@@ -153,30 +153,135 @@
 
     header {
       text-align: center;
-      padding: 1.5rem 1rem;
+      padding: 1rem;
       background: var(--gradient);
       color: white;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border-radius: 0 0 30px 30px;
-      transition: transform 0.3s ease;
-    }
-
-    header:hover {
-      transform: translateY(-2px);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     header h1 {
       color: white;
       margin: 0;
-      font-size: 2.5rem;
+      font-size: 1.8rem;
       font-weight: 700;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     header p {
-      font-size: 1.2rem;
-      margin-top: 0.5rem;
+      font-size: 1rem;
+      margin: 0;
       opacity: 0.9;
+    }
+
+    /* Hamburger Menu */
+    .hamburger {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 1001;
+      background: none;
+      border: none;
+      padding: 0.5rem;
+      cursor: pointer;
+      display: none;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 25px;
+      height: 3px;
+      background: white;
+      margin: 5px 0;
+      transition: all 0.3s ease;
+    }
+
+    .mobile-nav {
+      position: fixed;
+      top: 0;
+      left: -100%;
+      width: 80%;
+      max-width: 300px;
+      height: 100vh;
+      background: white;
+      z-index: 1000;
+      padding: 4rem 1rem 1rem;
+      transition: left 0.3s ease;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .mobile-nav.active {
+      left: 0;
+    }
+
+    .mobile-nav a {
+      display: block;
+      padding: 1rem;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .mobile-nav a:hover {
+      color: var(--primary);
+      background: rgba(76, 175, 80, 0.1);
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Adjust container padding for fixed header */
+    .container {
+      padding-top: 4rem;
+    }
+
+    @media(max-width: 767px) {
+      .hamburger {
+        display: block;
+      }
+
+      .sticky-nav {
+        display: none;
+      }
+
+      header {
+        padding: 0.75rem;
+      }
+
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      header p {
+        font-size: 0.9rem;
+      }
+
+      .container {
+        padding-top: 3.5rem;
+      }
     }
 
     .services-grid {
@@ -728,18 +833,24 @@
 </head>
 <body>
 
-<nav class="sticky-nav">
-  <div class="nav-links">
-    <a href="#services">Services</a>
-    <a href="#insights">Insights</a>
-    <a href="#success">Success Stories</a>
-    <a href="#contact">Contact</a>
-  </div>
+<button class="hamburger" aria-label="Menu">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<nav class="mobile-nav">
+  <a href="#services">Services</a>
+  <a href="#insights">Insights</a>
+  <a href="#success">Success Stories</a>
+  <a href="#contact">Contact</a>
 </nav>
 
+<div class="overlay"></div>
+
 <header>
-   <h1><i class="fas fa-chart-line"></i> ADBio</h1>
-   <p>Reinier Olivier</p>
+  <h1><i class="fas fa-chart-line"></i> ADBio</h1>
+  <p>Reinier Olivier</p>
 </header>
 
 <div class="container">
@@ -976,6 +1087,32 @@
           block: 'start'
         });
       }
+    });
+  });
+
+  // Mobile Navigation
+  const hamburger = document.querySelector('.hamburger');
+  const mobileNav = document.querySelector('.mobile-nav');
+  const overlay = document.querySelector('.overlay');
+
+  hamburger.addEventListener('click', () => {
+    mobileNav.classList.toggle('active');
+    overlay.classList.toggle('active');
+    document.body.style.overflow = mobileNav.classList.contains('active') ? 'hidden' : '';
+  });
+
+  overlay.addEventListener('click', () => {
+    mobileNav.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  });
+
+  // Close mobile menu when clicking a link
+  document.querySelectorAll('.mobile-nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileNav.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
     });
   });
 </script>
