@@ -1286,11 +1286,34 @@
       opacity: 0.3;
       cursor: pointer;
       transition: all 0.3s ease;
+      border: 2px solid var(--primary);
+      position: relative;
     }
 
     .carousel-dot.active {
       opacity: 1;
       transform: scale(1.2);
+      background: var(--accent1);
+      border-color: var(--accent1);
+    }
+
+    .carousel-dot::after {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .carousel-dot.active::after {
+      opacity: 0.2;
     }
 
     @media(max-width: 767px) {
@@ -2181,12 +2204,6 @@
         showTestimonial(currentIndex);
       });
     });
-
-    // Auto-rotate testimonials
-    setInterval(() => {
-      currentIndex = (currentIndex + 1) % testimonialCards.length;
-      showTestimonial(currentIndex);
-    }, 5000);
 
     // Initialize first testimonial
     showTestimonial(0);
