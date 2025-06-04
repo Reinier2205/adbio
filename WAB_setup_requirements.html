@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Complete guide for setting up WhatsApp Business - prerequisites, restrictions, and best practices" />
-  <title>WhatsApp Business Setup Guidelines - ADBio</title>
+  <meta name="description" content="WhatsApp Business Setup Requirements - Complete checklist of prerequisites and requirements" />
+  <title>WhatsApp Business Setup Requirements - ADBio</title>
   
   <!-- Preload critical assets -->
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" as="style">
@@ -23,14 +23,6 @@
       --background: #FFF8E1;
       --text: #212121;
       --gradient: linear-gradient(135deg, #4CAF50, #388E3C);
-      --section-spacing: 4rem;
-      --card-spacing: 2rem;
-      --heading-large: 2.8rem;
-      --heading-medium: 2.2rem;
-      --heading-small: 1.8rem;
-      --body-large: 1.3rem;
-      --body-medium: 1.1rem;
-      --body-small: 0.9rem;
     }
 
     body {
@@ -40,6 +32,60 @@
       color: var(--text);
       line-height: 1.6;
       padding: 2rem;
+      padding-top: 120px;
+    }
+
+    .sticky-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      text-align: center;
+    }
+
+    .sticky-header h1 {
+      color: var(--primary);
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    .progress-container {
+      position: fixed;
+      top: 80px;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .progress-text {
+      font-size: 0.9rem;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .progress-bar {
+      flex-grow: 1;
+      height: 8px;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
     }
 
     .container {
@@ -51,274 +97,428 @@
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
 
-    h1 {
-      color: var(--primary);
-      text-align: center;
-      margin-bottom: 2rem;
-      font-size: var(--heading-large);
-    }
-
-    h2 {
-      color: var(--primary);
-      margin: 2rem 0 1rem;
-      font-size: var(--heading-medium);
-      border-bottom: 2px solid var(--primary);
-      padding-bottom: 0.5rem;
-    }
-
-    h3 {
-      color: var(--accent1);
-      margin: 1.5rem 0 1rem;
-      font-size: var(--heading-small);
-    }
-
-    .guideline-section {
+    .requirement-section {
       margin-bottom: 2rem;
       padding: 1.5rem;
       background: var(--background);
       border-radius: 15px;
-      border-left: 4px solid var(--primary);
+      position: relative;
     }
 
-    .requirement {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .requirement i {
+    .requirement-section h2 {
       color: var(--primary);
-      font-size: 1.2rem;
-      margin-top: 0.2rem;
-    }
-
-    .restriction {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
       margin-bottom: 1rem;
-      color: var(--accent1);
-    }
-
-    .restriction i {
-      color: var(--accent1);
-      font-size: 1.2rem;
-      margin-top: 0.2rem;
-    }
-
-    .best-practice {
+      font-size: 1.5rem;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 1rem;
-      margin-bottom: 1rem;
-      color: var(--accent2);
     }
 
-    .best-practice i {
-      color: var(--accent2);
+    .requirement-section h2 i {
+      color: var(--primary);
+    }
+
+    .requirement-content {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .requirement-checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--primary);
+      border-radius: 6px;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      margin-top: 0.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .requirement-checkbox.checked {
+      background: var(--primary);
+    }
+
+    .requirement-checkbox.checked::after {
+      content: '✓';
+      position: absolute;
+      color: white;
+      font-size: 16px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .requirement-details {
+      flex-grow: 1;
+    }
+
+    .requirement-details h3 {
+      color: var(--text);
+      margin: 0 0 0.5rem 0;
       font-size: 1.2rem;
-      margin-top: 0.2rem;
     }
 
-    .note {
-      background: #f8f9fa;
-      padding: 1rem;
-      border-radius: 10px;
-      margin-top: 2rem;
-      font-style: italic;
+    .requirement-details p {
+      margin: 0 0 1rem 0;
       color: var(--text);
       opacity: 0.9;
+    }
+
+    .requirement-type {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 15px;
+      font-size: 0.9rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .requirement-type.prerequisite {
+      background: rgba(76, 175, 80, 0.1);
+      color: var(--primary);
+    }
+
+    .requirement-type.restriction {
+      background: rgba(255, 112, 67, 0.1);
+      color: var(--accent1);
+    }
+
+    .requirement-type.best-practice {
+      background: rgba(3, 169, 244, 0.1);
+      color: var(--accent2);
+    }
+
+    .reset-button {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--accent1);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .reset-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     }
 
     @media (max-width: 768px) {
       body {
         padding: 1rem;
+        padding-top: 140px;
+      }
+
+      .sticky-header {
+        padding: 0.75rem 1rem;
+      }
+
+      .sticky-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .progress-container {
+        padding: 0.75rem 1rem;
+        top: 60px;
+      }
+
+      .progress-text {
+        font-size: 0.8rem;
       }
 
       .container {
+        padding: 1.5rem;
+      }
+
+      .requirement-section {
         padding: 1rem;
       }
 
-      h1 {
-        font-size: 2rem;
-      }
-
-      h2 {
-        font-size: 1.6rem;
-      }
-
-      h3 {
+      .requirement-section h2 {
         font-size: 1.3rem;
+      }
+
+      .reset-button {
+        bottom: 1rem;
+        right: 1rem;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>WhatsApp Business Setup Guidelines</h1>
-    
-    <div class="guideline-section">
-      <h2>Prerequisites for WhatsApp Business Setup</h2>
+  <div class="sticky-header">
+    <h1>WhatsApp Business Setup Requirements</h1>
+  </div>
 
-      <h3>1. Business Phone Number</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>A dedicated business phone number (avoid personal numbers)</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>Once registered, the number cannot be changed without re-registering</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Use a professional phone number, preferably linked to a business line</div>
-      </div>
-
-      <h3>2. Business Name</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>Your official business name as seen by customers</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>Cannot be changed after registration (choose carefully!)</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Keep it short, recognizable, and avoid unnecessary symbols or emojis</div>
-      </div>
-
-      <h3>3. Business Logo</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>A high-quality square image representing your brand</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>No specific file size limit, but square format recommended for optimal display</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Use a clean logo with a transparent background for a professional look</div>
-      </div>
-
-      <h3>4. Business Description</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>A short summary of your business</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>Limited to 139 characters</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Be clear, engaging, and precise (mention your services/products concisely)</div>
-      </div>
-
-      <h3>5. Business Category</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>Select a category that best represents your business</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>Once set, modifying it requires account settings update</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Pick the most relevant category to help customers find you</div>
-      </div>
-
-      <h3>6. Business Address</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>Your physical address (if applicable)</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>Address visibility depends on business type</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>If you operate online, mention "Online Store" or relevant details</div>
-      </div>
-
-      <h3>7. Operating Hours</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>Define your working hours for customer visibility</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>Customers may see outdated hours if not updated regularly</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Keep them accurate and update based on seasonal changes</div>
-      </div>
-
-      <h3>8. Website & Email</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>Your official website and business email for contact</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>Only one website link can be added to the profile</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Use a professional domain rather than a generic email (e.g., info@yourbrand.com)</div>
-      </div>
-
-      <h3>9. Product/Service Catalog</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>High-quality product images, descriptions, and prices</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>Up to 500 products/services can be listed</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Keep product names short, descriptions clear, and images professional</div>
-      </div>
-
-      <h3>10. Message Templates</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>Pre-written Greeting Messages, Away Messages, and Quick Replies</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>Character limits apply based on message type</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Personalize templates to sound human and engaging instead of robotic</div>
-      </div>
-
-      <h3>11. Labels for Chats</h3>
-      <div class="requirement">
-        <i class="fas fa-check-circle"></i>
-        <div>Organize chats using colored labels (e.g., New Customer, Pending Payment)</div>
-      </div>
-      <div class="restriction">
-        <i class="fas fa-exclamation-circle"></i>
-        <div>You can create up to 20 labels</div>
-      </div>
-      <div class="best-practice">
-        <i class="fas fa-lightbulb"></i>
-        <div>Use labels efficiently to categorize customers and track progress</div>
-      </div>
-    </div>
-
-    <div class="note">
-      Having these inputs prepared in advance ensures a smooth and professional setup for WhatsApp Business. Need help refining any of these? 🚀
+  <div class="progress-container">
+    <span class="progress-text">Progress: <span id="progress-percentage">0%</span></span>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
     </div>
   </div>
+
+  <div class="container">
+    <div class="requirement-section" data-requirement="1">
+      <h2><i class="fas fa-phone"></i> Business Phone Number</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(1)"></div>
+        <div class="requirement-details">
+          <h3>Phone Number Requirements</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>A dedicated business phone number that can receive SMS and calls for verification.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Cannot use a landline number. Must be a mobile number that can receive SMS.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Use a dedicated business number separate from your personal WhatsApp to maintain professionalism.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="2">
+      <h2><i class="fas fa-store"></i> Business Name</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(2)"></div>
+        <div class="requirement-details">
+          <h3>Business Name Guidelines</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>Your official business name as registered or commonly known to customers.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Cannot use generic terms or misleading names. Must be your actual business name.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Use a consistent business name across all platforms for better brand recognition.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="3">
+      <h2><i class="fas fa-image"></i> Business Logo</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(3)"></div>
+        <div class="requirement-details">
+          <h3>Logo Specifications</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>A clear, professional logo representing your business.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Logo must be appropriate and not contain prohibited content. Maximum size: 5MB.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Use a high-quality, square logo with transparent background for best display.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="4">
+      <h2><i class="fas fa-align-left"></i> Business Description</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(4)"></div>
+        <div class="requirement-details">
+          <h3>Description Guidelines</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>A brief description of your business and services.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Maximum 512 characters. No spam or misleading content.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Include key services, unique selling points, and business hours.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="5">
+      <h2><i class="fas fa-tags"></i> Business Category</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(5)"></div>
+        <div class="requirement-details">
+          <h3>Category Selection</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>Select the most appropriate category for your business.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Must choose from predefined categories. Cannot be changed frequently.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Choose the most specific category that matches your business type.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="6">
+      <h2><i class="fas fa-map-marker-alt"></i> Business Address</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(6)"></div>
+        <div class="requirement-details">
+          <h3>Address Requirements</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>Your business location or service area.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Must be a valid address. Cannot use PO boxes for verification.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Include clear directions or landmarks for better customer location.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="7">
+      <h2><i class="fas fa-clock"></i> Operating Hours</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(7)"></div>
+        <div class="requirement-details">
+          <h3>Hours Guidelines</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>Your business operating hours.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Must be accurate and regularly updated.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Include special hours for holidays and peak seasons.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="8">
+      <h2><i class="fas fa-globe"></i> Website & Email</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(8)"></div>
+        <div class="requirement-details">
+          <h3>Contact Information</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>Business website and email address.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Email must be a valid business email address.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Use a professional email address matching your business domain.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="9">
+      <h2><i class="fas fa-shopping-cart"></i> Product/Service Catalog</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(9)"></div>
+        <div class="requirement-details">
+          <h3>Catalog Requirements</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>List of products or services you offer.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Products must comply with WhatsApp's commerce policies.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Include clear photos, prices, and descriptions for each item.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="10">
+      <h2><i class="fas fa-comment-dots"></i> Message Templates</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(10)"></div>
+        <div class="requirement-details">
+          <h3>Template Guidelines</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>Pre-approved message templates for common interactions.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Templates must be approved by WhatsApp before use.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Create templates for order confirmations, shipping updates, and FAQs.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="requirement-section" data-requirement="11">
+      <h2><i class="fas fa-tags"></i> Labels for Chats</h2>
+      <div class="requirement-content">
+        <div class="requirement-checkbox" onclick="toggleRequirement(11)"></div>
+        <div class="requirement-details">
+          <h3>Labeling System</h3>
+          <span class="requirement-type prerequisite">Prerequisite</span>
+          <p>System for organizing and categorizing customer chats.</p>
+          
+          <span class="requirement-type restriction">Restriction</span>
+          <p>Labels must be appropriate and professional.</p>
+          
+          <span class="requirement-type best-practice">Best Practice</span>
+          <p>Create labels for different stages of customer interaction (New, In Progress, Completed).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="reset-button" onclick="resetProgress()">
+    <i class="fas fa-redo"></i> Reset Progress
+  </button>
+
+  <script>
+    // Load saved progress
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedProgress = JSON.parse(localStorage.getItem('requirementsProgress') || '{}');
+      Object.entries(savedProgress).forEach(([id, checked]) => {
+        if (checked) {
+          document.querySelector(`[data-requirement="${id}"] .requirement-checkbox`).classList.add('checked');
+        }
+      });
+      updateProgress();
+    });
+
+    // Toggle requirement completion
+    function toggleRequirement(id) {
+      const checkbox = document.querySelector(`[data-requirement="${id}"] .requirement-checkbox`);
+      checkbox.classList.toggle('checked');
+      
+      // Save progress
+      const savedProgress = JSON.parse(localStorage.getItem('requirementsProgress') || '{}');
+      savedProgress[id] = checkbox.classList.contains('checked');
+      localStorage.setItem('requirementsProgress', JSON.stringify(savedProgress));
+      
+      updateProgress();
+    }
+
+    // Update progress bar
+    function updateProgress() {
+      const totalRequirements = document.querySelectorAll('.requirement-section').length;
+      const completedRequirements = document.querySelectorAll('.requirement-checkbox.checked').length;
+      const percentage = Math.round((completedRequirements / totalRequirements) * 100);
+      
+      document.getElementById('progress-percentage').textContent = `${percentage}%`;
+      document.getElementById('progress-fill').style.width = `${percentage}%`;
+    }
+
+    // Reset progress
+    function resetProgress() {
+      if (confirm('Are you sure you want to reset your progress?')) {
+        localStorage.removeItem('requirementsProgress');
+        document.querySelectorAll('.requirement-checkbox').forEach(checkbox => {
+          checkbox.classList.remove('checked');
+        });
+        updateProgress();
+      }
+    }
+  </script>
 </body>
 </html> 
