@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Detailed guide for setting up WhatsApp Business App - features, setup steps, and best practices" />
+  <title>WhatsApp Business Setup Guide - ADBio</title>
+  
+  <!-- Preload critical assets -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style">
+  
+  <!-- Stylesheets -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --secondary: #FFEB3B;
+      --accent1: #FF7043;
+      --accent2: #03A9F4;
+      --background: #FFF8E1;
+      --text: #212121;
+      --gradient: linear-gradient(135deg, #4CAF50, #388E3C);
+      --section-spacing: 4rem;
+      --card-spacing: 2rem;
+      --heading-large: 2.8rem;
+      --heading-medium: 2.2rem;
+      --heading-small: 1.8rem;
+      --body-large: 1.3rem;
+      --body-medium: 1.1rem;
+      --body-small: 0.9rem;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: var(--background);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      background: white;
+      padding: 1rem 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin: 0 0 1rem 0;
+      font-size: 2rem;
+    }
+
+    h2 {
+      color: var(--primary);
+      margin: 2rem 0 1rem;
+      font-size: var(--heading-medium);
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 0.5rem;
+    }
+
+    h3 {
+      color: var(--accent1);
+      margin: 1.5rem 0 1rem;
+      font-size: var(--heading-small);
+    }
+
+    .guide-section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: var(--background);
+      border-radius: 15px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .step {
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .step.completed {
+      opacity: 0.7;
+    }
+
+    .step.completed .step-title h3 {
+      text-decoration: line-through;
+      color: var(--primary);
+    }
+
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .step-title i {
+      color: var(--primary);
+      font-size: 1.5rem;
+    }
+
+    .step-content {
+      margin-left: 2.5rem;
+    }
+
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-list i {
+      color: var(--primary);
+      font-size: 1.2rem;
+      margin-top: 0.2rem;
+    }
+
+    .warning {
+      background: #fff3e0;
+      border-left: 4px solid var(--accent1);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 0 10px 10px 0;
+    }
+
+    .warning i {
+      color: var(--accent1);
+      margin-right: 0.5rem;
+    }
+
+    .best-practice {
+      background: #e8f5e9;
+      border-left: 4px solid var(--primary);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 0 10px 10px 0;
+    }
+
+    .best-practice i {
+      color: var(--primary);
+      margin-right: 0.5rem;
+    }
+
+    .note {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 2rem;
+      font-style: italic;
+      color: var(--text);
+      opacity: 0.9;
+    }
+
+    .progress-container {
+      position: sticky;
+      top: 80px;
+      background: white;
+      padding: 1rem 0;
+      z-index: 99;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    .progress-text {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .checkbox-wrapper {
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
+
+    .custom-checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--primary);
+      border-radius: 50%;
+      display: inline-block;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .custom-checkbox.checked {
+      background: var(--primary);
+    }
+
+    .custom-checkbox.checked::after {
+      content: '✓';
+      position: absolute;
+      color: white;
+      font-size: 16px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .reset-progress {
+      display: block;
+      margin: 2rem auto;
+      padding: 0.8rem 1.5rem;
+      background: var(--accent1);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .reset-progress:hover {
+      background: #f4511e;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .container {
+        padding: 1rem;
+      }
+
+      .sticky-header {
+        padding: 0.5rem 0;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .progress-container {
+        top: 60px;
+        padding: 0.5rem 0;
+      }
+
+      .progress-text {
+        font-size: 0.8rem;
+      }
+
+      .progress-bar {
+        height: 6px;
+      }
+
+      .step-content {
+        margin-left: 1.5rem;
+      }
+
+      .checkbox-wrapper {
+        position: static;
+        margin-left: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sticky-header">
+      <h1>WhatsApp Business Setup Guide</h1>
+    </div>
+    
+    <div class="progress-container">
+      <div class="progress-text">Setup Progress: <span id="progress-percentage">0%</span></div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <h2>Step-by-Step WhatsApp Business App Setup</h2>
+
+      <div class="step" data-step="1">
+        <div class="step-title">
+          <i class="fas fa-download"></i>
+          <h3>1. Download and Install WhatsApp Business</h3>
+          <div class="checkbox-wrapper">
+            <div class="custom-checkbox" onclick="toggleStep(1)"></div>
+          </div>
+        </div>
+        <div class="step-content">
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i>Install the app from the Google Play Store or Apple App Store.</li>
+            <li><i class="fas fa-check"></i>Open the app and agree to the terms of service.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step" data-step="2">
+        <div class="step-title">
+          <i class="fas fa-phone"></i>
+          <h3>2. Verify Your Business Phone Number</h3>
+          <div class="checkbox-wrapper">
+            <div class="custom-checkbox" onclick="toggleStep(2)"></div>
+          </div>
+        </div>
+        <div class="step-content">
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i>Enter your business phone number and verify it via SMS or call.</li>
+            <li><i class="fas fa-check"></i>If using a landline, select "Call Me" for verification.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step" data-step="3">
+        <div class="step-title">
+          <i class="fas fa-store"></i>
+          <h3>3. Set Up Your Business Profile</h3>
+          <div class="checkbox-wrapper">
+            <div class="custom-checkbox" onclick="toggleStep(3)"></div>
+          </div>
+        </div>
+        <div class="step-content">
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i>Add your business name, category, description, address, hours, website, and email.</li>
+            <li><i class="fas fa-check"></i>Upload a high-quality logo or an image that represents your brand.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step" data-step="4">
+        <div class="step-title">
+          <i class="fas fa-comments"></i>
+          <h3>4. Enable Business Messaging Tools</h3>
+          <div class="checkbox-wrapper">
+            <div class="custom-checkbox" onclick="toggleStep(4)"></div>
+          </div>
+        </div>
+        <div class="step-content">
+          <h4>📨 Automated Messages</h4>
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i>Greeting Message – Automatically send a welcome message when customers contact you.</li>
+            <li><i class="fas fa-check"></i>Away Message – Notify customers when you're unavailable.</li>
+          </ul>
+
+          <h4>⚡ Quick Replies</h4>
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i>Store frequently used messages and respond instantly with shortcuts.</li>
+            <li><i class="fas fa-check"></i>Example: Instead of typing "Thanks for reaching out! We'll get back to you soon," just type "/thanks" and it will auto-expand.</li>
+          </ul>
+
+          <h4>🔖 Labels</h4>
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i>Organize chats with colored labels for better workflow:</li>
+            <li><i class="fas fa-tag"></i>New Customer – Identify first-time inquiries.</li>
+            <li><i class="fas fa-tag"></i>Pending Payment – Track unpaid orders.</li>
+            <li><i class="fas fa-tag"></i>Completed Orders – Mark transactions that are finished.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step" data-step="5">
+        <div class="step-title">
+          <i class="fas fa-shopping-cart"></i>
+          <h3>5. Set Up a Product Catalog</h3>
+          <div class="checkbox-wrapper">
+            <div class="custom-checkbox" onclick="toggleStep(5)"></div>
+          </div>
+        </div>
+        <div class="step-content">
+          <p>Your WhatsApp Catalog lets customers browse your products/services within the app.</p>
+          <h4>🛒 How to Create a Catalog</h4>
+          <ol class="feature-list">
+            <li><i class="fas fa-arrow-right"></i>Go to Settings → Business Tools → Catalog.</li>
+            <li><i class="fas fa-arrow-right"></i>Click "Add Product or Service".</li>
+            <li><i class="fas fa-arrow-right"></i>Upload high-quality images (max 500 items).</li>
+            <li><i class="fas fa-arrow-right"></i>Add: Product name, Price, Description, Link (if applicable), Product Code (optional)</li>
+            <li><i class="fas fa-arrow-right"></i>Click Save – Customers can now view your catalog!</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="step" data-step="6">
+        <div class="step-title">
+          <i class="fas fa-chart-line"></i>
+          <h3>6. Optimize Customer Engagement</h3>
+          <div class="checkbox-wrapper">
+            <div class="custom-checkbox" onclick="toggleStep(6)"></div>
+          </div>
+        </div>
+        <div class="step-content">
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i>Share catalog items directly in chat.</li>
+            <li><i class="fas fa-check"></i>Use WhatsApp Web for managing conversations on your computer.</li>
+            <li><i class="fas fa-check"></i>Monitor chat insights via Business Statistics.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <h2>Pitfalls to Avoid</h2>
+      <div class="warning">
+        <ul class="feature-list">
+          <li><i class="fas fa-exclamation-triangle"></i>Ignoring Messages – Customers expect quick responses.</li>
+          <li><i class="fas fa-exclamation-triangle"></i>Incomplete Profile – A missing business description reduces trust.</li>
+          <li><i class="fas fa-exclamation-triangle"></i>No Labels – Without labels, it's hard to track conversations efficiently.</li>
+          <li><i class="fas fa-exclamation-triangle"></i>Unoptimized Catalog – Ensure images & details are clear and professional.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <h2>Best Practices</h2>
+      <div class="best-practice">
+        <ul class="feature-list">
+          <li><i class="fas fa-check-circle"></i>Use Quick Replies – Save time & improve efficiency.</li>
+          <li><i class="fas fa-check-circle"></i>Organize Chats with Labels – Makes customer interactions easier to manage.</li>
+          <li><i class="fas fa-check-circle"></i>Keep Your Catalog Updated – Regularly refresh product listings.</li>
+          <li><i class="fas fa-check-circle"></i>Respond Promptly – Fast replies build trust and improve engagement.</li>
+        </ul>
+      </div>
+    </div>
+
+    <button class="reset-progress" onclick="resetProgress()">Reset Progress</button>
+
+    <div class="note">
+      Need help with any of these steps? Our team is here to guide you through the setup process! 🚀
+    </div>
+  </div>
+
+  <script>
+    // Load saved progress
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedProgress = JSON.parse(localStorage.getItem('wabSetupProgress') || '{}');
+      Object.keys(savedProgress).forEach(step => {
+        if (savedProgress[step]) {
+          const checkbox = document.querySelector(`.step[data-step="${step}"] .custom-checkbox`);
+          const stepElement = document.querySelector(`.step[data-step="${step}"]`);
+          checkbox.classList.add('checked');
+          stepElement.classList.add('completed');
+        }
+      });
+      updateProgress();
+    });
+
+    // Toggle step completion
+    function toggleStep(step) {
+      const checkbox = document.querySelector(`.step[data-step="${step}"] .custom-checkbox`);
+      const stepElement = document.querySelector(`.step[data-step="${step}"]`);
+      const savedProgress = JSON.parse(localStorage.getItem('wabSetupProgress') || '{}');
+      
+      savedProgress[step] = !savedProgress[step];
+      localStorage.setItem('wabSetupProgress', JSON.stringify(savedProgress));
+      
+      checkbox.classList.toggle('checked');
+      stepElement.classList.toggle('completed');
+      
+      updateProgress();
+    }
+
+    // Update progress bar
+    function updateProgress() {
+      const savedProgress = JSON.parse(localStorage.getItem('wabSetupProgress') || '{}');
+      const totalSteps = document.querySelectorAll('.step').length;
+      const completedSteps = Object.values(savedProgress).filter(Boolean).length;
+      const percentage = Math.round((completedSteps / totalSteps) * 100);
+      
+      document.getElementById('progress-fill').style.width = `${percentage}%`;
+      document.getElementById('progress-percentage').textContent = `${percentage}%`;
+    }
+
+    // Reset progress
+    function resetProgress() {
+      if (confirm('Are you sure you want to reset your progress?')) {
+        localStorage.removeItem('wabSetupProgress');
+        document.querySelectorAll('.custom-checkbox').forEach(checkbox => {
+          checkbox.classList.remove('checked');
+        });
+        document.querySelectorAll('.step').forEach(step => {
+          step.classList.remove('completed');
+        });
+        updateProgress();
+      }
+    }
+  </script>
+</body>
+</html> 
