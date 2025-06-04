@@ -213,28 +213,23 @@
       transition: width 0.3s ease;
     }
 
-    .checkbox-wrapper {
-      position: absolute;
-      right: 0;
-      top: 0;
-    }
-
-    .custom-checkbox {
+    .step-checkbox {
       width: 24px;
       height: 24px;
       border: 2px solid var(--primary);
-      border-radius: 50%;
-      display: inline-block;
-      position: relative;
+      border-radius: 6px;
       cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      margin-top: 0.25rem;
       transition: all 0.3s ease;
     }
 
-    .custom-checkbox.checked {
+    .step-checkbox.checked {
       background: var(--primary);
     }
 
-    .custom-checkbox.checked::after {
+    .step-checkbox.checked::after {
       content: '✓';
       position: absolute;
       color: white;
@@ -242,6 +237,10 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+    }
+
+    .step-content {
+      flex-grow: 1;
     }
 
     .reset-button {
@@ -306,11 +305,6 @@
         margin-left: 1.5rem;
       }
 
-      .checkbox-wrapper {
-        position: static;
-        margin-left: 1rem;
-      }
-
       .reset-button {
         bottom: 1rem;
         right: 1rem;
@@ -340,9 +334,7 @@
         <div class="step-title">
           <i class="fas fa-download"></i>
           <h3>1. Download and Install WhatsApp Business</h3>
-          <div class="checkbox-wrapper">
-            <div class="custom-checkbox" onclick="toggleStep(1)"></div>
-          </div>
+          <div class="step-checkbox" onclick="toggleStep(1)"></div>
         </div>
         <div class="step-content">
           <ul class="feature-list">
@@ -356,9 +348,7 @@
         <div class="step-title">
           <i class="fas fa-phone"></i>
           <h3>2. Verify Your Business Phone Number</h3>
-          <div class="checkbox-wrapper">
-            <div class="custom-checkbox" onclick="toggleStep(2)"></div>
-          </div>
+          <div class="step-checkbox" onclick="toggleStep(2)"></div>
         </div>
         <div class="step-content">
           <ul class="feature-list">
@@ -372,9 +362,7 @@
         <div class="step-title">
           <i class="fas fa-store"></i>
           <h3>3. Set Up Your Business Profile</h3>
-          <div class="checkbox-wrapper">
-            <div class="custom-checkbox" onclick="toggleStep(3)"></div>
-          </div>
+          <div class="step-checkbox" onclick="toggleStep(3)"></div>
         </div>
         <div class="step-content">
           <ul class="feature-list">
@@ -388,9 +376,7 @@
         <div class="step-title">
           <i class="fas fa-comments"></i>
           <h3>4. Enable Business Messaging Tools</h3>
-          <div class="checkbox-wrapper">
-            <div class="custom-checkbox" onclick="toggleStep(4)"></div>
-          </div>
+          <div class="step-checkbox" onclick="toggleStep(4)"></div>
         </div>
         <div class="step-content">
           <h4>📨 Automated Messages</h4>
@@ -419,9 +405,7 @@
         <div class="step-title">
           <i class="fas fa-shopping-cart"></i>
           <h3>5. Set Up a Product Catalog</h3>
-          <div class="checkbox-wrapper">
-            <div class="custom-checkbox" onclick="toggleStep(5)"></div>
-          </div>
+          <div class="step-checkbox" onclick="toggleStep(5)"></div>
         </div>
         <div class="step-content">
           <p>Your WhatsApp Catalog lets customers browse your products/services within the app.</p>
@@ -440,9 +424,7 @@
         <div class="step-title">
           <i class="fas fa-chart-line"></i>
           <h3>6. Optimize Customer Engagement</h3>
-          <div class="checkbox-wrapper">
-            <div class="custom-checkbox" onclick="toggleStep(6)"></div>
-          </div>
+          <div class="step-checkbox" onclick="toggleStep(6)"></div>
         </div>
         <div class="step-content">
           <ul class="feature-list">
@@ -493,7 +475,7 @@
       const savedProgress = JSON.parse(localStorage.getItem('wabSetupProgress') || '{}');
       Object.keys(savedProgress).forEach(step => {
         if (savedProgress[step]) {
-          const checkbox = document.querySelector(`.step[data-step="${step}"] .custom-checkbox`);
+          const checkbox = document.querySelector(`.step[data-step="${step}"] .step-checkbox`);
           const stepElement = document.querySelector(`.step[data-step="${step}"]`);
           checkbox.classList.add('checked');
           stepElement.classList.add('completed');
@@ -504,7 +486,7 @@
 
     // Toggle step completion
     function toggleStep(step) {
-      const checkbox = document.querySelector(`.step[data-step="${step}"] .custom-checkbox`);
+      const checkbox = document.querySelector(`.step[data-step="${step}"] .step-checkbox`);
       const stepElement = document.querySelector(`.step[data-step="${step}"]`);
       const savedProgress = JSON.parse(localStorage.getItem('wabSetupProgress') || '{}');
       
@@ -532,7 +514,7 @@
     function resetProgress() {
       if (confirm('Are you sure you want to reset your progress?')) {
         localStorage.removeItem('wabSetupProgress');
-        document.querySelectorAll('.custom-checkbox').forEach(checkbox => {
+        document.querySelectorAll('.step-checkbox').forEach(checkbox => {
           checkbox.classList.remove('checked');
         });
         document.querySelectorAll('.step').forEach(step => {
