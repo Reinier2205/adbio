@@ -48,14 +48,13 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="bg-gray-50 dark:bg-gray-900">
       <Header />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           <AddLinkForm />
           <SearchAndFilters />
-          <ActionBar 
+          <ActionBar
             onShareClick={() => setShowShare(true)}
             onExportImportClick={() => setShowExportImport(true)}
           />
@@ -67,7 +66,7 @@ function AppContent() {
         isOpen={showExportImport}
         onClose={() => setShowExportImport(false)}
       />
-      
+
       <ShareModal
         isOpen={showShare}
         onClose={() => setShowShare(false)}

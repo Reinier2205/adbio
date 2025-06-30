@@ -98,7 +98,7 @@ export function LinkList() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={filteredAndSortedLinks} strategy={verticalListSortingStrategy}>
-          <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
             {filteredAndSortedLinks.map((link) => (
               <SortableItem key={link.id} id={link.id}>
                 <LinkCard link={link} />
