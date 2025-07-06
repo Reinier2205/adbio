@@ -50,12 +50,20 @@ body {
   @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900;
 }
 
-/* Transitions */
-.transition-all {
-  transition-property: all;
+/* Component transitions - avoid using transition-all to prevent conflicts with libraries */
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
+
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+
 
 /* Dark mode improvements */
 @media (prefers-color-scheme: dark) {
@@ -78,6 +86,56 @@ body {
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Custom swipe implementation styles */
+.swipe-card {
+  transition: none !important;
+  transform: none !important;
+}
+
+.swipe-card * {
+  transition: none !important;
+}
+
+/* Grid card improvements */
+.grid > div {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure cards maintain consistent height in grid */
+.grid > div > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile-specific improvements for custom swipe */
+@media (max-width: 640px) {
+  /* Optimize touch targets on mobile */
+  .swipe-card button {
+    min-height: 44px;
+  }
+  
+  /* Ensure proper grid spacing on mobile */
+  .grid {
+    gap: 0.75rem;
+  }
+}
+
+/* Tablet improvements */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid {
+    gap: 1rem;
+  }
+}
+
+/* Desktop improvements */
+@media (min-width: 1025px) {
+  .grid {
+    gap: 1.5rem;
+  }
 }
 
 /* Custom checkbox styles */
