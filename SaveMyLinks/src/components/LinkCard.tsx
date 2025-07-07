@@ -19,6 +19,7 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
   const initialSwipeOffset = useRef(0);
   const [faviconLoaded, setFaviconLoaded] = useState(false);
   const [hasMoved, setHasMoved] = useState(false);
+  const hasMovedRef = useRef(false);
 
   const handleStarClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -50,6 +51,7 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
     initialSwipeOffset.current = swipeOffset;
     setIsSwiping(true);
     setHasMoved(false);
+    hasMovedRef.current = false;
   }, [swipeOffset]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
@@ -57,9 +59,10 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchStartX.current;
     const deltaY = Math.abs(touch.clientY - touchStartY.current);
-    if (!hasMoved) {
+    if (!hasMovedRef.current) {
       // Only start swiping if horizontal movement exceeds 8px and is greater than vertical
       if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > deltaY) {
+        hasMovedRef.current = true;
         setHasMoved(true);
       } else {
         return;
@@ -68,12 +71,13 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
     e.preventDefault();
     const newOffset = Math.max(-160, Math.min(0, initialSwipeOffset.current + deltaX));
     setSwipeOffset(newOffset);
-  }, [isSwiping, hasMoved]);
+  }, [isSwiping]);
 
   const handleTouchEnd = useCallback(() => {
     if (!isSwiping) return;
     setIsSwiping(false);
     setHasMoved(false);
+    hasMovedRef.current = false;
     // If swiped more than 32px to the left, snap to open position
     if (swipeOffset < -32) {
       setSwipeOffset(-160);
