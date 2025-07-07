@@ -28,22 +28,22 @@ export function Header() {
               <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-sm">
                 <BookMarked className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold font-sans text-gray-900 dark:text-white">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold font-sans text-gray-900 dark:text-white truncate">
                   SaveMyLinks
                 </h1>
-                <p className="text-lg font-medium font-sans text-gray-500 dark:text-gray-400">
+                <p className="text-base sm:text-lg font-medium font-sans text-gray-500 dark:text-gray-400 truncate">
                   Your personal bookmark manager
                 </p>
                 {user && user.user_metadata?.firstName && (
-                  <p className="text-base font-semibold font-sans text-blue-600 dark:text-blue-400 mt-1 mb-2">
+                  <p className="text-base font-semibold font-sans text-blue-600 dark:text-blue-400 mt-1 mb-2 truncate">
                     Welcome, {user.user_metadata.firstName}!
                   </p>
                 )}
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3 pr-2">
               <CloudSyncStatus onSignInClick={() => setShowAuthModal(true)} />
               
               <button
