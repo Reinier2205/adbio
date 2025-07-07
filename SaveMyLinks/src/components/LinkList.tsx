@@ -158,25 +158,8 @@ function DraggableTouchTest() {
         position: 'relative',
         width: 320,
         minHeight: 120,
-        background: '#fff',
-        borderRadius: 18,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-        border: '1px solid #e5e7eb',
-        padding: 24,
-        touchAction: 'none',
-        WebkitUserSelect: 'none',
-        userSelect: 'none',
-        transform: `translate(${offset.x}px, ${offset.y}px)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        fontSize: 18,
-        overflow: 'visible',
+        margin: '0 auto',
       }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       {/* Swipe Actions Background */}
       <div
@@ -196,8 +179,31 @@ function DraggableTouchTest() {
         <button style={{ flex: 1, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18 }}>Edit</button>
         <button style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18 }}>Delete</button>
       </div>
-      {/* Main Card Content */}
-      <div style={{ position: 'relative', width: '100%', zIndex: 1 }}>
+      {/* Main Card Content (only this moves) */}
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          background: '#fff',
+          borderRadius: 18,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+          border: '1px solid #e5e7eb',
+          padding: 24,
+          touchAction: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+          transform: `translate(${offset.x}px, ${offset.y}px)`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          fontSize: 18,
+          zIndex: 1,
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
           <div style={{ width: 40, height: 40, borderRadius: 8, background: '#e0e7ef', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16, fontSize: 22 }}>
             🌐
