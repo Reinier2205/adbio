@@ -69,7 +69,7 @@ function AppContent() {
         </div>
       )}
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={`${!isOnline ? 'pt-24' : 'pt-14'} max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8`}>
         <div className="space-y-6">
           <SearchAndFilters />
           <AddLinkForm />
