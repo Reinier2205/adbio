@@ -32,14 +32,18 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, firstName?: string, lastName?: string) => {
     if (!supabase) throw new Error('Supabase not configured');
-    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          firstName,
+          lastName,
+        },
+      },
     });
-    
     if (error) throw error;
     return data;
   };

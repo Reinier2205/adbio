@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { BookMarked, Menu, Star, Clock, Share2, Import, KeyRound, LogOut, Home as HomeIcon, X, Mail } from 'lucide-react';
+import { BookMarked, Menu, Star, Clock, Share2, Import, KeyRound, LogOut, Home as HomeIcon, X, Mail, User as UserIcon } from 'lucide-react';
 import { CloudSyncStatus } from './CloudSyncStatus';
 import { AuthModal } from './AuthModal';
 import { useApp } from '../context/AppContext';
 import { ShareModal } from './ShareModal';
 import { ExportImportModal } from './ExportImportModal';
 import { ContactAdminModal } from './ContactAdminModal';
+import { useAuth } from '../hooks/useAuth';
+import { UpdateProfileModal } from './UpdateProfileModal';
 
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -14,6 +16,8 @@ export function Header() {
   const [showShare, setShowShare] = useState(false);
   const [showExportImport, setShowExportImport] = useState(false);
   const [showContactAdmin, setShowContactAdmin] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const { user } = useAuth();
 
   return (
     <>
@@ -31,6 +35,11 @@ export function Header() {
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Your personal bookmark manager
                 </p>
+                {user && user.user_metadata?.firstName && (
+                  <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                    Welcome, {user.user_metadata.firstName}!
+                  </p>
+                )}
               </div>
             </div>
             
@@ -83,8 +92,8 @@ export function Header() {
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowExportImport(true); setShowMenu(false); }}>
               <Import className="w-5 h-5" /> Export/Import
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => setShowMenu(false)}>
-              <KeyRound className="w-5 h-5" /> Reset Password
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowProfile(true); setShowMenu(false); }}>
+              <UserIcon className="w-5 h-5" /> Profile
             </button>
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowContactAdmin(true); setShowMenu(false); }}>
               <Mail className="w-5 h-5" /> Contact Admin
@@ -100,6 +109,9 @@ export function Header() {
       <ExportImportModal isOpen={showExportImport} onClose={() => setShowExportImport(false)} />
       {showContactAdmin && (
         <ContactAdminModal isOpen={showContactAdmin} onClose={() => setShowContactAdmin(false)} />
+      )}
+      {showProfile && (
+        <UpdateProfileModal isOpen={showProfile} onClose={() => setShowProfile(false)} />
       )}
     </>
   );

@@ -19,6 +19,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [resetSent, setResetSent] = useState(false);
   const [verificationMode, setVerificationMode] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   if (!isOpen) return null;
 
@@ -31,7 +33,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await signIn(email, password);
         onClose();
       } else {
-        await signUp(email, password);
+        await signUp(email, password, firstName, lastName);
         setVerificationMode(true);
       }
     } catch (err: any) {
@@ -242,6 +244,33 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 />
               </div>
             </div>
+
+            {mode === 'signup' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={e => setFirstName(e.target.value)}
+                    className="w-full pl-4 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Enter your first name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={e => setLastName(e.target.value)}
+                    className="w-full pl-4 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Enter your last name"
+                    required
+                  />
+                </div>
+              </>
+            )}
 
             <button
               type="submit"
