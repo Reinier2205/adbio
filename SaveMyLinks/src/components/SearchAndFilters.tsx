@@ -29,7 +29,7 @@ export function SearchAndFilters() {
   const hasActiveFilters = searchQuery || selectedTags.length > 0 || showStarredOnly || sortBy !== 'newest';
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-200 ease-in-out">
       <div className="p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search Input */}
@@ -48,7 +48,7 @@ export function SearchAndFilters() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-lg border font-medium transition-colors flex items-center gap-2 ${
+              className={`px-4 py-3 rounded-lg border font-medium transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px] flex items-center gap-2 ${
                 showFilters
                   ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
                   : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -64,7 +64,7 @@ export function SearchAndFilters() {
             {hasActiveFilters && (
               <button
                 onClick={clearAllFilters}
-                className="px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors flex items-center gap-2"
+                className="px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px] flex items-center gap-2"
                 title="Clear all filters"
               >
                 <X className="w-4 h-4" />

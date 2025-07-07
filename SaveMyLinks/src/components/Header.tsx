@@ -21,7 +21,7 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors transition-shadow duration-200 ease-in-out">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
@@ -36,7 +36,7 @@ export function Header() {
                   Your personal bookmark manager
                 </p>
                 {user && user.user_metadata?.firstName && (
-                  <p className="text-base font-semibold font-sans text-blue-600 dark:text-blue-400 mt-1">
+                  <p className="text-base font-semibold font-sans text-blue-600 dark:text-blue-400 mt-1 mb-2">
                     Welcome, {user.user_metadata.firstName}!
                   </p>
                 )}
@@ -77,33 +77,33 @@ export function Header() {
               <BookMarked className="w-6 h-6 text-blue-600" />
               <span className="text-lg font-bold font-sans text-gray-900 dark:text-white">SaveMyLinks</span>
             </div>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { clearAllFilters(); setShowRecentsOnly(false); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => { clearAllFilters(); setShowRecentsOnly(false); setShowMenu(false); }}>
               <HomeIcon className="w-5 h-5" /> Home
             </button>
             {!user && (
-              <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowAuthModal(true); setShowMenu(false); }}>
+              <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => { setShowAuthModal(true); setShowMenu(false); }}>
                 <KeyRound className="w-5 h-5" /> Login
               </button>
             )}
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowProfile(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => { setShowProfile(true); setShowMenu(false); }}>
               <UserIcon className="w-5 h-5" /> Profile
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowStarredOnly(true); setShowRecentsOnly(false); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => { setShowStarredOnly(true); setShowRecentsOnly(false); setShowMenu(false); }}>
               <Star className="w-5 h-5" /> Favourites
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowRecentsOnly(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => { setShowRecentsOnly(true); setShowMenu(false); }}>
               <Clock className="w-5 h-5" /> Recents
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowShare(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => { setShowShare(true); setShowMenu(false); }}>
               <Share2 className="w-5 h-5" /> Share Collection
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowExportImport(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => { setShowExportImport(true); setShowMenu(false); }}>
               <Import className="w-5 h-5" /> Export/Import
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowContactAdmin(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => { setShowContactAdmin(true); setShowMenu(false); }}>
               <Mail className="w-5 h-5" /> Contact Admin
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={async () => { await signOut(); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={async () => { await signOut(); setShowMenu(false); }}>
               <LogOut className="w-5 h-5" /> Logout
             </button>
           </nav>

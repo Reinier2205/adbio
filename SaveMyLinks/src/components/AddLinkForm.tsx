@@ -118,7 +118,7 @@ export function AddLinkForm() {
             setIsExpanded(true);
             setTimeout(() => urlInputRef.current?.focus(), 100);
           }}
-          className="w-full p-4 text-left flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+          className="w-full p-4 text-left flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]"
         >
           <div className="flex items-center justify-center w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -129,7 +129,7 @@ export function AddLinkForm() {
           </div>
         </button>
       ) : (
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 transition-colors duration-200 ease-in-out">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold font-sans text-gray-900 dark:text-white">Add New Link</h3>
             <button
