@@ -118,11 +118,11 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
         style={{
           transform: `translateX(${swipeOffset}px)`,
           transition: isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          touchAction: 'pan-y', // Allow vertical scrolling, handle horizontal ourselves
+          touchAction: 'pan-y',
           WebkitUserSelect: 'none',
           userSelect: 'none',
         }}
-        onTouchStart={handleTouchStart}
+        onTouchStart={(e) => { alert('touch!'); handleTouchStart(e); }}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
