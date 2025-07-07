@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useApp } from '../context/AppContext';
 import { LinkCard } from './LinkCard';
 import { EmptyState } from './EmptyState';
+import TouchTest from './TouchTest';
 
 export function LinkList() {
   const {
@@ -120,10 +121,60 @@ export function LinkList() {
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 w-full">
+        <DraggableTouchTest />
         {filteredAndSortedLinks.map((link) => (
           <LinkCard key={link.id} link={link} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function DraggableTouchTest() {
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const start = React.useRef({ x: 0, y: 0 });
+  const last = React.useRef({ x: 0, y: 0 });
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    start.current = { x: touch.clientX, y: touch.clientY };
+    last.current = { ...offset };
+    setDragging(true);
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!dragging) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - start.current.x;
+    const dy = touch.clientY - start.current.y;
+    setOffset({ x: last.current.x + dx, y: last.current.y + dy });
+  };
+  const handleTouchEnd = () => {
+    setDragging(false);
+  };
+  return (
+    <div
+      style={{
+        width: 200,
+        height: 100,
+        background: 'orange',
+        borderRadius: 16,
+        touchAction: 'none',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        transform: `translate(${offset.x}px, ${offset.y}px)`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 'bold',
+        fontSize: 18,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      TouchTest in grid
     </div>
   );
 }
