@@ -184,6 +184,22 @@ function DraggableTouchTest() {
           <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 8, color: '#1e293b' }}>Example Link Title</div>
           <div style={{ fontWeight: 400, fontSize: 15, color: '#64748b' }}>example.com</div>
         </div>
+        <button
+          style={{
+            marginLeft: 8,
+            background: 'none',
+            border: 'none',
+            padding: 8,
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontSize: 22,
+            color: '#fbbf24',
+          }}
+          aria-label="Favorite"
+          onClick={e => e.stopPropagation()}
+        >
+          ★
+        </button>
       </div>
       <div style={{ marginTop: 12, marginBottom: 8 }}>
         <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 500, marginRight: 8 }}>tag1</span>
