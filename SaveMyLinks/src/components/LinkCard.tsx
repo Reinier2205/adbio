@@ -16,10 +16,8 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
-  const initialSwipeOffset = useRef(0);
+  const lastOffset = useRef(0);
   const [faviconLoaded, setFaviconLoaded] = useState(false);
-  const [hasMoved, setHasMoved] = useState(false);
-  const hasMovedRef = useRef(false);
 
   const handleStarClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -44,42 +42,29 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
     setIsSwiping(false);
   }, []);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  const handleTouchStart = React.useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
     touchStartX.current = touch.clientX;
     touchStartY.current = touch.clientY;
-    initialSwipeOffset.current = swipeOffset;
+    lastOffset.current = swipeOffset;
     setIsSwiping(true);
-    setHasMoved(false);
-    hasMovedRef.current = false;
   }, [swipeOffset]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  const handleTouchMove = React.useCallback((e: React.TouchEvent) => {
     if (!isSwiping) return;
     const touch = e.touches[0];
-    const deltaX = touch.clientX - touchStartX.current;
-    const deltaY = Math.abs(touch.clientY - touchStartY.current);
+    const dx = touch.clientX - touchStartX.current;
+    // Only allow horizontal drag
+    const dy = Math.abs(touch.clientY - touchStartY.current);
+    if (Math.abs(dx) < dy) return;
     e.preventDefault();
-    console.log('touchmove', deltaX, deltaY);
-    if (!hasMovedRef.current) {
-      // Only start swiping if horizontal movement exceeds 4px and is greater than vertical
-      if (Math.abs(deltaX) > 4 && Math.abs(deltaX) > deltaY) {
-        hasMovedRef.current = true;
-        setHasMoved(true);
-      } else {
-        return;
-      }
-    }
-    const newOffset = Math.max(-160, Math.min(0, initialSwipeOffset.current + deltaX));
-    setSwipeOffset(newOffset);
+    setSwipeOffset(Math.max(-160, Math.min(0, lastOffset.current + dx)));
   }, [isSwiping]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = React.useCallback(() => {
     if (!isSwiping) return;
     setIsSwiping(false);
-    setHasMoved(false);
-    hasMovedRef.current = false;
-    // If swiped more than 32px to the left, snap to open position
+    // Snap left if swiped more than 32px, else snap back
     if (swipeOffset < -32) {
       setSwipeOffset(-160);
       if (navigator.vibrate) navigator.vibrate([20]);
@@ -122,10 +107,8 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
       
       {/* Main Card Content */}
       <div
-        className="swipe-card"
+        className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 w-full relative z-10 h-full flex flex-col transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px] select-none swipe-card"
         style={{
-          height: 100,
-          background: '#eee',
           transform: `translateX(${swipeOffset}px)`,
           transition: isSwiping ? 'none' : 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
           touchAction: 'pan-y',
