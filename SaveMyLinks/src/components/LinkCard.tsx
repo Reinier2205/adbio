@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useRef, useCallback, lazy, Suspense } from 'react';
-import { Star, ExternalLink, Edit2, Trash2, Calendar, Globe, Tag } from 'lucide-react';
+import { Star, ExternalLink, Edit2, Trash2, Calendar, Globe, Tag, MoreVertical } from 'lucide-react';
 import { SavedLink } from '../types';
 import { useApp } from '../context/AppContext';
 
@@ -19,6 +19,8 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
   const lastOffset = useRef(0);
   const [faviconLoaded, setFaviconLoaded] = useState(false);
   const cardContentRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleStarClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -80,6 +82,18 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
     node.addEventListener('touchmove', handler, { passive: false });
     return () => node.removeEventListener('touchmove', handler);
   }, [isSwiping]);
+
+  // Close menu on outside click
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [menuOpen]);
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
@@ -154,10 +168,33 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
                 <p className="text-sm font-sans text-gray-500 dark:text-gray-400 line-clamp-2 mb-1">{getDomain(link.url)}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-1 flex-shrink-0">
+            <div className="flex items-center space-x-1 flex-shrink-0 relative">
               <button onClick={handleStarClick} className={`p-2 rounded-lg transition-colors duration-200 ${link.starred ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 hover:text-yellow-500'}`} title={link.starred ? 'Remove from favorites' : 'Add to favorites'}>
                 <Star className={`w-4 h-4 ${link.starred ? 'fill-current' : ''}`} />
               </button>
+              <button
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="More actions"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              {menuOpen && (
+                <div ref={menuRef} className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 animate-fade-in">
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-t-lg text-sm text-gray-900 dark:text-white"
+                    onClick={() => { setShowEditModal(true); setMenuOpen(false); }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-b-lg text-sm text-red-600 dark:text-red-400"
+                    onClick={() => { handleDelete(); setMenuOpen(false); }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
