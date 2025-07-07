@@ -155,10 +155,13 @@ function DraggableTouchTest() {
   return (
     <div
       style={{
-        width: 200,
-        height: 100,
-        background: 'orange',
-        borderRadius: 16,
+        width: 320,
+        minHeight: 120,
+        background: '#fff',
+        borderRadius: 18,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+        border: '1px solid #e5e7eb',
+        padding: 24,
         touchAction: 'none',
         WebkitUserSelect: 'none',
         userSelect: 'none',
@@ -168,7 +171,6 @@ function DraggableTouchTest() {
         justifyContent: 'center',
         fontWeight: 'bold',
         fontSize: 18,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
