@@ -124,14 +124,14 @@ export function AddLinkForm() {
             <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <p className="font-medium text-gray-900 dark:text-white">Add New Link</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Save a link to your collection</p>
+            <p className="font-medium font-sans text-gray-900 dark:text-white">Add New Link</p>
+            <p className="text-sm font-sans text-gray-500 dark:text-gray-400">Save a link to your collection</p>
           </div>
         </button>
       ) : (
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Add New Link</h3>
+            <h3 className="text-lg font-bold font-sans text-gray-900 dark:text-white">Add New Link</h3>
             <button
               type="button"
               onClick={() => setIsExpanded(false)}
@@ -142,7 +142,7 @@ export function AddLinkForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
               URL *
             </label>
             <div className="relative">
@@ -166,7 +166,7 @@ export function AddLinkForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
               Title
             </label>
             <input
@@ -179,7 +179,7 @@ export function AddLinkForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
               Notes
             </label>
             <textarea
@@ -192,7 +192,7 @@ export function AddLinkForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
               Tags
             </label>
             

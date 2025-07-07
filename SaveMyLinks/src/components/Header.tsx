@@ -29,14 +29,14 @@ export function Header() {
                 <BookMarked className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-2xl font-bold font-sans text-gray-900 dark:text-white">
                   SaveMyLinks
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-lg font-medium font-sans text-gray-500 dark:text-gray-400">
                   Your personal bookmark manager
                 </p>
                 {user && user.user_metadata?.firstName && (
-                  <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-1">
+                  <p className="text-base font-semibold font-sans text-blue-600 dark:text-blue-400 mt-1">
                     Welcome, {user.user_metadata.firstName}!
                   </p>
                 )}
@@ -75,35 +75,35 @@ export function Header() {
             </button>
             <div className="mb-8 flex items-center gap-3">
               <BookMarked className="w-6 h-6 text-blue-600" />
-              <span className="text-lg font-bold text-gray-900 dark:text-white">SaveMyLinks</span>
+              <span className="text-lg font-bold font-sans text-gray-900 dark:text-white">SaveMyLinks</span>
             </div>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { clearAllFilters(); setShowRecentsOnly(false); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { clearAllFilters(); setShowRecentsOnly(false); setShowMenu(false); }}>
               <HomeIcon className="w-5 h-5" /> Home
             </button>
             {!user && (
-              <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowAuthModal(true); setShowMenu(false); }}>
+              <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowAuthModal(true); setShowMenu(false); }}>
                 <KeyRound className="w-5 h-5" /> Login
               </button>
             )}
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowProfile(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowProfile(true); setShowMenu(false); }}>
               <UserIcon className="w-5 h-5" /> Profile
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowStarredOnly(true); setShowRecentsOnly(false); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowStarredOnly(true); setShowRecentsOnly(false); setShowMenu(false); }}>
               <Star className="w-5 h-5" /> Favourites
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowRecentsOnly(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowRecentsOnly(true); setShowMenu(false); }}>
               <Clock className="w-5 h-5" /> Recents
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowShare(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowShare(true); setShowMenu(false); }}>
               <Share2 className="w-5 h-5" /> Share Collection
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowExportImport(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowExportImport(true); setShowMenu(false); }}>
               <Import className="w-5 h-5" /> Export/Import
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowContactAdmin(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={() => { setShowContactAdmin(true); setShowMenu(false); }}>
               <Mail className="w-5 h-5" /> Contact Admin
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={async () => { await signOut(); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white" onClick={async () => { await signOut(); setShowMenu(false); }}>
               <LogOut className="w-5 h-5" /> Logout
             </button>
           </nav>

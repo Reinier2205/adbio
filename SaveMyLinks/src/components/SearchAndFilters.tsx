@@ -79,7 +79,7 @@ export function SearchAndFilters() {
           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
             {/* Sort Options */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                 Sort by
               </label>
               <div className="flex flex-wrap gap-2">
@@ -106,7 +106,7 @@ export function SearchAndFilters() {
 
             {/* Quick Filters */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                 Quick Filters
               </label>
               <button
@@ -125,7 +125,7 @@ export function SearchAndFilters() {
             {/* Tag Filters */}
             {tags.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                   Filter by Tags
                 </label>
                 <div className="flex flex-wrap gap-2">
