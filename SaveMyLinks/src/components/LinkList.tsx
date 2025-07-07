@@ -72,7 +72,7 @@ export function LinkList() {
   return (
     <div className="space-y-6 w-full">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-base font-medium font-sans text-gray-600 dark:text-gray-400">
           {filteredAndSortedLinks.length} link{filteredAndSortedLinks.length !== 1 ? 's' : ''} found
         </p>
       </div>
