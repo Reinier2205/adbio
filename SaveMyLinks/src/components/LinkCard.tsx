@@ -88,11 +88,7 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
   const EditLinkModal = lazy(() => import('./EditLinkModal'));
 
   return (
-    <div className="relative w-full overflow-hidden h-full" ref={cardRef}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="relative w-full overflow-hidden h-full" ref={cardRef}>
       {/* Swipe Actions Background */}
       <div className="absolute top-0 right-0 h-full grid grid-cols-2 gap-2 z-0 rounded-xl shadow-lg p-2" style={{ width: '128px' }}>
         <button
@@ -119,6 +115,9 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
           WebkitUserSelect: 'none',
           userSelect: 'none',
         }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="p-4 sm:p-5 flex-1 flex flex-col">
           <div className="flex items-start justify-between mb-3">
