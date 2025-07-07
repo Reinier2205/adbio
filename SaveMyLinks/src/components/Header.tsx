@@ -32,9 +32,6 @@ export function Header() {
                 <h1 className="text-base sm:text-lg font-bold font-sans text-gray-900 dark:text-white truncate">
                   SaveMyLinks
                 </h1>
-                <p className="text-base sm:text-lg font-medium font-sans text-gray-500 dark:text-gray-400 truncate">
-                  Your personal bookmark manager
-                </p>
                 {user && user.user_metadata?.firstName && (
                   <p className="text-base font-semibold font-sans text-blue-600 dark:text-blue-400 mt-1 mb-2 truncate">
                     Welcome, {user.user_metadata.firstName}!
