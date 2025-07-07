@@ -7,6 +7,8 @@ import { ExportImportModal } from './components/ExportImportModal';
 import { ShareModal } from './components/ShareModal';
 import { SharedCollectionView } from './components/SharedCollectionView';
 import { AppProvider } from './context/AppContext';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ResetPassword from './components/ResetPassword';
 
 function AppContent() {
   const [showExportImport, setShowExportImport] = useState(false);
@@ -73,7 +75,12 @@ function AppContent() {
 function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/*" element={<AppContent />} />
+        </Routes>
+      </BrowserRouter>
     </AppProvider>
   );
 }
