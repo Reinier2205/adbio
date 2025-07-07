@@ -43,6 +43,7 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    console.log('touch start');
     const touch = e.touches[0];
     touchStartX.current = touch.clientX;
     touchStartY.current = touch.clientY;
