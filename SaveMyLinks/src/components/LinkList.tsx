@@ -18,6 +18,8 @@ export function LinkList() {
     retrySync,
   } = useApp();
 
+  console.log('links', links);
+
   const filteredAndSortedLinks = useMemo(() => {
     let filtered = [...links];
 
