@@ -119,7 +119,7 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
         style={{
           transform: `translateX(${swipeOffset}px)`,
           transition: isSwiping ? 'none' : 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-          touchAction: 'pan-y',
+          touchAction: 'none',
           WebkitUserSelect: 'none',
           userSelect: 'none',
         }}
