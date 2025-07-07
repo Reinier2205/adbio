@@ -7,6 +7,7 @@ import { SharedCollectionView } from './components/SharedCollectionView';
 import { AppProvider } from './context/AppContext';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ResetPassword from './components/ResetPassword';
+import TouchTest from './components/TouchTest';
 
 const ExportImportModal = lazy(() => import('./components/ExportImportModal'));
 const ShareModal = lazy(() => import('./components/ShareModal'));
@@ -100,6 +101,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/touch-test" element={<TouchTest />} />
           <Route path="/*" element={<AppContent />} />
         </Routes>
       </BrowserRouter>
