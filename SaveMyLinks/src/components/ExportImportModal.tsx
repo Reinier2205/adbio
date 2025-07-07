@@ -276,3 +276,5 @@ export function ExportImportModal({ isOpen, onClose }: ExportImportModalProps) {
     </div>
   );
 }
+
+export default ExportImportModal;

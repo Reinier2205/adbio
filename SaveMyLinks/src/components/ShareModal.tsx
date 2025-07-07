@@ -288,3 +288,5 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
     </div>
   );
 }
+
+export default ShareModal;

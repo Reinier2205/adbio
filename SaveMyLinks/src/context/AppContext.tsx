@@ -19,6 +19,7 @@ interface AppContextType extends AppState {
   importLinks: (links: Partial<SavedLink>[]) => void;
   syncStatus: 'idle' | 'syncing' | 'error';
   setShowRecentsOnly: (show: boolean) => void;
+  retrySync: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -330,6 +331,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_SHOW_RECENTS_ONLY', payload: show });
   };
 
+  // Add a retrySync function for retrying cloud sync
+  const retrySync = async () => {
+    if (user) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      try {
+        const cloudLinks = await CloudSync.syncLinks(user.id);
+        dispatch({ type: 'SET_LINKS', payload: cloudLinks });
+        dispatch({ type: 'SET_SYNC_STATUS', payload: 'idle' });
+      } catch (error) {
+        dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      }
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -346,7 +361,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toggleDarkMode,
         clearAllFilters,
         importLinks,
-        setShowRecentsOnly
+        syncStatus: state.syncStatus || "idle",
+        setShowRecentsOnly,
+        retrySync
       }}
     >
       {children}

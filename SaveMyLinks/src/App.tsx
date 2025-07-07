@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
 import { AddLinkForm } from './components/AddLinkForm';
 import { SearchAndFilters } from './components/SearchAndFilters';
 import { LinkList } from './components/LinkList';
-import { ExportImportModal } from './components/ExportImportModal';
-import { ShareModal } from './components/ShareModal';
 import { SharedCollectionView } from './components/SharedCollectionView';
 import { AppProvider } from './context/AppContext';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ResetPassword from './components/ResetPassword';
+
+const ExportImportModal = lazy(() => import('./components/ExportImportModal'));
+const ShareModal = lazy(() => import('./components/ShareModal'));
 
 function AppContent() {
   const [showExportImport, setShowExportImport] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [currentView, setCurrentView] = useState<'main' | 'share'>('main');
   const [shareId, setShareId] = useState<string>('');
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
   // Handle routing for shared collections
   useEffect(() => {
@@ -38,6 +40,17 @@ function AppContent() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const handleBackToMain = () => {
     window.history.pushState(null, '', window.location.pathname);
     setCurrentView('main');
@@ -50,6 +63,11 @@ function AppContent() {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900">
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-red-600 text-white text-center py-2 font-medium shadow-md animate-fade-in">
+          <span className="inline-block align-middle">You are offline. Some features may be unavailable.</span>
+        </div>
+      )}
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
@@ -59,15 +77,19 @@ function AppContent() {
         </div>
       </main>
 
-      <ExportImportModal
-        isOpen={showExportImport}
-        onClose={() => setShowExportImport(false)}
-      />
+      <Suspense fallback={null}>
+        <ExportImportModal
+          isOpen={showExportImport}
+          onClose={() => setShowExportImport(false)}
+        />
+      </Suspense>
 
-      <ShareModal
-        isOpen={showShare}
-        onClose={() => setShowShare(false)}
-      />
+      <Suspense fallback={null}>
+        <ShareModal
+          isOpen={showShare}
+          onClose={() => setShowShare(false)}
+        />
+      </Suspense>
     </div>
   );
 }

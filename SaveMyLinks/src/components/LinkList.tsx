@@ -13,6 +13,8 @@ export function LinkList() {
     sortBy,
     showStarredOnly,
     showRecentsOnly,
+    syncStatus,
+    retrySync,
   } = useApp();
 
   const filteredAndSortedLinks = useMemo(() => {
@@ -64,6 +66,47 @@ export function LinkList() {
 
     return filtered;
   }, [links, searchQuery, selectedTags, sortBy, showStarredOnly, showRecentsOnly]);
+
+  if (syncStatus === 'syncing') {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 w-full">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col animate-pulse min-h-[120px]">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-8 h-8 rounded-md bg-gray-200 dark:bg-gray-700" />
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
+              </div>
+            </div>
+            <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-full mb-2" />
+            <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-2/3 mb-2" />
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">
+              <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/4" />
+              <div className="h-6 bg-gray-100 dark:bg-gray-800 rounded w-12" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (syncStatus === 'error') {
+    return (
+      <div className="w-full flex flex-col items-center justify-center py-8">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4 text-center">
+          <p className="text-base font-medium font-sans text-red-700 dark:text-red-300 mb-2">Failed to sync links. Please check your connection and try again.</p>
+          <button
+            onClick={retrySync}
+            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium font-sans transition-colors duration-200"
+          >
+            Retry
+          </button>
+        </div>
+        <EmptyState />
+      </div>
+    );
+  }
 
   if (filteredAndSortedLinks.length === 0) {
     return <EmptyState />;

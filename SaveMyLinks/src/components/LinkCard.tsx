@@ -1,15 +1,14 @@
 import * as React from 'react';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, lazy, Suspense } from 'react';
 import { Star, ExternalLink, Edit2, Trash2, Calendar, Globe, Tag } from 'lucide-react';
 import { SavedLink } from '../types';
 import { useApp } from '../context/AppContext';
-import { EditLinkModal } from './EditLinkModal';
 
 interface LinkCardProps {
   link: SavedLink;
 }
 
-export function LinkCard({ link }: LinkCardProps) {
+const LinkCardComponent = ({ link }: LinkCardProps) => {
   const { toggleStar, deleteLink } = useApp();
   const [showEditModal, setShowEditModal] = useState(false);
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -23,6 +22,7 @@ export function LinkCard({ link }: LinkCardProps) {
   const handleStarClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (navigator.vibrate) navigator.vibrate([20]);
     toggleStar(link.id);
   };
 
@@ -32,6 +32,7 @@ export function LinkCard({ link }: LinkCardProps) {
   };
 
   const handleDelete = () => {
+    if (navigator.vibrate) navigator.vibrate([20]);
     deleteLink(link.id);
     resetSwipe();
   };
@@ -67,12 +68,11 @@ export function LinkCard({ link }: LinkCardProps) {
 
   const handleTouchEnd = useCallback(() => {
     if (!isSwiping) return;
-    
     setIsSwiping(false);
-    
     // If swiped more than 64px to the left, snap to open position
     if (swipeOffset < -64) {
       setSwipeOffset(-128);
+      if (navigator.vibrate) navigator.vibrate([20]);
     } else {
       // Otherwise, snap back to closed position
       setSwipeOffset(0);
@@ -90,6 +90,8 @@ export function LinkCard({ link }: LinkCardProps) {
       return url;
     }
   };
+
+  const EditLinkModal = lazy(() => import('./EditLinkModal'));
 
   return (
     <div className="relative w-full overflow-hidden h-full" ref={cardRef}>
@@ -192,11 +194,15 @@ export function LinkCard({ link }: LinkCardProps) {
         </div>
       </div>
       
-      <EditLinkModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        link={link}
-      />
+      <Suspense fallback={null}>
+        <EditLinkModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          link={link}
+        />
+      </Suspense>
     </div>
   );
-}
+};
+
+export const LinkCard = React.memo(LinkCardComponent);

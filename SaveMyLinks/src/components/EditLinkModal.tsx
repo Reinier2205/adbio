@@ -244,3 +244,5 @@ export function EditLinkModal({ isOpen, onClose, link }: EditLinkModalProps) {
     </div>
   );
 }
+
+export default EditLinkModal;
