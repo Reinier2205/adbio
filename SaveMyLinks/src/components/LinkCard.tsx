@@ -58,6 +58,7 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
     const dy = Math.abs(touch.clientY - touchStartY.current);
     if (Math.abs(dx) < dy) return;
     e.preventDefault();
+    console.log('touchmove');
     setSwipeOffset(Math.max(-160, Math.min(0, lastOffset.current + dx)));
   }, [isSwiping]);
 
