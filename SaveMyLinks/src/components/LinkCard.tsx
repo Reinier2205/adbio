@@ -66,6 +66,7 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
   // Attach touchmove with passive: false
   React.useEffect(() => {
     const node = cardContentRef.current;
+    console.log('Attaching touchmove to', node);
     if (!node) return;
     const handler = (e: TouchEvent) => {
       if (!isSwiping) return;
