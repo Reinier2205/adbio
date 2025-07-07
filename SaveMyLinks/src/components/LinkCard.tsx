@@ -18,6 +18,7 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
   const touchStartY = useRef(0);
   const lastOffset = useRef(0);
   const [faviconLoaded, setFaviconLoaded] = useState(false);
+  const cardContentRef = useRef<HTMLDivElement>(null);
 
   const handleStarClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -50,18 +51,6 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
     setIsSwiping(true);
   }, [swipeOffset]);
 
-  const handleTouchMove = React.useCallback((e: React.TouchEvent) => {
-    if (!isSwiping) return;
-    const touch = e.touches[0];
-    const dx = touch.clientX - touchStartX.current;
-    // Only allow horizontal drag
-    const dy = Math.abs(touch.clientY - touchStartY.current);
-    if (Math.abs(dx) < dy) return;
-    e.preventDefault();
-    console.log('touchmove');
-    setSwipeOffset(Math.max(-160, Math.min(0, lastOffset.current + dx)));
-  }, [isSwiping]);
-
   const handleTouchEnd = React.useCallback(() => {
     if (!isSwiping) return;
     setIsSwiping(false);
@@ -73,6 +62,23 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
       setSwipeOffset(0);
     }
   }, [isSwiping, swipeOffset]);
+
+  // Attach touchmove with passive: false
+  React.useEffect(() => {
+    const node = cardContentRef.current;
+    if (!node) return;
+    const handler = (e: TouchEvent) => {
+      if (!isSwiping) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchStartX.current;
+      const dy = Math.abs(touch.clientY - touchStartY.current);
+      if (Math.abs(dx) < dy) return;
+      e.preventDefault();
+      setSwipeOffset(Math.max(-160, Math.min(0, lastOffset.current + dx)));
+    };
+    node.addEventListener('touchmove', handler, { passive: false });
+    return () => node.removeEventListener('touchmove', handler);
+  }, [isSwiping]);
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
@@ -108,6 +114,7 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
       
       {/* Main Card Content */}
       <div
+        ref={cardContentRef}
         className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 w-full relative z-10 h-full flex flex-col transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px] select-none swipe-card"
         style={{
           transform: `translateX(${swipeOffset}px)`,
@@ -117,7 +124,6 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
           userSelect: 'none',
         }}
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div style={{height: 100, background: '#eee'}}>Test</div>
