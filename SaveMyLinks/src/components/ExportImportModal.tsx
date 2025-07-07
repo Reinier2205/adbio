@@ -107,7 +107,7 @@ export function ExportImportModal({ isOpen, onClose }: ExportImportModalProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white mb-4">
             Export & Import Links
           </h2>
           <button
@@ -146,13 +146,13 @@ export function ExportImportModal({ isOpen, onClose }: ExportImportModalProps) {
           {activeTab === 'export' ? (
             <div className="space-y-6">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-base font-medium font-sans text-gray-600 dark:text-gray-400 mb-4">
                   Export your {links.length} saved links to back them up or share with others.
                 </p>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                       Export Format
                     </label>
                     <div className="flex gap-4">
@@ -217,13 +217,13 @@ export function ExportImportModal({ isOpen, onClose }: ExportImportModalProps) {
           ) : (
             <div className="space-y-6">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-base font-medium font-sans text-gray-600 dark:text-gray-400 mb-4">
                   Import links from a file or paste them directly. Supports both text and JSON formats.
                 </p>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                       Import from File
                     </label>
                     <input
@@ -247,7 +247,7 @@ export function ExportImportModal({ isOpen, onClose }: ExportImportModalProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                       Paste Links Here
                     </label>
                     <textarea

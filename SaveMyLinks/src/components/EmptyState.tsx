@@ -14,10 +14,10 @@ export function EmptyState() {
         <div className="mx-auto w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-full flex items-center justify-center mb-6">
           <BookMarked className="w-12 h-12 text-blue-600 dark:text-blue-400" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white mb-2">
           No links saved yet
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+        </h2>
+        <p className="text-base font-medium font-sans text-gray-600 dark:text-gray-400 mb-4">
           Start building your personal link collection by adding your first bookmark above.
         </p>
         <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 dark:text-gray-400">
@@ -44,10 +44,10 @@ export function EmptyState() {
         <div className="mx-auto w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-full flex items-center justify-center mb-6">
           <Search className="w-12 h-12 text-gray-400" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white mb-2">
           No links match your filters
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+        </h2>
+        <p className="text-base font-medium font-sans text-gray-600 dark:text-gray-400 mb-4">
           Try adjusting your search terms or filters to find what you're looking for.
         </p>
         <button

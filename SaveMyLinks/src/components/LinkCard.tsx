@@ -131,8 +131,8 @@ export function LinkCard({ link }: LinkCardProps) {
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-gray-900 dark:text-white truncate">{link.title}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{getDomain(link.url)}</p>
+                <h3 className="text-base font-medium font-sans text-gray-900 dark:text-white line-clamp-2 mb-1">{link.title}</h3>
+                <p className="text-sm font-sans text-gray-500 dark:text-gray-400 line-clamp-2 mb-1">{getDomain(link.url)}</p>
               </div>
             </div>
             <div className="flex items-center space-x-1 flex-shrink-0">
@@ -144,7 +144,7 @@ export function LinkCard({ link }: LinkCardProps) {
 
           {link.notes && (
             <div className="mb-3">
-              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{link.notes}</p>
+              <p className="text-sm font-sans text-gray-500 dark:text-gray-400 line-clamp-3">{link.notes}</p>
             </div>
           )}
           {link.tags.length > 0 && (

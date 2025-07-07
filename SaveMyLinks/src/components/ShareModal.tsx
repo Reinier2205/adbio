@@ -89,7 +89,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white">
               Collection Shared!
             </h2>
             <button
@@ -105,7 +105,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Share2 className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-base text-gray-600 dark:text-gray-400 mb-4">
                 Your collection is now available at the link below. Anyone with this link can view your selected links.
               </p>
             </div>
@@ -168,7 +168,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white">
             Share Link Collection
           </h2>
           <button
@@ -182,7 +182,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
         <div className="p-6 space-y-6 max-h-[calc(90vh-120px)] overflow-y-auto">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                 Collection Title
               </label>
               <input
@@ -195,7 +195,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                 Description (Optional)
               </label>
               <textarea
@@ -210,20 +210,20 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
 
           <div>
             <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300">
                 Select Links to Share ({selectedLinks.length}/{links.length})
               </label>
               <div className="flex gap-2">
                 <button
                   onClick={selectAll}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                  className="text-base font-medium font-sans text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   Select All
                 </button>
                 <span className="text-gray-400">|</span>
                 <button
                   onClick={deselectAll}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                  className="text-base font-medium font-sans text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   Deselect All
                 </button>

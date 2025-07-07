@@ -40,7 +40,7 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Update Profile</h2>
+          <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white mb-4">Update Profile</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -52,17 +52,17 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
           {error && (
             <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              <p className="text-base text-red-700 dark:text-red-300">{error}</p>
             </div>
           )}
           {success && (
             <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center gap-3">
               <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-              <p className="text-sm text-green-700 dark:text-green-300">Profile updated!</p>
+              <p className="text-base text-green-700 dark:text-green-300">Profile updated!</p>
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
+            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">First Name</label>
             <input
               type="text"
               value={firstName}
@@ -73,7 +73,7 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
+            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
             <input
               type="text"
               value={lastName}
@@ -86,7 +86,7 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-base font-medium font-sans text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Update Profile'}
           </button>

@@ -97,7 +97,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white">
             {resetMode
               ? 'Reset Password'
               : verificationMode
@@ -120,7 +120,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-                  <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                  <p className="text-base font-sans text-red-700 dark:text-red-300">{error}</p>
                 </div>
               </div>
             )}
@@ -128,11 +128,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                  <p className="text-sm text-green-700 dark:text-green-300">Verification email sent! Check your inbox.</p>
+                  <p className="text-base font-sans text-green-700 dark:text-green-300">Verification email sent! Check your inbox.</p>
                 </div>
               </div>
             )}
-            <p className="text-gray-700 dark:text-gray-300">A verification email has been sent to <span className="font-semibold">{email}</span>. Please check your inbox and follow the link to verify your account.</p>
+            <p className="text-base font-sans text-gray-700 dark:text-gray-300">A verification email has been sent to <span className="font-semibold">{email}</span>. Please check your inbox and follow the link to verify your account.</p>
             <button
               type="button"
               disabled={loading}
@@ -150,7 +150,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <button
                 type="button"
                 onClick={() => { setVerificationMode(false); setMode('signin'); setEmail(''); setPassword(''); setError(''); setVerificationSent(false); }}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                className="text-base font-medium font-sans text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
                 Back to Sign In
               </button>
@@ -162,7 +162,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-                  <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                  <p className="text-base font-sans text-red-700 dark:text-red-300">{error}</p>
                 </div>
               </div>
             )}
@@ -170,12 +170,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                  <p className="text-sm text-green-700 dark:text-green-300">Password reset email sent! Check your inbox.</p>
+                  <p className="text-base font-sans text-green-700 dark:text-green-300">Password reset email sent! Check your inbox.</p>
                 </div>
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <div className="relative">
@@ -206,7 +206,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <button
                 type="button"
                 onClick={() => { setResetMode(false); setResetEmail(''); setResetSent(false); setError(''); }}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                className="text-base font-medium font-sans text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
                 Back to Sign In
               </button>
@@ -218,13 +218,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-                  <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                  <p className="text-base font-sans text-red-700 dark:text-red-300">{error}</p>
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <div className="relative">
@@ -241,7 +241,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -261,7 +261,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {mode === 'signup' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name</label>
+                  <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">First Name</label>
                   <input
                     type="text"
                     value={firstName}
@@ -272,7 +272,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
+                  <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">Last Name</label>
                   <input
                     type="text"
                     value={lastName}
@@ -336,7 +336,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <button
                 type="button"
                 onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                className="text-base font-medium font-sans text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
                 {mode === 'signin' 
                   ? "Don't have an account? Sign up" 
@@ -347,7 +347,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <button
                   type="button"
                   onClick={() => { setResetMode(true); setResetEmail(email); setResetSent(false); setError(''); }}
-                  className="block mt-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 w-full"
+                  className="block mt-2 text-base font-medium font-sans text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 w-full"
                 >
                   Forgot password?
                 </button>
