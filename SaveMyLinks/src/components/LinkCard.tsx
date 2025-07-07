@@ -43,7 +43,6 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    console.log('touch start');
     const touch = e.touches[0];
     touchStartX.current = touch.clientX;
     touchStartY.current = touch.clientY;
@@ -53,29 +52,23 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isSwiping) return;
-    
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchStartX.current;
     const deltaY = Math.abs(touch.clientY - touchStartY.current);
-    
-    // Only allow horizontal swiping (prevent vertical scrolling interference)
     if (deltaY > Math.abs(deltaX)) return;
-    
     e.preventDefault();
-    
-    const newOffset = Math.max(-128, Math.min(0, initialSwipeOffset.current + deltaX));
+    const newOffset = Math.max(-160, Math.min(0, initialSwipeOffset.current + deltaX));
     setSwipeOffset(newOffset);
   }, [isSwiping]);
 
   const handleTouchEnd = useCallback(() => {
     if (!isSwiping) return;
     setIsSwiping(false);
-    // If swiped more than 64px to the left, snap to open position
-    if (swipeOffset < -64) {
-      setSwipeOffset(-128);
+    // If swiped more than 32px to the left, snap to open position
+    if (swipeOffset < -32) {
+      setSwipeOffset(-160);
       if (navigator.vibrate) navigator.vibrate([20]);
     } else {
-      // Otherwise, snap back to closed position
       setSwipeOffset(0);
     }
   }, [isSwiping, swipeOffset]);
@@ -117,12 +110,12 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
         className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 w-full relative z-10 h-full flex flex-col transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px] select-none"
         style={{
           transform: `translateX(${swipeOffset}px)`,
-          transition: isSwiping ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: isSwiping ? 'none' : 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
           touchAction: 'pan-y',
           WebkitUserSelect: 'none',
           userSelect: 'none',
         }}
-        onTouchStart={(e) => { alert('touch!'); handleTouchStart(e); }}
+        onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
