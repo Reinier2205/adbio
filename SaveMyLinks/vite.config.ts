@@ -11,4 +11,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom']
   },
+  define: {
+    __APP_VERSION__: JSON.stringify(new Date().toISOString()),
+  },
 });

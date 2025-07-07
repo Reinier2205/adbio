@@ -9,6 +9,10 @@ import { ContactAdminModal } from './ContactAdminModal';
 import { useAuth } from '../hooks/useAuth';
 import { UpdateProfileModal } from './UpdateProfileModal';
 
+// Declare global constant for Vite build version
+// eslint-disable-next-line no-var
+declare var __APP_VERSION__: string;
+
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -103,6 +107,9 @@ export function Header() {
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={async () => { setShowMenu(false); await signOut(); }}>
               <LogOut className="w-5 h-5" /> Logout
             </button>
+            <span className="text-xs text-gray-400 mt-4 block text-center select-none">
+              Version: {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}
+            </span>
           </nav>
         </div>
       )}
