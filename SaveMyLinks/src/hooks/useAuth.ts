@@ -83,8 +83,8 @@ export function useAuth() {
     if (error) throw error;
   };
 
-  // Social login (Google, GitHub, etc.)
-  const signInWithProvider = async (provider: 'google' | 'github') => {
+  // Social login (Google, GitHub, Facebook/Meta, etc.)
+  const signInWithProvider = async (provider: 'google' | 'github' | 'facebook') => {
     if (!supabase) throw new Error('Supabase not configured');
     const { data, error } = await supabase.auth.signInWithOAuth({ provider });
     if (error) throw error;
