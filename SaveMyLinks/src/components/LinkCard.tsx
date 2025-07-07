@@ -55,8 +55,9 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchStartX.current;
     const deltaY = Math.abs(touch.clientY - touchStartY.current);
-    if (deltaY > Math.abs(deltaX)) return;
     e.preventDefault();
+    // Only ignore if vertical movement is much greater than horizontal
+    if (deltaY > Math.abs(deltaX) * 1.5) return;
     const newOffset = Math.max(-160, Math.min(0, initialSwipeOffset.current + deltaX));
     setSwipeOffset(newOffset);
   }, [isSwiping]);
