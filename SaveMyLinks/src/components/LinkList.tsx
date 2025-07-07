@@ -155,6 +155,7 @@ function DraggableTouchTest() {
   return (
     <div
       style={{
+        position: 'relative',
         width: 320,
         minHeight: 120,
         background: '#fff',
@@ -171,42 +172,64 @@ function DraggableTouchTest() {
         alignItems: 'flex-start',
         justifyContent: 'center',
         fontSize: 18,
+        overflow: 'visible',
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-        <div style={{ width: 40, height: 40, borderRadius: 8, background: '#e0e7ef', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16, fontSize: 22 }}>
-          🌐
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 8, color: '#1e293b' }}>Example Link Title</div>
-          <div style={{ fontWeight: 400, fontSize: 15, color: '#64748b' }}>example.com</div>
-        </div>
-        <button
-          style={{
-            marginLeft: 8,
-            background: 'none',
-            border: 'none',
-            padding: 8,
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontSize: 22,
-            color: '#fbbf24',
-          }}
-          aria-label="Favorite"
-          onClick={e => e.stopPropagation()}
-        >
-          ★
-        </button>
+      {/* Swipe Actions Background */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          height: '100%',
+          width: 128,
+          display: 'flex',
+          flexDirection: 'row',
+          gap: 8,
+          zIndex: 0,
+          padding: 16,
+        }}
+      >
+        <button style={{ flex: 1, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18 }}>Edit</button>
+        <button style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18 }}>Delete</button>
       </div>
-      <div style={{ marginTop: 12, marginBottom: 8 }}>
-        <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 500, marginRight: 8 }}>tag1</span>
-        <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 500 }}>tag2</span>
-      </div>
-      <div style={{ color: '#64748b', fontSize: 15, marginBottom: 8 }}>
-        This is a note about the link.
+      {/* Main Card Content */}
+      <div style={{ position: 'relative', width: '100%', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 8, background: '#e0e7ef', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16, fontSize: 22 }}>
+            🌐
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 8, color: '#1e293b' }}>Example Link Title</div>
+            <div style={{ fontWeight: 400, fontSize: 15, color: '#64748b' }}>example.com</div>
+          </div>
+          <button
+            style={{
+              marginLeft: 8,
+              background: 'none',
+              border: 'none',
+              padding: 8,
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontSize: 22,
+              color: '#fbbf24',
+            }}
+            aria-label="Favorite"
+            onClick={e => e.stopPropagation()}
+          >
+            ★
+          </button>
+        </div>
+        <div style={{ marginTop: 12, marginBottom: 8 }}>
+          <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 500, marginRight: 8 }}>tag1</span>
+          <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 500 }}>tag2</span>
+        </div>
+        <div style={{ color: '#64748b', fontSize: 15, marginBottom: 8 }}>
+          This is a note about the link.
+        </div>
       </div>
     </div>
   );
