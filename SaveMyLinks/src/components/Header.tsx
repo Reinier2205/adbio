@@ -80,6 +80,14 @@ export function Header() {
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { clearAllFilters(); setShowRecentsOnly(false); setShowMenu(false); }}>
               <HomeIcon className="w-5 h-5" /> Home
             </button>
+            {!user && (
+              <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowAuthModal(true); setShowMenu(false); }}>
+                <KeyRound className="w-5 h-5" /> Login
+              </button>
+            )}
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowProfile(true); setShowMenu(false); }}>
+              <UserIcon className="w-5 h-5" /> Profile
+            </button>
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowStarredOnly(true); setShowRecentsOnly(false); setShowMenu(false); }}>
               <Star className="w-5 h-5" /> Favourites
             </button>
@@ -92,18 +100,10 @@ export function Header() {
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowExportImport(true); setShowMenu(false); }}>
               <Import className="w-5 h-5" /> Export/Import
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowProfile(true); setShowMenu(false); }}>
-              <UserIcon className="w-5 h-5" /> Profile
-            </button>
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowContactAdmin(true); setShowMenu(false); }}>
               <Mail className="w-5 h-5" /> Contact Admin
             </button>
-            {!user && (
-              <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowAuthModal(true); setShowMenu(false); }}>
-                <KeyRound className="w-5 h-5" /> Login
-              </button>
-            )}
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white mt-auto" onClick={() => setShowMenu(false)}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => setShowMenu(false)}>
               <LogOut className="w-5 h-5" /> Logout
             </button>
           </nav>
