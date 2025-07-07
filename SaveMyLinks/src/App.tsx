@@ -3,7 +3,6 @@ import { Header } from './components/Header';
 import { AddLinkForm } from './components/AddLinkForm';
 import { SearchAndFilters } from './components/SearchAndFilters';
 import { LinkList } from './components/LinkList';
-import { ActionBar } from './components/ActionBar';
 import { ExportImportModal } from './components/ExportImportModal';
 import { ShareModal } from './components/ShareModal';
 import { SharedCollectionView } from './components/SharedCollectionView';
@@ -54,10 +53,6 @@ function AppContent() {
         <div className="space-y-6">
           <AddLinkForm />
           <SearchAndFilters />
-          <ActionBar
-            onShareClick={() => setShowShare(true)}
-            onExportImportClick={() => setShowExportImport(true)}
-          />
           <LinkList />
         </div>
       </main>

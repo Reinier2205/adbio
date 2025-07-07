@@ -63,6 +63,30 @@ export function useAuth() {
     if (error) throw error;
   };
 
+  // Send password reset email
+  const sendPasswordReset = async (email: string) => {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) throw error;
+    return data;
+  };
+
+  // Send email verification (re-send)
+  const sendVerificationEmail = async () => {
+    if (!supabase) throw new Error('Supabase not configured');
+    if (!user) throw new Error('No user');
+    const { error } = await supabase.auth.resend({ type: 'signup', email: user.email as string });
+    if (error) throw error;
+  };
+
+  // Social login (Google, GitHub, etc.)
+  const signInWithProvider = async (provider: 'google' | 'github') => {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase.auth.signInWithOAuth({ provider });
+    if (error) throw error;
+    return data;
+  };
+
   return {
     user,
     session,
@@ -70,6 +94,9 @@ export function useAuth() {
     signUp,
     signIn,
     signOut,
+    sendPasswordReset,
+    sendVerificationEmail,
+    signInWithProvider,
     isAuthenticated: !!user,
     isSupabaseConfigured: !!supabase,
   };

@@ -206,6 +206,11 @@ export function ExportImportModal({ isOpen, onClose }: ExportImportModalProps) {
                       )}
                     </button>
                   </div>
+                  {copied && (
+                    <div className="mt-3 w-full bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-green-700 dark:text-green-300 text-center font-medium">
+                      Copied to clipboard!
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

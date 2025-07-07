@@ -27,6 +27,7 @@ export interface AppState {
   showStarredOnly: boolean;
   darkMode: boolean;
   syncStatus?: 'idle' | 'syncing' | 'error';
+  showRecentsOnly: boolean;
 }
 
 export interface LinkFormData {

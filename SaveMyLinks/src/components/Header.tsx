@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { BookMarked, Menu, Star, Clock, Share2, Import, KeyRound, LogOut, Home as HomeIcon, X } from 'lucide-react';
+import { BookMarked, Menu, Star, Clock, Share2, Import, KeyRound, LogOut, Home as HomeIcon, X, Mail } from 'lucide-react';
 import { CloudSyncStatus } from './CloudSyncStatus';
 import { AuthModal } from './AuthModal';
 import { useApp } from '../context/AppContext';
+import { ShareModal } from './ShareModal';
+import { ExportImportModal } from './ExportImportModal';
+import { ContactAdminModal } from './ContactAdminModal';
 
 export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const { setShowStarredOnly, clearAllFilters } = useApp();
+  const { setShowStarredOnly, clearAllFilters, setShowRecentsOnly } = useApp();
+  const [showShare, setShowShare] = useState(false);
+  const [showExportImport, setShowExportImport] = useState(false);
+  const [showContactAdmin, setShowContactAdmin] = useState(false);
 
   return (
     <>
@@ -62,29 +68,38 @@ export function Header() {
               <BookMarked className="w-6 h-6 text-blue-600" />
               <span className="text-lg font-bold text-gray-900 dark:text-white">SaveMyLinks</span>
             </div>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { clearAllFilters(); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { clearAllFilters(); setShowRecentsOnly(false); setShowMenu(false); }}>
               <HomeIcon className="w-5 h-5" /> Home
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowStarredOnly(true); setShowMenu(false); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowStarredOnly(true); setShowRecentsOnly(false); setShowMenu(false); }}>
               <Star className="w-5 h-5" /> Favourites
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => setShowMenu(false)}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowRecentsOnly(true); setShowMenu(false); }}>
               <Clock className="w-5 h-5" /> Recents
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => setShowMenu(false)}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowShare(true); setShowMenu(false); }}>
               <Share2 className="w-5 h-5" /> Share Collection
             </button>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => setShowMenu(false)}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowExportImport(true); setShowMenu(false); }}>
               <Import className="w-5 h-5" /> Export/Import
             </button>
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => setShowMenu(false)}>
               <KeyRound className="w-5 h-5" /> Reset Password
+            </button>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white" onClick={() => { setShowContactAdmin(true); setShowMenu(false); }}>
+              <Mail className="w-5 h-5" /> Contact Admin
             </button>
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white mt-auto" onClick={() => setShowMenu(false)}>
               <LogOut className="w-5 h-5" /> Logout
             </button>
           </nav>
         </div>
+      )}
+
+      <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} />
+      <ExportImportModal isOpen={showExportImport} onClose={() => setShowExportImport(false)} />
+      {showContactAdmin && (
+        <ContactAdminModal isOpen={showContactAdmin} onClose={() => setShowContactAdmin(false)} />
       )}
     </>
   );

@@ -12,6 +12,7 @@ export function LinkList() {
     selectedTags,
     sortBy,
     showStarredOnly,
+    showRecentsOnly,
   } = useApp();
 
   const filteredAndSortedLinks = useMemo(() => {
@@ -37,6 +38,16 @@ export function LinkList() {
       filtered = filtered.filter(link => link.starred);
     }
 
+    if (showRecentsOnly) {
+      const now = Date.now();
+      const oneDay = 24 * 60 * 60 * 1000;
+      filtered = filtered.filter(link => {
+        const created = link.createdAt instanceof Date ? link.createdAt.getTime() : new Date(link.createdAt).getTime();
+        const updated = link.updatedAt instanceof Date ? link.updatedAt.getTime() : new Date(link.updatedAt).getTime();
+        return now - Math.max(created, updated) <= oneDay;
+      });
+    }
+
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'oldest':
@@ -52,7 +63,7 @@ export function LinkList() {
     });
 
     return filtered;
-  }, [links, searchQuery, selectedTags, sortBy, showStarredOnly]);
+  }, [links, searchQuery, selectedTags, sortBy, showStarredOnly, showRecentsOnly]);
 
   if (filteredAndSortedLinks.length === 0) {
     return <EmptyState />;

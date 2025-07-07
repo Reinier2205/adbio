@@ -18,6 +18,7 @@ interface AppContextType extends AppState {
   clearAllFilters: () => void;
   importLinks: (links: Partial<SavedLink>[]) => void;
   syncStatus: 'idle' | 'syncing' | 'error';
+  setShowRecentsOnly: (show: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,7 +37,8 @@ type Action =
   | { type: 'TOGGLE_DARK_MODE' }
   | { type: 'CLEAR_FILTERS' }
   | { type: 'IMPORT_LINKS'; payload: SavedLink[] }
-  | { type: 'SET_SYNC_STATUS'; payload: 'idle' | 'syncing' | 'error' };
+  | { type: 'SET_SYNC_STATUS'; payload: 'idle' | 'syncing' | 'error' }
+  | { type: 'SET_SHOW_RECENTS_ONLY'; payload: boolean };
 
 const initialState: AppState = {
   links: [],
@@ -45,7 +47,8 @@ const initialState: AppState = {
   selectedTags: [],
   sortBy: 'newest',
   showStarredOnly: false,
-  darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches
+  darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
+  showRecentsOnly: false
 };
 
 function appReducer(state: AppState, action: Action): AppState {
@@ -123,6 +126,9 @@ function appReducer(state: AppState, action: Action): AppState {
     
     case 'SET_SYNC_STATUS':
       return { ...state, syncStatus: action.payload };
+    
+    case 'SET_SHOW_RECENTS_ONLY':
+      return { ...state, showRecentsOnly: action.payload };
     
     default:
       return state;
@@ -320,6 +326,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'IMPORT_LINKS', payload: validLinks });
   };
 
+  const setShowRecentsOnly = (show: boolean) => {
+    dispatch({ type: 'SET_SHOW_RECENTS_ONLY', payload: show });
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -335,7 +345,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setShowStarredOnly,
         toggleDarkMode,
         clearAllFilters,
-        importLinks
+        importLinks,
+        setShowRecentsOnly
       }}
     >
       {children}
