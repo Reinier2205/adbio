@@ -167,16 +167,17 @@ function DraggableTouchTest() {
         userSelect: 'none',
         transform: `translate(${offset.x}px, ${offset.y}px)`,
         display: 'flex',
-        alignItems: 'center',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
         justifyContent: 'center',
-        fontWeight: 'bold',
         fontSize: 18,
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      TouchTest in grid
+      <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 8, color: '#1e293b' }}>Example Link Title</div>
+      <div style={{ fontWeight: 400, fontSize: 15, color: '#64748b' }}>example.com</div>
     </div>
   );
 }
