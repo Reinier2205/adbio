@@ -176,8 +176,15 @@ function DraggableTouchTest() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 8, color: '#1e293b' }}>Example Link Title</div>
-      <div style={{ fontWeight: 400, fontSize: 15, color: '#64748b' }}>example.com</div>
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+        <div style={{ width: 40, height: 40, borderRadius: 8, background: '#e0e7ef', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16, fontSize: 22 }}>
+          🌐
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 8, color: '#1e293b' }}>Example Link Title</div>
+          <div style={{ fontWeight: 400, fontSize: 15, color: '#64748b' }}>example.com</div>
+        </div>
+      </div>
     </div>
   );
 }
