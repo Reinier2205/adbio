@@ -59,16 +59,17 @@ const LinkCardComponent = ({ link }: LinkCardProps) => {
     const touch = e.touches[0];
     const deltaX = touch.clientX - touchStartX.current;
     const deltaY = Math.abs(touch.clientY - touchStartY.current);
+    e.preventDefault();
+    console.log('touchmove', deltaX, deltaY);
     if (!hasMovedRef.current) {
-      // Only start swiping if horizontal movement exceeds 8px and is greater than vertical
-      if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > deltaY) {
+      // Only start swiping if horizontal movement exceeds 4px and is greater than vertical
+      if (Math.abs(deltaX) > 4 && Math.abs(deltaX) > deltaY) {
         hasMovedRef.current = true;
         setHasMoved(true);
       } else {
         return;
       }
     }
-    e.preventDefault();
     const newOffset = Math.max(-160, Math.min(0, initialSwipeOffset.current + deltaX));
     setSwipeOffset(newOffset);
   }, [isSwiping]);
