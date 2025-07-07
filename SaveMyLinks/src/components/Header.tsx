@@ -112,7 +112,9 @@ export function Header() {
               <LogOut className="w-5 h-5" /> Logout
             </button>
             <span className="text-xs text-gray-400 mt-4 block text-center select-none">
-              Version: {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'}
+              Version: {typeof __APP_VERSION__ !== 'undefined' && !isNaN(Date.parse(__APP_VERSION__))
+                ? new Date(__APP_VERSION__).toLocaleString('sv-SE', { hour12: false }).replace('T', ' ').slice(0, 19)
+                : 'dev'}
             </span>
           </nav>
         </div>
