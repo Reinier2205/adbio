@@ -18,6 +18,7 @@ export function LinkCard({ link }: LinkCardProps) {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const initialSwipeOffset = useRef(0);
+  const [faviconLoaded, setFaviconLoaded] = useState(false);
 
   const handleStarClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -124,7 +125,19 @@ export function LinkCard({ link }: LinkCardProps) {
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               {link.favicon ? (
-                <img src={link.favicon} alt="" className="w-8 h-8 rounded-md flex-shrink-0" />
+                <>
+                  {!faviconLoaded && (
+                    <div className="w-8 h-8 rounded-md flex-shrink-0 bg-gray-200 dark:bg-gray-700 animate-pulse" />
+                  )}
+                  <img
+                    src={link.favicon}
+                    alt=""
+                    className={`w-8 h-8 rounded-md flex-shrink-0 transition-opacity duration-300 ${faviconLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    loading="lazy"
+                    onLoad={() => setFaviconLoaded(true)}
+                    style={{ display: faviconLoaded ? 'block' : 'none' }}
+                  />
+                </>
               ) : (
                 <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center flex-shrink-0">
                   <Globe className="w-4 h-4 text-gray-500 dark:text-gray-400" />
