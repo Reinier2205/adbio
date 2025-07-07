@@ -185,6 +185,13 @@ function DraggableTouchTest() {
           <div style={{ fontWeight: 400, fontSize: 15, color: '#64748b' }}>example.com</div>
         </div>
       </div>
+      <div style={{ marginTop: 12, marginBottom: 8 }}>
+        <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 500, marginRight: 8 }}>tag1</span>
+        <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 500 }}>tag2</span>
+      </div>
+      <div style={{ color: '#64748b', fontSize: 15, marginBottom: 8 }}>
+        This is a note about the link.
+      </div>
     </div>
   );
 }
