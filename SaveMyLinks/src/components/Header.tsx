@@ -29,7 +29,7 @@ export function Header() {
                 <BookMarked className="w-6 h-6 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold font-sans text-gray-900 dark:text-white truncate">
+                <h1 className="text-base sm:text-lg font-bold font-sans text-gray-900 dark:text-white truncate">
                   SaveMyLinks
                 </h1>
                 <p className="text-base sm:text-lg font-medium font-sans text-gray-500 dark:text-gray-400 truncate">
