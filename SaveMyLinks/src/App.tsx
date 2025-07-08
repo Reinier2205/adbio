@@ -64,33 +64,8 @@ function AppContent() {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900">
-      {!isOnline && (
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-red-600 text-white text-center py-2 font-medium shadow-md animate-fade-in">
-          <span className="inline-block align-middle">You are offline. Some features may be unavailable.</span>
-        </div>
-      )}
       <Header />
-      <main className={`${!isOnline ? 'pt-24' : 'pt-14'} max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8`}>
-        <div className="space-y-6 max-w-full px-2 sm:px-4 lg:px-8 mx-auto">
-          <SearchAndFilters />
-          <AddLinkForm />
-          <LinkList />
-        </div>
-      </main>
-
-      <Suspense fallback={null}>
-        <ExportImportModal
-          isOpen={showExportImport}
-          onClose={() => setShowExportImport(false)}
-        />
-      </Suspense>
-
-      <Suspense fallback={null}>
-        <ShareModal
-          isOpen={showShare}
-          onClose={() => setShowShare(false)}
-        />
-      </Suspense>
+      <div style={{ height: '2000px', background: '#f3f4f6' }} />
     </div>
   );
 }
