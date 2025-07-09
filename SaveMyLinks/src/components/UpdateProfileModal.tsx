@@ -24,6 +24,11 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
     setError('');
     setSuccess(false);
     try {
+      if (!supabase) {
+        setError('Supabase is not configured.');
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.auth.updateUser({
         data: { firstName, lastName }
       });
@@ -61,6 +66,12 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
               <p className="text-base text-green-700 dark:text-green-300">Profile updated!</p>
             </div>
           )}
+          <div>
+            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
+            <div className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white cursor-not-allowed select-all">
+              {user?.email || 'No email found'}
+            </div>
+          </div>
           <div>
             <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">First Name</label>
             <input
