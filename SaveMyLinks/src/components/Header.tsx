@@ -111,14 +111,15 @@ export function Header() {
             <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={async () => {
               try {
                 await signOut();
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 500);
               } catch (err: any) {
                 if (!(err && err.name === "AuthSessionMissingError")) {
                   console.error(err);
                 }
+                window.location.href = '/';
               }
-              setTimeout(() => {
-                window.location.reload();
-              }, 200);
             }}>
               <LogOut className="w-5 h-5" /> Logout
             </button>
