@@ -21,8 +21,8 @@ export function CloudSyncStatus({ onSignInClick }: CloudSyncStatusProps) {
   if (user) {
     return (
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 px-3 py-2 bg-green-100 dark:bg-green-900 rounded-lg">
-          <Cloud className="w-4 h-4 text-green-600 dark:text-green-300" />
+        <div className="flex items-center gap-2 px-3 py-2 bg-green-100 dark:bg-blue-700 rounded-lg">
+          <Cloud className="w-4 h-4 text-green-600 dark:text-white" />
           <span className="text-base font-semibold font-sans text-green-700 dark:text-white">Synced</span>
         </div>
       </div>
@@ -32,9 +32,9 @@ export function CloudSyncStatus({ onSignInClick }: CloudSyncStatusProps) {
   return (
     <button
       onClick={onSignInClick}
-      className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-lg transition-colors"
+      className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-lg transition-colors"
     >
-      <User className="w-4 h-4 text-blue-600 dark:text-blue-200" />
+      <User className="w-4 h-4 text-blue-600 dark:text-white" />
       <span className="text-base font-semibold font-sans text-blue-700 dark:text-white">Sign in to sync</span>
     </button>
   );
