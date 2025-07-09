@@ -21,9 +21,9 @@ export function CloudSyncStatus({ onSignInClick }: CloudSyncStatusProps) {
   if (user) {
     return (
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 px-3 py-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-          <Cloud className="w-4 h-4 text-green-600 dark:text-green-400" />
-          <span className="text-base font-medium font-sans text-green-700 dark:text-green-300">Synced</span>
+        <div className="flex items-center gap-2 px-3 py-2 bg-green-100 dark:bg-green-900 rounded-lg">
+          <Cloud className="w-4 h-4 text-green-600 dark:text-green-300" />
+          <span className="text-base font-semibold font-sans text-green-700 dark:text-white">Synced</span>
         </div>
       </div>
     );
