@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BookMarked, Menu, Star, Clock, Share2, Import, KeyRound, LogOut, Home as HomeIcon, X, Mail, User as UserIcon } from 'lucide-react';
+import { useState } from 'react';
+import { BookMarked, Menu, Star, Clock, Share2, Import, KeyRound, Home as HomeIcon, X, Mail, User as UserIcon } from 'lucide-react';
 import { CloudSyncStatus } from './CloudSyncStatus';
 import { AuthModal } from './AuthModal';
 import { useApp } from '../context/AppContext';
@@ -22,7 +22,7 @@ export function Header() {
   const [showExportImport, setShowExportImport] = useState(false);
   const [showContactAdmin, setShowContactAdmin] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   return (
     <>
