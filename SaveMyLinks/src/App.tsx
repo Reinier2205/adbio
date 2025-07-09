@@ -63,9 +63,13 @@ function AppContent() {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900">
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       <Header />
-      <div style={{ height: '2000px', background: '#f3f4f6' }} />
+      <main className="max-w-3xl mx-auto p-4">
+        <AddLinkForm />
+        <SearchAndFilters />
+        <LinkList />
+      </main>
     </div>
   );
 }
