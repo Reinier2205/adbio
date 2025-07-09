@@ -12,7 +12,7 @@ export function EmptyState() {
     return (
       <div className="text-center py-16">
         <div className="mx-auto w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-full flex items-center justify-center mb-6">
-          <img src="./SaveMyLinks/images/sml_whitelogo.png" alt="SaveMyLinks white logo" className="w-20 h-20 object-contain" />
+          <img src="/SaveMyLinks/images/sml_whitelogo.png" alt="SaveMyLinks white logo" className="w-20 h-20 object-contain" />
         </div>
         <h2 className="text-2xl font-bold font-sans text-gray-900 dark:text-white mb-2">
           Welcome to SaveMyLinks!
