@@ -108,7 +108,7 @@ export function Header() {
             <Link to="/feature-guide" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => setShowMenu(false)}>
               <BookMarked className="w-5 h-5" /> Feature Guide
             </Link>
-            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={async () => { setShowMenu(false); await signOut(); }}>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={async () => { await signOut(); window.location.reload(); setShowMenu(false); }}>
               <LogOut className="w-5 h-5" /> Logout
             </button>
             <span className="text-xs text-gray-400 mt-4 block text-center select-none">
