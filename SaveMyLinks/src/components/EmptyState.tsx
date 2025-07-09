@@ -14,26 +14,36 @@ export function EmptyState() {
         <div className="mx-auto w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-full flex items-center justify-center mb-6">
           <BookMarked className="w-12 h-12 text-blue-600 dark:text-blue-400" />
         </div>
-        <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white mb-2">
-          No links saved yet
+        <h2 className="text-2xl font-bold font-sans text-gray-900 dark:text-white mb-2">
+          Welcome to SaveMyLinks!
         </h2>
-        <p className="text-base font-medium font-sans text-gray-600 dark:text-gray-400 mb-4">
-          Start building your personal link collection by adding your first bookmark above.
+        <p className="text-base font-medium font-sans text-gray-600 dark:text-gray-400 mb-4 max-w-xl mx-auto">
+          This is your personal space to save, organize, and quickly find your favorite websites, articles, tools, and more. <br />
+          <span className="block mt-2">Never lose an important link again—SaveMyLinks helps you build your own private, searchable, and taggable bookmark collection, accessible from anywhere.</span>
         </p>
-        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mb-6">
+          <span className="inline-block bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg font-semibold">
+            Get started by adding your first link above!
+          </span>
+        </div>
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-2">
           <div className="flex items-center gap-2">
             <Search className="w-4 h-4" />
-            <span>Searchable</span>
+            <span>Search your collection anytime</span>
           </div>
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4" />
-            <span>Taggable</span>
+            <span>Organize with tags</span>
           </div>
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4" />
-            <span>Favoritable</span>
+            <span>Mark favorites for quick access</span>
           </div>
         </div>
+        <p className="text-base text-gray-500 dark:text-gray-400 mt-6 max-w-lg mx-auto">
+          <span className="block mb-2">Ready to get started?</span>
+          <span className="block">Just paste a link in the box above and click <b>Add</b>. You can add notes, tags, and even star your most important bookmarks. Welcome aboard!</span>
+        </p>
       </div>
     );
   }
