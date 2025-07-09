@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
@@ -15,6 +15,13 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFirstName(user?.user_metadata?.firstName || '');
+      setLastName(user?.user_metadata?.lastName || '');
+    }
+  }, [isOpen, user]);
 
   if (!isOpen) return null;
 
