@@ -25,13 +25,6 @@ export function CloudSyncStatus({ onSignInClick }: CloudSyncStatusProps) {
           <Cloud className="w-4 h-4 text-green-600 dark:text-green-400" />
           <span className="text-base font-medium font-sans text-green-700 dark:text-green-300">Synced</span>
         </div>
-        <button
-          onClick={signOut}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          title="Sign out"
-        >
-          <LogOut className="w-4 h-4 text-gray-500" />
-        </button>
       </div>
     );
   }

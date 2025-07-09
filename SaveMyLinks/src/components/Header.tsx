@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookMarked, Menu, Star, Clock, Share2, Import, KeyRound, Home as HomeIcon, X, Mail, User as UserIcon } from 'lucide-react';
+import { BookMarked, Menu, Star, Clock, Share2, Import, KeyRound, Home as HomeIcon, X, Mail, User as UserIcon, LogOut } from 'lucide-react';
 import { CloudSyncStatus } from './CloudSyncStatus';
 import { AuthModal } from './AuthModal';
 import { useApp } from '../context/AppContext';
@@ -22,7 +22,7 @@ export function Header() {
   const [showExportImport, setShowExportImport] = useState(false);
   const [showContactAdmin, setShowContactAdmin] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   return (
     <>
@@ -110,6 +110,9 @@ export function Header() {
             <Link to="/feature-guide" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={() => setShowMenu(false)}>
               <BookMarked className="w-5 h-5" /> Feature Guide
             </Link>
+            <button className="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-base font-medium font-sans text-gray-900 dark:text-white transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]" onClick={async () => { setShowMenu(false); await signOut(); }}>
+              <LogOut className="w-5 h-5" /> Logout
+            </button>
             <span className="text-xs text-gray-400 mt-4 block text-center select-none">
               Version: {typeof __APP_VERSION__ !== 'undefined' && !isNaN(Date.parse(__APP_VERSION__))
                 ? new Date(__APP_VERSION__).toLocaleString('sv-SE', { hour12: false }).replace('T', ' ').slice(0, 19)
