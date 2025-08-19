@@ -22,28 +22,28 @@
   #setup, #game { display: none; text-align: center; }
   .dice-container {
     display: flex;
-    gap: 40px;
-    margin-top: 20px;
-    perspective: 1200px;
+    gap: 60px;
+    margin-top: 30px;
+    perspective: 1400px;
   }
   .dice {
-    width: 100px; height: 100px;
+    width: 150px; height: 150px;
     position: relative;
     transform-style: preserve-3d;
     transition: transform 1s cubic-bezier(.36,1.56,.3,1);
   }
   .face {
     position: absolute;
-    width: 100px; height: 100px;
-    border-radius: 15px;
-    display: flex; flex-wrap: wrap;
-    justify-content: space-between; align-content: space-between;
-    padding: 18px;
-    box-sizing: border-box;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    width: 150px; height: 150px;
+    border-radius: 20px;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    grid-template-rows: repeat(3,1fr);
+    justify-items: center; align-items: center;
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.6);
   }
   .pip {
-    width: 20px; height: 20px;
+    width: 28px; height: 28px;
     border-radius: 50%;
   }
 
@@ -51,19 +51,28 @@
   .classic { background: #fff; }
   .classic .pip { background: #000; }
 
-  .neon { background: #111; }
-  .neon .pip { background: #0ff; box-shadow: 0 0 8px #0ff; }
+  .neon { background: #000; }
+  .neon .pip { background: #0ff; box-shadow: 0 0 10px #0ff; }
 
-  .wood { background: #a0522d; background: linear-gradient(145deg,#8b5a2b,#deb887); }
+  .wood { background: linear-gradient(145deg,#8b5a2b,#deb887); }
   .wood .pip { background: #fff; }
 
+  .marble { background: radial-gradient(circle at 30% 30%, #f8f8f8, #c0c0c0); }
+  .marble .pip { background: #000; }
+
+  .gold { background: linear-gradient(145deg,#FFD700,#B8860B); }
+  .gold .pip { background: #111; }
+
+  .casino { background: #b30000; }
+  .casino .pip { background: #fff; }
+
   /* 3D positioning */
-  .front  { transform: rotateY(0deg) translateZ(50px); }
-  .back   { transform: rotateY(180deg) translateZ(50px); }
-  .right  { transform: rotateY(90deg) translateZ(50px); }
-  .left   { transform: rotateY(-90deg) translateZ(50px); }
-  .top    { transform: rotateX(90deg) translateZ(50px); }
-  .bottom { transform: rotateX(-90deg) translateZ(50px); }
+  .front  { transform: rotateY(0deg) translateZ(75px); }
+  .back   { transform: rotateY(180deg) translateZ(75px); }
+  .right  { transform: rotateY(90deg) translateZ(75px); }
+  .left   { transform: rotateY(-90deg) translateZ(75px); }
+  .top    { transform: rotateX(90deg) translateZ(75px); }
+  .bottom { transform: rotateX(-90deg) translateZ(75px); }
 
   button, select {
     padding: 10px 20px; margin: 10px;
@@ -90,6 +99,9 @@
         <option value="classic">Classic</option>
         <option value="neon">Neon</option>
         <option value="wood" selected>Wood</option>
+        <option value="marble">Marble</option>
+        <option value="gold">Gold</option>
+        <option value="casino">Casino Red</option>
       </select>
     </label>
     <br>
@@ -108,44 +120,43 @@ const startBtn = document.getElementById("start");
 const diceContainer = document.getElementById("diceContainer");
 const saved = JSON.parse(localStorage.getItem("diceSetup")||"{}");
 
-if(saved.diceCount){ 
-  document.getElementById("diceCount").value = saved.diceCount; 
-}
-if(saved.theme){ 
-  document.getElementById("theme").value = saved.theme; 
-}
+if(saved.diceCount){ document.getElementById("diceCount").value = saved.diceCount; }
+if(saved.theme){ document.getElementById("theme").value = saved.theme; }
 
 setup.style.display = "block";
 
-function createFace(pipLayout, theme){
-  const face = document.createElement("div");
-  face.className = "face " + theme;
-  pipLayout.forEach(pos=>{
-    const pip = document.createElement("div");
-    pip.className = "pip";
-    pip.style.alignSelf = pos.includes("top") ? "flex-start" : pos.includes("bottom") ? "flex-end" : "center";
-    pip.style.justifySelf = pos.includes("left") ? "flex-start" : pos.includes("right") ? "flex-end" : "center";
-    face.appendChild(pip);
-  });
-  return face;
-}
-
+// pip placement grid positions
 function pipPattern(value){
   const layouts = {
-    1: ["center"],
-    2: ["top-left","bottom-right"],
-    3: ["top-left","center","bottom-right"],
-    4: ["top-left","top-right","bottom-left","bottom-right"],
-    5: ["top-left","top-right","center","bottom-left","bottom-right"],
-    6: ["top-left","top-right","mid-left","mid-right","bottom-left","bottom-right"]
+    1: [4],
+    2: [0,8],
+    3: [0,4,8],
+    4: [0,2,6,8],
+    5: [0,2,4,6,8],
+    6: [0,2,3,5,6,8]
   };
   return layouts[value];
+}
+
+function createFace(value, theme, name){
+  const face = document.createElement("div");
+  face.className = "face " + theme + " " + name;
+  for(let i=0;i<9;i++){
+    if(pipPattern(value).includes(i)){
+      const pip = document.createElement("div");
+      pip.className = "pip";
+      face.appendChild(pip);
+    } else {
+      const empty = document.createElement("div");
+      face.appendChild(empty);
+    }
+  }
+  return face;
 }
 
 function createDice(theme){
   const dice = document.createElement("div");
   dice.className = "dice";
-  // Die face values mapped to cube sides
   const faces = [
     {name:"front", value:1},
     {name:"back", value:6},
@@ -155,9 +166,7 @@ function createDice(theme){
     {name:"bottom", value:2}
   ];
   faces.forEach(f=>{
-    const face = createFace(pipPattern(f.value), theme);
-    face.classList.add(f.name);
-    dice.appendChild(face);
+    dice.appendChild(createFace(f.value, theme, f.name));
   });
   return dice;
 }
@@ -170,16 +179,15 @@ startBtn.onclick = () => {
   game.style.display = "block";
   diceContainer.innerHTML = "";
   for (let i = 0; i < count; i++) {
-    const dice = createDice(theme);
-    diceContainer.appendChild(dice);
+    diceContainer.appendChild(createDice(theme));
   }
 };
 
 document.body.addEventListener("click", () => {
   [...diceContainer.children].forEach(dice => {
-    const x = 360 * 2 + [0,90,180,270][Math.floor(Math.random()*4)];
-    const y = 360 * 2 + [0,90,180,270][Math.floor(Math.random()*4)];
-    const z = 360 * 2 + [0,90,180,270][Math.floor(Math.random()*4)];
+    const x = 360*2 + [0,90,180,270][Math.floor(Math.random()*4)];
+    const y = 360*2 + [0,90,180,270][Math.floor(Math.random()*4)];
+    const z = 360*2 + [0,90,180,270][Math.floor(Math.random()*4)];
     dice.style.transform = `rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
   });
 });
