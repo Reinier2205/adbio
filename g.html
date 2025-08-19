@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Give and Take 15</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+        :root {
+            --bg-color: #f0f4f8;
+            --container-bg: #ffffff;
+            --player-bg: #e3eaf3;
+            --active-player-bg: #cce0ff;
+            --accent-color: #007bff;
+            --text-color: #333;
+            --dice-color: #495057;
+            --win-overlay: rgba(0, 0, 0, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .game-container {
+            background-color: var(--container-bg);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .players {
+            display: flex;
+            justify-content: space-around;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .player {
+            background-color: var(--player-bg);
+            padding: 1.5rem;
+            border-radius: 10px;
+            width: 45%;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .player.active {
+            background-color: var(--active-player-bg);
+            border-color: var(--accent-color);
+            transform: scale(1.05);
+        }
+
+        .player h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .score {
+            font-size: 3rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .game-area {
+            margin: 2rem 0;
+        }
+        
+        #game-status {
+            min-height: 24px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            height: 60px;
+        }
+
+        .dice {
+            font-size: 3.5rem;
+            color: var(--dice-color);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls button {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 0.5rem;
+        }
+        
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-choice {
+            background-color: #28a745;
+        }
+        .btn-choice.subtract {
+            background-color: #dc3545;
+        }
+        .btn-choice:hover:not(:disabled) {
+             filter: brightness(1.1);
+        }
+        
+        .hidden {
+            display: none;
+        }
+
+        #win-message {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--win-overlay);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: 600;
+            border-radius: 15px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease;
+            z-index: 10;
+        }
+
+        #win-message.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        #win-message button {
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Give and Take 15</h1>
+        <div class="players">
+            <div id="player-0-panel" class="player active">
+                <h2>Player 1</h2>
+                <p id="score-0" class="score">0</p>
+            </div>
+            <div id="player-1-panel" class="player">
+                <h2>Player 2</h2>
+                <p id="score-1" class="score">0</p>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <p id="game-status">Player 1, roll the dice!</p>
+            <div class="dice-container">
+                <div id="dice-1" class="dice"></div>
+                <div id="dice-2" class="dice"></div>
+            </div>
+            <div class="controls">
+                <button id="btn-roll" class="btn">🎲 Roll Dice</button>
+                <div id="choice-controls" class="hidden">
+                    <button id="btn-add" class="btn btn-choice">Add to My Score</button>
+                    <button id="btn-subtract" class="btn btn-choice subtract">Subtract from Opponent</button>
+                </div>
+            </div>
+        </div>
+        
+        <button id="btn-new" class="btn">🔄 New Game</button>
+    </div>
+    
+    <div id="win-message" class="hidden">
+        <p id="winner-text"></p>
+        <button id="btn-play-again" class="btn">Play Again</button>
+    </div>
+
+
+    <script>
+        // --- DOM Elements ---
+        const player0Panel = document.getElementById('player-0-panel');
+        const player1Panel = document.getElementById('player-1-panel');
+        const score0El = document.getElementById('score-0');
+        const score1El = document.getElementById('score-1');
+        const dice1El = document.getElementById('dice-1');
+        const dice2El = document.getElementById('dice-2');
+        const gameStatusEl = document.getElementById('game-status');
+
+        const btnRoll = document.getElementById('btn-roll');
+        const btnNew = document.getElementById('btn-new');
+        const choiceControls = document.getElementById('choice-controls');
+        const btnAdd = document.getElementById('btn-add');
+        const btnSubtract = document.getElementById('btn-subtract');
+        
+        const winMessageEl = document.getElementById('win-message');
+        const winnerTextEl = document.getElementById('winner-text');
+        const btnPlayAgain = document.getElementById('btn-play-again');
+
+        // --- Game State Variables ---
+        let scores, activePlayer, gameActive, lastRoll;
+        const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
+        // --- Functions ---
+
+        /**
+         * Initializes the game to its starting state
+         */
+        const initGame = () => {
+            scores = [0, 0];
+            activePlayer = 0;
+            gameActive = true;
+            lastRoll = 0;
+
+            // Reset UI
+            score0El.textContent = 0;
+            score1El.textContent = 0;
+            dice1El.textContent = '';
+            dice2El.textContent = '';
+            
+            player0Panel.classList.add('active');
+            player1Panel.classList.remove('active');
+            
+            gameStatusEl.textContent = `Player 1, roll the dice!`;
+            
+            btnRoll.classList.remove('hidden');
+            btnRoll.disabled = false;
+            choiceControls.classList.add('hidden');
+            
+            winMessageEl.classList.remove('show');
+            winMessageEl.classList.add('hidden');
+        };
+
+        /**
+         * Switches the active player
+         */
+        const switchPlayer = () => {
+            activePlayer = activePlayer === 0 ? 1 : 0;
+            player0Panel.classList.toggle('active');
+            player1Panel.classList.toggle('active');
+            gameStatusEl.textContent = `Player ${activePlayer + 1}, roll the dice!`;
+        };
+        
+        /**
+         * Updates the score display for both players
+         */
+        const updateScoreDisplay = () => {
+             score0El.textContent = scores[0];
+             score1El.textContent = scores[1];
+        };
+
+        /**
+         * Handles the dice roll logic
+         */
+        const rollDice = () => {
+            if (!gameActive) return;
+
+            // 1. Generate random numbers
+            const d1 = Math.floor(Math.random() * 6);
+            const d2 = Math.floor(Math.random() * 6);
+            lastRoll = d1 + d2 + 2; // +2 because array is 0-indexed
+
+            // 2. Display dice
+            dice1El.textContent = diceFaces[d1];
+            dice2El.textContent = diceFaces[d2];
+
+            // 3. Update status and button visibility
+            gameStatusEl.textContent = `You rolled a ${lastRoll}. What will you do?`;
+            btnRoll.disabled = true;
+            choiceControls.classList.remove('hidden');
+        };
+
+        /**
+         * Handles the player's choice to add or subtract
+         * @param {string} action - 'add' or 'subtract'
+         */
+        const makeChoice = (action) => {
+            if (action === 'add') {
+                scores[activePlayer] += lastRoll;
+                // Bust rule: if score > 15, reset to 0
+                if (scores[activePlayer] > 15) {
+                    scores[activePlayer] = 0;
+                    gameStatusEl.textContent = `Player ${activePlayer + 1} busted!`;
+                }
+            } else { // subtract
+                const opponent = activePlayer === 0 ? 1 : 0;
+                scores[opponent] -= lastRoll;
+            }
+            
+            updateScoreDisplay();
+
+            // Check for winner
+            if (scores[activePlayer] === 15) {
+                gameActive = false;
+                winnerTextEl.textContent = `🎉 Player ${activePlayer + 1} Wins! 🎉`;
+                winMessageEl.classList.remove('hidden');
+                winMessageEl.classList.add('show');
+                btnRoll.disabled = true;
+                choiceControls.classList.add('hidden');
+            } else {
+                 // Next player's turn
+                btnRoll.disabled = false;
+                choiceControls.classList.add('hidden');
+                switchPlayer();
+            }
+        };
+
+        // --- Event Listeners ---
+        btnRoll.addEventListener('click', rollDice);
+        btnAdd.addEventListener('click', () => makeChoice('add'));
+        btnSubtract.addEventListener('click', () => makeChoice('subtract'));
+
+        btnNew.addEventListener('click', initGame);
+        btnPlayAgain.addEventListener('click', initGame);
+
+
+        // --- Initial Game Start ---
+        initGame();
+    </script>
+</body>
+</html>
