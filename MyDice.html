@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Dice Roller</title>
+<style>
+  body {
+    margin: 0;
+    background: #111;
+    color: #fff;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    text-align: center;
+  }
+  #setup, #game { display: none; }
+  .dice-container {
+    display: flex;
+    gap: 40px;
+    margin-top: 30px;
+    perspective: 1000px;
+  }
+  .dice {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateX(0deg) rotateY(0deg);
+    transition: transform 1s ease;
+  }
+  .face {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: #fff;
+    border: 2px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: bold;
+    color: #000;
+  }
+  .front  { transform: rotateY(0deg) translateZ(50px); }
+  .back   { transform: rotateY(180deg) translateZ(50px); }
+  .right  { transform: rotateY(90deg) translateZ(50px); }
+  .left   { transform: rotateY(-90deg) translateZ(50px); }
+  .top    { transform: rotateX(90deg) translateZ(50px); }
+  .bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+  button, select {
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button { background: #ff4081; color: #fff; }
+  select { background: #333; color: #fff; }
+</style>
+</head>
+<body>
+  <div id="setup">
+    <h2>🎲 3D Dice Roller</h2>
+    <p>Choose your setup:</p>
+    <label>Dice Count:
+      <select id="diceCount">
+        <option value="1">1 Die</option>
+        <option value="2">2 Dice</option>
+      </select>
+    </label>
+    <br>
+    <button id="start">Start Game</button>
+  </div>
+
+  <div id="game">
+    <h2>Tap Anywhere to Roll</h2>
+    <div class="dice-container" id="diceContainer"></div>
+  </div>
+
+<script>
+const setup = document.getElementById("setup");
+const game = document.getElementById("game");
+const startBtn = document.getElementById("start");
+const diceContainer = document.getElementById("diceContainer");
+
+setup.style.display = "block";
+
+function createDice() {
+  const dice = document.createElement("div");
+  dice.className = "dice";
+  const faces = ["front","back","right","left","top","bottom"];
+  const values = [1,6,3,4,5,2]; // standard die orientation
+  faces.forEach((face,i)=>{
+    const div = document.createElement("div");
+    div.className = "face " + face;
+    div.textContent = values[i];
+    dice.appendChild(div);
+  });
+  return dice;
+}
+
+startBtn.onclick = () => {
+  const count = document.getElementById("diceCount").value;
+  setup.style.display = "none";
+  game.style.display = "block";
+  diceContainer.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    const dice = createDice();
+    diceContainer.appendChild(dice);
+  }
+};
+
+document.body.addEventListener("click", () => {
+  [...diceContainer.children].forEach(dice => {
+    const x = 360 * 3 + [0,90,180,270][Math.floor(Math.random()*4)];
+    const y = 360 * 3 + [0,90,180,270][Math.floor(Math.random()*4)];
+    const z = 360 * 2 + [0,90,180,270][Math.floor(Math.random()*4)];
+    dice.style.transform = `rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
+  });
+});
+</script>
+</body>
+</html>
