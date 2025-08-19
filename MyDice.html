@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>3D Dice Roller</title>
 <style>
-  body {
-    margin: 0;
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
     background: #111;
     color: #fff;
     font-family: sans-serif;
@@ -14,38 +16,48 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    overflow: hidden;
-    text-align: center;
+    -webkit-user-select: none;
+    user-select: none;
   }
-  #setup, #game { display: none; }
+  #setup, #game { display: none; text-align: center; }
   .dice-container {
     display: flex;
     gap: 40px;
-    margin-top: 30px;
-    perspective: 1000px;
+    margin-top: 20px;
+    perspective: 1200px;
   }
   .dice {
-    width: 100px;
-    height: 100px;
+    width: 100px; height: 100px;
     position: relative;
     transform-style: preserve-3d;
-    transform: rotateX(0deg) rotateY(0deg);
-    transition: transform 1s ease;
+    transition: transform 1s cubic-bezier(.36,1.56,.3,1);
   }
   .face {
     position: absolute;
-    width: 100px;
-    height: 100px;
-    background: #fff;
-    border: 2px solid #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    font-weight: bold;
-    color: #000;
+    width: 100px; height: 100px;
+    border-radius: 15px;
+    display: flex; flex-wrap: wrap;
+    justify-content: space-between; align-content: space-between;
+    padding: 18px;
+    box-sizing: border-box;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
   }
+  .pip {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+  }
+
+  /* Themes */
+  .classic { background: #fff; }
+  .classic .pip { background: #000; }
+
+  .neon { background: #111; }
+  .neon .pip { background: #0ff; box-shadow: 0 0 8px #0ff; }
+
+  .wood { background: #a0522d; background: linear-gradient(145deg,#8b5a2b,#deb887); }
+  .wood .pip { background: #fff; }
+
+  /* 3D positioning */
   .front  { transform: rotateY(0deg) translateZ(50px); }
   .back   { transform: rotateY(180deg) translateZ(50px); }
   .right  { transform: rotateY(90deg) translateZ(50px); }
@@ -54,11 +66,9 @@
   .bottom { transform: rotateX(-90deg) translateZ(50px); }
 
   button, select {
-    padding: 10px 20px;
-    margin: 10px;
+    padding: 10px 20px; margin: 10px;
     font-size: 16px;
-    border: none;
-    border-radius: 8px;
+    border: none; border-radius: 8px;
     cursor: pointer;
   }
   button { background: #ff4081; color: #fff; }
@@ -68,11 +78,18 @@
 <body>
   <div id="setup">
     <h2>🎲 3D Dice Roller</h2>
-    <p>Choose your setup:</p>
     <label>Dice Count:
       <select id="diceCount">
         <option value="1">1 Die</option>
         <option value="2">2 Dice</option>
+      </select>
+    </label>
+    <br>
+    <label>Theme:
+      <select id="theme">
+        <option value="classic">Classic</option>
+        <option value="neon">Neon</option>
+        <option value="wood" selected>Wood</option>
       </select>
     </label>
     <br>
@@ -89,38 +106,79 @@ const setup = document.getElementById("setup");
 const game = document.getElementById("game");
 const startBtn = document.getElementById("start");
 const diceContainer = document.getElementById("diceContainer");
+const saved = JSON.parse(localStorage.getItem("diceSetup")||"{}");
+
+if(saved.diceCount){ 
+  document.getElementById("diceCount").value = saved.diceCount; 
+}
+if(saved.theme){ 
+  document.getElementById("theme").value = saved.theme; 
+}
 
 setup.style.display = "block";
 
-function createDice() {
+function createFace(pipLayout, theme){
+  const face = document.createElement("div");
+  face.className = "face " + theme;
+  pipLayout.forEach(pos=>{
+    const pip = document.createElement("div");
+    pip.className = "pip";
+    pip.style.alignSelf = pos.includes("top") ? "flex-start" : pos.includes("bottom") ? "flex-end" : "center";
+    pip.style.justifySelf = pos.includes("left") ? "flex-start" : pos.includes("right") ? "flex-end" : "center";
+    face.appendChild(pip);
+  });
+  return face;
+}
+
+function pipPattern(value){
+  const layouts = {
+    1: ["center"],
+    2: ["top-left","bottom-right"],
+    3: ["top-left","center","bottom-right"],
+    4: ["top-left","top-right","bottom-left","bottom-right"],
+    5: ["top-left","top-right","center","bottom-left","bottom-right"],
+    6: ["top-left","top-right","mid-left","mid-right","bottom-left","bottom-right"]
+  };
+  return layouts[value];
+}
+
+function createDice(theme){
   const dice = document.createElement("div");
   dice.className = "dice";
-  const faces = ["front","back","right","left","top","bottom"];
-  const values = [1,6,3,4,5,2]; // standard die orientation
-  faces.forEach((face,i)=>{
-    const div = document.createElement("div");
-    div.className = "face " + face;
-    div.textContent = values[i];
-    dice.appendChild(div);
+  // Die face values mapped to cube sides
+  const faces = [
+    {name:"front", value:1},
+    {name:"back", value:6},
+    {name:"right", value:3},
+    {name:"left", value:4},
+    {name:"top", value:5},
+    {name:"bottom", value:2}
+  ];
+  faces.forEach(f=>{
+    const face = createFace(pipPattern(f.value), theme);
+    face.classList.add(f.name);
+    dice.appendChild(face);
   });
   return dice;
 }
 
 startBtn.onclick = () => {
   const count = document.getElementById("diceCount").value;
+  const theme = document.getElementById("theme").value;
+  localStorage.setItem("diceSetup", JSON.stringify({diceCount:count, theme:theme}));
   setup.style.display = "none";
   game.style.display = "block";
   diceContainer.innerHTML = "";
   for (let i = 0; i < count; i++) {
-    const dice = createDice();
+    const dice = createDice(theme);
     diceContainer.appendChild(dice);
   }
 };
 
 document.body.addEventListener("click", () => {
   [...diceContainer.children].forEach(dice => {
-    const x = 360 * 3 + [0,90,180,270][Math.floor(Math.random()*4)];
-    const y = 360 * 3 + [0,90,180,270][Math.floor(Math.random()*4)];
+    const x = 360 * 2 + [0,90,180,270][Math.floor(Math.random()*4)];
+    const y = 360 * 2 + [0,90,180,270][Math.floor(Math.random()*4)];
     const z = 360 * 2 + [0,90,180,270][Math.floor(Math.random()*4)];
     dice.style.transform = `rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
   });
