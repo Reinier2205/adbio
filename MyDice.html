@@ -1,241 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Glossy Dice Roller</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Glossy 3D Dice</title>
 <style>
-  html, body {
-    margin: 0; padding: 0;
-    width: 100%; height: 100%;
-    overflow: hidden;
-    background: #111;
-    color: #fff;
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    -webkit-user-select: none;
-    user-select: none;
+  :root { --size: 160px; --r: 22px; --depth: calc(var(--size)/2); }
+  html,body{
+    margin:0;height:100%;background:#111;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;-webkit-user-select:none;user-select:none;
   }
-  #setup, #game { display: none; text-align: center; }
-  .dice-container {
-    display: flex;
-    gap: 60px;
-    margin-top: 20px;
-    perspective: 1400px;
+  #setup,#game{display:none;text-align:center}
+  .row{margin:10px 0}
+  button,select{padding:10px 16px;margin:6px;border:0;border-radius:10px;font-size:16px;cursor:pointer}
+  button{background:#555;color:#fff}
+  select{background:#222;color:#fff}
+  #players input{margin:5px;padding:8px;border:0;border-radius:8px;background:#222;color:#fff}
+  #currentPlayer{margin:10px 0 0 0;font-weight:700}
+  #resetBtn{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#404040}
+
+  /* Dice area */
+  .dice-container{display:flex;gap:70px;margin-top:18px;perspective:1400px;perspective-origin:center}
+  .dice{
+    width:var(--size);height:var(--size);position:relative;
+    transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
+    transition:transform 900ms cubic-bezier(.36,1.56,.3,1);
+    will-change:transform;transform:translateZ(0);-webkit-transform:translateZ(0);
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
   }
-  .dice {
-    width: 150px; height: 150px;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 1s cubic-bezier(.36,1.56,.3,1);
+  .face{
+    position:absolute;width:var(--size);height:var(--size);border-radius:var(--r);
+    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    justify-items:center;align-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    /* remove bevel/outline; only soft global shadow above via drop-shadow */
+    overflow:hidden; /* keeps highlight inside rounded corners */
   }
-  .face {
-    position: absolute;
-    width: 150px; height: 150px;
-    border-radius: 20px;
-    display: grid;
-    grid-template-columns: repeat(3,1fr);
-    grid-template-rows: repeat(3,1fr);
-    justify-items: center; align-items: center;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-    background-size: cover;
-    background-position: center;
-  }
-  .pip { width: 28px; height: 28px; border-radius: 50%; }
+  .pip{width:calc(var(--size)/5.6);height:calc(var(--size)/5.6);border-radius:50%}
 
-  /* Themes */
-  .classic { background: linear-gradient(145deg,#fdfdfd,#e0e0e0); }
-  .classic .pip { background: #000; }
+  /* Themes (glossy) */
+  .wood{background:linear-gradient(145deg,#8b5a2b,#cfa670)}
+  .wood .pip{background:#fff}
 
-  .wood { background: linear-gradient(145deg,#8b5a2b,#deb887); }
-  .wood .pip { background: #fff; }
+  .classic{background:linear-gradient(145deg,#fdfdfd,#e1e1e1)}
+  .classic .pip{background:#000}
 
-  .marble { background: radial-gradient(circle at 30% 30%, #f8f8f8, #c0c0c0); }
-  .marble .pip { background: #000; }
+  .marble{background:radial-gradient(circle at 30% 30%,#f8f8f8,#c0c0c0)}
+  .marble .pip{background:#000}
 
-  .gold { background: linear-gradient(145deg,#FFD700,#B8860B); }
-  .gold .pip { background: #111; }
+  .gold{background:linear-gradient(145deg,#ffd64d,#b88700)}
+  .gold .pip{background:#111}
 
-  .casino { 
-    background: linear-gradient(145deg,#d40000,#7a0000); 
-    position: relative;
-  }
-  .casino .pip { background: #fff; }
+  .casinoRed{background:linear-gradient(145deg,#d30000,#7a0000)}
+  .casinoRed .pip{background:#fff}
 
-  .casinoGreen { 
-    background: linear-gradient(145deg,#008000,#004d00); 
-    position: relative;
-  }
-  .casinoGreen .pip { background: #fff; }
+  .casinoGreen{background:linear-gradient(145deg,#0a8f2a,#045a1a)}
+  .casinoGreen .pip{background:#fff}
 
-  /* Gloss effect: pseudo-element overlay */
-  .face::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 40%, transparent 100%);
-    pointer-events: none;
+  /* Gloss highlight overlay (no border line) */
+  .face::before{
+    content:"";position:absolute;inset:0;border-radius:var(--r);pointer-events:none;
+    background:
+      radial-gradient(80% 80% at 25% 15%, rgba(255,255,255,.55), rgba(255,255,255,.08) 40%, transparent 60%),
+      linear-gradient(180deg, rgba(255,255,255,.25), rgba(255,255,255,0) 35%);
+    mix-blend-mode:screen;
   }
 
-  /* 3D positioning */
-  .front  { transform: rotateY(0deg) translateZ(75px); }
-  .back   { transform: rotateY(180deg) translateZ(75px); }
-  .right  { transform: rotateY(90deg) translateZ(75px); }
-  .left   { transform: rotateY(-90deg) translateZ(75px); }
-  .top    { transform: rotateX(90deg) translateZ(75px); }
-  .bottom { transform: rotateX(-90deg) translateZ(75px); }
-
-  button, select {
-    padding: 10px 20px; margin: 10px;
-    font-size: 16px;
-    border: none; border-radius: 8px;
-    cursor: pointer;
-  }
-  button { background: #ff4081; color: #fff; }
-  select { background: #333; color: #fff; }
-
-  #players input { margin: 5px; padding: 6px; border-radius: 5px; border: none; }
-  #currentPlayer { margin-top: 15px; font-size: 20px; font-weight: bold; }
-  #resetBtn { margin-top: 30px; background: #444; }
+  /* 3D placement */
+  .front {transform:rotateY(0deg)    translateZ(var(--depth)); -webkit-transform:rotateY(0deg) translateZ(var(--depth));}
+  .back  {transform:rotateY(180deg)  translateZ(var(--depth)); -webkit-transform:rotateY(180deg) translateZ(var(--depth));}
+  .right {transform:rotateY(90deg)   translateZ(var(--depth)); -webkit-transform:rotateY(90deg) translateZ(var(--depth));}
+  .left  {transform:rotateY(-90deg)  translateZ(var(--depth)); -webkit-transform:rotateY(-90deg) translateZ(var(--depth));}
+  .top   {transform:rotateX(90deg)   translateZ(var(--depth)); -webkit-transform:rotateX(90deg) translateZ(var(--depth));}
+  .bottom{transform:rotateX(-90deg)  translateZ(var(--depth)); -webkit-transform:rotateX(-90deg) translateZ(var(--depth));}
 </style>
 </head>
 <body>
   <div id="setup">
-    <h2>🎲 Glossy 3D Dice Roller</h2>
-    <label>Dice Count:
-      <select id="diceCount">
-        <option value="1">1 Die</option>
-        <option value="2">2 Dice</option>
-      </select>
-    </label>
-    <br>
-    <label>Theme:
-      <select id="theme">
-        <option value="classic">Classic</option>
-        <option value="wood" selected>Wood</option>
-        <option value="marble">Marble</option>
-        <option value="gold">Gold</option>
-        <option value="casino">Casino Red</option>
-        <option value="casinoGreen">Casino Green</option>
-      </select>
-    </label>
-    <br><br>
-    <div id="players">
-      <h3>Players</h3>
+    <h2>Tap to Roll</h2>
+    <div class="row">
+      <label>Dice:
+        <select id="diceCount">
+          <option value="1">1</option>
+          <option value="2">2</option>
+        </select>
+      </label>
+    </div>
+    <div class="row">
+      <label>Theme:
+        <select id="theme">
+          <option value="wood">Wood (default)</option>
+          <option value="classic">Classic</option>
+          <option value="marble">Marble</option>
+          <option value="gold">Gold</option>
+          <option value="casinoRed">Casino Red</option>
+          <option value="casinoGreen">Casino Green</option>
+        </select>
+      </label>
+    </div>
+    <div id="players" class="row">
+      <h3 style="margin:6px 0">Players</h3>
       <div id="playerList"></div>
       <button type="button" id="addPlayer">+ Add Player</button>
     </div>
-    <br>
-    <button id="start">Start Game</button>
+    <div class="row">
+      <button id="start">Start</button>
+    </div>
   </div>
 
   <div id="game">
     <h2>Tap Anywhere to Roll</h2>
     <div id="currentPlayer"></div>
     <div class="dice-container" id="diceContainer"></div>
-    <button id="resetBtn">🔄 Reset</button>
+    <button id="resetBtn">Reset</button>
   </div>
 
 <script>
-const setup = document.getElementById("setup");
-const game = document.getElementById("game");
-const startBtn = document.getElementById("start");
-const diceContainer = document.getElementById("diceContainer");
-const currentPlayerDiv = document.getElementById("currentPlayer");
-const resetBtn = document.getElementById("resetBtn");
+  // ---- setup persistence ----
+  const setup = document.getElementById("setup");
+  const game = document.getElementById("game");
+  const diceContainer = document.getElementById("diceContainer");
+  const startBtn = document.getElementById("start");
+  const resetBtn = document.getElementById("resetBtn");
+  const currentPlayerDiv = document.getElementById("currentPlayer");
 
-let players = [];
-let turn = 0;
+  const saved = JSON.parse(localStorage.getItem("diceSetup")||"{}");
+  const diceCountEl = document.getElementById("diceCount");
+  const themeEl = document.getElementById("theme");
+  if(saved.diceCount) diceCountEl.value = saved.diceCount;
+  themeEl.value = saved.theme || "wood"; // default
 
-setup.style.display = "block";
-
-// Add player input fields
-document.getElementById("addPlayer").onclick = () => {
-  const div = document.createElement("div");
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = "Player " + (document.querySelectorAll("#playerList input").length + 1);
-  div.appendChild(input);
-  document.getElementById("playerList").appendChild(div);
-};
-
-function pipPattern(value){
-  const layouts = {
-    1: [4], 2: [0,8], 3: [0,4,8],
-    4: [0,2,6,8], 5: [0,2,4,6,8],
-    6: [0,2,3,5,6,8]
+  // players
+  const playerList = document.getElementById("playerList");
+  document.getElementById("addPlayer").onclick = () => {
+    const div = document.createElement("div");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Player " + (playerList.querySelectorAll("input").length + 1);
+    div.appendChild(input);
+    playerList.appendChild(div);
   };
-  return layouts[value];
-}
 
-function createFace(value, theme, name){
-  const face = document.createElement("div");
-  face.className = "face " + theme + " " + name;
-  for(let i=0;i<9;i++){
-    if(pipPattern(value).includes(i)){
-      const pip = document.createElement("div");
-      pip.className = "pip";
-      face.appendChild(pip);
-    } else {
-      face.appendChild(document.createElement("div"));
+  let players = [];
+  let turn = 0;
+
+  setup.style.display = "block";
+
+  // ---- dice helpers ----
+  function pipPattern(n){
+    return {
+      1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8]
+    }[n];
+  }
+
+  function face(name, value, theme){
+    const f = document.createElement("div");
+    f.className = `face ${theme} ${name}`;
+    for(let i=0;i<9;i++){
+      if(pipPattern(value).includes(i)){
+        const p = document.createElement("div");
+        p.className = "pip";
+        f.appendChild(p);
+      } else {
+        f.appendChild(document.createElement("div"));
+      }
     }
+    return f;
   }
-  return face;
-}
 
-function createDice(theme){
-  const dice = document.createElement("div");
-  dice.className = "dice";
-  const faces = [
-    {name:"front", value:1},
-    {name:"back", value:6},
-    {name:"right", value:3},
-    {name:"left", value:4},
-    {name:"top", value:5},
-    {name:"bottom", value:2}
-  ];
-  faces.forEach(f=>dice.appendChild(createFace(f.value, theme, f.name)));
-  return dice;
-}
-
-startBtn.onclick = () => {
-  const count = document.getElementById("diceCount").value;
-  const theme = document.getElementById("theme").value;
-
-  players = [];
-  document.querySelectorAll("#playerList input").forEach(inp=>{
-    if(inp.value.trim()) players.push(inp.value.trim());
-  });
-  if(players.length===0) players = ["Player 1"];
-
-  turn = 0;
-  currentPlayerDiv.textContent = players[turn] + "'s turn";
-
-  setup.style.display = "none";
-  game.style.display = "block";
-  diceContainer.innerHTML = "";
-  for (let i = 0; i < count; i++) {
-    diceContainer.appendChild(createDice(theme));
+  function makeDie(theme){
+    const d = document.createElement("div");
+    d.className = "dice";
+    const faces = [
+      ["front",1],["back",6],["right",3],
+      ["left",4],["top",5],["bottom",2]
+    ];
+    faces.forEach(([n,v])=>d.appendChild(face(n,v,theme)));
+    return d;
   }
-};
 
-document.body.addEventListener("click", () => {
-  if(setup.style.display==="block") return;
-  [...diceContainer.children].forEach(dice => {
-    const x = 360*2 + [0,90,180,270][Math.floor(Math.random()*4)];
-    const y = 360*2 + [0,90,180,270][Math.floor(Math.random()*4)];
-    const z = 360*2 + [0,90,180,270][Math.floor(Math.random()*4)];
-    dice.style.transform = `rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
+  // ---- start ----
+  startBtn.onclick = () => {
+    const count = parseInt(diceCountEl.value,10);
+    const theme = themeEl.value;
+    localStorage.setItem("diceSetup", JSON.stringify({diceCount:count, theme}));
+
+    players = [];
+    playerList.querySelectorAll("input").forEach(inp => {
+      const name = inp.value.trim();
+      if(name) players.push(name);
+    });
+    if(players.length === 0) players = ["Player 1"];
+    turn = 0;
+    currentPlayerDiv.textContent = `${players[turn]}'s turn`;
+
+    setup.style.display = "none";
+    game.style.display = "block";
+    diceContainer.innerHTML = "";
+    for(let i=0;i<count;i++) diceContainer.appendChild(makeDie(theme));
+  };
+
+  // ---- roll ----
+  function rollAll(){
+    [...diceContainer.children].forEach(d=>{
+      const x = 720 + [0,90,180,270][Math.floor(Math.random()*4)];
+      const y = 720 + [0,90,180,270][Math.floor(Math.random()*4)];
+      const z = 720 + [0,90,180,270][Math.floor(Math.random()*4)];
+      d.style.transform = `rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
+      d.style.webkitTransform = `rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
+    });
+    turn = (turn + 1) % players.length;
+    currentPlayerDiv.textContent = `${players[turn]}'s turn`;
+  }
+
+  document.body.addEventListener("click", () => {
+    if(setup.style.display==="block") return;
+    rollAll();
   });
-  turn = (turn+1) % players.length;
-  currentPlayerDiv.textContent = players[turn] + "'s turn";
-});
 
-resetBtn.onclick = () => { location.reload(); };
+  // ---- reset ----
+  resetBtn.onclick = () => location.reload();
 </script>
 </body>
 </html>
