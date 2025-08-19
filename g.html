@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Give and Take 15</title>
+    <title>Give and Take 15 (Animated)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
@@ -15,7 +15,9 @@
             --accent-color: #007bff;
             --text-color: #333;
             --dice-color: #495057;
-            --win-overlay: rgba(0, 0, 0, 0.7);
+            --win-overlay: rgba(0, 0, 0, 0.75);
+            --good-outcome-color: #28a745;
+            --bad-outcome-color: #dc3545;
         }
 
         * {
@@ -44,6 +46,7 @@
             max-width: 800px;
             text-align: center;
             position: relative;
+            overflow: hidden; /* Important for animations */
         }
 
         h1 {
@@ -64,11 +67,10 @@
             border-radius: 10px;
             width: 45%;
             transition: all 0.3s ease;
-            border: 2px solid transparent;
+            border: 3px solid transparent;
         }
 
         .player.active {
-            background-color: var(--active-player-bg);
             border-color: var(--accent-color);
             transform: scale(1.05);
         }
@@ -100,6 +102,7 @@
             gap: 1rem;
             margin-bottom: 1.5rem;
             height: 60px;
+            position: relative;
         }
 
         .dice {
@@ -130,8 +133,8 @@
         }
         
         .btn:hover:not(:disabled) {
-            background-color: #0056b3;
             transform: translateY(-2px);
+            filter: brightness(1.1);
         }
 
         .btn:disabled {
@@ -139,19 +142,10 @@
             cursor: not-allowed;
         }
         
-        .btn-choice {
-            background-color: #28a745;
-        }
-        .btn-choice.subtract {
-            background-color: #dc3545;
-        }
-        .btn-choice:hover:not(:disabled) {
-             filter: brightness(1.1);
-        }
+        #btn-add { background-color: var(--good-outcome-color); }
+        #btn-subtract { background-color: var(--bad-outcome-color); }
         
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none; }
 
         #win-message {
             position: absolute;
@@ -173,14 +167,35 @@
             transition: opacity 0.5s ease;
             z-index: 10;
         }
+        #win-message.show { opacity: 1; visibility: visible; }
+        #win-message button { margin-top: 1.5rem; }
 
-        #win-message.show {
-            opacity: 1;
-            visibility: visible;
+        /* --- ANIMATIONS --- */
+        .dice.rolling {
+            animation: roll 0.7s ease-in-out;
         }
-        
-        #win-message button {
-            margin-top: 1.5rem;
+        @keyframes roll {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(180deg) scale(1.2); }
+            50% { transform: rotate(-180deg) scale(0.8); }
+            75% { transform: rotate(90deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        .player.good-outcome {
+            animation: good-flash 0.8s ease;
+        }
+        @keyframes good-flash {
+            0%, 100% { background-color: var(--active-player-bg); border-color: var(--accent-color); }
+            50% { background-color: #c8f5d4; border-color: var(--good-outcome-color); }
+        }
+
+        .player.bad-outcome {
+            animation: bad-flash 0.8s ease;
+        }
+        @keyframes bad-flash {
+            0%, 100% { background-color: var(--active-player-bg); border-color: var(--accent-color); }
+            50% { background-color: #f5c8cb; border-color: var(--bad-outcome-color); }
         }
     </style>
 </head>
@@ -200,17 +215,14 @@
         </div>
 
         <div class="game-area">
-            <p id="game-status">Player 1, roll the dice!</p>
+            <p id="game-status">Player 1, make your choice!</p>
             <div class="dice-container">
                 <div id="dice-1" class="dice"></div>
                 <div id="dice-2" class="dice"></div>
             </div>
-            <div class="controls">
-                <button id="btn-roll" class="btn">🎲 Roll Dice</button>
-                <div id="choice-controls" class="hidden">
-                    <button id="btn-add" class="btn btn-choice">Add to My Score</button>
-                    <button id="btn-subtract" class="btn btn-choice subtract">Subtract from Opponent</button>
-                </div>
+            <div id="choice-controls" class="controls">
+                <button id="btn-add" class="btn">Add to My Score</button>
+                <button id="btn-subtract" class="btn">Subtract from Opponent</button>
             </div>
         </div>
         
@@ -232,22 +244,16 @@
         const dice1El = document.getElementById('dice-1');
         const dice2El = document.getElementById('dice-2');
         const gameStatusEl = document.getElementById('game-status');
-
-        const btnRoll = document.getElementById('btn-roll');
-        const btnNew = document.getElementById('btn-new');
-        const choiceControls = document.getElementById('choice-controls');
         const btnAdd = document.getElementById('btn-add');
         const btnSubtract = document.getElementById('btn-subtract');
-        
+        const btnNew = document.getElementById('btn-new');
         const winMessageEl = document.getElementById('win-message');
         const winnerTextEl = document.getElementById('winner-text');
         const btnPlayAgain = document.getElementById('btn-play-again');
 
         // --- Game State Variables ---
-        let scores, activePlayer, gameActive, lastRoll;
+        let scores, activePlayer, gameActive;
         const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-
-        // --- Functions ---
 
         /**
          * Initializes the game to its starting state
@@ -256,9 +262,7 @@
             scores = [0, 0];
             activePlayer = 0;
             gameActive = true;
-            lastRoll = 0;
 
-            // Reset UI
             score0El.textContent = 0;
             score1El.textContent = 0;
             dice1El.textContent = '';
@@ -267,11 +271,10 @@
             player0Panel.classList.add('active');
             player1Panel.classList.remove('active');
             
-            gameStatusEl.textContent = `Player 1, roll the dice!`;
+            gameStatusEl.textContent = `Player 1, make your choice!`;
             
-            btnRoll.classList.remove('hidden');
-            btnRoll.disabled = false;
-            choiceControls.classList.add('hidden');
+            btnAdd.disabled = false;
+            btnSubtract.disabled = false;
             
             winMessageEl.classList.remove('show');
             winMessageEl.classList.add('hidden');
@@ -284,7 +287,10 @@
             activePlayer = activePlayer === 0 ? 1 : 0;
             player0Panel.classList.toggle('active');
             player1Panel.classList.toggle('active');
-            gameStatusEl.textContent = `Player ${activePlayer + 1}, roll the dice!`;
+            gameStatusEl.textContent = `Player ${activePlayer + 1}, make your choice!`;
+            // Re-enable buttons for the new player
+            btnAdd.disabled = false;
+            btnSubtract.disabled = false;
         };
         
         /**
@@ -296,69 +302,86 @@
         };
 
         /**
-         * Handles the dice roll logic
+         * Main function to handle a player's turn, including roll and animation
+         * @param {string} action - The chosen action ('add' or 'subtract')
          */
-        const rollDice = () => {
+        const performTurn = (action) => {
             if (!gameActive) return;
 
-            // 1. Generate random numbers
-            const d1 = Math.floor(Math.random() * 6);
-            const d2 = Math.floor(Math.random() * 6);
-            lastRoll = d1 + d2 + 2; // +2 because array is 0-indexed
-
-            // 2. Display dice
-            dice1El.textContent = diceFaces[d1];
-            dice2El.textContent = diceFaces[d2];
-
-            // 3. Update status and button visibility
-            gameStatusEl.textContent = `You rolled a ${lastRoll}. What will you do?`;
-            btnRoll.disabled = true;
-            choiceControls.classList.remove('hidden');
-        };
-
-        /**
-         * Handles the player's choice to add or subtract
-         * @param {string} action - 'add' or 'subtract'
-         */
-        const makeChoice = (action) => {
-            if (action === 'add') {
-                scores[activePlayer] += lastRoll;
-                // Bust rule: if score > 15, reset to 0
-                if (scores[activePlayer] > 15) {
-                    scores[activePlayer] = 0;
-                    gameStatusEl.textContent = `Player ${activePlayer + 1} busted!`;
-                }
-            } else { // subtract
-                const opponent = activePlayer === 0 ? 1 : 0;
-                scores[opponent] -= lastRoll;
-            }
+            // 1. Disable buttons to prevent multiple clicks
+            btnAdd.disabled = true;
+            btnSubtract.disabled = true;
+            gameStatusEl.textContent = 'Rolling...';
             
-            updateScoreDisplay();
+            // 2. Animate the dice roll
+            dice1El.classList.add('rolling');
+            dice2El.classList.add('rolling');
 
-            // Check for winner
-            if (scores[activePlayer] === 15) {
-                gameActive = false;
-                winnerTextEl.textContent = `🎉 Player ${activePlayer + 1} Wins! 🎉`;
-                winMessageEl.classList.remove('hidden');
-                winMessageEl.classList.add('show');
-                btnRoll.disabled = true;
-                choiceControls.classList.add('hidden');
-            } else {
-                 // Next player's turn
-                btnRoll.disabled = false;
-                choiceControls.classList.add('hidden');
-                switchPlayer();
-            }
+            // Wait for the rolling animation to finish
+            setTimeout(() => {
+                // 3. Stop animation and calculate the roll
+                dice1El.classList.remove('rolling');
+                dice2El.classList.remove('rolling');
+                
+                const d1 = Math.floor(Math.random() * 6);
+                const d2 = Math.floor(Math.random() * 6);
+                const rollTotal = d1 + d2 + 2;
+
+                dice1El.textContent = diceFaces[d1];
+                dice2El.textContent = diceFaces[d2];
+
+                // 4. Determine outcome and trigger outcome animation
+                const isGoodOutcome = rollTotal > 6;
+                const activePlayerPanel = document.getElementById(`player-${activePlayer}-panel`);
+                
+                let outcomeText = '';
+                if (isGoodOutcome) {
+                    activePlayerPanel.classList.add('good-outcome');
+                    outcomeText = `Great roll! A ${rollTotal}!`;
+                } else {
+                    activePlayerPanel.classList.add('bad-outcome');
+                    outcomeText = `Tough luck... only a ${rollTotal}.`;
+                }
+                gameStatusEl.textContent = outcomeText;
+
+                // 5. Update scores after outcome animation
+                setTimeout(() => {
+                    activePlayerPanel.classList.remove('good-outcome', 'bad-outcome');
+                    
+                    if (action === 'add') {
+                        scores[activePlayer] += rollTotal;
+                        if (scores[activePlayer] > 15) {
+                            scores[activePlayer] = 0;
+                            gameStatusEl.textContent = `Busted! Score reset to 0.`;
+                        }
+                    } else { // subtract
+                        const opponent = activePlayer === 0 ? 1 : 0;
+                        scores[opponent] -= rollTotal;
+                    }
+                    
+                    updateScoreDisplay();
+
+                    // 6. Check for a winner
+                    if (scores[activePlayer] === 15) {
+                        gameActive = false;
+                        winnerTextEl.textContent = `🎉 Player ${activePlayer + 1} Wins! 🎉`;
+                        winMessageEl.classList.remove('hidden');
+                        winMessageEl.classList.add('show');
+                        btnAdd.disabled = true;
+                        btnSubtract.disabled = true;
+                    } else {
+                        // 7. If no winner, switch to the next player
+                        switchPlayer();
+                    }
+                }, 800); // Duration of the outcome flash animation
+            }, 700); // Duration of the roll animation
         };
 
         // --- Event Listeners ---
-        btnRoll.addEventListener('click', rollDice);
-        btnAdd.addEventListener('click', () => makeChoice('add'));
-        btnSubtract.addEventListener('click', () => makeChoice('subtract'));
-
+        btnAdd.addEventListener('click', () => performTurn('add'));
+        btnSubtract.addEventListener('click', () => performTurn('subtract'));
         btnNew.addEventListener('click', initGame);
         btnPlayAgain.addEventListener('click', initGame);
-
 
         // --- Initial Game Start ---
         initGame();
