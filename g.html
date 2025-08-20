@@ -392,10 +392,7 @@
                 default:
                     if (choice === 'add') {
                         state.scores[state.activePlayer] += rollValue;
-                        if (state.scores[state.activePlayer] > 15) {
-                            state.scores[state.activePlayer] = 0;
-                            updateStatus(`${state.playerNames[state.activePlayer]} busted!`);
-                        }
+                        // BUST RULE REMOVED. WIN CONDITION IS CHECKED BELOW.
                     } else { // subtract
                         const opponent = 1 - state.activePlayer;
                         state.scores[opponent] -= rollValue;
@@ -404,7 +401,8 @@
             
             DOM.scoreEls.forEach((el, i) => el.textContent = state.scores[i]);
             
-            if (state.scores[state.activePlayer] === 15) {
+            // WIN CONDITION IS NOW >= 15
+            if (state.scores[state.activePlayer] >= 15) {
                 endGame(state.activePlayer);
                 return;
             }
@@ -476,4 +474,3 @@
     </script>
 </body>
 </html>
-
