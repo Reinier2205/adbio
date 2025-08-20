@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>🎲 Casino Dice Roller</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎲 Casino Dice Roller 3D</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -12,100 +12,86 @@
   --gold: #ffd700;
   --ivory: #faf8f0;
 }
-
-* { margin:0; padding:0; box-sizing:border-box; }
-
+*{margin:0;padding:0;box-sizing:border-box;}
 body {
-  font-family: 'Lato', sans-serif;
-  background: var(--dark-wood);
-  background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
-  display:flex; align-items:center; justify-content:center;
-  min-height:100vh; padding:1rem;
+  font-family:'Lato',sans-serif;
+  background:var(--dark-wood);
+  background-image:radial-gradient(circle,#4d322e 0%,var(--dark-wood) 70%);
+  display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;
 }
-
 .casino-table {
-  background: var(--felt-green);
-  background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                    radial-gradient(rgba(255,255,255,0.1) 1px, var(--felt-green) 1px);
+  background:var(--felt-green);
+  background-image:radial-gradient(rgba(255,255,255,0.1) 1px,transparent 1px),
+                    radial-gradient(rgba(255,255,255,0.1) 1px,var(--felt-green) 1px);
   background-size:4px 4px;
-  background-position:0 0, 2px 2px;
+  background-position:0 0,2px 2px;
   border:10px solid #4a2c2a;
-  box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
-  border-radius:15px;
-  padding:2rem; width:100%; max-width:900px;
-  text-align:center; position:relative;
+  box-shadow:0 0 0 5px var(--gold),inset 0 0 25px rgba(0,0,0,0.5);
+  border-radius:15px;padding:2rem;width:100%;max-width:900px;
+  text-align:center;position:relative;
 }
-
 h1 {
-  font-family: 'Cinzel', serif;
-  color: var(--gold);
-  font-size: 2.4rem;
-  text-shadow:2px 2px 5px rgba(0,0,0,0.7);
-  margin-bottom:1rem;
+  font-family:'Cinzel',serif;color:var(--gold);font-size:2.4rem;
+  text-shadow:2px 2px 5px rgba(0,0,0,0.7);margin-bottom:1rem;
 }
-
 .players {
-  display:flex; flex-wrap:wrap; justify-content:center; gap:1rem; margin:1.5rem 0;
+  display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin:1.5rem 0;
 }
 .player {
   flex:1 1 200px;
   background:linear-gradient(145deg,#3e1e24,#2a1a1f);
-  padding:1rem; border-radius:10px; border:3px solid #1a1a1a;
-  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
-  transition:all .3s ease; text-align:center;
+  padding:1rem;border-radius:10px;border:3px solid #1a1a1a;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 15px rgba(0,0,0,0.4);
+  transition:all .3s ease;text-align:center;
 }
 .player.active {
-  border-color:var(--gold);
-  transform:scale(1.05);
-  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
+  border-color:var(--gold);transform:scale(1.05);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 15px rgba(0,0,0,0.4),0 0 20px var(--gold);
 }
 .player input {
-  width:100%; font-size:1.2rem; padding:0.5rem; border-radius:6px;
-  border:1px solid var(--gold); text-align:center;
+  width:100%;font-size:1.2rem;padding:0.5rem;border-radius:6px;
+  border:1px solid var(--gold);text-align:center;
 }
-
-#status { font-size:1.2rem; font-weight:700; color:#fff8e1; text-shadow:1px 1px 2px #000; margin-bottom:1rem; }
-
-.dice-container {
-  display:flex; justify-content:center; gap:1.5rem; margin-bottom:2rem;
-  perspective:800px;
-}
+#status{font-size:1.2rem;font-weight:700;color:#fff8e1;text-shadow:1px 1px 2px #000;margin-bottom:1rem;}
+.dice-container{display:flex;justify-content:center;gap:2rem;margin:2rem 0;perspective:1000px;}
 .dice {
-  width:90px; height:90px; position:relative;
-  background:var(--ivory); border-radius:15px;
-  box-shadow:inset 0 0 15px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.6);
-  display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
-  padding:10px; transition:transform 1s;
+  width:100px;height:100px;position:relative;transform-style:preserve-3d;
+  transform:rotateX(0deg) rotateY(0deg);transition:transform 1s ease-out;
+}
+.face {
+  position:absolute;width:100px;height:100px;
+  background:var(--ivory);border-radius:15px;
+  box-shadow:inset 0 0 10px rgba(0,0,0,0.3),0 6px 12px rgba(0,0,0,0.6);
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  padding:10px;
 }
 .dot {
-  width:18px; height:18px; background:#111; border-radius:50%;
+  width:20px;height:20px;background:#111;border-radius:50%;
+  align-self:center;justify-self:center;
   box-shadow:inset 0 0 3px rgba(0,0,0,0.7);
-  align-self:center; justify-self:center; visibility:hidden;
 }
-.dice[data-value="1"] .dot:nth-child(5),
-.dice[data-value="2"] .dot:nth-child(1), .dice[data-value="2"] .dot:nth-child(9),
-.dice[data-value="3"] .dot:nth-child(1), .dice[data-value="3"] .dot:nth-child(5), .dice[data-value="3"] .dot:nth-child(9),
-.dice[data-value="4"] .dot:nth-child(1), .dice[data-value="4"] .dot:nth-child(3), .dice[data-value="4"] .dot:nth-child(7), .dice[data-value="4"] .dot:nth-child(9),
-.dice[data-value="5"] .dot:nth-child(1), .dice[data-value="5"] .dot:nth-child(3), .dice[data-value="5"] .dot:nth-child(5), .dice[data-value="5"] .dot:nth-child(7), .dice[data-value="5"] .dot:nth-child(9),
-.dice[data-value="6"] .dot:nth-child(1), .dice[data-value="6"] .dot:nth-child(3), .dice[data-value="6"] .dot:nth-child(4), .dice[data-value="6"] .dot:nth-child(6), .dice[data-value="6"] .dot:nth-child(7), .dice[data-value="6"] .dot:nth-child(9)
-{ visibility:visible; }
+.face:nth-child(1){transform:rotateY(0deg) translateZ(50px);}     /* front */
+.face:nth-child(2){transform:rotateY(90deg) translateZ(50px);}    /* right */
+.face:nth-child(3){transform:rotateY(180deg) translateZ(50px);}   /* back */
+.face:nth-child(4){transform:rotateY(-90deg) translateZ(50px);}   /* left */
+.face:nth-child(5){transform:rotateX(90deg) translateZ(50px);}    /* top */
+.face:nth-child(6){transform:rotateX(-90deg) translateZ(50px);}   /* bottom */
 
 button {
-  font-family:'Cinzel',serif; font-size:1rem; padding:0.7rem 1.3rem;
-  border:2px solid #111; border-radius:8px; cursor:pointer;
-  transition:all .2s ease; margin:0.3rem;
-  color:white; text-shadow:1px 1px 2px black;
-  box-shadow:0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+  font-family:'Cinzel',serif;font-size:1rem;padding:0.7rem 1.3rem;
+  border:2px solid #111;border-radius:8px;cursor:pointer;transition:all .2s ease;
+  margin:0.3rem;color:white;text-shadow:1px 1px 2px black;
+  box-shadow:0 4px 0 #111,0 5px 10px rgba(0,0,0,0.5);
 }
-button:active { transform:translateY(3px); box-shadow:0 1px 0 #111; }
-#btn-roll { background:linear-gradient(145deg,#008c3a,#005a25); }
-#btn-reset { background:linear-gradient(145deg,#a80000,#5a0000); }
-#btn-addplayer { background:linear-gradient(145deg,#ffd64d,#b88700); color:#111; }
+button:active{transform:translateY(3px);box-shadow:0 1px 0 #111;}
+#btn-roll{background:linear-gradient(145deg,#008c3a,#005a25);}
+#btn-reset{background:linear-gradient(145deg,#a80000,#5a0000);}
+#btn-addplayer{background:linear-gradient(145deg,#ffd64d,#b88700);color:#111;}
 </style>
 </head>
 <body>
 <div class="casino-table">
-  <h1>Casino Dice Roller</h1>
+  <h1>Casino Dice Roller 3D</h1>
   <div id="status">Tap Roll to Start</div>
   <div class="players" id="players"></div>
   <div class="dice-container" id="diceContainer"></div>
@@ -124,9 +110,9 @@ const btnRoll=document.getElementById("btn-roll");
 const btnAdd=document.getElementById("btn-addplayer");
 const btnReset=document.getElementById("btn-reset");
 
-let players=[], turn=0;
+let players=[],turn=0;
 
-// Add first player by default
+// --- Setup ---
 function addPlayer(name){
   const idx=players.length;
   const div=document.createElement("div");
@@ -139,29 +125,56 @@ function addPlayer(name){
 }
 addPlayer("Player 1");
 
+// --- Dice ---
 function createDie(){
   const d=document.createElement("div");
   d.className="dice";
-  for(let i=0;i<9;i++){d.appendChild(document.createElement("div")).className="dot";}
+  for(let i=1;i<=6;i++){d.appendChild(makeFace(i));}
   return d;
 }
+function makeFace(val){
+  const f=document.createElement("div");
+  f.className="face";
+  for(let i=0;i<9;i++){
+    const dot=document.createElement("div");dot.className="dot";dot.style.visibility="hidden";
+    f.appendChild(dot);
+  }
+  let map={
+    1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]
+  };
+  map[val].forEach(i=>f.children[i].style.visibility="visible");
+  return f;
+}
+// Map value -> final rotation
+const rotations={
+  1:"rotateX(0deg) rotateY(0deg)",
+  2:"rotateX(0deg) rotateY(-90deg)",
+  3:"rotateX(0deg) rotateY(180deg)",
+  4:"rotateX(0deg) rotateY(90deg)",
+  5:"rotateX(-90deg) rotateY(0deg)",
+  6:"rotateX(90deg) rotateY(0deg)"
+};
 function rollDie(die){
   const val=Math.floor(Math.random()*6)+1;
-  die.setAttribute("data-value",val);
+  const extraX=Math.floor(Math.random()*4+3)*360;
+  const extraY=Math.floor(Math.random()*4+3)*360;
+  die.style.transform=`rotateX(${extraX}deg) rotateY(${extraY}deg)`;
+  setTimeout(()=>{die.style.transform=rotations[val];},1000);
   return val;
 }
+
+// --- Game Logic ---
 function setActive(idx){
   [...playersDiv.children].forEach((p,i)=>p.classList.toggle("active",i===idx));
 }
 btnRoll.onclick=()=>{
-  if(players.length===0) return;
+  if(players.length===0)return;
   diceContainer.innerHTML="";
-  const die1=createDie(),die2=createDie();
-  diceContainer.appendChild(die1); diceContainer.appendChild(die2);
-  const v1=rollDie(die1),v2=rollDie(die2);
+  const d1=createDie(),d2=createDie();
+  diceContainer.appendChild(d1);diceContainer.appendChild(d2);
+  const v1=rollDie(d1),v2=rollDie(d2);
   statusEl.textContent=`${players[turn].value} rolled ${v1+v2}`;
-  turn=(turn+1)%players.length;
-  setActive(turn);
+  turn=(turn+1)%players.length;setActive(turn);
 };
 btnAdd.onclick=()=>addPlayer();
 btnReset.onclick=()=>location.reload();
