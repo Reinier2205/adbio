@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Glossy 3D Dice Roller</title>
+<title>Glossy 3D Dice</title>
 <style>
   :root { --size: 160px; --r: 22px; --depth: calc(var(--size)/2); }
   html,body{
@@ -21,13 +21,23 @@
   #currentPlayer{margin:10px 0;font-weight:700}
   #resetBtn{margin-top:18px;background:#404040}
 
-  .dice-container{display:flex;gap:70px;margin-top:18px;perspective:1200px}
+  /* Dice area */
+  .dice-container{display:flex;gap:70px;margin-top:18px;perspective:1200px;perspective-origin:center}
   .dice{
-    width:var(--size);height:var(--size);
-    position:relative;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
-    transition:transform 1s cubic-bezier(.36,1.56,.3,1);
+    width:var(--size);height:var(--size);position:relative;
+    /* constant 3/4 view so you see the cube, not a flat face */
+    transform:rotateX(-18deg) rotateY(28deg) translateZ(0);
+    -webkit-transform:rotateX(-18deg) rotateY(28deg) translateZ(0);
+    transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
     filter:drop-shadow(0 10px 18px rgba(0,0,0,.45));
   }
+  .cube{
+    position:absolute;inset:0;
+    transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
+    transition:transform 900ms cubic-bezier(.36,1.56,.3,1);
+    will-change:transform;
+  }
+
   .face{
     position:absolute;width:var(--size);height:var(--size);border-radius:var(--r);
     display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
@@ -36,7 +46,7 @@
   }
   .pip{width:calc(var(--size)/5.5);height:calc(var(--size)/5.5);border-radius:50%}
 
-  /* Themes */
+  /* Themes (applied to each face) */
   .theme-wood{background:linear-gradient(145deg,#8b5a2b,#cfa670)}
   .theme-wood .pip{background:#fff}
   .theme-classic{background:linear-gradient(145deg,#fdfdfd,#e1e1e1)}
@@ -50,13 +60,15 @@
   .theme-casinoGreen{background:linear-gradient(145deg,#0a8f2a,#045a1a)}
   .theme-casinoGreen .pip{background:#fff}
 
-  /* Gloss */
+  /* Gloss highlight */
   .face::before{
     content:"";position:absolute;inset:0;border-radius:var(--r);pointer-events:none;
-    background:linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(255,255,255,.05) 40%,transparent 70%);
+    background:
+      radial-gradient(80% 80% at 25% 15%, rgba(255,255,255,.55), rgba(255,255,255,.08) 40%, transparent 60%),
+      linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0) 35%);
   }
 
-  /* 3D placement */
+  /* 3D placement of faces */
   .front {transform:rotateY(0deg)    translateZ(var(--depth));}
   .back  {transform:rotateY(180deg)  translateZ(var(--depth));}
   .right {transform:rotateY(90deg)   translateZ(var(--depth));}
@@ -67,7 +79,7 @@
 </head>
 <body>
   <div id="setup">
-    <h2>🎲 Glossy 3D Dice Roller</h2>
+    <h2>Tap to Roll</h2>
     <div class="row">
       <label>Dice:
         <select id="diceCount">
@@ -114,7 +126,7 @@ const themeEl = document.getElementById("theme");
 
 let players=[],turn=0;
 
-// Player add
+// Add players
 document.getElementById("addPlayer").onclick=()=>{
   const div=document.createElement("div");
   const inp=document.createElement("input");
@@ -136,11 +148,14 @@ function makeFace(v,theme,name){
   }
   return f;
 }
+
 function makeDie(theme){
-  const d=document.createElement("div");d.className="dice";
+  const die=document.createElement("div");die.className="dice";
+  const cube=document.createElement("div");cube.className="cube";
   [["front",1],["back",6],["right",3],["left",4],["top",5],["bottom",2]]
-    .forEach(([n,v])=>d.appendChild(makeFace(v,theme,n)));
-  return d;
+    .forEach(([n,v])=>cube.appendChild(makeFace(v,theme,n)));
+  die.appendChild(cube);
+  return die;
 }
 
 document.getElementById("start").onclick=()=>{
@@ -153,11 +168,12 @@ document.getElementById("start").onclick=()=>{
 };
 
 function roll(){
-  [...diceContainer.children].forEach(d=>{
+  // rotate inner cubes; outer (.dice) keeps the 3/4 view
+  diceContainer.querySelectorAll(".cube").forEach(c=>{
     const x=720+[0,90,180,270][Math.floor(Math.random()*4)];
     const y=720+[0,90,180,270][Math.floor(Math.random()*4)];
-    const z=720+[0,90,180,270][Math.floor(Math.random()*4)];
-    d.style.transform=`rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
+    c.style.transform=`rotateX(${x}deg) rotateY(${y}deg)`;
+    c.style.webkitTransform=`rotateX(${x}deg) rotateY(${y}deg)`;
   });
   turn=(turn+1)%players.length;
   currentPlayerDiv.textContent=`${players[turn]}'s turn`;
