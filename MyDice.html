@@ -2,185 +2,169 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Glossy 3D Dice</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🎲 Casino Dice Roller</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  :root { --size: 160px; --r: 22px; --depth: calc(var(--size)/2); }
-  html,body{
-    margin:0;height:100%;background:#111;color:#fff;
-    font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    overflow:hidden;-webkit-user-select:none;user-select:none;
-  }
-  #setup,#game{display:none;text-align:center}
-  .row{margin:10px 0}
-  button,select{padding:10px 16px;margin:6px;border:0;border-radius:10px;font-size:16px;cursor:pointer}
-  button{background:#555;color:#fff}
-  select{background:#222;color:#fff}
-  #players input{margin:5px;padding:8px;border:0;border-radius:8px;background:#222;color:#fff}
-  #currentPlayer{margin:10px 0;font-weight:700}
-  #resetBtn{margin-top:18px;background:#404040}
+:root {
+  --felt-green: #0a4821;
+  --dark-wood: #2a1a1f;
+  --gold: #ffd700;
+  --ivory: #faf8f0;
+}
 
-  /* Dice area */
-  .dice-container{display:flex;gap:70px;margin-top:18px;perspective:1200px;perspective-origin:center}
-  .dice{
-    width:var(--size);height:var(--size);position:relative;
-    /* constant 3/4 view so you see the cube, not a flat face */
-    transform:rotateX(-18deg) rotateY(28deg) translateZ(0);
-    -webkit-transform:rotateX(-18deg) rotateY(28deg) translateZ(0);
-    transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
-    filter:drop-shadow(0 10px 18px rgba(0,0,0,.45));
-  }
-  .cube{
-    position:absolute;inset:0;
-    transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
-    transition:transform 900ms cubic-bezier(.36,1.56,.3,1);
-    will-change:transform;
-  }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-  .face{
-    position:absolute;width:var(--size);height:var(--size);border-radius:var(--r);
-    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
-    justify-items:center;align-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;
-    overflow:hidden;
-  }
-  .pip{width:calc(var(--size)/5.5);height:calc(var(--size)/5.5);border-radius:50%}
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--dark-wood);
+  background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; padding:1rem;
+}
 
-  /* Themes (applied to each face) */
-  .theme-wood{background:linear-gradient(145deg,#8b5a2b,#cfa670)}
-  .theme-wood .pip{background:#fff}
-  .theme-classic{background:linear-gradient(145deg,#fdfdfd,#e1e1e1)}
-  .theme-classic .pip{background:#000}
-  .theme-marble{background:radial-gradient(circle at 30% 30%,#f8f8f8,#c0c0c0)}
-  .theme-marble .pip{background:#000}
-  .theme-gold{background:linear-gradient(145deg,#ffd64d,#b88700)}
-  .theme-gold .pip{background:#111}
-  .theme-casinoRed{background:linear-gradient(145deg,#d30000,#7a0000)}
-  .theme-casinoRed .pip{background:#fff}
-  .theme-casinoGreen{background:linear-gradient(145deg,#0a8f2a,#045a1a)}
-  .theme-casinoGreen .pip{background:#fff}
+.casino-table {
+  background: var(--felt-green);
+  background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                    radial-gradient(rgba(255,255,255,0.1) 1px, var(--felt-green) 1px);
+  background-size:4px 4px;
+  background-position:0 0, 2px 2px;
+  border:10px solid #4a2c2a;
+  box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
+  border-radius:15px;
+  padding:2rem; width:100%; max-width:900px;
+  text-align:center; position:relative;
+}
 
-  /* Gloss highlight */
-  .face::before{
-    content:"";position:absolute;inset:0;border-radius:var(--r);pointer-events:none;
-    background:
-      radial-gradient(80% 80% at 25% 15%, rgba(255,255,255,.55), rgba(255,255,255,.08) 40%, transparent 60%),
-      linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0) 35%);
-  }
+h1 {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  font-size: 2.4rem;
+  text-shadow:2px 2px 5px rgba(0,0,0,0.7);
+  margin-bottom:1rem;
+}
 
-  /* 3D placement of faces */
-  .front {transform:rotateY(0deg)    translateZ(var(--depth));}
-  .back  {transform:rotateY(180deg)  translateZ(var(--depth));}
-  .right {transform:rotateY(90deg)   translateZ(var(--depth));}
-  .left  {transform:rotateY(-90deg)  translateZ(var(--depth));}
-  .top   {transform:rotateX(90deg)   translateZ(var(--depth));}
-  .bottom{transform:rotateX(-90deg)  translateZ(var(--depth));}
+.players {
+  display:flex; flex-wrap:wrap; justify-content:center; gap:1rem; margin:1.5rem 0;
+}
+.player {
+  flex:1 1 200px;
+  background:linear-gradient(145deg,#3e1e24,#2a1a1f);
+  padding:1rem; border-radius:10px; border:3px solid #1a1a1a;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
+  transition:all .3s ease; text-align:center;
+}
+.player.active {
+  border-color:var(--gold);
+  transform:scale(1.05);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
+}
+.player input {
+  width:100%; font-size:1.2rem; padding:0.5rem; border-radius:6px;
+  border:1px solid var(--gold); text-align:center;
+}
+
+#status { font-size:1.2rem; font-weight:700; color:#fff8e1; text-shadow:1px 1px 2px #000; margin-bottom:1rem; }
+
+.dice-container {
+  display:flex; justify-content:center; gap:1.5rem; margin-bottom:2rem;
+  perspective:800px;
+}
+.dice {
+  width:90px; height:90px; position:relative;
+  background:var(--ivory); border-radius:15px;
+  box-shadow:inset 0 0 15px rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.6);
+  display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+  padding:10px; transition:transform 1s;
+}
+.dot {
+  width:18px; height:18px; background:#111; border-radius:50%;
+  box-shadow:inset 0 0 3px rgba(0,0,0,0.7);
+  align-self:center; justify-self:center; visibility:hidden;
+}
+.dice[data-value="1"] .dot:nth-child(5),
+.dice[data-value="2"] .dot:nth-child(1), .dice[data-value="2"] .dot:nth-child(9),
+.dice[data-value="3"] .dot:nth-child(1), .dice[data-value="3"] .dot:nth-child(5), .dice[data-value="3"] .dot:nth-child(9),
+.dice[data-value="4"] .dot:nth-child(1), .dice[data-value="4"] .dot:nth-child(3), .dice[data-value="4"] .dot:nth-child(7), .dice[data-value="4"] .dot:nth-child(9),
+.dice[data-value="5"] .dot:nth-child(1), .dice[data-value="5"] .dot:nth-child(3), .dice[data-value="5"] .dot:nth-child(5), .dice[data-value="5"] .dot:nth-child(7), .dice[data-value="5"] .dot:nth-child(9),
+.dice[data-value="6"] .dot:nth-child(1), .dice[data-value="6"] .dot:nth-child(3), .dice[data-value="6"] .dot:nth-child(4), .dice[data-value="6"] .dot:nth-child(6), .dice[data-value="6"] .dot:nth-child(7), .dice[data-value="6"] .dot:nth-child(9)
+{ visibility:visible; }
+
+button {
+  font-family:'Cinzel',serif; font-size:1rem; padding:0.7rem 1.3rem;
+  border:2px solid #111; border-radius:8px; cursor:pointer;
+  transition:all .2s ease; margin:0.3rem;
+  color:white; text-shadow:1px 1px 2px black;
+  box-shadow:0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+}
+button:active { transform:translateY(3px); box-shadow:0 1px 0 #111; }
+#btn-roll { background:linear-gradient(145deg,#008c3a,#005a25); }
+#btn-reset { background:linear-gradient(145deg,#a80000,#5a0000); }
+#btn-addplayer { background:linear-gradient(145deg,#ffd64d,#b88700); color:#111; }
 </style>
 </head>
 <body>
-  <div id="setup">
-    <h2>Tap to Roll</h2>
-    <div class="row">
-      <label>Dice:
-        <select id="diceCount">
-          <option value="1">1</option>
-          <option value="2">2</option>
-        </select>
-      </label>
-    </div>
-    <div class="row">
-      <label>Theme:
-        <select id="theme">
-          <option value="wood">Wood (default)</option>
-          <option value="classic">Classic</option>
-          <option value="marble">Marble</option>
-          <option value="gold">Gold</option>
-          <option value="casinoRed">Casino Red</option>
-          <option value="casinoGreen">Casino Green</option>
-        </select>
-      </label>
-    </div>
-    <div id="players" class="row">
-      <h3>Players</h3>
-      <div id="playerList"></div>
-      <button type="button" id="addPlayer">+ Add Player</button>
-    </div>
-    <div class="row"><button id="start">Start Game</button></div>
+<div class="casino-table">
+  <h1>Casino Dice Roller</h1>
+  <div id="status">Tap Roll to Start</div>
+  <div class="players" id="players"></div>
+  <div class="dice-container" id="diceContainer"></div>
+  <div>
+    <button id="btn-roll">🎲 Roll</button>
+    <button id="btn-addplayer">+ Add Player</button>
+    <button id="btn-reset">🔄 Reset</button>
   </div>
-
-  <div id="game">
-    <h2>Tap Anywhere to Roll</h2>
-    <div id="currentPlayer"></div>
-    <div class="dice-container" id="diceContainer"></div>
-    <button id="resetBtn">Reset</button>
-  </div>
+</div>
 
 <script>
-const setup = document.getElementById("setup");
-const game = document.getElementById("game");
-const diceContainer = document.getElementById("diceContainer");
-const currentPlayerDiv = document.getElementById("currentPlayer");
-const resetBtn = document.getElementById("resetBtn");
-const diceCountEl = document.getElementById("diceCount");
-const themeEl = document.getElementById("theme");
+const playersDiv=document.getElementById("players");
+const diceContainer=document.getElementById("diceContainer");
+const statusEl=document.getElementById("status");
+const btnRoll=document.getElementById("btn-roll");
+const btnAdd=document.getElementById("btn-addplayer");
+const btnReset=document.getElementById("btn-reset");
 
-let players=[],turn=0;
+let players=[], turn=0;
 
-// Add players
-document.getElementById("addPlayer").onclick=()=>{
+// Add first player by default
+function addPlayer(name){
+  const idx=players.length;
   const div=document.createElement("div");
+  div.className="player"+(idx===0?" active":"");
   const inp=document.createElement("input");
-  inp.type="text";inp.placeholder="Player "+(document.querySelectorAll("#playerList input").length+1);
-  div.appendChild(inp);document.getElementById("playerList").appendChild(div);
-};
-
-function pipPattern(v){
-  return {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]}[v];
+  inp.value=name||`Player ${idx+1}`;
+  div.appendChild(inp);
+  playersDiv.appendChild(div);
+  players.push(inp);
 }
+addPlayer("Player 1");
 
-function makeFace(v,theme,name){
-  const f=document.createElement("div");
-  f.className=`face theme-${theme} ${name}`;
-  for(let i=0;i<9;i++){
-    if(pipPattern(v).includes(i)){
-      const p=document.createElement("div");p.className="pip";f.appendChild(p);
-    } else f.appendChild(document.createElement("div"));
-  }
-  return f;
+function createDie(){
+  const d=document.createElement("div");
+  d.className="dice";
+  for(let i=0;i<9;i++){d.appendChild(document.createElement("div")).className="dot";}
+  return d;
 }
-
-function makeDie(theme){
-  const die=document.createElement("div");die.className="dice";
-  const cube=document.createElement("div");cube.className="cube";
-  [["front",1],["back",6],["right",3],["left",4],["top",5],["bottom",2]]
-    .forEach(([n,v])=>cube.appendChild(makeFace(v,theme,n)));
-  die.appendChild(cube);
-  return die;
+function rollDie(die){
+  const val=Math.floor(Math.random()*6)+1;
+  die.setAttribute("data-value",val);
+  return val;
 }
-
-document.getElementById("start").onclick=()=>{
-  const count=+diceCountEl.value;const theme=themeEl.value;
-  players=[];document.querySelectorAll("#playerList input").forEach(inp=>{if(inp.value.trim())players.push(inp.value.trim());});
-  if(!players.length)players=["Player 1"];turn=0;
-  currentPlayerDiv.textContent=`${players[turn]}'s turn`;
-  setup.style.display="none";game.style.display="block";diceContainer.innerHTML="";
-  for(let i=0;i<count;i++)diceContainer.appendChild(makeDie(theme));
-};
-
-function roll(){
-  // rotate inner cubes; outer (.dice) keeps the 3/4 view
-  diceContainer.querySelectorAll(".cube").forEach(c=>{
-    const x=720+[0,90,180,270][Math.floor(Math.random()*4)];
-    const y=720+[0,90,180,270][Math.floor(Math.random()*4)];
-    c.style.transform=`rotateX(${x}deg) rotateY(${y}deg)`;
-    c.style.webkitTransform=`rotateX(${x}deg) rotateY(${y}deg)`;
-  });
+function setActive(idx){
+  [...playersDiv.children].forEach((p,i)=>p.classList.toggle("active",i===idx));
+}
+btnRoll.onclick=()=>{
+  if(players.length===0) return;
+  diceContainer.innerHTML="";
+  const die1=createDie(),die2=createDie();
+  diceContainer.appendChild(die1); diceContainer.appendChild(die2);
+  const v1=rollDie(die1),v2=rollDie(die2);
+  statusEl.textContent=`${players[turn].value} rolled ${v1+v2}`;
   turn=(turn+1)%players.length;
-  currentPlayerDiv.textContent=`${players[turn]}'s turn`;
-}
-document.body.addEventListener("click",()=>{if(setup.style.display==="block")return;roll();});
-resetBtn.onclick=()=>location.reload();
-setup.style.display="block";
+  setActive(turn);
+};
+btnAdd.onclick=()=>addPlayer();
+btnReset.onclick=()=>location.reload();
 </script>
 </body>
 </html>
