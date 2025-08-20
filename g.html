@@ -1,3 +1,13 @@
+Of course! Adding a running total of wins and making the end-of-game sequence more robust is a great way to enhance the experience.
+Here is the updated code that addresses your requests.
+Key Improvements:
+ * Bug Fix & Game Reset: The game logic has been refactored to ensure that when "Play Again" is selected, the scores for the new round are correctly reset to zero for both players.
+ * Win Tally: The game now keeps a running total of how many games each player has won during the session.
+ * Enhanced Win Screen: When a game ends, the win screen now explicitly asks if you want to play again and displays the current overall win count for both players.
+ * Loser Starts Next Round: To make things fairer and more interesting, the player who lost the previous round gets to start the next one.
+ * New Session Button: The "New Game" button on the main screen has been renamed "New Session." Clicking it will reset everything, including the win tally, allowing you to start a fresh match.
+The Bellagio Experience: Give & Take (Final Version)
+Save this as casino-dice-final.html. The changes are primarily in the JavaScript logic, with minor tweaks to the HTML for the new win screen display.
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -195,7 +205,7 @@
         .controls button:disabled { background: #666; color: #aaa; box-shadow: 0 4px 0 #333; cursor: not-allowed;}
         #btn-add { background: linear-gradient(145deg, #008c3a, #005a25); }
         #btn-subtract { background: linear-gradient(145deg, #a80000, var(--dark-red)); }
-        #btn-new { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; margin-top: 1rem; }
+        #btn-new-session { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; margin-top: 1rem; }
 
         .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -217,7 +227,9 @@
         }
         .modal-overlay.show .modal-content { transform: scale(1); }
         .modal-content h3 { font-family: 'Cinzel', serif; font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem; }
-        .modal-content p { font-size: 1.2rem; margin-bottom: 2rem; max-width: 400px; }
+        .modal-content p { font-size: 1.2rem; margin-bottom: 1.5rem; max-width: 400px; }
+        #win-tally { font-size: 1.1rem; margin-bottom: 2rem; }
+        #win-tally span { font-weight: 700; color: var(--gold); }
         .modal-content button {
              font-family: 'Cinzel', serif; font-size: 1.2rem; padding: 0.8rem 2.5rem;
              border: 2px solid #111; border-radius: 8px; cursor: pointer;
@@ -250,7 +262,7 @@
         </div>
 
         <div class="game-area">
-            <p id="game-status">Player 1, make your choice!</p>
+            <p id="game-status">Welcome! Player 1, make your choice!</p>
             <div class="dice-container">
                 <div id="dice-1" class="dice"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
                 <div id="dice-2" class="dice"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
@@ -261,7 +273,7 @@
             </div>
         </div>
         
-        <button id="btn-new" onclick="initGame()">🔄 New Game</button>
+        <button id="btn-new-session">🔄 New Session</button>
     </div>
     
     <div id="outcome-modal" class="modal-overlay">
@@ -275,6 +287,8 @@
     <div id="win-modal" class="modal-overlay">
          <div class="modal-content">
             <h3 id="winner-text"></h3>
+            <p>Play another round?</p>
+            <div id="win-tally"></div>
             <button id="btn-play-again">Play Again</button>
         </div>
     </div>
@@ -288,51 +302,51 @@
             gameStatus: document.getElementById('game-status'),
             btnAdd: document.getElementById('btn-add'),
             btnSubtract: document.getElementById('btn-subtract'),
+            btnNewSession: document.getElementById('btn-new-session'),
             outcomeModal: document.getElementById('outcome-modal'),
             outcomeTitle: document.getElementById('outcome-title'),
             outcomeDescription: document.getElementById('outcome-description'),
             btnContinue: document.getElementById('btn-continue'),
             winModal: document.getElementById('win-modal'),
             winnerText: document.getElementById('winner-text'),
+            winTally: document.getElementById('win-tally'),
             btnPlayAgain: document.getElementById('btn-play-again'),
         };
 
         let state = {};
 
-        function initGame() {
-            state = {
-                scores: [0, 0],
-                playerNames: ['Player 1', 'Player 2'],
-                activePlayer: 0,
-                gameActive: true,
-                currentRoll: { d1: 0, d2: 0, total: 0, event: null, choice: null }
-            };
+        function startNewSession() {
+            state.winTally = [0, 0];
+            startNextRound(0);
+        }
+        
+        function startNextRound(startingPlayer = 0) {
+            state.scores = [0, 0];
+            state.playerNames = state.playerNames || ['Player 1', 'Player 2'];
+            state.activePlayer = startingPlayer;
+            state.gameActive = true;
+            state.currentRoll = { d1: 0, d2: 0, total: 0, event: null, choice: null };
             
-            DOM.scoreEls[0].textContent = 0;
-            DOM.scoreEls[1].textContent = 0;
-            DOM.playerNames[0].textContent = state.playerNames[0];
-            DOM.playerNames[1].textContent = state.playerNames[1];
+            DOM.scoreEls.forEach((el, i) => el.textContent = state.scores[i]);
+            DOM.playerNames.forEach((el, i) => el.textContent = state.playerNames[i]);
             DOM.dice.forEach(d => d.setAttribute('data-value', ''));
             
-            DOM.playerPanels[0].classList.add('active');
-            DOM.playerPanels[1].classList.remove('active');
+            DOM.playerPanels.forEach((panel, i) => {
+                panel.classList.toggle('active', i === state.activePlayer);
+            });
             
-            updateStatus(`${state.playerNames[0]}, make your choice!`);
+            updateStatus(`${state.playerNames[state.activePlayer]}, make your choice!`);
             
             setButtonsDisabled(false);
             DOM.outcomeModal.classList.remove('show');
             DOM.winModal.classList.remove('show');
         }
 
-        function updateStatus(text) {
-            DOM.gameStatus.textContent = text;
-        }
-        
+        function updateStatus(text) { DOM.gameStatus.textContent = text; }
         function setButtonsDisabled(isDisabled) {
             DOM.btnAdd.disabled = isDisabled;
             DOM.btnSubtract.disabled = isDisabled;
         }
-
         function updateDiceDisplay(d1, d2) {
             DOM.dice[0].setAttribute('data-value', d1);
             DOM.dice[1].setAttribute('data-value', d2);
@@ -341,22 +355,20 @@
         function performTurn(choice) {
             if (!state.gameActive) return;
             state.currentRoll.choice = choice;
-
             setButtonsDisabled(true);
             updateStatus('Rolling...');
-            
-            DOM.dice.forEach(d => d.classList.add('rolling'));
+            DOM.dice.forEach(d => {
+                d.classList.add('rolling');
+                d.setAttribute('data-value', '');
+            });
 
             setTimeout(() => {
                 DOM.dice.forEach(d => d.classList.remove('rolling'));
-                
                 state.currentRoll.d1 = Math.floor(Math.random() * 6) + 1;
                 state.currentRoll.d2 = Math.floor(Math.random() * 6) + 1;
                 state.currentRoll.total = state.currentRoll.d1 + state.currentRoll.d2;
-                
                 updateDiceDisplay(state.currentRoll.d1, state.currentRoll.d2);
                 state.currentRoll.event = getRollEvent(state.currentRoll.d1, state.currentRoll.d2, state.currentRoll.total);
-                
                 showOutcomeModal();
             }, 1000);
         }
@@ -395,13 +407,12 @@
                             updateStatus(`${state.playerNames[state.activePlayer]} busted!`);
                         }
                     } else { // subtract
-                        const opponent = state.activePlayer === 0 ? 1 : 0;
+                        const opponent = 1 - state.activePlayer;
                         state.scores[opponent] -= rollValue;
                     }
             }
             
-            DOM.scoreEls[0].textContent = state.scores[0];
-            DOM.scoreEls[1].textContent = state.scores[1];
+            DOM.scoreEls.forEach((el, i) => el.textContent = state.scores[i]);
             
             if (state.scores[state.activePlayer] === 15) {
                 endGame(state.activePlayer);
@@ -417,28 +428,37 @@
         }
         
         function switchPlayer() {
-            state.activePlayer = state.activePlayer === 0 ? 1 : 0;
-            DOM.playerPanels[0].classList.toggle('active');
-            DOM.playerPanels[1].classList.toggle('active');
+            state.activePlayer = 1 - state.activePlayer;
+            DOM.playerPanels.forEach((panel, i) => panel.classList.toggle('active', i === state.activePlayer));
             updateStatus(`${state.playerNames[state.activePlayer]}, make your choice!`);
             setButtonsDisabled(false);
         }
 
         function endGame(winnerIndex) {
             state.gameActive = false;
+            state.winTally[winnerIndex]++;
             setButtonsDisabled(true);
+            
             DOM.winnerText.innerHTML = `🎉 ${state.playerNames[winnerIndex]} Wins! 🎉`;
+            DOM.winTally.innerHTML = `
+                Overall Score:<br>
+                <span>${state.playerNames[0]}: ${state.winTally[0]} Wins</span> | 
+                <span>${state.playerNames[1]}: ${state.winTally[1]} Wins</span>
+            `;
+
+            // The loser (1 - winnerIndex) will start the next round
+            DOM.btnPlayAgain.onclick = () => startNextRound(1 - winnerIndex);
+            
             DOM.winModal.classList.add('show');
         }
 
         function editName(playerIndex) {
             const nameEl = DOM.playerNames[playerIndex];
-            const currentName = nameEl.textContent;
             const parent = nameEl.parentElement;
             
             const input = document.createElement('input');
             input.type = 'text';
-            input.value = currentName;
+            input.value = state.playerNames[playerIndex];
             input.className = 'player-name-input';
             
             parent.replaceChild(input, nameEl);
@@ -449,25 +469,21 @@
                 state.playerNames[playerIndex] = newName;
                 nameEl.textContent = newName;
                 parent.replaceChild(nameEl, input);
-                if (state.activePlayer === playerIndex) {
+                if (state.activePlayer === playerIndex && state.gameActive) {
                    updateStatus(`${state.playerNames[state.activePlayer]}, make your choice!`);
                 }
             };
-
             input.addEventListener('blur', saveName);
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    input.blur();
-                }
-            });
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
         }
 
         DOM.btnAdd.addEventListener('click', () => performTurn('add'));
         DOM.btnSubtract.addEventListener('click', () => performTurn('subtract'));
         DOM.btnContinue.addEventListener('click', continueGame);
-        DOM.btnPlayAgain.addEventListener('click', initGame);
+        DOM.btnNewSession.addEventListener('click', startNewSession);
 
-        initGame();
+        startNewSession(); // Start the very first game session
     </script>
 </body>
 </html>
+
