@@ -49,7 +49,7 @@
             border-radius: 15px;
             padding: 2rem;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -143,69 +143,70 @@
             margin-top: 0.3rem;
         }
 
-        .board {
+        .hex-board {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            gap: 8px;
-            margin: 1.5rem 0;
-            aspect-ratio: 1 / 1;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 4px;
+            margin: 1.5rem auto;
+            width: 320px;
+            height: 320px;
+            position: relative;
         }
 
-        .cell {
+        .hex-cell {
             background: linear-gradient(145deg, #0f5a2c, #0a4821);
-            border: 3px solid #1a1a1a;
-            border-radius: 8px;
+            border: 2px solid #1a1a1a;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2rem;
+            font-size: 1.8rem;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
             position: relative;
-            overflow: hidden;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
         }
 
-        .cell:hover {
-            transform: scale(1.03);
+        .hex-cell:hover {
+            transform: scale(1.08);
             box-shadow: inset 0 0 15px rgba(255,255,255,0.1), 0 0 10px var(--gold);
         }
 
-        .cell.x::before, .cell.x::after {
+        .hex-cell.x::before, .hex-cell.x::after {
             content: '';
             position: absolute;
-            width: 70%;
-            height: 8px;
+            width: 60%;
+            height: 6px;
             background-color: var(--player1-color);
             border-radius: 5px;
         }
 
-        .cell.x::before {
+        .hex-cell.x::before {
             transform: rotate(45deg);
         }
 
-        .cell.x::after {
+        .hex-cell.x::after {
             transform: rotate(-45deg);
         }
 
-        .cell.o::before {
+        .hex-cell.o::before {
             content: '';
             position: absolute;
-            width: 60%;
-            height: 60%;
-            border: 8px solid var(--player2-color);
+            width: 50%;
+            height: 50%;
+            border: 6px solid var(--player2-color);
             border-radius: 50%;
         }
 
-        .cell.delta::before {
+        .hex-cell.delta::before {
             content: '';
             position: absolute;
             width: 0;
             height: 0;
-            border-left: 30px solid transparent;
-            border-right: 30px solid transparent;
-            border-bottom: 50px solid var(--player3-color);
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 25px solid var(--player3-color);
         }
 
         #game-status {
@@ -234,7 +235,10 @@
             transform: translateY(3px);
             box-shadow: 0 1px 0 #111;
         }
-        #btn-reset { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; }
+        #btn-reset { 
+            background: linear-gradient(145deg, #ffeb3b, var(--gold)); 
+            color: #333; 
+        }
 
         .win-message {
             position: absolute;
@@ -320,11 +324,12 @@
                 font-size: 1.5rem;
             }
             
-            .board {
-                gap: 6px;
+            .hex-board {
+                width: 280px;
+                height: 280px;
             }
             
-            .cell {
+            .hex-cell {
                 font-size: 1.5rem;
             }
         }
@@ -333,7 +338,7 @@
 <body>
 
     <div class="casino-table">
-        <h1>Tric Tac Toe</h1>
+        <h1>Triple Tic Tac Toe</h1>
         
         <div class="win-message" id="win-message">
             <h3 id="winner-text"></h3>
@@ -369,25 +374,30 @@
 
         <div class="game-area">
             <p id="game-status" aria-live="polite">Player X's turn</p>
-            <div class="board" id="game-board">
-                <!-- 4x4 grid for 3 players -->
-                <div class="cell" id="cell-0" data-index="0"></div>
-                <div class="cell" id="cell-1" data-index="1"></div>
-                <div class="cell" id="cell-2" data-index="2"></div>
-                <div class="cell" id="cell-3" data-index="3"></div>
-                <div class="cell" id="cell-4" data-index="4"></div>
-                <div class="cell" id="cell-5" data-index="5"></div>
-                <div class="cell" id="cell-6" data-index="6"></div>
-                <div class="cell" id="cell-7" data-index="7"></div>
-                <div class="cell" id="cell-8" data-index="8"></div>
-                <div class="cell" id="cell-9" data-index="9"></div>
-                <div class="cell" id="cell-10" data-index="10"></div>
-                <div class="cell" id="cell-11" data-index="11"></div>
-                <div class="cell" id="cell-12" data-index="12"></div>
-                <div class="cell" id="cell-13" data-index="13"></div>
-                <div class="cell" id="cell-14" data-index="14"></div>
-                <div class="cell" id="cell-15" data-index="15"></div>
+            
+            <!-- Hexagonal board with 19 cells -->
+            <div class="hex-board" id="game-board">
+                <div class="hex-cell" data-index="0"></div>
+                <div class="hex-cell" data-index="1"></div>
+                <div class="hex-cell" data-index="2"></div>
+                <div class="hex-cell" data-index="3"></div>
+                <div class="hex-cell" data-index="4"></div>
+                <div class="hex-cell" data-index="5"></div>
+                <div class="hex-cell" data-index="6"></div>
+                <div class="hex-cell" data-index="7"></div>
+                <div class="hex-cell" data-index="8"></div>
+                <div class="hex-cell" data-index="9"></div>
+                <div class="hex-cell" data-index="10"></div>
+                <div class="hex-cell" data-index="11"></div>
+                <div class="hex-cell" data-index="12"></div>
+                <div class="hex-cell" data-index="13"></div>
+                <div class="hex-cell" data-index="14"></div>
+                <div class="hex-cell" data-index="15"></div>
+                <div class="hex-cell" data-index="16"></div>
+                <div class="hex-cell" data-index="17"></div>
+                <div class="hex-cell" data-index="18"></div>
             </div>
+            
             <div class="move-history" id="move-history"></div>
             <div class="controls">
                 <button id="btn-reset">🔄 New Game</button>
@@ -417,7 +427,7 @@
                         player3Wins: document.getElementById('player-3-wins'),
                         gameStatus: document.getElementById('game-status'),
                         board: document.getElementById('game-board'),
-                        cells: document.querySelectorAll('.cell'),
+                        cells: document.querySelectorAll('.hex-cell'),
                         btnReset: document.getElementById('btn-reset'),
                         winMessage: document.getElementById('win-message'),
                         winnerText: document.getElementById('winner-text'),
@@ -451,7 +461,7 @@
 
                 startNewGame() {
                     this.state = {
-                        board: Array(16).fill(null),
+                        board: Array(19).fill(null),
                         currentPlayer: 0, // 0: X, 1: O, 2: Δ
                         gameActive: true,
                         moveHistory: [],
@@ -469,7 +479,7 @@
                 handleCellClick(e) {
                     if (!this.state.gameActive) return;
                     
-                    const cell = e.target.closest('.cell');
+                    const cell = e.target.closest('.hex-cell');
                     if (!cell) return;
                     
                     const index = parseInt(cell.dataset.index);
@@ -490,7 +500,7 @@
                         this.state.moveHistory.shift();
                         
                         // Update the board display
-                        this.DOM.cells[oldestMoveIndex].className = 'cell';
+                        this.DOM.cells[oldestMoveIndex].className = 'hex-cell';
                     }
                     
                     // Make the new move
@@ -518,7 +528,7 @@
                 updateBoard() {
                     this.state.board.forEach((value, index) => {
                         const cell = this.DOM.cells[index];
-                        cell.className = 'cell';
+                        cell.className = 'hex-cell';
                         if (value === 0) {
                             cell.classList.add('x');
                         } else if (value === 1) {
@@ -555,24 +565,27 @@
                 }
 
                 checkGameState() {
-                    // Check win conditions for 4x4 grid
+                    // Define winning paths for hexagonal board
                     const winPatterns = [
-                        // Rows
-                        [0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15],
-                        // Columns
-                        [0, 4, 8, 12], [1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15],
-                        // Diagonals
-                        [0, 5, 10, 15], [3, 6, 9, 12]
+                        // Horizontal lines
+                        [0, 1, 2, 3], [4, 5, 6, 7, 8], [9, 10, 11, 12, 13, 14], [15, 16, 17, 18],
+                        // Diagonal right lines
+                        [0, 4, 9, 15], [1, 5, 10, 16], [2, 6, 11, 17], [3, 7, 12, 18], [8, 13],
+                        // Diagonal left lines
+                        [15, 9, 4, 0], [16, 10, 5, 1], [17, 11, 6, 2], [18, 12, 7, 3], [14, 13, 8],
+                        // Additional patterns for more interesting gameplay
+                        [4, 10, 16], [5, 11, 17], [9, 10, 11], [10, 11, 12], [5, 6, 7]
                     ];
 
                     for (const pattern of winPatterns) {
-                        const [a, b, c, d] = pattern;
-                        if (this.state.board[a] !== null && 
-                            this.state.board[a] === this.state.board[b] && 
-                            this.state.board[a] === this.state.board[c] &&
-                            this.state.board[a] === this.state.board[d]) {
-                            
-                            this.state.winner = this.state.board[a];
+                        // Check if all cells in the pattern are occupied by the same player
+                        const firstCell = this.state.board[pattern[0]];
+                        if (firstCell === null) continue;
+                        
+                        const isWin = pattern.every(index => this.state.board[index] === firstCell);
+                        
+                        if (isWin) {
+                            this.state.winner = firstCell;
                             this.state.gameActive = false;
                             
                             // Update win count
