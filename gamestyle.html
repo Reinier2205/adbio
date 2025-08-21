@@ -7,7 +7,7 @@
     <title>Casino Game Style Template</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* =====================================
            CASINO GAME STYLE TEMPLATE
@@ -19,7 +19,8 @@
         /* Primary Casino Colors */
         --felt-green: #0a4821;
         --dark-wood: #2a1a1f;
-        --gold: #ffd700;
+        --gold: #d4af37;
+        --gold-light: #ffd700;
         --light-gold: #fff8e1;
         --dark-red: #8c0000;
         --ivory: #faf8f0;
@@ -83,22 +84,26 @@
        TYPOGRAPHY - CASINO STYLE
        ===================================== */
     h1 {
-        font-family: 'Cinzel', serif;
-        color: var(--gold);
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        color: var(--gold-light);
         font-size: 2.8rem;
         text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
         margin-bottom: 1.5rem;
     }
 
     h2 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
         color: var(--light-gold);
         font-size: 1.5rem;
     }
 
     h3 {
-        font-family: 'Cinzel', serif;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
         font-size: 2rem;
-        color: var(--gold);
+        color: var(--gold-light);
         margin-bottom: 0.5rem;
     }
 
@@ -244,7 +249,8 @@
     }
 
     .controls button {
-        font-family: 'Cinzel', serif;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
         font-size: 1.1rem;
         padding: 0.8rem 1.5rem;
         border: 2px solid #111;
@@ -272,8 +278,8 @@
     /* Button color variants */
     .btn-primary { background: linear-gradient(145deg, #008c3a, #005a25); }
     .btn-secondary { background: linear-gradient(145deg, #a80000, var(--dark-red)); }
-    .btn-gold { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; }
-    .btn-reset { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; }
+    .btn-gold { background: linear-gradient(145deg, var(--gold), #b8860b); color: white; }
+    .btn-reset { background: linear-gradient(145deg, var(--gold), #b8860b); color: white; }
 
     /* =====================================
        GAME BOARD COMPONENTS
@@ -447,9 +453,10 @@
     }
 
     .modal-content h3 {
-        font-family: 'Cinzel', serif;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
         font-size: 2.5rem;
-        color: var(--gold);
+        color: var(--gold-light);
         margin-bottom: 1rem;
     }
 
@@ -462,17 +469,18 @@
     }
 
     .modal-content button {
-        font-family: 'Cinzel', serif;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
         font-size: 1.2rem;
         padding: 0.8rem 2.5rem;
         border: 2px solid #111;
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
-        color: #333;
-        text-shadow: none;
+        color: white;
+        text-shadow: 1px 1px 2px black;
         box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
-        background: linear-gradient(145deg, #ffeb3b, var(--gold));
+        background: linear-gradient(145deg, var(--gold), #b8860b);
     }
 
     .modal-content button:active {
@@ -832,5 +840,134 @@
 </div>
 
 <script>
-    //
+    // Demo functionality for the template showcase
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // Add click handler to show modal example
+        const demoButton = document.createElement('button');
+        demoButton.textContent = 'Show Modal Example';
+        demoButton.className = 'btn-gold';
+        demoButton.style.marginTop = '2rem';
+        demoButton.onclick = () => {
+            document.getElementById('example-modal').classList.add('show');
+        };
+        
+        const gameStatus = document.getElementById('game-status');
+        gameStatus.parentNode.insertBefore(demoButton, gameStatus.nextSibling);
+        
+        // Add dice animation demo
+        const diceElements = document.querySelectorAll('.dice');
+        diceElements.forEach(dice => {
+            dice.style.cursor = 'pointer';
+            dice.onclick = () => {
+                dice.classList.add('rolling');
+                setTimeout(() => {
+                    dice.classList.remove('rolling');
+                    // Random dice value
+                    const value = Math.floor(Math.random() * 6) + 1;
+                    dice.setAttribute('data-value', value);
+                }, 1000);
+            };
+        });
+        
+        // Add hover effects to demo elements
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.onclick = () => {
+                if (!cell.classList.contains('x') && !cell.classList.contains('o') && !cell.classList.contains('delta')) {
+                    const markers = ['x', 'o', 'delta'];
+                    const randomMarker = markers[Math.floor(Math.random() * markers.length)];
+                    cell.classList.add(randomMarker);
+                }
+            };
+        });
+    });
+    
+    /*
+    =====================================
+    TEMPLATE USAGE GUIDE
+    =====================================
+    
+    This CSS template provides all the styling elements from your casino games.
+    Here's how to use it for new games:
+    
+    1. BASIC STRUCTURE:
+       - Wrap your game in <div class="casino-table">
+       - Add your title with <h1>Game Title</h1>
+       - Use appropriate sections for different game areas
+    
+    2. PLAYER MANAGEMENT:
+       - Use .players container with .player divs
+       - Add .active class to highlight current player
+       - Use player-1, player-2, etc. classes for color coding
+       - Include .player-header with name editing functionality
+    
+    3. GAME CONTROLS:
+       - Wrap buttons in .controls container
+       - Use button classes: .btn-primary, .btn-secondary, .btn-gold, .btn-reset
+       - Add disabled state styling automatically applied
+    
+    4. GAME BOARDS:
+       - Use .board container with .grid-3x3, .grid-4x4, or .grid-5x5
+       - Individual cells use .cell class
+       - Game pieces: .x, .o, .delta classes for markers
+    
+    5. DICE GAMES:
+       - Use .dice-container with .dice elements
+       - Add data-value attribute (1-6) to show dice faces
+       - Use .rolling class for animation effects
+    
+    6. MODALS & POPUPS:
+       - Use .modal-overlay with .modal-content
+       - Add .show class to display modal
+       - Includes built-in animation effects
+    
+    7. RESPONSIVE DESIGN:
+       - All elements automatically responsive
+       - Mobile-first approach included
+       - Touch-friendly sizing for mobile games
+    
+    8. CUSTOMIZATION:
+       - Modify CSS variables in :root for color themes
+       - Add new player colors (--player4-color, etc.)
+       - Adjust sizing via CSS custom properties
+    
+    9. JAVASCRIPT INTEGRATION:
+       - Use standard DOM manipulation
+       - Modal show/hide via .show class
+       - Player switching via .active class
+       - Game state management through data attributes
+    
+    10. ACCESSIBILITY:
+        - ARIA labels included where needed
+        - Keyboard navigation support
+        - Screen reader friendly
+        - Focus management for modals
+    
+    EXAMPLE NEW GAME STRUCTURE:
+    ```html
+    <div class="casino-table">
+        <h1>My New Game</h1>
+        
+        <div class="players">
+            <div class="player player-1 active">
+                <div class="player-header">
+                    <h2>Player 1</h2>
+                    <span class="edit-name-icon">✏️</span>
+                </div>
+                <p class="score">0</p>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <p id="game-status">Game Status Here</p>
+            <!-- Your game content -->
+            <div class="controls">
+                <button class="btn-primary">Play</button>
+                <button class="btn-reset">Reset</button>
+            </div>
+        </div>
+    </div>
+    ```
+    */
 ```
