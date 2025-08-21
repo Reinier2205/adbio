@@ -96,11 +96,40 @@
             font-size: 1.2rem;
         }
 
+        .edit-name-icon {
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--gold);
+            transition: transform 0.2s;
+            border-radius: 4px;
+        }
+        .edit-name-icon:hover { transform: scale(1.2); }
+        .edit-name-icon:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
+        }
+
+        .player-name-input {
+            background-color: var(--light-gold);
+            border: 1px solid var(--gold);
+            border-radius: 4px;
+            padding: 4px;
+            font-family: 'Lato', sans-serif;
+            text-align: center;
+            width: 80%;
+        }
+
         .mark {
             font-size: 2rem;
             font-weight: bold;
             color: var(--gold);
             text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .win-tally {
+            color: var(--light-gold);
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
         }
 
         .board {
@@ -187,35 +216,35 @@
         .controls button:disabled { background: #666; color: #aaa; box-shadow: 0 4px 0 #333; cursor: not-allowed;}
         #btn-reset { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; }
 
-        .modal-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0; visibility: hidden; transition: all 0.5s ease; z-index: 100;
-        }
-        .modal-overlay.show { opacity: 1; visibility: visible; }
-        .modal-content {
+        .win-message {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
             background: linear-gradient(145deg, #3e1e24, #2a1a1f);
             color: var(--light-gold);
-            padding: 2rem 3rem;
+            padding: 1.5rem 2rem;
             border-radius: 15px;
             border: 3px solid var(--gold);
             box-shadow: 0 0 30px var(--gold);
             text-align: center;
-            transform: scale(0.7);
-            transition: transform 0.5s ease;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease;
         }
-        .modal-overlay.show .modal-content { transform: scale(1); }
-        .modal-content h3 { font-family: 'Cinzel', serif; font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem; }
-        .modal-content p { font-size: 1.2rem; margin-bottom: 1.5rem; max-width: 400px; }
-        .modal-content button {
-             font-family: 'Cinzel', serif; font-size: 1.2rem; padding: 0.8rem 2.5rem;
-             border: 2px solid #111; border-radius: 8px; cursor: pointer;
-             transition: all 0.2s ease; color: #333; text-shadow: none;
-             box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
-             background: linear-gradient(145deg, #ffeb3b, var(--gold));
+        
+        .win-message.show {
+            opacity: 1;
+            visibility: visible;
         }
-        .modal-content button:active { transform: translateY(3px); box-shadow: 0 1px 0 #111; }
+        
+        .win-message h3 { 
+            font-family: 'Cinzel', serif; 
+            font-size: 2rem; 
+            color: var(--gold); 
+            margin-bottom: 0.5rem; 
+        }
         
         .move-history {
             display: flex;
@@ -258,6 +287,15 @@
             .mark {
                 font-size: 1.5rem;
             }
+            
+            .win-message {
+                width: 90%;
+                padding: 1rem;
+            }
+            
+            .win-message h3 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -265,18 +303,28 @@
 
     <div class="casino-table">
         <h1>Tic Tac Toe</h1>
+        
+        <div class="win-message" id="win-message">
+            <h3 id="winner-text"></h3>
+            <button id="btn-continue">Continue</button>
+        </div>
+        
         <div class="players">
             <div id="player-x" class="player active">
                 <div class="player-header">
-                    <h2>Player X</h2>
+                    <h2 id="player-x-name">Player X</h2>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player X Name">✏️</span>
                 </div>
                 <p class="mark">X</p>
+                <p class="win-tally">Wins: <span id="player-x-wins">0</span></p>
             </div>
             <div id="player-o" class="player">
                 <div class="player-header">
-                    <h2>Player O</h2>
+                    <h2 id="player-o-name">Player O</h2>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player O Name">✏️</span>
                 </div>
                 <p class="mark">O</p>
+                <p class="win-tally">Wins: <span id="player-o-wins">0</span></p>
             </div>
         </div>
 
@@ -299,13 +347,6 @@
             </div>
         </div>
     </div>
-    
-    <div id="win-modal" class="modal-overlay" role="alertdialog" aria-labelledby="winner-text">
-         <div class="modal-content">
-            <h3 id="winner-text" aria-live="assertive"></h3>
-            <button id="btn-play-again">Play Again</button>
-        </div>
-    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -320,14 +361,19 @@
                     this.DOM = {
                         playerX: document.getElementById('player-x'),
                         playerO: document.getElementById('player-o'),
+                        playerXName: document.getElementById('player-x-name'),
+                        playerOName: document.getElementById('player-o-name'),
+                        playerXWins: document.getElementById('player-x-wins'),
+                        playerOWins: document.getElementById('player-o-wins'),
                         gameStatus: document.getElementById('game-status'),
                         board: document.getElementById('game-board'),
                         cells: document.querySelectorAll('.cell'),
                         btnReset: document.getElementById('btn-reset'),
-                        winModal: document.getElementById('win-modal'),
+                        winMessage: document.getElementById('win-message'),
                         winnerText: document.getElementById('winner-text'),
-                        btnPlayAgain: document.getElementById('btn-play-again'),
-                        moveHistory: document.getElementById('move-history')
+                        btnContinue: document.getElementById('btn-continue'),
+                        moveHistory: document.getElementById('move-history'),
+                        editIcons: document.querySelectorAll('.edit-name-icon')
                     };
                 }
 
@@ -337,9 +383,19 @@
                     });
                     
                     this.DOM.btnReset.addEventListener('click', () => this.startNewGame());
-                    this.DOM.btnPlayAgain.addEventListener('click', () => {
-                        this.DOM.winModal.classList.remove('show');
+                    this.DOM.btnContinue.addEventListener('click', () => {
+                        this.DOM.winMessage.classList.remove('show');
                         this.startNewGame();
+                    });
+                    
+                    this.DOM.editIcons.forEach((icon, index) => {
+                        icon.addEventListener('click', () => this.editName(index));
+                        icon.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                this.editName(index);
+                            }
+                        });
                     });
                 }
 
@@ -349,12 +405,15 @@
                         currentPlayer: 'X',
                         gameActive: true,
                         moveHistory: [],
-                        winner: null
+                        winner: null,
+                        playerNames: ['Player X', 'Player O'],
+                        wins: [0, 0]
                     };
                     
                     this.updateBoard();
                     this.updateStatus();
                     this.updateMoveHistoryDisplay();
+                    this.updatePlayerTurnIndicator();
                 }
 
                 handleCellClick(e) {
@@ -417,10 +476,16 @@
 
                 updateStatus() {
                     this.DOM.gameStatus.textContent = this.state.winner 
-                        ? `Player ${this.state.winner} wins!` 
+                        ? `${this.getCurrentPlayerName()} wins!` 
                         : this.isBoardFull() 
                             ? "Game ended in a draw!" 
-                            : `Player ${this.state.currentPlayer}'s turn`;
+                            : `${this.getCurrentPlayerName()}'s turn`;
+                }
+                
+                getCurrentPlayerName() {
+                    return this.state.currentPlayer === 'X' 
+                        ? this.state.playerNames[0] 
+                        : this.state.playerNames[1];
                 }
 
                 updatePlayerTurnIndicator() {
@@ -453,6 +518,16 @@
                             
                             this.state.winner = this.state.board[a];
                             this.state.gameActive = false;
+                            
+                            // Update win count
+                            if (this.state.winner === 'X') {
+                                this.state.wins[0]++;
+                                this.DOM.playerXWins.textContent = this.state.wins[0];
+                            } else {
+                                this.state.wins[1]++;
+                                this.DOM.playerOWins.textContent = this.state.wins[1];
+                            }
+                            
                             this.showWinner();
                             return;
                         }
@@ -471,14 +546,45 @@
 
                 showWinner() {
                     this.updateStatus();
-                    this.DOM.winnerText.textContent = `Player ${this.state.winner} Wins!`;
-                    this.DOM.winModal.classList.add('show');
+                    this.DOM.winnerText.textContent = `${this.getCurrentPlayerName()} Wins!`;
+                    this.DOM.winMessage.classList.add('show');
                 }
 
                 showDraw() {
                     this.updateStatus();
                     this.DOM.winnerText.textContent = "It's a Draw!";
-                    this.DOM.winModal.classList.add('show');
+                    this.DOM.winMessage.classList.add('show');
+                }
+                
+                editName(playerIndex) {
+                    const nameEl = playerIndex === 0 ? this.DOM.playerXName : this.DOM.playerOName;
+                    const parent = nameEl.parentElement;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = this.state.playerNames[playerIndex];
+                    input.className = 'player-name-input';
+                    
+                    parent.replaceChild(input, nameEl);
+                    input.focus();
+                    
+                    const saveName = () => {
+                        const newName = input.value.trim() || `Player ${playerIndex === 0 ? 'X' : 'O'}`;
+                        this.state.playerNames[playerIndex] = newName;
+                        nameEl.textContent = newName;
+                        parent.replaceChild(nameEl, input);
+
+                        if (this.state.activePlayer === playerIndex && this.state.gameActive) {
+                           this.updateStatus();
+                        }
+                    };
+                    
+                    input.addEventListener('blur', saveName);
+                    input.addEventListener('keydown', (e) => { 
+                        if (e.key === 'Enter') {
+                            input.blur();
+                        }
+                    });
                 }
             }
 
