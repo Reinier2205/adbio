@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three-Player Tic Tac Toe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --felt-green: #0a4821;
+            --dark-wood: #2a1a1f;
+            --gold: #ffd700;
+            --light-gold: #fff8e1;
+            --dark-red: #8c0000;
+            --ivory: #faf8f0;
+            --player1-color: #ff6b6b;
+            --player2-color: #4ecdc4;
+            --player3-color: #ffe66d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--dark-wood);
+            background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+            touch-action: manipulation;
+        }
+
+        .casino-table {
+            background: var(--felt-green);
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                              radial-gradient(rgba(255, 255, 255, 0.1) 1px, var(--felt-green) 1px);
+            background-size: 4px 4px;
+            background-position: 0 0, 2px 2px;
+            border: 10px solid #4a2c2a;
+            box-shadow: 0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            margin-bottom: 1.5rem;
+        }
+
+        .players {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .player {
+            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+            padding: 0.8rem;
+            border-radius: 10px;
+            width: 30%;
+            transition: all 0.3s ease;
+            border: 3px solid #1a1a1a;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .player.active {
+            border-color: var(--gold);
+            transform: scale(1.05);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
+        }
+
+        .player-1.active { border-color: var(--player1-color); }
+        .player-2.active { border-color: var(--player2-color); }
+        .player-3.active { border-color: var(--player3-color); }
+
+        .player-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.3rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .player-header h2 {
+            color: var(--light-gold);
+            font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .edit-name-icon {
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--gold);
+            transition: transform 0.2s;
+            border-radius: 4px;
+        }
+        .edit-name-icon:hover { transform: scale(1.2); }
+
+        .player-name-input {
+            background-color: var(--light-gold);
+            border: 1px solid var(--gold);
+            border-radius: 4px;
+            padding: 2px;
+            font-family: 'Lato', sans-serif;
+            text-align: center;
+            width: 80%;
+            font-size: 0.9rem;
+        }
+
+        .mark {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .player-1 .mark { color: var(--player1-color); }
+        .player-2 .mark { color: var(--player2-color); }
+        .player-3 .mark { color: var(--player3-color); }
+
+        .win-tally {
+            color: var(--light-gold);
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 8px;
+            margin: 1.5rem 0;
+            aspect-ratio: 1 / 1;
+        }
+
+        .cell {
+            background: linear-gradient(145deg, #0f5a2c, #0a4821);
+            border: 3px solid #1a1a1a;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell:hover {
+            transform: scale(1.03);
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.1), 0 0 10px var(--gold);
+        }
+
+        .cell.x::before, .cell.x::after {
+            content: '';
+            position: absolute;
+            width: 70%;
+            height: 8px;
+            background-color: var(--player1-color);
+            border-radius: 5px;
+        }
+
+        .cell.x::before {
+            transform: rotate(45deg);
+        }
+
+        .cell.x::after {
+            transform: rotate(-45deg);
+        }
+
+        .cell.o::before {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            border: 8px solid var(--player2-color);
+            border-radius: 50%;
+        }
+
+        .cell.delta::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 50px solid var(--player3-color);
+        }
+
+        #game-status {
+            min-height: 24px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--light-gold);
+            margin-bottom: 1rem;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .controls button {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            padding: 0.8rem 1.5rem;
+            border: 2px solid #111;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 0.5rem;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .controls button:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #111;
+        }
+        #btn-reset { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; }
+
+        .win-message {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+            color: var(--light-gold);
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            border: 3px solid var(--gold);
+            box-shadow: 0 0 30px var(--gold);
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease;
+        }
+        
+        .win-message.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .win-message h3 { 
+            font-family: 'Cinzel', serif; 
+            font-size: 2rem; 
+            color: var(--gold); 
+            margin-bottom: 0.5rem; 
+        }
+        
+        .move-history {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            max-width: 300px;
+            margin: 1rem auto 0;
+        }
+        
+        .history-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        
+        .history-dot.x {
+            background-color: var(--player1-color);
+        }
+        
+        .history-dot.o {
+            background-color: var(--player2-color);
+        }
+        
+        .history-dot.delta {
+            background-color: var(--player3-color);
+        }
+        
+        @media (max-width: 500px) {
+            .casino-table {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .player-header h2 {
+                font-size: 0.9rem;
+            }
+            
+            .mark {
+                font-size: 1.2rem;
+            }
+            
+            .win-message {
+                width: 90%;
+                padding: 1rem;
+            }
+            
+            .win-message h3 {
+                font-size: 1.5rem;
+            }
+            
+            .board {
+                gap: 6px;
+            }
+            
+            .cell {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="casino-table">
+        <h1>Tric Tac Toe</h1>
+        
+        <div class="win-message" id="win-message">
+            <h3 id="winner-text"></h3>
+            <button id="btn-continue">Continue</button>
+        </div>
+        
+        <div class="players">
+            <div id="player-1" class="player player-1 active">
+                <div class="player-header">
+                    <h2 id="player-1-name">Player X</h2>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player X Name">✏️</span>
+                </div>
+                <p class="mark">X</p>
+                <p class="win-tally">Wins: <span id="player-1-wins">0</span></p>
+            </div>
+            <div id="player-2" class="player player-2">
+                <div class="player-header">
+                    <h2 id="player-2-name">Player O</h2>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player O Name">✏️</span>
+                </div>
+                <p class="mark">O</p>
+                <p class="win-tally">Wins: <span id="player-2-wins">0</span></p>
+            </div>
+            <div id="player-3" class="player player-3">
+                <div class="player-header">
+                    <h2 id="player-3-name">Player Δ</h2>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player Delta Name">✏️</span>
+                </div>
+                <p class="mark">Δ</p>
+                <p class="win-tally">Wins: <span id="player-3-wins">0</span></p>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <p id="game-status" aria-live="polite">Player X's turn</p>
+            <div class="board" id="game-board">
+                <!-- 4x4 grid for 3 players -->
+                <div class="cell" id="cell-0" data-index="0"></div>
+                <div class="cell" id="cell-1" data-index="1"></div>
+                <div class="cell" id="cell-2" data-index="2"></div>
+                <div class="cell" id="cell-3" data-index="3"></div>
+                <div class="cell" id="cell-4" data-index="4"></div>
+                <div class="cell" id="cell-5" data-index="5"></div>
+                <div class="cell" id="cell-6" data-index="6"></div>
+                <div class="cell" id="cell-7" data-index="7"></div>
+                <div class="cell" id="cell-8" data-index="8"></div>
+                <div class="cell" id="cell-9" data-index="9"></div>
+                <div class="cell" id="cell-10" data-index="10"></div>
+                <div class="cell" id="cell-11" data-index="11"></div>
+                <div class="cell" id="cell-12" data-index="12"></div>
+                <div class="cell" id="cell-13" data-index="13"></div>
+                <div class="cell" id="cell-14" data-index="14"></div>
+                <div class="cell" id="cell-15" data-index="15"></div>
+            </div>
+            <div class="move-history" id="move-history"></div>
+            <div class="controls">
+                <button id="btn-reset">🔄 New Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            class TicTacToe {
+                constructor() {
+                    this.cacheDom();
+                    this.bindEvents();
+                    this.startNewGame();
+                }
+
+                cacheDom() {
+                    this.DOM = {
+                        player1: document.getElementById('player-1'),
+                        player2: document.getElementById('player-2'),
+                        player3: document.getElementById('player-3'),
+                        player1Name: document.getElementById('player-1-name'),
+                        player2Name: document.getElementById('player-2-name'),
+                        player3Name: document.getElementById('player-3-name'),
+                        player1Wins: document.getElementById('player-1-wins'),
+                        player2Wins: document.getElementById('player-2-wins'),
+                        player3Wins: document.getElementById('player-3-wins'),
+                        gameStatus: document.getElementById('game-status'),
+                        board: document.getElementById('game-board'),
+                        cells: document.querySelectorAll('.cell'),
+                        btnReset: document.getElementById('btn-reset'),
+                        winMessage: document.getElementById('win-message'),
+                        winnerText: document.getElementById('winner-text'),
+                        btnContinue: document.getElementById('btn-continue'),
+                        moveHistory: document.getElementById('move-history'),
+                        editIcons: document.querySelectorAll('.edit-name-icon')
+                    };
+                }
+
+                bindEvents() {
+                    this.DOM.cells.forEach(cell => {
+                        cell.addEventListener('click', (e) => this.handleCellClick(e));
+                    });
+                    
+                    this.DOM.btnReset.addEventListener('click', () => this.startNewGame());
+                    this.DOM.btnContinue.addEventListener('click', () => {
+                        this.DOM.winMessage.classList.remove('show');
+                        this.startNewGame();
+                    });
+                    
+                    this.DOM.editIcons.forEach((icon, index) => {
+                        icon.addEventListener('click', () => this.editName(index));
+                        icon.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                this.editName(index);
+                            }
+                        });
+                    });
+                }
+
+                startNewGame() {
+                    this.state = {
+                        board: Array(16).fill(null),
+                        currentPlayer: 0, // 0: X, 1: O, 2: Δ
+                        gameActive: true,
+                        moveHistory: [],
+                        winner: null,
+                        playerNames: ['Player X', 'Player O', 'Player Δ'],
+                        wins: [0, 0, 0]
+                    };
+                    
+                    this.updateBoard();
+                    this.updateStatus();
+                    this.updateMoveHistoryDisplay();
+                    this.updatePlayerTurnIndicator();
+                }
+
+                handleCellClick(e) {
+                    if (!this.state.gameActive) return;
+                    
+                    const cell = e.target.closest('.cell');
+                    if (!cell) return;
+                    
+                    const index = parseInt(cell.dataset.index);
+                    
+                    if (this.state.board[index] !== null) return;
+                    
+                    this.makeMove(index);
+                }
+
+                makeMove(index) {
+                    // Check if we need to remove the oldest move (when only 3 positions left)
+                    const emptyCells = this.state.board.filter(cell => cell === null).length;
+                    if (emptyCells === 3 && this.state.moveHistory.length > 0) {
+                        const oldestMoveIndex = this.state.moveHistory[0].index;
+                        this.state.board[oldestMoveIndex] = null;
+                        
+                        // Remove the oldest move from history
+                        this.state.moveHistory.shift();
+                        
+                        // Update the board display
+                        this.DOM.cells[oldestMoveIndex].className = 'cell';
+                    }
+                    
+                    // Make the new move
+                    this.state.board[index] = this.state.currentPlayer;
+                    this.state.moveHistory.push({
+                        index: index,
+                        player: this.state.currentPlayer
+                    });
+                    
+                    // Update display
+                    this.updateBoard();
+                    this.updateMoveHistoryDisplay();
+                    
+                    // Check for win or draw
+                    this.checkGameState();
+                    
+                    // Switch player if game is still active
+                    if (this.state.gameActive) {
+                        this.state.currentPlayer = (this.state.currentPlayer + 1) % 3;
+                        this.updateStatus();
+                        this.updatePlayerTurnIndicator();
+                    }
+                }
+
+                updateBoard() {
+                    this.state.board.forEach((value, index) => {
+                        const cell = this.DOM.cells[index];
+                        cell.className = 'cell';
+                        if (value === 0) {
+                            cell.classList.add('x');
+                        } else if (value === 1) {
+                            cell.classList.add('o');
+                        } else if (value === 2) {
+                            cell.classList.add('delta');
+                        }
+                    });
+                }
+
+                updateStatus() {
+                    if (this.state.winner !== null) {
+                        this.DOM.gameStatus.textContent = `${this.state.playerNames[this.state.winner]} wins!`;
+                    } else if (this.isBoardFull()) {
+                        this.DOM.gameStatus.textContent = "Game ended in a draw!";
+                    } else {
+                        this.DOM.gameStatus.textContent = `${this.state.playerNames[this.state.currentPlayer]}'s turn`;
+                    }
+                }
+
+                updatePlayerTurnIndicator() {
+                    this.DOM.player1.classList.toggle('active', this.state.currentPlayer === 0);
+                    this.DOM.player2.classList.toggle('active', this.state.currentPlayer === 1);
+                    this.DOM.player3.classList.toggle('active', this.state.currentPlayer === 2);
+                }
+
+                updateMoveHistoryDisplay() {
+                    this.DOM.moveHistory.innerHTML = '';
+                    this.state.moveHistory.forEach((move, i) => {
+                        const dot = document.createElement('div');
+                        dot.className = `history-dot ${move.player === 0 ? 'x' : move.player === 1 ? 'o' : 'delta'}`;
+                        this.DOM.moveHistory.appendChild(dot);
+                    });
+                }
+
+                checkGameState() {
+                    // Check win conditions for 4x4 grid
+                    const winPatterns = [
+                        // Rows
+                        [0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15],
+                        // Columns
+                        [0, 4, 8, 12], [1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15],
+                        // Diagonals
+                        [0, 5, 10, 15], [3, 6, 9, 12]
+                    ];
+
+                    for (const pattern of winPatterns) {
+                        const [a, b, c, d] = pattern;
+                        if (this.state.board[a] !== null && 
+                            this.state.board[a] === this.state.board[b] && 
+                            this.state.board[a] === this.state.board[c] &&
+                            this.state.board[a] === this.state.board[d]) {
+                            
+                            this.state.winner = this.state.board[a];
+                            this.state.gameActive = false;
+                            
+                            // Update win count
+                            this.state.wins[this.state.winner]++;
+                            this.DOM[`player${this.state.winner + 1}Wins`].textContent = this.state.wins[this.state.winner];
+                            
+                            this.showWinner();
+                            return;
+                        }
+                    }
+
+                    // Check for draw
+                    if (this.isBoardFull()) {
+                        this.state.gameActive = false;
+                        this.showDraw();
+                    }
+                }
+
+                isBoardFull() {
+                    return this.state.board.every(cell => cell !== null);
+                }
+
+                showWinner() {
+                    this.updateStatus();
+                    this.DOM.winnerText.textContent = `${this.state.playerNames[this.state.winner]} Wins!`;
+                    this.DOM.winMessage.classList.add('show');
+                }
+
+                showDraw() {
+                    this.updateStatus();
+                    this.DOM.winnerText.textContent = "It's a Draw!";
+                    this.DOM.winMessage.classList.add('show');
+                }
+                
+                editName(playerIndex) {
+                    const nameEl = this.DOM[`player${playerIndex + 1}Name`];
+                    const parent = nameEl.parentElement;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = this.state.playerNames[playerIndex];
+                    input.className = 'player-name-input';
+                    
+                    parent.replaceChild(input, nameEl);
+                    input.focus();
+                    
+                    const saveName = () => {
+                        const newName = input.value.trim() || `Player ${playerIndex === 0 ? 'X' : playerIndex === 1 ? 'O' : 'Δ'}`;
+                        this.state.playerNames[playerIndex] = newName;
+                        nameEl.textContent = newName;
+                        parent.replaceChild(nameEl, input);
+
+                        if (this.state.currentPlayer === playerIndex && this.state.gameActive) {
+                           this.updateStatus();
+                        }
+                    };
+                    
+                    input.addEventListener('blur', saveName);
+                    input.addEventListener('keydown', (e) => { 
+                        if (e.key === 'Enter') {
+                            input.blur();
+                        }
+                    });
+                }
+            }
+
+            new TicTacToe();
+        });
+    </script>
+</body>
+</html>
