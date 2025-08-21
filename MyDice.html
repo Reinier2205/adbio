@@ -3,24 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Casino Dice Roller (Refactored)</title>
+    <title>3D Casino Dice Roller (Fixed)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* 1. More targeted and modern CSS reset */
+        /* Targeted CSS Reset */
         *, *::before, *::after {
             box-sizing: border-box;
         }
         body, h1, p {
             margin: 0;
-        }
-        img, picture, video, canvas, svg {
-            display: block;
-            max-width: 100%;
-        }
-        input, button {
-            font: inherit;
         }
         
         :root {
@@ -28,7 +21,6 @@
             --dark-wood: #2a1a1f;
             --gold: #ffd700;
             --light-gold: #fff8e1;
-            --dark-red: #8c0000;
             --ivory: #faf8f0;
         }
 
@@ -91,6 +83,7 @@
         }
 
         .player input {
+            font: inherit;
             background: transparent;
             border: none;
             color: var(--light-gold);
@@ -123,18 +116,50 @@
 
         .die-face {
             position: absolute;
-            width: 100px;
-            height: 100px;
+            width: 100%;
+            height: 100%;
             background-color: var(--ivory);
             border: 2px solid #333;
             border-radius: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 3rem;
-            color: #333;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
         }
-
+        
+        .dot {
+            width: 20px;
+            height: 20px;
+            background-color: #333;
+            border-radius: 50%;
+            align-self: center;
+            justify-self: center;
+        }
+        
+        /* Dot Positioning */
+        .face-1 .dot:nth-child(1) { grid-area: 2 / 2; }
+        .face-2 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-2 .dot:nth-child(2) { grid-area: 3 / 3; }
+        .face-3 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-3 .dot:nth-child(2) { grid-area: 2 / 2; }
+        .face-3 .dot:nth-child(3) { grid-area: 3 / 3; }
+        .face-4 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-4 .dot:nth-child(2) { grid-area: 1 / 3; }
+        .face-4 .dot:nth-child(3) { grid-area: 3 / 1; }
+        .face-4 .dot:nth-child(4) { grid-area: 3 / 3; }
+        .face-5 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-5 .dot:nth-child(2) { grid-area: 1 / 3; }
+        .face-5 .dot:nth-child(3) { grid-area: 2 / 2; }
+        .face-5 .dot:nth-child(4) { grid-area: 3 / 1; }
+        .face-5 .dot:nth-child(5) { grid-area: 3 / 3; }
+        .face-6 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-6 .dot:nth-child(2) { grid-area: 1 / 3; }
+        .face-6 .dot:nth-child(3) { grid-area: 2 / 1; }
+        .face-6 .dot:nth-child(4) { grid-area: 2 / 3; }
+        .face-6 .dot:nth-child(5) { grid-area: 3 / 1; }
+        .face-6 .dot:nth-child(6) { grid-area: 3 / 3; }
+        
+        /* 3D Cube Transforms */
         .front  { transform: rotateY(0deg) translateZ(50px); }
         .back   { transform: rotateY(180deg) translateZ(50px); }
         .right  { transform: rotateY(90deg) translateZ(50px); }
@@ -223,14 +248,13 @@
                     btnReset: document.getElementById('btn-reset'),
                 },
 
-                // Rotations to show the correct face of the die
                 rotations: {
-                    1: 'rotateX(0deg) rotateY(0deg)',
-                    2: 'rotateX(-90deg) rotateY(0deg)',
-                    3: 'rotateX(0deg) rotateY(-90deg)',
-                    4: 'rotateX(0deg) rotateY(90deg)',
-                    5: 'rotateX(90deg) rotateY(0deg)',
-                    6: 'rotateX(0deg) rotateY(180deg)',
+                    1: 'rotateX(0deg) rotateY(0deg)',        // Front face
+                    2: 'rotateX(90deg) rotateY(0deg)',         // Top face
+                    3: 'rotateX(0deg) rotateY(90deg)',        // Right face
+                    4: 'rotateX(0deg) rotateY(-90deg)',       // Left face
+                    5: 'rotateX(-90deg) rotateY(0deg)',        // Bottom face
+                    6: 'rotateX(0deg) rotateY(180deg)',       // Back face
                 },
 
                 init() {
@@ -243,9 +267,8 @@
                     this.elements.btnRoll.addEventListener('click', () => this.rollHandler());
                     this.elements.btnReset.addEventListener('click', () => this.resetGame());
                 },
-
+                
                 sanitizePlayerName(name) {
-                    // Remove < and > to prevent basic HTML injection
                     return name.replace(/[<>]/g, '').substring(0, 20);
                 },
 
@@ -281,18 +304,30 @@
                     }
                 },
 
+                createFace(value) {
+                    const face = document.createElement('div');
+                    face.className = `die-face face-${value}`;
+                    for (let i = 0; i < value; i++) {
+                        face.appendChild(document.createElement('div'));
+                        face.lastChild.className = 'dot';
+                    }
+                    return face;
+                },
+
                 createDie() {
                     const die = document.createElement('div');
                     die.className = 'die';
-                    const faces = ['⚀', '⚄', '⚂', '⚃', '⚁', '⚅'];
-                    const faceClasses = ['front', 'top', 'left', 'right', 'bottom', 'back'];
                     
-                    faceClasses.forEach((faceClass, index) => {
-                        const face = document.createElement('div');
-                        face.className = `die-face ${faceClass}`;
-                        face.textContent = faces[index];
+                    // Standard die face arrangement
+                    const faceValues = {
+                        front: 1, top: 2, right: 3, left: 4, bottom: 5, back: 6
+                    };
+
+                    for (const [faceClass, value] of Object.entries(faceValues)) {
+                        const face = this.createFace(value);
+                        face.classList.add(faceClass);
                         die.appendChild(face);
-                    });
+                    }
                     
                     return die;
                 },
@@ -300,13 +335,11 @@
                 rollDie(die) {
                     return new Promise(resolve => {
                         const val = Math.floor(Math.random() * 6) + 1;
-                        // Random high-degree rotation for a spinning effect
                         const extraX = (Math.floor(Math.random() * 4) + 4) * 360;
                         const extraY = (Math.floor(Math.random() * 4) + 4) * 360;
                         
                         die.style.transform = `rotateX(${extraX}deg) rotateY(${extraY}deg)`;
                         
-                        // After the spin, settle on the correct face
                         setTimeout(() => {
                             die.style.transform = this.rotations[val];
                             resolve(val);
@@ -320,7 +353,8 @@
                         return;
                     }
                     
-                    this.elements.btnRoll.disabled = true; // Debounce button
+                    this.elements.btnRoll.disabled = true;
+                    // This explicitly clears the container to prevent duplication.
                     this.elements.diceContainer.innerHTML = "";
                     
                     const die1 = this.createDie();
@@ -328,7 +362,6 @@
                     this.elements.diceContainer.appendChild(die1);
                     this.elements.diceContainer.appendChild(die2);
                     
-                    // Wait for both dice animations to finish
                     const [v1, v2] = await Promise.all([this.rollDie(die1), this.rollDie(die2)]);
                     
                     const currentPlayerName = this.state.players[this.state.currentTurn].input.value;
@@ -336,21 +369,23 @@
                     
                     this.state.currentTurn = (this.state.currentTurn + 1) % this.state.players.length;
                     this.setActivePlayer(this.state.currentTurn);
-                    this.elements.btnRoll.disabled = false; // Re-enable button
+                    this.elements.btnRoll.disabled = false;
                 },
                 
                 resetGame() {
                     this.state.players = [];
                     this.state.currentTurn = 0;
+                    
+                    // These explicitly clear containers to prevent duplication.
                     this.elements.playersDiv.innerHTML = '';
                     this.elements.diceContainer.innerHTML = '';
+                    
                     this.elements.statusEl.textContent = 'Add a player and roll the dice!';
                     this.addPlayer('Player 1');
                 },
             };
 
             DiceGame.init();
-
         });
     </script>
 </body>
