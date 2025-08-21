@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe: Give & Take</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --felt-green: #0a4821;
+            --dark-wood: #2a1a1f;
+            --gold: #ffd700;
+            --light-gold: #fff8e1;
+            --dark-red: #8c0000;
+            --ivory: #faf8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--dark-wood);
+            background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+            touch-action: manipulation;
+        }
+
+        .casino-table {
+            background: var(--felt-green);
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                              radial-gradient(rgba(255, 255, 255, 0.1) 1px, var(--felt-green) 1px);
+            background-size: 4px 4px;
+            background-position: 0 0, 2px 2px;
+            border: 10px solid #4a2c2a;
+            box-shadow: 0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            margin-bottom: 1.5rem;
+        }
+
+        .players {
+            display: flex;
+            justify-content: space-around;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .player {
+            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+            padding: 1rem;
+            border-radius: 10px;
+            width: 45%;
+            transition: all 0.3s ease;
+            border: 3px solid #1a1a1a;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .player.active {
+            border-color: var(--gold);
+            transform: scale(1.05);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .player-header h2 {
+            color: var(--light-gold);
+            font-size: 1.2rem;
+        }
+
+        .mark {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            margin: 1.5rem 0;
+            aspect-ratio: 1 / 1;
+        }
+
+        .cell {
+            background: linear-gradient(145deg, #0f5a2c, #0a4821);
+            border: 3px solid #1a1a1a;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell:hover {
+            transform: scale(1.03);
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.1), 0 0 10px var(--gold);
+        }
+
+        .cell.x::before, .cell.x::after {
+            content: '';
+            position: absolute;
+            width: 70%;
+            height: 10px;
+            background-color: var(--gold);
+            border-radius: 5px;
+        }
+
+        .cell.x::before {
+            transform: rotate(45deg);
+        }
+
+        .cell.x::after {
+            transform: rotate(-45deg);
+        }
+
+        .cell.o::before {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            border: 10px solid var(--light-gold);
+            border-radius: 50%;
+        }
+
+        #game-status {
+            min-height: 24px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--light-gold);
+            margin-bottom: 1rem;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .controls button {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            padding: 0.8rem 1.5rem;
+            border: 2px solid #111;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 0.5rem;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .controls button:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #111;
+        }
+        .controls button:disabled { background: #666; color: #aaa; box-shadow: 0 4px 0 #333; cursor: not-allowed;}
+        #btn-reset { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; }
+
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: all 0.5s ease; z-index: 100;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+            color: var(--light-gold);
+            padding: 2rem 3rem;
+            border-radius: 15px;
+            border: 3px solid var(--gold);
+            box-shadow: 0 0 30px var(--gold);
+            text-align: center;
+            transform: scale(0.7);
+            transition: transform 0.5s ease;
+        }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-content h3 { font-family: 'Cinzel', serif; font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem; }
+        .modal-content p { font-size: 1.2rem; margin-bottom: 1.5rem; max-width: 400px; }
+        .modal-content button {
+             font-family: 'Cinzel', serif; font-size: 1.2rem; padding: 0.8rem 2.5rem;
+             border: 2px solid #111; border-radius: 8px; cursor: pointer;
+             transition: all 0.2s ease; color: #333; text-shadow: none;
+             box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+             background: linear-gradient(145deg, #ffeb3b, var(--gold));
+        }
+        .modal-content button:active { transform: translateY(3px); box-shadow: 0 1px 0 #111; }
+        
+        .move-history {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            max-width: 300px;
+            margin: 1rem auto 0;
+        }
+        
+        .history-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .history-dot.x {
+            background-color: var(--gold);
+        }
+        
+        .history-dot.o {
+            background-color: var(--light-gold);
+        }
+        
+        @media (max-width: 500px) {
+            .casino-table {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .player-header h2 {
+                font-size: 1rem;
+            }
+            
+            .mark {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="casino-table">
+        <h1>Tic Tac Toe: Give & Take</h1>
+        <div class="players">
+            <div id="player-x" class="player active">
+                <div class="player-header">
+                    <h2>Player X</h2>
+                </div>
+                <p class="mark">X</p>
+            </div>
+            <div id="player-o" class="player">
+                <div class="player-header">
+                    <h2>Player O</h2>
+                </div>
+                <p class="mark">O</p>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <p id="game-status" aria-live="polite">Player X's turn</p>
+            <div class="board" id="game-board">
+                <div class="cell" id="cell-0" data-index="0"></div>
+                <div class="cell" id="cell-1" data-index="1"></div>
+                <div class="cell" id="cell-2" data-index="2"></div>
+                <div class="cell" id="cell-3" data-index="3"></div>
+                <div class="cell" id="cell-4" data-index="4"></div>
+                <div class="cell" id="cell-5" data-index="5"></div>
+                <div class="cell" id="cell-6" data-index="6"></div>
+                <div class="cell" id="cell-7" data-index="7"></div>
+                <div class="cell" id="cell-8" data-index="8"></div>
+            </div>
+            <div class="move-history" id="move-history"></div>
+            <div class="controls">
+                <button id="btn-reset">🔄 New Game</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="win-modal" class="modal-overlay" role="alertdialog" aria-labelledby="winner-text">
+         <div class="modal-content">
+            <h3 id="winner-text" aria-live="assertive"></h3>
+            <button id="btn-play-again">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            class TicTacToe {
+                constructor() {
+                    this.cacheDom();
+                    this.bindEvents();
+                    this.startNewGame();
+                }
+
+                cacheDom() {
+                    this.DOM = {
+                        playerX: document.getElementById('player-x'),
+                        playerO: document.getElementById('player-o'),
+                        gameStatus: document.getElementById('game-status'),
+                        board: document.getElementById('game-board'),
+                        cells: document.querySelectorAll('.cell'),
+                        btnReset: document.getElementById('btn-reset'),
+                        winModal: document.getElementById('win-modal'),
+                        winnerText: document.getElementById('winner-text'),
+                        btnPlayAgain: document.getElementById('btn-play-again'),
+                        moveHistory: document.getElementById('move-history')
+                    };
+                }
+
+                bindEvents() {
+                    this.DOM.cells.forEach(cell => {
+                        cell.addEventListener('click', (e) => this.handleCellClick(e));
+                    });
+                    
+                    this.DOM.btnReset.addEventListener('click', () => this.startNewGame());
+                    this.DOM.btnPlayAgain.addEventListener('click', () => {
+                        this.DOM.winModal.classList.remove('show');
+                        this.startNewGame();
+                    });
+                }
+
+                startNewGame() {
+                    this.state = {
+                        board: Array(9).fill(null),
+                        currentPlayer: 'X',
+                        gameActive: true,
+                        moveHistory: [],
+                        winner: null
+                    };
+                    
+                    this.updateBoard();
+                    this.updateStatus();
+                    this.updateMoveHistoryDisplay();
+                }
+
+                handleCellClick(e) {
+                    if (!this.state.gameActive) return;
+                    
+                    const cell = e.target.closest('.cell');
+                    if (!cell) return;
+                    
+                    const index = parseInt(cell.dataset.index);
+                    
+                    if (this.state.board[index] !== null) return;
+                    
+                    this.makeMove(index);
+                }
+
+                makeMove(index) {
+                    // Check if we need to remove the oldest move (when only 3 positions left)
+                    const emptyCells = this.state.board.filter(cell => cell === null).length;
+                    if (emptyCells === 3 && this.state.moveHistory.length > 0) {
+                        const oldestMoveIndex = this.state.moveHistory[0];
+                        this.state.board[oldestMoveIndex] = null;
+                        
+                        // Remove the oldest move from history
+                        this.state.moveHistory.shift();
+                        
+                        // Update the board display
+                        this.DOM.cells[oldestMoveIndex].className = 'cell';
+                    }
+                    
+                    // Make the new move
+                    this.state.board[index] = this.state.currentPlayer;
+                    this.state.moveHistory.push(index);
+                    
+                    // Update display
+                    this.updateBoard();
+                    this.updateMoveHistoryDisplay();
+                    
+                    // Check for win or draw
+                    this.checkGameState();
+                    
+                    // Switch player if game is still active
+                    if (this.state.gameActive) {
+                        this.state.currentPlayer = this.state.currentPlayer === 'X' ? 'O' : 'X';
+                        this.updateStatus();
+                        this.updatePlayerTurnIndicator();
+                    }
+                }
+
+                updateBoard() {
+                    this.state.board.forEach((value, index) => {
+                        const cell = this.DOM.cells[index];
+                        cell.className = 'cell';
+                        if (value === 'X') {
+                            cell.classList.add('x');
+                        } else if (value === 'O') {
+                            cell.classList.add('o');
+                        }
+                    });
+                }
+
+                updateStatus() {
+                    this.DOM.gameStatus.textContent = this.state.winner 
+                        ? `Player ${this.state.winner} wins!` 
+                        : this.isBoardFull() 
+                            ? "Game ended in a draw!" 
+                            : `Player ${this.state.currentPlayer}'s turn`;
+                }
+
+                updatePlayerTurnIndicator() {
+                    this.DOM.playerX.classList.toggle('active', this.state.currentPlayer === 'X');
+                    this.DOM.playerO.classList.toggle('active', this.state.currentPlayer === 'O');
+                }
+
+                updateMoveHistoryDisplay() {
+                    this.DOM.moveHistory.innerHTML = '';
+                    this.state.moveHistory.forEach((moveIndex, i) => {
+                        const dot = document.createElement('div');
+                        dot.className = `history-dot ${i % 2 === 0 ? 'x' : 'o'}`;
+                        this.DOM.moveHistory.appendChild(dot);
+                    });
+                }
+
+                checkGameState() {
+                    // Check win conditions
+                    const winPatterns = [
+                        [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                        [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                        [0, 4, 8], [2, 4, 6]             // diagonals
+                    ];
+
+                    for (const pattern of winPatterns) {
+                        const [a, b, c] = pattern;
+                        if (this.state.board[a] && 
+                            this.state.board[a] === this.state.board[b] && 
+                            this.state.board[a] === this.state.board[c]) {
+                            
+                            this.state.winner = this.state.board[a];
+                            this.state.gameActive = false;
+                            this.showWinner();
+                            return;
+                        }
+                    }
+
+                    // Check for draw
+                    if (this.isBoardFull()) {
+                        this.state.gameActive = false;
+                        this.showDraw();
+                    }
+                }
+
+                isBoardFull() {
+                    return this.state.board.every(cell => cell !== null);
+                }
+
+                showWinner() {
+                    this.updateStatus();
+                    this.DOM.winnerText.textContent = `Player ${this.state.winner} Wins!`;
+                    this.DOM.winModal.classList.add('show');
+                }
+
+                showDraw() {
+                    this.updateStatus();
+                    this.DOM.winnerText.textContent = "It's a Draw!";
+                    this.DOM.winModal.classList.add('show');
+                }
+            }
+
+            new TicTacToe();
+        });
+    </script>
+</body>
+</html>
