@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino Dice: Give & Take</title>
+    <title>Casino Dice: Give & Take (Refactored)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
@@ -100,8 +100,14 @@
             font-size: 1.2rem;
             color: var(--gold);
             transition: transform 0.2s;
+            border-radius: 4px;
         }
         .edit-name-icon:hover { transform: scale(1.2); }
+        .edit-name-icon:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
+        }
+
         .player-name-input {
             background-color: var(--light-gold);
             border: 1px solid var(--gold);
@@ -238,22 +244,22 @@
             <div id="player-0-panel" class="player active">
                 <div class="player-header">
                     <h2 id="player-0-name">Player 1</h2>
-                    <span class="edit-name-icon" onclick="editName(0)">✏️</span>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player 1 Name">✏️</span>
                 </div>
                 <p id="score-0" class="score">0</p>
             </div>
             <div id="player-1-panel" class="player">
                 <div class="player-header">
                     <h2 id="player-1-name">Player 2</h2>
-                    <span class="edit-name-icon" onclick="editName(1)">✏️</span>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player 2 Name">✏️</span>
                 </div>
                 <p id="score-1" class="score">0</p>
             </div>
         </div>
 
         <div class="game-area">
-            <p id="game-status">Welcome! Player 1, make your choice!</p>
-            <div class="dice-container">
+            <p id="game-status" aria-live="polite">Welcome! Player 1, make your choice!</p>
+            <div class="dice-container" aria-live="polite" aria-atomic="true">
                 <div id="dice-1" class="dice"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
                 <div id="dice-2" class="dice"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
             </div>
@@ -266,17 +272,17 @@
         <button id="btn-new-session">🔄 New Session</button>
     </div>
     
-    <div id="outcome-modal" class="modal-overlay">
+    <div id="outcome-modal" class="modal-overlay" role="alertdialog" aria-labelledby="outcome-title" aria-describedby="outcome-description">
         <div class="modal-content">
-            <h3 id="outcome-title"></h3>
+            <h3 id="outcome-title" aria-live="assertive"></h3>
             <p id="outcome-description"></p>
             <button id="btn-continue">Continue</button>
         </div>
     </div>
     
-    <div id="win-modal" class="modal-overlay">
+    <div id="win-modal" class="modal-overlay" role="alertdialog" aria-labelledby="winner-text">
          <div class="modal-content">
-            <h3 id="winner-text"></h3>
+            <h3 id="winner-text" aria-live="assertive"></h3>
             <p>Play another round?</p>
             <div id="win-tally"></div>
             <button id="btn-play-again">Play Again</button>
@@ -284,193 +290,254 @@
     </div>
 
     <script>
-        const DOM = {
-            playerPanels: [document.getElementById('player-0-panel'), document.getElementById('player-1-panel')],
-            playerNames: [document.getElementById('player-0-name'), document.getElementById('player-1-name')],
-            scoreEls: [document.getElementById('score-0'), document.getElementById('score-1')],
-            dice: [document.getElementById('dice-1'), document.getElementById('dice-2')],
-            gameStatus: document.getElementById('game-status'),
-            btnAdd: document.getElementById('btn-add'),
-            btnSubtract: document.getElementById('btn-subtract'),
-            btnNewSession: document.getElementById('btn-new-session'),
-            outcomeModal: document.getElementById('outcome-modal'),
-            outcomeTitle: document.getElementById('outcome-title'),
-            outcomeDescription: document.getElementById('outcome-description'),
-            btnContinue: document.getElementById('btn-continue'),
-            winModal: document.getElementById('win-modal'),
-            winnerText: document.getElementById('winner-text'),
-            winTally: document.getElementById('win-tally'),
-            btnPlayAgain: document.getElementById('btn-play-again'),
-        };
-
-        let state = {};
-
-        function startNewSession() {
-            state.winTally = [0, 0];
-            startNextRound(0);
-        }
-        
-        function startNextRound(startingPlayer = 0) {
-            state.scores = [0, 0];
-            state.playerNames = state.playerNames || ['Player 1', 'Player 2'];
-            state.activePlayer = startingPlayer;
-            state.gameActive = true;
-            state.currentRoll = { d1: 0, d2: 0, total: 0, event: null, choice: null };
+        document.addEventListener('DOMContentLoaded', () => {
             
-            DOM.scoreEls.forEach((el, i) => el.textContent = state.scores[i]);
-            DOM.playerNames.forEach((el, i) => el.textContent = state.playerNames[i]);
-            DOM.dice.forEach(d => d.setAttribute('data-value', ''));
-            
-            DOM.playerPanels.forEach((panel, i) => {
-                panel.classList.toggle('active', i === state.activePlayer);
-            });
-            
-            updateStatus(`${state.playerNames[state.activePlayer]}, make your choice!`);
-            
-            setButtonsDisabled(false);
-            DOM.outcomeModal.classList.remove('show');
-            DOM.winModal.classList.remove('show');
-        }
-
-        function updateStatus(text) { DOM.gameStatus.textContent = text; }
-        function setButtonsDisabled(isDisabled) {
-            DOM.btnAdd.disabled = isDisabled;
-            DOM.btnSubtract.disabled = isDisabled;
-        }
-        function updateDiceDisplay(d1, d2) {
-            DOM.dice[0].setAttribute('data-value', d1);
-            DOM.dice[1].setAttribute('data-value', d2);
-        }
-        
-        function performTurn(choice) {
-            if (!state.gameActive) return;
-            state.currentRoll.choice = choice;
-            setButtonsDisabled(true);
-            updateStatus('Rolling...');
-            DOM.dice.forEach(d => {
-                d.classList.add('rolling');
-                d.setAttribute('data-value', '');
-            });
-
-            setTimeout(() => {
-                DOM.dice.forEach(d => d.classList.remove('rolling'));
-                state.currentRoll.d1 = Math.floor(Math.random() * 6) + 1;
-                state.currentRoll.d2 = Math.floor(Math.random() * 6) + 1;
-                state.currentRoll.total = state.currentRoll.d1 + state.currentRoll.d2;
-                updateDiceDisplay(state.currentRoll.d1, state.currentRoll.d2);
-                state.currentRoll.event = getRollEvent(state.currentRoll.d1, state.currentRoll.d2, state.currentRoll.total);
-                showOutcomeModal();
-            }, 1000);
-        }
-
-        function getRollEvent(d1, d2, total) {
-            if (d1 === 1 && d2 === 1) return { title: 'Snake Eyes!', description: 'A crushing blow! Your score resets to 0.', type: 'bust' };
-            if (d1 === 6 && d2 === 6) return { title: 'BOXCARS!', description: 'JACKPOT! You instantly win the game!', type: 'win' };
-            if (d1 === d2) return { title: 'Double Down!', description: `Doubles! Your roll of ${total} is now worth ${total * 2}!`, type: 'double' };
-            if (total === 7) return { title: 'Lucky 7!', description: 'Nice roll! You get to take another turn.', type: 'again' };
-            return { title: `You rolled a ${total}`, description: `The roll of ${total} will be applied.`, type: 'normal' };
-        }
-
-        function showOutcomeModal() {
-            DOM.outcomeTitle.textContent = state.currentRoll.event.title;
-            DOM.outcomeDescription.textContent = state.currentRoll.event.description;
-            DOM.outcomeModal.classList.add('show');
-        }
-
-        function continueGame() {
-            DOM.outcomeModal.classList.remove('show');
-            const { choice, event, total } = state.currentRoll;
-            let rollValue = event.type === 'double' ? total * 2 : total;
-
-            switch (event.type) {
-                case 'bust':
-                    state.scores[state.activePlayer] = 0;
-                    break;
-                case 'win':
-                    endGame(state.activePlayer);
-                    return;
-                default:
-                    if (choice === 'add') {
-                        state.scores[state.activePlayer] += rollValue;
-                        // BUST RULE REMOVED. WIN CONDITION IS CHECKED BELOW.
-                    } else { // subtract
-                        const opponent = 1 - state.activePlayer;
-                        state.scores[opponent] -= rollValue;
-                    }
-            }
-            
-            DOM.scoreEls.forEach((el, i) => el.textContent = state.scores[i]);
-            
-            // WIN CONDITION IS NOW >= 15
-            if (state.scores[state.activePlayer] >= 15) {
-                endGame(state.activePlayer);
-                return;
-            }
-
-            if (event.type !== 'again') {
-                switchPlayer();
-            } else {
-                updateStatus(`${state.playerNames[state.activePlayer]}, you get to go again!`);
-                setButtonsDisabled(false);
-            }
-        }
-        
-        function switchPlayer() {
-            state.activePlayer = 1 - state.activePlayer;
-            DOM.playerPanels.forEach((panel, i) => panel.classList.toggle('active', i === state.activePlayer));
-            updateStatus(`${state.playerNames[state.activePlayer]}, make your choice!`);
-            setButtonsDisabled(false);
-        }
-
-        function endGame(winnerIndex) {
-            state.gameActive = false;
-            state.winTally[winnerIndex]++;
-            setButtonsDisabled(true);
-            
-            DOM.winnerText.innerHTML = `🎉 ${state.playerNames[winnerIndex]} Wins! 🎉`;
-            DOM.winTally.innerHTML = `
-                Overall Score:<br>
-                <span>${state.playerNames[0]}: ${state.winTally[0]} Wins</span> | 
-                <span>${state.playerNames[1]}: ${state.winTally[1]} Wins</span>
-            `;
-
-            // The loser (1 - winnerIndex) will start the next round
-            DOM.btnPlayAgain.onclick = () => startNextRound(1 - winnerIndex);
-            
-            DOM.winModal.classList.add('show');
-        }
-
-        function editName(playerIndex) {
-            const nameEl = DOM.playerNames[playerIndex];
-            const parent = nameEl.parentElement;
-            
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = state.playerNames[playerIndex];
-            input.className = 'player-name-input';
-            
-            parent.replaceChild(input, nameEl);
-            input.focus();
-            
-            const saveName = () => {
-                const newName = input.value.trim() || `Player ${playerIndex + 1}`;
-                state.playerNames[playerIndex] = newName;
-                nameEl.textContent = newName;
-                parent.replaceChild(nameEl, input);
-                if (state.activePlayer === playerIndex && state.gameActive) {
-                   updateStatus(`${state.playerNames[state.activePlayer]}, make your choice!`);
-                }
+            const GAME_CONFIG = {
+                WINNING_SCORE: 15,
+                ANIMATION_DURATION: 1000,
+                MAX_NAME_LENGTH: 20,
             };
-            input.addEventListener('blur', saveName);
-            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
-        }
 
-        DOM.btnAdd.addEventListener('click', () => performTurn('add'));
-        DOM.btnSubtract.addEventListener('click', () => performTurn('subtract'));
-        DOM.btnContinue.addEventListener('click', continueGame);
-        DOM.btnNewSession.addEventListener('click', startNewSession);
+            class DiceGame {
+                constructor() {
+                    this.cacheDom();
+                    this.bindEvents();
+                    this.startNewSession();
+                }
 
-        startNewSession(); // Start the very first game session
+                cacheDom() {
+                    this.DOM = {
+                        playerPanels: document.querySelectorAll('.player'),
+                        playerNames: document.querySelectorAll('.player-header h2'),
+                        scoreEls: document.querySelectorAll('.score'),
+                        editIcons: document.querySelectorAll('.edit-name-icon'),
+                        dice: document.querySelectorAll('.dice'),
+                        diceContainer: document.querySelector('.dice-container'),
+                        gameStatus: document.getElementById('game-status'),
+                        btnAdd: document.getElementById('btn-add'),
+                        btnSubtract: document.getElementById('btn-subtract'),
+                        btnNewSession: document.getElementById('btn-new-session'),
+                        outcomeModal: document.getElementById('outcome-modal'),
+                        outcomeTitle: document.getElementById('outcome-title'),
+                        outcomeDescription: document.getElementById('outcome-description'),
+                        btnContinue: document.getElementById('btn-continue'),
+                        winModal: document.getElementById('win-modal'),
+                        winnerText: document.getElementById('winner-text'),
+                        winTally: document.getElementById('win-tally'),
+                        btnPlayAgain: document.getElementById('btn-play-again'),
+                    };
+                }
+
+                bindEvents() {
+                    this.DOM.btnAdd.addEventListener('click', () => this.performTurn('add'));
+                    this.DOM.btnSubtract.addEventListener('click', () => this.performTurn('subtract'));
+                    this.DOM.btnContinue.addEventListener('click', () => this.continueGame());
+                    this.DOM.btnNewSession.addEventListener('click', () => this.startNewSession());
+                    this.DOM.btnPlayAgain.addEventListener('click', () => this.startNextRound(1 - this.state.winner));
+
+                    this.DOM.editIcons.forEach((icon, index) => {
+                        icon.addEventListener('click', () => this.editName(index));
+                        icon.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                this.editName(index);
+                            }
+                        });
+                    });
+                }
+
+                safeExecute(fn, errorMessage = 'An error occurred') {
+                    try {
+                        fn();
+                    } catch (error) {
+                        console.error(errorMessage, error);
+                        this.updateStatus('Something went wrong. Please refresh.');
+                        this.setButtonsDisabled(true); // Prevent further actions
+                    }
+                }
+                
+                validatePlayerName(name) {
+                    const trimmed = name.trim();
+                    return {
+                        isValid: trimmed.length > 0 && trimmed.length <= GAME_CONFIG.MAX_NAME_LENGTH,
+                        sanitized: trimmed,
+                    };
+                }
+
+                startNewSession() {
+                    this.state = {
+                        winTally: [0, 0],
+                        playerNames: ['Player 1', 'Player 2'],
+                        // other state will be set in startNextRound
+                    };
+                    this.startNextRound(0);
+                }
+                
+                startNextRound(startingPlayer = 0) {
+                    this.state = {
+                        ...this.state,
+                        scores: [0, 0],
+                        activePlayer: startingPlayer,
+                        gameActive: true,
+                        winner: null,
+                        currentRoll: { d1: 0, d2: 0, total: 0, event: null, choice: null },
+                    };
+                    
+                    this.DOM.scoreEls.forEach((el, i) => el.textContent = this.state.scores[i]);
+                    this.DOM.playerNames.forEach((el, i) => el.textContent = this.state.playerNames[i]);
+                    this.DOM.dice.forEach(d => d.setAttribute('data-value', ''));
+                    
+                    this.DOM.playerPanels.forEach((panel, i) => {
+                        panel.classList.toggle('active', i === this.state.activePlayer);
+                    });
+                    
+                    this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, make your choice!`);
+                    
+                    this.setButtonsDisabled(false);
+                    this.DOM.outcomeModal.classList.remove('show');
+                    this.DOM.winModal.classList.remove('show');
+                }
+
+                updateStatus(text) { this.DOM.gameStatus.textContent = text; }
+                
+                setButtonsDisabled(isDisabled) {
+                    this.DOM.btnAdd.disabled = isDisabled;
+                    this.DOM.btnSubtract.disabled = isDisabled;
+                }
+                
+                updateDiceDisplay(d1, d2) {
+                    this.DOM.dice[0].setAttribute('data-value', d1);
+                    this.DOM.dice[1].setAttribute('data-value', d2);
+                    this.DOM.diceContainer.ariaLabel = `Dice result: ${d1} and ${d2}. Total ${d1 + d2}.`;
+                }
+                
+                performTurn(choice) {
+                    if (!this.state.gameActive) return;
+                    this.state.currentRoll.choice = choice;
+                    this.setButtonsDisabled(true);
+                    this.updateStatus('Rolling...');
+                    this.DOM.dice.forEach(d => {
+                        d.classList.add('rolling');
+                        d.setAttribute('data-value', '');
+                    });
+
+                    setTimeout(() => this.safeExecute(() => {
+                        this.DOM.dice.forEach(d => d.classList.remove('rolling'));
+                        this.state.currentRoll.d1 = Math.floor(Math.random() * 6) + 1;
+                        this.state.currentRoll.d2 = Math.floor(Math.random() * 6) + 1;
+                        this.state.currentRoll.total = this.state.currentRoll.d1 + this.state.currentRoll.d2;
+                        this.updateDiceDisplay(this.state.currentRoll.d1, this.state.currentRoll.d2);
+                        this.state.currentRoll.event = this.getRollEvent(this.state.currentRoll.d1, this.state.currentRoll.d2, this.state.currentRoll.total);
+                        this.showOutcomeModal();
+                    }), GAME_CONFIG.ANIMATION_DURATION);
+                }
+
+                getRollEvent(d1, d2, total) {
+                    if (d1 === 1 && d2 === 1) return { title: 'Snake Eyes!', description: 'A crushing blow! Your score resets to 0.', type: 'bust' };
+                    if (d1 === 6 && d2 === 6) return { title: 'BOXCARS!', description: 'JACKPOT! You instantly win the game!', type: 'win' };
+                    if (d1 === d2) return { title: 'Double Down!', description: `Doubles! Your roll of ${total} is now worth ${total * 2}!`, type: 'double' };
+                    if (total === 7) return { title: 'Lucky 7!', description: 'Nice roll! You get to take another turn.', type: 'again' };
+                    return { title: `You rolled a ${total}`, description: `The roll of ${total} will be applied.`, type: 'normal' };
+                }
+
+                showOutcomeModal() {
+                    this.DOM.outcomeTitle.textContent = this.state.currentRoll.event.title;
+                    this.DOM.outcomeDescription.textContent = this.state.currentRoll.event.description;
+                    this.DOM.outcomeModal.classList.add('show');
+                    this.DOM.btnContinue.focus();
+                }
+
+                continueGame() {
+                    this.DOM.outcomeModal.classList.remove('show');
+                    const { choice, event, total } = this.state.currentRoll;
+                    let rollValue = event.type === 'double' ? total * 2 : total;
+
+                    switch (event.type) {
+                        case 'bust':
+                            this.state.scores[this.state.activePlayer] = 0;
+                            break;
+                        case 'win':
+                            this.endGame(this.state.activePlayer);
+                            return;
+                        default:
+                            if (choice === 'add') {
+                                this.state.scores[this.state.activePlayer] += rollValue;
+                            } else {
+                                const opponent = 1 - this.state.activePlayer;
+                                this.state.scores[opponent] -= rollValue;
+                            }
+                    }
+                    
+                    this.DOM.scoreEls.forEach((el, i) => el.textContent = this.state.scores[i]);
+                    
+                    if (this.state.scores[this.state.activePlayer] >= GAME_CONFIG.WINNING_SCORE) {
+                        this.endGame(this.state.activePlayer);
+                        return;
+                    }
+
+                    if (event.type !== 'again') {
+                        this.switchPlayer();
+                    } else {
+                        this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, you get to go again!`);
+                        this.setButtonsDisabled(false);
+                    }
+                }
+                
+                switchPlayer() {
+                    this.state.activePlayer = 1 - this.state.activePlayer;
+                    this.DOM.playerPanels.forEach((panel, i) => panel.classList.toggle('active', i === this.state.activePlayer));
+                    this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, make your choice!`);
+                    this.setButtonsDisabled(false);
+                }
+
+                endGame(winnerIndex) {
+                    this.state.gameActive = false;
+                    this.state.winner = winnerIndex;
+                    this.state.winTally[winnerIndex]++;
+                    this.setButtonsDisabled(true);
+                    
+                    this.DOM.winnerText.innerHTML = `🎉 ${this.state.playerNames[winnerIndex]} Wins! 🎉`;
+                    this.DOM.winTally.innerHTML = `
+                        Overall Score:<br>
+                        <span>${this.state.playerNames[0]}: ${this.state.winTally[0]} Wins</span> | 
+                        <span>${this.state.playerNames[1]}: ${this.state.winTally[1]} Wins</span>
+                    `;
+                    
+                    this.DOM.winModal.classList.add('show');
+                    this.DOM.btnPlayAgain.focus();
+                }
+
+                editName(playerIndex) {
+                    const nameEl = this.DOM.playerNames[playerIndex];
+                    const parent = nameEl.parentElement;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = this.state.playerNames[playerIndex];
+                    input.className = 'player-name-input';
+                    
+                    parent.replaceChild(input, nameEl);
+                    input.focus();
+                    
+                    const saveName = () => {
+                        const validation = this.validatePlayerName(input.value);
+                        const newName = validation.isValid ? validation.sanitized : `Player ${playerIndex + 1}`;
+                        
+                        this.state.playerNames[playerIndex] = newName;
+                        nameEl.textContent = newName;
+                        parent.replaceChild(nameEl, input);
+
+                        if (this.state.activePlayer === playerIndex && this.state.gameActive) {
+                           this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, make your choice!`);
+                        }
+                    };
+                    input.addEventListener('blur', saveName);
+                    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+                }
+            }
+
+            new DiceGame();
+        });
     </script>
 </body>
 </html>
