@@ -1,1 +1,284 @@
-r 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Dice Roller</title>
+    <!-- Google Font Link (remains external as it's not local CSS) -->
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+
+    <style>
+        /* CSS embedded directly in the HTML */
+
+        :root {
+            --dice-size: 20vmin; /* Adjust dice size relative to viewport */
+            --animation-duration: 2s; /* How long the roll animation takes */
+            --bounce-height: 20px; /* How much the dice "bounce" */
+            --initial-y-offset: -50vh; /* How far above the screen they start */
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden; /* Hide scrollbars if dice go slightly off during animation */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Full viewport height */
+            font-family: 'Luckiest Guy', cursive; /* A fun, casino-like font */
+            color: #fff;
+            background-image: url('images/casino-table.jpg'); /* Your table background image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            user-select: none; /* Prevent text selection */
+            perspective: 1000px; /* For 3D transformations */
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            z-index: 100; /* Ensure controls are on top */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 2px solid gold;
+        }
+
+        .dice-selection {
+            display: flex;
+            gap: 20px;
+            font-size: 1.2em;
+        }
+
+        .dice-selection input[type="radio"] {
+            display: none; /* Hide default radio button */
+        }
+
+        .dice-selection label {
+            cursor: pointer;
+            padding: 8px 15px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dice-selection input[type="radio"]:checked + label {
+            background-color: #ffcc00; /* Gold */
+            color: #000;
+            border-color: #ffef99;
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+        }
+
+        #throwButton {
+            background-color: #e74c3c; /* Red */
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.8em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease-in-out;
+            border: 3px solid #c0392b;
+            letter-spacing: 2px;
+        }
+
+        #throwButton:hover {
+            background-color: #c0392b; /* Darker red on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        #throwButton:disabled {
+            background-color: #95a5a6; /* Grey when disabled */
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+            border: 3px solid #7f8c8d;
+        }
+
+        .result {
+            margin-top: 15px;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ffcc00; /* Gold */
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+            text-align: center;
+            min-height: 1em; /* Reserve space */
+        }
+
+        .dice-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none; /* Allow clicks to pass through to controls if any */
+        }
+
+        .die {
+            position: absolute; /* Allows for independent positioning and animation */
+            width: var(--dice-size);
+            height: var(--dice-size);
+            background-size: cover; /* Make sure image covers the die */
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 10%; /* Slightly rounded corners for realism */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5), /* Soft shadow for depth */
+                        inset 0 0 15px rgba(255, 255, 255, 0.3); /* Subtle highlight */
+            transform-style: preserve-3d; /* Needed for any internal 3D transformations, though not strictly used for faces here */
+            transform: translate(-50%, -50%); /* Center the die itself */
+            opacity: 0; /* Start hidden */
+            animation-fill-mode: forwards; /* Keep final state of animation */
+            /* Will dynamically add animation via JS */
+        }
+
+        /* Keyframe for the falling and rolling animation */
+        @keyframes fallAndRoll {
+            0% {
+                transform: translate(-50%, var(--initial-y-offset)) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(0.8);
+                opacity: 0;
+            }
+            15% {
+                opacity: 1; /* Appear quickly */
+            }
+            80% {
+                /* This is the "fall" part, with a slight overshoot for bounce */
+                transform: translate(-50%, var(--bounce-height)) rotateX(var(--mid-rotate-x, 720deg)) rotateY(var(--mid-rotate-y, 1080deg)) rotateZ(var(--mid-rotate-z, 360deg)) scale(1);
+            }
+            100% {
+                /* Settle into final position and rotation */
+                transform: translate(-50%, 0) rotateX(var(--final-rotate-x)) rotateY(var(--final-rotate-y)) rotateZ(var(--final-rotate-z)) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <div class="dice-selection">
+            <input type="radio" id="oneDie" name="numDice" value="1" checked>
+            <label for="oneDie">1 Die</label>
+            <input type="radio" id="twoDice" name="numDice" value="2">
+            <label for="twoDice">2 Dice</label>
+        </div>
+        <button id="throwButton">THROW DICE</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <div id="dice-container" class="dice-container">
+        <!-- Dice will be dynamically added here by JavaScript -->
+    </div>
+
+    <script>
+        // JavaScript embedded directly in the HTML
+        document.addEventListener('DOMContentLoaded', () => {
+            const throwButton = document.getElementById('throwButton');
+            const numDiceRadios = document.querySelectorAll('input[name="numDice"]');
+            const diceContainer = document.getElementById('dice-container');
+            const resultDiv = document.getElementById('result');
+
+            const diceImages = {
+                1: 'images/dice-1.png',
+                2: 'images/dice-2.png',
+                3: 'images/dice-3.png',
+                4: 'images/dice-4.png',
+                5: 'images/dice-5.png',
+                6: 'images/dice-6.png'
+            };
+
+            let selectedNumDice = 1; // Default to 1 die
+
+            // Update selectedNumDice when radio button changes
+            numDiceRadios.forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    selectedNumDice = parseInt(event.target.value);
+                });
+            });
+
+            throwButton.addEventListener('click', throwDice);
+
+            function getRandomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            function throwDice() {
+                throwButton.disabled = true; // Disable button during animation
+                resultDiv.textContent = ''; // Clear previous result
+                diceContainer.innerHTML = ''; // Clear previous dice
+
+                let totalSum = 0;
+                const diceValues = [];
+
+                // Determine random positions for the dice based on selected number
+                const positions = [];
+                if (selectedNumDice === 1) {
+                    positions.push({ x: '50%', y: '50%' }); // Center for one die
+                } else {
+                    // For two dice, offset them slightly from center
+                    positions.push({ x: '35%', y: '50%' });
+                    positions.push({ x: '65%', y: '50%' });
+                }
+
+                for (let i = 0; i < selectedNumDice; i++) {
+                    const dieValue = getRandomInt(1, 6);
+                    diceValues.push(dieValue);
+                    totalSum += dieValue;
+
+                    const dieElement = document.createElement('div');
+                    dieElement.classList.add('die');
+
+                    // Apply specific position for each die
+                    dieElement.style.left = positions[i].x;
+                    dieElement.style.top = positions[i].y;
+
+                    // Set the background image for the rolled face
+                    dieElement.style.backgroundImage = `url(${diceImages[dieValue]})`;
+
+                    // Generate random rotation values for the animation
+                    // These will be used by the CSS keyframes via custom properties
+                    const initialRotateX = getRandomInt(360, 720);
+                    const initialRotateY = getRandomInt(360, 720);
+                    const initialRotateZ = getRandomInt(360, 720);
+
+                    const finalRotateX = getRandomInt(0, 359);
+                    const finalRotateY = getRandomInt(0, 359);
+                    const finalRotateZ = getRandomInt(0, 359);
+
+                    dieElement.style.setProperty('--initial-rotate-x', `${initialRotateX}deg`);
+                    dieElement.style.setProperty('--initial-rotate-y', `${initialRotateY}deg`);
+                    dieElement.style.setProperty('--initial-rotate-z', `${initialRotateZ}deg`);
+                    dieElement.style.setProperty('--final-rotate-x', `${finalRotateX}deg`);
+                    dieElement.style.setProperty('--final-rotate-y', `${finalRotateY}deg`);
+                    dieElement.style.setProperty('--final-rotate-z', `${finalRotateZ}deg`);
+
+                    // Apply the animation
+                    // We can add a slight delay for the second die if two are thrown
+                    const delay = (i === 1 && selectedNumDice === 2) ? '0.1s' : '0s';
+                    dieElement.style.animation = `fallAndRoll var(--animation-duration) ease-out ${delay} forwards`;
+
+
+                    diceContainer.appendChild(dieElement);
+                }
+
+                // Wait for the animation to finish before enabling the button and showing result
+                setTimeout(() => {
+                    resultDiv.textContent = `Result: ${totalSum}`;
+                    throwButton.disabled = false;
+                }, parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--animation-duration')) * 1000 + 200); // Add a small buffer
+            }
+
+            // Initial throw when page loads (optional)
+            throwDice();
+        });
+    </script>
+</body>
+</html>
