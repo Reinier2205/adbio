@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three-Player Tic Tac Toe</title>
+    <title>Triple Tic Tac Toe</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
@@ -209,6 +209,27 @@
             border-bottom: 25px solid var(--player3-color);
         }
 
+        /* Position the hex cells to form a hexagon shape */
+        .hex-cell:nth-child(1) { grid-area: 1 / 3; }
+        .hex-cell:nth-child(2) { grid-area: 1 / 4; }
+        .hex-cell:nth-child(3) { grid-area: 1 / 5; }
+        .hex-cell:nth-child(4) { grid-area: 2 / 2; }
+        .hex-cell:nth-child(5) { grid-area: 2 / 3; }
+        .hex-cell:nth-child(6) { grid-area: 2 / 4; }
+        .hex-cell:nth-child(7) { grid-area: 2 / 5; }
+        .hex-cell:nth-child(8) { grid-area: 3 / 1; }
+        .hex-cell:nth-child(9) { grid-area: 3 / 2; }
+        .hex-cell:nth-child(10) { grid-area: 3 / 3; }
+        .hex-cell:nth-child(11) { grid-area: 3 / 4; }
+        .hex-cell:nth-child(12) { grid-area: 3 / 5; }
+        .hex-cell:nth-child(13) { grid-area: 4 / 2; }
+        .hex-cell:nth-child(14) { grid-area: 4 / 3; }
+        .hex-cell:nth-child(15) { grid-area: 4 / 4; }
+        .hex-cell:nth-child(16) { grid-area: 4 / 5; }
+        .hex-cell:nth-child(17) { grid-area: 5 / 3; }
+        .hex-cell:nth-child(18) { grid-area: 5 / 4; }
+        .hex-cell:nth-child(19) { grid-area: 5 / 5; }
+
         #game-status {
             min-height: 24px;
             font-size: 1.2rem;
@@ -375,7 +396,7 @@
         <div class="game-area">
             <p id="game-status" aria-live="polite">Player X's turn</p>
             
-            <!-- Hexagonal board with 19 cells -->
+            <!-- Hexagonal board with 19 cells arranged in a hexagon -->
             <div class="hex-board" id="game-board">
                 <div class="hex-cell" data-index="0"></div>
                 <div class="hex-cell" data-index="1"></div>
@@ -568,13 +589,15 @@
                     // Define winning paths for hexagonal board
                     const winPatterns = [
                         // Horizontal lines
-                        [0, 1, 2, 3], [4, 5, 6, 7, 8], [9, 10, 11, 12, 13, 14], [15, 16, 17, 18],
+                        [0, 1, 2], [3, 4, 5, 6], [7, 8, 9, 10, 11], [12, 13, 14, 15], [16, 17, 18],
                         // Diagonal right lines
-                        [0, 4, 9, 15], [1, 5, 10, 16], [2, 6, 11, 17], [3, 7, 12, 18], [8, 13],
+                        [0, 4, 9, 15], [1, 5, 10, 16], [2, 6, 11], [3, 8, 14], [7, 12],
                         // Diagonal left lines
-                        [15, 9, 4, 0], [16, 10, 5, 1], [17, 11, 6, 2], [18, 12, 7, 3], [14, 13, 8],
+                        [2, 5, 8, 12], [1, 4, 7], [6, 10, 13, 17], [11, 14, 18], [15, 16],
                         // Additional patterns for more interesting gameplay
-                        [4, 10, 16], [5, 11, 17], [9, 10, 11], [10, 11, 12], [5, 6, 7]
+                        [3, 4, 8, 9], [4, 5, 9, 10], [5, 6, 10, 11],
+                        [8, 9, 13, 14], [9, 10, 14, 15], [10, 11, 15, 16],
+                        [12, 13, 17, 18], [13, 14, 18], [14, 15]
                     ];
 
                     for (const pattern of winPatterns) {
