@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Triple Tic Tac Toe — Hex (n=4)</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Triple Tic Tac Toe — Hex (fixed)</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root{
@@ -13,461 +11,332 @@
       --dark-wood:#2a1a1f;
       --gold:#ffd700;
       --light-gold:#fff8e1;
-      --ivory:#faf8f0;
-      --player1-color:#ff6b6b; /* X */
-      --player2-color:#4ecdc4; /* O */
-      --player3-color:#ffe66d; /* Δ */
+      --player1-color:#ff6b6b;
+      --player2-color:#4ecdc4;
+      --player3-color:#ffe66d;
     }
-    *{margin:0;padding:0;box-sizing:border-box}
+    *{box-sizing:border-box;margin:0;padding:0}
     body{
-      font-family:'Lato',sans-serif;
+      font-family: 'Lato',sans-serif;
       background-color:var(--dark-wood);
-      background-image:radial-gradient(circle,#4d322e 0%,var(--dark-wood) 70%);
-      display:flex;justify-content:center;align-items:center;min-height:100vh;
-      padding:1.5rem;touch-action:manipulation;
+      display:flex;justify-content:center;align-items:center;min-height:100vh;padding:1.5rem;
     }
     .casino-table{
       background:var(--felt-green);
-      background-image:
-        radial-gradient(rgba(255,255,255,.1) 1px,transparent 1px),
-        radial-gradient(rgba(255,255,255,.1) 1px,var(--felt-green) 1px);
-      background-size:4px 4px; background-position:0 0,2px 2px;
-      border:10px solid #4a2c2a; box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,.5);
-      border-radius:15px; padding:2rem; width:100%; max-width:760px; text-align:center; position:relative; overflow:hidden;
+      border:10px solid #4a2c2a;
+      box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,.5);
+      border-radius:15px;padding:1.5rem;width:100%;max-width:760px;position:relative;
     }
-    h1{font-family:'Cinzel',serif;color:var(--gold);font-size:2.2rem;text-shadow:2px 2px 5px rgba(0,0,0,.7);margin-bottom:1rem}
-    .players{display:flex;flex-wrap:wrap;justify-content:space-around;gap:.5rem;margin-bottom:1rem}
-    .player{
-      background:linear-gradient(145deg,#3e1e24,#2a1a1f);
-      padding:.8rem;border-radius:10px;width:30%;transition:all .3s;border:3px solid #1a1a1a;
-      box-shadow:inset 0 2px 5px rgba(0,0,0,.5),0 5px 15px rgba(0,0,0,.4)
-    }
-    .player.active{border-color:var(--gold);transform:scale(1.05);box-shadow:inset 0 2px 5px rgba(0,0,0,.5),0 5px 15px rgba(0,0,0,.4),0 0 20px var(--gold)}
-    .player-1.active{border-color:var(--player1-color)}
-    .player-2.active{border-color:var(--player2-color)}
-    .player-3.active{border-color:var(--player3-color)}
-    .player-header{display:flex;justify-content:center;align-items:center;gap:.3rem;margin-bottom:.3rem}
-    .player-header h2{color:var(--light-gold);font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .edit-name-icon{cursor:pointer;font-size:.8rem;color:var(--gold);transition:transform .2s;border-radius:4px}
-    .edit-name-icon:hover{transform:scale(1.2)}
-    .player-name-input{background-color:var(--light-gold);border:1px solid var(--gold);border-radius:4px;padding:2px;font-family:'Lato',sans-serif;text-align:center;width:80%;font-size:.9rem}
-    .mark{font-size:1.5rem;font-weight:700;text-shadow:1px 1px 3px rgba(0,0,0,.5)}
-    .player-1 .mark{color:var(--player1-color)} .player-2 .mark{color:var(--player2-color)} .player-3 .mark{color:var(--player3-color)}
-    .win-tally{color:var(--light-gold);font-size:.9rem;margin-top:.3rem}
-
-    #game-status{min-height:24px;font-size:1.1rem;font-weight:700;color:var(--light-gold);margin:0.5rem 0 1rem;text-shadow:1px 1px 2px black}
-
+    h1{font-family:'Cinzel',serif;color:var(--gold);font-size:1.9rem;margin-bottom:.6rem}
+    .players{display:flex;gap:.5rem;justify-content:space-between;margin-bottom:.6rem}
+    .player{background:linear-gradient(145deg,#3e1e24,#2a1a1f);padding:.6rem;border-radius:10px;width:32%;border:3px solid #111;color:var(--light-gold)}
+    .player.active{box-shadow:0 0 12px var(--gold)}
+    .mark{font-weight:700}
+    #game-status{color:var(--light-gold);margin:8px 0 12px;font-weight:700}
     .board-wrap{display:flex;justify-content:center;align-items:center}
-    svg#board{background:transparent;max-width:100%;height:auto;touch-action:manipulation}
-    .hex{cursor:pointer;transition:transform .15s}
-    .hex polygon{
-      fill:url(#feltCell);
-      stroke:#1a1a1a; stroke-width:2;
-      filter:drop-shadow(0 2px 2px rgba(0,0,0,.3)) inset;
-    }
+    svg#board{max-width:100%;height:auto;display:block}
+    .hex{cursor:pointer;transition:transform .12s}
     .hex:hover{transform:scale(1.05)}
-    .hex.win polygon{stroke:var(--gold);stroke-width:4;filter:drop-shadow(0 0 6px var(--gold))}
-    .piece line, .piece circle, .piece polygon{pointer-events:none}
-
-    .legend{display:flex;justify-content:center;gap:6px;margin-top:.5rem;flex-wrap:wrap}
-    .move-history{display:flex;justify-content:center;gap:4px;margin-top:.7rem;flex-wrap:wrap;max-width:420px;margin-left:auto;margin-right:auto}
-    .history-dot{width:6px;height:6px;border-radius:50%}
-    .history-dot.x{background-color:var(--player1-color)}
-    .history-dot.o{background-color:var(--player2-color)}
-    .history-dot.delta{background-color:var(--player3-color)}
-
-    .controls{margin-top:.8rem}
-    .controls button{
-      font-family:'Cinzel',serif;font-size:1.05rem;padding:.7rem 1.2rem;border:2px solid #111;border-radius:8px;cursor:pointer;transition:all .2s;margin:0 .3rem;
-      color:white;text-shadow:1px 1px 2px black;box-shadow:0 4px 0 #111,0 5px 10px rgba(0,0,0,.5)
-    }
-    #btn-reset{background:linear-gradient(145deg,#ffeb3b,var(--gold));color:#333}
-    .controls button:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #111}
-
-    .win-message{
-      position:absolute;top:20%;left:50%;transform:translateX(-50%);
-      background:linear-gradient(145deg,#3e1e24,#2a1a1f);color:var(--light-gold);
-      padding:1.2rem 1.6rem;border-radius:15px;border:3px solid var(--gold);box-shadow:0 0 30px var(--gold);
-      text-align:center;z-index:100;opacity:0;visibility:hidden;transition:all .4s
-    }
-    .win-message.show{opacity:1;visibility:visible}
-    .win-message h3{font-family:'Cinzel',serif;font-size:2rem;color:var(--gold);margin-bottom:.5rem}
-
-    @media (max-width:600px){
-      .casino-table{padding:1rem;max-width:95vw}
-      h1{font-size:1.8rem}
-    }
+    .hex.win polygon{stroke:var(--gold);stroke-width:4}
+    .piece line,.piece circle,.piece polygon{pointer-events:none}
+    .move-history{display:flex;gap:6px;justify-content:center;margin-top:8px}
+    .history-dot{width:8px;height:8px;border-radius:50%}
+    .history-dot.x{background:var(--player1-color)}
+    .history-dot.o{background:var(--player2-color)}
+    .history-dot.delta{background:var(--player3-color)}
+    .controls{display:flex;justify-content:center;margin-top:12px}
+    button{padding:.6rem 1rem;border-radius:8px;border:2px solid #111;background:var(--gold);cursor:pointer}
+    .win-message{position:absolute;top:18%;left:50%;transform:translateX(-50%);background:#2a1a1f;color:var(--light-gold);padding:1rem;border-radius:12px;border:3px solid var(--gold);display:none}
+    .win-message.show{display:block}
   </style>
 </head>
 <body>
-  <div class="casino-table">
-    <h1>Triple Tic Tac Toe — Hex</h1>
+  <div class="casino-table" role="application" aria-label="Triple Tic Tac Toe">
+    <h1>Triple Tic Tac Toe — Hex (n=4)</h1>
 
-    <div class="win-message" id="win-message">
-      <h3 id="winner-text"></h3>
-      <button id="btn-continue">Continue</button>
+    <div class="players" aria-hidden="false">
+      <div id="player-1" class="player active"><div><strong id="player-1-name">Player X</strong></div><div class="mark">X</div><div>Wins: <span id="player-1-wins">0</span></div></div>
+      <div id="player-2" class="player"><div><strong id="player-2-name">Player O</strong></div><div class="mark">O</div><div>Wins: <span id="player-2-wins">0</span></div></div>
+      <div id="player-3" class="player"><div><strong id="player-3-name">Player Δ</strong></div><div class="mark">Δ</div><div>Wins: <span id="player-3-wins">0</span></div></div>
     </div>
 
-    <div class="players">
-      <div id="player-1" class="player player-1 active">
-        <div class="player-header">
-          <h2 id="player-1-name">Player X</h2>
-          <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player X Name">✏️</span>
-        </div>
-        <p class="mark">X</p>
-        <p class="win-tally">Wins: <span id="player-1-wins">0</span></p>
-      </div>
-      <div id="player-2" class="player player-2">
-        <div class="player-header">
-          <h2 id="player-2-name">Player O</h2>
-          <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player O Name">✏️</span>
-        </div>
-        <p class="mark">O</p>
-        <p class="win-tally">Wins: <span id="player-2-wins">0</span></p>
-      </div>
-      <div id="player-3" class="player player-3">
-        <div class="player-header">
-          <h2 id="player-3-name">Player Δ</h2>
-          <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player Delta Name">✏️</span>
-        </div>
-        <p class="mark">Δ</p>
-        <p class="win-tally">Wins: <span id="player-3-wins">0</span></p>
-      </div>
-    </div>
-
-    <p id="game-status" aria-live="polite">Player X's turn</p>
+    <div id="game-status" aria-live="polite">Player X's turn</div>
 
     <div class="board-wrap">
-      <svg id="board"></svg>
+      <svg id="board" role="grid" aria-label="Hex board"></svg>
     </div>
 
-    <div class="legend"></div>
-    <div class="move-history" id="move-history"></div>
+    <div class="move-history" id="move-history" aria-hidden="false"></div>
 
     <div class="controls">
       <button id="btn-reset">🔄 New Game</button>
     </div>
+
+    <div class="win-message" id="win-message" role="dialog" aria-modal="true">
+      <h3 id="winner-text">Winner</h3>
+      <div style="text-align:center;margin-top:.6rem"><button id="btn-continue">Continue</button></div>
+    </div>
   </div>
 
   <script>
-    (() => {
-      // --- Config ---
-      const N = 4;                    // side length
-      const KEEP_EMPTY = 6;           // keep this many empty cells
-      const WIN_LENGTH = 4;           // 4 in a row
-      const HEX_SIZE = 36;            // visual radius in px
+  (function(){
+    // config
+    const N = 4;
+    const KEEP_EMPTY = 6;
+    const WIN_LENGTH = 4;
+    const HEX_SIZE = 36;
 
-      // Players and colors
-      const players = [
-        { id:0, mark:'X', color:getCss('--player1-color') },
-        { id:1, mark:'O', color:getCss('--player2-color') },
-        { id:2, mark:'Δ', color:getCss('--player3-color') },
-      ];
+    const players = [
+      {id:0, mark:'X', color:getCss('--player1-color')},
+      {id:1, mark:'O', color:getCss('--player2-color')},
+      {id:2, mark:'Δ', color:getCss('--player3-color')}
+    ];
 
-      // --- DOM ---
-      const svg = document.getElementById('board');
-      const statusEl = document.getElementById('game-status');
-      const moveHistoryEl = document.getElementById('move-history');
-      const winMsg = document.getElementById('win-message');
-      const winnerText = document.getElementById('winner-text');
-      const btnContinue = document.getElementById('btn-continue');
-      const btnReset = document.getElementById('btn-reset');
-      const playerCards = [
-        document.getElementById('player-1'),
-        document.getElementById('player-2'),
-        document.getElementById('player-3')
-      ];
-      const playerNameEls = [
-        document.getElementById('player-1-name'),
-        document.getElementById('player-2-name'),
-        document.getElementById('player-3-name')
-      ];
-      const playerWinsEls = [
-        document.getElementById('player-1-wins'),
-        document.getElementById('player-2-wins'),
-        document.getElementById('player-3-wins')
-      ];
-      document.querySelectorAll('.edit-name-icon').forEach((icon, idx) => {
-        icon.addEventListener('click', () => editName(idx));
-        icon.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault(); editName(idx);} });
-      });
+    // DOM
+    const svg = document.getElementById('board');
+    const statusEl = document.getElementById('game-status');
+    const moveHistoryEl = document.getElementById('move-history');
+    const btnReset = document.getElementById('btn-reset');
+    const btnContinue = document.getElementById('btn-continue');
+    const winMsg = document.getElementById('win-message');
+    const winnerText = document.getElementById('winner-text');
+    const playerCards = [document.getElementById('player-1'), document.getElementById('player-2'), document.getElementById('player-3')];
+    const playerNameEls = [document.getElementById('player-1-name'), document.getElementById('player-2-name'), document.getElementById('player-3-name')];
+    const playerWinsEls = [document.getElementById('player-1-wins'), document.getElementById('player-2-wins'), document.getElementById('player-3-wins')];
 
-      // --- Axial helpers ---
-      const radius = N - 1;
-      const dirs = [ [1,0], [0,1], [-1,1] ]; // 3 unique directions
-      function axialToPixel(q,r){
-        const x = HEX_SIZE * 1.5 * q;
-        const y = HEX_SIZE * (Math.sqrt(3) * (r + q/2));
-        return [x,y];
+    // axial helpers
+    const radius = N - 1;
+    const dirs = [[1,0],[0,1],[-1,1]];
+    function axialToPixel(q,r){
+      const x = HEX_SIZE * 1.5 * q;
+      const y = HEX_SIZE * (Math.sqrt(3) * (r + q/2));
+      return [x,y];
+    }
+    function key(q,r){ return `${q},${r}`; }
+
+    // state
+    let cells = new Map(); // key -> {q,r,g,poly,pieceGroup,owner}
+    let currentPlayer = 0;
+    let gameActive = true;
+    let wins = [0,0,0];
+    let moveHistory = [];
+    let winningKeys = [];
+
+    // build coords and svg sizing
+    const axial = [];
+    for(let q=-radius; q<=radius; q++){
+      const r1 = Math.max(-radius, -q-radius);
+      const r2 = Math.min(radius, -q+radius);
+      for(let r=r1; r<=r2; r++) axial.push([q,r]);
+    }
+    const centers = axial.map(([q,r]) => axialToPixel(q,r));
+    const minX = Math.min(...centers.map(c=>c[0])) - HEX_SIZE - 4;
+    const maxX = Math.max(...centers.map(c=>c[0])) + HEX_SIZE + 4;
+    const minY = Math.min(...centers.map(c=>c[1])) - HEX_SIZE - 4;
+    const maxY = Math.max(...centers.map(c=>c[1])) + HEX_SIZE + 4;
+    svg.setAttribute('viewBox', `${minX} ${minY} ${maxX-minX} ${maxY-minY}`);
+    svg.style.width = Math.min(760, maxX-minX) + 'px';
+    svg.style.maxWidth = '100%';
+    svg.style.height = 'auto';
+
+    // defs gradient
+    const defs = create('defs');
+    const grad = create('radialGradient', { id:'feltCell', cx:'50%', cy:'40%', r:'70%' });
+    grad.appendChild(create('stop', { offset:'0%', 'stop-color':'#0f5a2c' }));
+    grad.appendChild(create('stop', { offset:'100%', 'stop-color':'#0a4821' }));
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+
+    // draw board: create groups translated to center; polygon points centered at 0,0
+    for(const [q,r] of axial){
+      const [cx,cy] = axialToPixel(q,r);
+      const g = create('g', { class:'hex', 'data-key': key(q,r), transform:`translate(${cx},${cy})` });
+      const poly = create('polygon', { points: hexPoints(0,0,HEX_SIZE), fill:'url(#feltCell)' });
+      const piece = create('g', { class:'piece' });
+      g.appendChild(poly);
+      g.appendChild(piece);
+      svg.appendChild(g);
+      g.addEventListener('click', ()=>onCellClick(q,r));
+      cells.set(key(q,r), { q, r, g, poly, pieceGroup: piece, owner: null });
+    }
+
+    // init
+    updateStatus();
+    updateTurnIndicator();
+    updateMoveHistory();
+
+    btnReset.addEventListener('click', newGame);
+    btnContinue.addEventListener('click', ()=>{ winMsg.classList.remove('show'); newRound(); });
+
+    // handlers
+    function onCellClick(q,r){
+      if(!gameActive) return;
+      const c = cells.get(key(q,r));
+      if(!c || c.owner !== null) return;
+      placePiece(c, currentPlayer);
+      enforceEmptyRule();
+      const win = checkWinFrom(q,r,currentPlayer);
+      if(win){
+        highlightWin(win);
+        gameActive = false;
+        wins[currentPlayer]++; playerWinsEls[currentPlayer].textContent = wins[currentPlayer];
+        winnerText.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
+        updateStatus();
+        winMsg.classList.add('show');
+        return;
       }
-      function key(q,r){ return `${q},${r}`; }
-
-      // --- State ---
-      let cells = new Map(); // key-> {q,r, g, poly, pieceGroup, owner:null|0|1|2}
-      let centers = [];
-      let currentPlayer = 0;
-      let gameActive = true;
-      let wins = [0,0,0];
-      let moveHistory = [];  // [{q,r,player}]
-      let winningKeys = [];
-
-      // --- Build coords ---
-      let axial = [];
-      for(let q=-radius; q<=radius; q++){
-        const r1 = Math.max(-radius, -q - radius);
-        const r2 = Math.min( radius, -q + radius);
-        for(let r=r1; r<=r2; r++) axial.push([q,r]);
-      }
-      centers = axial.map(([q,r]) => axialToPixel(q,r));
-      const minX = Math.min(...centers.map(c=>c[0])) - HEX_SIZE - 4;
-      const maxX = Math.max(...centers.map(c=>c[0])) + HEX_SIZE + 4;
-      const minY = Math.min(...centers.map(c=>c[1])) - HEX_SIZE - 4;
-      const maxY = Math.max(...centers.map(c=>c[1])) + HEX_SIZE + 4;
-      svg.setAttribute('viewBox', `${minX} ${minY} ${maxX-minX} ${maxY-minY}`);
-      svg.setAttribute('width', Math.min(640, maxX-minX));
-      svg.setAttribute('height','auto');
-      svg.style.aspectRatio = `${(maxX-minX)/(maxY-minY)}`;
-
-      // --- Defs (cell fill gradient) ---
-      const defs = create('defs');
-      const grad = create('radialGradient', { id:'feltCell', cx:'50%', cy:'40%', r:'70%' });
-      grad.appendChild(create('stop', { offset:'0%', 'stop-color':'#0f5a2c', 'stop-opacity':1 }));
-      grad.appendChild(create('stop', { offset:'100%', 'stop-color':'#0a4821', 'stop-opacity':1 }));
-      defs.appendChild(grad);
-      svg.appendChild(defs);
-
-      // --- Draw board ---
-      for(const [q,r] of axial){
-        const [cx,cy] = axialToPixel(q,r);
-        const g = create('g', { class:'hex', 'data-key':key(q,r) });
-        const poly = create('polygon', { points: hexPoints(cx,cy,HEX_SIZE) });
-        const piece = create('g', { class:'piece' });
-        g.appendChild(poly);
-        g.appendChild(piece);
-        svg.appendChild(g);
-
-        g.addEventListener('click', ()=>onCellClick(q,r));
-
-        cells.set(key(q,r), { q,r, g, poly, pieceGroup:piece, owner:null });
-      }
-
+      currentPlayer = (currentPlayer + 1) % players.length;
       updateStatus();
       updateTurnIndicator();
+    }
+
+    function placePiece(cell, playerId){
+      cell.owner = playerId;
+      drawPiece(cell.pieceGroup, playerId);
+      moveHistory.push({ q:cell.q, r:cell.r, player:playerId });
       updateMoveHistory();
+    }
 
-      btnReset.addEventListener('click', newGame);
-      btnContinue.addEventListener('click', () => { winMsg.classList.remove('show'); newRound(); });
+    function removePieceAt(q,r){
+      const c = cells.get(key(q,r));
+      if(!c || c.owner===null) return;
+      c.owner = null;
+      c.g.classList.remove('win');
+      c.pieceGroup.replaceChildren();
+    }
 
-      // --- Functions ---
-      function onCellClick(q,r){
-        if(!gameActive) return;
-        const c = cells.get(key(q,r));
-        if(!c || c.owner!==null) return;
-
-        placePiece(c, currentPlayer);
-        enforceEmptyRule();
-        const win = checkWinFrom(q,r,currentPlayer);
-        if(win){
-          highlightWin(win);
-          gameActive = false;
-          wins[currentPlayer]++; playerWinsEls[currentPlayer].textContent = wins[currentPlayer];
-          winnerText.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
-          updateStatus();
-          winMsg.classList.add('show');
-          return;
-        }
-        currentPlayer = (currentPlayer + 1) % players.length;
-        updateStatus();
-        updateTurnIndicator();
+    function enforceEmptyRule(){
+      let empties = countEmpty();
+      // remove oldest until empties >= KEEP_EMPTY
+      while(empties < KEEP_EMPTY && moveHistory.length){
+        const oldest = moveHistory.shift();
+        removePieceAt(oldest.q, oldest.r);
+        empties = countEmpty();
       }
+      updateMoveHistory();
+    }
 
-      function placePiece(cell, playerId){
-        cell.owner = playerId;
-        drawPiece(cell.pieceGroup, playerId);
-        moveHistory.push({ q:cell.q, r:cell.r, player:playerId });
-        updateMoveHistory();
+    function countEmpty(){
+      let n=0; for(const c of cells.values()) if(c.owner===null) n++; return n;
+    }
+
+    function drawPiece(group, playerId){
+      group.replaceChildren();
+      const color = players[playerId].color;
+      if(playerId===0){
+        const l1 = create('line', { x1:-HEX_SIZE*0.45, y1:-HEX_SIZE*0.45, x2:HEX_SIZE*0.45, y2:HEX_SIZE*0.45, stroke:color, 'stroke-width':6, 'stroke-linecap':'round' });
+        const l2 = create('line', { x1:HEX_SIZE*0.45, y1:-HEX_SIZE*0.45, x2:-HEX_SIZE*0.45, y2:HEX_SIZE*0.45, stroke:color, 'stroke-width':6, 'stroke-linecap':'round' });
+        group.appendChild(l1); group.appendChild(l2);
+      } else if(playerId===1){
+        const c = create('circle', { cx:0, cy:0, r:HEX_SIZE*0.42, fill:'none', stroke:color, 'stroke-width':6 });
+        group.appendChild(c);
+      } else {
+        const tri = create('polygon', { points: trianglePoints(HEX_SIZE*0.55), fill:color });
+        group.appendChild(tri);
       }
+      // center piece group at local 0,0 (group parent is translated)
+      group.setAttribute('transform','translate(0,0)');
+    }
 
-      function removePieceAt(q,r){
-        const c = cells.get(key(q,r));
-        if(!c || c.owner===null) return;
-        c.owner = null;
-        c.g.classList.remove('win');
-        c.pieceGroup.replaceChildren(); // clear symbol
-      }
+    function checkWinFrom(q,r,playerId){
+      for(const [dq,dr] of dirs){
+        let run = [ key(q,r) ];
+        let nq=q+dq, nr=r+dr;
+        while(ownedBy(nq,nr,playerId)){ run.push(key(nq,nr)); nq+=dq; nr+=dr; }
+        nq=q-dq; nr=r-dr;
+        while(ownedBy(nq,nr,playerId)){ run.unshift(key(nq,nr)); nq-=dq; nr-=dr; }
 
-      function enforceEmptyRule(){
-        // maintain exactly KEEP_EMPTY empty cells once threshold is crossed
-        const total = cells.size;
-        let empties = countEmpty();
-        if(empties >= KEEP_EMPTY) return; // still above threshold after a move -> rare early case
-        // while empties < KEEP_EMPTY, remove oldest moves
-        while(empties < KEEP_EMPTY && moveHistory.length){
-          const oldest = moveHistory.shift();
-          removePieceAt(oldest.q, oldest.r);
-          empties = countEmpty();
-        }
-        updateMoveHistory();
-      }
-
-      function countEmpty(){
-        let n=0; for(const c of cells.values()) if(c.owner===null) n++; return n;
-      }
-
-      function drawPiece(group, playerId){
-        group.replaceChildren();
-        const color = players[playerId].color;
-        // X
-        if(playerId===0){
-          const l1 = create('line', { x1:-HEX_SIZE*0.45, y1:-HEX_SIZE*0.45, x2:HEX_SIZE*0.45, y2:HEX_SIZE*0.45, 'stroke':color, 'stroke-width':6, 'stroke-linecap':'round' });
-          const l2 = create('line', { x1:HEX_SIZE*0.45, y1:-HEX_SIZE*0.45, x2:-HEX_SIZE*0.45, y2:HEX_SIZE*0.45, 'stroke':color, 'stroke-width':6, 'stroke-linecap':'round' });
-          group.append(l1,l2);
-        }
-        // O
-        else if(playerId===1){
-          const c = create('circle', { r:HEX_SIZE*0.42, fill:'none', stroke:color, 'stroke-width':6 });
-          group.appendChild(c);
-        }
-        // Δ
-        else{
-          const tri = create('polygon', { points: trianglePoints(HEX_SIZE*0.55), fill:color });
-          group.appendChild(tri);
-        }
-        group.setAttribute('transform','translate(0,0)');
-      }
-
-      function checkWinFrom(q,r,playerId){
-        // return array of winning keys if found
-        for(const [dq,dr] of dirs){
-          let run = [ key(q,r) ];
-          // forward
-          let nq=q+dq, nr=r+dr;
-          while(ownedBy(nq,nr,playerId)){ run.push(key(nq,nr)); nq+=dq; nr+=dr; }
-          // backward
-          nq=q-dq; nr=r-dr;
-          while(ownedBy(nq,nr,playerId)){ run.unshift(key(nq,nr)); nq-=dq; nr-=dr; }
-
-          if(run.length >= WIN_LENGTH){
-            // trim to exactly WIN_LENGTH contiguous cells including the last placed if longer than needed
-            // choose the segment that includes (q,r)
-            let idx = run.indexOf(key(q,r));
-            // expand window around idx to length WIN_LENGTH if possible
-            let start = Math.max(0, idx - (WIN_LENGTH-1));
-            let end = start + WIN_LENGTH;
-            if(end > run.length){ end = run.length; start = end - WIN_LENGTH; }
-            return run.slice(start,end);
-          }
-        }
-        return null;
-      }
-
-      function ownedBy(q,r,playerId){
-        const c = cells.get(key(q,r)); return c && c.owner===playerId;
-      }
-
-      function highlightWin(keys){
-        winningKeys = keys;
-        for(const k of keys){
-          const c = cells.get(k);
-          if(c) c.g.classList.add('win');
+        if(run.length >= WIN_LENGTH){
+          const idx = run.indexOf(key(q,r));
+          let start = Math.max(0, idx - (WIN_LENGTH-1));
+          let end = start + WIN_LENGTH;
+          if(end > run.length){ end = run.length; start = end - WIN_LENGTH; }
+          return run.slice(start,end);
         }
       }
+      return null;
+    }
 
-      function clearWinHighlight(){
-        for(const k of winningKeys){
-          const c = cells.get(k);
-          if(c) c.g.classList.remove('win');
-        }
-        winningKeys = [];
-      }
+    function ownedBy(q,r,playerId){
+      const c = cells.get(key(q,r)); return c && c.owner===playerId;
+    }
 
-      function newRound(){
-        // keep tallies and names; clear board state only
-        moveHistory = [];
-        clearWinHighlight();
-        for(const c of cells.values()){
-          c.owner = null;
-          c.pieceGroup.replaceChildren();
-          c.g.classList.remove('win');
-        }
-        gameActive = true;
-        // next round starts with next player for fairness
-        currentPlayer = (currentPlayer + 1) % players.length;
-        updateMoveHistory();
-        updateStatus();
-        updateTurnIndicator();
+    function highlightWin(keys){
+      winningKeys = keys;
+      for(const k of keys){
+        const c = cells.get(k);
+        if(c) c.g.classList.add('win');
       }
+    }
 
-      function newGame(){
-        wins = [0,0,0];
-        playerWinsEls.forEach((el,i)=>el.textContent = wins[i]);
-        currentPlayer = 0;
-        winMsg.classList.remove('show');
-        newRound();
+    function clearWinHighlight(){
+      for(const k of winningKeys){
+        const c = cells.get(k); if(c) c.g.classList.remove('win');
       }
+      winningKeys = [];
+    }
 
-      function updateStatus(){
-        if(!gameActive && winningKeys.length){
-          statusEl.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
-        }else{
-          statusEl.textContent = `${playerNameEls[currentPlayer].textContent}'s turn`;
-        }
-      }
+    function newRound(){
+      moveHistory = [];
+      clearWinHighlight();
+      for(const c of cells.values()){ c.owner = null; c.pieceGroup.replaceChildren(); c.g.classList.remove('win'); }
+      gameActive = true;
+      currentPlayer = (currentPlayer + 1) % players.length;
+      updateMoveHistory(); updateStatus(); updateTurnIndicator();
+    }
 
-      function updateTurnIndicator(){
-        playerCards.forEach((card,i)=>card.classList.toggle('active', i===currentPlayer));
-      }
+    function newGame(){
+      wins = [0,0,0];
+      playerWinsEls.forEach((el,i)=>el.textContent = wins[i]);
+      currentPlayer = 0;
+      winMsg.classList.remove('show');
+      newRound();
+    }
 
-      function updateMoveHistory(){
-        moveHistoryEl.innerHTML = '';
-        for(const mv of moveHistory){
-          const dot = document.createElement('div');
-          dot.className = 'history-dot ' + (mv.player===0?'x':mv.player===1?'o':'delta');
-          moveHistoryEl.appendChild(dot);
-        }
+    function updateStatus(){
+      if(!gameActive && winningKeys.length){
+        statusEl.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
+      } else {
+        statusEl.textContent = `${playerNameEls[currentPlayer].textContent}'s turn`;
       }
+    }
 
-      function editName(idx){
-        const label = playerNameEls[idx];
-        const parent = label.parentElement;
-        const input = document.createElement('input');
-        input.type='text'; input.value = label.textContent; input.className='player-name-input';
-        parent.replaceChild(input,label); input.focus();
-        const save = ()=>{ const val = input.value.trim() || ['Player X','Player O','Player Δ'][idx];
-          label.textContent = val; parent.replaceChild(label,input); updateStatus(); };
-        input.addEventListener('blur', save);
-        input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ input.blur(); }});
-      }
+    function updateTurnIndicator(){
+      playerCards.forEach((c,i)=>c.classList.toggle('active', i===currentPlayer));
+    }
 
-      // --- SVG helpers ---
-      function create(tag, attrs={}){
-        const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-        for(const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
-        return el;
+    function updateMoveHistory(){
+      moveHistoryEl.innerHTML = '';
+      for(const mv of moveHistory){
+        const dot = document.createElement('div');
+        dot.className = 'history-dot ' + (mv.player===0?'x':mv.player===1?'o':'delta');
+        moveHistoryEl.appendChild(dot);
       }
-      function hexPoints(cx,cy,size){
-        const pts = [];
-        for(let k=0;k<6;k++){
-          const ang = Math.PI/180*(60*k);
-          pts.push( (cx+size*Math.cos(ang))+','+(cy+size*Math.sin(ang)) );
-        }
-        return pts.join(' ');
-      }
-      function trianglePoints(s){
-        // upright triangle centered at (0,0), draw relative, place with pieceGroup at cell center
-        const h = s * Math.sqrt(3)/2;
-        return `${0},${-h} ${-s/2},${h} ${s/2},${h}`;
-      }
-      function getCss(varName){
-        return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-      }
+    }
 
-      // Center pieces groups at each hex center using transform-origin
-      // Move each pieceGroup to hex center (by wrapping group in parent hex g already at 0,0)
-      // We need to ensure piece is centered: we'll translate the group to the polygon's center.
-      // Do this by adding transform on click-draw (no-op since local coords are 0,0 at group's origin).
-      // Already using shape coordinates centered at 0,0.
-    })();
+    // svg helpers
+    function create(tag, attrs={}){
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for(const k in attrs) el.setAttribute(k, attrs[k]);
+      return el;
+    }
+    function hexPoints(cx,cy,size){
+      const pts=[];
+      for(let k=0;k<6;k++){
+        const ang = Math.PI/180*(60*k);
+        const x = cx + size * Math.cos(ang);
+        const y = cy + size * Math.sin(ang);
+        pts.push(`${x},${y}`);
+      }
+      return pts.join(' ');
+    }
+    function trianglePoints(s){
+      const h = s * Math.sqrt(3)/2;
+      return `0,${-h} ${-s/2},${h} ${s/2},${h}`;
+    }
+    function getCss(varName){ return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
+
+  })();
   </script>
 </body>
 </html>
