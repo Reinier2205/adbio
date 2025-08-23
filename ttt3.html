@@ -4,53 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hexboard Casino Game</title>
-
-<!-- Google Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-
 <style>
 :root {
     --felt-green: #0a4821;
     --dark-wood: #2a1a1f;
     --gold: #ffd700;
-    --light-gold: #fff8e1;
     --player1-color: #ff6b6b;
     --player2-color: #4ecdc4;
     --player3-color: #ffe66d;
 }
 
-*{margin:0;padding:0;box-sizing:border-box;}
 body{
-    font-family:'Lato',sans-serif;
+    font-family: Arial, sans-serif;
     background-color: var(--dark-wood);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:flex-start;
-    min-height:100vh;
-    padding:1rem;
-    color: var(--light-gold);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
 }
+
 .casino-table{
     background-color: var(--felt-green);
     border: 10px solid #4a2c2a;
-    border-radius:15px;
-    padding:2rem;
-    max-width:800px;
-    width:100%;
-    text-align:center;
+    border-radius: 15px;
+    padding: 2rem;
+    max-width: 800px;
+    width: 100%;
 }
 
 h1{
-    font-family:'Inter',sans-serif;
-    font-weight:700;
-    color:var(--gold);
-    margin-bottom:1rem;
+    text-align: center;
+    color: var(--gold);
 }
 
-/* Players row */
 .players{
     display:flex;
     justify-content:flex-start;
@@ -58,15 +45,15 @@ h1{
     margin-bottom:2rem;
 }
 .player{
-    background:linear-gradient(145deg,#3e1e24,#2a1a1f);
+    background:#2a1a1f;
     padding:1rem;
     border-radius:10px;
-    border:3px solid #1a1a1a;
+    border:3px solid #111;
     min-width:120px;
     text-align:center;
 }
 .player.active{
-    border-color:var(--gold);
+    border-color: var(--gold);
 }
 
 /* Hexboard styles */
@@ -77,11 +64,16 @@ h1{
     justify-content:center;
     margin-bottom:2rem;
 }
+
 .cell{
-    width:60px;
-    height:52px;
-    background:linear-gradient(145deg,#0f5a2c,#0a4821);
-    border:2px solid #1a1a1a;
+    width: 60px;
+    aspect-ratio: 1.1547; /* for hex shape */
+    background-color:#0f5a2c;
+    clip-path: polygon(
+        25% 6.7%, 75% 6.7%,
+        100% 50%, 75% 93.3%,
+        25% 93.3%, 0% 50%
+    );
     display:flex;
     justify-content:center;
     align-items:center;
@@ -89,16 +81,18 @@ h1{
     cursor:pointer;
     position:relative;
 }
-.cell.x::before,.cell.x::after{
+
+.cell.x::before, .cell.x::after{
     content:'';
     position:absolute;
     width:70%;
     height:6px;
-    background-color:var(--player1-color);
+    background-color: var(--player1-color);
     border-radius:3px;
 }
-.cell.x::before{transform:rotate(45deg);}
-.cell.x::after{transform:rotate(-45deg);}
+.cell.x::before{transform: rotate(45deg);}
+.cell.x::after{transform: rotate(-45deg);}
+
 .cell.o::before{
     content:'';
     position:absolute;
@@ -107,6 +101,7 @@ h1{
     border:6px solid var(--player2-color);
     border-radius:50%;
 }
+
 .cell.delta::before{
     content:'';
     position:absolute;
@@ -117,22 +112,21 @@ h1{
     border-bottom:50px solid var(--player3-color);
 }
 
-/* Status & Controls */
+/* Controls */
 #game-status{
     margin-bottom:1rem;
     font-weight:700;
-    color:var(--gold);
+    color: var(--gold);
 }
-.controls button{
-    font-family:'Inter',sans-serif;
+button{
     font-weight:600;
     padding:0.5rem 1rem;
     border-radius:6px;
     margin:0 0.5rem;
     border:none;
     cursor:pointer;
-    background:var(--gold);
-    color:#111;
+    background: var(--gold);
+    color: #111;
 }
 </style>
 </head>
@@ -141,42 +135,26 @@ h1{
 <div class="casino-table">
 <h1>Hexboard Casino Game</h1>
 
-<!-- Players -->
 <div class="players">
-    <div class="player player-1 active">
-        <h2>Player 1</h2>
-        <p class="score">0</p>
-    </div>
-    <div class="player player-2">
-        <h2>Player 2</h2>
-        <p class="score">0</p>
-    </div>
-    <div class="player player-3">
-        <h2>Player 3</h2>
-        <p class="score">0</p>
-    </div>
+    <div class="player player-1 active"><h2>Player 1</h2></div>
+    <div class="player player-2"><h2>Player 2</h2></div>
+    <div class="player player-3"><h2>Player 3</h2></div>
 </div>
 
-<!-- Game board -->
 <div class="board" id="hexboard"></div>
 
-<!-- Game status -->
 <p id="game-status">Player 1's turn</p>
-
-<!-- Controls -->
-<div class="controls">
-    <button id="resetBtn">Reset</button>
-</div>
+<button id="resetBtn">Reset</button>
 </div>
 
 <script>
 // Hexboard setup
 const board = document.getElementById('hexboard');
-const size = 5; // 5x5 board
+const size = 5;
 const players = ['x','o','delta'];
 let currentPlayer = 0;
 
-// Create cells
+// Create hex cells
 for(let i=0;i<size*size;i++){
     const cell = document.createElement('div');
     cell.classList.add('cell');
@@ -184,7 +162,7 @@ for(let i=0;i<size*size;i++){
     board.appendChild(cell);
 }
 
-// Handle cell clicks
+// Handle clicks
 board.addEventListener('click', e=>{
     const cell = e.target.closest('.cell');
     if(!cell) return;
@@ -194,13 +172,20 @@ board.addEventListener('click', e=>{
     // Switch player
     currentPlayer = (currentPlayer+1)%players.length;
     document.getElementById('game-status').textContent = `Player ${currentPlayer+1}'s turn`;
+    // Highlight active player
+    document.querySelectorAll('.player').forEach((p,i)=>{
+        p.classList.toggle('active', i===currentPlayer);
+    });
 });
 
-// Reset button
+// Reset
 document.getElementById('resetBtn').addEventListener('click',()=>{
     document.querySelectorAll('.cell').forEach(c=>c.classList.remove('x','o','delta'));
     currentPlayer=0;
     document.getElementById('game-status').textContent="Player 1's turn";
+    document.querySelectorAll('.player').forEach((p,i)=>{
+        p.classList.toggle('active', i===currentPlayer);
+    });
 });
 </script>
 
