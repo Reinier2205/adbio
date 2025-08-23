@@ -1,723 +1,427 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Triple Tic Tac Toe — Hex (Fixed)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --felt-green: #0a4821;
-            --dark-wood: #2a1a1f;
-            --gold: #ffd700;
-            --light-gold: #fff8e1;
-            --dark-red: #8c0000;
-            --ivory: #faf8f0;
-            --player1-color: #ff6b6b;
-            --player2-color: #4ecdc4;
-            --player3-color: #ffe66d;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Lato', sans-serif;
-            background-color: var(--dark-wood);
-            background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1.5rem;
-        }
-        
-        .casino-table {
-            background: var(--felt-green);
-            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                              radial-gradient(rgba(255, 255, 255, 0.1) 1px, var(--felt-green) 1px);
-            background-size: 4px 4px;
-            background-position: 0 0, 2px 2px;
-            border: 10px solid #4a2c2a;
-            box-shadow: 0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
-            border-radius: 15px;
-            padding: 2rem;
-            width: 100%;
-            max-width: 760px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        h1 {
-            font-family: 'Cinzel', serif;
-            color: var(--gold);
-            font-size: 2.2rem;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
-            margin-bottom: 1.5rem;
-        }
-        
-        .players {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .player {
-            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-            padding: 0.8rem;
-            border-radius: 10px;
-            width: 30%;
-            transition: all 0.3s ease;
-            border: 3px solid #1a1a1a;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
-        }
-        
-        .player.active {
-            border-color: var(--gold);
-            transform: scale(1.05);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
-        }
-        
-        .player-1.active { border-color: var(--player1-color); }
-        .player-2.active { border-color: var(--player2-color); }
-        .player-3.active { border-color: var(--player3-color); }
-        
-        .player-header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.3rem;
-            margin-bottom: 0.3rem;
-        }
-        
-        .player-header h2 {
-            color: var(--light-gold);
-            font-size: 1rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .edit-name-icon {
-            cursor: pointer;
-            font-size: 0.8rem;
-            color: var(--gold);
-            transition: transform 0.2s;
-            border-radius: 4px;
-        }
-        .edit-name-icon:hover { transform: scale(1.2); }
-        
-        .player-name-input {
-            background-color: var(--light-gold);
-            border: 1px solid var(--gold);
-            border-radius: 4px;
-            padding: 2px;
-            font-family: 'Lato', sans-serif;
-            text-align: center;
-            width: 80%;
-            font-size: 0.9rem;
-        }
-        
-        .mark {
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-        }
-        
-        .player-1 .mark { color: var(--player1-color); }
-        .player-2 .mark { color: var(--player2-color); }
-        .player-3 .mark { color: var(--player3-color); }
-        
-        .win-tally {
-            color: var(--light-gold);
-            font-size: 0.9rem;
-            margin-top: 0.3rem;
-        }
-        
-        #game-status {
-            min-height: 24px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--light-gold);
-            margin-bottom: 1rem;
-            text-shadow: 1px 1px 2px black;
-        }
-        
-        .board-wrap {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 1.5rem 0;
-        }
-        
-        svg#board {
-            max-width: 100%;
-            height: auto;
-            display: block;
-        }
-        
-        .hex {
-            cursor: pointer;
-            transition: transform 0.12s;
-        }
-        
-        .hex:hover {
-            transform: scale(1.05);
-        }
-        
-        .hex.win polygon {
-            stroke: var(--gold);
-            stroke-width: 4;
-        }
-        
-        .piece line, .piece circle, .piece polygon {
-            pointer-events: none;
-        }
-        
-        .move-history {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-            max-width: 300px;
-            margin: 1rem auto 0;
-        }
-        
-        .history-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-        
-        .history-dot.x { background-color: var(--player1-color); }
-        .history-dot.o { background-color: var(--player2-color); }
-        .history-dot.delta { background-color: var(--player3-color); }
-        
-        .controls {
-            display: flex;
-            justify-content: center;
-            margin-top: 1rem;
-        }
-        
-        button {
-            font-family: 'Cinzel', serif;
-            font-size: 1.1rem;
-            padding: 0.8rem 1.5rem;
-            border: 2px solid #111;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin: 0 0.5rem;
-            color: white;
-            text-shadow: 1px 1px 2px black;
-            box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
-            background: linear-gradient(145deg, #ffeb3b, var(--gold));
-            color: #333;
-        }
-        
-        button:active:not(:disabled) {
-            transform: translateY(3px);
-            box-shadow: 0 1px 0 #111;
-        }
-        
-        .win-message {
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-            color: var(--light-gold);
-            padding: 1.5rem 2rem;
-            border-radius: 15px;
-            border: 3px solid var(--gold);
-            box-shadow: 0 0 30px var(--gold);
-            text-align: center;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.5s ease;
-        }
-        
-        .win-message.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .win-message h3 {
-            font-family: 'Cinzel', serif;
-            font-size: 2rem;
-            color: var(--gold);
-            margin-bottom: 0.5rem;
-        }
-        
-        @media (max-width: 600px) {
-            .casino-table {
-                padding: 1rem;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            .player-header h2 {
-                font-size: 0.9rem;
-            }
-            
-            .mark {
-                font-size: 1.2rem;
-            }
-            
-            .win-message {
-                width: 90%;
-                padding: 1rem;
-            }
-            
-            .win-message h3 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Triple Tic Tac Toe — Hex (n=4)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --felt-green:#0a4821;
+    --dark-wood:#2a1a1f;
+    --gold:#ffd700;
+    --light-gold:#fff8e1;
+    --player1-color:#ff6b6b;
+    --player2-color:#4ecdc4;
+    --player3-color:#ffe66d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Lato',sans-serif;
+    background-color:var(--dark-wood);
+    display:flex;justify-content:center;align-items:center;min-height:100vh;padding:1rem;
+  }
+  .casino-table{
+    background:var(--felt-green);
+    background-image:
+      radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+      radial-gradient(rgba(255,255,255,.06) 1px, var(--felt-green) 1px);
+    background-size:4px 4px; background-position:0 0,2px 2px;
+    border:10px solid #4a2c2a;
+    box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,.5);
+    border-radius:14px;padding:1.2rem;width:100%;max-width:820px;position:relative;
+  }
+  h1{font-family:'Cinzel',serif;color:var(--gold);font-size:1.9rem;margin-bottom:.6rem;text-align:center}
+  .players{display:flex;gap:.5rem;justify-content:space-between;margin-bottom:.6rem}
+  .player{background:linear-gradient(145deg,#3e1e24,#2a1a1f);padding:.6rem;border-radius:10px;width:32%;border:3px solid #111;color:var(--light-gold);text-align:center}
+  .player.active{box-shadow:0 0 12px var(--gold);transform:scale(1.03)}
+  .player .name{font-weight:700;cursor:pointer}
+  .mark{font-weight:700;margin-top:.25rem}
+  #game-status{color:var(--light-gold);margin:8px 0 12px;font-weight:700;text-align:center}
+  .board-wrap{display:flex;justify-content:center;align-items:center}
+  svg#board{max-width:100%;height:auto;display:block;touch-action:manipulation}
+  .hex{cursor:pointer;transition:transform .12s}
+  .hex:hover{transform:scale(.995) translateZ(0)}
+  .hex polygon{stroke:#111;stroke-width:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+  .hex.win polygon{stroke:var(--gold);stroke-width:4;filter:drop-shadow(0 0 6px var(--gold))}
+  .piece line,.piece circle,.piece polygon{pointer-events:none}
+  .move-history{display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+  .history-dot{width:8px;height:8px;border-radius:50%}
+  .history-dot.x{background:var(--player1-color)}
+  .history-dot.o{background:var(--player2-color)}
+  .history-dot.delta{background:var(--player3-color)}
+  .controls{display:flex;justify-content:center;margin-top:10px;gap:8px}
+  button{padding:.6rem 1rem;border-radius:8px;border:2px solid #111;background:var(--gold);cursor:pointer;font-family:'Cinzel',serif}
+  .win-message{position:absolute;top:18%;left:50%;transform:translateX(-50%);background:#2a1a1f;color:var(--light-gold);padding:1rem;border-radius:12px;border:3px solid var(--gold);display:none;z-index:30}
+  .win-message.show{display:block}
+  @media (max-width:640px){
+    .players{gap:.4rem}
+    h1{font-size:1.4rem}
+  }
+</style>
 </head>
 <body>
-    <div class="casino-table" role="application" aria-label="Triple Tic Tac Toe">
-        <h1>Triple Tic Tac Toe — Hex (n=4)</h1>
+  <div class="casino-table" role="application" aria-label="Triple Tic Tac Toe">
+    <h1>Triple Tic Tac Toe — Hex (n=4)</h1>
 
-        <div class="players" aria-hidden="false">
-            <div id="player-1" class="player player-1 active">
-                <div class="player-header">
-                    <h2 id="player-1-name">Player X</h2>
-                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player X Name">✏️</span>
-                </div>
-                <p class="mark">X</p>
-                <p class="win-tally">Wins: <span id="player-1-wins">0</span></p>
-            </div>
-            <div id="player-2" class="player player-2">
-                <div class="player-header">
-                    <h2 id="player-2-name">Player O</h2>
-                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player O Name">✏️</span>
-                </div>
-                <p class="mark">O</p>
-                <p class="win-tally">Wins: <span id="player-2-wins">0</span></p>
-            </div>
-            <div id="player-3" class="player player-3">
-                <div class="player-header">
-                    <h2 id="player-3-name">Player Δ</h2>
-                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player Delta Name">✏️</span>
-                </div>
-                <p class="mark">Δ</p>
-                <p class="win-tally">Wins: <span id="player-3-wins">0</span></p>
-            </div>
-        </div>
-
-        <div id="game-status" aria-live="polite">Player X's turn</div>
-
-        <div class="board-wrap">
-            <svg id="board" role="grid" aria-label="Hex board"></svg>
-        </div>
-
-        <div class="move-history" id="move-history" aria-hidden="false"></div>
-
-        <div class="controls">
-            <button id="btn-reset">🔄 New Game</button>
-        </div>
-
-        <div class="win-message" id="win-message" role="dialog" aria-modal="true">
-            <h3 id="winner-text">Winner</h3>
-            <div style="text-align:center;margin-top:1rem">
-                <button id="btn-continue">Continue</button>
-            </div>
-        </div>
+    <div class="players" aria-hidden="false">
+      <div id="player-1" class="player active"><div class="name" id="player-1-name" tabindex="0">Player X</div><div class="mark">X</div><div>Wins: <span id="player-1-wins">0</span></div></div>
+      <div id="player-2" class="player"><div class="name" id="player-2-name" tabindex="0">Player O</div><div class="mark">O</div><div>Wins: <span id="player-2-wins">0</span></div></div>
+      <div id="player-3" class="player"><div class="name" id="player-3-name" tabindex="0">Player Δ</div><div class="mark">Δ</div><div>Wins: <span id="player-3-wins">0</span></div></div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // CONFIG
-            const N = 4;
-            const KEEP_EMPTY = 6;
-            const WIN_LENGTH = 4;
-            const HEX_SIZE = 36;
+    <div id="game-status" aria-live="polite">Player X's turn</div>
 
-            // PLAYERS
-            const players = [
-                { id: 0, mark: 'X', color: getComputedStyle(document.documentElement).getPropertyValue('--player1-color').trim() },
-                { id: 1, mark: 'O', color: getComputedStyle(document.documentElement).getPropertyValue('--player2-color').trim() },
-                { id: 2, mark: 'Δ', color: getComputedStyle(document.documentElement).getPropertyValue('--player3-color').trim() }
-            ];
+    <div class="board-wrap" aria-hidden="false">
+      <svg id="board" role="grid" aria-label="Hex board"></svg>
+    </div>
 
-            // DOM
-            const svg = document.getElementById('board');
-            const statusEl = document.getElementById('game-status');
-            const moveHistoryEl = document.getElementById('move-history');
-            const btnReset = document.getElementById('btn-reset');
-            const btnContinue = document.getElementById('btn-continue');
-            const winMsg = document.getElementById('win-message');
-            const winnerText = document.getElementById('winner-text');
-            const playerCards = [document.getElementById('player-1'), document.getElementById('player-2'), document.getElementById('player-3')];
-            const playerNameEls = [document.getElementById('player-1-name'), document.getElementById('player-2-name'), document.getElementById('player-3-name')];
-            const playerWinsEls = [document.getElementById('player-1-wins'), document.getElementById('player-2-wins'), document.getElementById('player-3-wins')];
-            const editIcons = document.querySelectorAll('.edit-name-icon');
+    <div class="move-history" id="move-history" aria-hidden="false"></div>
 
-            // AXIAL helper
-            const radius = N - 1;
-            const dirs = [[1,0], [1,-1], [0,-1], [-1,0], [-1,1], [0,1]];
-            function axialToPixel(q, r) { 
-                return [ HEX_SIZE * 1.5 * q, HEX_SIZE * Math.sqrt(3) * (r + q/2) ]; 
-            }
-            function key(q, r) { return `${q},${r}`; }
+    <div class="controls">
+      <button id="btn-reset">🔄 New Game</button>
+      <button id="btn-round">⤻ New Round</button>
+    </div>
 
-            // STATE
-            let cells = new Map();
-            let currentPlayer = 0;
-            let gameActive = true;
-            let wins = [0, 0, 0];
-            let moveHistory = [];
-            let winningKeys = [];
+    <div class="win-message" id="win-message" role="dialog" aria-modal="true">
+      <h3 id="winner-text">Winner</h3>
+      <div style="text-align:center;margin-top:.6rem">
+        <button id="btn-continue">Continue</button>
+      </div>
+    </div>
+  </div>
 
-            // BUILD coords + svg sizing
-            const axial = [];
-            for(let q = -radius; q <= radius; q++) {
-                const r1 = Math.max(-radius, -q - radius);
-                const r2 = Math.min(radius, -q + radius);
-                for(let r = r1; r <= r2; r++) {
-                    axial.push([q, r]);
-                }
-            }
-            
-            const centers = axial.map(([q, r]) => axialToPixel(q, r));
-            const minX = Math.min(...centers.map(c => c[0])) - HEX_SIZE - 4;
-            const maxX = Math.max(...centers.map(c => c[0])) + HEX_SIZE + 4;
-            const minY = Math.min(...centers.map(c => c[1])) - HEX_SIZE - 4;
-            const maxY = Math.max(...centers.map(c => c[1])) + HEX_SIZE + 4;
-            
-            svg.setAttribute('viewBox', `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
-            svg.style.width = Math.min(760, maxX - minX) + 'px';
-            svg.style.maxWidth = '100%';
-            svg.style.height = 'auto';
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // CONFIG (change knobs here)
+  const N = 4;                 // side length
+  const KEEP_EMPTY = 6;        // maintain this many empty cells
+  const WIN_LENGTH = 4;        // four in a row
+  const HEX_SIZE = 36;         // visual radius px
 
-            // defs
-            const defs = create('defs');
-            const grad = create('radialGradient', { id: 'feltCell', cx: '50%', cy: '40%', r: '70%' });
-            grad.appendChild(create('stop', { offset: '0%', 'stop-color': '#0f5a2c' }));
-            grad.appendChild(create('stop', { offset: '100%', 'stop-color': '#0a4821' }));
-            defs.appendChild(grad);
-            svg.appendChild(defs);
+  // players definition
+  function getCssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#000'; }
+  const players = [
+    { id:0, mark:'X', color:getCssVar('--player1-color') },
+    { id:1, mark:'O', color:getCssVar('--player2-color') },
+    { id:2, mark:'Δ', color:getCssVar('--player3-color') },
+  ];
 
-            // draw hexes
-            for(const [q, r] of axial) {
-                const [cx, cy] = axialToPixel(q, r);
-                const g = create('g', { class: 'hex', 'data-q': String(q), 'data-r': String(r), transform: `translate(${cx},${cy})` });
-                const poly = create('polygon', { 
-                    points: hexPoints(0, 0, HEX_SIZE), 
-                    fill: 'url(#feltCell)',
-                    stroke: '#1a1a1a',
-                    'stroke-width': '2'
-                });
-                const piece = create('g', { class: 'piece' });
-                g.appendChild(poly);
-                g.appendChild(piece);
-                svg.appendChild(g);
-                
-                g.addEventListener('click', () => {
-                    onCellClick(q, r);
-                });
-                
-                cells.set(key(q, r), { q, r, g, poly, pieceGroup: piece, owner: null });
-            }
+  // DOM refs
+  const svg = document.getElementById('board');
+  const statusEl = document.getElementById('game-status');
+  const moveHistoryEl = document.getElementById('move-history');
+  const btnReset = document.getElementById('btn-reset');
+  const btnRound = document.getElementById('btn-round');
+  const btnContinue = document.getElementById('btn-continue');
+  const winMsg = document.getElementById('win-message');
+  const winnerText = document.getElementById('winner-text');
+  const playerCards = [
+    document.getElementById('player-1'),
+    document.getElementById('player-2'),
+    document.getElementById('player-3'),
+  ];
+  const playerNameEls = [
+    document.getElementById('player-1-name'),
+    document.getElementById('player-2-name'),
+    document.getElementById('player-3-name'),
+  ];
+  const playerWinsEls = [
+    document.getElementById('player-1-wins'),
+    document.getElementById('player-2-wins'),
+    document.getElementById('player-3-wins'),
+  ];
 
-            // init UI
-            updateStatus();
-            updateTurnIndicator();
-            updateMoveHistory();
+  // axial helpers (flat-top)
+  const radius = N - 1;
+  const dirs = [[1,0],[0,1],[-1,1]];
+  function axialToPixel(q,r){
+    const x = HEX_SIZE * 1.5 * q;
+    const y = HEX_SIZE * (Math.sqrt(3) * (r + q/2));
+    return [x,y];
+  }
+  function key(q,r){ return `${q},${r}`; }
 
-            // events
-            btnReset.addEventListener('click', newGame);
-            btnContinue.addEventListener('click', () => { 
-                winMsg.classList.remove('show'); 
-                newRound(); 
-            });
+  // state
+  let cells = new Map(); // key -> {q,r,g,poly,pieceGroup,owner}
+  let axialCoords = [];  // list of [q,r]
+  let currentPlayer = 0; // start X
+  let gameActive = true;
+  let wins = [0,0,0];
+  let moveHistory = []; // oldest-first: {q,r,player}
+  let winningKeys = [];
+  let winnerId = null;
 
-            // Add edit name functionality
-            editIcons.forEach((icon, index) => {
-                icon.addEventListener('click', () => editName(index));
-                icon.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        editName(index);
-                    }
-                });
-            });
+  // build axial coords
+  for(let q=-radius;q<=radius;q++){
+    const r1 = Math.max(-radius, -q - radius);
+    const r2 = Math.min(radius, -q + radius);
+    for(let r=r1;r<=r2;r++) axialCoords.push([q,r]);
+  }
 
-            // HANDLERS
-            function onCellClick(q, r) {
-                if(!gameActive) return;
-                const c = cells.get(key(q, r));
-                if(!c || c.owner !== null) return;
-                
-                placePiece(c, currentPlayer);
-                
-                // check win first
-                const winKeys = checkWinFrom(q, r, currentPlayer);
-                if(winKeys) {
-                    highlightWin(winKeys);
-                    gameActive = false;
-                    wins[currentPlayer]++; 
-                    playerWinsEls[currentPlayer].textContent = wins[currentPlayer];
-                    winnerText.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
-                    updateStatus();
-                    winMsg.classList.add('show');
-                    return;
-                }
-                
-                // enforce empty-rule
-                enforceEmptyRule();
-                currentPlayer = (currentPlayer + 1) % players.length;
-                updateStatus();
-                updateTurnIndicator();
-            }
+  // measure centers & set viewBox
+  const centers = axialCoords.map(([q,r]) => axialToPixel(q,r));
+  const minX = Math.min(...centers.map(c=>c[0])) - HEX_SIZE - 6;
+  const maxX = Math.max(...centers.map(c=>c[0])) + HEX_SIZE + 6;
+  const minY = Math.min(...centers.map(c=>c[1])) - HEX_SIZE - 6;
+  const maxY = Math.max(...centers.map(c=>c[1])) + HEX_SIZE + 6;
+  svg.setAttribute('viewBox', `${minX} ${minY} ${maxX-minX} ${maxY-minY}`);
+  svg.style.width = Math.min(780, maxX-minX) + 'px';
+  svg.style.height = 'auto';
 
-            function placePiece(cell, playerId) {
-                cell.owner = playerId;
-                drawPiece(cell.pieceGroup, playerId);
-                moveHistory.push({ q: cell.q, r: cell.r, player: playerId });
-                updateMoveHistory();
-            }
+  // defs fill
+  const defs = create('defs');
+  const grad = create('radialGradient', { id:'feltCell', cx:'50%', cy:'40%', r:'70%' });
+  grad.appendChild(create('stop', { offset:'0%', 'stop-color':'#0f5a2c' }));
+  grad.appendChild(create('stop', { offset:'100%', 'stop-color':'#0a4821' }));
+  defs.appendChild(grad);
+  svg.appendChild(defs);
 
-            function removePieceAt(q, r) {
-                const c = cells.get(key(q, r));
-                if(!c || c.owner === null) return;
-                c.owner = null;
-                c.g.classList.remove('win');
-                c.pieceGroup.replaceChildren();
-            }
+  // draw board: group per cell, group translated to center, polygon centered at 0,0
+  for(const [q,r] of axialCoords){
+    const [cx,cy] = axialToPixel(q,r);
+    const g = create('g', { class:'hex', 'data-q':String(q), 'data-r':String(r), transform:`translate(${cx},${cy})` });
+    const poly = create('polygon', { points: hexPoints(0,0,HEX_SIZE), fill:'url(#feltCell)' });
+    const piece = create('g', { class:'piece' });
+    g.appendChild(poly);
+    g.appendChild(piece);
+    svg.appendChild(g);
+    // robust click - read data attributes
+    g.addEventListener('click', () => {
+      const qq = Number(g.getAttribute('data-q'));
+      const rr = Number(g.getAttribute('data-r'));
+      onCellClick(qq, rr);
+    });
+    cells.set(key(q,r), { q, r, g, poly, pieceGroup: piece, owner: null });
+  }
 
-            function enforceEmptyRule() {
-                let empties = countEmpty();
-                while(empties < KEEP_EMPTY && moveHistory.length) {
-                    const oldest = moveHistory.shift();
-                    removePieceAt(oldest.q, oldest.r);
-                    empties = countEmpty();
-                }
-                updateMoveHistory();
-            }
+  // init UI
+  renderAll();
 
-            function countEmpty() { 
-                let n = 0; 
-                for(const v of cells.values()) {
-                    if(v.owner === null) n++;
-                }
-                return n; 
-            }
+  // events
+  btnReset.addEventListener('click', newGame);
+  btnRound.addEventListener('click', () => { winMsg.classList.remove('show'); newRound(); });
+  btnContinue.addEventListener('click', () => { winMsg.classList.remove('show'); newRound(); });
 
-            function drawPiece(group, playerId) {
-                group.replaceChildren();
-                const color = players[playerId].color;
-                
-                if(playerId === 0) {
-                    // X
-                    const l1 = create('line', { 
-                        x1: -HEX_SIZE * 0.45, 
-                        y1: -HEX_SIZE * 0.45, 
-                        x2: HEX_SIZE * 0.45, 
-                        y2: HEX_SIZE * 0.45, 
-                        stroke: color, 
-                        'stroke-width': 6, 
-                        'stroke-linecap': 'round' 
-                    });
-                    const l2 = create('line', { 
-                        x1: HEX_SIZE * 0.45, 
-                        y1: -HEX_SIZE * 0.45, 
-                        x2: -HEX_SIZE * 0.45, 
-                        y2: HEX_SIZE * 0.45, 
-                        stroke: color, 
-                        'stroke-width': 6, 
-                        'stroke-linecap': 'round' 
-                    });
-                    group.appendChild(l1);
-                    group.appendChild(l2);
-                } else if(playerId === 1) {
-                    // O
-                    const c = create('circle', { 
-                        cx: 0, 
-                        cy: 0, 
-                        r: HEX_SIZE * 0.42, 
-                        fill: 'none', 
-                        stroke: color, 
-                        'stroke-width': 6 
-                    });
-                    group.appendChild(c);
-                } else {
-                    // Δ
-                    const tri = create('polygon', { 
-                        points: trianglePoints(HEX_SIZE * 0.55), 
-                        fill: color 
-                    });
-                    group.appendChild(tri);
-                }
-            }
+  // inline edit name
+  playerNameEls.forEach((el, idx) => {
+    el.addEventListener('click', () => editName(idx));
+    el.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editName(idx); }});
+  });
 
-            // WIN CHECK
-            function checkWinFrom(q, r, playerId) {
-                for(const [dq, dr] of dirs) {
-                    const run = [key(q, r)];
-                    let nq = q + dq, nr = r + dr;
-                    
-                    while(ownedBy(nq, nr, playerId)) { 
-                        run.push(key(nq, nr)); 
-                        nq += dq; 
-                        nr += dr; 
-                    }
-                    
-                    nq = q - dq; 
-                    nr = r - dr;
-                    while(ownedBy(nq, nr, playerId)) { 
-                        run.unshift(key(nq, nr)); 
-                        nq -= dq; 
-                        nr -= dr; 
-                    }
+  // handlers
+  function onCellClick(q,r){
+    if(!gameActive) return;
+    const c = cells.get(key(q,r));
+    if(!c || c.owner !== null) return;
 
-                    if(run.length >= WIN_LENGTH) {
-                        const idx = run.indexOf(key(q, r));
-                        let start = Math.max(0, idx - (WIN_LENGTH - 1));
-                        let end = start + WIN_LENGTH;
-                        if(end > run.length) { 
-                            end = run.length; 
-                            start = end - WIN_LENGTH; 
-                        }
-                        return run.slice(start, end);
-                    }
-                }
-                return null;
-            }
+    // place piece
+    placePiece(c, currentPlayer);
 
-            function ownedBy(q, r, playerId) {
-                const c = cells.get(key(q, r)); 
-                return c && c.owner === playerId;
-            }
+    // check win BEFORE FIFO removal
+    const winKeys = checkWinFrom(q,r,currentPlayer);
+    if(winKeys){
+      winnerId = currentPlayer;
+      winningKeys = winKeys;
+      highlightWin(winKeys);
+      gameActive = false;
+      wins[winnerId]++; playerWinsEls[winnerId].textContent = wins[winnerId];
+      winnerText.textContent = `${playerNameEls[winnerId].textContent} wins!`;
+      updateStatus();
+      winMsg.classList.add('show');
+      return;
+    }
 
-            function highlightWin(keys) {
-                winningKeys = keys;
-                for(const k of keys) {
-                    const c = cells.get(k);
-                    if(c) c.g.classList.add('win');
-                }
-            }
+    // enforce FIFO removal after checking win
+    enforceEmptyRule();
 
-            function clearWinHighlight() {
-                for(const k of (winningKeys || [])) {
-                    const c = cells.get(k); 
-                    if(c) c.g.classList.remove('win');
-                }
-                winningKeys = [];
-            }
+    // rotate turn
+    currentPlayer = (currentPlayer + 1) % players.length;
+    updateStatus();
+    updateTurnIndicator();
+  }
 
-            // ROUNDS & GAMES
-            function newRound() {
-                moveHistory = [];
-                clearWinHighlight();
-                for(const v of cells.values()) { 
-                    v.owner = null; 
-                    v.pieceGroup.replaceChildren(); 
-                    v.g.classList.remove('win'); 
-                }
-                gameActive = true;
-                currentPlayer = (currentPlayer + 1) % players.length;
-                updateMoveHistory();
-                updateStatus();
-                updateTurnIndicator();
-            }
+  function placePiece(cell, playerId){
+    cell.owner = playerId;
+    drawPiece(cell.pieceGroup, playerId);
+    moveHistory.push({ q: cell.q, r: cell.r, player: playerId });
+    updateMoveHistory();
+  }
 
-            function newGame() {
-                wins = [0, 0, 0];
-                playerWinsEls.forEach((el, i) => el.textContent = wins[i]);
-                currentPlayer = 0;
-                winMsg.classList.remove('show');
-                newRound();
-            }
+  function removePieceAt(q,r){
+    const c = cells.get(key(q,r));
+    if(!c || c.owner === null) return;
+    c.owner = null;
+    c.g.classList.remove('win');
+    c.pieceGroup.replaceChildren();
+  }
 
-            // UI updates
-            function updateStatus() {
-                if(!gameActive && winningKeys && winningKeys.length) {
-                    statusEl.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
-                } else {
-                    statusEl.textContent = `${playerNameEls[currentPlayer].textContent}'s turn`;
-                }
-            }
+  function enforceEmptyRule(){
+    while(countEmpty() < KEEP_EMPTY && moveHistory.length){
+      const oldest = moveHistory.shift();
+      removePieceAt(oldest.q, oldest.r);
+    }
+    updateMoveHistory();
+  }
 
-            function updateTurnIndicator() {
-                playerCards.forEach((card, i) => {
-                    card.classList.toggle('active', i === currentPlayer);
-                });
-            }
+  function countEmpty(){
+    let n=0;
+    for(const v of cells.values()) if(v.owner === null) n++;
+    return n;
+  }
 
-            function updateMoveHistory() {
-                moveHistoryEl.innerHTML = '';
-                for(const mv of moveHistory) {
-                    const dot = document.createElement('div');
-                    dot.className = 'history-dot ' + (mv.player === 0 ? 'x' : mv.player === 1 ? 'o' : 'delta');
-                    moveHistoryEl.appendChild(dot);
-                }
-            }
+  // win detection: scan 3 axes, return a contiguous window of length WIN_LENGTH including last cell (or null)
+  function checkWinFrom(q,r,playerId){
+    for(const [dq,dr] of dirs){
+      const run = [ key(q,r) ];
+      let nq = q + dq, nr = r + dr;
+      while(ownedBy(nq,nr,playerId)){ run.push(key(nq,nr)); nq += dq; nr += dr; }
+      nq = q - dq; nr = r - dr;
+      while(ownedBy(nq,nr,playerId)){ run.unshift(key(nq,nr)); nq -= dq; nr -= dr; }
+      if(run.length >= WIN_LENGTH){
+        const idx = run.indexOf(key(q,r));
+        let start = Math.max(0, idx - (WIN_LENGTH - 1));
+        let end = start + WIN_LENGTH;
+        if(end > run.length){ end = run.length; start = end - WIN_LENGTH; }
+        return run.slice(start, end);
+      }
+    }
+    return null;
+  }
 
-            function editName(idx) {
-                const label = playerNameEls[idx];
-                const parent = label.parentElement;
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = label.textContent;
-                input.className = 'player-name-input';
-                parent.replaceChild(input, label);
-                input.focus();
-                
-                const save = () => {
-                    const val = input.value.trim() || `Player ${players[idx].mark}`;
-                    label.textContent = val;
-                    parent.replaceChild(label, input);
-                    updateStatus();
-                };
-                
-                input.addEventListener('blur', save);
-                input.addEventListener('keydown', e => {
-                    if(e.key === 'Enter') {
-                        input.blur();
-                    }
-                });
-            }
+  function ownedBy(q,r,playerId){
+    const c = cells.get(key(q,r));
+    return c && c.owner === playerId;
+  }
 
-            // SVG helpers
-            function create(tag, attrs = {}) {
-                const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-                for(const k in attrs) {
-                    el.setAttribute(k, attrs[k]);
-                }
-                return el;
-            }
-            
-            function hexPoints(cx, cy, size) {
-                const pts = [];
-                for(let k = 0; k < 6; k++) {
-                    const ang = Math.PI / 180 * (60 * k);
-                    const x = cx + size * Math.cos(ang);
-                    const y = cy + size * Math.sin(ang);
-                    pts.push(`${x},${y}`);
-                }
-                return pts.join(' ');
-            }
-            
-            function trianglePoints(s) {
-                const h = s * Math.sqrt(3) / 2;
-                return `0,${-h} ${-s/2},${h} ${s/2},${h}`;
-            }
+  function highlightWin(keys){
+    for(const k of keys){
+      const c = cells.get(k);
+      if(c) c.g.classList.add('win');
+    }
+  }
 
-            // Start the game
-            newGame();
-        });
-    </script>
+  function clearWinHighlight(){
+    for(const k of winningKeys){ const c = cells.get(k); if(c) c.g.classList.remove('win'); }
+    winningKeys = [];
+  }
+
+  // rounds & games
+  function newRound(){
+    moveHistory = [];
+    clearWinHighlight();
+    for(const c of cells.values()){
+      c.owner = null;
+      c.pieceGroup.replaceChildren();
+      c.g.classList.remove('win');
+    }
+    gameActive = true;
+    winnerId = null;
+    // rotate start player
+    currentPlayer = (currentPlayer + 1) % players.length;
+    renderAll();
+  }
+
+  function newGame(){
+    wins = [0,0,0];
+    playerWinsEls.forEach((el,i)=>el.textContent = wins[i]);
+    currentPlayer = 0;
+    winnerId = null;
+    winMsg.classList.remove('show');
+    newRound();
+  }
+
+  // drawing pieces centered at group origin
+  function drawPiece(group, playerId){
+    group.replaceChildren();
+    const color = players[playerId].color;
+    if(playerId === 0){
+      const l1 = create('line', { x1:-HEX_SIZE*0.45, y1:-HEX_SIZE*0.45, x2:HEX_SIZE*0.45, y2:HEX_SIZE*0.45, stroke:color, 'stroke-width':6, 'stroke-linecap':'round' });
+      const l2 = create('line', { x1:HEX_SIZE*0.45, y1:-HEX_SIZE*0.45, x2:-HEX_SIZE*0.45, y2:HEX_SIZE*0.45, stroke:color, 'stroke-width':6, 'stroke-linecap':'round' });
+      group.appendChild(l1); group.appendChild(l2);
+    } else if(playerId === 1){
+      const c = create('circle', { cx:0, cy:0, r:HEX_SIZE*0.42, fill:'none', stroke:color, 'stroke-width':6 });
+      group.appendChild(c);
+    } else {
+      const tri = create('polygon', { points: trianglePoints(HEX_SIZE*0.55), fill:color });
+      group.appendChild(tri);
+    }
+    group.setAttribute('transform', 'translate(0,0)');
+  }
+
+  // UI updates
+  function updateStatus(){
+    if(!gameActive && winnerId !== null){
+      statusEl.textContent = `${playerNameEls[winnerId].textContent} wins!`;
+    } else {
+      statusEl.textContent = `${playerNameEls[currentPlayer].textContent}'s turn`;
+    }
+  }
+
+  function updateTurnIndicator(){
+    playerCards.forEach((card,i) => card.classList.toggle('active', i === currentPlayer));
+  }
+
+  function updateMoveHistory(){
+    moveHistoryEl.innerHTML = '';
+    for(const mv of moveHistory){
+      const dot = document.createElement('div');
+      dot.className = 'history-dot ' + (mv.player===0?'x':mv.player===1?'o':'delta');
+      moveHistoryEl.appendChild(dot);
+    }
+  }
+
+  function renderAll(){
+    updateStatus();
+    updateTurnIndicator();
+    updateMoveHistory();
+  }
+
+  // edit names
+  function editName(idx){
+    const label = playerNameEls[idx];
+    const parent = label.parentElement;
+    const input = document.createElement('input');
+    input.type = 'text'; input.value = label.textContent; input.style.width = '100%';
+    parent.replaceChild(input, label);
+    input.focus();
+    const save = () => {
+      const val = input.value.trim() || (idx===0?'Player X':idx===1?'Player O':'Player Δ');
+      label.textContent = val;
+      parent.replaceChild(label, input);
+      updateStatus();
+    };
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ input.blur(); }});
+  }
+
+  // helpers: SVG creation and geometry
+  function create(tag, attrs = {}){
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for(const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function hexPoints(cx,cy,size){
+    const pts = [];
+    for(let k=0;k<6;k++){
+      const ang = Math.PI/180*(60*k);
+      const x = cx + size * Math.cos(ang);
+      const y = cy + size * Math.sin(ang);
+      pts.push(`${x},${y}`);
+    }
+    return pts.join(' ');
+  }
+  function trianglePoints(s){
+    const h = s * Math.sqrt(3)/2;
+    return `0,${-h} ${-s/2},${h} ${s/2},${h}`;
+  }
+
+  // expose debug object
+  window._ttt = { cells, axialCoords, placePiece: (c,p)=>placePiece(c,p), newGame, newRound, state: () => ({ currentPlayer, moveHistory, wins }) };
+
+  // start fresh
+  newGame();
+});
+</script>
 </body>
 </html>
