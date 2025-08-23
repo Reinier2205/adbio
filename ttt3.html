@@ -2,99 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3-Player Hex Tic Tac Toe</title>
+  <title>Hexagon Tic-Tac-Toe (3 Players)</title>
   <style>
     body {
-      text-align: center;
-      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
     }
-    svg {
-      margin-top: 20px;
-    }
-    .hex {
-      fill: white;
-      stroke: black;
-      stroke-width: 2;
+
+    canvas {
+      background: white;
+      border: 2px solid #333;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
       cursor: pointer;
-    }
-    .label {
-      font-size: 20px;
-      text-anchor: middle;
-      dominant-baseline: middle;
-      pointer-events: none;
-    }
-    #currentPlayer {
-      font-size: 24px;
-      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>3-Player Hex Tic Tac Toe</h1>
-  <div id="currentPlayer">Current Player: X</div>
-  <svg id="board" width="600" height="600"></svg>
-
+  <canvas id="gameCanvas" width="600" height="600"></canvas>
   <script>
-    const svg = document.getElementById("board");
-    const hexSize = 40;
-    const n = 4; // radius (H(4)=37 hexes)
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const hexRadius = 50;
+    const boardSize = 4; // n=4 hexagon-of-hexagons
+    const hexHeight = Math.sqrt(3) * hexRadius;
+
     const players = ["X", "O", "△"];
     let currentPlayer = 0;
-    const hexes = [];
 
-    function hexToPixel(q, r) {
-      const x = hexSize * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
-      const y = hexSize * (3/2 * r);
-      return [x, y];
-    }
+    // Storage for hexagons
+    let hexes = [];
 
-    function drawHex(x, y, size) {
-      const points = [];
+    function drawHexagon(x, y, radius, fill=false, text="") {
+      ctx.beginPath();
       for (let i = 0; i < 6; i++) {
-        const angle = Math.PI/3 * i + Math.PI/6;
-        points.push([
-          x + size * Math.cos(angle),
-          y + size * Math.sin(angle)
-        ].join(","));
+        const angle = Math.PI / 3 * i + Math.PI / 6;
+        const px = x + radius * Math.cos(angle);
+        const py = y + radius * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
       }
-      return points.join(" ");
+      ctx.closePath();
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      if (fill) {
+        ctx.fillStyle = "#ddd";
+        ctx.fill();
+      }
+      if (text) {
+        ctx.fillStyle = "#000";
+        ctx.font = "24px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, x, y);
+      }
     }
 
-    function axialDistance(a, b) {
-      return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
-    }
-
-    // Build hexagon-of-hexagons
-    for (let q = -n+1; q <= n-1; q++) {
-      for (let r = -n+1; r <= n-1; r++) {
-        if (axialDistance({q, r}, {q:0, r:0}) < n) {
-          const [x, y] = hexToPixel(q, r);
-          const hex = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-          hex.setAttribute("points", drawHex(x+300, y+300, hexSize-2));
-          hex.setAttribute("class", "hex");
-          svg.appendChild(hex);
-
-          const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-          label.setAttribute("x", x+300);
-          label.setAttribute("y", y+300);
-          label.setAttribute("class", "label");
-          svg.appendChild(label);
-
-          const cell = {q, r, hex, label, value: ""};
-          hexes.push(cell);
-
-          hex.addEventListener("click", () => {
-            if (cell.value === "") {
-              cell.value = players[currentPlayer];
-              label.textContent = cell.value;
-              currentPlayer = (currentPlayer + 1) % players.length;
-              document.getElementById("currentPlayer").textContent =
-                "Current Player: " + players[currentPlayer];
-            }
-          });
+    function generateBoard(n) {
+      hexes = [];
+      for (let q = -n+1; q <= n-1; q++) {
+        const r1 = Math.max(-n+1, -q-n+1);
+        const r2 = Math.min(n-1, -q+n-1);
+        for (let r = r1; r <= r2; r++) {
+          const x = canvas.width/2 + hexRadius * 3/2 * q;
+          const y = canvas.height/2 + hexHeight * (r + q/2);
+          hexes.push({q, r, x, y, value: ""});
         }
       }
     }
+
+    function drawBoard() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let hex of hexes) {
+        drawHexagon(hex.x, hex.y, hexRadius-2, false, hex.value);
+      }
+    }
+
+    function hexClicked(mx, my) {
+      for (let hex of hexes) {
+        const dx = mx - hex.x;
+        const dy = my - hex.y;
+        if (Math.sqrt(dx*dx + dy*dy) < hexRadius*0.9) {
+          return hex;
+        }
+      }
+      return null;
+    }
+
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const hex = hexClicked(mx, my);
+      if (hex && hex.value === "") {
+        hex.value = players[currentPlayer];
+        currentPlayer = (currentPlayer + 1) % players.length;
+        drawBoard();
+      }
+    });
+
+    generateBoard(boardSize);
+    drawBoard();
   </script>
 </body>
 </html>
