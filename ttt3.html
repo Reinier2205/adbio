@@ -1,146 +1,100 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Hex Board — Click Test (n=4)</title>
-<style>
-  :root{
-    --bg:#0a4821;
-    --gold:#ffd700;
-    --cell-fill:#0f5a2c;
-    --cell-fill-2:#0a4821;
-    --hit:#88cfa3;
-  }
-  html,body{height:100%;margin:0}
-  body{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#1f2b26;
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
-    padding:16px;
-  }
-  .wrap{background:var(--bg);padding:14px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.6)}
-  svg{display:block;touch-action:manipulation;max-width:720px;width:90vw;height:auto}
-  .hex polygon{
-    fill:url(#cellGrad);
-    stroke:#0c1a14;
-    stroke-width:2;
-    transition:fill .12s, stroke .12s, transform .12s;
-  }
-  .hex:hover polygon{filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
-  .hex.selected polygon{
-    stroke:var(--gold);
-    stroke-width:3;
-    fill:var(--hit);
-  }
-  .status{color:#fff;margin-top:10px;text-align:center}
-  .coords{font-weight:700;color:var(--gold)}
-</style>
+  <meta charset="UTF-8">
+  <title>3-Player Hex Tic Tac Toe</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: sans-serif;
+    }
+    svg {
+      margin-top: 20px;
+    }
+    .hex {
+      fill: white;
+      stroke: black;
+      stroke-width: 2;
+      cursor: pointer;
+    }
+    .label {
+      font-size: 20px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+    }
+    #currentPlayer {
+      font-size: 24px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <div class="wrap" role="region" aria-label="Hex click test">
-    <svg id="svgBoard" aria-hidden="false"></svg>
-    <div class="status">Last click: <span class="coords" id="coords">none</span></div>
-  </div>
+  <h1>3-Player Hex Tic Tac Toe</h1>
+  <div id="currentPlayer">Current Player: X</div>
+  <svg id="board" width="600" height="600"></svg>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const N = 4;               // side length
-  const SIZE = 36;           // hex radius (px)
-  const radius = N - 1;
+  <script>
+    const svg = document.getElementById("board");
+    const hexSize = 40;
+    const n = 4; // radius (H(4)=37 hexes)
+    const players = ["X", "O", "△"];
+    let currentPlayer = 0;
+    const hexes = [];
 
-  const svg = document.getElementById('svgBoard');
-  const coordsEl = document.getElementById('coords');
-
-  // axial helpers (flat-top orientation)
-  function axialToPixel(q, r){
-    const x = SIZE * 1.5 * q;
-    const y = SIZE * (Math.sqrt(3) * (r + q/2));
-    return [x, y];
-  }
-  function key(q,r){ return `${q},${r}`; }
-
-  // compute axial coords for n=4
-  const axial = [];
-  for(let q = -radius; q <= radius; q++){
-    const r1 = Math.max(-radius, -q - radius);
-    const r2 = Math.min(radius, -q + radius);
-    for(let r = r1; r <= r2; r++) axial.push([q, r]);
-  }
-
-  // compute centers and set viewBox
-  const centers = axial.map(([q,r]) => axialToPixel(q,r));
-  const minX = Math.min(...centers.map(c=>c[0])) - SIZE - 4;
-  const maxX = Math.max(...centers.map(c=>c[0])) + SIZE + 4;
-  const minY = Math.min(...centers.map(c=>c[1])) - SIZE - 4;
-  const maxY = Math.max(...centers.map(c=>c[1])) + SIZE + 4;
-  svg.setAttribute('viewBox', `${minX} ${minY} ${maxX-minX} ${maxY-minY}`);
-
-  // defs gradient for cell fill
-  const defs = createSVG('defs');
-  const grad = createSVG('radialGradient', { id:'cellGrad', cx:'50%', cy:'40%', r:'70%' });
-  grad.appendChild(createSVG('stop', { offset:'0%', 'stop-color': '#0f5a2c' }));
-  grad.appendChild(createSVG('stop', { offset:'100%', 'stop-color': '#0a4821' }));
-  defs.appendChild(grad);
-  svg.appendChild(defs);
-
-  // map of cells
-  const cells = new Map();
-
-  // draw each hex as a group translated to its center. polygon points are centered at 0,0
-  for(const [q,r] of axial){
-    const [cx,cy] = axialToPixel(q,r);
-    const g = createSVG('g', { class:'hex', 'data-q':String(q), 'data-r':String(r), transform:`translate(${cx},${cy})` });
-    const poly = createSVG('polygon', { points: hexPoints(0,0,SIZE) });
-    const pieces = createSVG('g', { class:'piece' });
-    g.appendChild(poly);
-    g.appendChild(pieces);
-    svg.appendChild(g);
-
-    // click handler reads data attributes, selects only that group
-    g.addEventListener('click', (ev) => {
-      // prevent accidental double events
-      ev.stopPropagation();
-      clearSelection();
-      g.classList.add('selected');
-      coordsEl.textContent = `${q}, ${r}`;
-    });
-
-    cells.set(key(q,r), { q, r, g, poly, pieces, owner: null });
-  }
-
-  // clicking outside clears selection
-  svg.ownerSVGElement || svg; // noop to keep svg variable used
-  document.addEventListener('click', (e) => {
-    // if click outside the svg area, clear
-    if(!svg.contains(e.target)) clearSelection();
-  });
-
-  function clearSelection(){
-    for(const c of cells.values()) c.g.classList.remove('selected');
-    coordsEl.textContent = 'none';
-  }
-
-  // helpers
-  function createSVG(tag, attrs = {}){
-    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-    for(const k of Object.keys(attrs)) el.setAttribute(k, attrs[k]);
-    return el;
-  }
-
-  function hexPoints(cx, cy, s){
-    const pts = [];
-    for(let i=0;i<6;i++){
-      const ang = Math.PI/180 * (60 * i);
-      const x = cx + s * Math.cos(ang);
-      const y = cy + s * Math.sin(ang);
-      pts.push(`${x},${y}`);
+    function hexToPixel(q, r) {
+      const x = hexSize * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r);
+      const y = hexSize * (3/2 * r);
+      return [x, y];
     }
-    return pts.join(' ');
-  }
-});
-</script>
+
+    function drawHex(x, y, size) {
+      const points = [];
+      for (let i = 0; i < 6; i++) {
+        const angle = Math.PI/3 * i + Math.PI/6;
+        points.push([
+          x + size * Math.cos(angle),
+          y + size * Math.sin(angle)
+        ].join(","));
+      }
+      return points.join(" ");
+    }
+
+    function axialDistance(a, b) {
+      return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
+    }
+
+    // Build hexagon-of-hexagons
+    for (let q = -n+1; q <= n-1; q++) {
+      for (let r = -n+1; r <= n-1; r++) {
+        if (axialDistance({q, r}, {q:0, r:0}) < n) {
+          const [x, y] = hexToPixel(q, r);
+          const hex = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          hex.setAttribute("points", drawHex(x+300, y+300, hexSize-2));
+          hex.setAttribute("class", "hex");
+          svg.appendChild(hex);
+
+          const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          label.setAttribute("x", x+300);
+          label.setAttribute("y", y+300);
+          label.setAttribute("class", "label");
+          svg.appendChild(label);
+
+          const cell = {q, r, hex, label, value: ""};
+          hexes.push(cell);
+
+          hex.addEventListener("click", () => {
+            if (cell.value === "") {
+              cell.value = players[currentPlayer];
+              label.textContent = cell.value;
+              currentPlayer = (currentPlayer + 1) % players.length;
+              document.getElementById("currentPlayer").textContent =
+                "Current Player: " + players[currentPlayer];
+            }
+          });
+        }
+      }
+    }
+  </script>
 </body>
 </html>
