@@ -1,220 +1,358 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Hex Casino Game</title>
-  <style>
-    body {
-      background-color: green;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 20px;
-    }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Triple Tic Tac Toe — Casino Style (n=4)</title>
 
-    h1 {
-      margin-bottom: 10px;
-    }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 
-    .players {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      margin-bottom: 20px;
-    }
+<style>
+/* ===== Casino Theme ===== */
+:root{
+  --felt-green: #0a4821;
+  --dark-wood: #2a1a1f;
+  --gold: #d4af37;
+  --gold-light: #ffd700;
+  --light-gold: #fff8e1;
+  --ivory: #faf8f0;
+  --player1-color: #ff6b6b;
+  --player2-color: #4ecdc4;
+  --player3-color: #ffe66d;
+}
+/* Reset / base */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Lato',sans-serif;
+  background-color:var(--dark-wood);
+  background-image:radial-gradient(circle,#4d322e 0%,var(--dark-wood) 70%);
+  display:flex;justify-content:center;align-items:center;padding:1.5rem;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
 
-    .player {
-      padding: 10px 20px;
-      border: 2px solid white;
-      border-radius: 10px;
-      background-color: darkgreen;
-      min-width: 100px;
-    }
+/* Casino table container */
+.casino-table{
+  background:var(--felt-green);
+  background-image:
+    radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,0.08) 1px, var(--felt-green) 1px);
+  background-size:4px 4px; background-position:0 0,2px 2px;
+  border:10px solid #4a2c2a;
+  box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
+  border-radius:15px;padding:1.25rem;width:100%;max-width:940px;position:relative;
+}
 
-    .active {
-      background-color: goldenrod;
-    }
+/* Title */
+h1{
+  font-family:'Inter',sans-serif;font-weight:700;color:var(--gold-light);
+  font-size:2rem;text-shadow:2px 2px 5px rgba(0,0,0,0.7);margin-bottom:1rem;text-align:center;
+}
 
-    .board {
-      display: grid;
-      grid-template-columns: repeat(5, 60px);
-      grid-gap: 5px;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
+/* Players row: left -> right */
+.players{
+  display:flex;flex-direction:row;justify-content:space-between;gap:1rem;margin-bottom:1rem;align-items:stretch
+}
+.player{
+  background:linear-gradient(145deg,#3e1e24,#2a1a1f);
+  padding:0.9rem;border-radius:10px;border:3px solid #1a1a1a;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 10px rgba(0,0,0,0.35);
+  width:32%;min-width:150px;color:var(--light-gold);text-align:center;
+}
+.player-header{display:flex;justify-content:center;align-items:center;gap:.5rem;margin-bottom:.25rem}
+.player .name{font-weight:700}
+.player .wins{margin-top:.35rem;font-size:.95rem;color:var(--light-gold)}
+.player.active{border-color:var(--gold);transform:scale(1.03);box-shadow:0 0 18px rgba(212,175,55,0.18)}
+.player-1.active{border-color:var(--player1-color)}
+.player-2.active{border-color:var(--player2-color)}
+.player-3.active{border-color:var(--player3-color)}
 
-    .hex {
-      width: 60px;
-      height: 52px;
-      background-color: #004d00;
-      clip-path: polygon(
-        50% 0%,
-        93% 25%,
-        93% 75%,
-        50% 100%,
-        7% 75%,
-        7% 25%
-      );
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      cursor: pointer;
-      color: white;
-    }
+/* Panel symbols */
+.symbol{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;position:relative;
+}
+.symbol.x::before,.symbol.x::after{
+  content:'';position:absolute;width:75%;height:6px;background:var(--player1-color);border-radius:5px;
+}
+.symbol.x::before{transform:rotate(45deg)}
+.symbol.x::after{transform:rotate(-45deg)}
+.symbol.o{border:6px solid var(--player2-color);border-radius:50%}
+.symbol.delta svg{display:block}
 
-    .hex.taken {
-      cursor: default;
-    }
+/* Status */
+#game-status{
+  min-height:24px;font-size:1.05rem;font-weight:700;color:var(--light-gold);
+  margin:10px 0;text-shadow:1px 1px 2px black;text-align:center
+}
 
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: none;
-      background-color: goldenrod;
-      cursor: pointer;
-    }
+/* Game area / board */
+.game-area{display:flex;gap:1rem;flex-direction:column;align-items:center;justify-content:center}
+.board-wrap{display:flex;justify-content:center;align-items:center;padding:8px}
+svg#board{width:640px;max-width:90vw;height:auto;display:block;touch-action:manipulation}
 
-    /* Yellow filled equilateral triangle symbol */
-    .triangle {
-      width: 0;
-      height: 0;
-      border-left: 12px solid transparent;
-      border-right: 12px solid transparent;
-      border-bottom: 20px solid yellow;
-      display: inline-block;
-    }
+/* Hex styling */
+.hex polygon{
+  fill:url(#cellGrad);
+  stroke:#111;stroke-width:2;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+  transition:transform .08s, stroke .12s;
+}
+.hex:hover polygon{transform:scale(1.01)}
+.hex.win polygon{stroke:var(--gold);stroke-width:4;filter:drop-shadow(0 0 6px var(--gold))}
 
-  </style>
+/* Move history */
+.move-history{display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.history-dot{width:8px;height:8px;border-radius:50%}
+.history-dot.x{background:var(--player1-color)}
+.history-dot.o{background:var(--player2-color)}
+.history-dot.delta{background:var(--player3-color)}
+
+/* Controls */
+.controls{margin-top:12px;display:flex;gap:8px;justify-content:center}
+button{
+  font-family:'Inter',sans-serif;font-weight:600;padding:.6rem 1rem;border-radius:8px;border:2px solid #111;cursor:pointer;
+  background:linear-gradient(145deg,var(--gold),#b8860b);color:#111
+}
+button:active{transform:translateY(2px)}
+
+/* Responsive */
+@media (max-width:720px){
+  svg#board{width:92vw}
+  .players{flex-direction:column;gap:0.6rem}
+  .player{width:100%}
+}
+</style>
 </head>
 <body>
-  <h1>Hex Casino Game</h1>
+  <div class="casino-table" role="application" aria-label="Triple Tic Tac Toe Casino">
+    <h1>Triple Tic Tac Toe — Hex (n=4)</h1>
 
-  <div class="players">
-    <div id="playerX" class="player active">Player X<br>X</div>
-    <div id="playerO" class="player">Player O<br>O</div>
-    <div id="playerT" class="player">Player ▲<br><span class="triangle"></span></div>
+    <!-- Players left -> right -->
+    <div class="players" id="players">
+      <div class="player player-1 active" id="playerCard0">
+        <div class="player-header">
+          <div class="symbol x" aria-hidden="true"></div>
+          <div class="name" id="pname0">Player X</div>
+        </div>
+        <div class="wins">Wins: <span id="pw0">0</span></div>
+      </div>
+
+      <div class="player player-2" id="playerCard1">
+        <div class="player-header">
+          <div class="symbol o" aria-hidden="true"></div>
+          <div class="name" id="pname1">Player O</div>
+        </div>
+        <div class="wins">Wins: <span id="pw1">0</span></div>
+      </div>
+
+      <div class="player player-3" id="playerCard2">
+        <div class="player-header">
+          <!-- Equilateral filled triangle (same as board color) -->
+          <div class="symbol delta" aria-hidden="true" title="Delta">
+            <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true">
+              <!-- side ≈ 20.784, height ≈ 18 -->
+              <polygon points="12,3 1.608,21 22.392,21" fill="var(--player3-color)"/>
+            </svg>
+          </div>
+          <div class="name" id="pname2">Player Δ</div>
+        </div>
+        <div class="wins">Wins: <span id="pw2">0</span></div>
+      </div>
+    </div>
+
+    <div id="game-status">Player X's turn</div>
+
+    <div class="game-area">
+      <div class="board-wrap">
+        <svg id="board" role="grid" aria-label="Hex board"></svg>
+      </div>
+
+      <div class="move-history" id="move-history" aria-hidden="false"></div>
+
+      <div class="controls">
+        <button id="btn-new-round">New Round</button>
+        <button id="btn-new-game">New Game</button>
+      </div>
+    </div>
   </div>
 
-  <div id="board" class="board"></div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Config
+  const N = 4;          // side length
+  const SIZE = 36;      // hex radius (px)
 
-  <button onclick="resetGame()">Reset Game</button>
+  // CSS vars
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const playerColors = [cssVar('--player1-color'), cssVar('--player2-color'), cssVar('--player3-color')];
+  const players = [{id:0, name:'Player X'}, {id:1, name:'Player O'}, {id:2, name:'Player Δ'}];
 
-  <h2 id="status"></h2>
+  // DOM
+  const svg = document.getElementById('board');
+  const statusEl = document.getElementById('game-status');
+  const moveHistoryEl = document.getElementById('move-history');
+  const playerCards = [document.getElementById('playerCard0'), document.getElementById('playerCard1'), document.getElementById('playerCard2')];
+  const playerNameEls = [document.getElementById('pname0'), document.getElementById('pname1'), document.getElementById('pname2')];
+  const playerWinsEls = [document.getElementById('pw0'), document.getElementById('pw1'), document.getElementById('pw2')];
+  const btnNewRound = document.getElementById('btn-new-round');
+  const btnNewGame = document.getElementById('btn-new-game');
 
-  <script>
-    const boardSize = 5; // 5x5 hex grid
-    const winLength = 4;
-    const symbols = ["X", "O", "▲"];
-    const playerIds = ["playerX", "playerO", "playerT"];
-    let currentPlayer = 0;
-    let board = [];
+  // Axial helpers (flat-top)
+  const radius = N - 1;
+  function axialToPixel(q, r){
+    const x = SIZE * 1.5 * q;
+    const y = SIZE * (Math.sqrt(3) * (r + q/2));
+    return [x, y];
+  }
+  function key(q,r){ return `${q},${r}`; }
 
-    function createBoard() {
-      const boardEl = document.getElementById("board");
-      boardEl.innerHTML = "";
-      board = Array.from({ length: boardSize }, () =>
-        Array(boardSize).fill(null)
-      );
+  // Build axial coords of hex of radius (N-1)
+  const axial = [];
+  for(let q=-radius; q<=radius; q++){
+    const r1 = Math.max(-radius, -q - radius);
+    const r2 = Math.min(radius, -q + radius);
+    for(let r=r1; r<=r2; r++) axial.push([q,r]);
+  }
 
-      for (let r = 0; r < boardSize; r++) {
-        for (let c = 0; c < boardSize; c++) {
-          const hex = document.createElement("div");
-          hex.className = "hex";
-          hex.dataset.row = r;
-          hex.dataset.col = c;
-          hex.addEventListener("click", handleMove);
-          boardEl.appendChild(hex);
-        }
-      }
-      updatePanels();
-      document.getElementById("status").textContent = "Player X's turn";
+  // compute viewBox to fit board
+  const centers = axial.map(([q,r]) => axialToPixel(q,r));
+  const minX = Math.min(...centers.map(c=>c[0])) - SIZE - 6;
+  const maxX = Math.max(...centers.map(c=>c[0])) + SIZE + 6;
+  const minY = Math.min(...centers.map(c=>c[1])) - SIZE - 6;
+  const maxY = Math.max(...centers.map(c=>c[1])) + SIZE + 6;
+  svg.setAttribute('viewBox', `${minX} ${minY} ${maxX-minX} ${maxY-minX}`);
+  // NOTE: fix typo: height should use Y span:
+  svg.setAttribute('viewBox', `${minX} ${minY} ${maxX-minX} ${maxY-minY}`);
+  svg.setAttribute('width', Math.min(640, maxX-minX));
+  svg.style.aspectRatio = `${(maxX-minX)/(maxY-minY)}`;
+
+  // SVG helpers
+  const NS = 'http://www.w3.org/2000/svg';
+  const create = (tag, attrs={}) => {
+    const el = document.createElementNS(NS, tag);
+    for(const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  };
+  function hexPoints(cx, cy, s){
+    const pts = [];
+    for(let k=0;k<6;k++){
+      const ang = Math.PI/180*(60*k);
+      pts.push(`${cx + s*Math.cos(ang)},${cy + s*Math.sin(ang)}`);
     }
+    return pts.join(' ');
+  }
+  function triPoints(side){
+    // side -> height
+    const h = side * Math.sqrt(3)/2;
+    // centered at (0,0), pointing up
+    return `0,${-h/1.0} ${-side/2},${h/1.0} ${side/2},${h/1.0}`;
+  }
 
-    function updatePanels() {
-      playerIds.forEach((id, i) => {
-        const el = document.getElementById(id);
-        el.classList.toggle("active", i === currentPlayer);
-      });
+  // defs gradient for cells
+  const defs = create('defs');
+  const grad = create('radialGradient', { id:'cellGrad', cx:'50%', cy:'40%', r:'70%' });
+  grad.appendChild(create('stop', { offset:'0%', 'stop-color':'#0f5a2c' }));
+  grad.appendChild(create('stop', { offset:'100%', 'stop-color':'#0a4821' }));
+  defs.appendChild(grad);
+  svg.appendChild(defs);
+
+  // State
+  const cells = new Map(); // key -> {q,r,g,poly,pieceGroup,owner}
+  let currentPlayer = 0;
+  let moveHistory = [];
+  let wins = [0,0,0];
+
+  // Draw board
+  for(const [q,r] of axial){
+    const [cx,cy] = axialToPixel(q,r);
+    const g = create('g', { class:'hex', 'data-q':String(q), 'data-r':String(r) });
+    const poly = create('polygon', { points: hexPoints(cx,cy,SIZE), fill:'url(#cellGrad)' });
+    const piece = create('g', { class:'piece', transform:`translate(${cx},${cy})` });
+    g.appendChild(poly);
+    g.appendChild(piece);
+    svg.appendChild(g);
+
+    g.addEventListener('click', () => onCellClick(q,r));
+
+    cells.set(key(q,r), { q, r, g, poly, pieceGroup:piece, owner:null });
+  }
+
+  // UI helpers
+  function setActivePlayer(idx){
+    playerCards.forEach((card,i)=>card.classList.toggle('active', i===idx));
+    statusEl.textContent = `${playerNameEls[idx].textContent}'s turn`;
+  }
+  function updateMoveHistory(){
+    moveHistoryEl.innerHTML = '';
+    for(const mv of moveHistory){
+      const dot = document.createElement('div');
+      dot.className = 'history-dot ' + (mv.player===0?'x':mv.player===1?'o':'delta');
+      moveHistoryEl.appendChild(dot);
     }
+  }
 
-    function handleMove(e) {
-      const row = parseInt(e.target.dataset.row);
-      const col = parseInt(e.target.dataset.col);
-
-      if (board[row][col] !== null) return;
-
-      const symbol = symbols[currentPlayer];
-      board[row][col] = symbol;
-
-      if (symbol === "▲") {
-        const tri = document.createElement("span");
-        tri.className = "triangle";
-        e.target.innerHTML = "";
-        e.target.appendChild(tri);
-      } else {
-        e.target.textContent = symbol;
-      }
-      e.target.classList.add("taken");
-
-      if (checkWin(row, col)) {
-        document.getElementById("status").textContent =
-          `Player ${symbol} wins!`;
-        disableBoard();
-        return;
-      }
-
-      currentPlayer = (currentPlayer + 1) % symbols.length;
-      updatePanels();
-      document.getElementById("status").textContent =
-        `Player ${symbols[currentPlayer]}'s turn`;
+  // Draw a piece into a pieceGroup at its local origin
+  function drawPiece(group, playerId){
+    group.replaceChildren();
+    const color = playerColors[playerId];
+    if(playerId === 0){
+      const l1 = create('line', { x1:-SIZE*0.45, y1:-SIZE*0.45, x2:SIZE*0.45, y2:SIZE*0.45, stroke:color, 'stroke-width':6, 'stroke-linecap':'round' });
+      const l2 = create('line', { x1:SIZE*0.45, y1:-SIZE*0.45, x2:-SIZE*0.45, y2:SIZE*0.45, stroke:color, 'stroke-width':6, 'stroke-linecap':'round' });
+      group.appendChild(l1); group.appendChild(l2);
+    } else if(playerId === 1){
+      const c = create('circle', { cx:0, cy:0, r:SIZE*0.42, fill:'none', stroke:color, 'stroke-width':6 });
+      group.appendChild(c);
+    } else {
+      // equilateral filled triangle
+      const tri = create('polygon', { points: triPoints(SIZE*0.9), fill: color });
+      group.appendChild(tri);
     }
+  }
 
-    function disableBoard() {
-      document.querySelectorAll(".hex").forEach(h => h.style.pointerEvents = "none");
+  // Click handler
+  function onCellClick(q,r){
+    const k = key(q,r);
+    const cell = cells.get(k);
+    if(!cell || cell.owner !== null) return;
+
+    cell.owner = currentPlayer;
+    drawPiece(cell.pieceGroup, currentPlayer);
+    moveHistory.push({ q, r, player: currentPlayer });
+    updateMoveHistory();
+
+    currentPlayer = (currentPlayer + 1) % players.length;
+    setActivePlayer(currentPlayer);
+  }
+
+  // Round / Game
+  function clearBoard(){
+    for(const c of cells.values()){
+      c.owner = null;
+      c.pieceGroup.replaceChildren();
+      c.g.classList.remove('win');
     }
+    moveHistory = [];
+    updateMoveHistory();
+  }
+  btnNewRound.addEventListener('click', () => {
+    clearBoard();
+    currentPlayer = (currentPlayer + 1) % players.length; // rotate starter
+    setActivePlayer(currentPlayer);
+  });
+  btnNewGame.addEventListener('click', () => {
+    wins = [0,0,0];
+    playerWinsEls.forEach((el,i)=>el.textContent = wins[i]);
+    clearBoard();
+    currentPlayer = 0;
+    setActivePlayer(currentPlayer);
+  });
 
-    function resetGame() {
-      currentPlayer = 0;
-      createBoard();
-    }
-
-    function checkWin(row, col) {
-      const symbol = board[row][col];
-      const directions = [
-        [1, 0], [0, 1], [1, -1], [1, 1], [-1, 0], [0, -1]
-      ];
-
-      for (let [dr, dc] of directions) {
-        let count = 1;
-        count += countDirection(row, col, dr, dc, symbol);
-        count += countDirection(row, col, -dr, -dc, symbol);
-        if (count >= winLength) return true;
-      }
-      return false;
-    }
-
-    function countDirection(r, c, dr, dc, symbol) {
-      let count = 0;
-      let nr = r + dr;
-      let nc = c + dc;
-      while (
-        nr >= 0 &&
-        nr < boardSize &&
-        nc >= 0 &&
-        nc < boardSize &&
-        board[nr][nc] === symbol
-      ) {
-        count++;
-        nr += dr;
-        nc += dc;
-      }
-      return count;
-    }
-
-    createBoard();
-  </script>
+  // init
+  setActivePlayer(0);
+});
+</script>
 </body>
 </html>
