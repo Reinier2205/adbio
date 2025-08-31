@@ -14,21 +14,21 @@
   .controls{position:fixed;bottom:1rem;left:0;right:0;display:flex;gap:.5rem;justify-content:center;opacity:.85}
   button{background:#1f1f1f;border:1px solid #333;padding:.6rem 1rem;border-radius:.6rem;color:var(--fg);font-size:clamp(12px,2.2vw,16px)}
   button:active{transform:scale(.98)}
-  .now{font-size:clamp(28px,6vw,60px);line-height:1.2;text-align:center;white-space:pre-wrap;max-width:1200px}
-  .tag{display:block;margin-bottom:.6rem;font-size:clamp(14px,3vw,22px);color:var(--accent);letter-spacing:.06em}
+  .lines{font-size:clamp(22px,5vw,48px);line-height:1.3;text-align:center;max-width:1200px;white-space:pre-wrap}
+  .tag{display:block;margin-bottom:.3rem;font-size:clamp(16px,3vw,26px);color:var(--accent);letter-spacing:.06em}
+  .current{color:var(--accent)}
   .fade{animation:fade .35s ease}
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   audio{position:fixed;top:1rem;right:1rem;width:min(42vw,320px)}
 </style>
 </head>
 <body>
-  <!-- Replace src with your audio file URL -->
   <audio id="song" src="song.mp3" preload="auto" controls></audio>
 
-  <div class="hint">Tap / click for next line • Space / → next • ← back</div>
+  <div class="hint">Tap / click for next • Space / → next • ← back</div>
 
   <div class="stage" id="stage" aria-live="polite" aria-atomic="true">
-    <div class="now" id="line"><span class="tag">Tap to begin</span>Playback starts on first tap.</div>
+    <div class="lines" id="lines"><span class="tag">Tap to begin</span>Playback starts on first tap.</div>
   </div>
 
   <div class="controls" aria-hidden="true">
@@ -38,7 +38,6 @@
   </div>
 
 <script>
-/* ======== LYRICS ======== */
 const LINES = [
   "[Verse 1]",
   "Packed the car in Jo’burg town,",
@@ -101,62 +100,51 @@ const LINES = [
   "Sing for the flowers of Namakwaland."
 ];
 
-/* ======== PLAYER / KARAOKE-STEP LOGIC ======== */
 const stage = document.getElementById('stage');
-const lineEl = document.getElementById('line');
+const linesEl = document.getElementById('lines');
 const audio = document.getElementById('song');
 
 let idx = -1;
 let started = false;
 
 function render() {
-  const text = LINES[idx] || "";
-  lineEl.classList.remove('fade');
-  void lineEl.offsetWidth; // reflow for animation
-  lineEl.classList.add('fade');
-
-  if (text.startsWith("[")) {
-    lineEl.innerHTML = `<span class="tag">${text.replace(/$begin:math:display$|$end:math:display$/g,"")}</span>`;
-  } else {
-    lineEl.textContent = text;
-  }
+  const start = Math.max(0, idx);
+  const end = Math.min(LINES.length, start + 4);
+  const four = LINES.slice(start, end).map((l,i)=>{
+    if(i===0 && !l.startsWith("[")) return `<span class="current">${l}</span>`;
+    if(l.startsWith("[")) return `<span class="tag">${l.replace(/$begin:math:display$|$end:math:display$/g,"")}</span>`;
+    return l;
+  }).join("<br>");
+  linesEl.classList.remove('fade');
+  void linesEl.offsetWidth;
+  linesEl.classList.add('fade');
+  linesEl.innerHTML = four;
 }
 
 function next() {
-  if (!started) {
-    started = true;
-    audio.currentTime = 0;
-    audio.play().catch(()=>{});
-  }
-  idx = Math.min(idx + 1, LINES.length - 1);
+  if (!started) { started = true; audio.currentTime=0; audio.play().catch(()=>{}); }
+  idx = Math.min(idx + 1, LINES.length-1);
   render();
 }
 
 function prev() {
-  idx = Math.max(idx - 1, 0);
+  idx = Math.max(idx-1,0);
   render();
 }
 
-function repeatLine() {
-  render();
-}
+function repeatLine() { render(); }
 
-/* Click/tap advances */
 stage.addEventListener('click', next);
-
-/* Buttons */
 document.getElementById('nextBtn').addEventListener('click', next);
 document.getElementById('prevBtn').addEventListener('click', prev);
 document.getElementById('repeatBtn').addEventListener('click', repeatLine);
 
-/* Keys: space/arrow right = next, left = back */
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
-  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+window.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight'||e.key===' ') { e.preventDefault(); next(); }
+  if(e.key==='ArrowLeft'){ e.preventDefault(); prev(); }
 });
 
-/* Start text */
-lineEl.innerHTML = `<span class="tag">Tap to begin</span>Playback starts on first tap.`;
+linesEl.innerHTML = `<span class="tag">Tap to begin</span>Playback starts on first tap.`;
 </script>
 </body>
 </html>
