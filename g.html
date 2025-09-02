@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Dice: Give & Take (Refactored)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --felt-green: #0a4821;
+            --dark-wood: #2a1a1f;
+            --gold: #ffd700;
+            --light-gold: #fff8e1;
+            --dark-red: #8c0000;
+            --ivory: #faf8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--dark-wood);
+            background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .casino-table {
+            background: var(--felt-green);
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                              radial-gradient(rgba(255, 255, 255, 0.1) 1px, var(--felt-green) 1px);
+            background-size: 4px 4px;
+            background-position: 0 0, 2px 2px;
+            border: 10px solid #4a2c2a;
+            box-shadow: 0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 2.8rem;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            margin-bottom: 1rem;
+        }
+
+        .players {
+            display: flex;
+            justify-content: space-around;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .player {
+            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+            padding: 1.5rem;
+            border-radius: 10px;
+            width: 45%;
+            transition: all 0.3s ease;
+            border: 3px solid #1a1a1a;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .player.active {
+            border-color: var(--gold);
+            transform: scale(1.05);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .player-header h2 {
+            color: var(--light-gold);
+            font-size: 1.5rem;
+        }
+
+        .edit-name-icon {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--gold);
+            transition: transform 0.2s;
+            border-radius: 4px;
+        }
+        .edit-name-icon:hover { transform: scale(1.2); }
+        .edit-name-icon:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
+        }
+
+        .player-name-input {
+            background-color: var(--light-gold);
+            border: 1px solid var(--gold);
+            border-radius: 4px;
+            padding: 4px;
+            font-family: 'Lato', sans-serif;
+            text-align: center;
+            width: 80%;
+        }
+
+        .score {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            text-shadow: 2px 2px 3px rgba(0,0,0,0.5);
+        }
+
+        #game-status {
+            min-height: 24px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--light-gold);
+            margin-bottom: 1.5rem;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            height: 80px;
+            perspective: 800px;
+        }
+
+        .dice {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s;
+            background-color: var(--ivory);
+            border-radius: 12px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3), 0 5px 10px rgba(0,0,0,0.5);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 8px;
+        }
+
+        .dice .dot {
+            width: 16px;
+            height: 16px;
+            background-color: #333;
+            border-radius: 50%;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.7);
+            align-self: center;
+            justify-self: center;
+            visibility: hidden;
+        }
+        .dice[data-value="1"] .dot:nth-child(5),
+        .dice[data-value="2"] .dot:nth-child(1), .dice[data-value="2"] .dot:nth-child(9),
+        .dice[data-value="3"] .dot:nth-child(1), .dice[data-value="3"] .dot:nth-child(5), .dice[data-value="3"] .dot:nth-child(9),
+        .dice[data-value="4"] .dot:nth-child(1), .dice[data-value="4"] .dot:nth-child(3), .dice[data-value="4"] .dot:nth-child(7), .dice[data-value="4"] .dot:nth-child(9),
+        .dice[data-value="5"] .dot:nth-child(1), .dice[data-value="5"] .dot:nth-child(3), .dice[data-value="5"] .dot:nth-child(5), .dice[data-value="5"] .dot:nth-child(7), .dice[data-value="5"] .dot:nth-child(9),
+        .dice[data-value="6"] .dot:nth-child(1), .dice[data-value="6"] .dot:nth-child(3), .dice[data-value="6"] .dot:nth-child(4), .dice[data-value="6"] .dot:nth-child(6), .dice[data-value="6"] .dot:nth-child(7), .dice[data-value="6"] .dot:nth-child(9)
+        { visibility: visible; }
+        .dice.rolling { animation: rolling 1s ease-out; }
+        @keyframes rolling {
+            0% { transform: rotateY(0) rotateX(0); }
+            100% { transform: rotateY(1080deg) rotateX(720deg); }
+        }
+
+        .controls button {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            padding: 0.8rem 1.5rem;
+            border: 2px solid #111;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 0.5rem;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .controls button:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #111;
+        }
+        .controls button:disabled { background: #666; color: #aaa; box-shadow: 0 4px 0 #333; cursor: not-allowed;}
+        #btn-add { background: linear-gradient(145deg, #008c3a, #005a25); }
+        #btn-subtract { background: linear-gradient(145deg, #a80000, var(--dark-red)); }
+        #btn-new-session { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; margin-top: 1rem; }
+
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: all 0.5s ease; z-index: 100;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+            color: var(--light-gold);
+            padding: 2rem 3rem;
+            border-radius: 15px;
+            border: 3px solid var(--gold);
+            box-shadow: 0 0 30px var(--gold);
+            text-align: center;
+            transform: scale(0.7);
+            transition: transform 0.5s ease;
+        }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-content h3 { font-family: 'Cinzel', serif; font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem; }
+        .modal-content p { font-size: 1.2rem; margin-bottom: 1.5rem; max-width: 400px; }
+        #win-tally { font-size: 1.1rem; margin-bottom: 2rem; }
+        #win-tally span { font-weight: 700; color: var(--gold); }
+        .modal-content button {
+             font-family: 'Cinzel', serif; font-size: 1.2rem; padding: 0.8rem 2.5rem;
+             border: 2px solid #111; border-radius: 8px; cursor: pointer;
+             transition: all 0.2s ease; color: #333; text-shadow: none;
+             box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+             background: linear-gradient(145deg, #ffeb3b, var(--gold));
+        }
+        .modal-content button:active { transform: translateY(3px); box-shadow: 0 1px 0 #111; }
+    </style>
+</head>
+<body>
+
+    <div class="casino-table">
+        <h1>Give & Take</h1>
+        <div class="players">
+            <div id="player-0-panel" class="player active">
+                <div class="player-header">
+                    <h2 id="player-0-name">Player 1</h2>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player 1 Name">✏️</span>
+                </div>
+                <p id="score-0" class="score">0</p>
+            </div>
+            <div id="player-1-panel" class="player">
+                <div class="player-header">
+                    <h2 id="player-1-name">Player 2</h2>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player 2 Name">✏️</span>
+                </div>
+                <p id="score-1" class="score">0</p>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <p id="game-status" aria-live="polite">Welcome! Player 1, make your choice!</p>
+            <div class="dice-container" aria-live="polite" aria-atomic="true">
+                <div id="dice-1" class="dice"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                <div id="dice-2" class="dice"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            </div>
+            <div id="choice-controls" class="controls">
+                <button id="btn-add">Add to Score</button>
+                <button id="btn-subtract">Subtract from Opponent</button>
+            </div>
+        </div>
+        
+        <button id="btn-new-session">🔄 New Session</button>
+    </div>
+    
+    <div id="outcome-modal" class="modal-overlay" role="alertdialog" aria-labelledby="outcome-title" aria-describedby="outcome-description">
+        <div class="modal-content">
+            <h3 id="outcome-title" aria-live="assertive"></h3>
+            <p id="outcome-description"></p>
+            <button id="btn-continue">Continue</button>
+        </div>
+    </div>
+    
+    <div id="win-modal" class="modal-overlay" role="alertdialog" aria-labelledby="winner-text">
+         <div class="modal-content">
+            <h3 id="winner-text" aria-live="assertive"></h3>
+            <p>Play another round?</p>
+            <div id="win-tally"></div>
+            <button id="btn-play-again">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const GAME_CONFIG = {
+                WINNING_SCORE: 15,
+                ANIMATION_DURATION: 1000,
+                MAX_NAME_LENGTH: 20,
+            };
+
+            class DiceGame {
+                constructor() {
+                    this.cacheDom();
+                    this.bindEvents();
+                    this.startNewSession();
+                }
+
+                cacheDom() {
+                    this.DOM = {
+                        playerPanels: document.querySelectorAll('.player'),
+                        playerNames: document.querySelectorAll('.player-header h2'),
+                        scoreEls: document.querySelectorAll('.score'),
+                        editIcons: document.querySelectorAll('.edit-name-icon'),
+                        dice: document.querySelectorAll('.dice'),
+                        diceContainer: document.querySelector('.dice-container'),
+                        gameStatus: document.getElementById('game-status'),
+                        btnAdd: document.getElementById('btn-add'),
+                        btnSubtract: document.getElementById('btn-subtract'),
+                        btnNewSession: document.getElementById('btn-new-session'),
+                        outcomeModal: document.getElementById('outcome-modal'),
+                        outcomeTitle: document.getElementById('outcome-title'),
+                        outcomeDescription: document.getElementById('outcome-description'),
+                        btnContinue: document.getElementById('btn-continue'),
+                        winModal: document.getElementById('win-modal'),
+                        winnerText: document.getElementById('winner-text'),
+                        winTally: document.getElementById('win-tally'),
+                        btnPlayAgain: document.getElementById('btn-play-again'),
+                    };
+                }
+
+                bindEvents() {
+                    this.DOM.btnAdd.addEventListener('click', () => this.performTurn('add'));
+                    this.DOM.btnSubtract.addEventListener('click', () => this.performTurn('subtract'));
+                    this.DOM.btnContinue.addEventListener('click', () => this.continueGame());
+                    this.DOM.btnNewSession.addEventListener('click', () => this.startNewSession());
+                    this.DOM.btnPlayAgain.addEventListener('click', () => this.startNextRound(1 - this.state.winner));
+
+                    this.DOM.editIcons.forEach((icon, index) => {
+                        icon.addEventListener('click', () => this.editName(index));
+                        icon.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                this.editName(index);
+                            }
+                        });
+                    });
+                }
+
+                safeExecute(fn, errorMessage = 'An error occurred') {
+                    try {
+                        fn();
+                    } catch (error) {
+                        console.error(errorMessage, error);
+                        this.updateStatus('Something went wrong. Please refresh.');
+                        this.setButtonsDisabled(true); // Prevent further actions
+                    }
+                }
+                
+                validatePlayerName(name) {
+                    const trimmed = name.trim();
+                    return {
+                        isValid: trimmed.length > 0 && trimmed.length <= GAME_CONFIG.MAX_NAME_LENGTH,
+                        sanitized: trimmed,
+                    };
+                }
+
+                startNewSession() {
+                    this.state = {
+                        winTally: [0, 0],
+                        playerNames: ['Player 1', 'Player 2'],
+                        // other state will be set in startNextRound
+                    };
+                    this.startNextRound(0);
+                }
+                
+                startNextRound(startingPlayer = 0) {
+                    this.state = {
+                        ...this.state,
+                        scores: [0, 0],
+                        activePlayer: startingPlayer,
+                        gameActive: true,
+                        winner: null,
+                        currentRoll: { d1: 0, d2: 0, total: 0, event: null, choice: null },
+                    };
+                    
+                    this.DOM.scoreEls.forEach((el, i) => el.textContent = this.state.scores[i]);
+                    this.DOM.playerNames.forEach((el, i) => el.textContent = this.state.playerNames[i]);
+                    this.DOM.dice.forEach(d => d.setAttribute('data-value', ''));
+                    
+                    this.DOM.playerPanels.forEach((panel, i) => {
+                        panel.classList.toggle('active', i === this.state.activePlayer);
+                    });
+                    
+                    this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, make your choice!`);
+                    
+                    this.setButtonsDisabled(false);
+                    this.DOM.outcomeModal.classList.remove('show');
+                    this.DOM.winModal.classList.remove('show');
+                }
+
+                updateStatus(text) { this.DOM.gameStatus.textContent = text; }
+                
+                setButtonsDisabled(isDisabled) {
+                    this.DOM.btnAdd.disabled = isDisabled;
+                    this.DOM.btnSubtract.disabled = isDisabled;
+                }
+                
+                updateDiceDisplay(d1, d2) {
+                    this.DOM.dice[0].setAttribute('data-value', d1);
+                    this.DOM.dice[1].setAttribute('data-value', d2);
+                    this.DOM.diceContainer.ariaLabel = `Dice result: ${d1} and ${d2}. Total ${d1 + d2}.`;
+                }
+                
+                performTurn(choice) {
+                    if (!this.state.gameActive) return;
+                    this.state.currentRoll.choice = choice;
+                    this.setButtonsDisabled(true);
+                    this.updateStatus('Rolling...');
+                    this.DOM.dice.forEach(d => {
+                        d.classList.add('rolling');
+                        d.setAttribute('data-value', '');
+                    });
+
+                    setTimeout(() => this.safeExecute(() => {
+                        this.DOM.dice.forEach(d => d.classList.remove('rolling'));
+                        this.state.currentRoll.d1 = Math.floor(Math.random() * 6) + 1;
+                        this.state.currentRoll.d2 = Math.floor(Math.random() * 6) + 1;
+                        this.state.currentRoll.total = this.state.currentRoll.d1 + this.state.currentRoll.d2;
+                        this.updateDiceDisplay(this.state.currentRoll.d1, this.state.currentRoll.d2);
+                        this.state.currentRoll.event = this.getRollEvent(this.state.currentRoll.d1, this.state.currentRoll.d2, this.state.currentRoll.total);
+                        this.showOutcomeModal();
+                    }), GAME_CONFIG.ANIMATION_DURATION);
+                }
+
+                getRollEvent(d1, d2, total) {
+                    if (d1 === 1 && d2 === 1) return { title: 'Snake Eyes!', description: 'A crushing blow! Your score resets to 0.', type: 'bust' };
+                    if (d1 === 6 && d2 === 6) return { title: 'BOXCARS!', description: 'JACKPOT! You instantly win the game!', type: 'win' };
+                    if (d1 === d2) return { title: 'Double Down!', description: `Doubles! Your roll of ${total} is now worth ${total * 2}!`, type: 'double' };
+                    if (total === 7) return { title: 'Lucky 7!', description: 'Nice roll! You get to take another turn.', type: 'again' };
+                    return { title: `You rolled a ${total}`, description: `The roll of ${total} will be applied.`, type: 'normal' };
+                }
+
+                showOutcomeModal() {
+                    this.DOM.outcomeTitle.textContent = this.state.currentRoll.event.title;
+                    this.DOM.outcomeDescription.textContent = this.state.currentRoll.event.description;
+                    this.DOM.outcomeModal.classList.add('show');
+                    this.DOM.btnContinue.focus();
+                }
+
+                continueGame() {
+                    this.DOM.outcomeModal.classList.remove('show');
+                    const { choice, event, total } = this.state.currentRoll;
+                    let rollValue = event.type === 'double' ? total * 2 : total;
+
+                    switch (event.type) {
+                        case 'bust':
+                            this.state.scores[this.state.activePlayer] = 0;
+                            break;
+                        case 'win':
+                            this.endGame(this.state.activePlayer);
+                            return;
+                        default:
+                            if (choice === 'add') {
+                                this.state.scores[this.state.activePlayer] += rollValue;
+                            } else {
+                                const opponent = 1 - this.state.activePlayer;
+                                this.state.scores[opponent] -= rollValue;
+                            }
+                    }
+                    
+                    this.DOM.scoreEls.forEach((el, i) => el.textContent = this.state.scores[i]);
+                    
+                    if (this.state.scores[this.state.activePlayer] >= GAME_CONFIG.WINNING_SCORE) {
+                        this.endGame(this.state.activePlayer);
+                        return;
+                    }
+
+                    if (event.type !== 'again') {
+                        this.switchPlayer();
+                    } else {
+                        this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, you get to go again!`);
+                        this.setButtonsDisabled(false);
+                    }
+                }
+                
+                switchPlayer() {
+                    this.state.activePlayer = 1 - this.state.activePlayer;
+                    this.DOM.playerPanels.forEach((panel, i) => panel.classList.toggle('active', i === this.state.activePlayer));
+                    this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, make your choice!`);
+                    this.setButtonsDisabled(false);
+                }
+
+                endGame(winnerIndex) {
+                    this.state.gameActive = false;
+                    this.state.winner = winnerIndex;
+                    this.state.winTally[winnerIndex]++;
+                    this.setButtonsDisabled(true);
+                    
+                    this.DOM.winnerText.innerHTML = `🎉 ${this.state.playerNames[winnerIndex]} Wins! 🎉`;
+                    this.DOM.winTally.innerHTML = `
+                        Overall Score:<br>
+                        <span>${this.state.playerNames[0]}: ${this.state.winTally[0]} Wins</span> | 
+                        <span>${this.state.playerNames[1]}: ${this.state.winTally[1]} Wins</span>
+                    `;
+                    
+                    this.DOM.winModal.classList.add('show');
+                    this.DOM.btnPlayAgain.focus();
+                }
+
+                editName(playerIndex) {
+                    const nameEl = this.DOM.playerNames[playerIndex];
+                    const parent = nameEl.parentElement;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = this.state.playerNames[playerIndex];
+                    input.className = 'player-name-input';
+                    
+                    parent.replaceChild(input, nameEl);
+                    input.focus();
+                    
+                    const saveName = () => {
+                        const validation = this.validatePlayerName(input.value);
+                        const newName = validation.isValid ? validation.sanitized : `Player ${playerIndex + 1}`;
+                        
+                        this.state.playerNames[playerIndex] = newName;
+                        nameEl.textContent = newName;
+                        parent.replaceChild(nameEl, input);
+
+                        if (this.state.activePlayer === playerIndex && this.state.gameActive) {
+                           this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, make your choice!`);
+                        }
+                    };
+                    input.addEventListener('blur', saveName);
+                    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+                }
+            }
+
+            new DiceGame();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flowers of Namakwaland — Lyrics</title>
+<style>
+  :root {--bg:#0a0a0a; --fg:#f7f7f7; --dim:#9aa0a6; --accent:#ffd54f;}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:4vh 4vw;user-select:none;cursor:pointer}
+  .hint{position:fixed;top:1rem;left:1rem;font-size:clamp(12px,1.8vw,16px);color:var(--dim)}
+  .controls{position:fixed;bottom:1rem;left:0;right:0;display:flex;gap:.5rem;justify-content:center;opacity:.85}
+  button{background:#1f1f1f;border:1px solid #333;padding:.6rem 1rem;border-radius:.6rem;color:var(--fg);font-size:clamp(12px,2.2vw,16px)}
+  button:active{transform:scale(.98)}
+  .lines{font-size:clamp(22px,5vw,48px);line-height:1.3;text-align:center;max-width:1200px;white-space:pre-wrap}
+  .tag{display:block;margin-bottom:.3rem;font-size:clamp(16px,3vw,26px);color:var(--accent);letter-spacing:.06em}
+  .current{color:var(--accent)}
+  .fade{animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  audio{position:fixed;top:1rem;right:1rem;width:min(42vw,320px)}
+</style>
+</head>
+<body>
+<audio id="song" src="song.mp3" preload="auto" controls></audio>
+
+<div class="hint">Tap / click for next • Space / → next • ← back</div>
+
+<div class="stage" id="stage" aria-live="polite" aria-atomic="true">
+  <div class="lines" id="lines"><span class="tag">Tap to begin</span>Playback starts on first tap.</div>
+</div>
+
+<div class="controls" aria-hidden="true">
+  <button id="prevBtn" type="button">◀︎ Back</button>
+  <button id="repeatBtn" type="button">⟳ Repeat</button>
+  <button id="nextBtn" type="button">Next ▶︎</button>
+</div>
+
+<script>
+const LINES = [
+  "[Instrumental Intro]",
+  "[Verse 1]",
+  "Packed the car in Jo’burg town,",
+  "Camp fridge , the chairs tied down.",
+  "Picked up Rachel still busy with work,",
+  "Chanel just laughing with a smile and smirk.",
+  "Down the N1, past Aldam gate,",
+  "Dusty old veld, we just had to wait.",
+  "The road was long but the laughter ran,",
+  "On the way to Namakwaland.",
+
+  "[Chorus]",
+  "Flowers of Namakwaland, bright in the sun,",
+  "Shining a moment, then they are gone.",
+  "Orange and yellow, purple so grand,",
+  "Sing for the flowers of Namakwaland.",
+
+  "[Verse 2]",
+  "Two ladies knitting socks in the car,",
+  "Counting their stitches like stars in a jar.",
+  "Forward, backward, they knit and they sigh,",
+  "Drop one stitch and the whole row flies.",
+  "They laughed at the socks as the colours took shape,",
+  "Like daisies exploding, no rule, no escape.",
+  "From Vosburg quiet to Nieuwoudtville grand,",
+  "We followed the blooms of Namakwaland.",
+
+  "[Chorus]",
+  "Flowers of Namakwaland, bright in the sun,",
+  "Shining a moment, then they are gone.",
+  "Orange and yellow, purple so grand,",
+  "Sing for the flowers of Namakwaland.",
+
+  "[Verse 3]",
+  "At Skilpad camp the fields lay still,",
+  "Waiting for sunshine over the hill.",
+  "Then the daisies lifted, a fiery sea,",
+  "Orange and white calling out to me.",
+  "In Nababeep the valleys burned,",
+  "Gold on the hills where the old mines turned.",
+  "And Okiep whispered of my Dad,",
+  "The flowers made the heart feel glad.",
+
+  "[Chorus]",
+  "Flowers of Namakwaland, bright in the sun,",
+  "Shining a moment, then they are gone.",
+  "Orange and yellow, purple so grand,",
+  "Sing for the flowers of Namakwaland.",
+
+  "[Bridge]",
+  "Dry land, ghost towns, silence and stone,",
+  "Sudden life where the seeds are sown.",
+  "We come and we go, but the flowers remain,",
+  "Dancing with joy in the winter rain.",
+
+  "[Final Chorus]",
+  "Flowers of Namakwaland, bright in the sun,",
+  "Shining a moment, then they are gone.",
+  "Orange and yellow, purple so grand,",
+  "Sing for the flowers of Namakwaland."
+];
+
+const stage = document.getElementById('stage');
+const linesEl = document.getElementById('lines');
+const audio = document.getElementById('song');
+
+let idx = -1;
+let started = false;
+
+function render() {
+  const start = Math.max(0, idx);
+  const end = Math.min(LINES.length, start + 4);
+  const four = LINES.slice(start, end).map((l,i)=>{
+    if(i===0 && !l.startsWith("[")) return `<span class="current">${l}</span>`;
+    if(l.startsWith("[")) return `<span class="tag">${l.replace(/$begin:math:display$|$end:math:display$/g,"")}</span>`;
+    return l;
+  }).join("<br>");
+  linesEl.classList.remove('fade');
+  void linesEl.offsetWidth;
+  linesEl.classList.add('fade');
+  linesEl.innerHTML = four;
+}
+
+function next() {
+  if (!started) { started = true; audio.currentTime=0; audio.play().catch(()=>{}); }
+  idx = Math.min(idx + 1, LINES.length-1);
+  render();
+}
+
+function prev() {
+  idx = Math.max(idx-1,0);
+  render();
+}
+
+function repeatLine() { render(); }
+
+stage.addEventListener('click', next);
+document.getElementById('nextBtn').addEventListener('click', next);
+document.getElementById('prevBtn').addEventListener('click', prev);
+document.getElementById('repeatBtn').addEventListener('click', repeatLine);
+
+window.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight'||e.key===' ') { e.preventDefault(); next(); }
+  if(e.key==='ArrowLeft'){ e.preventDefault(); prev(); }
+});
+
+linesEl.innerHTML = `<span class="tag">Tap to begin</span>Playback starts on first tap.`;
+</script>
+</body>
+</html>

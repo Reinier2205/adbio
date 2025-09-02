@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casino Style Hex Game</title>
+  <style>
+    body {
+      background: radial-gradient(circle at center, #1b1b1b, #0d0d0d);
+      color: #f5d76e;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      color: #ffcc00;
+      text-shadow: 0 0 8px #000, 0 0 12px #ffcc00;
+      margin: 1rem 0;
+    }
+
+    /* Players row: left -> right */
+    .players {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 1rem;
+      align-items: stretch;
+    }
+    .player {
+      background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+      padding: 0.9rem;
+      border-radius: 10px;
+      border: 3px solid #1a1a1a;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.35);
+      flex: 1;
+      min-width: 150px;
+      color: var(--light-gold);
+      text-align: center;
+    }
+    .player span {
+      display: block;
+      font-size: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle at 30% 30%, #2f2f2f, #1a1a1a);
+      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .cell:hover {
+      transform: scale(1.05);
+    }
+
+    /* Equilateral yellow triangle */
+    .triangle {
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 34.64px solid yellow; /* √3/2 * side */
+    }
+
+    button {
+      margin-top: 2rem;
+      padding: 0.7rem 1.2rem;
+      background: #ffcc00;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+    }
+    button:hover {
+      background: #e6b800;
+    }
+  </style>
+</head>
+<body>
+  <h1>Casino Style Hex Game</h1>
+
+  <!-- Player Panels -->
+  <div class="players">
+    <div class="player">
+      Player 1 <span>⭕</span>
+    </div>
+    <div class="player">
+      Player 2 <span>✖</span>
+    </div>
+    <div class="player">
+      Player 3 <span><div class="triangle"></div></span>
+    </div>
+  </div>
+
+  <!-- Hex Board -->
+  <div class="board" id="board"></div>
+
+  <button onclick="resetGame()">Restart Game</button>
+
+  <script>
+    const board = document.getElementById("board");
+    const players = ["⭕", "✖", "triangle"];
+    let currentPlayer = 0;
+    let gameState = Array(9).fill(null);
+
+    function createBoard() {
+      board.innerHTML = "";
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index = i;
+        cell.addEventListener("click", handleClick);
+        board.appendChild(cell);
+      }
+    }
+
+    function handleClick(e) {
+      const idx = e.target.dataset.index;
+      if (gameState[idx]) return;
+
+      let symbol = players[currentPlayer];
+      if (symbol === "triangle") {
+        const tri = document.createElement("div");
+        tri.classList.add("triangle");
+        e.target.appendChild(tri);
+        gameState[idx] = "▲";
+      } else {
+        e.target.textContent = symbol;
+        gameState[idx] = symbol;
+      }
+
+      if (checkWin()) {
+        setTimeout(() => alert(`Player ${currentPlayer + 1} wins!`), 100);
+        return;
+      }
+
+      currentPlayer = (currentPlayer + 1) % players.length;
+    }
+
+    function checkWin() {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (const [a,b,c] of wins) {
+        if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function resetGame() {
+      gameState = Array(9).fill(null);
+      currentPlayer = 0;
+      createBoard();
+    }
+
+    createBoard();
+  </script>
+</body>
+</html>

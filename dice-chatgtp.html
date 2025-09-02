@@ -1,0 +1,644 @@
+Dice-chatgtp
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Casino Dice — Full Screen Throw</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #0b3d0b; /* fallback if WebGL not available */
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #ui {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+  /* Top bar */
+  .topbar {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding: 14px 16px;
+    pointer-events: auto;
+    align-items: center;
+    user-select: none;
+  }
+  .chip {
+    display: inline-flex;
+    background: rgba(20,20,22,0.5);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    border-radius: 999px;
+    padding: 6px 10px;
+    gap: 10px;
+    align-items: center;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  }
+  .segmented {
+    display: inline-flex;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+  .segmented input { display: none; }
+  .segmented label {
+    padding: 8px 14px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.08);
+    color: #ddd;
+    transition: all .15s ease;
+  }
+  .segmented label:hover { background: rgba(255,255,255,0.12); }
+  .segmented input:checked + label {
+    background: #0ea5e9;
+    color: #001018;
+    font-weight: 700;
+  }
+  .hint {
+    font-size: 13px;
+    color: #cfd8cf;
+    opacity: 0.85;
+  }
+  /* Center helper text */
+  .center-hint {
+    justify-self: center;
+    align-self: center;
+    text-align: center;
+    color: rgba(255,255,255,0.8);
+    font-weight: 600;
+    letter-spacing: .4px;
+    pointer-events: none;
+    user-select: none;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: .65; }
+    50% { opacity: 1; }
+  }
+  /* Bottom bar (results) */
+  .bottombar {
+    padding: 14px 16px 18px;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .result {
+    pointer-events: auto;
+    display: inline-flex;
+    gap: 12px;
+    background: rgba(10,10,12,0.55);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #fff;
+    border-radius: 14px;
+    padding: 10px 14px;
+    align-items: center;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+  }
+  .result .value {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+  .result .breakdown {
+    font-size: 13px;
+    opacity: 0.9;
+  }
+  .overlay-left {
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+    pointer-events: none;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+  <div id="ui">
+    <div class="topbar">
+      <div class="chip">
+        Dice:
+        <div class="segmented" id="diceCount">
+          <input type="radio" id="oneDie" name="dice" value="1">
+          <label for="oneDie">1</label>
+          <input type="radio" id="twoDice" name="dice" value="2" checked>
+          <label for="twoDice">2</label>
+        </div>
+      </div>
+      <div class="chip hint">Tap / click anywhere or press Space to throw</div>
+    </div>
+    <div class="center-hint" id="tapHint">Tap to throw 🎲</div>
+    <div class="bottombar">
+      <div class="result" id="resultBox" style="opacity:0; transform: translateY(6px); transition: all .2s ease;">
+        <span>Result:</span>
+        <span class="value" id="total">—</span>
+        <span class="breakdown" id="breakdown"></span>
+      </div>
+    </div>
+  </div>
+  <div class="overlay-left">Casino felt table • 3D dice with physics</div>
+
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import { RoundedBoxGeometry } from 'https://unpkg.com/three@0.160.0/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'https://unpkg.com/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
+import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js';
+
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+
+// Scene setup
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a320a); // fallback; env map gives reflections
+
+// Renderer
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.04;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// Camera
+const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 8.5, 7.5);
+camera.lookAt(0, 0.6, 0);
+
+// Lights
+const hemi = new THREE.HemisphereLight(0xffffff, 0x0b2a0b, 0.6);
+scene.add(hemi);
+
+const spot = new THREE.SpotLight(0xffffff, 1.35, 0, Math.PI / 4.5, 0.25, 1.2);
+spot.position.set(5, 10, 4);
+spot.target.position.set(0, 0, 0);
+spot.castShadow = true;
+spot.shadow.mapSize.set(2048, 2048);
+spot.shadow.normalBias = 0.02;
+scene.add(spot, spot.target);
+
+// Subtle image-based lighting for photoreal highlights
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environment = envTex;
+// pmrem.dispose(); // keep if you won't change env later
+
+// Physics world
+const world = new CANNON.World({
+  gravity: new CANNON.Vec3(0, -9.82, 0),
+  allowSleep: true
+});
+world.broadphase = new CANNON.SAPBroadphase(world);
+
+const tableMat = new CANNON.Material('table');
+const diceMat = new CANNON.Material('dice');
+const cm = new CANNON.ContactMaterial(tableMat, diceMat, {
+  friction: 0.38,
+  restitution: 0.22,
+});
+const dm = new CANNON.ContactMaterial(diceMat, diceMat, {
+  friction: 0.35,
+  restitution: 0.18,
+});
+world.addContactMaterial(cm);
+world.addContactMaterial(dm);
+
+// Table (visual + physics)
+const table = new THREE.Group();
+scene.add(table);
+
+const tableSize = { w: 18, d: 10 };
+
+// Felt texture (procedural)
+function makeFeltTexture(size = 256) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+
+  // Base gradient green
+  const grad = ctx.createRadialGradient(size*0.5, size*0.5, size*0.1, size*0.5, size*0.5, size*0.7);
+  grad.addColorStop(0, '#0e7a0e');
+  grad.addColorStop(1, '#0b5e0b');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+
+  // Noise speckles to mimic felt fiber
+  const img = ctx.createImageData(size, size);
+  const data = img.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const n = Math.random();
+    const v = (n * 14) | 0;
+    data[i] = v; data[i+1] = v*1.5; data[i+2] = v; data[i+3] = 26 + (n*14);
+  }
+  ctx.putImageData(img, 0, 0);
+
+  // Soft global shadow for depth
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = 'rgba(0,0,0,0.06)';
+  ctx.fillRect(0,0,size,size);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(8, 8);
+  tex.anisotropy = 8;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+const feltTexture = makeFeltTexture();
+
+const floorGeom = new THREE.PlaneGeometry(tableSize.w, tableSize.d, 1, 1);
+const floorMat = new THREE.MeshStandardMaterial({
+  color: 0x0a6b0a,
+  roughness: 0.95,
+  metalness: 0.0,
+  map: feltTexture,
+});
+const floorMesh = new THREE.Mesh(floorGeom, floorMat);
+floorMesh.receiveShadow = true;
+floorMesh.rotation.x = -Math.PI/2;
+table.add(floorMesh);
+
+// Physics floor
+const floorBody = new CANNON.Body({
+  shape: new CANNON.Plane(),
+  type: CANNON.Body.STATIC,
+  material: tableMat
+});
+floorBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
+world.addBody(floorBody);
+
+// Invisible boundary walls so dice don't leave the screen
+const walls = [];
+function addWall(x, y, z, w, h, d) {
+  const body = new CANNON.Body({
+    type: CANNON.Body.STATIC,
+    material: tableMat
+  });
+  body.addShape(new CANNON.Box(new CANNON.Vec3(w/2, h/2, d/2)));
+  body.position.set(x, y, z);
+  world.addBody(body);
+  walls.push(body);
+}
+function rebuildWalls() {
+  for (const b of walls) world.removeBody(b);
+  walls.length = 0;
+  const w = tableSize.w, d = tableSize.d;
+  const height = 1.6;
+  const thickness = 0.5;
+  addWall(0, height/2, d/2 + thickness/2, w, height, thickness);   // +Z
+  addWall(0, height/2, -d/2 - thickness/2, w, height, thickness); // -Z
+  addWall(w/2 + thickness/2, height/2, 0, thickness, height, d);  // +X
+  addWall(-w/2 - thickness/2, height/2, 0, thickness, height, d); // -X
+}
+rebuildWalls();
+
+// Dice textures (procedural pips)
+function makePipTextures(size = 512) {
+  function drawFace(n, isBump = false) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+
+    if (!isBump) {
+      const g = ctx.createLinearGradient(0, 0, 0, size);
+      g.addColorStop(0, '#fafafa');
+      g.addColorStop(1, '#eaeaea');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+    } else {
+      ctx.fillStyle = '#808080'; // neutral mid-gray for bump baseline
+      ctx.fillRect(0, 0, size, size);
+    }
+
+    const r = size * 0.08;
+    const off = size * 0.28;
+    const centers = {
+      1: [[0,0]],
+      2: [[-off,-off],[off,off]],
+      3: [[-off,-off],[0,0],[off,off]],
+      4: [[-off,-off],[-off,off],[off,-off],[off,off]],
+      5: [[-off,-off],[-off,off],[0,0],[off,-off],[off,off]],
+      6: [[-off,-off],[-off,0],[-off,off],[off,-off],[off,0],[off,off]],
+    };
+
+    ctx.save();
+    ctx.translate(size/2, size/2);
+    for (const [cx, cy] of centers[n]) {
+      if (!isBump) {
+        ctx.fillStyle = '#0a0a0a';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.fill();
+        // subtle inner shadow to imply indentation
+        const grad = ctx.createRadialGradient(cx - r*0.2, cy - r*0.2, r*0.4, cx, cy, r);
+        grad.addColorStop(0, 'rgba(0,0,0,0.25)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.6)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#f0f0f0';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 8;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  const colorMaps = [];
+  const bumpMaps = [];
+  for (let n = 1; n <= 6; n++) {
+    colorMaps[n] = drawFace(n, false);
+    bumpMaps[n] = drawFace(n, true);
+  }
+  return { colorMaps, bumpMaps };
+}
+const pipTex = makePipTextures();
+
+// Dice material set per face
+function makeDieMaterials() {
+  // Box/RoundedBox material order: +X, -X, +Y, -Y, +Z, -Z
+  // Standard opposite pairs: (1↔6), (2↔5), (3↔4)
+  const faceMap = { '+X': 3, '-X': 4, '+Y': 1, '-Y': 6, '+Z': 2, '-Z': 5 };
+  const order = ['+X','-X','+Y','-Y','+Z','-Z'];
+  return order.map(key => {
+    const n = faceMap[key];
+    return new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      metalness: 0.0,
+      roughness: 0.38,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.18,
+      map: pipTex.colorMaps[n],
+      bumpMap: pipTex.bumpMaps[n],
+      bumpScale: -0.015, // negative => pips look indented
+      envMapIntensity: 1.0,
+    });
+  });
+}
+
+// Dice creation (mesh + physics body)
+const DICE_EDGE = 1.4; // big dice
+const DICE_ROUND = 0.18;
+
+function createDie() {
+  // Visual
+  const geom = new RoundedBoxGeometry(DICE_EDGE, DICE_EDGE, DICE_EDGE, 8, DICE_ROUND);
+  const materials = makeDieMaterials();
+  const mesh = new THREE.Mesh(geom, materials);
+  mesh.castShadow = true;
+
+  // Physics (approximate as box)
+  const half = DICE_EDGE / 2;
+  const shape = new CANNON.Box(new CANNON.Vec3(half, half, half));
+  const body = new CANNON.Body({
+    mass: 1.2,
+    material: diceMat,
+    sleepSpeedLimit: 0.15,
+    sleepTimeLimit: 0.7,
+  });
+  body.addShape(shape);
+  body.linearDamping = 0.12;
+  body.angularDamping = 0.12;
+
+  body.addEventListener('sleep', () => {
+    updateResultsSoon();
+  });
+
+  return { mesh, body };
+}
+
+// Keep dice
+let dice = [];
+
+// Add/remove dice to match desired count
+function ensureDiceCount(count) {
+  while (dice.length < count) {
+    const d = createDie();
+    scene.add(d.mesh);
+    world.addBody(d.body);
+    dice.push(d);
+    d.body.addEventListener('collide', onDiceCollide);
+  }
+  while (dice.length > count) {
+    const d = dice.pop();
+    world.removeBody(d.body);
+    scene.remove(d.mesh);
+  }
+}
+
+// Camera shake on impacts
+let shake = { t: 0, amp: 0 };
+function onDiceCollide(e) {
+  const impact = e.contact.getImpactVelocityAlongNormal();
+  const intensity = Math.min(Math.abs(impact) / 12, 1);
+  if (intensity > 0.05) {
+    shake.t = 0.25;
+    shake.amp = Math.max(shake.amp, intensity * 0.25);
+  }
+}
+
+// Throw behavior
+function randomIn(min, max) { return Math.random() * (max - min) + min; }
+
+function throwDice() {
+  hideTapHint();
+
+  const count = getSelectedCount();
+  ensureDiceCount(count);
+  setResult(null);
+
+  dice.forEach((d, i) => {
+    const x = randomIn(-tableSize.w * 0.18, tableSize.w * 0.18);
+    const z = randomIn(-tableSize.d * 0.18, tableSize.d * 0.18);
+    const y = 7 + i * 0.3;
+
+    d.body.position.set(x, y, z);
+    d.body.velocity.set(0, 0, 0);
+    d.body.angularVelocity.set(0, 0, 0);
+
+    const q = new CANNON.Quaternion();
+    q.setFromEuler(randomIn(0, Math.PI*2), randomIn(0, Math.PI*2), randomIn(0, Math.PI*2));
+    d.body.quaternion.copy(q);
+
+    // Add tumbling motion
+    d.body.velocity.set(randomIn(-1.0, 1.0), randomIn(-0.6, -1.6), randomIn(-1.0, 1.0));
+    d.body.angularVelocity.set(randomIn(-24, 24), randomIn(-24, 24), randomIn(-24, 24));
+    d.body.wakeUp();
+  });
+}
+
+// Determine top face after settle
+function getTopFace(body) {
+  // Local axis normals for the 6 faces:
+  // +X -> 3, -X -> 4, +Y -> 1, -Y -> 6, +Z -> 2, -Z -> 5
+  const faces = [
+    { v: new CANNON.Vec3(1,0,0), n: 3 },
+    { v: new CANNON.Vec3(-1,0,0), n: 4 },
+    { v: new CANNON.Vec3(0,1,0), n: 1 },
+    { v: new CANNON.Vec3(0,-1,0), n: 6 },
+    { v: new CANNON.Vec3(0,0,1), n: 2 },
+    { v: new CANNON.Vec3(0,0,-1), n: 5 },
+  ];
+  let best = -Infinity, num = 1;
+  const up = new CANNON.Vec3(0,1,0);
+  for (const f of faces) {
+    const w = f.v.clone();
+    body.quaternion.vmult(w, w);
+    const d = w.dot(up);
+    if (d > best) { best = d; num = f.n; }
+  }
+  return num;
+}
+
+// Results
+let resultTimeout = null;
+function updateResultsSoon() {
+  if (resultTimeout) clearTimeout(resultTimeout);
+  resultTimeout = setTimeout(() => {
+    const values = dice.map(d => getTopFace(d.body));
+    const allSleeping = dice.every(d => d.body.sleepState === CANNON.Body.SLEEPING);
+    if (!allSleeping) return;
+    setResult(values);
+  }, 120);
+}
+
+function setResult(values) {
+  const box = document.getElementById('resultBox');
+  const totalEl = document.getElementById('total');
+  const breakdownEl = document.getElementById('breakdown');
+  if (!values) {
+    box.style.opacity = 0;
+    box.style.transform = 'translateY(6px)';
+    totalEl.textContent = '—';
+    breakdownEl.textContent = '';
+    return;
+  }
+  const total = values.reduce((a,b)=>a+b,0);
+  totalEl.textContent = String(total);
+  breakdownEl.textContent = '(' + values.join(' + ') + ')';
+  box.style.opacity = 1;
+  box.style.transform = 'translateY(0)';
+}
+
+// UI handlers
+function getSelectedCount() {
+  const one = document.getElementById('oneDie');
+  return one.checked ? 1 : 2;
+}
+document.getElementById('diceCount').addEventListener('change', () => {
+  ensureDiceCount(getSelectedCount());
+});
+
+function hideTapHint() {
+  const h = document.getElementById('tapHint');
+  if (h) h.style.display = 'none';
+}
+
+// Input: click/touch/space to throw
+window.addEventListener('pointerdown', throwDice, { passive: true });
+window.addEventListener('touchstart', throwDice, { passive: true });
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    throwDice();
+  }
+});
+
+// Resize handling
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setPixelRatio(DPR);
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+
+  // Resize table to match aspect while keeping dice inside walls
+  const aspect = w / h;
+  const baseW = 18;
+  const baseD = 10;
+  if (aspect > 1.6) {
+    tableSize.w = baseW * (aspect / 1.8);
+    tableSize.d = baseD;
+  } else {
+    tableSize.w = baseW;
+    tableSize.d = baseD * (1.8 / Math.max(1.2, aspect));
+  }
+
+  floorMesh.geometry.dispose();
+  floorMesh.geometry = new THREE.PlaneGeometry(tableSize.w, tableSize.d, 1, 1);
+  rebuildWalls();
+}
+onResize();
+window.addEventListener('resize', onResize);
+
+// Animation loop
+const clock = new THREE.Clock();
+let accumulator = 0;
+const fixedTimeStep = 1/60;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const dt = clock.getDelta();
+  accumulator += dt;
+
+  // physics steps
+  const maxSubSteps = 3;
+  let subSteps = 0;
+  while (accumulator >= fixedTimeStep && subSteps < maxSubSteps) {
+    world.step(fixedTimeStep);
+    accumulator -= fixedTimeStep;
+    subSteps++;
+  }
+
+  // Sync three meshes with physics
+  for (const d of dice) {
+    d.mesh.position.copy(d.body.position);
+    d.mesh.quaternion.copy(d.body.quaternion);
+  }
+
+  // Camera subtle shake
+  if (shake.t > 0) {
+    const s = shake.amp * Math.sin(shake.t * 40);
+    camera.position.x += (Math.random()-0.5) * s;
+    camera.position.y += (Math.random()-0.5) * s * 0.35;
+    camera.position.z += (Math.random()-0.5) * s;
+    shake.t -= fixedTimeStep;
+    shake.amp *= 0.93;
+  } else {
+    shake.amp = 0;
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+// Initialize with selected dice count visible (no throw yet)
+ensureDiceCount(getSelectedCount());
+</script>
+</body>
+</html>

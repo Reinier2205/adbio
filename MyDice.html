@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Casino Dice Roller (Fixed)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Targeted CSS Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body, h1, p {
+            margin: 0;
+        }
+        
+        :root {
+            --felt-green: #0a4821;
+            --dark-wood: #2a1a1f;
+            --gold: #ffd700;
+            --light-gold: #fff8e1;
+            --ivory: #faf8f0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark-wood);
+            background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            color: var(--light-gold);
+        }
+
+        .casino-table {
+            background: var(--felt-green);
+            border: 10px solid #4a2c2a;
+            box-shadow: 0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            margin-bottom: 1.5rem;
+        }
+
+        .players-container {
+            margin-bottom: 1.5rem;
+        }
+
+        #players-div {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .player {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            background: #2a1a1f;
+            border: 2px solid #1a1a1a;
+            border-radius: 8px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .player.active {
+            border-color: var(--gold);
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        .player input {
+            font: inherit;
+            background: transparent;
+            border: none;
+            color: var(--light-gold);
+            text-align: center;
+            width: 120px;
+            outline: none;
+        }
+        
+        .player input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            height: 100px;
+            perspective: 800px;
+        }
+
+        .die {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s ease-out;
+        }
+
+        .die-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: var(--ivory);
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+        }
+        
+        .dot {
+            width: 20px;
+            height: 20px;
+            background-color: #333;
+            border-radius: 50%;
+            align-self: center;
+            justify-self: center;
+        }
+        
+        /* Dot Positioning */
+        .face-1 .dot:nth-child(1) { grid-area: 2 / 2; }
+        .face-2 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-2 .dot:nth-child(2) { grid-area: 3 / 3; }
+        .face-3 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-3 .dot:nth-child(2) { grid-area: 2 / 2; }
+        .face-3 .dot:nth-child(3) { grid-area: 3 / 3; }
+        .face-4 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-4 .dot:nth-child(2) { grid-area: 1 / 3; }
+        .face-4 .dot:nth-child(3) { grid-area: 3 / 1; }
+        .face-4 .dot:nth-child(4) { grid-area: 3 / 3; }
+        .face-5 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-5 .dot:nth-child(2) { grid-area: 1 / 3; }
+        .face-5 .dot:nth-child(3) { grid-area: 2 / 2; }
+        .face-5 .dot:nth-child(4) { grid-area: 3 / 1; }
+        .face-5 .dot:nth-child(5) { grid-area: 3 / 3; }
+        .face-6 .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face-6 .dot:nth-child(2) { grid-area: 1 / 3; }
+        .face-6 .dot:nth-child(3) { grid-area: 2 / 1; }
+        .face-6 .dot:nth-child(4) { grid-area: 2 / 3; }
+        .face-6 .dot:nth-child(5) { grid-area: 3 / 1; }
+        .face-6 .dot:nth-child(6) { grid-area: 3 / 3; }
+        
+        /* 3D Cube Transforms */
+        .front  { transform: rotateY(0deg) translateZ(50px); }
+        .back   { transform: rotateY(180deg) translateZ(50px); }
+        .right  { transform: rotateY(90deg) translateZ(50px); }
+        .left   { transform: rotateY(-90deg) translateZ(50px); }
+        .top    { transform: rotateX(90deg) translateZ(50px); }
+        .bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            padding: 0.8rem 1.5rem;
+            border: 2px solid #111;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #333;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.2);
+            background: linear-gradient(145deg, #ffeb3b, var(--gold));
+            box-shadow: 0 4px 0 #b38600, 0 5px 10px rgba(0,0,0,0.5);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #b38600;
+        }
+        
+        .btn:disabled {
+            background: #999;
+            box-shadow: 0 4px 0 #666;
+            cursor: not-allowed;
+            color: #ccc;
+        }
+
+        #game-status {
+            margin-top: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            min-height: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="casino-table">
+        <h1>3D Dice Roller</h1>
+        
+        <div class="players-container">
+            <div id="players-div"></div>
+            <div class="controls">
+                <button id="btn-add-player" class="btn">Add Player</button>
+            </div>
+        </div>
+
+        <div id="dice-container" class="dice-container"></div>
+
+        <div class="controls">
+            <button id="btn-roll" class="btn">Roll Dice</button>
+            <button id="btn-reset" class="btn">Reset Game</button>
+        </div>
+
+        <p id="game-status">Add a player and roll the dice!</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const DiceGame = {
+                state: {
+                    players: [],
+                    currentTurn: 0,
+                },
+
+                elements: {
+                    playersDiv: document.getElementById('players-div'),
+                    diceContainer: document.getElementById('dice-container'),
+                    statusEl: document.getElementById('game-status'),
+                    btnAddPlayer: document.getElementById('btn-add-player'),
+                    btnRoll: document.getElementById('btn-roll'),
+                    btnReset: document.getElementById('btn-reset'),
+                },
+
+                rotations: {
+                    1: 'rotateX(0deg) rotateY(0deg)',        // Front face
+                    2: 'rotateX(90deg) rotateY(0deg)',         // Top face
+                    3: 'rotateX(0deg) rotateY(90deg)',        // Right face
+                    4: 'rotateX(0deg) rotateY(-90deg)',       // Left face
+                    5: 'rotateX(-90deg) rotateY(0deg)',        // Bottom face
+                    6: 'rotateX(0deg) rotateY(180deg)',       // Back face
+                },
+
+                init() {
+                    this.bindEvents();
+                    this.resetGame();
+                },
+
+                bindEvents() {
+                    this.elements.btnAddPlayer.addEventListener('click', () => this.addPlayer());
+                    this.elements.btnRoll.addEventListener('click', () => this.rollHandler());
+                    this.elements.btnReset.addEventListener('click', () => this.resetGame());
+                },
+                
+                sanitizePlayerName(name) {
+                    return name.replace(/[<>]/g, '').substring(0, 20);
+                },
+
+                addPlayer(name = '') {
+                    const sanitizedName = this.sanitizePlayerName(name);
+                    const playerName = sanitizedName || `Player ${this.state.players.length + 1}`;
+                    
+                    const playerDiv = document.createElement("div");
+                    playerDiv.className = "player";
+                    
+                    const input = document.createElement("input");
+                    input.value = playerName;
+                    input.setAttribute('maxlength', '20');
+                    input.addEventListener('change', (e) => {
+                        input.value = this.sanitizePlayerName(e.target.value) || `Player ${this.state.players.length}`;
+                    });
+                    
+                    playerDiv.appendChild(input);
+                    this.elements.playersDiv.appendChild(playerDiv);
+                    this.state.players.push({ element: playerDiv, input: input });
+
+                    if (this.state.players.length === 1) {
+                        this.setActivePlayer(0);
+                    }
+                },
+
+                setActivePlayer(turnIndex) {
+                    this.state.players.forEach((player, index) => {
+                        player.element.classList.toggle('active', index === turnIndex);
+                    });
+                    if (this.state.players.length > 0) {
+                        this.elements.statusEl.textContent = `It's ${this.state.players[turnIndex].input.value}'s turn.`;
+                    }
+                },
+
+                createFace(value) {
+                    const face = document.createElement('div');
+                    face.className = `die-face face-${value}`;
+                    for (let i = 0; i < value; i++) {
+                        face.appendChild(document.createElement('div'));
+                        face.lastChild.className = 'dot';
+                    }
+                    return face;
+                },
+
+                createDie() {
+                    const die = document.createElement('div');
+                    die.className = 'die';
+                    
+                    // Standard die face arrangement
+                    const faceValues = {
+                        front: 1, top: 2, right: 3, left: 4, bottom: 5, back: 6
+                    };
+
+                    for (const [faceClass, value] of Object.entries(faceValues)) {
+                        const face = this.createFace(value);
+                        face.classList.add(faceClass);
+                        die.appendChild(face);
+                    }
+                    
+                    return die;
+                },
+
+                rollDie(die) {
+                    return new Promise(resolve => {
+                        const val = Math.floor(Math.random() * 6) + 1;
+                        const extraX = (Math.floor(Math.random() * 4) + 4) * 360;
+                        const extraY = (Math.floor(Math.random() * 4) + 4) * 360;
+                        
+                        die.style.transform = `rotateX(${extraX}deg) rotateY(${extraY}deg)`;
+                        
+                        setTimeout(() => {
+                            die.style.transform = this.rotations[val];
+                            resolve(val);
+                        }, 1000);
+                    });
+                },
+
+                async rollHandler() {
+                    if (this.state.players.length === 0) {
+                        this.elements.statusEl.textContent = "Please add a player first!";
+                        return;
+                    }
+                    
+                    this.elements.btnRoll.disabled = true;
+                    // This explicitly clears the container to prevent duplication.
+                    this.elements.diceContainer.innerHTML = "";
+                    
+                    const die1 = this.createDie();
+                    const die2 = this.createDie();
+                    this.elements.diceContainer.appendChild(die1);
+                    this.elements.diceContainer.appendChild(die2);
+                    
+                    const [v1, v2] = await Promise.all([this.rollDie(die1), this.rollDie(die2)]);
+                    
+                    const currentPlayerName = this.state.players[this.state.currentTurn].input.value;
+                    this.elements.statusEl.textContent = `${currentPlayerName} rolled a ${v1} and a ${v2} (Total: ${v1 + v2})`;
+                    
+                    this.state.currentTurn = (this.state.currentTurn + 1) % this.state.players.length;
+                    this.setActivePlayer(this.state.currentTurn);
+                    this.elements.btnRoll.disabled = false;
+                },
+                
+                resetGame() {
+                    this.state.players = [];
+                    this.state.currentTurn = 0;
+                    
+                    // These explicitly clear containers to prevent duplication.
+                    this.elements.playersDiv.innerHTML = '';
+                    this.elements.diceContainer.innerHTML = '';
+                    
+                    this.elements.statusEl.textContent = 'Add a player and roll the dice!';
+                    this.addPlayer('Player 1');
+                },
+            };
+
+            DiceGame.init();
+        });
+    </script>
+</body>
+</html>

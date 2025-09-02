@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hexagon Game Board</title>
+  <style>
+    body { display: flex; justify-content: center; margin-top: 20px; }
+    svg { background: white; }
+    polygon { fill: white; stroke: black; stroke-width: 2; cursor: pointer; }
+    polygon:hover { fill: lightblue; }
+  </style>
+</head>
+<body>
+  <svg id="board"></svg>
+
+  <script>
+    const n = 3;        // hex board size (side length)
+    const size = 40;    // hex radius in pixels
+    const svg = document.getElementById("board");
+
+    // axial -> pixel (flat-top hexes)
+    function axialToPixel(q, r) {
+      const x = size * (3/2) * q;
+      const y = size * (Math.sqrt(3) * (r + q/2));
+      return [x, y];
+    }
+
+    // get hex polygon points
+    function hexPoints(cx, cy) {
+      let pts = [];
+      for (let k = 0; k < 6; k++) {
+        const angle = Math.PI / 180 * (60 * k);
+        const x = cx + size * Math.cos(angle);
+        const y = cy + size * Math.sin(angle);
+        pts.push(`${x},${y}`);
+      }
+      return pts.join(" ");
+    }
+
+    // build coordinates of hexagon of hexagons
+    let cells = [];
+    const radius = n - 1;
+    for (let q = -radius; q <= radius; q++) {
+      const r1 = Math.max(-radius, -q - radius);
+      const r2 = Math.min(radius, -q + radius);
+      for (let r = r1; r <= r2; r++) {
+        cells.push([q, r]);
+      }
+    }
+
+    // compute all centers
+    let centers = cells.map(([q, r]) => axialToPixel(q, r));
+    let minX = Math.min(...centers.map(c => c[0])) - size;
+    let maxX = Math.max(...centers.map(c => c[0])) + size;
+    let minY = Math.min(...centers.map(c => c[1])) - size;
+    let maxY = Math.max(...centers.map(c => c[1])) + size;
+
+    svg.setAttribute("width", maxX - minX);
+    svg.setAttribute("height", maxY - minY);
+    svg.setAttribute("viewBox", `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
+
+    // draw all hexes
+    cells.forEach(([q, r]) => {
+      const [cx, cy] = axialToPixel(q, r);
+      const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      poly.setAttribute("points", hexPoints(cx, cy));
+      poly.addEventListener("click", () => {
+        poly.setAttribute("fill", poly.getAttribute("fill") === "lightgreen" ? "white" : "lightgreen");
+      });
+      svg.appendChild(poly);
+    });
+  </script>
+</body>
+</html>
