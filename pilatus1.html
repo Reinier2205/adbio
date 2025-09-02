@@ -43,7 +43,7 @@
   </style>
 </head>
 <body>
-  <h1>Pilates Full Body</h1>
+  <h1 style="text-align:center; background:#333; color:#fff; padding:15px;">Pilates Full Body</h1>
   <ul style="list-style: none; padding: 0;">
 
     <li style="margin-bottom: 30px;" id="warmup">
@@ -52,7 +52,7 @@
         <img src="https://img.youtube.com/vi/CSrBaHX3HxQ/hqdefault.jpg" alt="Warm Up video" width="100%">
       </a>
       <p>Gentle warm-up to prepare your body.</p>
-      <button onclick="markDone(this)" style="width:100%;padding:20px;font-size:20px;">✅ Done</button>
+      <button onclick="markDone(this)" class="done-btn">✅ Done</button>
     </li>
 
     <li style="margin-bottom: 30px;" id="workout1">
@@ -61,7 +61,7 @@
         <img src="https://img.youtube.com/vi/2Z9g-AZinUc/hqdefault.jpg" alt="Workout 1 video" width="100%">
       </a>
       <p>First workout sequence for strength and mobility.</p>
-      <button onclick="markDone(this)" style="width:100%;padding:20px;font-size:20px;">✅ Done</button>
+      <button onclick="markDone(this)" class="done-btn">✅ Done</button>
     </li>
 
     <li style="margin-bottom: 30px;" id="workout2">
@@ -70,7 +70,7 @@
         <img src="https://img.youtube.com/vi/jKTxe236-4U/hqdefault.jpg" alt="Workout 2 video" width="100%">
       </a>
       <p>Second workout, targeting core and balance.</p>
-      <button onclick="markDone(this)" style="width:100%;padding:20px;font-size:20px;">✅ Done</button>
+      <button onclick="markDone(this)" class="done-btn">✅ Done</button>
     </li>
 
     <li style="margin-bottom: 30px;" id="workout2b">
@@ -79,7 +79,7 @@
         <img src="https://img.youtube.com/vi/DGjRXQ7FO4s/hqdefault.jpg" alt="Workout 2 alternative video" width="100%">
       </a>
       <p>Alternative sequence for variation.</p>
-      <button onclick="markDone(this)" style="width:100%;padding:20px;font-size:20px;">✅ Done</button>
+      <button onclick="markDone(this)" class="done-btn">✅ Done</button>
     </li>
 
     <li style="margin-bottom: 30px;" id="workout3">
@@ -88,7 +88,7 @@
         <img src="https://img.youtube.com/vi/SbURodJWeMM/hqdefault.jpg" alt="Workout 3 video" width="100%">
       </a>
       <p>Final workout with focus on flexibility and flow.</p>
-      <button onclick="markDone(this)" style="width:100%;padding:20px;font-size:20px;">✅ Done</button>
+      <button onclick="markDone(this)" class="done-btn">✅ Done</button>
     </li>
 
     <li style="margin-bottom: 30px;" id="cooldown">
@@ -97,10 +97,32 @@
         <img src="https://img.youtube.com/vi/VIDEO_ID_5/hqdefault.jpg" alt="Cool Down video" width="100%">
       </a>
       <p>Cool-down stretch to finish the session.</p>
-      <button onclick="markDone(this)" style="width:100%;padding:20px;font-size:20px;">✅ Done</button>
+      <button onclick="markDone(this)" class="done-btn">✅ Done</button>
     </li>
 
   </ul>
+
+  <style>
+    .done-btn {
+      width: 100%;
+      padding: 20px;
+      font-size: 22px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .done-btn:disabled {
+      background: #aaa;
+      cursor: default;
+    }
+    li.active {
+      border: 4px solid green;
+      padding: 10px;
+    }
+  </style>
 
   <script>
     function markDone(button) {
@@ -112,7 +134,7 @@
       // highlight next workout
       let next = li.nextElementSibling;
       if(next) {
-        next.style.border = "4px solid green";
+        next.classList.add("active");
         next.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
