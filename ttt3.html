@@ -42,7 +42,7 @@ body{
   background-size:4px 4px; background-position:0 0,2px 2px;
   border:10px solid #4a2c2a;
   box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
-  border-radius:15px;padding:2rem;width:100%;max-width:700px;position:relative;
+  border-radius:15px;padding:2rem;width:100%;max-width:1000px;position:relative;overflow:hidden;
 }
 
 /* Title */
@@ -53,18 +53,18 @@ h1{
 
 /* Players row: left -> right */
 .players{
-  display:flex;flex-direction:row;justify-content:space-around;gap:1rem;margin-bottom:1.5rem;align-items:stretch
+  display:flex;flex-direction:row;justify-content:space-around;gap:1rem;margin-bottom:1.5rem;height:auto;
 }
 .player{
   background:linear-gradient(145deg,#3e1e24,#2a1a1f);
   padding:1rem;border-radius:10px;border:3px solid #1a1a1a;
   box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 15px rgba(0,0,0,0.4);
-  width:32%;min-width:150px;color:var(--light-gold);text-align:center;
+  width:32%;min-width:150px;color:var(--light-gold);text-align:center;flex-shrink:0;
   transition: all 0.3s ease;
 }
 .player-header{display:flex;justify-content:center;align-items:center;gap:.5rem;margin-bottom:.5rem}
-.player-header h2{font-weight:700; font-size: 1.2rem;}
-.mark{font-size: 2rem; font-weight: bold; color: var(--gold); text-shadow: 1px 1px 3px rgba(0,0,0,0.5);}
+.player-header h2{font-family:'Cinzel',serif;font-weight:700; font-size: 1.2rem; color: var(--light-gold);}
+.mark{font-size: 2rem; font-weight: bold; color: var(--gold); text-shadow: 1px 1px 3px rgba(0,0,0,0.5); font-family: 'Cinzel', serif;}
 .player .wins{margin-top:.5rem;font-size:1.1rem;color:var(--light-gold)}
 .player.active{border-color:var(--gold);transform:scale(1.05);box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold)}
 /* These specific player active border colors are no longer needed as the generic .player.active handles it */
@@ -96,9 +96,9 @@ h1{
 }
 
 /* Game area / board */
-.game-area{display:flex;gap:1rem;flex-direction:column;align-items:center;justify-content:center}
+.game-area{display:flex;gap:1rem;flex-direction:column;align-items:center;justify-content:center;}
 .board-wrap{display:flex;justify-content:center;align-items:center;padding:8px}
-svg#board{width:auto;max-width:100%;height:auto;display:block;touch-action:manipulation}
+svg#board{width:100%;height:100%;max-width:calc(100% - 16px);display:block;touch-action:manipulation;}
 
 /* Hex styling */
 .hex > polygon{
@@ -120,14 +120,14 @@ svg#board{width:auto;max-width:100%;height:auto;display:block;touch-action:manip
 /* Controls */
 .controls{margin-top:12px;display:flex;gap:8px;justify-content:center}
 button{
-  font-family:'Inter',sans-serif;font-weight:600;padding:.6rem 1rem;border-radius:8px;border:2px solid #111;cursor:pointer;
+  font-family:'Cinzel',serif;font-weight:600;padding:.6rem 1rem;border-radius:8px;border:2px solid #111;cursor:pointer;
   background:linear-gradient(145deg,var(--gold),#b8860b);color:#111
 }
 button:active{transform:translateY(2px)}
 
 /* Responsive */
 @media (max-width:720px){
-  svg#board{width:92vw}
+  svg#board{width:calc(100% - 30px);}
   .players{flex-direction:column;gap:0.6rem}
   .player{width:100%}
 }
@@ -184,7 +184,7 @@ button:active{transform:translateY(2px)}
 document.addEventListener('DOMContentLoaded', () => {
   // Config
   const N = 4;          // side length
-  const SIZE = 36;      // hex radius (px)
+  const SIZE = 48;      // hex radius (px)
 
   // CSS vars
   const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -224,10 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const maxX = Math.max(...centers.map(c=>c[0])) + SIZE + 6;
   const minY = Math.min(...centers.map(c=>c[1])) - SIZE - 6;
   const maxY = Math.max(...centers.map(c=>c[1])) + SIZE + 6;
-  svg.setAttribute('viewBox', `${minX} ${minY} ${maxX-minX} ${maxY-minX}`);
-  // NOTE: fix typo: height should use Y span:
   svg.setAttribute('viewBox', `${minX} ${minY} ${maxX-minX} ${maxY-minY}`);
-  svg.setAttribute('width', Math.min(640, maxX-minX));
+  //svg.setAttribute('width', Math.min(640, maxX-minX)); // Remove this line to allow full responsiveness
   svg.style.aspectRatio = `${(maxX-minX)/(maxY-minY)}`;
 
   // SVG helpers
