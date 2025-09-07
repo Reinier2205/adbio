@@ -99,13 +99,19 @@ h1{
 
 /* Timer display */
 #timer-display {
+  display: inline-block; /* Make it inline */
+  margin-left: 0.5rem; /* Add some space between text and timer */
   font-family:'Cinzel',serif;font-weight:700;color:var(--gold);
-  font-size:2.5rem;text-shadow:2px 2px 5px rgba(0,0,0,0.7);text-align:center;
-  margin-bottom:1rem;
+  font-size:1.8rem; /* Smaller font size to fit with status */
+  text-shadow:2px 2px 5px rgba(0,0,0,0.7);
+  /* Removed margin-bottom as it's now inline */
 }
 
 /* Status */
 #game-status{
+  display: flex; /* Use flexbox to align content */
+  justify-content: center; /* Center the content */
+  align-items: baseline; /* Align items to the baseline for better text alignment */
   min-height:24px;font-size:1.2rem;font-weight:700;color:var(--light-gold);
   margin-bottom:1rem;text-shadow:1px 1px 2px black;text-align:center
 }
@@ -252,8 +258,7 @@ button:active{transform:translateY(2px)}
       </div>
     </div>
 
-    <div id="timer-display">10</div>
-    <div id="game-status">Player X's turn</div>
+    <div id="game-status">Player X's turn <span id="timer-display">10</span></div>
 
     <div class="game-area">
       <div class="board-wrap">
@@ -386,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // UI helpers
   function setActivePlayer(idx){
     playerCards.forEach((card,i)=>card.classList.toggle('active', i===idx));
-    statusEl.textContent = `${playerNameEls[idx].textContent}'s turn`;
+    statusEl.innerHTML = `${playerNameEls[idx].textContent}'s turn <span id="timer-display">${timeLeft}</span>`;
     startTimer(); // Start timer for the new active player
   }
   function updateMoveHistory(){
@@ -445,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (checkWin(q, r, currentPlayer)) {
       wins[currentPlayer]++;
       playerWinsEls[currentPlayer].textContent = wins[currentPlayer];
-      statusEl.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
+      statusEl.innerHTML = `${playerNameEls[currentPlayer].textContent} wins!`; // No timer needed on win
       gameActive = false; // Disable further moves
       clearInterval(timerInterval); // Stop timer on win
       showFireworks(playerColors[currentPlayer]); // Show fireworks on win
@@ -538,11 +543,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function startTimer() {
     clearInterval(timerInterval); // Clear any existing timer
     timeLeft = turnDuration;
-    timerDisplayEl.textContent = timeLeft;
+    updateStatusAndTimer();
 
     timerInterval = setInterval(() => {
       timeLeft--;
-      timerDisplayEl.textContent = timeLeft;
+      updateStatusAndTimer();
 
       if (timeLeft <= 0) {
         clearInterval(timerInterval);
@@ -551,8 +556,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 
+  function updateStatusAndTimer() {
+    const currentPlayerName = playerNameEls[currentPlayer].textContent;
+    statusEl.innerHTML = `${currentPlayerName}'s turn <span id="timer-display">${timeLeft}</span>`;
+  }
+
   function handleTimeExpired() {
-    statusEl.textContent = `${playerNameEls[currentPlayer].textContent} forfeited turn!`;
+    statusEl.innerHTML = `${playerNameEls[currentPlayer].textContent} forfeited turn!`;
     gameActive = true; // Ensure game is active to make a move
 
     const emptyCells = Array.from(cells.values()).filter(cell => cell.owner === null);
@@ -570,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (checkWin(randomCell.q, randomCell.r, currentPlayer)) {
         wins[currentPlayer]++;
         playerWinsEls[currentPlayer].textContent = wins[currentPlayer];
-        statusEl.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
+        statusEl.innerHTML = `${playerNameEls[currentPlayer].textContent} wins!`; // No timer needed on win
         gameActive = false;
         clearInterval(timerInterval);
         showFireworks(playerColors[currentPlayer]); // Show fireworks on forfeit win
