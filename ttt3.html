@@ -7,20 +7,19 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 /* ===== Casino Theme ===== */
 :root{
   --felt-green: #0a4821;
   --dark-wood: #2a1a1f;
-  --gold: #d4af37;
-  --gold-light: #ffd700;
+  --gold: #ffd700;
   --light-gold: #fff8e1;
   --ivory: #faf8f0;
   --player1-color: #ff6b6b;
   --player2-color: #4ecdc4;
-  --player3-color: #ffe66d;
+  --player3-color: var(--gold);
 }
 /* Reset / base */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -29,8 +28,9 @@ body{
   font-family:'Lato',sans-serif;
   background-color:var(--dark-wood);
   background-image:radial-gradient(circle,#4d322e 0%,var(--dark-wood) 70%);
-  display:flex;justify-content:center;align-items:center;padding:1.5rem;
+  display:flex;justify-content:center;align-items:center;min-height:100vh;padding:1.5rem;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  touch-action:manipulation;
 }
 
 /* Casino table container */
@@ -42,34 +42,40 @@ body{
   background-size:4px 4px; background-position:0 0,2px 2px;
   border:10px solid #4a2c2a;
   box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
-  border-radius:15px;padding:1.25rem;width:100%;max-width:940px;position:relative;
+  border-radius:15px;padding:2rem;width:100%;max-width:700px;position:relative;
 }
 
 /* Title */
 h1{
-  font-family:'Inter',sans-serif;font-weight:700;color:var(--gold-light);
-  font-size:2rem;text-shadow:2px 2px 5px rgba(0,0,0,0.7);margin-bottom:1rem;text-align:center;
+  font-family:'Cinzel',serif;font-weight:700;color:var(--gold);
+  font-size:2.2rem;text-shadow:2px 2px 5px rgba(0,0,0,0.7);margin-bottom:1.5rem;text-align:center;
 }
 
 /* Players row: left -> right */
 .players{
-  display:flex;flex-direction:row;justify-content:space-between;gap:1rem;margin-bottom:1rem;align-items:stretch
+  display:flex;flex-direction:row;justify-content:space-around;gap:1rem;margin-bottom:1.5rem;align-items:stretch
 }
 .player{
   background:linear-gradient(145deg,#3e1e24,#2a1a1f);
-  padding:0.9rem;border-radius:10px;border:3px solid #1a1a1a;
-  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 10px rgba(0,0,0,0.35);
+  padding:1rem;border-radius:10px;border:3px solid #1a1a1a;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 15px rgba(0,0,0,0.4);
   width:32%;min-width:150px;color:var(--light-gold);text-align:center;
+  transition: all 0.3s ease;
 }
-.player-header{display:flex;justify-content:center;align-items:center;gap:.5rem;margin-bottom:.25rem}
-.player .name{font-weight:700}
-.player .wins{margin-top:.35rem;font-size:.95rem;color:var(--light-gold)}
-.player.active{border-color:var(--gold);transform:scale(1.03);box-shadow:0 0 18px rgba(212,175,55,0.18)}
+.player-header{display:flex;justify-content:center;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.player-header h2{font-weight:700; font-size: 1.2rem;}
+.mark{font-size: 2rem; font-weight: bold; color: var(--gold); text-shadow: 1px 1px 3px rgba(0,0,0,0.5);}
+.player .wins{margin-top:.5rem;font-size:1.1rem;color:var(--light-gold)}
+.player.active{border-color:var(--gold);transform:scale(1.05);box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold)}
+/* These specific player active border colors are no longer needed as the generic .player.active handles it */
+/*
 .player-1.active{border-color:var(--player1-color)}
 .player-2.active{border-color:var(--player2-color)}
 .player-3.active{border-color:var(--player3-color)}
+*/
 
-/* Panel symbols */
+/* Panel symbols - these styles are no longer needed as symbols are text in HTML */
+/*
 .symbol{
   display:inline-flex;align-items:center;justify-content:center;
   width:40px;height:40px;position:relative;
@@ -81,20 +87,21 @@ h1{
 .symbol.x::after{transform:rotate(-45deg)}
 .symbol.o{border:6px solid var(--player2-color);border-radius:50%}
 .symbol.delta svg{display:block}
+*/
 
 /* Status */
 #game-status{
-  min-height:24px;font-size:1.05rem;font-weight:700;color:var(--light-gold);
-  margin:10px 0;text-shadow:1px 1px 2px black;text-align:center
+  min-height:24px;font-size:1.2rem;font-weight:700;color:var(--light-gold);
+  margin-bottom:1rem;text-shadow:1px 1px 2px black;text-align:center
 }
 
 /* Game area / board */
 .game-area{display:flex;gap:1rem;flex-direction:column;align-items:center;justify-content:center}
 .board-wrap{display:flex;justify-content:center;align-items:center;padding:8px}
-svg#board{width:640px;max-width:90vw;height:auto;display:block;touch-action:manipulation}
+svg#board{width:auto;max-width:100%;height:auto;display:block;touch-action:manipulation}
 
 /* Hex styling */
-.hex polygon{
+.hex > polygon{
   fill:url(#cellGrad);
   stroke:#111;stroke-width:2;
   filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));
@@ -134,32 +141,26 @@ button:active{transform:translateY(2px)}
     <div class="players" id="players">
       <div class="player player-1 active" id="playerCard0">
         <div class="player-header">
-          <div class="symbol x" aria-hidden="true"></div>
-          <div class="name" id="pname0">Player X</div>
+          <h2 class="name" id="pname0">Player X</h2>
         </div>
-        <div class="wins">Wins: <span id="pw0">0</span></div>
+        <p class="mark">X</p>
+        <p class="wins">Wins: <span id="pw0">0</span></p>
       </div>
 
       <div class="player player-2" id="playerCard1">
         <div class="player-header">
-          <div class="symbol o" aria-hidden="true"></div>
-          <div class="name" id="pname1">Player O</div>
+          <h2 class="name" id="pname1">Player O</h2>
         </div>
-        <div class="wins">Wins: <span id="pw1">0</span></div>
+        <p class="mark">O</p>
+        <p class="wins">Wins: <span id="pw1">0</span></p>
       </div>
 
       <div class="player player-3" id="playerCard2">
         <div class="player-header">
-          <!-- Equilateral filled triangle (same as board color) -->
-          <div class="symbol delta" aria-hidden="true" title="Delta">
-            <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true">
-              <!-- side ≈ 20.784, height ≈ 18 -->
-              <polygon points="12,3 1.608,21 22.392,21" fill="var(--player3-color)"/>
-            </svg>
-          </div>
-          <div class="name" id="pname2">Player Δ</div>
+          <h2 class="name" id="pname2">Player Δ</h2>
         </div>
-        <div class="wins">Wins: <span id="pw2">0</span></div>
+        <p class="mark">Δ</p>
+        <p class="wins">Wins: <span id="pw2">0</span></p>
       </div>
     </div>
 
@@ -264,6 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentPlayer = 0;
   let moveHistory = [];
   let wins = [0,0,0];
+  let gameActive = true; // Flag to control game activity
 
   // Draw board
   for(const [q,r] of axial){
@@ -307,13 +309,15 @@ document.addEventListener('DOMContentLoaded', () => {
       group.appendChild(c);
     } else {
       // equilateral filled triangle
-      const tri = create('polygon', { points: triPoints(SIZE*0.9), fill: color });
+      const tri = create('polygon', { points: triPoints(SIZE), fill: color });
       group.appendChild(tri);
     }
   }
 
   // Click handler
   function onCellClick(q,r){
+    if (!gameActive) return; // Only allow clicks if game is active
+
     const k = key(q,r);
     const cell = cells.get(k);
     if(!cell || cell.owner !== null) return;
@@ -323,8 +327,57 @@ document.addEventListener('DOMContentLoaded', () => {
     moveHistory.push({ q, r, player: currentPlayer });
     updateMoveHistory();
 
+    if (checkWin(q, r, currentPlayer)) {
+      wins[currentPlayer]++;
+      playerWinsEls[currentPlayer].textContent = wins[currentPlayer];
+      statusEl.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
+      gameActive = false; // Disable further moves
+      return;
+    }
+
     currentPlayer = (currentPlayer + 1) % players.length;
     setActivePlayer(currentPlayer);
+  }
+
+  function checkWin(q, r, player) {
+    const directions = [
+      [[1, 0], [-1, 0]], // q-axis
+      [[0, 1], [0, -1]], // r-axis
+      [[1, -1], [-1, 1]] // s-axis (q+r+s=0)
+    ];
+
+    const N_WIN = N; // Number of pieces in a row to win
+
+    for (const [dir1, dir2] of directions) {
+      let count = 1;
+      // Check in first direction
+      for (let i = 1; i < N_WIN; i++) {
+        const nq = q + dir1[0] * i;
+        const nr = r + dir1[1] * i;
+        const cell = cells.get(key(nq, nr));
+        if (cell && cell.owner === player) {
+          count++;
+        } else {
+          break;
+        }
+      }
+      // Check in second direction
+      for (let i = 1; i < N_WIN; i++) {
+        const nq = q + dir2[0] * i;
+        const nr = r + dir2[1] * i;
+        const cell = cells.get(key(nq, nr));
+        if (cell && cell.owner === player) {
+          count++;
+        } else {
+          break;
+        }
+      }
+
+      if (count >= N_WIN) {
+        return true; // Win condition met
+      }
+    }
+    return false; // No win
   }
 
   // Round / Game
@@ -336,6 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     moveHistory = [];
     updateMoveHistory();
+    gameActive = true; // Re-enable game
   }
   btnNewRound.addEventListener('click', () => {
     clearBoard();
