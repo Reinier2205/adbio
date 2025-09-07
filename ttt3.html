@@ -42,7 +42,7 @@ body{
   background-size:4px 4px; background-position:0 0,2px 2px;
   border:10px solid #4a2c2a;
   box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
-  border-radius:15px;padding:2rem;width:100%;max-width:1000px;position:relative;overflow:hidden;
+  border-radius:15px;padding:2rem;width:100%;position:relative;overflow:hidden;
 }
 
 /* Title */
@@ -57,9 +57,9 @@ h1{
 }
 .player{
   background:linear-gradient(145deg,#3e1e24,#2a1a1f);
-  padding:1rem;border-radius:10px;border:3px solid #1a1a1a;
+  padding:0.5rem 1rem;border-radius:10px;border:3px solid #1a1a1a;
   box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 15px rgba(0,0,0,0.4);
-  width:32%;min-width:150px;color:var(--light-gold);text-align:center;flex-shrink:0;
+  width:auto;min-width:unset;color:var(--light-gold);text-align:center;flex-shrink:unset;
   transition: all 0.3s ease;
 }
 .player-header{display:flex;justify-content:center;align-items:center;gap:.5rem;margin-bottom:.5rem}
@@ -103,7 +103,7 @@ svg#board{width:100%;height:100%;max-width:calc(100% - 16px);display:block;touch
 /* Hex styling */
 .hex > polygon{
   fill:url(#cellGrad);
-  stroke:#111;stroke-width:2;
+  stroke:var(--gold);stroke-width:2;
   filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));
   transition:transform .08s, stroke .12s;
 }
@@ -184,7 +184,7 @@ button:active{transform:translateY(2px)}
 document.addEventListener('DOMContentLoaded', () => {
   // Config
   const N = 4;          // side length
-  const SIZE = 48;      // hex radius (px)
+  const SIZE = 80;      // hex radius (px)
 
   // CSS vars
   const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -220,10 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // compute viewBox to fit board
   const centers = axial.map(([q,r]) => axialToPixel(q,r));
-  const minX = Math.min(...centers.map(c=>c[0])) - SIZE - 6;
-  const maxX = Math.max(...centers.map(c=>c[0])) + SIZE + 6;
-  const minY = Math.min(...centers.map(c=>c[1])) - SIZE - 6;
-  const maxY = Math.max(...centers.map(c=>c[1])) + SIZE + 6;
+  const minX = Math.min(...centers.map(c=>c[0])) - SIZE;
+  const maxX = Math.max(...centers.map(c=>c[0])) + SIZE;
+  const minY = Math.min(...centers.map(c=>c[1])) - SIZE;
+  const maxY = Math.max(...centers.map(c=>c[1])) + SIZE;
   svg.setAttribute('viewBox', `${minX} ${minY} ${maxX-minX} ${maxY-minY}`);
   //svg.setAttribute('width', Math.min(640, maxX-minX)); // Remove this line to allow full responsiveness
   svg.style.aspectRatio = `${(maxX-minX)/(maxY-minY)}`;
@@ -243,11 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return pts.join(' ');
   }
-  function triPoints(side){
-    // side -> height
-    const h = side * Math.sqrt(3)/2;
-    // centered at (0,0), pointing up
-    return `0,${-h/1.0} ${-side/2},${h/1.0} ${side/2},${h/1.0}`;
+  function triPoints(R){
+    // Equilateral triangle pointing upwards, centered at (0,0) with circumradius R
+    const p1_x = 0;
+    const p1_y = -R;
+    const p2_x = -R * Math.sqrt(3) / 2;
+    const p2_y = R / 2;
+    const p3_x = R * Math.sqrt(3) / 2;
+    const p3_y = R / 2;
+    return `${p1_x},${p1_y} ${p2_x},${p2_y} ${p3_x},${p3_y}`;
   }
 
   // defs gradient for cells
@@ -307,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
       group.appendChild(c);
     } else {
       // equilateral filled triangle
-      const tri = create('polygon', { points: triPoints(SIZE), fill: color });
+      const tri = create('polygon', { points: triPoints(SIZE * 0.5), fill: color });
       group.appendChild(tri);
     }
   }
@@ -319,6 +323,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const k = key(q,r);
     const cell = cells.get(k);
     if(!cell || cell.owner !== null) return;
+
+    // Calculate empty cells
+    const emptyCells = cells.size - moveHistory.length;
+
+    // If only 6 empty cells left and there are moves in history, remove the oldest move
+    if (emptyCells === 6 && moveHistory.length > 0) {
+      const oldestMove = moveHistory.shift(); // Remove from history
+      const oldestCell = cells.get(key(oldestMove.q, oldestMove.r));
+      if (oldestCell) {
+        oldestCell.owner = null;
+        oldestCell.pieceGroup.replaceChildren(); // Remove piece visually
+      }
+    }
 
     cell.owner = currentPlayer;
     drawPiece(cell.pieceGroup, currentPlayer);
