@@ -74,6 +74,19 @@ h1{
 .player-3.active{border-color:var(--player3-color)}
 */
 
+/* Timer display */
+#timer-display {
+  font-family:'Cinzel',serif;font-weight:700;color:var(--gold);
+  font-size:2.5rem;text-shadow:2px 2px 5px rgba(0,0,0,0.7);text-align:center;
+  margin-bottom:1rem;
+}
+
+/* Status */
+#game-status{
+  min-height:24px;font-size:1.2rem;font-weight:700;color:var(--light-gold);
+  margin-bottom:1rem;text-shadow:1px 1px 2px black;text-align:center
+}
+
 /* Panel symbols - these styles are no longer needed as symbols are text in HTML */
 /*
 .symbol{
@@ -88,12 +101,6 @@ h1{
 .symbol.o{border:6px solid var(--player2-color);border-radius:50%}
 .symbol.delta svg{display:block}
 */
-
-/* Status */
-#game-status{
-  min-height:24px;font-size:1.2rem;font-weight:700;color:var(--light-gold);
-  margin-bottom:1rem;text-shadow:1px 1px 2px black;text-align:center
-}
 
 /* Game area / board */
 .game-area{display:flex;gap:1rem;flex-direction:column;align-items:center;justify-content:center;}
@@ -164,6 +171,7 @@ button:active{transform:translateY(2px)}
       </div>
     </div>
 
+    <div id="timer-display">10</div>
     <div id="game-status">Player X's turn</div>
 
     <div class="game-area">
@@ -174,6 +182,7 @@ button:active{transform:translateY(2px)}
       <div class="move-history" id="move-history" aria-hidden="false"></div>
 
       <div class="controls">
+        <button id="btn-undo">Undo</button>
         <button id="btn-new-round">New Round</button>
         <button id="btn-new-game">New Game</button>
       </div>
@@ -200,6 +209,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const playerWinsEls = [document.getElementById('pw0'), document.getElementById('pw1'), document.getElementById('pw2')];
   const btnNewRound = document.getElementById('btn-new-round');
   const btnNewGame = document.getElementById('btn-new-game');
+  const btnUndo = document.getElementById('btn-undo');
+  const timerDisplayEl = document.getElementById('timer-display');
+
+  // Timer variables
+  const turnDuration = 10; // seconds
+  let timeLeft = turnDuration;
+  let timerInterval;
 
   // Axial helpers (flat-top)
   const radius = N - 1;
@@ -288,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function setActivePlayer(idx){
     playerCards.forEach((card,i)=>card.classList.toggle('active', i===idx));
     statusEl.textContent = `${playerNameEls[idx].textContent}'s turn`;
+    startTimer(); // Start timer for the new active player
   }
   function updateMoveHistory(){
     moveHistoryEl.innerHTML = '';
@@ -347,11 +364,13 @@ document.addEventListener('DOMContentLoaded', () => {
       playerWinsEls[currentPlayer].textContent = wins[currentPlayer];
       statusEl.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
       gameActive = false; // Disable further moves
+      clearInterval(timerInterval); // Stop timer on win
       return;
     }
 
     currentPlayer = (currentPlayer + 1) % players.length;
     setActivePlayer(currentPlayer);
+    startTimer(); // Restart timer for the next player after a valid move
   }
 
   function checkWin(q, r, player) {
@@ -395,6 +414,78 @@ document.addEventListener('DOMContentLoaded', () => {
     return false; // No win
   }
 
+  // Timer functions
+  function startTimer() {
+    clearInterval(timerInterval); // Clear any existing timer
+    timeLeft = turnDuration;
+    timerDisplayEl.textContent = timeLeft;
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerDisplayEl.textContent = timeLeft;
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        handleTimeExpired();
+      }
+    }, 1000);
+  }
+
+  function handleTimeExpired() {
+    statusEl.textContent = `${playerNameEls[currentPlayer].textContent} forfeited turn!`;
+    gameActive = true; // Ensure game is active to make a move
+
+    const emptyCells = Array.from(cells.values()).filter(cell => cell.owner === null);
+    if (emptyCells.length > 0) {
+      const randomIndex = Math.floor(Math.random() * emptyCells.length);
+      const randomCell = emptyCells[randomIndex];
+
+      // Simulate a move for the current player
+      randomCell.owner = currentPlayer;
+      drawPiece(randomCell.pieceGroup, currentPlayer);
+      moveHistory.push({ q: randomCell.q, r: randomCell.r, player: currentPlayer });
+      updateMoveHistory();
+
+      // Check for win after forced move
+      if (checkWin(randomCell.q, randomCell.r, currentPlayer)) {
+        wins[currentPlayer]++;
+        playerWinsEls[currentPlayer].textContent = wins[currentPlayer];
+        statusEl.textContent = `${playerNameEls[currentPlayer].textContent} wins!`;
+        gameActive = false;
+        clearInterval(timerInterval);
+        return;
+      }
+    }
+
+    // Move to the next player
+    currentPlayer = (currentPlayer + 1) % players.length;
+    setActivePlayer(currentPlayer);
+  }
+
+  // Undo function
+  function undoLastMove() {
+    if (moveHistory.length === 0) return; // Nothing to undo
+    if (!gameActive) { // If game just ended due to a win, allow undo and resume game
+      gameActive = true;
+      // Optionally, revert win display (statusEl) if needed
+    }
+
+    const lastMove = moveHistory.pop(); // Remove last move from history
+    const { q, r, player: lastPlayer } = lastMove;
+
+    const cell = cells.get(key(q, r));
+    if (cell) {
+      cell.owner = null; // Clear owner
+      cell.pieceGroup.replaceChildren(); // Remove piece visually
+      cell.g.classList.remove('win'); // Remove win highlight if it was part of a win
+    }
+
+    // Rotate current player back
+    currentPlayer = lastPlayer;
+    setActivePlayer(currentPlayer);
+    updateMoveHistory();
+  }
+
   // Round / Game
   function clearBoard(){
     for(const c of cells.values()){
@@ -405,6 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
     moveHistory = [];
     updateMoveHistory();
     gameActive = true; // Re-enable game
+    clearInterval(timerInterval); // Clear timer when board is cleared
   }
   btnNewRound.addEventListener('click', () => {
     clearBoard();
@@ -418,6 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
     currentPlayer = 0;
     setActivePlayer(currentPlayer);
   });
+
+  btnUndo.addEventListener('click', undoLastMove);
 
   // init
   setActivePlayer(0);
