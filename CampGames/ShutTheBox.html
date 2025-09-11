@@ -20,12 +20,18 @@
   --ivory: #faf8f0;
   --tile-front-color: #008080; /* Teal */
   --tile-back-color: #800000; /* Maroon */
+  --tile-front-selected: #00a6a6; /* Slightly brighter teal when selected */
   --player1-color: #ff6b6b;
   --player2-color: #4ecdc4;
   --player3-color: #feca57;
   --player4-color: #9b59b6;
   --disabled-gray: #555;
   --disabled-text: #999;
+  /* Unified dice theme */
+  --dice-red: #7b0d1e;
+  --dice-red-dark: #4a070f;
+  --pip-color: #fff8e1;
+  --pip-shadow: rgba(0,0,0,0.35);
 }
 /* Reset / base */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -87,36 +93,37 @@ h1{
 }
 
 .die {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
     position: relative;
     transform-style: preserve-3d;
     transition: transform 1s ease-out;
-    font-size: 2rem;
+    font-size: 1.4rem;
     background-color: var(--dark-wood); /* Added to make corners black */
-    border-radius: 10px; /* Added border-radius to match gamestyle and prevent white corners */
+    border-radius: 8px; /* Added border-radius to match gamestyle and prevent white corners */
 }
 
 .die-face {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: var(--ivory);
-    border: 2px solid var(--dark-wood);
-    border-radius: 8px;
+    background: radial-gradient(120% 120% at 30% 20%, #9a1428, var(--dice-red) 40%, var(--dice-red-dark) 100%);
+    border: 2px solid var(--dice-red-dark);
+    border-radius: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
-    color: var(--dark-wood);
+    color: var(--pip-color);
     font-family: 'Cinzel', serif;
     font-weight: bold;
+    box-shadow: inset 8px 8px 16px rgba(0,0,0,0.35), inset -4px -4px 10px rgba(255,255,255,0.08), 0 10px 20px rgba(0,0,0,0.6);
 }
-.face-1 { transform: rotateY(0deg) translateZ(30px); }
-.face-6 { transform: rotateY(180deg) translateZ(30px); }
-.face-2 { transform: rotateY(90deg) translateZ(30px); }
-.face-5 { transform: rotateY(-90deg) translateZ(30px); }
-.face-3 { transform: rotateX(90deg) translateZ(30px); }
-.face-4 { transform: rotateX(-90deg) translateZ(30px); }
+.face-1 { transform: rotateY(0deg) translateZ(28px); }
+.face-6 { transform: rotateY(180deg) translateZ(28px); }
+.face-2 { transform: rotateY(90deg) translateZ(28px); }
+.face-5 { transform: rotateY(-90deg) translateZ(28px); }
+.face-3 { transform: rotateX(90deg) translateZ(28px); }
+.face-4 { transform: rotateX(-90deg) translateZ(28px); }
 
 
 /* Player List */
@@ -130,20 +137,20 @@ h1{
 
 .player-indicator {
     background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-    padding: 0.8rem 1.5rem; /* Adjusted padding to match gamestyle button */
-    border-radius: 8px; /* Adjusted border-radius to match gamestyle button */
-    border: 2px solid #1a1a1a; /* Adjusted border to match gamestyle button */
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4); /* Adjusted box-shadow to match gamestyle button */
+    padding: 0.9rem;
+    border-radius: 10px;
+    border: 3px solid #1a1a1a;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
     color: var(--light-gold);
-    font-family: 'Inter', sans-serif; /* Changed to Inter to match gamestyle.html */
-    font-size: 1.1rem; /* Adjusted font size to match gamestyle button */
+    font-family: 'Lato', sans-serif;
+    font-size: 1.1rem;
     transition: all 0.3s ease;
 }
 
 .player-indicator.active {
     border-color: var(--gold);
-    transform: scale(1.1);
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 15px var(--gold);
+    transform: scale(1.05);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
 }
 
 
@@ -174,7 +181,7 @@ h1{
 }
 
 .tile.selected {
-    transform: scale(1.05);
+    transform: scale(1.1);
 }
 
 .tile-inner {
@@ -185,6 +192,12 @@ h1{
     transform-style: preserve-3d;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     border-radius: 6px;
+}
+
+.tile.selected .tile-inner {
+    box-shadow: 0 8px 18px rgba(0,0,0,0.45), 0 0 18px var(--gold);
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
 }
 
 .tile.shut .tile-inner {
@@ -209,6 +222,10 @@ h1{
 .tile-front {
     background: var(--tile-front-color);
     color: var(--light-gold);
+}
+
+.tile.selected .tile-front {
+    background: linear-gradient(145deg, var(--tile-front-selected), #009090);
 }
 
 .tile-back {
@@ -250,15 +267,7 @@ button:disabled {
     cursor: not-allowed;
 }
 
-#new-game-btn {
-    margin-top: 1.5rem;
-    grid-column: 1 / -1; /* Span full width if in a grid */
-    text-align: center;
-    width: 50%;
-    margin-left: auto;
-    margin-right: auto;
-    display: block;
-}
+/* #new-game-btn inherits button styles to match size with End Turn */
 
 
 </style>
@@ -290,6 +299,7 @@ button:disabled {
         <div class="controls">
             <button id="roll-btn">Roll Dice</button>
             <button id="end-turn-btn">End Turn</button>
+            <button id="new-game-btn">New Game</button>
         </div>
     </div>
     
@@ -302,8 +312,6 @@ button:disabled {
             <!-- Tiles will be generated by JavaScript -->
         </div>
     </div>
-
-    <button id="new-game-btn">New Game</button>
   </div>
 
 <script>
@@ -370,12 +378,57 @@ document.addEventListener('DOMContentLoaded', () => {
         // Render Player List
         playerList.innerHTML = '';
         players.forEach(player => {
-            const playerIndicator = document.createElement('div');
-            playerIndicator.className = 'player-indicator';
-            playerIndicator.id = `player-indicator-${player.id}`;
-            playerIndicator.textContent = player.name;
-            playerIndicator.style.borderColor = player.color;
-            playerList.appendChild(playerIndicator);
+            const card = document.createElement('div');
+            card.className = 'player-indicator';
+            card.id = `player-indicator-${player.id}`;
+            card.style.borderColor = player.color;
+
+            const header = document.createElement('div');
+            header.className = 'player-header';
+            header.style.display = 'flex';
+            header.style.justifyContent = 'center';
+            header.style.alignItems = 'center';
+            header.style.gap = '0.5rem';
+
+            const nameEl = document.createElement('h2');
+            nameEl.textContent = player.name;
+            nameEl.style.fontSize = '1.1rem';
+            nameEl.style.color = 'var(--light-gold)';
+
+            const pencil = document.createElement('span');
+            pencil.textContent = '✏️';
+            pencil.className = 'edit-name-icon';
+            pencil.setAttribute('role', 'button');
+            pencil.setAttribute('tabindex', '0');
+            pencil.setAttribute('aria-label', `Edit ${player.name} Name`);
+
+            const doEdit = () => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = '';
+                input.placeholder = 'Enter name';
+                input.className = 'player-name-input';
+                header.replaceChild(input, nameEl);
+                input.focus();
+                const save = () => {
+                    const val = (input.value || '').trim();
+                    const newName = val.length ? val : player.name;
+                    player.name = newName;
+                    nameEl.textContent = newName;
+                    header.replaceChild(nameEl, input);
+                    updateStatus(`${players[currentPlayerIndex].name}'s turn to roll.`);
+                };
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+            };
+            pencil.addEventListener('click', doEdit);
+            pencil.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doEdit(); }});
+
+            header.appendChild(nameEl);
+            header.appendChild(pencil);
+            card.appendChild(header);
+
+            playerList.appendChild(card);
         });
 
         // Render The Box
@@ -426,6 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateControls() {
         rollBtn.disabled = gameState !== 'AWAITING_ROLL';
         endTurnBtn.disabled = gameState === 'AWAITING_ROLL' || gameState === 'SETUP';
+        newGameBtn.disabled = gameState !== 'GAME_OVER'; // Only enable if game is over
     }
 
     /**

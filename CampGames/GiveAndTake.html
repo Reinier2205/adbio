@@ -15,6 +15,11 @@
             --light-gold: #fff8e1;
             --dark-red: #8c0000;
             --ivory: #faf8f0;
+            /* Unified dice theme */
+            --dice-red: #7b0d1e;
+            --dice-red-dark: #4a070f;
+            --pip-color: #fff8e1;
+            --pip-shadow: rgba(0,0,0,0.35);
         }
 
         * {
@@ -68,9 +73,9 @@
 
         .player {
             background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-            padding: 1.5rem;
+            padding: 0.9rem;
             border-radius: 10px;
-            width: 45%;
+            width: 42%;
             transition: all 0.3s ease;
             border: 3px solid #1a1a1a;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
@@ -89,41 +94,12 @@
             gap: 0.5rem;
             margin-bottom: 0.5rem;
         }
-        
-        .player-header h2 {
-            color: var(--light-gold);
-            font-size: 1.5rem;
-        }
-
-        .edit-name-icon {
-            cursor: pointer;
-            font-size: 1.2rem;
-            color: var(--gold);
-            transition: transform 0.2s;
-            border-radius: 4px;
-        }
+        .player-header h2 { color: var(--light-gold); font-size: 1.1rem; }
+        .edit-name-icon { cursor: pointer; font-size: 1.1rem; color: var(--gold); transition: transform 0.2s; border-radius: 4px; }
         .edit-name-icon:hover { transform: scale(1.2); }
-        .edit-name-icon:focus-visible {
-            outline: 2px solid var(--gold);
-            outline-offset: 2px;
-        }
-
-        .player-name-input {
-            background-color: var(--light-gold);
-            border: 1px solid var(--gold);
-            border-radius: 4px;
-            padding: 4px;
-            font-family: 'Lato', sans-serif;
-            text-align: center;
-            width: 80%;
-        }
-
-        .score {
-            font-size: 3.5rem;
-            font-weight: 700;
-            color: var(--gold);
-            text-shadow: 2px 2px 3px rgba(0,0,0,0.5);
-        }
+        .edit-name-icon:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+        .player-name-input { background-color: var(--light-gold); border: 1px solid var(--gold); border-radius: 4px; padding: 4px; font-family: 'Lato', sans-serif; text-align: center; width: 80%; }
+        .score { font-size: 3rem; font-weight: 700; color: var(--gold); text-shadow: 2px 2px 3px rgba(0,0,0,0.5); }
 
         #game-status {
             min-height: 24px;
@@ -139,47 +115,83 @@
             justify-content: center;
             gap: 1.5rem;
             margin-bottom: 2rem;
-            height: 80px;
+            height: 70px;
             perspective: 800px;
         }
 
         .dice {
-            width: 80px;
-            height: 80px;
+            width: 56px;
+            height: 56px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 1s;
-            background-color: var(--ivory);
+            background: radial-gradient(120% 120% at 30% 20%, #9a1428, var(--dice-red) 40%, var(--dice-red-dark) 100%);
             border-radius: 12px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.3), 0 5px 10px rgba(0,0,0,0.5);
+            box-shadow: inset 8px 8px 16px rgba(0,0,0,0.35), inset -4px -4px 10px rgba(255,255,255,0.08), 0 8px 16px rgba(0,0,0,0.5);
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             padding: 8px;
         }
 
+        /* 3D faces */
+        .dice-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(120% 120% at 30% 20%, #9a1428, var(--dice-red) 40%, var(--dice-red-dark) 100%);
+            border: 2px solid var(--dice-red-dark);
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            box-shadow: inset 8px 8px 16px rgba(0,0,0,0.35), inset -4px -4px 10px rgba(255,255,255,0.08), 0 10px 20px rgba(0,0,0,0.6);
+        }
+        .front  { transform: rotateY(0deg) translateZ(28px); }
+        .back   { transform: rotateY(180deg) translateZ(28px); }
+        .right  { transform: rotateY(90deg) translateZ(28px); }
+        .left   { transform: rotateY(-90deg) translateZ(28px); }
+        .top    { transform: rotateX(90deg) translateZ(28px); }
+        .bottom { transform: rotateX(-90deg) translateZ(28px); }
+
         .dice .dot {
-            width: 16px;
-            height: 16px;
-            background-color: #333;
+            width: 12px;
+            height: 12px;
+            background-color: var(--pip-color);
             border-radius: 50%;
-            box-shadow: inset 0 0 3px rgba(0,0,0,0.7);
+            box-shadow: inset 0 -2px 3px var(--pip-shadow), 0 1px 2px rgba(0,0,0,0.4);
             align-self: center;
             justify-self: center;
-            visibility: hidden;
+            visibility: visible; /* dots placed explicitly per face */
         }
-        .dice[data-value="1"] .dot:nth-child(5),
-        .dice[data-value="2"] .dot:nth-child(1), .dice[data-value="2"] .dot:nth-child(9),
-        .dice[data-value="3"] .dot:nth-child(1), .dice[data-value="3"] .dot:nth-child(5), .dice[data-value="3"] .dot:nth-child(9),
-        .dice[data-value="4"] .dot:nth-child(1), .dice[data-value="4"] .dot:nth-child(3), .dice[data-value="4"] .dot:nth-child(7), .dice[data-value="4"] .dot:nth-child(9),
-        .dice[data-value="5"] .dot:nth-child(1), .dice[data-value="5"] .dot:nth-child(3), .dice[data-value="5"] .dot:nth-child(5), .dice[data-value="5"] .dot:nth-child(7), .dice[data-value="5"] .dot:nth-child(9),
-        .dice[data-value="6"] .dot:nth-child(1), .dice[data-value="6"] .dot:nth-child(3), .dice[data-value="6"] .dot:nth-child(4), .dice[data-value="6"] .dot:nth-child(6), .dice[data-value="6"] .dot:nth-child(7), .dice[data-value="6"] .dot:nth-child(9)
-        { visibility: visible; }
         .dice.rolling { animation: rolling 1s ease-out; }
         @keyframes rolling {
             0% { transform: rotateY(0) rotateX(0); }
             100% { transform: rotateY(1080deg) rotateX(720deg); }
         }
+
+        /* Dot positioning within each face */
+        .dice-face.front  .dot:nth-child(1) { grid-area: 2 / 2; }
+        .dice-face.top    .dot:nth-child(1) { grid-area: 1 / 1; }
+        .dice-face.top    .dot:nth-child(2) { grid-area: 3 / 3; }
+        .dice-face.right  .dot:nth-child(1) { grid-area: 1 / 1; }
+        .dice-face.right  .dot:nth-child(2) { grid-area: 2 / 2; }
+        .dice-face.right  .dot:nth-child(3) { grid-area: 3 / 3; }
+        .dice-face.left   .dot:nth-child(1) { grid-area: 1 / 1; }
+        .dice-face.left   .dot:nth-child(2) { grid-area: 1 / 3; }
+        .dice-face.left   .dot:nth-child(3) { grid-area: 3 / 1; }
+        .dice-face.left   .dot:nth-child(4) { grid-area: 3 / 3; }
+        .dice-face.bottom .dot:nth-child(1) { grid-area: 1 / 1; }
+        .dice-face.bottom .dot:nth-child(2) { grid-area: 1 / 3; }
+        .dice-face.bottom .dot:nth-child(3) { grid-area: 2 / 2; }
+        .dice-face.bottom .dot:nth-child(4) { grid-area: 3 / 1; }
+        .dice-face.bottom .dot:nth-child(5) { grid-area: 3 / 3; }
+        .dice-face.back   .dot:nth-child(1) { grid-area: 1 / 1; }
+        .dice-face.back   .dot:nth-child(2) { grid-area: 1 / 3; }
+        .dice-face.back   .dot:nth-child(3) { grid-area: 2 / 1; }
+        .dice-face.back   .dot:nth-child(4) { grid-area: 2 / 3; }
+        .dice-face.back   .dot:nth-child(5) { grid-area: 3 / 1; }
+        .dice-face.back   .dot:nth-child(6) { grid-area: 3 / 3; }
 
         .controls button {
             font-family: 'Cinzel', serif;
@@ -260,8 +272,22 @@
         <div class="game-area">
             <p id="game-status" aria-live="polite">Welcome! Player 1, make your choice!</p>
             <div class="dice-container" aria-live="polite" aria-atomic="true">
-                <div id="dice-1" class="dice"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-                <div id="dice-2" class="dice"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                <div id="dice-1" class="dice">
+                    <div class="dice-face front">  <div class="dot"></div> </div>
+                    <div class="dice-face back">   <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div> </div>
+                    <div class="dice-face right">  <div class="dot"></div><div class="dot"></div><div class="dot"></div> </div>
+                    <div class="dice-face left">   <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div> </div>
+                    <div class="dice-face top">    <div class="dot"></div><div class="dot"></div> </div>
+                    <div class="dice-face bottom"> <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div> </div>
+                </div>
+                <div id="dice-2" class="dice">
+                    <div class="dice-face front">  <div class="dot"></div> </div>
+                    <div class="dice-face back">   <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div> </div>
+                    <div class="dice-face right">  <div class="dot"></div><div class="dot"></div><div class="dot"></div> </div>
+                    <div class="dice-face left">   <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div> </div>
+                    <div class="dice-face top">    <div class="dot"></div><div class="dot"></div> </div>
+                    <div class="dice-face bottom"> <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div> </div>
+                </div>
             </div>
             <div id="choice-controls" class="controls">
                 <button id="btn-add">Add to Score</button>
@@ -406,8 +432,16 @@
                 }
                 
                 updateDiceDisplay(d1, d2) {
-                    this.DOM.dice[0].setAttribute('data-value', d1);
-                    this.DOM.dice[1].setAttribute('data-value', d2);
+                    const rotations = {
+                        1: 'rotateX(0deg) rotateY(0deg)',
+                        2: 'rotateX(90deg) rotateY(0deg)',
+                        3: 'rotateX(0deg) rotateY(90deg)',
+                        4: 'rotateX(0deg) rotateY(-90deg)',
+                        5: 'rotateX(-90deg) rotateY(0deg)',
+                        6: 'rotateX(0deg) rotateY(180deg)'
+                    };
+                    this.DOM.dice[0].style.transform = rotations[d1];
+                    this.DOM.dice[1].style.transform = rotations[d2];
                     this.DOM.diceContainer.ariaLabel = `Dice result: ${d1} and ${d2}. Total ${d1 + d2}.`;
                 }
                 
@@ -416,10 +450,8 @@
                     this.state.currentRoll.choice = choice;
                     this.setButtonsDisabled(true);
                     this.updateStatus('Rolling...');
-                    this.DOM.dice.forEach(d => {
-                        d.classList.add('rolling');
-                        d.setAttribute('data-value', '');
-                    });
+                    this.DOM.dice.forEach(d => d.classList.add('rolling'));
+                    this.DOM.dice.forEach(d => d.style.transform = '');
 
                     setTimeout(() => this.safeExecute(() => {
                         this.DOM.dice.forEach(d => d.classList.remove('rolling'));
@@ -510,19 +542,20 @@
                 editName(playerIndex) {
                     const nameEl = this.DOM.playerNames[playerIndex];
                     const parent = nameEl.parentElement;
-                    
+
                     const input = document.createElement('input');
                     input.type = 'text';
-                    input.value = this.state.playerNames[playerIndex];
+                    input.value = '';
+                    input.placeholder = 'Enter name';
                     input.className = 'player-name-input';
-                    
+
                     parent.replaceChild(input, nameEl);
                     input.focus();
-                    
+
                     const saveName = () => {
                         const validation = this.validatePlayerName(input.value);
                         const newName = validation.isValid ? validation.sanitized : `Player ${playerIndex + 1}`;
-                        
+
                         this.state.playerNames[playerIndex] = newName;
                         nameEl.textContent = newName;
                         parent.replaceChild(nameEl, input);

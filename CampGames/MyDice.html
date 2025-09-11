@@ -22,6 +22,11 @@
             --gold: #ffd700;
             --light-gold: #fff8e1;
             --ivory: #faf8f0;
+            /* Unified dice theme */
+            --dice-red: #7b0d1e;
+            --dice-red-dark: #4a070f;
+            --pip-color: #fff8e1; /* light ivory pips for high contrast */
+            --pip-shadow: rgba(0,0,0,0.35);
         }
 
         body {
@@ -55,60 +60,28 @@
             margin-bottom: 1.5rem;
         }
 
-        .players-container {
-            margin-bottom: 1.5rem;
-        }
-
-        #players-div {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .player {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem;
-            background: #2a1a1f;
-            border: 2px solid #1a1a1a;
-            border-radius: 8px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        .player.active {
-            border-color: var(--gold);
-            box-shadow: 0 0 10px var(--gold);
-        }
-
-        .player input {
-            font: inherit;
-            background: transparent;
-            border: none;
-            color: var(--light-gold);
-            text-align: center;
-            width: 120px;
-            outline: none;
-        }
-        
-        .player input:focus {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
+        .players-container { margin-bottom: 1.5rem; }
+        #players-div { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-bottom: 1rem; }
+        .player-card { background: linear-gradient(145deg, #3e1e24, #2a1a1f); padding: 0.9rem; border-radius: 10px; width: 220px; border: 3px solid #1a1a1a; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4); color: var(--light-gold); transition: all 0.3s ease; }
+        .player-card.active { border-color: var(--gold); transform: scale(1.05); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold); }
+        .player-header { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+        .player-header h2 { font-size: 1.1rem; color: var(--light-gold); }
+        .edit-name-icon { cursor: pointer; font-size: 1.1rem; color: var(--gold); transition: transform 0.2s; border-radius: 4px; }
+        .edit-name-icon:hover { transform: scale(1.2); }
+        .player-name-input { background-color: var(--light-gold); border: 1px solid var(--gold); border-radius: 4px; padding: 4px; font-family: 'Lato', sans-serif; text-align: center; width: 80%; }
 
         .dice-container {
             display: flex;
             justify-content: center;
             gap: 2rem;
             margin: 2rem 0;
-            height: 100px;
+            height: 70px;
             perspective: 800px;
         }
 
         .die {
-            width: 100px;
-            height: 100px;
+            width: 56px;
+            height: 56px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 1s ease-out;
@@ -118,22 +91,24 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background-color: var(--ivory);
-            border: 2px solid #333;
-            border-radius: 12px;
-            padding: 10px;
+            background: radial-gradient(120% 120% at 30% 20%, #9a1428, var(--dice-red) 40%, var(--dice-red-dark) 100%);
+            border: 2px solid var(--dice-red-dark);
+            border-radius: 10px;
+            padding: 6px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
+            box-shadow: inset 8px 8px 16px rgba(0,0,0,0.35), inset -4px -4px 10px rgba(255,255,255,0.08), 0 10px 20px rgba(0,0,0,0.6);
         }
         
         .dot {
-            width: 20px;
-            height: 20px;
-            background-color: #333;
+            width: 12px;
+            height: 12px;
+            background-color: var(--pip-color);
             border-radius: 50%;
             align-self: center;
             justify-self: center;
+            box-shadow: inset 0 -2px 3px var(--pip-shadow), 0 1px 2px rgba(0,0,0,0.4);
         }
         
         /* Dot Positioning */
@@ -160,12 +135,12 @@
         .face-6 .dot:nth-child(6) { grid-area: 3 / 3; }
         
         /* 3D Cube Transforms */
-        .front  { transform: rotateY(0deg) translateZ(50px); }
-        .back   { transform: rotateY(180deg) translateZ(50px); }
-        .right  { transform: rotateY(90deg) translateZ(50px); }
-        .left   { transform: rotateY(-90deg) translateZ(50px); }
-        .top    { transform: rotateX(90deg) translateZ(50px); }
-        .bottom { transform: rotateX(-90deg) translateZ(50px); }
+        .front  { transform: rotateY(0deg) translateZ(28px); }
+        .back   { transform: rotateY(180deg) translateZ(28px); }
+        .right  { transform: rotateY(90deg) translateZ(28px); }
+        .left   { transform: rotateY(-90deg) translateZ(28px); }
+        .top    { transform: rotateX(90deg) translateZ(28px); }
+        .bottom { transform: rotateX(-90deg) translateZ(28px); }
 
         .controls {
             display: flex;
@@ -273,22 +248,47 @@
                 },
 
                 addPlayer(name = '') {
-                    const sanitizedName = this.sanitizePlayerName(name);
-                    const playerName = sanitizedName || `Player ${this.state.players.length + 1}`;
-                    
-                    const playerDiv = document.createElement("div");
-                    playerDiv.className = "player";
-                    
-                    const input = document.createElement("input");
-                    input.value = playerName;
-                    input.setAttribute('maxlength', '20');
-                    input.addEventListener('change', (e) => {
-                        input.value = this.sanitizePlayerName(e.target.value) || `Player ${this.state.players.length}`;
-                    });
-                    
-                    playerDiv.appendChild(input);
-                    this.elements.playersDiv.appendChild(playerDiv);
-                    this.state.players.push({ element: playerDiv, input: input });
+                    const defaultName = name || `Player ${this.state.players.length + 1}`;
+                    const card = document.createElement('div');
+                    card.className = 'player-card';
+
+                    const header = document.createElement('div');
+                    header.className = 'player-header';
+                    const nameEl = document.createElement('h2');
+                    nameEl.textContent = defaultName;
+                    const pencil = document.createElement('span');
+                    pencil.textContent = '✏️';
+                    pencil.className = 'edit-name-icon';
+                    pencil.setAttribute('role','button');
+                    pencil.setAttribute('tabindex','0');
+                    pencil.setAttribute('aria-label',`Edit ${defaultName} Name`);
+
+                    const doEdit = () => {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.value = '';
+                        input.placeholder = 'Enter name';
+                        input.className = 'player-name-input';
+                        header.replaceChild(input, nameEl);
+                        input.focus();
+                        const save = () => {
+                            const val = (input.value || '').trim();
+                            const newName = val.length ? val : defaultName;
+                            nameEl.textContent = newName;
+                            header.replaceChild(nameEl, input);
+                        };
+                        input.addEventListener('blur', save);
+                        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+                    };
+                    pencil.addEventListener('click', doEdit);
+                    pencil.addEventListener('keydown', (e) => { if (e.key==='Enter' || e.key===' ') { e.preventDefault(); doEdit(); }});
+
+                    header.appendChild(nameEl);
+                    header.appendChild(pencil);
+                    card.appendChild(header);
+
+                    this.elements.playersDiv.appendChild(card);
+                    this.state.players.push({ element: card, nameEl });
 
                     if (this.state.players.length === 1) {
                         this.setActivePlayer(0);
@@ -300,7 +300,8 @@
                         player.element.classList.toggle('active', index === turnIndex);
                     });
                     if (this.state.players.length > 0) {
-                        this.elements.statusEl.textContent = `It's ${this.state.players[turnIndex].input.value}'s turn.`;
+                        const currentName = this.state.players[turnIndex].element.querySelector('h2')?.textContent || `Player ${turnIndex+1}`;
+                        this.elements.statusEl.textContent = `It's ${currentName}'s turn.`;
                     }
                 },
 
@@ -364,7 +365,7 @@
                     
                     const [v1, v2] = await Promise.all([this.rollDie(die1), this.rollDie(die2)]);
                     
-                    const currentPlayerName = this.state.players[this.state.currentTurn].input.value;
+                    const currentPlayerName = this.state.players[this.state.currentTurn].element.querySelector('h2')?.textContent || `Player ${this.state.currentTurn + 1}`;
                     this.elements.statusEl.textContent = `${currentPlayerName} rolled a ${v1} and a ${v2} (Total: ${v1 + v2})`;
                     
                     this.state.currentTurn = (this.state.currentTurn + 1) % this.state.players.length;
