@@ -737,7 +737,8 @@
         justify-content: space-between;
         min-height: 160px; /* Made cards smaller */
         position: relative;
-        overflow: hidden;
+        overflow: hidden; /* keep hover/overlay contained */
+        z-index: 0; /* create base stacking */
     }
 
     .game-card::before {
@@ -750,7 +751,7 @@
         background: rgba(255,255,255,0.05);
         transform: rotate(30deg);
         transition: transform 0.5s ease;
-        z-index: 0;
+        z-index: 1; /* behind content */
     }
 
     .game-card:hover::before {
@@ -779,17 +780,96 @@
         z-index: 1;
     }
 
-    .game-card .play-icon {
-        font-size: 2rem; /* Adjusted icon size */
-        color: var(--gold);
-        transition: transform 0.2s ease, color 0.2s ease;
-        z-index: 1;
+    .game-card-image {
+        width: 100%;
+        max-width: 100px; /* Adjust as needed */
+        height: auto;
+        aspect-ratio: 1 / 1; /* Enforce 1:1 aspect ratio */
+        object-fit: cover; /* Crop if necessary */
+        border-radius: 8px; /* Slightly rounded corners for the image */
+        margin-bottom: 0.8rem;
+        border: 2px solid var(--gold-light);
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        z-index: 2;
     }
 
-    .game-card:hover .play-icon {
-        transform: scale(1.05);
-        color: var(--gold-light);
+    .info-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 2px solid var(--gold);
+        background: radial-gradient(circle at 30% 30%, var(--gold-light), var(--gold));
+        color: #111;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        z-index: 5; /* above image and hover layer */
+        transition: transform 0.15s ease;
     }
+    .info-btn:hover { transform: scale(1.05); }
+    .info-btn:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+
+    .game-card-description {
+        position: absolute;
+        inset: 0;
+        background: rgba(42,26,31,0.92); /* var(--dark-wood) */
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 0.9rem; /* match card short description */
+        font-family: 'Lato', sans-serif; /* match card short description */
+        line-height: 1.3; /* match card short description */
+        border-radius: 15px;
+        border: 2px solid var(--gold);
+        box-shadow: 0 0 20px var(--gold-light);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        transform: translateY(8px);
+        padding: 1.2rem 1.4rem;
+        z-index: 10; /* top of card */
+    }
+
+    .game-card.show-desc .game-card-description { /* mobile / JS toggle */
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .close-desc {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid var(--gold);
+        background: rgba(0,0,0,0.5);
+        color: #ffffff;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Prevent accidental navigation when description is visible */
+    .game-card.show-desc { pointer-events: none; }
+    .game-card.show-desc * { pointer-events: auto; }
+
+    /* Reduce image emphasis when description is visible */
+    .game-card.show-desc .game-card-image { filter: brightness(0.6); }
 
     @media (max-width: 600px) {
         .game-cards-container {
@@ -818,35 +898,116 @@
         <h1>🎲 Game Launcher 🎲</h1>
 
         <div class="demo-section">
-            <h2 class="text-center mb-2">My Games</h2>
+            <h2 class="text-center mb-2">Camp Games</h2>
             <div class="game-cards-container">
                 <a href="MyDice.html" class="game-card">
-                    <h3>MyDice</h3>
+                    <img src="./images/mydice.jpeg" alt="Roll two stunning 3D casino dice! Challenge friends, customize player names, and see who gets the luckiest roll. Every turn is a new chance for glory—will you be the high roller?" class="game-card-image">
+                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                    <h3>Dice</h3>
                     <p>Roll the dice and test your luck!</p>
-                    <span class="play-icon">▶️</span>
+                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="MyDice details">
+                        <button class="close-desc" aria-label="Close">×</button>
+                        <span>Roll two stunning 3D casino dice! Challenge friends, customize player names, and see who gets the luckiest roll. Every turn is a new chance for glory—will you be the high roller?</span>
+                    </div>
                 </a>
                 <a href="GiveAndTake.html" class="game-card">
-                    <h3>GiveAndTake</h3>
+                    <img src="./images/giveandtake.jpeg" alt="Battle head-to-head in this strategic dice game! Roll for big scores, sabotage your opponent, and trigger wild casino events like Snake Eyes and Boxcars. First to 15 wins—can you outsmart and outroll your rival?" class="game-card-image">
+                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                    <h3>Give And Take</h3>
                     <p>A strategic game of giving and taking.</p>
-                    <span class="play-icon">▶️</span>
+                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Give and Take details">
+                        <button class="close-desc" aria-label="Close">×</button>
+                        <span>Battle head-to-head in this strategic dice game! Roll for big scores, sabotage your opponent, and trigger wild casino events like Snake Eyes and Boxcars. First to 15 wins—can you outsmart and outroll your rival?</span>
+                    </div>
                 </a>
                 <a href="TicTacToe.html" class="game-card">
+                    <img src="./images/tictactoe.png" alt="Classic Tic Tac Toe with a casino twist! Play as X or O, track your win tally, and enjoy a beautiful felt table. Outsmart your opponent and claim victory in this timeless duel!" class="game-card-image">
+                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
                     <h3>Tic Tac Toe</h3>
                     <p>The classic game of X's and O's.</p>
-                    <span class="play-icon">▶️</span>
+                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Tic Tac Toe details">
+                        <button class="close-desc" aria-label="Close">×</button>
+                        <span>Classic Tic Tac Toe with a casino twist! Play as X or O, track your win tally, and enjoy a beautiful felt table. Outsmart your opponent and claim victory in this timeless duel!</span>
+                    </div>
                 </a>
                 <a href="../Trigon_Game/Trigon.html" class="game-card">
+                    <img src="./images/trigon.jpeg" alt="Experience the ultimate three-player Tic Tac Toe on a hexagonal board! Play as X, O, or Δ, and race to outmaneuver two rivals in this fast-paced, strategic, and visually stunning casino challenge!" class="game-card-image">
+                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
                     <h3>Trigon</h3>
                     <p>A challenging puzzle game with triangles.</p>
-                    <span class="play-icon">▶️</span>
+                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Trigon details">
+                        <button class="close-desc" aria-label="Close">×</button>
+                        <span>Experience the ultimate three-player Tic Tac Toe on a hexagonal board! Play as X, O, or Δ, and race to outmaneuver two rivals in this fast-paced, strategic, and visually stunning casino challenge!</span>
+                    </div>
                 </a>
                 <a href="ShutTheBox.html" class="game-card">
+                    <img src="./images/shutthebox.png" alt="Roll the dice and take turns shutting or opening the box! Compete with up to four players in this addictive game of luck and strategy—will you be the one to outwit your rivals and shut every number for the win?" class="game-card-image">
+                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
                     <h3>Shut the Box</h3>
                     <p>Roll dice and close numbers to win!</p>
-                    <span class="play-icon">▶️</span>
+                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Shut the Box details">
+                        <button class="close-desc" aria-label="Close">×</button>
+                        <span>Roll the dice and take turns shutting or opening the box! Compete with up to four players in this addictive game of luck and strategy—will you be the one to outwit your rivals and shut every number for the win?</span>
+                    </div>
                 </a>
             </div>
         </div>
     </div>
+
+    <script>
+    (function() {
+        function closestCard(el) {
+            return el.closest && el.closest('.game-card');
+        }
+        function hideAll() {
+            document.querySelectorAll('.game-card.show-desc').forEach(c => c.classList.remove('show-desc'));
+        }
+        // Toggle via info button
+        document.addEventListener('click', function(e) {
+            const infoBtn = e.target.closest && e.target.closest('.info-btn');
+            if (infoBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const card = closestCard(infoBtn);
+                const isOpen = card.classList.contains('show-desc');
+                hideAll();
+                if (!isOpen) {
+                    card.classList.add('show-desc');
+                    const dialog = card.querySelector('.game-card-description');
+                    if (dialog) dialog.focus({ preventScroll: true });
+                }
+                return;
+            }
+            const closeBtn = e.target.closest && e.target.closest('.close-desc');
+            if (closeBtn) {
+                e.preventDefault();
+                const card = closestCard(closeBtn);
+                if (card) card.classList.remove('show-desc');
+                return;
+            }
+            // Click outside the dialog closes it
+            const desc = e.target.closest && e.target.closest('.game-card-description');
+            if (!desc) {
+                // If user taps somewhere else while a dialog is open, close all
+                hideAll();
+            }
+        }, { passive: false });
+
+        // Escape key closes any open dialog
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') hideAll();
+        });
+
+        // Prevent navigation when description is open by intercepting link click
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (card.classList.contains('show-desc')) {
+                    // If the description is open, do not navigate
+                    e.preventDefault();
+                }
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
