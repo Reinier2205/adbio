@@ -1,0 +1,206 @@
+/* ===== Casino Theme ===== */
+:root{
+  --felt-green: #0a4821;
+  --dark-wood: #2a1a1f;
+  --gold: #ffd700;
+  --light-gold: #fff8e1;
+  --ivory: #faf8f0;
+  --player1-color: #ff6b6b;
+  --player2-color: #4ecdc4;
+  --player3-color: var(--gold);
+}
+/* Reset / base */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Lato',sans-serif;
+  background-color:var(--dark-wood);
+  background-image:radial-gradient(circle,#4d322e 0%,var(--dark-wood) 70%);
+  display:flex;justify-content:center;align-items:center;min-height:100vh;padding:1.5rem;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  touch-action:manipulation;
+}
+
+/* Casino table container */
+.casino-table{
+  background:var(--felt-green);
+  background-image:
+    radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,0.08) 1px, var(--felt-green) 1px);
+  background-size:4px 4px; background-position:0 0,2px 2px;
+  border:10px solid #4a2c2a;
+  box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
+  border-radius:15px;padding:2rem;width:100%;position:relative;overflow:hidden;
+}
+
+/* Title */
+h1{
+  font-family:'Cinzel',serif;font-weight:700;color:var(--gold);
+  font-size:2.5rem;text-shadow:2px 2px 5px rgba(0,0,0,0.7);margin-bottom:1.5rem;text-align:center;
+}
+
+/* Players row: left -> right */
+.players{
+  display:flex;flex-direction:row;justify-content:space-around;gap:1rem;margin-bottom:1.5rem;height:auto;
+}
+.player{
+  background:linear-gradient(145deg,#3e1e24,#2a1a1f);
+  padding:0.5rem 1rem;border-radius:10px;border:3px solid #1a1a1a;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 15px rgba(0,0,0,0.4);
+  width:auto;min-width:unset;color:var(--light-gold);text-align:center;flex-shrink:unset;
+  transition: all 0.3s ease;
+}
+.player-header{display:flex;justify-content:center;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.player-header h2{font-family:'Cinzel',serif;font-weight:700; font-size: 1.2rem; color: var(--light-gold);}
+.mark{font-size: 2rem; font-weight: bold; color: var(--gold); text-shadow: 1px 1px 3px rgba(0,0,0,0.5); font-family: 'Cinzel', serif;}
+.player .wins{margin-top:.5rem;font-size:1.1rem;color:var(--light-gold)}
+.player.active{border-color:var(--gold);transform:scale(1.05);box-shadow:inset 0 2px 5px rgba(0,0,0,0.5),0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold)}
+/* These specific player active border colors are no longer needed as the generic .player.active handles it */
+/*
+.player-1.active{border-color:var(--player1-color)}
+.player-2.active{border-color:var(--player2-color)}
+.player-3.active{border-color:var(--player3-color)}
+*/
+
+.edit-name-icon {
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--gold);
+  transition: transform 0.2s;
+  border-radius: 4px;
+}
+.edit-name-icon:hover { transform: scale(1.2); }
+.edit-name-icon:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.player-name-input {
+  background-color: var(--light-gold);
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  padding: 4px;
+  font-family: 'Lato', sans-serif;
+  text-align: center;
+  width: 80%;
+}
+
+/* Timer display */
+#timer-display {
+  display: inline-block; /* Make it inline */
+  margin-left: 0.5rem; /* Add some space between text and timer */
+  font-family:'Cinzel',serif;font-weight:700;color:var(--gold);
+  font-size:1.8rem; /* Smaller font size to fit with status */
+  text-shadow:2px 2px 5px rgba(0,0,0,0.7);
+  /* Removed margin-bottom as it's now inline */
+}
+
+/* Status */
+#game-status{
+  display: flex; /* Use flexbox to align content */
+  justify-content: center; /* Center the content */
+  align-items: baseline; /* Align items to the baseline for better text alignment */
+  min-height:24px;font-size:1.2rem;font-weight:700;color:var(--light-gold);
+  margin-bottom:1rem;text-shadow:1px 1px 2px black;text-align:center
+}
+
+/* Panel symbols - these styles are no longer needed as symbols are text in HTML */
+/*
+.symbol{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;position:relative;
+}
+.symbol.x::before,.symbol.x::after{
+  content:'';position:absolute;width:75%;height:6px;background:var(--player1-color);border-radius:5px;
+}
+.symbol.x::before{transform:rotate(45deg)}
+.symbol.x::after{transform:rotate(-45deg)}
+.symbol.o{border:6px solid var(--player2-color);border-radius:50%}
+.symbol.delta svg{display:block}
+*/
+
+/* Game area / board */
+.game-area{display:flex;gap:1rem;flex-direction:column;align-items:center;justify-content:center;}
+.board-wrap{display:flex;justify-content:center;align-items:center;padding:8px}
+svg#board{width:100%;height:100%;max-width:calc(100% - 16px);display:block;touch-action:manipulation;}
+
+/* Hex styling */
+.hex > polygon{
+  fill:url(#cellGrad);
+  stroke:var(--gold);stroke-width:2;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+  transition:transform .08s, stroke .12s;
+}
+.hex:hover polygon{transform:scale(1.01)}
+.hex.win polygon{stroke:var(--gold);stroke-width:4;filter:drop-shadow(0 0 6px var(--gold))}
+
+/* Move history */
+.move-history{display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.history-dot{width:8px;height:8px;border-radius:50%}
+.history-dot.x{background:var(--player1-color)}
+.history-dot.o{background:var(--player2-color)}
+.history-dot.delta{background:var(--player3-color)}
+
+/* Controls */
+.controls{margin-top:12px;display:flex;gap:8px;justify-content:center}
+button{
+  font-family:'Cinzel',serif;font-weight:600;padding:.6rem 1rem;border-radius:8px;border:2px solid #111;cursor:pointer;
+  background:linear-gradient(145deg,var(--gold),#b8860b);color:#111
+}
+button:active{transform:translateY(2px)}
+
+/* Responsive */
+@media (max-width:720px){
+  svg#board{width:calc(100% - 30px);}
+  .players{flex-direction:row;justify-content:space-around;gap:0.2rem; flex-wrap: wrap;}
+  .player{
+    flex: 1 1 30%; /* Allow shrinking and growing, with a base of 30% */
+    min-width: 80px; /* Ensure they don't get too small */
+    padding:0.2rem 0.3rem; /* Further reduced padding */
+  }
+  .player-header h2 { font-size: 0.7rem; } /* Even smaller font for name */
+  .mark { font-size: 1rem; } /* Even smaller font for mark */
+  .player .wins { font-size: 0.7rem; }
+}
+
+/* Fireworks */
+#fireworks-container {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.firework {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background-color: transparent;
+  border-radius: 50%;
+  opacity: 0;
+  animation: firework-explode 2s forwards ease-out;
+}
+
+.firework::before, .firework::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: inherit;
+  border-radius: 50%;
+}
+
+.firework::before { transform: scale(0.5); }
+.firework::after { transform: scale(1.5); opacity: 0;}
+
+@keyframes firework-explode {
+  0% { transform: scale(0); opacity: 1; }
+  10% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes firework-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
