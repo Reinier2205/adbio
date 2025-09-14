@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sunrise & Live Sun Compass</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+    input, button { margin: 5px; padding: 5px; }
+    #compassCanvas { border: 1px solid #333; border-radius: 50%; }
+  </style>
+  <script src="https://unpkg.com/suncalc/suncalc.js"></script>
+</head>
+<body>
+  <h2>Sunrise & Live Sun Compass</h2>
+
+  <label>Latitude <input id="lat" type="number" step="any"></label><br>
+  <label>Longitude <input id="lon" type="number" step="any"></label><br>
+  <label>Date <input id="date" type="date"></label><br>
+  <button onclick="calcSunrise()">Calculate sunrise</button>
+  <button onclick="useMyGPS()">Use my GPS</button>
+  <button id="enableCompass">Enable Compass</button>
+
+  <div id="results"></div>
+
+  <canvas id="compassCanvas" width="300" height="300"></canvas>
+
+<script>
+let sunriseAzimuth = null;
+let liveAzimuth = null;
+let heading = 0;
+
+function calcSunrise() {
+  const lat = parseFloat(document.getElementById("lat").value);
+  const lon = parseFloat(document.getElementById("lon").value);
+  const date = new Date(document.getElementById("date").value);
+
+  if (isNaN(lat) || isNaN(lon)) {
+    alert("Enter latitude and longitude.");
+    return;
+  }
+
+  const times = SunCalc.getTimes(date, lat, lon);
+  const sunrisePos = SunCalc.getPosition(times.sunrise, lat, lon);
+  sunriseAzimuth = sunrisePos.azimuth * 180 / Math.PI + 180;
+
+  updateLiveSun(lat, lon);
+
+  document.getElementById("results").innerHTML = `
+    <p>Azimuth: ${sunriseAzimuth.toFixed(1)}°<br>
+    Sunrise: ${times.sunrise.toLocaleTimeString()}</p>
+    <p id="live"></p>
+  `;
+  drawCompass();
+}
+
+function updateLiveSun(lat, lon) {
+  const now = new Date();
+  const pos = SunCalc.getPosition(now, lat, lon);
+  liveAzimuth = pos.azimuth * 180 / Math.PI + 180;
+  const altitude = pos.altitude * 180 / Math.PI;
+
+  document.getElementById("live").innerHTML = `
+    Live sun azimuth: <b>${liveAzimuth.toFixed(1)}°</b><br>
+    Altitude: ${altitude.toFixed(1)}°
+  `;
+}
+
+function useMyGPS() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById("lat").value = pos.coords.latitude.toFixed(5);
+    document.getElementById("lon").value = pos.coords.longitude.toFixed(5);
+    document.getElementById("date").value = new Date().toISOString().split("T")[0];
+    calcSunrise();
+  });
+}
+
+function drawCompass() {
+  const canvas = document.getElementById("compassCanvas");
+  const ctx = canvas.getContext("2d");
+  const radius = canvas.width / 2;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw outer circle
+  ctx.beginPath();
+  ctx.arc(radius, radius, radius-5, 0, 2*Math.PI);
+  ctx.stroke();
+
+  // Rotate canvas to device heading
+  ctx.save();
+  ctx.translate(radius, radius);
+  ctx.rotate(-heading * Math.PI/180);
+
+  // Draw ticks & labels
+  for (let i = 0; i < 360; i += 30) {
+    ctx.beginPath();
+    ctx.moveTo(0, -radius+10);
+    ctx.lineTo(0, -radius+2);
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(0, -radius+20);
+    ctx.rotate(heading * Math.PI/180);
+    if (i % 90 === 0) {
+      const label = i===0?"N":i===90?"E":i===180?"S":"W";
+      ctx.fillText(label, -5, 5);
+    }
+    ctx.restore();
+    ctx.rotate(30 * Math.PI/180);
+  }
+
+  // Draw sunrise azimuth line (red)
+  if (sunriseAzimuth !== null) {
+    ctx.save();
+    ctx.rotate(sunriseAzimuth * Math.PI/180);
+    ctx.strokeStyle = "red";
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(0, -radius+30);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Draw live sun azimuth line (yellow)
+  if (liveAzimuth !== null) {
+    ctx.save();
+    ctx.rotate(liveAzimuth * Math.PI/180);
+    ctx.strokeStyle = "gold";
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(0, -radius+30);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+// Compass permission
+document.getElementById("enableCompass").addEventListener("click", async () => {
+  if (typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function") {
+    try {
+      const response = await DeviceOrientationEvent.requestPermission();
+      if (response === "granted") {
+        window.addEventListener("deviceorientation", handleOrientation);
+        document.getElementById("enableCompass").style.display = "none";
+      } else {
+        alert("Compass access denied.");
+      }
+    } catch (e) {
+      alert("Error: " + e);
+    }
+  } else {
+    window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+    window.addEventListener("deviceorientation", handleOrientation, true);
+    document.getElementById("enableCompass").style.display = "none";
+  }
+});
+
+function handleOrientation(event) {
+  if (event.webkitCompassHeading) {
+    heading = event.webkitCompassHeading; // iOS
+  } else if (event.alpha !== null) {
+    heading = 360 - event.alpha; // fallback
+  }
+  drawCompass();
+}
+</script>
+</body>
+</html>
