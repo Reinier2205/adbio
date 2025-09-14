@@ -1,154 +1,169 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
   <title>Sunrise & Live Sun Compass</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:18px;line-height:1.4}
-    label,input,button{display:block;margin:6px 0}
-    .row{display:flex;gap:8px;align-items:center}
-    #compass{width:300px;height:300px;border-radius:50%;border:2px solid #222;position:relative;margin-top:12px;overflow:hidden}
-    #dial{width:100%;height:100%;position:absolute;inset:0;transition:transform .2s linear}
-    .needle{position:absolute;left:50%;top:50%;width:3px;height:40%;transform-origin:50% 100%}
-    #sunriseNeedle{background:#c00}
-    #liveNeedle{background:gold}
-    #north{position:absolute;left:50%;top:6px;transform:translateX(-50%);font-weight:600}
-    .info{margin-top:10px;padding:10px;border:1px solid #ddd;background:#fafafa}
+    body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+    input, button { margin: 5px; padding: 5px; }
+    #compassCanvas { border: 1px solid #333; border-radius: 50%; }
   </style>
+  <script src="https://unpkg.com/suncalc/suncalc.js"></script>
 </head>
 <body>
   <h2>Sunrise & Live Sun Compass</h2>
 
-  <label>Latitude
-    <input id="lat" type="number" step="0.00001" value="-33.9258" />
-  </label>
-  <label>Longitude
-    <input id="lon" type="number" step="0.00001" value="18.4232" />
-  </label>
-  <label>Date
-    <input id="date" type="date" value="" />
-  </label>
+  <label>Latitude <input id="lat" type="number" step="any"></label><br>
+  <label>Longitude <input id="lon" type="number" step="any"></label><br>
+  <label>Date <input id="date" type="date"></label><br>
+  <button onclick="calcSunrise()">Calculate sunrise</button>
+  <button onclick="useMyGPS()">Use my GPS</button>
+  <button id="enableCompass">Enable Compass</button>
 
-  <div class="row">
-    <button id="calc">Calculate sunrise</button>
-    <button id="now">Use my GPS</button>
-  </div>
+  <div id="results"></div>
 
-  <div class="info" id="result">Azimuth: —°<br>Sunrise: —</div>
-  <div class="info" id="liveResult">Live sun azimuth: —°<br>Altitude: —°</div>
+  <canvas id="compassCanvas" width="300" height="300"></canvas>
 
-  <div id="compass">
-    <div id="dial">
-      <svg viewBox="0 0 100 100" width="100%" height="100%">
-        <g transform="translate(50,50)">
-          <circle r="48" fill="none" stroke="#333" stroke-width="1"/>
-          <g id="ticks"></g>
-        </g>
-      </svg>
-    </div>
-    <div id="sunriseNeedle" class="needle"></div>
-    <div id="liveNeedle" class="needle"></div>
-    <div id="north">N</div>
-  </div>
+<script>
+let sunriseAzimuth = null;
+let liveAzimuth = null;
+let heading = 0;
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
-  <script>
-    // Add ticks to compass
-    (function(){
-      const g=document.getElementById('ticks');
-      for(let i=0;i<360;i+=10){
-        const len=(i%90===0)?8:(i%30===0?6:3);
-        const r1=42, r2=42-len;
-        const rad=i*Math.PI/180;
-        const x1=Math.cos(rad)*r1, y1=Math.sin(rad)*r1;
-        const x2=Math.cos(rad)*r2, y2=Math.sin(rad)*r2;
-        const line=document.createElementNS("http://www.w3.org/2000/svg","line");
-        line.setAttribute("x1",x1);line.setAttribute("y1",y1);
-        line.setAttribute("x2",x2);line.setAttribute("y2",y2);
-        line.setAttribute("stroke","#000");line.setAttribute("stroke-width","0.8");
-        g.appendChild(line);
-        if(i%90===0){
-          const text=document.createElementNS("http://www.w3.org/2000/svg","text");
-          text.setAttribute("x",Math.cos(rad)*35);
-          text.setAttribute("y",Math.sin(rad)*35+3);
-          text.setAttribute("text-anchor","middle");
-          text.setAttribute("font-size","6");
-          text.textContent=i===0?'E':i===90?'S':i===180?'W':'N';
-          g.appendChild(text);
-        }
-      }
-    })();
+function calcSunrise() {
+  const lat = parseFloat(document.getElementById("lat").value);
+  const lon = parseFloat(document.getElementById("lon").value);
+  const date = new Date(document.getElementById("date").value);
 
-    function toLocalString(d){
-      return new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit'}).format(d);
+  if (isNaN(lat) || isNaN(lon)) {
+    alert("Enter latitude and longitude.");
+    return;
+  }
+
+  const times = SunCalc.getTimes(date, lat, lon);
+  const sunrisePos = SunCalc.getPosition(times.sunrise, lat, lon);
+  sunriseAzimuth = sunrisePos.azimuth * 180 / Math.PI + 180;
+
+  updateLiveSun(lat, lon);
+
+  document.getElementById("results").innerHTML = `
+    <p>Azimuth: ${sunriseAzimuth.toFixed(1)}°<br>
+    Sunrise: ${times.sunrise.toLocaleTimeString()}</p>
+    <p id="live"></p>
+  `;
+  drawCompass();
+}
+
+function updateLiveSun(lat, lon) {
+  const now = new Date();
+  const pos = SunCalc.getPosition(now, lat, lon);
+  liveAzimuth = pos.azimuth * 180 / Math.PI + 180;
+  const altitude = pos.altitude * 180 / Math.PI;
+
+  document.getElementById("live").innerHTML = `
+    Live sun azimuth: <b>${liveAzimuth.toFixed(1)}°</b><br>
+    Altitude: ${altitude.toFixed(1)}°
+  `;
+}
+
+function useMyGPS() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById("lat").value = pos.coords.latitude.toFixed(5);
+    document.getElementById("lon").value = pos.coords.longitude.toFixed(5);
+    document.getElementById("date").value = new Date().toISOString().split("T")[0];
+    calcSunrise();
+  });
+}
+
+function drawCompass() {
+  const canvas = document.getElementById("compassCanvas");
+  const ctx = canvas.getContext("2d");
+  const radius = canvas.width / 2;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw outer circle
+  ctx.beginPath();
+  ctx.arc(radius, radius, radius-5, 0, 2*Math.PI);
+  ctx.stroke();
+
+  // Rotate canvas to device heading
+  ctx.save();
+  ctx.translate(radius, radius);
+  ctx.rotate(-heading * Math.PI/180);
+
+  // Draw ticks & labels
+  for (let i = 0; i < 360; i += 30) {
+    ctx.beginPath();
+    ctx.moveTo(0, -radius+10);
+    ctx.lineTo(0, -radius+2);
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(0, -radius+20);
+    ctx.rotate(heading * Math.PI/180);
+    if (i % 90 === 0) {
+      const label = i===0?"N":i===90?"E":i===180?"S":"W";
+      ctx.fillText(label, -5, 5);
     }
-    function sunAzToBearing(azRad){
-      return ((azRad*180/Math.PI)+180+360)%360;
-    }
+    ctx.restore();
+    ctx.rotate(30 * Math.PI/180);
+  }
 
-    let sunriseBearing=null;
-    let lat=parseFloat(document.getElementById('lat').value);
-    let lon=parseFloat(document.getElementById('lon').value);
+  // Draw sunrise azimuth line (red)
+  if (sunriseAzimuth !== null) {
+    ctx.save();
+    ctx.rotate(sunriseAzimuth * Math.PI/180);
+    ctx.strokeStyle = "red";
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(0, -radius+30);
+    ctx.stroke();
+    ctx.restore();
+  }
 
-    // Calculate sunrise
-    document.getElementById('calc').addEventListener('click',()=>{
-      lat=parseFloat(document.getElementById('lat').value);
-      lon=parseFloat(document.getElementById('lon').value);
-      const dateInput=document.getElementById('date').value;
-      const date=dateInput?new Date(dateInput):new Date();
-      const times=SunCalc.getTimes(date,lat,lon);
-      const sunrise=times.sunrise;
-      if(!sunrise){alert("No sunrise (polar day/night)");return;}
-      const pos=SunCalc.getPosition(sunrise,lat,lon);
-      sunriseBearing=sunAzToBearing(pos.azimuth);
-      document.getElementById('result').innerHTML=
-        `Azimuth: <b>${sunriseBearing.toFixed(1)}°</b><br>Sunrise: <b>${toLocalString(sunrise)}</b>`;
-      document.getElementById('sunriseNeedle').style.transform=
-        `translateX(-50%) rotate(${sunriseBearing}deg)`;
-    });
+  // Draw live sun azimuth line (yellow)
+  if (liveAzimuth !== null) {
+    ctx.save();
+    ctx.rotate(liveAzimuth * Math.PI/180);
+    ctx.strokeStyle = "gold";
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(0, -radius+30);
+    ctx.stroke();
+    ctx.restore();
+  }
 
-    // Use GPS
-    document.getElementById('now').addEventListener('click',()=>{
-      navigator.geolocation.getCurrentPosition(pos=>{
-        lat=pos.coords.latitude;
-        lon=pos.coords.longitude;
-        document.getElementById('lat').value=lat.toFixed(5);
-        document.getElementById('lon').value=lon.toFixed(5);
-      });
-    });
+  ctx.restore();
+}
 
-    // Device orientation for compass dial
-    window.addEventListener('deviceorientation',e=>{
-      if(e.absolute===false && typeof e.webkitCompassHeading==="undefined") return;
-      let heading;
-      if(e.webkitCompassHeading!==undefined){ // iOS
-        heading=e.webkitCompassHeading;
-      }else{ // Android
-        heading=360-e.alpha;
+// Compass permission
+document.getElementById("enableCompass").addEventListener("click", async () => {
+  if (typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function") {
+    try {
+      const response = await DeviceOrientationEvent.requestPermission();
+      if (response === "granted") {
+        window.addEventListener("deviceorientation", handleOrientation);
+        document.getElementById("enableCompass").style.display = "none";
+      } else {
+        alert("Compass access denied.");
       }
-      document.getElementById('dial').style.transform=`rotate(${-heading}deg)`;
-    });
+    } catch (e) {
+      alert("Error: " + e);
+    }
+  } else {
+    window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+    window.addEventListener("deviceorientation", handleOrientation, true);
+    document.getElementById("enableCompass").style.display = "none";
+  }
+});
 
-    // Live sun updater
-    setInterval(()=>{
-      if(isNaN(lat)||isNaN(lon)) return;
-      const now=new Date();
-      const pos=SunCalc.getPosition(now,lat,lon);
-      const bearing=sunAzToBearing(pos.azimuth);
-      const alt=pos.altitude*180/Math.PI;
-      document.getElementById('liveNeedle').style.transform=
-        `translateX(-50%) rotate(${bearing}deg)`;
-      document.getElementById('liveResult').innerHTML=
-        `Live sun azimuth: <b>${bearing.toFixed(1)}°</b><br>Altitude: <b>${alt.toFixed(1)}°</b>`;
-    },1000);
-
-    // Default date = today
-    (function(){
-      const d=new Date();
-      const yyyy=d.getFullYear(),mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');
-      document.getElementById('date').value=`${yyyy}-${mm}-${dd}`;
-    })();
-  </script>
+function handleOrientation(event) {
+  if (event.webkitCompassHeading) {
+    heading = event.webkitCompassHeading; // iOS
+  } else if (event.alpha !== null) {
+    heading = 360 - event.alpha; // fallback
+  }
+  drawCompass();
+}
+</script>
 </body>
 </html>
