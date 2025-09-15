@@ -193,18 +193,31 @@
         .dice-face.back   .dot:nth-child(5) { grid-area: 3 / 1; }
         .dice-face.back   .dot:nth-child(6) { grid-area: 3 / 3; }
 
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
         .controls button {
             font-family: 'Cinzel', serif;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             padding: 0.8rem 1.5rem;
             border: 2px solid #111;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
-            margin: 0 0.5rem;
+            margin: 0;
             color: white;
             text-shadow: 1px 1px 2px black;
             box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+            width: 200px;
+            min-width: 200px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .controls button:active:not(:disabled) {
             transform: translateY(3px);
@@ -298,14 +311,6 @@
         <button id="btn-new-session">🔄 New Session</button>
     </div>
     
-    <div id="outcome-modal" class="modal-overlay" role="alertdialog" aria-labelledby="outcome-title" aria-describedby="outcome-description">
-        <div class="modal-content">
-            <h3 id="outcome-title" aria-live="assertive"></h3>
-            <p id="outcome-description"></p>
-            <button id="btn-continue">Continue</button>
-        </div>
-    </div>
-    
     <div id="win-modal" class="modal-overlay" role="alertdialog" aria-labelledby="winner-text">
          <div class="modal-content">
             <h3 id="winner-text" aria-live="assertive"></h3>
@@ -343,10 +348,6 @@
                         btnAdd: document.getElementById('btn-add'),
                         btnSubtract: document.getElementById('btn-subtract'),
                         btnNewSession: document.getElementById('btn-new-session'),
-                        outcomeModal: document.getElementById('outcome-modal'),
-                        outcomeTitle: document.getElementById('outcome-title'),
-                        outcomeDescription: document.getElementById('outcome-description'),
-                        btnContinue: document.getElementById('btn-continue'),
                         winModal: document.getElementById('win-modal'),
                         winnerText: document.getElementById('winner-text'),
                         winTally: document.getElementById('win-tally'),
@@ -357,10 +358,8 @@
                 bindEvents() {
                     this.DOM.btnAdd.addEventListener('click', () => this.performTurn('add'));
                     this.DOM.btnSubtract.addEventListener('click', () => this.performTurn('subtract'));
-                    this.DOM.btnContinue.addEventListener('click', () => this.continueGame());
                     this.DOM.btnNewSession.addEventListener('click', () => this.startNewSession());
                     this.DOM.btnPlayAgain.addEventListener('click', () => this.startNextRound(1 - this.state.winner));
-
                     this.DOM.editIcons.forEach((icon, index) => {
                         icon.addEventListener('click', () => this.editName(index));
                         icon.addEventListener('keydown', (e) => {
@@ -420,7 +419,6 @@
                     this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, make your choice!`);
                     
                     this.setButtonsDisabled(false);
-                    this.DOM.outcomeModal.classList.remove('show');
                     this.DOM.winModal.classList.remove('show');
                 }
 
@@ -433,15 +431,22 @@
                 
                 updateDiceDisplay(d1, d2) {
                     const rotations = {
-                        1: 'rotateX(0deg) rotateY(0deg)',
-                        2: 'rotateX(90deg) rotateY(0deg)',
-                        3: 'rotateX(0deg) rotateY(90deg)',
-                        4: 'rotateX(0deg) rotateY(-90deg)',
-                        5: 'rotateX(-90deg) rotateY(0deg)',
-                        6: 'rotateX(0deg) rotateY(180deg)'
+                        1: 'rotateX(0deg) rotateY(0deg)',      // front face - shows 1 pip
+                        2: 'rotateX(-90deg) rotateY(0deg)',    // top face - shows 2 pips
+                        3: 'rotateX(0deg) rotateY(-90deg)',    // right face - shows 3 pips
+                        4: 'rotateX(0deg) rotateY(90deg)',     // left face - shows 4 pips
+                        5: 'rotateX(90deg) rotateY(0deg)',     // bottom face - shows 5 pips
+                        6: 'rotateX(0deg) rotateY(180deg)'     // back face - shows 6 pips
                     };
+                    
+                    // Remove rolling class and reset transform
+                    this.DOM.dice[0].classList.remove('rolling');
+                    this.DOM.dice[1].classList.remove('rolling');
+                    
+                    // Apply the correct transform for each die
                     this.DOM.dice[0].style.transform = rotations[d1];
                     this.DOM.dice[1].style.transform = rotations[d2];
+                    
                     this.DOM.diceContainer.ariaLabel = `Dice result: ${d1} and ${d2}. Total ${d1 + d2}.`;
                 }
                 
@@ -450,43 +455,55 @@
                     this.state.currentRoll.choice = choice;
                     this.setButtonsDisabled(true);
                     this.updateStatus('Rolling...');
-                    this.DOM.dice.forEach(d => d.classList.add('rolling'));
-                    this.DOM.dice.forEach(d => d.style.transform = '');
+                    
+                    // Generate roll BEFORE animation
+                    const d1 = Math.floor(Math.random() * 6) + 1;
+                    const d2 = Math.floor(Math.random() * 6) + 1;
+                    this.state.currentRoll.d1 = d1;
+                    this.state.currentRoll.d2 = d2;
+                    this.state.currentRoll.total = d1 + d2;
+                    
+                    
+                    // Reset dice to neutral state before animation
+                    this.DOM.dice.forEach(d => {
+                        d.classList.remove('rolling');
+                        d.style.transform = 'rotateX(0deg) rotateY(0deg)'; // Reset to front face (1)
+                    });
+                    
+                    // Start rolling animation
+                    this.DOM.dice.forEach(d => {
+                        d.classList.add('rolling');
+                    });
 
                     setTimeout(() => this.safeExecute(() => {
-                        this.DOM.dice.forEach(d => d.classList.remove('rolling'));
-                        this.state.currentRoll.d1 = Math.floor(Math.random() * 6) + 1;
-                        this.state.currentRoll.d2 = Math.floor(Math.random() * 6) + 1;
-                        this.state.currentRoll.total = this.state.currentRoll.d1 + this.state.currentRoll.d2;
+                        // Animation complete - update dice display with the rolled values
                         this.updateDiceDisplay(this.state.currentRoll.d1, this.state.currentRoll.d2);
                         this.state.currentRoll.event = this.getRollEvent(this.state.currentRoll.d1, this.state.currentRoll.d2, this.state.currentRoll.total);
-                        this.showOutcomeModal();
+                        // Immediately update score and status (no modal)
+                        this.immediateScoreUpdate();
                     }), GAME_CONFIG.ANIMATION_DURATION);
                 }
 
                 getRollEvent(d1, d2, total) {
-                    if (d1 === 1 && d2 === 1) return { title: 'Snake Eyes!', description: 'A crushing blow! Your score resets to 0.', type: 'bust' };
-                    if (d1 === 6 && d2 === 6) return { title: 'BOXCARS!', description: 'JACKPOT! You instantly win the game!', type: 'win' };
-                    if (d1 === d2) return { title: 'Double Down!', description: `Doubles! Your roll of ${total} is now worth ${total * 2}!`, type: 'double' };
-                    if (total === 7) return { title: 'Lucky 7!', description: 'Nice roll! You get to take another turn.', type: 'again' };
-                    return { title: `You rolled a ${total}`, description: `The roll of ${total} will be applied.`, type: 'normal' };
+                    if (d1 === 1 && d2 === 1) return { title: 'Snake Eyes!', description: 'A crushing blow! Your score resets to 0.', type: 'bust', value: 0 };
+                    if (d1 === 6 && d2 === 6) return { title: 'BOXCARS!', description: 'JACKPOT! You instantly win the game!', type: 'win', value: 0 };
+                    if (d1 === d2) return { title: 'Double Down!', description: `Doubles! Your roll of ${total} is now worth ${total * 2}!`, type: 'double', value: total * 2 };
+                    if (total === 7) return { title: 'Lucky 7!', description: 'Nice roll! You get to take another turn.', type: 'again', value: total };
+                    return { title: `You rolled a ${total}`, description: `The roll of ${total} will be applied.`, type: 'normal', value: total };
                 }
 
-                showOutcomeModal() {
-                    this.DOM.outcomeTitle.textContent = this.state.currentRoll.event.title;
-                    this.DOM.outcomeDescription.textContent = this.state.currentRoll.event.description;
-                    this.DOM.outcomeModal.classList.add('show');
-                    this.DOM.btnContinue.focus();
-                }
+                showOutcomeModal() { /* removed modal logic */ }
 
-                continueGame() {
-                    this.DOM.outcomeModal.classList.remove('show');
-                    const { choice, event, total } = this.state.currentRoll;
-                    let rollValue = event.type === 'double' ? total * 2 : total;
-
+                immediateScoreUpdate() {
+                    const { choice, event } = this.state.currentRoll;
+                    let rollValue = event.value;
+                    let statusMsg = '';
+                    
+                    
                     switch (event.type) {
                         case 'bust':
                             this.state.scores[this.state.activePlayer] = 0;
+                            statusMsg = `${this.state.playerNames[this.state.activePlayer]} rolled Snake Eyes! Score resets to 0.`;
                             break;
                         case 'win':
                             this.endGame(this.state.activePlayer);
@@ -494,9 +511,11 @@
                         default:
                             if (choice === 'add') {
                                 this.state.scores[this.state.activePlayer] += rollValue;
+                                statusMsg = `${this.state.playerNames[this.state.activePlayer]} rolled ${this.state.currentRoll.d1} + ${this.state.currentRoll.d2} = ${rollValue} and added to their score.`;
                             } else {
                                 const opponent = 1 - this.state.activePlayer;
                                 this.state.scores[opponent] -= rollValue;
+                                statusMsg = `${this.state.playerNames[this.state.activePlayer]} rolled ${this.state.currentRoll.d1} + ${this.state.currentRoll.d2} = ${rollValue} and subtracted from opponent.`;
                             }
                     }
                     
@@ -507,13 +526,16 @@
                         return;
                     }
 
-                    if (event.type !== 'again') {
-                        this.switchPlayer();
-                    } else {
-                        this.updateStatus(`${this.state.playerNames[this.state.activePlayer]}, you get to go again!`);
+                    if (event.type === 'again') {
+                        this.updateStatus(`${statusMsg} ${this.state.playerNames[this.state.activePlayer]}, you get to go again!`);
                         this.setButtonsDisabled(false);
+                    } else {
+                        this.updateStatus(statusMsg);
+                        this.switchPlayer();
                     }
                 }
+
+                continueGame() { /* removed modal logic */ }
                 
                 switchPlayer() {
                     this.state.activePlayer = 1 - this.state.activePlayer;
