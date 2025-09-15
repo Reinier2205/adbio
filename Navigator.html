@@ -1,0 +1,539 @@
+<!-- Sunrise Icon -->
+
+```
+            <div id="sunriseIcon" class="absolute w-8 h-8 transition-all duration-300" style="transform-origin: 50% 150px;">
+                <div class="w-full h-full bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75z"/>
+                    </svg>
+                </div>
+</div>
+            </div>
+
+            <!-- Sunset Icon -->
+            <div id="sunsetIcon" class="absolute w-8 h-8 transition-all duration-300" style="transform-origin: 50% 150px;">
+                <div class="w-full h-full bg-red-500 rounded-full flex items-center justify-center shadow-lg">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591z"/>
+                    </svg>
+                </div>
+            </div><!DOCTYPE html>
+```
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vintage Compass - Camping Navigator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&display=swap');
+
+```
+    .wood-texture {
+        background: 
+            radial-gradient(ellipse at top left, rgba(139, 69, 19, 0.8) 0%, transparent 50%),
+            radial-gradient(ellipse at top right, rgba(160, 82, 45, 0.6) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom left, rgba(205, 133, 63, 0.4) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom right, rgba(139, 69, 19, 0.5) 0%, transparent 50%),
+            linear-gradient(135deg, #8B4513 0%, #A0522D 15%, #CD853F 30%, #D2B48C 45%, #DEB887 60%, #F4A460 75%, #D2691E 90%, #8B4513 100%);
+        background-size: 400px 400px, 300px 300px, 350px 350px, 250px 250px, 100% 100%;
+        position: relative;
+    }
+    
+    .wood-texture::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+            repeating-linear-gradient(45deg, 
+                rgba(139, 69, 19, 0.15) 0px, 
+                rgba(139, 69, 19, 0.15) 2px, 
+                transparent 2px, 
+                transparent 8px,
+                rgba(160, 82, 45, 0.1) 8px,
+                rgba(160, 82, 45, 0.1) 10px,
+                transparent 10px,
+                transparent 16px
+            ),
+            repeating-linear-gradient(-45deg, 
+                rgba(205, 133, 63, 0.08) 0px, 
+                rgba(205, 133, 63, 0.08) 1px, 
+                transparent 1px, 
+                transparent 12px
+            );
+        opacity: 0.7;
+    }
+    
+    .wood-texture::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 30%, rgba(139, 69, 19, 0.3) 2px, transparent 4px),
+            radial-gradient(circle at 60% 20%, rgba(160, 82, 45, 0.2) 1px, transparent 3px),
+            radial-gradient(circle at 80% 70%, rgba(139, 69, 19, 0.25) 1.5px, transparent 3px),
+            radial-gradient(circle at 30% 80%, rgba(205, 133, 63, 0.2) 2px, transparent 4px),
+            radial-gradient(circle at 70% 40%, rgba(139, 69, 19, 0.3) 1px, transparent 2px);
+    }
+    
+    .brass-compass {
+        background: radial-gradient(circle at 30% 30%, 
+            #FFD700 0%, #B8860B 30%, #CD853F 60%, #8B4513 100%);
+        box-shadow: 
+            inset 0 0 20px rgba(0,0,0,0.3),
+            0 0 40px rgba(0,0,0,0.5),
+            0 0 60px rgba(255,215,0,0.2);
+    }
+    
+    .compass-needle {
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+    }
+    
+    .compass-ring {
+        background: conic-gradient(from 0deg, 
+            #FFD700 0deg, #B8860B 45deg, #CD853F 90deg, 
+            #B8860B 135deg, #FFD700 180deg, #B8860B 225deg, 
+            #CD853F 270deg, #B8860B 315deg, #FFD700 360deg);
+    }
+    
+    .dark .wood-texture {
+        background: 
+            radial-gradient(ellipse at top left, rgba(44, 24, 16, 0.9) 0%, transparent 50%),
+            radial-gradient(ellipse at top right, rgba(61, 40, 23, 0.7) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom left, rgba(74, 44, 23, 0.5) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom right, rgba(53, 32, 16, 0.6) 0%, transparent 50%),
+            linear-gradient(135deg, #2C1810 0%, #3D2817 15%, #4A2C17 30%, #352010 45%, #2A1810 60%, #3A2318 75%, #2D1A10 90%, #2C1810 100%);
+        background-size: 400px 400px, 300px 300px, 350px 350px, 250px 250px, 100% 100%;
+    }
+    
+    .dark .wood-texture::before {
+        background-image: 
+            repeating-linear-gradient(45deg, 
+                rgba(44, 24, 16, 0.2) 0px, 
+                rgba(44, 24, 16, 0.2) 2px, 
+                transparent 2px, 
+                transparent 8px,
+                rgba(61, 40, 23, 0.15) 8px,
+                rgba(61, 40, 23, 0.15) 10px,
+                transparent 10px,
+                transparent 16px
+            ),
+            repeating-linear-gradient(-45deg, 
+                rgba(74, 44, 23, 0.1) 0px, 
+                rgba(74, 44, 23, 0.1) 1px, 
+                transparent 1px, 
+                transparent 12px
+            );
+    }
+    
+    .sun-rise-icon {
+        background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 30%, #FFB366 60%, #FFC947 100%);
+        box-shadow: 
+            0 0 30px rgba(255, 107, 53, 0.6),
+            0 0 60px rgba(255, 201, 71, 0.3),
+            inset 0 2px 10px rgba(255, 255, 255, 0.3);
+        animation: sunrise-glow 3s ease-in-out infinite alternate;
+    }
+    
+    .sun-set-icon {
+        background: linear-gradient(135deg, #E74C3C 0%, #C0392B 30%, #A93226 60%, #922B21 100%);
+        box-shadow: 
+            0 0 30px rgba(231, 76, 60, 0.6),
+            0 0 60px rgba(192, 57, 43, 0.3),
+            inset 0 2px 10px rgba(255, 255, 255, 0.2);
+        animation: sunset-glow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes sunrise-glow {
+        0% { box-shadow: 0 0 30px rgba(255, 107, 53, 0.6), 0 0 60px rgba(255, 201, 71, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.3); }
+        100% { box-shadow: 0 0 40px rgba(255, 107, 53, 0.8), 0 0 80px rgba(255, 201, 71, 0.5), inset 0 2px 10px rgba(255, 255, 255, 0.4); }
+    }
+    
+    @keyframes sunset-glow {
+        0% { box-shadow: 0 0 30px rgba(231, 76, 60, 0.6), 0 0 60px rgba(192, 57, 43, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.2); }
+        100% { box-shadow: 0 0 40px rgba(231, 76, 60, 0.8), 0 0 80px rgba(192, 57, 43, 0.5), inset 0 2px 10px rgba(255, 255, 255, 0.3); }
+    }
+    
+    .font-cinzel {
+        font-family: 'Cinzel', serif;
+    }
+    
+    .compass-mark {
+        background: linear-gradient(45deg, #FFD700, #B8860B);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+</style>
+```
+
+</head>
+<body class="wood-texture min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300">
+    <!-- Dark Mode Toggle -->
+    <div class="absolute top-4 right-4">
+        <button id="darkModeToggle" class="p-3 rounded-full bg-black bg-opacity-20 backdrop-blur-sm text-white hover:bg-opacity-30 transition-all duration-300">
+            <svg id="sunIcon" class="w-6 h-6 sun-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>
+            </svg>
+            <svg id="moonIcon" class="w-6 h-6 moon-icon hidden" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    </div>
+
+```
+<!-- Main Content Container -->
+<div class="flex flex-col items-center justify-center min-h-screen p-4 space-y-8">
+    
+    <!-- Compass Section with Side Icons -->
+    <div class="flex items-center justify-center space-x-8 w-full max-w-6xl">
+        
+        <!-- Sunrise Icon - Left Side -->
+        <div class="flex-shrink-0">
+            <div class="sun-rise-icon w-16 h-16 rounded-full flex items-center justify-center relative">
+                <svg class="w-8 h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>
+                </svg>
+            </div>
+            <div class="mt-3 text-center">
+                <div class="bg-black bg-opacity-40 backdrop-blur-sm rounded-lg px-3 py-2 text-white">
+                    <div class="text-xs opacity-75 mb-1">Sunrise</div>
+                    <div class="font-cinzel font-bold text-sm" id="sunriseTimeLeft">--:--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Compass Container -->
+    <!-- Compass Base -->
+    <div class="brass-compass w-80 h-80 rounded-full relative overflow-hidden">
+        <!-- Compass Ring with Degrees -->
+        <div id="compassRing" class="compass-ring absolute inset-2 rounded-full transition-transform duration-300 ease-out">
+            <!-- Degree Markings -->
+            <div class="absolute inset-0">
+                <!-- Major Cardinal Points -->
+                <div class="absolute top-2 left-1/2 transform -translate-x-1/2">
+                    <div class="bg-red-600 w-1 h-8 compass-mark"></div>
+                    <div class="text-center font-cinzel font-bold text-white mt-1 text-sm">N</div>
+                </div>
+                <div class="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <div class="bg-yellow-600 h-1 w-8 compass-mark"></div>
+                    <div class="text-center font-cinzel font-bold text-white ml-8 text-sm">E</div>
+                </div>
+                <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                    <div class="bg-yellow-600 w-1 h-8 compass-mark"></div>
+                    <div class="text-center font-cinzel font-bold text-white -mt-6 text-sm">S</div>
+                </div>
+                <div class="absolute left-2 top-1/2 transform -translate-y-1/2">
+                    <div class="bg-yellow-600 h-1 w-8 compass-mark"></div>
+                    <div class="text-center font-cinzel font-bold text-white -ml-8 text-sm">W</div>
+                </div>
+            </div>
+
+            <!-- Sunrise Icon -->
+            <div id="sunriseIcon" class="absolute w-8 h-8 transition-all duration-300" style="transform-origin: 50% 150px;">
+                <div class="w-full h-full bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Sunset Icon -->
+            <div id="sunsetIcon" class="absolute w-8 h-8 transition-all duration-300" style="transform-origin: 50% 150px;">
+                <div class="w-full h-full bg-red-500 rounded-full flex items-center justify-center shadow-lg">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Circle -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-red-600 rounded-full border-2 border-white shadow-lg z-10"></div>
+
+        <!-- Compass Needle -->
+        <div id="compassNeedle" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 ease-out compass-needle z-20">
+            <div class="relative">
+                <!-- North Arrow (Red) -->
+                <div class="absolute -top-16 -left-1 w-2 h-16 bg-gradient-to-t from-red-600 to-red-400 clip-path-triangle-up shadow-lg"></div>
+                <!-- South Arrow (White) -->
+                <div class="absolute top-0 -left-1 w-2 h-16 bg-gradient-to-b from-gray-200 to-gray-400 clip-path-triangle-down shadow-lg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Heading Display -->
+    <div class="mt-6 text-center">
+        <div class="bg-black bg-opacity-30 backdrop-blur-sm rounded-lg p-4 text-white">
+            <div class="font-cinzel text-2xl font-bold" id="heading">0°</div>
+            <div class="text-sm opacity-75" id="direction">North</div>
+        </div>
+    </div>
+</div>
+
+<!-- Location and Sun Info -->
+<div class="mt-6 bg-black bg-opacity-30 backdrop-blur-sm rounded-lg p-4 text-white text-center max-w-sm">
+    <div class="text-sm opacity-75 mb-2">Today's Sun Times</div>
+    <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="text-xs opacity-75">Sunrise</div>
+                <div class="font-cinzel font-bold" id="sunriseTime">--:--</div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="text-xs opacity-75">Sunset</div>
+                <div class="font-cinzel font-bold" id="sunsetTime">--:--</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Permission Request Modal -->
+<div id="permissionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-sm mx-4 text-center">
+        <div class="text-6xl mb-4">🧭</div>
+        <h3 class="text-lg font-cinzel font-bold mb-2 text-gray-800 dark:text-white">Location & Orientation Access</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">This compass needs access to your device's location and orientation sensors to show accurate readings and sun times.</p>
+        <button id="enableSensors" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg font-cinzel transition-colors duration-200">
+            Enable Compass
+        </button>
+    </div>
+</div>
+
+<script>
+    let currentHeading = 0;
+    let userLatitude = null;
+    let userLongitude = null;
+    let sunriseAzimuth = 90; // Default east
+    let sunsetAzimuth = 270; // Default west
+
+    // Dark mode functionality
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const sunIcon = document.getElementById('sunIcon');
+    const moonIcon = document.getElementById('moonIcon');
+    const body = document.body;
+
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'true' || (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        enableDarkMode();
+    }
+
+    darkModeToggle.addEventListener('click', () => {
+        if (body.classList.contains('dark')) {
+            disableDarkMode();
+        } else {
+            enableDarkMode();
+        }
+    });
+
+    function enableDarkMode() {
+        body.classList.add('dark');
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+        localStorage.setItem('darkMode', 'true');
+    }
+
+    function disableDarkMode() {
+        body.classList.remove('dark');
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+        localStorage.setItem('darkMode', 'false');
+    }
+
+    // Permission and sensor initialization
+    document.getElementById('enableSensors').addEventListener('click', initializeSensors);
+
+    function showPermissionModal() {
+        document.getElementById('permissionModal').classList.remove('hidden');
+    }
+
+    function hidePermissionModal() {
+        document.getElementById('permissionModal').classList.add('hidden');
+    }
+
+    async function initializeSensors() {
+        try {
+            // Request device orientation permission (iOS 13+)
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const permission = await DeviceOrientationEvent.requestPermission();
+                if (permission !== 'granted') {
+                    alert('Device orientation permission is required for the compass to work.');
+                    return;
+                }
+            }
+
+            // Request location permission
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLatitude = position.coords.latitude;
+                        userLongitude = position.coords.longitude;
+                        calculateSunTimes();
+                    },
+                    (error) => {
+                        console.warn('Location access denied:', error);
+                        // Use default sun times if location is denied
+                        updateSunDisplay(6, 0, 18, 30, 90, 270);
+                    }
+                );
+            } else {
+                console.warn('Geolocation not supported');
+            }
+
+            // Start compass functionality
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', handleOrientation);
+            } else {
+                alert('Device orientation not supported on this device.');
+            }
+
+            hidePermissionModal();
+        } catch (error) {
+            console.error('Error initializing sensors:', error);
+            alert('Error accessing device sensors. Please try again.');
+        }
+    }
+
+    function handleOrientation(event) {
+        // Get the compass heading
+        let compass = event.webkitCompassHeading || Math.abs(event.alpha - 360);
+        
+        if (compass !== null && compass !== undefined) {
+            currentHeading = Math.round(compass);
+            updateCompass();
+        }
+    }
+
+    function updateCompass() {
+        // Update needle rotation (negative because we want the needle to point to magnetic north)
+        const needle = document.getElementById('compassNeedle');
+        needle.style.transform = `translate(-50%, -50%) rotate(${-currentHeading}deg)`;
+
+        // Update compass ring rotation (positive to rotate the compass face)
+        const ring = document.getElementById('compassRing');
+        ring.style.transform = `rotate(${currentHeading}deg)`;
+
+        // Update heading display
+        document.getElementById('heading').textContent = `${currentHeading}°`;
+        document.getElementById('direction').textContent = getDirection(currentHeading);
+    }
+
+    function getDirection(heading) {
+        const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+        const index = Math.round(heading / 22.5) % 16;
+        return directions[index];
+    }
+
+    function updateSunIcons() {
+        // Sun icons are now fixed on the sides, no need to rotate them
+        // This function can be used for future enhancements
+    }
+
+    function calculateSunTimes() {
+        if (!userLatitude || !userLongitude) return;
+
+        const now = new Date();
+        const result = calculateSunriseSunset(userLatitude, userLongitude, now);
+        
+        updateSunDisplay(
+            result.sunrise.getHours(),
+            result.sunrise.getMinutes(),
+            result.sunset.getHours(),
+            result.sunset.getMinutes(),
+            result.sunriseAzimuth,
+            result.sunsetAzimuth
+        );
+    }
+
+    function updateSunDisplay(sunriseHour, sunriseMin, sunsetHour, sunsetMin, sunriseAz, sunsetAz) {
+        const sunriseTimeStr = `${sunriseHour.toString().padStart(2, '0')}:${sunriseMin.toString().padStart(2, '0')}`;
+        const sunsetTimeStr = `${sunsetHour.toString().padStart(2, '0')}:${sunsetMin.toString().padStart(2, '0')}`;
+        
+        // Update both displays
+        document.getElementById('sunriseTime').textContent = sunriseTimeStr;
+        document.getElementById('sunsetTime').textContent = sunsetTimeStr;
+        document.getElementById('sunriseTimeLeft').textContent = sunriseTimeStr;
+        document.getElementById('sunsetTimeRight').textContent = sunsetTimeStr;
+        
+        sunriseAzimuth = sunriseAz;
+        sunsetAzimuth = sunsetAz;
+    }
+
+    function calculateSunriseSunset(lat, lng, date) {
+        // Simplified sunrise/sunset calculation
+        const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+        const P = Math.asin(0.39795 * Math.cos(0.98563 * (dayOfYear - 173) * Math.PI / 180));
+        const argument = -Math.tan(lat * Math.PI / 180) * Math.tan(P);
+        
+        let sunrise, sunset, sunriseAz, sunsetAz;
+        
+        if (Math.abs(argument) < 1) {
+            const hourAngle = 12 * Math.acos(argument) / Math.PI;
+            sunrise = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12 - hourAngle, 0, 0);
+            sunset = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12 + hourAngle, 0, 0);
+            
+            // Approximate azimuth calculation
+            const latRad = lat * Math.PI / 180;
+            const decRad = P;
+            
+            sunriseAz = Math.atan2(Math.sin(hourAngle * Math.PI / 12), 
+                Math.cos(hourAngle * Math.PI / 12) * Math.sin(latRad) - Math.tan(decRad) * Math.cos(latRad));
+            sunsetAz = Math.atan2(-Math.sin(hourAngle * Math.PI / 12), 
+                Math.cos(hourAngle * Math.PI / 12) * Math.sin(latRad) - Math.tan(decRad) * Math.cos(latRad));
+            
+            sunriseAz = (sunriseAz * 180 / Math.PI + 360) % 360;
+            sunsetAz = (sunsetAz * 180 / Math.PI + 360) % 360;
+        } else {
+            // Polar day/night - use default values
+            sunrise = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 6, 0, 0);
+            sunset = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 18, 0, 0);
+            sunriseAz = 90;  // East
+            sunsetAz = 270;  // West
+        }
+        
+        return {
+            sunrise: sunrise,
+            sunset: sunset,
+            sunriseAzimuth: sunriseAz,
+            sunsetAzimuth: sunsetAz
+        };
+    }
+
+    // Show permission modal on load
+    window.addEventListener('load', () => {
+        showPermissionModal();
+    });
+
+    // Add triangle clipping for needle arrows
+    const style = document.createElement('style');
+    style.textContent = `
+        .clip-path-triangle-up {
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        .clip-path-triangle-down {
+            clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+```
+
+</body>
+</html>
