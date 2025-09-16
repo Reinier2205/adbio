@@ -228,6 +228,27 @@
         #btn-subtract { background: linear-gradient(145deg, #a80000, var(--dark-red)); }
         #btn-new-session { background: linear-gradient(145deg, #ffeb3b, var(--gold)); color: #333; margin-top: 1rem; }
 
+        /* Help button */
+        .help-btn{
+            position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
+            border:2px solid #111;background:radial-gradient(circle at 30% 30%, var(--gold), #b8860b);
+            color:#111;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+            box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .help-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+
+        /* Help modal */
+        .help-modal{ position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:all .3s ease; z-index:1000; }
+        .help-modal.show{ opacity:1; visibility:visible; }
+        .help-panel{ background:linear-gradient(145deg,#3e1e24,#2a1a1f); color:var(--light-gold); padding:2rem 2.2rem; border-radius:15px; border:3px solid var(--gold); box-shadow:0 0 30px var(--gold); max-width:640px; width:92%; text-align:left; transform:scale(.9); transition:transform .3s ease; }
+        .help-modal.show .help-panel{ transform:scale(1); }
+        .help-panel h3{ font-family:'Cinzel', serif; font-size:2rem; color:var(--gold); margin:0 0 .75rem; }
+        .help-panel h4{ font-family:'Lato',sans-serif; font-size:1.1rem; color:var(--light-gold); margin:1rem 0 .4rem; }
+        .help-panel p, .help-panel li{ font-size:1rem; line-height:1.5; }
+        .help-actions{ margin-top:1.25rem; text-align:center; }
+        .close-help{ font-family:'Cinzel',serif; font-size:1.1rem; padding:.7rem 1.6rem; border:2px solid #111; border-radius:8px; background:linear-gradient(145deg, #ffeb3b, var(--gold)); cursor:pointer; box-shadow:0 4px 0 #111, 0 5px 10px rgba(0,0,0,.5); }
+        .close-help:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+
         .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.8);
@@ -264,6 +285,7 @@
 <body>
 
     <div class="casino-table">
+        <button class="help-btn" id="help-btn" aria-label="How to play">?</button>
         <h1>Give & Take</h1>
         <div class="players">
             <div id="player-0-panel" class="player active">
@@ -309,6 +331,34 @@
         </div>
         
         <button id="btn-new-session">🔄 New Session</button>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div class="help-panel" tabindex="-1">
+            <h3 id="help-title">How to Play: Give & Take</h3>
+            <p>Two-player dice duel. Each turn, choose to add your roll to your score or subtract it from your opponent. First to reach the goal wins.</p>
+            <h4>Setup</h4>
+            <ul>
+                <li>Rename players via the pencil next to their names.</li>
+                <li>Winning score: 21.</li>
+            </ul>
+            <h4>Turn</h4>
+            <ul>
+                <li>Tap <strong>Add to Score</strong> or <strong>Subtract from Opponent</strong>.</li>
+                <li>Dice roll animates, then applies immediately.</li>
+            </ul>
+            <h4>Special Rolls</h4>
+            <ul>
+                <li><strong>Snake Eyes (1+1)</strong>: your score resets to 0.</li>
+                <li><strong>BOXCARS (6+6)</strong>: instant win.</li>
+                <li><strong>Doubles</strong>: total is doubled.</li>
+                <li><strong>Lucky 7</strong>: take another turn.</li>
+            </ul>
+            <div class="help-actions">
+                <button id="close-help" class="close-help">Got it</button>
+            </div>
+        </div>
     </div>
     
     <div id="win-modal" class="modal-overlay" role="alertdialog" aria-labelledby="winner-text">
@@ -592,6 +642,18 @@
             }
 
             new DiceGame();
+
+            // Help modal wiring
+            const helpBtn = document.getElementById('help-btn');
+            const helpModal = document.getElementById('help-modal');
+            const closeHelp = document.getElementById('close-help');
+            const panel = helpModal.querySelector('.help-panel');
+            const openHelp = () => { helpModal.classList.add('show'); setTimeout(()=>panel.focus(),0); };
+            const close = () => { helpModal.classList.remove('show'); helpBtn.focus(); };
+            helpBtn.addEventListener('click', openHelp);
+            closeHelp.addEventListener('click', close);
+            helpModal.addEventListener('click', (e)=>{ if(e.target === helpModal) close(); });
+            document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && helpModal.classList.contains('show')) close(); });
         });
     </script>
 </body>

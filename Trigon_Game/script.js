@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const timerDisplayEl = document.getElementById('timer-display');
   const editIcons = document.querySelectorAll('.edit-name-icon');
   const fireworksContainerEl = document.getElementById('fireworks-container');
+  const helpBtn = document.getElementById('help-btn');
+  const helpModal = document.getElementById('help-modal');
 
   // Timer variables
   const turnDuration = 10; // seconds
@@ -409,6 +411,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // init
   setActivePlayer(0);
   startTimer(); // Start the timer on initial load
+
+  // Help modal wiring
+  if (helpBtn && helpModal) {
+    const panel = helpModal.querySelector('.help-panel');
+    const closeBtn = document.getElementById('close-help');
+    const open = () => { helpModal.classList.add('show'); setTimeout(()=>panel && panel.focus(),0); };
+    const close = () => { helpModal.classList.remove('show'); helpBtn.focus(); };
+    helpBtn.addEventListener('click', open);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    helpModal.addEventListener('click', (e)=>{ if(e.target === helpModal) close(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && helpModal.classList.contains('show')) close(); });
+  }
 });
 
 // Register service worker

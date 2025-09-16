@@ -50,6 +50,7 @@
             width: 100%;
             max-width: 800px;
             text-align: center;
+            position: relative;
         }
 
         h1 {
@@ -179,11 +180,33 @@
             font-weight: 700;
             min-height: 1.5rem;
         }
+
+        /* Help button (top-right) */
+        .help-btn{
+            position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
+            border:2px solid #111;background:radial-gradient(circle at 30% 30%, var(--gold), #b8860b);
+            color:#111;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+            box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .help-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+
+        /* Help modal */
+        .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:all .3s ease; z-index:1000; }
+        .modal-overlay.show{ opacity:1; visibility:visible; }
+        .modal-content{ background:linear-gradient(145deg,#3e1e24,#2a1a1f); color:var(--light-gold); padding:2rem 2.2rem; border-radius:15px; border:3px solid var(--gold); box-shadow:0 0 30px var(--gold); max-width:560px; width:90%; text-align:left; transform:scale(.9); transition:transform .3s ease; }
+        .modal-overlay.show .modal-content{ transform:scale(1); }
+        .modal-content h3{ font-family:'Playfair Display', serif; font-size:2rem; color:var(--gold); margin:0 0 .75rem; }
+        .modal-content h4{ font-family:'Roboto',sans-serif; font-size:1.1rem; color:var(--light-gold); margin:1rem 0 .4rem; }
+        .modal-content p, .modal-content li{ font-size:1rem; line-height:1.5; }
+        .modal-actions{ margin-top:1.25rem; text-align:center; }
+        .close-modal{ font-family:'Inter',sans-serif; font-weight:600; padding:.7rem 1.6rem; border-radius:8px; border:2px solid #111; cursor:pointer; background:linear-gradient(145deg,var(--gold),#b8860b); color:white; text-shadow:1px 1px 2px black; box-shadow:0 4px 0 #111, 0 5px 10px rgba(0,0,0,.5); }
+        .close-modal:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
     </style>
 </head>
 <body>
 
     <div class="casino-table">
+        <button class="help-btn" id="help-btn" aria-label="How to play">?</button>
         <h1>3D Dice Roller</h1>
         
         <div class="players-container">
@@ -201,6 +224,30 @@
         </div>
 
         <p id="game-status">Add a player and roll the dice!</p>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div class="modal-content" tabindex="-1">
+            <h3 id="help-title">How to Play: 3D Dice Roller</h3>
+            <p>Roll two 3D dice with friends, track turns, and enjoy the casino feel.</p>
+            <h4>Setup</h4>
+            <ul>
+                <li>Tap <strong>Add Player</strong> to add participants. Rename by tapping the pencil.</li>
+            </ul>
+            <h4>Gameplay</h4>
+            <ul>
+                <li>Tap <strong>Roll Dice</strong> on your turn to roll both dice.</li>
+                <li>Turns advance automatically to the next player.</li>
+            </ul>
+            <h4>Tips</h4>
+            <ul>
+                <li>Use <strong>Reset Game</strong> to clear players and start over.</li>
+            </ul>
+            <div class="modal-actions">
+                <button class="close-modal" id="close-help">Got it</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -412,6 +459,18 @@
             };
 
             DiceGame.init();
+
+            // Help modal wiring
+            const helpBtn = document.getElementById('help-btn');
+            const helpModal = document.getElementById('help-modal');
+            const closeHelp = document.getElementById('close-help');
+            const modalPanel = helpModal.querySelector('.modal-content');
+            const openHelp = () => { helpModal.classList.add('show'); setTimeout(()=>modalPanel.focus(), 0); };
+            const closeModal = () => { helpModal.classList.remove('show'); helpBtn.focus(); };
+            helpBtn.addEventListener('click', openHelp);
+            closeHelp.addEventListener('click', closeModal);
+            helpModal.addEventListener('click', (e)=>{ if(e.target === helpModal) closeModal(); });
+            document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && helpModal.classList.contains('show')) closeModal(); });
         });
     </script>
 </body>

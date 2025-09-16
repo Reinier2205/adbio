@@ -233,6 +233,27 @@
             visibility: hidden;
             transition: all 0.5s ease;
         }
+
+        /* Help button */
+        .help-btn{
+            position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
+            border:2px solid #111;background:radial-gradient(circle at 30% 30%, var(--gold), #b8860b);
+            color:#111;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+            box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .help-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+
+        /* Help modal */
+        .help-modal{ position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:all .3s ease; z-index:1000; }
+        .help-modal.show{ opacity:1; visibility:visible; }
+        .help-panel{ background:linear-gradient(145deg,#3e1e24,#2a1a1f); color:var(--light-gold); padding:2rem 2.2rem; border-radius:15px; border:3px solid var(--gold); box-shadow:0 0 30px var(--gold); max-width:560px; width:90%; text-align:left; transform:scale(.9); transition:transform .3s ease; }
+        .help-modal.show .help-panel{ transform:scale(1); }
+        .help-panel h3{ font-family:'Cinzel', serif; font-size:2rem; color:var(--gold); margin:0 0 .75rem; }
+        .help-panel h4{ font-family:'Lato',sans-serif; font-size:1.1rem; color:var(--light-gold); margin:1rem 0 .4rem; }
+        .help-panel p, .help-panel li{ font-size:1rem; line-height:1.5; }
+        .help-actions{ margin-top:1.25rem; text-align:center; }
+        .close-help{ font-family:'Cinzel',serif; font-size:1.1rem; padding:.7rem 1.6rem; border:2px solid #111; border-radius:8px; background:linear-gradient(145deg, #ffeb3b, var(--gold)); cursor:pointer; box-shadow:0 4px 0 #111, 0 5px 10px rgba(0,0,0,.5); }
+        .close-help:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
         
         .win-message.show {
             opacity: 1;
@@ -302,6 +323,7 @@
 <body>
 
     <div class="casino-table">
+        <button class="help-btn" id="help-btn" aria-label="How to play">?</button>
         <h1>Tic Tac Toe</h1>
         
         <div class="win-message" id="win-message">
@@ -589,6 +611,42 @@
             }
 
             new TicTacToe();
+
+            // Help modal wiring
+            const helpBtn = document.getElementById('help-btn');
+            const helpModal = document.createElement('div');
+            helpModal.className = 'help-modal';
+            helpModal.id = 'help-modal';
+            helpModal.setAttribute('role','dialog');
+            helpModal.setAttribute('aria-modal','true');
+            helpModal.setAttribute('aria-labelledby','help-title');
+            helpModal.innerHTML = `
+                <div class="help-panel" tabindex="-1">
+                    <h3 id="help-title">How to Play: Tic Tac Toe</h3>
+                    <p>Classic X vs O on a 3x3 board. Players alternate turns placing marks. First to align three in a row wins.</p>
+                    <h4>Setup</h4>
+                    <ul>
+                        <li>Rename players using the pencil icons.</li>
+                    </ul>
+                    <h4>Gameplay</h4>
+                    <ul>
+                        <li>Tap a cell to place your mark.</li>
+                        <li>Win by making a line of three horizontally, vertically, or diagonally.</li>
+                        <li>Use <strong>New Game</strong> to reset the board; win counts persist per session.</li>
+                    </ul>
+                    <div class="help-actions">
+                        <button id="close-help" class="close-help">Got it</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(helpModal);
+            const panel = helpModal.querySelector('.help-panel');
+            const closeHelpBtn = () => helpModal.querySelector('#close-help');
+            const open = () => { helpModal.classList.add('show'); setTimeout(()=>panel.focus(),0); };
+            const close = () => { helpModal.classList.remove('show'); helpBtn.focus(); };
+            helpBtn.addEventListener('click', open);
+            helpModal.addEventListener('click', (e)=>{ if(e.target === helpModal) close(); });
+            document.addEventListener('click', (e)=>{ if(e.target && e.target.id==='close-help') close(); });
+            document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && helpModal.classList.contains('show')) close(); });
         });
     </script>
 </body>
