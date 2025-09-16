@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const timerDisplayEl = document.getElementById('timer-display');
   const editIcons = document.querySelectorAll('.edit-name-icon');
   const fireworksContainerEl = document.getElementById('fireworks-container');
+  const setupModal = document.getElementById('setup-modal');
   const helpBtn = document.getElementById('help-btn');
   const helpModal = document.getElementById('help-modal');
 
@@ -411,6 +412,25 @@ document.addEventListener('DOMContentLoaded', () => {
   // init
   setActivePlayer(0);
   startTimer(); // Start the timer on initial load
+
+  // Setup modal (fixed three players)
+  if (setupModal) {
+    const panel = setupModal.querySelector('.help-panel');
+    const confirm = document.getElementById('confirm-setup');
+    const openSetup = () => { setupModal.classList.add('show'); setTimeout(()=>panel && panel.focus(),0); };
+    const closeSetup = () => { setupModal.classList.remove('show'); };
+    openSetup();
+    confirm.addEventListener('click', ()=>{
+      const n0 = (document.getElementById('pname-0').value || '').trim() || 'Player X';
+      const n1 = (document.getElementById('pname-1').value || '').trim() || 'Player O';
+      const n2 = (document.getElementById('pname-2').value || '').trim() || 'Player Δ';
+      playerNameEls[0].textContent = n0;
+      playerNameEls[1].textContent = n1;
+      playerNameEls[2].textContent = n2;
+      closeSetup();
+      updateStatusAndTimer();
+    });
+  }
 
   // Help modal wiring
   if (helpBtn && helpModal) {

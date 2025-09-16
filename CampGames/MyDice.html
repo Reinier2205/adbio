@@ -201,6 +201,18 @@
         .modal-actions{ margin-top:1.25rem; text-align:center; }
         .close-modal{ font-family:'Inter',sans-serif; font-weight:600; padding:.7rem 1.6rem; border-radius:8px; border:2px solid #111; cursor:pointer; background:linear-gradient(145deg,var(--gold),#b8860b); color:white; text-shadow:1px 1px 2px black; box-shadow:0 4px 0 #111, 0 5px 10px rgba(0,0,0,.5); }
         .close-modal:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+
+        /* Setup modal */
+        .setup-modal{ position:fixed; inset:0; background:rgba(0,0,0,.8); display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:all .3s ease; z-index:1100; }
+        .setup-modal.show{ opacity:1; visibility:visible; }
+        .setup-panel{ background:linear-gradient(145deg,#3e1e24,#2a1a1f); color:var(--light-gold); padding:2rem 2.2rem; border-radius:15px; border:3px solid var(--gold); box-shadow:0 0 30px var(--gold); max-width:560px; width:92%; text-align:left; transform:scale(.9); transition:transform .3s ease; }
+        .setup-modal.show .setup-panel{ transform:scale(1); }
+        .setup-panel h3{ font-family:'Playfair Display', serif; font-size:2rem; color:var(--gold); margin:0 0 .75rem; }
+        .setup-row{ margin:.6rem 0; }
+        .setup-row label{ display:block; font-weight:700; margin-bottom:.35rem; }
+        .setup-input, .setup-select{ width:100%; padding:.6rem .7rem; border:2px solid var(--gold); border-radius:8px; background:var(--light-gold); color:#222; font-family:'Lato',sans-serif; }
+        .setup-actions{ margin-top:1rem; text-align:center; }
+        .btn-setup{ font-family:'Inter',sans-serif; font-weight:700; padding:.7rem 1.6rem; border-radius:8px; border:2px solid #111; cursor:pointer; background:linear-gradient(145deg,var(--gold),#b8860b); color:white; box-shadow:0 4px 0 #111, 0 5px 10px rgba(0,0,0,.5); }
     </style>
 </head>
 <body>
@@ -250,6 +262,28 @@
         </div>
     </div>
 
+    <!-- Setup Modal -->
+    <div id="setup-modal" class="setup-modal" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+        <div class="setup-panel" tabindex="-1">
+            <h3 id="setup-title">Game Setup</h3>
+            <div class="setup-row">
+                <label for="player-count">Number of players</label>
+                <select id="player-count" class="setup-select">
+                    <option value="1">1</option>
+                    <option value="2" selected>2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                </select>
+            </div>
+            <div id="name-rows"></div>
+            <div class="setup-actions">
+                <button id="confirm-setup" class="btn-setup">Start</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
@@ -257,6 +291,7 @@
                 state: {
                     players: [],
                     currentTurn: 0,
+                    initialPlayers: [],
                 },
 
                 elements: {
@@ -451,14 +486,54 @@
                     }
                     this.setDieFace(this.diceElements[0], 1);
                     this.setDieFace(this.diceElements[1], 1);
-                    this.elements.statusEl.textContent = 'Add a player and roll the dice!';
-                    this.addPlayer('Player 1');
+                    this.elements.statusEl.textContent = 'Set up players to begin!';
+                    if (this.state.initialPlayers && this.state.initialPlayers.length) {
+                        this.state.initialPlayers.forEach(name => this.addPlayer(name));
+                    }
                     // Enable roll button if at least one player
                     this.elements.btnRoll.disabled = this.state.players.length === 0;
                 },
             };
 
-            DiceGame.init();
+            // Setup modal logic
+            const setupModal = document.getElementById('setup-modal');
+            const nameRows = document.getElementById('name-rows');
+            const countSelect = document.getElementById('player-count');
+            const confirmBtn = document.getElementById('confirm-setup');
+            const setupPanel = setupModal.querySelector('.setup-panel');
+
+            function renderNameRows() {
+                const n = parseInt(countSelect.value, 10);
+                nameRows.innerHTML = '';
+                for (let i = 0; i < n; i++) {
+                    const row = document.createElement('div');
+                    row.className = 'setup-row';
+                    row.innerHTML = `
+                        <label for="pname-${i}">Player ${i + 1} name</label>
+                        <input id="pname-${i}" type="text" class="setup-input" placeholder="Player ${i + 1}">
+                    `;
+                    nameRows.appendChild(row);
+                }
+            }
+
+            const openSetup = () => { setupModal.classList.add('show'); setTimeout(()=>setupPanel.focus(),0); };
+            const closeSetup = () => { setupModal.classList.remove('show'); };
+            countSelect.addEventListener('change', renderNameRows);
+            renderNameRows();
+            openSetup();
+
+            confirmBtn.addEventListener('click', () => {
+                const n = parseInt(countSelect.value, 10);
+                const names = [];
+                for (let i = 0; i < n; i++) {
+                    const input = document.getElementById(`pname-${i}`);
+                    const v = (input?.value || '').trim();
+                    names.push(v || `Player ${i + 1}`);
+                }
+                DiceGame.state.initialPlayers = names;
+                DiceGame.init();
+                closeSetup();
+            });
 
             // Help modal wiring
             const helpBtn = document.getElementById('help-btn');
