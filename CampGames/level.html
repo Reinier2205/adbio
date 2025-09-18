@@ -6,9 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Level Tool | Camp Games</title>
     
-    <!-- SEO & Meta Tags -->
-    <meta name="description" content="Check if surfaces are perfectly level with this free browser-based tool. Part of the Camp Games collection.">
-    
     <!-- Stylesheets and Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,12 +34,6 @@
             transform: translateY(-3px);
             box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
         }
-        .section-glow {
-            box-shadow: 0 0 40px rgba(10, 72, 33, 0.5);
-        }
-        .testimonial-card {
-             background-color: rgba(255, 255, 255, 0.05);
-        }
         
         /* Level-specific styles */
         .bubble-level {
@@ -50,7 +41,6 @@
             height: 280px;
             border-radius: 50%;
             background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(10px);
             position: relative;
             margin: 20px auto;
             overflow: hidden;
@@ -109,7 +99,6 @@
         
         .indicator {
             background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(5px);
             padding: 15px;
             border-radius: 18px;
             text-align: center;
@@ -124,7 +113,6 @@
             padding: 12px 25px;
             border-radius: 50px;
             background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(5px);
             display: inline-block;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
@@ -285,11 +273,12 @@
             
             let lastBeta = 0;
             let lastGamma = 0;
+            let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             
             // Calibration button
             calibrateBtn.addEventListener('click', function() {
                 // For iOS, we need to re-request permission on user gesture
-                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                if (isIOS && typeof DeviceOrientationEvent.requestPermission === 'function') {
                     DeviceOrientationEvent.requestPermission()
                         .then(permissionState => {
                             if (permissionState === 'granted') {
@@ -389,7 +378,7 @@
             // Initialize on tap anywhere on screen for iOS compatibility
             document.body.addEventListener('click', function initOnClick() {
                 // Check for iOS permission requirements
-                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                if (isIOS && typeof DeviceOrientationEvent.requestPermission === 'function') {
                     DeviceOrientationEvent.requestPermission()
                         .then(permissionState => {
                             if (permissionState === 'granted') {
@@ -401,7 +390,7 @@
                         })
                         .catch(console.error);
                 } else {
-                    // Non-iOS devices
+                    // Non-iOS devices (Android)
                     window.addEventListener('deviceorientation', handleOrientation);
                 }
                 
