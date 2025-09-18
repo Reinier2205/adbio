@@ -1,65 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Modern Level Tool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Tool | Camp Games</title>
+    
+    <!-- SEO & Meta Tags -->
+    <meta name="description" content="Check if surfaces are perfectly level with this free browser-based tool. Part of the Camp Games collection.">
+    
+    <!-- Stylesheets and Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
+        /* Custom styles to match the 'casino' theme */
         body {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #2a1a1f; /* --dark-wood */
+            color: #faf8f0; /* --ivory */
         }
-
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
+        .felt-green { background-color: #0a4821; }
+        .gold-text { color: #d4af37; }
+        .gold-light-text { color: #ffd700; }
+        .gold-bg { background-color: #d4af37; }
+        .gold-border { border-color: #d4af37; }
+        .btn-primary {
+            background-color: #d4af37; /* --gold */
+            color: #2a1a1f; /* --dark-wood */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
-        header {
-            text-align: center;
-            padding: 20px 0;
-            position: relative;
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
         }
-
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        .section-glow {
+            box-shadow: 0 0 40px rgba(10, 72, 33, 0.5);
         }
-
-        .subtitle {
-            font-size: 1rem;
-            opacity: 0.9;
-            margin-bottom: 15px;
+        .testimonial-card {
+             background-color: rgba(255, 255, 255, 0.05);
         }
-
-        .level-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
+        
+        /* Level-specific styles */
         .bubble-level {
             width: 280px;
             height: 280px;
@@ -74,7 +59,7 @@
                 0 10px 25px rgba(0, 0, 0, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.1);
         }
-
+        
         .crosshair {
             position: absolute;
             top: 0;
@@ -82,27 +67,27 @@
             width: 100%;
             height: 100%;
         }
-
+        
         .crosshair:before, .crosshair:after {
             content: '';
             position: absolute;
             background: rgba(255, 255, 255, 0.15);
         }
-
+        
         .crosshair:before {
             width: 100%;
             height: 1px;
             top: 50%;
             left: 0;
         }
-
+        
         .crosshair:after {
             width: 1px;
             height: 100%;
             left: 50%;
             top: 0;
         }
-
+        
         .bubble {
             width: 70px;
             height: 70px;
@@ -116,23 +101,13 @@
             box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
             z-index: 10;
         }
-
+        
         .bubble.level {
             background: radial-gradient(circle at 30% 30%, #33ff33, #00cc00);
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
         }
-
-        .indicators {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 320px;
-            margin: 30px 0;
-            gap: 15px;
-        }
-
+        
         .indicator {
-            flex: 1;
             background: rgba(0, 0, 0, 0.25);
             backdrop-filter: blur(5px);
             padding: 15px;
@@ -141,28 +116,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .indicator-title {
-            font-size: 0.9rem;
-            opacity: 0.9;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .indicator-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-
-        .indicator-units {
-            font-size: 0.9rem;
-            opacity: 0.7;
-            margin-top: 3px;
-        }
-
+        
         .level-status {
             font-size: 1.2rem;
             font-weight: 600;
@@ -175,66 +129,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0 30px;
-        }
-
-        button {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(5px);
-            color: white;
-            border: none;
-            padding: 14px 25px;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        button:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
-
-        button:active {
-            transform: translateY(1px);
-        }
-
-        .instructions {
-            text-align: center;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            margin-top: 10px;
-            font-size: 0.9rem;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .warning {
-            color: #ff9999;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        .fine-print {
-            text-align: center;
-            font-size: 0.75rem;
-            opacity: 0.7;
-            margin-top: 10px;
-        }
-
+        
         @media (max-height: 700px) {
             .bubble-level {
                 width: 220px;
@@ -245,71 +140,114 @@
                 width: 50px;
                 height: 50px;
             }
-            
-            .indicator-value {
-                font-size: 1.5rem;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Modern Level Tool</h1>
-            <p class="subtitle">Check if surfaces are perfectly level</p>
-        </header>
-        
-        <div class="level-container">
-            <div class="bubble-level">
-                <div class="crosshair"></div>
-                <div class="bubble" id="bubble"></div>
-            </div>
-            
-            <div class="indicators">
-                <div class="indicator">
-                    <div class="indicator-title">
-                        <i class="fas fa-arrows-alt-v"></i>
-                        <span>Front-Back</span>
-                    </div>
-                    <div class="indicator-value" id="beta-value">0.00°</div>
-                    <div class="indicator-units">degrees</div>
+
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="felt-green p-4 sticky top-0 z-50 shadow-lg">
+        <nav class="container mx-auto flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold gold-light-text tracking-wider">🎲 Camp Games</a>
+            <a href="#games" class="btn-primary font-bold py-2 px-5 rounded-lg text-sm md:text-base">All Games</a>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+
+        <!-- Hero Section -->
+        <section class="text-center py-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold gold-light-text mb-4">Phone Level Tool</h1>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-200 mb-8">Check if surfaces are perfectly level with this free tool. Calibrate for your phone's camera bump.</p>
+        </section>
+
+        <!-- Level Tool -->
+        <section class="py-8">
+            <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-xl shadow-lg border-2 gold-border">
+                <div class="bubble-level">
+                    <div class="crosshair"></div>
+                    <div class="bubble" id="bubble"></div>
                 </div>
                 
-                <div class="indicator">
-                    <div class="indicator-title">
-                        <i class="fas fa-arrows-alt-h"></i>
-                        <span>Left-Right</span>
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <div class="indicator">
+                        <div class="indicator-title flex items-center justify-center gap-2 mb-2">
+                            <i class="fas fa-arrows-alt-v"></i>
+                            <span>Front-Back</span>
+                        </div>
+                        <div class="indicator-value text-2xl font-bold gold-text" id="beta-value">0.00°</div>
+                        <div class="indicator-units text-sm text-gray-400">degrees</div>
                     </div>
-                    <div class="indicator-value" id="gamma-value">0.00°</div>
-                    <div class="indicator-units">degrees</div>
+                    
+                    <div class="indicator">
+                        <div class="indicator-title flex items-center justify-center gap-2 mb-2">
+                            <i class="fas fa-arrows-alt-h"></i>
+                            <span>Left-Right</span>
+                        </div>
+                        <div class="indicator-value text-2xl font-bold gold-text" id="gamma-value">0.00°</div>
+                        <div class="indicator-units text-sm text-gray-400">degrees</div>
+                    </div>
+                </div>
+                
+                <div class="level-status gold-text text-center w-full mt-4" id="level-status">PERFECTLY LEVEL</div>
+                
+                <div class="flex justify-center gap-4 mt-6">
+                    <button id="calibrate" class="btn-primary font-bold py-3 px-6 rounded-lg flex items-center gap-2">
+                        <i class="fas fa-compress-alt"></i>
+                        <span>Calibrate</span>
+                    </button>
+                    <button id="reset" class="bg-gray-700 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-redo"></i>
+                        <span>Reset</span>
+                    </button>
+                </div>
+                
+                <div class="mt-6 text-center text-sm text-gray-400">
+                    <p id="support-warning"></p>
+                    <p class="mt-2">Place your phone on a surface to check if it's level</p>
+                    <p class="mt-1 italic">Calibrate to account for camera bump or case thickness</p>
                 </div>
             </div>
-            
-            <div class="level-status" id="level-status">PERFECTLY LEVEL</div>
+        </section>
+
+        <!-- Instructions -->
+        <section class="py-12 max-w-3xl mx-auto">
+            <h2 class="text-2xl font-bold gold-text mb-4">How to Use the Level Tool</h2>
+            <div class="grid md:grid-cols-3 gap-6 text-center">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <div class="text-4xl font-bold gold-text mb-4">1.</div>
+                    <h3 class="text-lg font-bold mb-2">Place Your Phone</h3>
+                    <p class="text-gray-400">Put your phone on the surface you want to check</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <div class="text-4xl font-bold gold-text mb-4">2.</div>
+                    <h3 class="text-lg font-bold mb-2">Calibrate</h3>
+                    <p class="text-gray-400">Tap "Calibrate" to account for your phone's camera bump</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <div class="text-4xl font-bold gold-text mb-4">3.</div>
+                    <h3 class="text-lg font-bold mb-2">Read Results</h3>
+                    <p class="text-gray-400">Check the bubble and angle measurements</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Back to Games -->
+        <section class="py-12 text-center">
+            <h2 class="text-2xl font-bold gold-text mb-6">More Games from Camp Games</h2>
+            <a href="#games" class="btn-primary font-bold py-3 px-8 rounded-lg text-lg inline-block">Browse All Games</a>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-center py-8 mt-12">
+        <div class="container mx-auto px-4 text-gray-400">
+            <p>&copy; 2025 Camp Games. All Rights Reserved.</p>
+            <p class="mt-2 text-sm">Have a question or a game idea? <a href="mailto:mymelogeni@gmail.com" class="gold-text hover:underline">Contact us</a>.</p>
         </div>
-        
-        <div class="controls">
-            <button id="calibrate">
-                <i class="fas fa-compress-alt"></i>
-                <span>Calibrate</span>
-            </button>
-            <button id="reset">
-                <i class="fas fa-redo"></i>
-                <span>Reset</span>
-            </button>
-        </div>
-        
-        <div class="instructions">
-            <p>Place your phone on a surface to check if it's level</p>
-            <p class="fine-print">Calibrate to account for camera bump or case thickness</p>
-        </div>
-        
-        <p class="warning" id="support-warning"></p>
-    </div>
+    </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -327,59 +265,73 @@
                 return;
             }
             
-            // Initialize variables
+            // Load calibration from localStorage if available
             let calibration = {
                 beta: 0,
                 gamma: 0
             };
             
+            // Try to load saved calibration
+            try {
+                const savedCalibration = localStorage.getItem('levelCalibration');
+                if (savedCalibration) {
+                    calibration = JSON.parse(savedCalibration);
+                    supportWarning.textContent = 'Loaded previous calibration';
+                    setTimeout(() => { supportWarning.textContent = ''; }, 3000);
+                }
+            } catch (e) {
+                console.error('Error loading calibration:', e);
+            }
+            
             let lastBeta = 0;
             let lastGamma = 0;
-            let isCalibrated = false;
             
-            // Request permission and start listening
-            function initOrientation() {
-                // Check for iOS permission requirements
+            // Calibration button
+            calibrateBtn.addEventListener('click', function() {
+                // For iOS, we need to re-request permission on user gesture
                 if (typeof DeviceOrientationEvent.requestPermission === 'function') {
                     DeviceOrientationEvent.requestPermission()
                         .then(permissionState => {
                             if (permissionState === 'granted') {
-                                window.addEventListener('deviceorientation', handleOrientation);
-                                supportWarning.textContent = '';
-                            } else {
-                                supportWarning.textContent = 'Permission to access device orientation was denied';
+                                calibrate();
                             }
                         })
                         .catch(console.error);
                 } else {
-                    // Non-iOS devices
-                    window.addEventListener('deviceorientation', handleOrientation);
+                    calibrate();
                 }
-            }
-            
-            // Calibration button
-            calibrateBtn.addEventListener('click', function() {
-                calibrate();
             });
             
             // Reset button
             resetBtn.addEventListener('click', function() {
                 calibration.beta = 0;
                 calibration.gamma = 0;
-                isCalibrated = false;
-                supportWarning.textContent = 'Calibration reset';
-                setTimeout(() => { supportWarning.textContent = ''; }, 2000);
+                
+                // Save to localStorage
+                try {
+                    localStorage.setItem('levelCalibration', JSON.stringify(calibration));
+                    supportWarning.textContent = 'Calibration reset';
+                    setTimeout(() => { supportWarning.textContent = ''; }, 3000);
+                } catch (e) {
+                    console.error('Error saving calibration:', e);
+                    supportWarning.textContent = 'Error saving calibration';
+                }
             });
             
             function calibrate() {
-                // In a real implementation, we would average several readings
-                // For simplicity, we'll use the current orientation as calibration point
+                // Use the current orientation as calibration point
                 calibration.beta = lastBeta;
                 calibration.gamma = lastGamma;
-                isCalibrated = true;
                 
-                supportWarning.textContent = 'Calibration complete!';
-                setTimeout(() => { supportWarning.textContent = ''; }, 2000);
+                // Save to localStorage
+                try {
+                    localStorage.setItem('levelCalibration', JSON.stringify(calibration));
+                    supportWarning.textContent = 'Calibration complete!';
+                    setTimeout(() => { supportWarning.textContent = ''; }, 3000);
+                } catch (e) {
+                    console.error('Error saving calibration:', e);
+                    supportWarning.textContent = 'Error saving calibration';
+                }
             }
             
             function handleOrientation(event) {
@@ -436,7 +388,23 @@
             
             // Initialize on tap anywhere on screen for iOS compatibility
             document.body.addEventListener('click', function initOnClick() {
-                initOrientation();
+                // Check for iOS permission requirements
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(permissionState => {
+                            if (permissionState === 'granted') {
+                                window.addEventListener('deviceorientation', handleOrientation);
+                                supportWarning.textContent = '';
+                            } else {
+                                supportWarning.textContent = 'Permission to access device orientation was denied';
+                            }
+                        })
+                        .catch(console.error);
+                } else {
+                    // Non-iOS devices
+                    window.addEventListener('deviceorientation', handleOrientation);
+                }
+                
                 document.body.removeEventListener('click', initOnClick);
             }, { once: true });
         });
