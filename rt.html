@@ -34,14 +34,14 @@
         }
         
         .btn {
-            display: inline-block; /* Changed to inline-block for side-by-side */
+            display: inline-block;
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
             text-align: center;
             font-weight: 600;
             text-decoration: none;
             transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
-            flex-grow: 1; /* Allows buttons to grow to fill space */
+            flex-grow: 1;
         }
 
         .btn:hover {
@@ -104,8 +104,26 @@
         /* Flexbox for side-by-side buttons */
         .button-group {
             display: flex;
-            gap: 1rem; /* Space between buttons */
-            margin-bottom: 1rem; /* Space below the button group */
+            gap: 1rem;
+            margin-bottom: 1rem;
+            justify-content: flex-end; /* Align to the right */
+        }
+        .route-title-btn {
+            background-color: #374151;
+            color: #ffffff;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1.1rem;
+            transition: 0.4s;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .route-title-btn:hover {
+            background-color: #4b5563;
         }
 
     </style>
@@ -124,9 +142,9 @@
         </p>
 
         <div class="space-y-4">
-            <div class="button-group">
-                <button class="btn btn-primary collapsible">Roete: Dag 1</button>
-                <a href="https://maps.app.goo.gl/3UqvwMctp8YsaDfd7?g_st=ic" target="_blank" class="btn btn-primary">Maak oop in Google Maps</a>
+            <div class="flex items-center space-x-4">
+                <button class="route-title-btn collapsible flex-grow text-left">Roete: Dag 1: Malelanehek na Skukuza</button>
+                <a href="https://maps.app.goo.gl/3UqvwMctp8YsaDfd7?g_st=ic" target="_blank" class="btn btn-primary flex-shrink-0">Roete</a>
             </div>
             <div class="content">
                 <div class="section-details">
@@ -141,9 +159,9 @@
                 </div>
             </div>
 
-            <div class="button-group">
-                <button class="btn btn-primary collapsible">Roete: Dag 2</button>
-                <a href="https://maps.app.goo.gl/6TSq4aTFPEkUfrXc6?g_st=ic" target="_blank" class="btn btn-primary">Maak oop in Google Maps</a>
+            <div class="flex items-center space-x-4">
+                <button class="route-title-btn collapsible flex-grow text-left">Roete: Dag 2: Satara na Lower Sabie</button>
+                <a href="https://maps.app.goo.gl/6TSq4aTFPEkUfrXc6?g_st=ic" target="_blank" class="btn btn-primary flex-shrink-0">Roete</a>
             </div>
             <div class="content">
                 <div class="section-details">
@@ -155,9 +173,9 @@
                 </div>
             </div>
 
-            <div class="button-group">
-                <button class="btn btn-primary collapsible">Roete: Dag 3</button>
-                <a href="https://maps.app.goo.gl/BFCa1BMA5XS4dsad8?g_st=ic" target="_blank" class="btn btn-primary">Maak oop in Google Maps</a>
+            <div class="flex items-center space-x-4">
+                <button class="route-title-btn collapsible flex-grow text-left">Roete: Dag 3: Tshokwane na Satara</button>
+                <a href="https://maps.app.goo.gl/BFCa1BMA5XS4dsad8?g_st=ic" target="_blank" class="btn btn-primary flex-shrink-0">Roete</a>
             </div>
             <div class="content">
                 <div class="section-details">
@@ -169,9 +187,9 @@
                 </div>
             </div>
 
-            <div class="button-group">
-                <button class="btn btn-primary collapsible">Roete: Dag 4</button>
-                <a href="https://maps.app.goo.gl/kVXLvZyevLbsXZm68?g_st=ic" target="_blank" class="btn btn-primary">Maak oop in Google Maps</a>
+            <div class="flex items-center space-x-4">
+                <button class="route-title-btn collapsible flex-grow text-left">Roete: Dag 4: Berg-en-Dal na Malelanehek</button>
+                <a href="https://maps.app.goo.gl/kVXLvZyevLbsXZm68?g_st=ic" target="_blank" class="btn btn-primary flex-shrink-0">Roete</a>
             </div>
             <div class="content">
                 <div class="section-details">
@@ -185,32 +203,30 @@
         </div>
         
         <p class="body mt-8 text-sm text-slate-400">
-            Geniet die toer! 🐘
+            Geniet die toer! safari 🐘
         </p>
 
     </main>
 
     <script>
         var coll = document.getElementsByClassName("collapsible");
-        var activeContent = null;
         
         for (var i = 0; i < coll.length; i++) {
             coll[i].addEventListener("click", function() {
                 var currentContent = this.parentElement.nextElementSibling;
+                var isActive = this.classList.contains("active");
 
-                if (activeContent && activeContent !== currentContent) {
-                    activeContent.style.maxHeight = null;
-                    activeContent.previousElementSibling.firstElementChild.classList.remove("active");
+                // Sluit alle oop afdelings
+                for (var j = 0; j < coll.length; j++) {
+                    coll[j].classList.remove("active");
+                    coll[j].parentElement.nextElementSibling.style.maxHeight = null;
                 }
-                
-                this.classList.toggle("active");
-                if (currentContent.style.maxHeight){
-                    currentContent.style.maxHeight = null;
-                    activeContent = null;
-                } else {
+
+                // Maak die geselekteerde een oop as dit nie reeds oop was nie
+                if (!isActive) {
+                    this.classList.add("active");
                     currentContent.style.maxHeight = currentContent.scrollHeight + "px";
-                    activeContent = currentContent;
-                } 
+                }
             });
         }
     </script>
