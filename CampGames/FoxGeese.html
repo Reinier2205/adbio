@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Fox and Geese - Casino Edition</title>
+<title>Fox &amp; Geese — Casino Edition</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,219 +19,582 @@
   --ivory: #faf8f0;
   --fox-color: #ff6b6b;
   --geese-color: #4ecdc4;
+  --cell-bg: rgba(255,255,255,0.06);
+  --cell-playable: rgba(0,0,0,0.18);
+  --accent: var(--gold-light);
+  --board-size: 9;
+  --cell-size: clamp(44px, 6.0vw, 64px);
 }
+
+/* Reset */
 *{box-sizing:border-box;margin:0;padding:0}
+html{font-family:'Lato',sans-serif;font-size:16px}
 body{
-  font-family:'Lato',sans-serif;
+  display:flex;justify-content:center;align-items:center;
+  min-height:100vh;padding:1.5rem;
   background-color:var(--dark-wood);
   background-image:radial-gradient(circle,#4d322e 0%,var(--dark-wood) 70%);
-  display:flex;justify-content:center;align-items:center;min-height:100vh;padding:1.5rem;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
 }
 
 /* Casino table */
 .casino-table{
   background:var(--felt-green);
   background-image:
-    radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-    radial-gradient(rgba(255,255,255,0.1) 1px, var(--felt-green) 1px);
+    radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,0.08) 1px, var(--felt-green) 1px);
   background-size:4px 4px;
   border:10px solid #4a2c2a;
   box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
-  border-radius:15px;
-  padding:clamp(1.5rem, 4vw, 2rem);
-  max-width:1000px;width:100%;
-  position:relative;overflow:hidden;
+  border-radius:15px;padding:clamp(1rem,3vw,1.6rem);
+  width:100%;max-width:1180px;position:relative;
 }
 
 /* Title */
 h1{
   font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light);
-  font-size:clamp(1.5rem, 5vw, 2.8rem);
-  text-shadow:2px 2px 5px rgba(0,0,0,0.7);
-  margin-bottom:1rem;text-align:center;
+  font-size:clamp(1.2rem,3vw,1.9rem);
+  text-align:center;margin-bottom:.75rem;text-shadow:1px 1px 2px rgba(0,0,0,0.6);
 }
 
-/* Help button */
-.help-btn{
-  position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
-  border:2px solid #111;background:radial-gradient(circle at 30% 30%, var(--gold-light), var(--gold));
-  color:#111;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
-}
-.help-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+/* small controls row */
+.top-controls{display:flex;gap:.6rem;justify-content:center;align-items:center;margin-bottom:.8rem}
+.select, .btn { font-family:'Inter',sans-serif;font-weight:600;padding:.5rem .8rem;border-radius:8px;border:2px solid #111;cursor:pointer;
+  background:linear-gradient(145deg,var(--gold),#b8860b);color:white; text-shadow:1px 1px 2px black; box-shadow:0 4px 0 #111;}
+.select { background: var(--light-gold); color:var(--dark-wood); border:2px solid var(--gold); padding:.45rem .6rem; box-shadow:none; }
 
 /* Status */
-#game-status{
-  min-height:28px;
-  font-size:1.1rem;
-  font-weight:700;
-  color:var(--light-gold);
-  margin-bottom:1rem;
-  text-align:center;
-  text-shadow:1px 1px 2px black;
-}
+#game-status{ text-align:center; color:var(--light-gold); font-weight:700; margin-bottom:.8rem; }
 
-/* Board */
-.board{
+/* Board grid: 9x9 visual grid, non-playable cells are dimmed */
+.board {
   display:grid;
-  grid-template-columns:repeat(7,60px);
-  grid-template-rows:repeat(7,60px);
-  gap:4px;
+  grid-template-columns: repeat(9, var(--cell-size));
+  grid-template-rows: repeat(9, var(--cell-size));
+  gap:8px;
   justify-content:center;
+  align-items:center;
   margin:0 auto 1rem auto;
+  width: calc(var(--cell-size) * 9 + 8px * 8);
 }
-.cell{
-  width:60px;height:60px;
-  border-radius:50%;
-  background:rgba(255,255,255,0.08);
+.cell {
+  width: var(--cell-size); height: var(--cell-size);
+  border-radius:14px;
+  background: var(--cell-bg);
   display:flex;align-items:center;justify-content:center;
+  position:relative;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.35), 0 6px 14px rgba(0,0,0,0.45);
+  user-select:none; cursor:default;
 }
-.cell.playable{
-  background:rgba(0,0,0,0.2);
-  border:2px solid var(--gold);
+.cell.nonplayable{ opacity:0.18; filter:grayscale(70%); background:transparent; box-shadow:none; border-radius:8px; }
+.cell.playable{ background:var(--cell-playable); border:2px solid rgba(0,0,0,0.35); cursor:pointer; }
+
+/* intersections (small marker) */
+.cell .marker {
+  width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.08);
+  position:absolute; top:8px; left:8px;
 }
-.piece{
-  width:40px;height:40px;
+
+/* piece styles */
+.piece {
+  width: calc(var(--cell-size) * 0.66);
+  height: calc(var(--cell-size) * 0.66);
   border-radius:50%;
-  cursor:pointer;
-  box-shadow:inset -3px -3px 6px rgba(0,0,0,0.5), inset 3px 3px 6px rgba(255,255,255,0.2);
-}
-.fox{ background:var(--fox-color); }
-.goose{ background:var(--geese-color); }
-
-/* Buttons */
-.controls{
-  display:flex;gap:1rem;justify-content:center;margin-bottom:1rem;
-}
-button{
-  font-family:'Inter',sans-serif;font-weight:600;
-  padding:.7rem 1.4rem;border-radius:8px;border:2px solid #111;cursor:pointer;
-  background:linear-gradient(145deg,var(--gold),#b8860b);color:white;
-  text-shadow:1px 1px 2px black;
-  box-shadow:0 4px 0 #111,0 5px 10px rgba(0,0,0,0.5);
-  font-size:1rem;
-}
-button:hover:not(:disabled){
-  background:linear-gradient(145deg,#ffeb80,#d4a60a);
-  transform:translateY(-2px);
-}
-button:active{ transform:translateY(2px); box-shadow:0 1px 0 #111; }
-
-/* Help modal */
-.help-modal{ position:fixed;inset:0;background:rgba(0,0,0,0.8);
   display:flex;align-items:center;justify-content:center;
-  opacity:0;visibility:hidden;transition:.3s;z-index:1000; }
-.help-modal.show{ opacity:1;visibility:visible; }
-.help-panel{ background:linear-gradient(145deg,#3e1e24,#2a1a1f);color:var(--light-gold);
-  padding:2rem;border-radius:15px;border:3px solid var(--gold);
-  box-shadow:0 0 30px var(--gold);max-width:600px;width:90%;text-align:left; }
-.help-panel h3{ font-family:'Cinzel',serif;color:var(--gold-light);margin-bottom:.8rem; }
-.help-actions{ text-align:center;margin-top:1rem; }
-.close-help{ background:linear-gradient(145deg,#ffeb3b,var(--gold));border:2px solid #111;
-  padding:.5rem 1.2rem;border-radius:8px;cursor:pointer; }
+  color:white;font-weight:700;font-family:'Cinzel',serif;
+  box-shadow: inset -4px -4px 8px rgba(255,255,255,0.06), inset 3px 3px 8px rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.45);
+}
+.piece.fox{ background:var(--fox-color); }
+.piece.goose{ background:var(--geese-color); }
+
+/* highlights */
+.cell.move-target{ outline:3px solid rgba(255,255,255,0.06); box-shadow:0 0 0 4px rgba(0,0,0,0.35), 0 0 18px rgba(255,255,255,0.02) inset; transform:translateY(-2px); }
+.cell.capture-target{ outline:3px solid rgba(255,80,80,0.18); box-shadow:0 0 0 4px rgba(255,80,80,0.06); transform:translateY(-2px); }
+.piece.selected{ box-shadow: 0 0 0 4px rgba(255,215,0,0.08), inset 3px 3px 6px rgba(0,0,0,0.45); transform:scale(1.02); }
+
+/* footer */
+.footer { display:flex; justify-content:space-between; gap:1rem; align-items:center; color:var(--light-gold); padding-top:.6rem; border-top:1px solid rgba(255,255,255,0.03); margin-top:.6rem; font-size:0.95rem; }
+.small { font-size:0.9rem; color:var(--light-gold); }
+
+/* help modal */
+.help-modal{ position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:all .25s ease; z-index:1000; }
+.help-modal.show{ opacity:1; visibility:visible; }
+.help-panel{ background:linear-gradient(145deg,#3e1e24,#2a1a1f); color:var(--light-gold); padding:1.4rem; border-radius:12px; border:3px solid var(--gold); box-shadow:0 0 30px var(--gold); width:92%; max-width:720px;}
+.help-panel h3{ font-family:'Cinzel',serif;color:var(--gold-light); margin-bottom:.5rem; }
+.help-panel ul{ margin-left:1rem; margin-bottom:.6rem;}
+.close-help{ margin-top:.6rem; display:inline-block; padding:.5rem .9rem; border-radius:8px; background:linear-gradient(145deg,#ffeb3b,var(--gold)); border:2px solid #111; cursor:pointer; }
+
+@media (max-width:720px){
+  .board{ gap:6px; }
+  :root{ --cell-size: clamp(38px, 8.0vw, 56px); }
+}
 </style>
 </head>
 <body>
-<div class="casino-table">
-  <button class="help-btn" id="help-btn">?</button>
-  <h1>Fox and Geese</h1>
-  <div id="game-status">Your turn: Fox moves first.</div>
+  <div class="casino-table" role="application" aria-label="Fox and Geese Casino Edition">
+    <h1>Fox &amp; Geese — Casino Edition</h1>
 
-  <div class="board" id="board"></div>
+    <div class="top-controls">
+      <label class="small" style="color:var(--light-gold);margin-right:.4rem">Geese side:</label>
+      <select id="start-side" class="select" aria-label="Geese start side">
+        <option value="top">Top</option>
+        <option value="left">Left</option>
+        <option value="right">Right</option>
+        <option value="bottom">Bottom</option>
+      </select>
 
-  <div class="controls">
-    <button id="new-game-btn">New Game</button>
+      <label class="small" style="color:var(--light-gold);margin-left:.6rem;margin-right:.4rem">Geese count:</label>
+      <select id="geese-count" class="select" aria-label="Number of geese">
+        <option value="13">13</option>
+        <option value="15">15</option>
+        <option value="17">17</option>
+      </select>
+
+      <button id="new-game" class="btn" style="margin-left:.6rem">New Game</button>
+      <button id="help-btn" class="btn" style="background:var(--gold-light); color:#111; margin-left:.3rem">Rules</button>
+    </div>
+
+    <div id="game-status">Loading... </div>
+
+    <div class="board" id="board" role="grid" aria-label="Fox and Geese board"></div>
+
+    <div class="footer">
+      <div class="small" id="pieces-info">Fox: 1 • Geese: 13</div>
+      <div class="small" id="turn-info">Turn: Geese</div>
+    </div>
   </div>
-</div>
 
-<!-- Help Modal -->
-<div id="help-modal" class="help-modal">
-  <div class="help-panel">
-    <h3>How to Play: Fox and Geese</h3>
-    <p>The game is played on a cross-shaped board:</p>
-    <ul>
-      <li>One fox vs. 13–15 geese.</li>
-      <li>Fox moves like a king (one step any direction) and can capture by jumping over a goose.</li>
-      <li>Geese move one step forward, left, or right — no backward moves.</li>
-      <li>Fox wins by capturing enough geese to block them.</li>
-      <li>Geese win by trapping the fox so it cannot move.</li>
-    </ul>
-    <div class="help-actions"><button id="close-help" class="close-help">Got it</button></div>
+  <!-- Help modal -->
+  <div id="help-modal" class="help-modal" role="dialog" aria-modal="true">
+    <div class="help-panel">
+      <h3>Rules &amp; Moves — Fox &amp; Geese (chosen variant)</h3>
+
+      <ul>
+        <li>Board: cross made of 5 blocks of 3×3 (central 3×3 + four arms). Play only on those intersections.</li>
+        <li>Pieces: 1 fox (red), N geese (green/turquoise). Default setup used here: fox center; geese occupy one arm and adjacent row(s) depending on chosen count.</li>
+        <li>Turn order: Geese move first.</li>
+        <li>Geese move: one step to an adjacent playable empty point.
+          <br>Restriction chosen: geese cannot move "backwards" away from their starting side. They may move forward (toward the fox) or sideways.
+        </li>
+        <li>Fox moves: one step to any adjacent playable empty point.
+          <br>Capture: fox may jump over an adjacent goose into the empty space directly beyond (in same direction) and remove the goose.
+          <br>Multiple jumps are allowed and the fox continues capturing as long as legal jumps remain.
+        </li>
+        <li>Win conditions:
+          <ul>
+            <li>Geese win if the fox has no legal moves (trapped).</li>
+            <li>Fox wins if geese are reduced to two or fewer (traditional finishing rule).</li>
+          </ul>
+        </li>
+      </ul>
+
+      <p style="margin-top:.4rem">Notes: rules vary historically (13/15/17 geese; diagonal allowed/disallowed; mandatory capture variants). This implementation uses the common, playable variant with diagonals allowed and geese restricted from moving backward toward their starting side.</p>
+
+      <div style="text-align:center">
+        <button id="close-help" class="close-help">Close</button>
+      </div>
+    </div>
   </div>
-</div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const boardEl = document.getElementById("board");
-  const statusEl = document.getElementById("game-status");
-  const newGameBtn = document.getElementById("new-game-btn");
-  const helpBtn = document.getElementById("help-btn");
-  const helpModal = document.getElementById("help-modal");
-  const closeHelp = document.getElementById("close-help");
+/* ---------- Game engine (no external libs) ---------- */
+/* Board constants and playable mask: 9x9 visual grid.
+   Playable cells form 5 blocks of 3x3:
+     - center: rows 3..5, cols 3..5
+     - top:    rows 0..2, cols 3..5
+     - bottom: rows 6..8, cols 3..5
+     - left:   rows 3..5, cols 0..2
+     - right:  rows 3..5, cols 6..8
+*/
+const SIZE = 9;
+const boardEl = document.getElementById('board');
+const statusEl = document.getElementById('game-status');
+const piecesInfoEl = document.getElementById('pieces-info');
+const turnInfoEl = document.getElementById('turn-info');
+const newBtn = document.getElementById('new-game');
+const startSideSel = document.getElementById('start-side');
+const geeseCountSel = document.getElementById('geese-count');
+const helpBtn = document.getElementById('help-btn');
+const helpModal = document.getElementById('help-modal');
+const closeHelp = document.getElementById('close-help');
 
-  const SIZE = 7;
-  let board = [];
-  let foxPos = {r:3,c:3};
-  let turn = "fox"; // or "geese"
+let board = []; // null = not playable, 'empty', 'fox','goose'
+let turn = 'geese'; // 'geese' or 'fox'
+let selected = null; // {r,c}
+let geeseSide = 'top';
+let geeseCount = 13;
 
-  function initBoard(){
-    board = Array.from({length:SIZE},()=>Array(SIZE).fill(null));
-    // playable cross
-    const playable = (r,c) => r===3 || c===3 || (r>1&&r<5 && c>1&&c<5);
-    for(let r=0;r<SIZE;r++){
-      for(let c=0;c<SIZE;c++){
-        if(playable(r,c)) board[r][c]="empty";
-      }
+// playable mask
+function isPlayable(r,c){
+  const in = (rr,cc,rs,re,cs,ce) => (rr>=rs && rr<=re && cc>=cs && cc<=ce);
+  if (in(r,c,3,5,3,5)) return true; // center 3x3
+  if (in(r,c,0,2,3,5)) return true; // top 3x3
+  if (in(r,c,6,8,3,5)) return true; // bottom 3x3
+  if (in(r,c,3,5,0,2)) return true; // left 3x3
+  if (in(r,c,3,5,6,8)) return true; // right 3x3
+  return false;
+}
+
+function createEmptyBoard(){
+  board = Array.from({length:SIZE},()=>Array(SIZE).fill(null));
+  for(let r=0;r<SIZE;r++){
+    for(let c=0;c<SIZE;c++){
+      board[r][c] = isPlayable(r,c) ? 'empty' : null;
     }
-    board[3][3] = "fox";
-    // place geese at top
-    for(let r=0;r<2;r++){
-      for(let c=0;c<SIZE;c++){
-        if(board[r][c]==="empty") board[r][c]="goose";
+  }
+}
+
+/* initial placements for common counts.
+   We'll place fox at center (4,4).
+   For geese start side, we'll fill the whole arm 3x3 and then add the top row of the central band to reach 13,
+   or fill more cells for 15/17.
+*/
+function placeInitialPieces(side, count){
+  createEmptyBoard();
+  // place fox center
+  const center = Math.floor(SIZE/2);
+  board[center][center] = 'fox';
+
+  // collect cells in "one side" order starting from the outer arm inward, left-to-right by row.
+  let cells = [];
+  if (side === 'top'){
+    for(let r=0;r<=2;r++){ for(let c=3;c<=5;c++){ cells.push([r,c]); } }
+    // row 3 (central top row) left-to-right
+    for(let c=2;c<=5;c++){ cells.push([3,c]); }
+    // for higher counts push more around center
+    for(let r=4;r<=5;r++){ for(let c=3;c<=5;c++){ cells.push([r,c]); } }
+  } else if (side === 'bottom'){
+    for(let r=6;r<=8;r++){ for(let c=3;c<=5;c++){ cells.push([r,c]); } }
+    for(let c=2;c<=5;c++){ cells.push([5,c]); } // central bottom row (r=5)
+    for(let r=2;r>=1;r--){ for(let c=3;c<=5;c++){ cells.push([r,c]); } }
+  } else if (side === 'left'){
+    for(let c=0;c<=2;c++){ for(let r=3;r<=5;r++){ cells.push([r,c]); } }
+    for(let r=2;r<=5;r++){ cells.push([r,3]); }
+    for(let c=4;c<=5;c++){ for(let r=3;r<=5;r++){ cells.push([r,c]); } }
+  } else { // right
+    for(let c=6;c<=8;c++){ for(let r=3;r<=5;r++){ cells.push([r,c]); } }
+    for(let r=2;r<=5;r++){ cells.push([r,5]); }
+    for(let c=1;c<=2;c++){ for(let r=3;r<=5;r++){ cells.push([r,c]); } }
+  }
+
+  // place geese on first 'count' playable cells (skip fox center)
+  let placed = 0;
+  for(let i=0;i<cells.length && placed<count;i++){
+    const [r,c] = cells[i];
+    if (board[r][c] === 'empty'){ board[r][c] = 'goose'; placed++; }
+  }
+  // if insufficient from that order, fill any other playable empty squares until count reached
+  outer: for(let r=0;r<SIZE;r++){
+    for(let c=0;c<SIZE;c++){
+      if (placed>=count) break outer;
+      if (board[r][c]==='empty'){ board[r][c]='goose'; placed++; }
+    }
+  }
+}
+
+/* Render */
+function render(){
+  boardEl.innerHTML = '';
+  for(let r=0;r<SIZE;r++){
+    for(let c=0;c<SIZE;c++){
+      const cell = document.createElement('div');
+      cell.className='cell';
+      cell.dataset.r=r; cell.dataset.c=c;
+      if (!isPlayable(r,c)){ cell.classList.add('nonplayable'); }
+      else { cell.classList.add('playable'); }
+      // put marker
+      const mark = document.createElement('div'); mark.className='marker';
+      cell.appendChild(mark);
+
+      const val = board[r][c];
+      if (val === 'fox' || val === 'goose'){
+        const p = document.createElement('div');
+        p.className = 'piece ' + (val==='fox'?'fox':'goose');
+        p.dataset.r=r; p.dataset.c=c;
+        p.title = val;
+        if (selected && selected.r==r && selected.c==c) p.classList.add('selected');
+        p.addEventListener('click', pieceClick);
+        cell.appendChild(p);
+      }
+      cell.addEventListener('click', cellClick);
+      boardEl.appendChild(cell);
+    }
+  }
+  updateInfo();
+}
+
+/* Utilities */
+function inBounds(r,c){ return r>=0 && r<SIZE && c>=0 && c<SIZE; }
+
+/* Get neighbors (8 directions) restricted to playable positions */
+const DIRS = [
+  [-1,0], [1,0], [0,-1], [0,1],
+  [-1,-1], [-1,1], [1,-1], [1,1]
+];
+
+function neighbors(r,c){
+  const out=[];
+  for(const [dr,dc] of DIRS){
+    const nr=r+dr, nc=c+dc;
+    if (inBounds(nr,nc) && isPlayable(nr,nc)) out.push([nr,nc,dr,dc]);
+  }
+  return out;
+}
+
+/* Fox legal moves and capture opportunities from pos */
+function foxMovesFrom(r,c){
+  const normal=[];
+  const captures=[]; // {to:[nr,nc], over:[mr,mc], dir:[dr,dc]}
+  for(const [nr,nc,dr,dc] of neighbors(r,c)){
+    if (board[nr][nc] === 'empty') {
+      normal.push([nr,nc]);
+    } else if (board[nr][nc] === 'goose'){
+      // landing spot
+      const lr = nr+dr, lc = nc+dc;
+      if (inBounds(lr,lc) && isPlayable(lr,lc) && board[lr][lc] === 'empty'){
+        captures.push({to:[lr,lc], over:[nr,nc], dir:[dr,dc]});
       }
     }
   }
+  return {normal, captures};
+}
 
-  function renderBoard(){
-    boardEl.innerHTML="";
-    for(let r=0;r<SIZE;r++){
-      for(let c=0;c<SIZE;c++){
-        const cell=document.createElement("div");
-        cell.className="cell";
-        if(board[r][c]) cell.classList.add("playable");
-        if(board[r][c]==="fox"){
-          const piece=document.createElement("div");
-          piece.className="piece fox";
-          piece.dataset.r=r; piece.dataset.c=c;
-          cell.appendChild(piece);
-        } else if(board[r][c]==="goose"){
-          const piece=document.createElement("div");
-          piece.className="piece goose";
-          piece.dataset.r=r; piece.dataset.c=c;
-          cell.appendChild(piece);
+/* Geese legal moves from pos — variant: no backwards moves relative to starting side.
+   We compute allowed dr sign based on geeseSide:
+     top -> geese advance downward => dr_allowed >= 0 (0 or +1)
+     bottom -> dr_allowed <= 0 (0 or -1)
+     left -> dc_allowed >= 0 (0 or +1)
+     right -> dc_allowed <= 0 (0 or -1)
+   Also allow sideways (dr==0 or dc==0) consistent with described rules.
+*/
+function gooseMovesFrom(r,c){
+  const out=[];
+  for(const [nr,nc,dr,dc] of neighbors(r,c)){
+    if (board[nr][nc] !== 'empty') continue;
+    let ok=false;
+    if (geeseSide === 'top'){
+      if (nr >= r) ok=true; // forward (down) or same row
+    } else if (geeseSide === 'bottom'){
+      if (nr <= r) ok=true;
+    } else if (geeseSide === 'left'){
+      if (nc >= c) ok=true;
+    } else {
+      if (nc <= c) ok=true;
+    }
+    if (ok) out.push([nr,nc]);
+  }
+  return out;
+}
+
+/* List all legal moves for current side - used for trap detection */
+function anyFoxMoves(){
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+    if (board[r][c] === 'fox'){
+      const {normal,captures} = foxMovesFrom(r,c);
+      if (normal.length || captures.length) return true;
+    }
+  }
+  return false;
+}
+function anyGeeseMoves(){
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+    if (board[r][c] === 'goose'){
+      if (gooseMovesFrom(r,c).length) return true;
+    }
+  }
+  return false;
+}
+
+function countGeese(){ let n=0; for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++) if (board[r][c]==='goose') n++; return n; }
+
+/* apply a normal move (no capture) */
+function applyMove(from, to){
+  const [fr,fc] = from; const [tr,tc] = to;
+  board[tr][tc] = board[fr][fc];
+  board[fr][fc] = 'empty';
+}
+
+/* apply a single fox capture: move fox to to, remove over */
+function applyCapture(from, to, over){
+  const [fr,fc] = from; const [tr,tc] = to; const [mr,mc] = over;
+  board[tr][tc] = 'fox';
+  board[fr][fc] = 'empty';
+  board[mr][mc] = 'empty';
+}
+
+/* UI helpers: highlight legal moves */
+function clearHighlights(){
+  document.querySelectorAll('.cell').forEach(el=>el.classList.remove('move-target','capture-target'));
+  document.querySelectorAll('.piece').forEach(el=>el.classList.remove('selected'));
+}
+
+function showLegalMovesForSelected(){
+  clearHighlights();
+  if (!selected) return;
+  const {r,c} = selected;
+  if (turn === 'fox'){
+    const {normal,captures} = foxMovesFrom(r,c);
+    normal.forEach(([nr,nc])=>{
+      const sel = document.querySelector(`.cell[data-r='${nr}'][data-c='${nc}']`);
+      if (sel) sel.classList.add('move-target');
+    });
+    captures.forEach(cap=>{
+      const [nr,nc] = cap.to;
+      const sel = document.querySelector(`.cell[data-r='${nr}'][data-c='${nc}']`);
+      if (sel) sel.classList.add('capture-target');
+    });
+    const p = document.querySelector(`.piece[data-r='${r}'][data-c='${c}']`);
+    if (p) p.classList.add('selected');
+  } else {
+    const moves = gooseMovesFrom(r,c);
+    moves.forEach(([nr,nc])=>{
+      const sel = document.querySelector(`.cell[data-r='${nr}'][data-c='${nc}']`);
+      if (sel) sel.classList.add('move-target');
+    });
+    const p = document.querySelector(`.piece[data-r='${r}'][data-c='${c}']`);
+    if (p) p.classList.add('selected');
+  }
+}
+
+/* click handlers */
+function pieceClick(ev){
+  ev.stopPropagation();
+  const el = ev.currentTarget;
+  const r = parseInt(el.dataset.r,10), c = parseInt(el.dataset.c,10);
+  const val = board[r][c];
+  if (turn === 'fox' && val === 'fox'){
+    selected = {r,c};
+    showLegalMovesForSelected();
+  } else if (turn === 'geese' && val === 'goose'){
+    selected = {r,c};
+    showLegalMovesForSelected();
+  } else {
+    // clicking enemy piece when expecting to move -> ignore
+  }
+}
+
+function cellClick(ev){
+  ev.stopPropagation();
+  const cell = ev.currentTarget;
+  const r = parseInt(cell.dataset.r,10), c = parseInt(cell.dataset.c,10);
+  if (!isPlayable(r,c)) return;
+  // if selected exists and target is a highlighted move -> perform
+  if (selected){
+    const sr = selected.r, sc = selected.c;
+    if (turn === 'geese'){
+      // validate
+      const legal = gooseMovesFrom(sr,sc).some(([nr,nc])=>nr===r && nc===c);
+      if (!legal) return;
+      applyMove([sr,sc],[r,c]);
+      selected = null;
+      clearHighlights();
+      // end geese turn
+      turn = 'fox';
+      updateAfterMove();
+    } else { // fox turn
+      const {normal, captures} = foxMovesFrom(sr,sc);
+      // check if click matches capture first
+      const cap = captures.find(cp => cp.to[0]===r && cp.to[1]===c);
+      if (cap){
+        applyCapture([sr,sc], cap.to, cap.over);
+        selected = {r,c}; // fox may continue capturing from new pos
+        clearHighlights();
+        // check if further captures from new pos
+        const more = foxMovesFrom(r,c).captures;
+        render();
+        if (more.length>0){
+          statusEl.textContent = 'Fox captured — continue capturing.';
+          showLegalMovesForSelected();
+          return; // fox continues turn
+        } else {
+          // no further captures -> end fox turn
+          selected = null; clearHighlights();
+          turn = 'geese';
+          updateAfterMove();
+          return;
         }
-        cell.dataset.r=r; cell.dataset.c=c;
-        boardEl.appendChild(cell);
+      }
+      // else normal move?
+      const isNorm = normal.some(([nr,nc])=>nr===r && nc===c);
+      if (isNorm){
+        applyMove([sr,sc],[r,c]);
+        selected=null; clearHighlights();
+        turn='geese';
+        updateAfterMove();
       }
     }
+  } else {
+    // select nothing -> if there's a piece here belonging to current player, select it
+    const val = board[r][c];
+    if ((turn==='fox' && val==='fox') || (turn==='geese' && val==='goose')){
+      selected = {r,c};
+      showLegalMovesForSelected();
+    } else {
+      // nothing
+    }
+  }
+}
+
+/* After each move: update display and check wins */
+function updateAfterMove(){
+  render();
+  // check win conditions
+  const geeseLeft = countGeese();
+  if (geeseLeft <= 2){
+    statusEl.textContent = `Fox wins — geese reduced to ${geeseLeft}.`;
+    turn = null;
+    updateInfo();
+    return;
+  }
+  // if fox has no moves, geese win
+  if (!anyFoxMoves()){
+    statusEl.textContent = 'Geese win — fox is trapped.';
+    turn = null;
+    updateInfo();
+    return;
+  }
+  // if geese have no moves (rare), fox wins by default
+  if (!anyGeeseMoves()){
+    statusEl.textContent = 'Fox wins — geese cannot move.';
+    turn = null;
+    updateInfo();
+    return;
   }
 
-  function resetGame(){
-    initBoard();
-    turn="fox";
-    statusEl.textContent="Your turn: Fox moves first.";
-    renderBoard();
-  }
+  // otherwise continue
+  statusEl.textContent = turn === 'geese' ? 'Geese to move.' : 'Fox to move.';
+  updateInfo();
+}
 
-  newGameBtn.addEventListener("click",resetGame);
+/* update info area */
+function updateInfo(){
+  const geeseLeft = countGeese();
+  piecesInfoEl.textContent = `Fox: 1  •  Geese: ${geeseLeft}`;
+  turnInfoEl.textContent = `Turn: ${turn ? turn.charAt(0).toUpperCase()+turn.slice(1) : 'Game Over'}`;
+}
 
-  // Help
-  helpBtn.onclick=()=>helpModal.classList.add("show");
-  closeHelp.onclick=()=>helpModal.classList.remove("show");
-  helpModal.onclick=e=>{ if(e.target===helpModal) helpModal.classList.remove("show"); };
+/* New game wiring */
+function startNewGame(){
+  geeseSide = startSideSel.value;
+  geeseCount = parseInt(geeseCountSel.value,10);
+  placeInitialPieces(geeseSide, geeseCount);
+  // geese move first (common rule)
+  turn = 'geese';
+  selected = null;
+  clearHighlights();
+  render();
+  statusEl.textContent = 'New game — Geese to move first.';
+}
 
-  resetGame();
-});
+/* modal wiring */
+helpBtn.addEventListener('click', ()=> helpModal.classList.add('show'));
+closeHelp.addEventListener('click', ()=> helpModal.classList.remove('show'));
+helpModal.addEventListener('click', (e)=>{ if (e.target === helpModal) helpModal.classList.remove('show'); });
+
+newBtn.addEventListener('click', ()=> startNewGame());
+
+/* initialize */
+startNewGame();
 </script>
 </body>
 </html>
