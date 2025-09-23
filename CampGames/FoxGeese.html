@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>Fox &amp; Geese — Casino Edition (Full Playable)</title>
+<title>Fox &amp; Geese — Travel Edition</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -95,9 +95,12 @@ body{
 .piece.goose{ background:var(--goose) }
 .piece.selected{ outline:4px solid rgba(255,215,0,0.12); transform:scale(1.02) }
 
-/* highlights - stronger contrast */
-.cell.move-target{ box-shadow: 0 0 0 4px rgba(0,0,0,0.35), inset 0 0 0 4px rgba(255,214,74,0.12); border:3px solid var(--highlight); transform:translateY(-3px); }
-.cell.capture-target{ box-shadow: 0 0 0 6px rgba(255,80,80,0.06), inset 0 0 0 4px rgba(255,80,80,0.06); border:3px solid #ff6b6b; transform:translateY(-3px); }
+/* invalid move cross */
+.invalid-cross{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+.invalid-cross .bar{ position:absolute; width:70%; height:8px; background:#ff4d4d; border-radius:5px; box-shadow:0 0 8px rgba(255,0,0,0.5); opacity:0.95; }
+.invalid-cross .bar.a{ transform:rotate(45deg); }
+.invalid-cross .bar.b{ transform:rotate(-45deg); }
+.invalid-cross.fade{ transition:opacity .5s ease; opacity:0; }
 
 /* footer */
 .footer{display:flex;justify-content:space-between;align-items:center;color:var(--light-gold);margin-top:10px;font-size:.95rem}
@@ -116,9 +119,9 @@ body{
 </style>
 </head>
 <body>
-  <main class="container" role="main" aria-label="Fox and Geese Casino Edition">
+  <main class="container" role="main" aria-label="Fox and Geese Travel Edition">
     <div class="header">
-      <div class="title">Fox &amp; Geese — Casino Edition</div>
+      <div class="title">Fox &amp; Geese — Travel Edition</div>
 
       <div class="controls" role="toolbar" aria-label="Game controls">
         <label style="color:var(--light-gold);font-weight:600;margin-right:6px">Geese side</label>
@@ -141,7 +144,7 @@ body{
       </div>
     </div>
 
-    <div id="status" class="status" aria-live="polite">Loading...</div>
+      <div id="status" class="status" aria-live="polite">Loading...</div>
 
     <div class="board-wrap">
       <div id="board" class="board" role="grid" aria-label="Fox-and-geese board"></div>
@@ -338,23 +341,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.piece').forEach(el=>el.classList.remove('selected'));
   }
 
+  function showInvalid(cellEl){
+    if (!cellEl) return;
+    const cross = document.createElement('div');
+    cross.className = 'invalid-cross';
+    const barA = document.createElement('div'); barA.className = 'bar a';
+    const barB = document.createElement('div'); barB.className = 'bar b';
+    cross.appendChild(barA); cross.appendChild(barB);
+    cellEl.appendChild(cross);
+    setTimeout(()=>{ cross.classList.add('fade'); }, 1500);
+    setTimeout(()=>{ if (cross.parentElement) cross.parentElement.removeChild(cross); }, 2000);
+  }
+
   function showLegalMovesForSelected(){
     clearHighlights();
     if (!selected) return;
     const {r,c}=selected;
-    if (turn==='fox'){
-      const {normal,captures} = foxMovesFrom(r,c);
-      normal.forEach(([nr,nc])=>{
-        const el=document.querySelector(`.cell[data-r="${nr}"][data-c="${nc}"]`); if (el) el.classList.add('move-target');
-      });
-      captures.forEach(cap=>{
-        const [nr,nc]=cap.to; const el=document.querySelector(`.cell[data-r="${nr}"][data-c="${nc}"]`); if (el) el.classList.add('capture-target');
-      });
-    } else {
-      gooseMovesFrom(r,c).forEach(([nr,nc])=>{
-        const el=document.querySelector(`.cell[data-r="${nr}"][data-c="${nc}"]`); if (el) el.classList.add('move-target');
-      });
-    }
     const p=document.querySelector(`.piece[data-r="${r}"][data-c="${c}"]`); if (p) p.classList.add('selected');
   }
 
@@ -365,22 +367,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const r=+el.dataset.r, c=+el.dataset.c, type=el.dataset.type;
     if (turn==='fox' && type==='fox'){ selected={r,c}; showLegalMovesForSelected(); }
     else if (turn==='geese' && type==='goose'){ selected={r,c}; showLegalMovesForSelected(); }
+    else { showInvalid(el.parentElement); }
   }
 
   function onCellTap(e){
     e.stopPropagation();
     if (!turn) return;
     const el=e.currentTarget; const r=+el.dataset.r, c=+el.dataset.c;
-    if (!isPlayable(r,c)) return;
+    if (!isPlayable(r,c)) { showInvalid(el); return; }
     if (!selected){
       const val=board[r][c];
       if ((turn==='fox' && val==='fox') || (turn==='geese' && val==='goose')){ selected={r,c}; showLegalMovesForSelected(); }
+      else { showInvalid(el); }
       return;
     }
     const sr=selected.r, sc=selected.c;
     if (turn==='geese'){
       const legal = gooseMovesFrom(sr,sc).some(([nr,nc])=>nr===r && nc===c);
-      if (!legal) return;
+      if (!legal) { showInvalid(el); return; }
       applyMove([sr,sc],[r,c]); selected=null; clearHighlights();
       turn='fox'; afterMove();
       return;
@@ -404,6 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isNorm){
         applyMove([sr,sc],[r,c]); selected=null; clearHighlights(); turn='geese'; afterMove(); return;
       }
+      showInvalid(el);
     }
   }
 
