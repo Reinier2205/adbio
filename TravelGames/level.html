@@ -41,10 +41,10 @@
       border:2px solid rgba(255,255,255,.08);
       display:flex; align-items:center; justify-content:center;
     }
-    .crosshair{position:absolute; inset:0}
-    .crosshair:before, .crosshair:after{ content:''; position:absolute; background:rgba(255,255,255,.12) }
-    .crosshair:before{ height:1px; width:100%; top:50%; left:0 }
-    .crosshair:after{ width:1px; height:100%; left:50%; top:0 }
+     .crosshair{position:absolute; inset:0}
+     .crosshair:before, .crosshair:after{ content:''; position:absolute; background:rgba(255,255,255,.4) }
+     .crosshair:before{ height:2px; width:100%; top:50%; left:0 }
+     .crosshair:after{ width:2px; height:100%; left:50%; top:0 }
     .bubble{
       width: calc(min(72vmin, 320px) * 0.22);
       height: calc(min(72vmin, 320px) * 0.22);
@@ -316,22 +316,25 @@
 
         // map angle to pixel offset (clamped to container)
         // ANGLE_MAP degrees maps to full radius
-        const mapX = (adjustedGamma / ANGLE_MAP) * maxMovementPx;
-        const mapY = (adjustedBeta / ANGLE_MAP) * maxMovementPx;
-        const limitedX = Math.max(Math.min(mapX, maxMovementPx), -maxMovementPx);
-        const limitedY = Math.max(Math.min(mapY, maxMovementPx), -maxMovementPx);
+         // map to pixels (bubble moves opposite to tilt direction, like a real spirit level)
+         const mapX = (adjustedGamma / ANGLE_MAP) * maxMovementPx;
+         const mapY = (adjustedBeta / ANGLE_MAP) * maxMovementPx;
+         const limitedX = Math.max(Math.min(mapX, maxMovementPx), -maxMovementPx);
+         const limitedY = Math.max(Math.min(mapY, maxMovementPx), -maxMovementPx);
 
-        // move bubble (invert Y for natural bubble movement)
-        bubble.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${-limitedY}px))`;
+         // move bubble: invert both axes (bubble moves uphill)
+         bubble.style.transform = `translate(calc(-50% + ${-limitedX}px), calc(-50% + ${-limitedY}px))`;
 
         // level check threshold (degrees)
         const THRESHOLD = 0.5;
         const isLevel = Math.abs(adjustedBeta) < THRESHOLD && Math.abs(adjustedGamma) < THRESHOLD;
 
-        if (isLevel) {
+         if (isLevel) {
           bubble.classList.add('level');
           levelStatus.textContent = 'PERFECTLY LEVEL';
           levelStatus.style.background = 'rgba(0,100,0,0.28)';
+           // snap to exact center when level
+           bubble.style.transform = 'translate(-50%, -50%)';
         } else {
           bubble.classList.remove('level');
           // display primary tilt direction
