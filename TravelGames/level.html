@@ -52,6 +52,8 @@
       border-radius:50%;
       background: radial-gradient(circle at 30% 30%, #ff3333, #cc0000);
       position:absolute;
+       top:50%;
+       left:50%;
       transform: translate(-50%,-50%);
       transition: transform .08s cubic-bezier(.2,.9,.3,1);
       box-shadow: 0 0 20px rgba(255,0,0,.45);
@@ -212,10 +214,12 @@
 
       // dimensions
       function updateDimensions() {
-        const rect = bubbleLevel.getBoundingClientRect();
-        containerRadius = Math.min(rect.width, rect.height) / 2;
-        bubbleRadius = Math.min(bubble.offsetWidth, bubble.offsetHeight) / 2;
-        maxMovementPx = Math.max(8, Math.floor(containerRadius - bubbleRadius - 6));
+         const rect = bubbleLevel.getBoundingClientRect();
+         containerRadius = Math.min(rect.width, rect.height) / 2;
+         // Use computed style to get actual rendered size (including calc and max constraints)
+         const bubbleRect = bubble.getBoundingClientRect();
+         bubbleRadius = Math.min(bubbleRect.width, bubbleRect.height) / 2;
+         maxMovementPx = Math.max(8, Math.floor(containerRadius - bubbleRadius - 6));
       }
       updateDimensions();
       window.addEventListener('resize', updateDimensions);
