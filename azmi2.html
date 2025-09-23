@@ -178,15 +178,15 @@ function drawCompass() {
     ctx.save();
     ctx.rotate(sunriseAzimuth * Math.PI/180);
     ctx.strokeStyle = "#ef4444";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(0,0);
-    ctx.lineTo(0, -radius+30);
+    ctx.lineTo(0, -radius+6); // extend line close to rim
     ctx.stroke();
-    // Arrowhead
-    const tipY = -radius+30;
-    const ah = 10; // arrowhead length
-    const aw = 5;  // arrowhead half width
+    // Arrowhead outside the compass
+    const tipY = -radius - 8; // outside the circle
+    const ah = 18; // arrowhead length
+    const aw = 9;  // arrowhead half width
     ctx.beginPath();
     ctx.moveTo(0, tipY);
     ctx.lineTo(-aw, tipY+ah);
@@ -204,16 +204,31 @@ function drawCompass() {
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0,0);
-    ctx.lineTo(0, -radius+30);
+    ctx.lineTo(0, -radius+6);
     ctx.stroke();
-    // Sun circle at end
+    // Sun outside the rim with rays
+    const sunY = -radius - 10;
+    const sunR = 10;
     ctx.beginPath();
-    ctx.arc(0, -radius+30, 6, 0, 2*Math.PI);
+    ctx.arc(0, sunY, sunR, 0, 2*Math.PI);
     ctx.fillStyle = "#ffd700";
     ctx.fill();
     ctx.strokeStyle = "#b8860b";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
+    // Rays
+    ctx.strokeStyle = "#ffd700";
+    ctx.lineWidth = 1.5;
+    for (let a = 0; a < 2*Math.PI; a += Math.PI/6) {
+      const x1 = Math.cos(a) * (sunR + 2);
+      const y1 = sunY + Math.sin(a) * (sunR + 2);
+      const x2 = Math.cos(a) * (sunR + 8);
+      const y2 = sunY + Math.sin(a) * (sunR + 8);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
