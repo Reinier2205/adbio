@@ -184,12 +184,12 @@ function drawCompass() {
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(0,0);
-    ctx.lineTo(0, -radius+6); // extend line close to rim
+    ctx.lineTo(0, -radius+16); // line ends a bit inside the rim
     ctx.stroke();
-    // Arrowhead outside the compass
-    const tipY = -radius - 8; // outside the circle
-    const ah = 18; // arrowhead length
-    const aw = 9;  // arrowhead half width
+    // Arrowhead inside the compass (bigger)
+    const tipY = -radius + 8; // tip inside
+    const ah = 14; // arrowhead length
+    const aw = 8;  // arrowhead half width
     ctx.beginPath();
     ctx.moveTo(0, tipY);
     ctx.lineTo(-aw, tipY+ah);
@@ -207,11 +207,11 @@ function drawCompass() {
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0,0);
-    ctx.lineTo(0, -radius+6);
+    ctx.lineTo(0, -radius+16);
     ctx.stroke();
-    // Sun outside the rim with rays
-    const sunY = -radius - 10;
-    const sunR = 10;
+    // Sun just inside the rim with rays
+    const sunY = -radius + 12;
+    const sunR = 9;
     ctx.beginPath();
     ctx.arc(0, sunY, sunR, 0, 2*Math.PI);
     ctx.fillStyle = "#ffd700";
@@ -225,8 +225,8 @@ function drawCompass() {
     for (let a = 0; a < 2*Math.PI; a += Math.PI/6) {
       const x1 = Math.cos(a) * (sunR + 2);
       const y1 = sunY + Math.sin(a) * (sunR + 2);
-      const x2 = Math.cos(a) * (sunR + 8);
-      const y2 = sunY + Math.sin(a) * (sunR + 8);
+      const x2 = Math.cos(a) * (sunR + 7);
+      const y2 = sunY + Math.sin(a) * (sunR + 7);
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
