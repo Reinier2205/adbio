@@ -50,6 +50,148 @@
         .testimonial-card {
              background-color: rgba(255, 255, 255, 0.05);
         }
+        /* Game Launcher card styles (from index) */
+        .game-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1.5rem;
+            justify-content: center;
+        }
+        .game-card {
+            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+            padding: 1.2rem;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #fff8e1;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 160px;
+            position: relative;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255,255,255,0.05);
+            transform: rotate(30deg);
+            transition: transform 0.5s ease;
+            z-index: 1;
+        }
+        .game-card:hover::before { transform: rotate(60deg); }
+        .game-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.6), 0 0 20px #ffd700;
+            border-color: #d4af37;
+        }
+        .game-card h3 {
+            color: #ffd700;
+            font-size: 1.6rem;
+            margin-bottom: 0.4rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            z-index: 1;
+        }
+        .game-card p {
+            font-size: 0.9rem;
+            line-height: 1.3;
+            margin-bottom: 0.8rem;
+            flex-grow: 1;
+            z-index: 1;
+        }
+        .game-card-image {
+            width: 100%;
+            max-width: 100px;
+            height: auto;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+        .info-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #d4af37;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #d4af37);
+            color: #111;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            z-index: 5;
+            transition: transform 0.15s ease;
+        }
+        .info-btn:hover { transform: scale(1.05); }
+        .info-btn:focus-visible { outline: 2px solid #ffd700; outline-offset: 2px; }
+        .game-card-description {
+            position: absolute;
+            inset: 0;
+            background: rgba(42,26,31,0.92);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.9rem;
+            font-family: 'Lato', sans-serif;
+            line-height: 1.3;
+            border-radius: 15px;
+            border: 2px solid #d4af37;
+            box-shadow: 0 0 20px #ffd700;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            transform: translateY(8px);
+            padding: 1.2rem 1.4rem;
+            z-index: 10;
+        }
+        .game-card.show-desc .game-card-description { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .close-desc {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #d4af37;
+            background: rgba(0,0,0,0.5);
+            color: #ffffff;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .game-card.show-desc { pointer-events: none; }
+        .game-card.show-desc * { pointer-events: auto; }
+        .game-card.show-desc .game-card-image { filter: brightness(0.6); }
+        @media (max-width: 600px) { .game-cards-container { grid-template-columns: 1fr; } }
+        @media (max-width: 400px) {
+            .game-card { min-height: 140px; padding: 1rem; }
+            .game-card h3 { font-size: 1.4rem; }
+            .game-card p { font-size: 0.8rem; }
+        }
     </style>
 </head>
 
@@ -96,33 +238,57 @@
         <section id="games" class="py-16 md:py-24">
              <div class="container mx-auto px-4 text-center">
                  <h2 class="text-3xl md:text-4xl font-bold mb-12 gold-text">Choose Your Travel Game</h2>
-                 <!-- This is where the original game launcher from the prompt would go -->
-                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                     <!-- Game Card 1 -->
-                     <a href="https://adbio.pages.dev/TravelGames/MyDice.html" class="bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-yellow-400">
-                         <h3 class="text-2xl font-bold mb-2 gold-light-text">Dice</h3>
-                         <p class="text-gray-300">Roll the dice and test your luck!</p>
-                     </a>
-                     <!-- Game Card 2 -->
-                     <a href="https://adbio.pages.dev/TravelGames/GiveAndTake.html" class="bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-yellow-400">
-                         <h3 class="text-2xl font-bold mb-2 gold-light-text">Give And Take</h3>
-                         <p class="text-gray-300">A strategic game of giving and taking.</p>
-                     </a>
-                     <!-- Game Card 3 -->
-                     <a href="https://adbio.pages.dev/TravelGames/TicTacToe.html" class="bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-yellow-400">
-                         <h3 class="text-2xl font-bold mb-2 gold-light-text">Tic Tac Toe</h3>
-                         <p class="text-gray-300">The classic game of X's and O's.</p>
-                     </a>
-                      <!-- Game Card 4 -->
-                     <a href="https://adbio.pages.dev/Trigon_Game/Trigon.html" class="bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-yellow-400">
-                         <h3 class="text-2xl font-bold mb-2 gold-light-text">Trigon</h3>
-                         <p class="text-gray-300">A 3-player hexagonal challenge.</p>
-                     </a>
-                     <!-- Game Card 5 -->
-                     <a href="https://adbio.pages.dev/TravelGames/ShutTheBox.html" class="bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-yellow-400">
-                         <h3 class="text-2xl font-bold mb-2 gold-light-text">Shut the Box</h3>
-                         <p class="text-gray-300">Roll dice and choose wise to win!</p>
-                     </a>
+                 <div class="game-cards-container">
+                    <a href="https://adbio.pages.dev/TravelGames/MyDice.html" class="game-card">
+                        <img src="./images/mydice.jpeg" alt="Roll two stunning dice anywhere you go. Quick turns, big laughs—perfect for travel downtime." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Dice</h3>
+                        <p>Roll two beautiful 3D dice. Simple, quick, and fun anywhere.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="MyDice details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Roll two stunning dice and keep score with friends. Designed for fast play while traveling—airport lounges, train rides, or campfire breaks.</span>
+                        </div>
+                    </a>
+                    <a href="https://adbio.pages.dev/TravelGames/GiveAndTake.html" class="game-card">
+                        <img src="./images/giveandtake.jpeg" alt="Strategic dice duels on the go. Add to your score or subtract from your opponent." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Give And Take</h3>
+                        <p>Head-to-head dice strategy: add to yours or subtract theirs.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Give and Take details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Battle head-to-head with quick turns and wild events. Great for two players sharing a screen when you’re on the move.</span>
+                        </div>
+                    </a>
+                    <a href="https://adbio.pages.dev/TravelGames/TicTacToe.html" class="game-card">
+                        <img src="./images/tictactoe.png" alt="Classic travel-friendly duel: X vs O." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Tic Tac Toe</h3>
+                        <p>Classic quick match, perfect for filling short waits.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Tic Tac Toe details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Play X or O with a crisp, travel-ready design. Fast, familiar, and perfect for short breaks anywhere.</span>
+                        </div>
+                    </a>
+                    <a href="https://adbio.pages.dev/Trigon_Game/Trigon.html" class="game-card">
+                        <img src="./images/trigon.jpeg" alt="Three-player hexagonal challenge for friends on the go." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Trigon</h3>
+                        <p>Three-player strategy on a hex board—unique and fast-paced.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Trigon details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Experience three-way Tic Tac Toe with strategy and style. A great travel challenge when you have a few minutes to spare.</span>
+                        </div>
+                    </a>
+                    <a href="https://adbio.pages.dev/TravelGames/ShutTheBox.html" class="game-card">
+                        <img src="./images/shutthebox.png" alt="Roll dice and shut the tiles—easy to learn, addictive to play while traveling." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Shut the Box</h3>
+                        <p>Fast dice puzzle you can play anywhere, with anyone.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Shut the Box details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Roll and flip tiles to match totals. Simple to pick up, satisfying to master—ideal for travel downtime.</span>
+                        </div>
+                    </a>
                  </div>
              </div>
         </section>
@@ -131,7 +297,7 @@
         <section id="problem" class="py-16 md:py-24 bg-gray-900">
             <div class="container mx-auto px-4 max-w-3xl text-center">
                 <h2 class="text-3xl md:text-4xl font-bold gold-text mb-4">Turn Good Moments into Great Memories</h2>
-                <p class="text-lg md:text-xl text-gray-300 leading-relaxed">Picture the perfect campfire or get-together. The vibe is great, the company is better. It's the ideal time to introduce a little shared fun, but physical board games are a hassle to pack or teach. Camp Games bridges that gap, turning a pleasant pause into the highlight of the night—sparking laughter and friendly competition in seconds.</p>
+                <p class="text-lg md:text-xl text-gray-300 leading-relaxed">Picture the perfect campfire or get-together. The vibe is great, the company is better. It's the ideal time to introduce a little shared fun, but physical board games are a hassle to pack or teach. Travel Games bridges that gap, turning a pleasant pause into the highlight of the night—sparking laughter and friendly competition in seconds.</p>
             </div>
         </section>
 
@@ -342,6 +508,39 @@
                 });
             });
         });
+        // Game card info toggles (from index)
+        (function() {
+            function closestCard(el) { return el.closest && el.closest('.game-card'); }
+            function hideAll() { document.querySelectorAll('.game-card.show-desc').forEach(c => c.classList.remove('show-desc')); }
+            document.addEventListener('click', function(e) {
+                const infoBtn = e.target.closest && e.target.closest('.info-btn');
+                if (infoBtn) {
+                    e.preventDefault(); e.stopPropagation();
+                    const card = closestCard(infoBtn);
+                    const isOpen = card.classList.contains('show-desc');
+                    hideAll();
+                    if (!isOpen) {
+                        card.classList.add('show-desc');
+                        const dialog = card.querySelector('.game-card-description');
+                        if (dialog) dialog.focus({ preventScroll: true });
+                    }
+                    return;
+                }
+                const closeBtn = e.target.closest && e.target.closest('.close-desc');
+                if (closeBtn) {
+                    e.preventDefault();
+                    const card = closestCard(closeBtn);
+                    if (card) card.classList.remove('show-desc');
+                    return;
+                }
+                const desc = e.target.closest && e.target.closest('.game-card-description');
+                if (!desc) hideAll();
+            }, { passive: false });
+            document.addEventListener('keydown', function(e) { if (e.key === 'Escape') document.querySelectorAll('.game-card.show-desc').forEach(c => c.classList.remove('show-desc')); });
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.addEventListener('click', function(e) { if (card.classList.contains('show-desc')) e.preventDefault(); });
+            });
+        })();
     </script>
 
 </body>
