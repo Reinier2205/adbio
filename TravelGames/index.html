@@ -1,1013 +1,554 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Launcher</title>
+    
+    <!-- SEO & Meta Tags -->
+    <title>Travel Games | Play Anywhere, Anytime</title>
+    <meta name="description" content="Left the board games at home? No problem. Enjoy beautiful, browser-based games that travel with you—play anywhere, anytime, with anyone.">
+    
+    <!-- Social Media (Open Graph) Tags -->
+    <meta property="og:title" content="Travel Games | Play Anywhere, Anytime">
+    <meta property="og:description" content="When you travel and didn’t pack bulky board games, open Travel Games and play instantly—no setup, no downloads.">
+    <meta property="og:image" content="https://placehold.co/1200x630/0a4821/d4af37?text=Travel+Games">
+    <meta property="og:url" content="https://adbio.pages.dev/TravelGames/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Stylesheets and Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        /* =====================================
-           TRAVEL GAME STYLE TEMPLATE
-           ===================================== */
-
-    /* CSS Variables - Core Travel Theme (keeps felt/wood aesthetic) */
-    :root {
-        /* Primary Casino Colors */
-        --felt-green: #0a4821;
-        --dark-wood: #2a1a1f;
-        --gold: #d4af37;
-        --gold-light: #ffd700;
-        --light-gold: #fff8e1;
-        --dark-red: #8c0000;
-        --ivory: #faf8f0;
-        
-        /* Player Colors (customizable for multi-player games) */
-        --player1-color: #ff6b6b;
-        --player2-color: #4ecdc4;
-        --player3-color: #ffe66d;
-        --player4-color: #a78bfa;
-        --player5-color: #fb7185;
-        --player6-color: #34d399;
-    }
-
-    /* =====================================
-       BASE RESET & BODY STYLING
-       ===================================== */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Lato', sans-serif;
-        background-color: var(--dark-wood);
-        background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        padding: 1.5rem;
-        touch-action: manipulation;
-    }
-
-    /* =====================================
-       TRAVEL TABLE - MAIN CONTAINER
-       ===================================== */
-    .casino-table {
-        background: var(--felt-green);
-        /* Felt texture pattern */
-        background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                          radial-gradient(rgba(255, 255, 255, 0.1) 1px, var(--felt-green) 1px);
-        background-size: 4px 4px;
-        background-position: 0 0, 2px 2px;
-        
-        /* Casino table border styling */
-        border: 10px solid #4a2c2a;
-        box-shadow: 0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
-        border-radius: 15px;
-        
-        /* Layout */
-        padding: 2rem;
-        width: 100%;
-        max-width: 900px; /* Adjust based on game needs */
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* =====================================
-       TYPOGRAPHY - TRAVEL STYLE
-       ===================================== */
-    h1 {
-        font-family: 'Inter', sans-serif;
-        font-weight: 700;
-        color: var(--gold-light);
-        font-size: 2.8rem;
-        text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
-        margin-bottom: 1.5rem;
-    }
-
-    h2 {
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
-        color: var(--light-gold);
-        font-size: 1.5rem;
-    }
-
-    h3 {
-        font-family: 'Inter', sans-serif;
-        font-weight: 700;
-        font-size: 2rem;
-        color: var(--gold-light);
-        margin-bottom: 0.5rem;
-    }
-
-    /* =====================================
-       PLAYER PANELS - FLEXIBLE LAYOUT
-       ===================================== */
-    .players {
-        display: flex;
-        justify-content: space-around;
-        gap: 1rem;
-        margin: 2rem 0;
-        flex-wrap: wrap;
-    }
-
-    .player {
-        background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-        padding: 1.5rem;
-        border-radius: 10px;
-        transition: all 0.3s ease;
-        border: 3px solid #1a1a1a;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
-        min-width: 120px;
-    }
-
-    /* Two players */
-    .players .player:nth-child(2n) {
-        width: 45%;
-    }
-
-    /* Three players */
-    .players .player:nth-child(3n) {
-        width: 30%;
-    }
-
-    /* Four or more players */
-    .players .player:nth-child(n+4) {
-        width: 22%;
-        min-width: 150px;
-    }
-
-    .player.active {
-        border-color: var(--gold);
-        transform: scale(1.05);
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
-    }
-
-    /* Player-specific active states */
-    .player-1.active { border-color: var(--player1-color); }
-    .player-2.active { border-color: var(--player2-color); }
-    .player-3.active { border-color: var(--player3-color); }
-    .player-4.active { border-color: var(--player4-color); }
-    .player-5.active { border-color: var(--player5-color); }
-    .player-6.active { border-color: var(--player6-color); }
-
-    /* =====================================
-       PLAYER COMPONENTS
-       ===================================== */
-    .player-header {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .player-header h2 {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 120px;
-    }
-
-    .edit-name-icon {
-        cursor: pointer;
-        font-size: 1rem;
-        color: var(--gold);
-        transition: transform 0.2s;
-        border-radius: 4px;
-    }
-
-    .edit-name-icon:hover { 
-        transform: scale(1.2); 
-    }
-
-    .edit-name-icon:focus-visible {
-        outline: 2px solid var(--gold);
-        outline-offset: 2px;
-    }
-
-    .player-name-input {
-        background-color: var(--light-gold);
-        border: 1px solid var(--gold);
-        border-radius: 4px;
-        padding: 4px;
-        font-family: 'Lato', sans-serif;
-        text-align: center;
-        width: 80%;
-    }
-
-    /* Score display */
-    .score {
-        font-size: 3.5rem;
-        font-weight: 700;
-        color: var(--gold);
-        text-shadow: 2px 2px 3px rgba(0,0,0,0.5);
-    }
-
-    /* Game piece markers (for games like Tic Tac Toe) */
-    .mark {
-        font-size: 1.5rem;
-        font-weight: bold;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-    }
-
-    .player-1 .mark { color: var(--player1-color); }
-    .player-2 .mark { color: var(--player2-color); }
-    .player-3 .mark { color: var(--player3-color); }
-
-    .win-tally {
-        color: var(--light-gold);
-        font-size: 0.9rem;
-        margin-top: 0.3rem;
-    }
-
-    /* =====================================
-       GAME STATUS & CONTROLS
-       ===================================== */
-    #game-status {
-        min-height: 24px;
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--light-gold);
-        margin-bottom: 1.5rem;
-        text-shadow: 1px 1px 2px black;
-    }
-
-    .game-area {
-        margin: 2rem 0;
-    }
-
-    .controls {
-        margin-top: 1.5rem;
-    }
-
-    .controls button {
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
-        font-size: 1.1rem;
-        padding: 0.8rem 1.5rem;
-        border: 2px solid #111;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin: 0 0.5rem;
-        color: white;
-        text-shadow: 1px 1px 2px black;
-        box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
-    }
-
-    .controls button:active:not(:disabled) {
-        transform: translateY(3px);
-        box-shadow: 0 1px 0 #111;
-    }
-
-    .controls button:disabled { 
-        background: #666; 
-        color: #aaa; 
-        box-shadow: 0 4px 0 #333; 
-        cursor: not-allowed;
-    }
-
-    /* Button color variants */
-    .btn-primary { background: linear-gradient(145deg, #008c3a, #005a25); }
-    .btn-secondary { background: linear-gradient(145deg, #a80000, var(--dark-red)); }
-    .btn-gold { background: linear-gradient(145deg, var(--gold), #b8860b); color: white; }
-    .btn-reset { background: linear-gradient(145deg, var(--gold), #b8860b); color: white; }
-
-    /* =====================================
-       GAME BOARD COMPONENTS
-       ===================================== */
-    .board {
-        display: grid;
-        gap: 8px;
-        margin: 1.5rem auto;
-        aspect-ratio: 1 / 1;
-        max-width: 400px;
-    }
-
-    /* Grid layouts for different board sizes */
-    .board.grid-3x3 { grid-template-columns: repeat(3, 1fr); }
-    .board.grid-4x4 { grid-template-columns: repeat(4, 1fr); }
-    .board.grid-5x5 { grid-template-columns: repeat(5, 1fr); }
-
-    .cell {
-        background: linear-gradient(145deg, #0f5a2c, #0a4821);
-        border: 3px solid #1a1a1a;
-        border-radius: 8px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 2rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-        position: relative;
-        overflow: hidden;
-        aspect-ratio: 1 / 1;
-    }
-
-    .cell:hover {
-        transform: scale(1.03);
-        box-shadow: inset 0 0 15px rgba(255,255,255,0.1), 0 0 10px var(--gold);
-    }
-
-    /* =====================================
-       DICE COMPONENTS
-       ===================================== */
-    .dice-container {
-        display: flex;
-        justify-content: center;
-        gap: 1.5rem;
-        margin: 2rem 0;
-        height: 80px;
-        perspective: 800px;
-    }
-
-    .dice {
-        width: 80px;
-        height: 80px;
-        position: relative;
-        transform-style: preserve-3d;
-        transition: transform 1s;
-        background-color: var(--ivory);
-        border-radius: 12px;
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.3), 0 5px 10px rgba(0,0,0,0.5);
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(3, 1fr);
-        padding: 8px;
-    }
-
-    .dice .dot {
-        width: 16px;
-        height: 16px;
-        background-color: #333;
-        border-radius: 50%;
-        box-shadow: inset 0 0 3px rgba(0,0,0,0.7);
-        align-self: center;
-        justify-self: center;
-        visibility: hidden;
-    }
-
-    /* Dice face patterns */
-    .dice[data-value="1"] .dot:nth-child(5),
-    .dice[data-value="2"] .dot:nth-child(1), .dice[data-value="2"] .dot:nth-child(9),
-    .dice[data-value="3"] .dot:nth-child(1), .dice[data-value="3"] .dot:nth-child(5), .dice[data-value="3"] .dot:nth-child(9),
-    .dice[data-value="4"] .dot:nth-child(1), .dice[data-value="4"] .dot:nth-child(3), .dice[data-value="4"] .dot:nth-child(7), .dice[data-value="4"] .dot:nth-child(9),
-    .dice[data-value="5"] .dot:nth-child(1), .dice[data-value="5"] .dot:nth-child(3), .dice[data-value="5"] .dot:nth-child(5), .dice[data-value="5"] .dot:nth-child(7), .dice[data-value="5"] .dot:nth-child(9),
-    .dice[data-value="6"] .dot:nth-child(1), .dice[data-value="6"] .dot:nth-child(3), .dice[data-value="6"] .dot:nth-child(4), .dice[data-value="6"] .dot:nth-child(6), .dice[data-value="6"] .dot:nth-child(7), .dice[data-value="6"] .dot:nth-child(9)
-    { visibility: visible; }
-
-    .dice.rolling { 
-        animation: rolling 1s ease-out; 
-    }
-
-    @keyframes rolling {
-        0% { transform: rotateY(0) rotateX(0); }
-        100% { transform: rotateY(1080deg) rotateX(720deg); }
-    }
-
-    /* =====================================
-       GAME PIECE STYLES (for board games)
-       ===================================== */
-    
-    /* X marker */
-    .cell.x::before, .cell.x::after {
-        content: '';
-        position: absolute;
-        width: 70%;
-        height: 8px;
-        background-color: var(--player1-color);
-        border-radius: 5px;
-    }
-    .cell.x::before { transform: rotate(45deg); }
-    .cell.x::after { transform: rotate(-45deg); }
-
-    /* O marker */
-    .cell.o::before {
-        content: '';
-        position: absolute;
-        width: 60%;
-        height: 60%;
-        border: 8px solid var(--player2-color);
-        border-radius: 50%;
-    }
-
-    /* Triangle/Delta marker */
-    .cell.delta::before {
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 0;
-        border-left: 30px solid transparent;
-        border-right: 30px solid transparent;
-        border-bottom: 50px solid var(--player3-color);
-    }
-
-    /* =====================================
-       MODAL SYSTEMS
-       ===================================== */
-    .modal-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.8);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.5s ease;
-        z-index: 100;
-    }
-
-    .modal-overlay.show {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    .modal-content {
-        background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-        color: var(--light-gold);
-        padding: 2rem 3rem;
-        border-radius: 15px;
-        border: 3px solid var(--gold);
-        box-shadow: 0 0 30px var(--gold);
-        text-align: center;
-        transform: scale(0.7);
-        transition: transform 0.5s ease;
-        max-width: 90vw;
-    }
-
-    .modal-overlay.show .modal-content {
-        transform: scale(1);
-    }
-
-    .modal-content h3 {
-        font-family: 'Inter', sans-serif;
-        font-weight: 700;
-        font-size: 2.5rem;
-        color: var(--gold-light);
-        margin-bottom: 1rem;
-    }
-
-    .modal-content p {
-        font-size: 1.2rem;
-        margin-bottom: 1.5rem;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .modal-content button {
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
-        font-size: 1.2rem;
-        padding: 0.8rem 2.5rem;
-        border: 2px solid #111;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        color: white;
-        text-shadow: 1px 1px 2px black;
-        box-shadow: 0 4px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
-        background: linear-gradient(145deg, var(--gold), #b8860b);
-    }
-
-    .modal-content button:active {
-        transform: translateY(3px);
-        box-shadow: 0 1px 0 #111;
-    }
-
-    /* Win message specific styling */
-    .win-message {
-        position: absolute;
-        top: 20%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-        color: var(--light-gold);
-        padding: 1.5rem 2rem;
-        border-radius: 15px;
-        border: 3px solid var(--gold);
-        box-shadow: 0 0 30px var(--gold);
-        text-align: center;
-        z-index: 100;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.5s ease;
-    }
-
-    .win-message.show {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    /* =====================================
-       HISTORY & PROGRESS INDICATORS
-       ===================================== */
-    .move-history {
-        display: flex;
-        justify-content: center;
-        gap: 4px;
-        margin: 1rem auto 0;
-        flex-wrap: wrap;
-        max-width: 300px;
-    }
-
-    .history-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        /* background-color: var(--gold); */
-    }
-
-    .history-dot.x { background-color: var(--player1-color); }
-    .history-dot.o { background-color: var(--player2-color); }
-    .history-dot.delta { background-color: var(--player3-color); }
-
-    /* Progress bars */
-    .progress-bar {
-        width: 100%;
-        height: 20px;
-        background: rgba(0,0,0,0.3);
-        border-radius: 10px;
-        overflow: hidden;
-        margin: 10px 0;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--gold), #ffeb3b);
-        transition: width 0.3s ease;
-        border-radius: 10px;
-    }
-
-    /* =====================================
-       RESPONSIVE DESIGN
-       ===================================== */
-    @media (max-width: 768px) {
+        /* Custom styles tuned for the travel vibe */
         body {
-            padding: 1rem;
+            font-family: 'Inter', sans-serif;
+            background-color: #2a1a1f; /* --dark-wood */
+            color: #faf8f0; /* --ivory */
         }
-        
-        .casino-table {
-            padding: 1.5rem;
-            max-width: 100%;
+        .felt-green { background-color: #0a4821; }
+        .gold-text { color: #d4af37; }
+        .gold-light-text { color: #ffd700; }
+        .gold-bg { background-color: #d4af37; }
+        .gold-border { border-color: #d4af37; }
+        .btn-primary {
+            background-color: #d4af37; /* --gold */
+            color: #2a1a1f; /* --dark-wood */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        
-        h1 {
-            font-size: 2.2rem;
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
         }
-        
-        .players {
-            gap: 0.5rem;
+        .section-glow {
+            box-shadow: 0 0 40px rgba(10, 72, 33, 0.5);
         }
-        
-        .player {
-            padding: 1rem;
+        .testimonial-card {
+             background-color: rgba(255, 255, 255, 0.05);
         }
-        
-        .player-header h2 {
-            font-size: 1.2rem;
-            max-width: 100px;
-        }
-        
-        .score {
-            font-size: 2.5rem;
-        }
-        
-        .controls button {
-            padding: 0.6rem 1rem;
-            font-size: 1rem;
-            margin: 0.25rem;
-        }
-        
-        .dice-container {
-            gap: 1rem;
-            height: 60px;
-        }
-        
-        .dice {
-            width: 60px;
-            height: 60px;
-        }
-        
-        .dice .dot {
-            width: 12px;
-            height: 12px;
-        }
-    }
-
-    @media (max-width: 500px) {
-        .casino-table {
-            padding: 1rem;
-        }
-        
-        h1 {
-            font-size: 1.8rem;
-        }
-        
-        .players .player {
-            width: 100%;
-            margin-bottom: 0.5rem;
-        }
-        
-        .player-header h2 {
-            font-size: 1rem;
-        }
-        
-        .mark {
-            font-size: 1.2rem;
-        }
-        
-        .modal-content {
-            padding: 1rem;
-        }
-        
-        .modal-content h3 {
-            font-size: 1.5rem;
-        }
-        
-        .board {
-            gap: 4px;
-            max-width: 280px;
-        }
-        
-        .cell {
-            font-size: 1.5rem;
-        }
-    }
-
-    /* =====================================
-       UTILITY CLASSES
-       ===================================== */
-    .text-center { text-align: center; }
-    .text-gold { color: var(--gold); }
-    .text-light-gold { color: var(--light-gold); }
-    .text-shadow { text-shadow: 1px 1px 2px black; }
-    
-    .mb-1 { margin-bottom: 1rem; }
-    .mb-2 { margin-bottom: 2rem; }
-    .mt-1 { margin-top: 1rem; }
-    .mt-2 { margin-top: 2rem; }
-    
-    .hidden { display: none; }
-    .invisible { opacity: 0; visibility: hidden; }
-    
-    .scale-up { transform: scale(1.05); }
-    .glow-gold { box-shadow: 0 0 20px var(--gold); }
-    
-    /* Animations */
-    .fade-in { animation: fadeIn 0.5s ease-in; }
-    .slide-up { animation: slideUp 0.5s ease-out; }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { transform: translateY(30px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-
-    /* =====================================
-       DEMO CONTENT STYLES
-       ===================================== */
-    .demo-section {
-        margin: 3rem 0;
-        padding: 2rem;
-        border: 2px solid var(--gold);
-        border-radius: 10px;
-        background: rgba(0,0,0,0.2);
-    }
-
-    .demo-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin: 1rem 0;
-    }
-
-    .style-preview {
-        padding: 1rem;
-        background: rgba(255,255,255,0.1);
-        border-radius: 8px;
-        text-align: left;
-    }
-
-    .color-swatch {
-        width: 50px;
-        height: 30px;
-        border-radius: 4px;
-        display: inline-block;
-        margin-right: 10px;
-        border: 1px solid #333;
-    }
-
-    /* Game Card Styles */
-    .game-cards-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Made cards smaller */
-        gap: 1.2rem;
-        margin-top: 1.5rem;
-        justify-content: center;
-    }
-
-    .game-card {
-        background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-        padding: 1.2rem;
-        border-radius: 15px;
-        text-decoration: none;
-        color: var(--light-gold);
-        text-align: center;
-        transition: all 0.3s ease;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-between;
-        min-height: 160px; /* Made cards smaller */
-        position: relative;
-        overflow: hidden; /* keep hover/overlay contained */
-        z-index: 0; /* create base stacking */
-    }
-
-    .game-card::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: rgba(255,255,255,0.05);
-        transform: rotate(30deg);
-        transition: transform 0.5s ease;
-        z-index: 1; /* behind content */
-    }
-
-    .game-card:hover::before {
-        transform: rotate(60deg);
-    }
-
-    .game-card:hover {
-        transform: translateY(-5px) scale(1.01); /* Adjusted hover effect for smaller size */
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.6), 0 0 20px var(--gold-light); /* Adjusted glow */
-        border-color: var(--gold);
-    }
-
-    .game-card h3 {
-        color: var(--gold-light);
-        font-size: 1.6rem; /* Adjusted font size */
-        margin-bottom: 0.4rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-        z-index: 1;
-    }
-
-    .game-card p {
-        font-size: 0.9rem; /* Adjusted font size */
-        line-height: 1.3;
-        margin-bottom: 0.8rem;
-        flex-grow: 1;
-        z-index: 1;
-    }
-
-    .game-card-image {
-        width: 100%;
-        max-width: 100px; /* Adjust as needed */
-        height: auto;
-        aspect-ratio: 1 / 1; /* Enforce 1:1 aspect ratio */
-        object-fit: cover; /* Crop if necessary */
-        border-radius: 8px; /* Slightly rounded corners for the image */
-        margin-bottom: 0.8rem;
-        border: 2px solid var(--gold-light);
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        z-index: 2;
-    }
-
-    .info-btn {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        border: 2px solid var(--gold);
-        background: radial-gradient(circle at 30% 30%, var(--gold-light), var(--gold));
-        color: #111;
-        font-weight: 700;
-        line-height: 1;
-        cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        z-index: 5; /* above image and hover layer */
-        transition: transform 0.15s ease;
-    }
-    .info-btn:hover { transform: scale(1.05); }
-    .info-btn:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
-
-    .game-card-description {
-        position: absolute;
-        inset: 0;
-        background: rgba(42,26,31,0.92); /* var(--dark-wood) */
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        font-size: 0.9rem; /* match card short description */
-        font-family: 'Lato', sans-serif; /* match card short description */
-        line-height: 1.3; /* match card short description */
-        border-radius: 15px;
-        border: 2px solid var(--gold);
-        box-shadow: 0 0 20px var(--gold-light);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.25s ease, transform 0.25s ease;
-        transform: translateY(8px);
-        padding: 1.2rem 1.4rem;
-        z-index: 10; /* top of card */
-    }
-
-    .game-card.show-desc .game-card-description { /* mobile / JS toggle */
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(0);
-    }
-
-    .close-desc {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        border: 2px solid var(--gold);
-        background: rgba(0,0,0,0.5);
-        color: #ffffff;
-        font-weight: 700;
-        line-height: 1;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Prevent accidental navigation when description is visible */
-    .game-card.show-desc { pointer-events: none; }
-    .game-card.show-desc * { pointer-events: auto; }
-
-    /* Reduce image emphasis when description is visible */
-    .game-card.show-desc .game-card-image { filter: brightness(0.6); }
-
-    @media (max-width: 600px) {
+        /* Game Launcher card styles (from index) */
         .game-cards-container {
-            grid-template-columns: 1fr;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1.5rem;
+            justify-content: center;
         }
-    }
-    @media (max-width: 400px) {
         .game-card {
-            min-height: 140px;
-            padding: 1rem;
+            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+            padding: 1.2rem;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #fff8e1;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 160px;
+            position: relative;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255,255,255,0.05);
+            transform: rotate(30deg);
+            transition: transform 0.5s ease;
+            z-index: 1;
+        }
+        .game-card:hover::before { transform: rotate(60deg); }
+        .game-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.6), 0 0 20px #ffd700;
+            border-color: #d4af37;
         }
         .game-card h3 {
-            font-size: 1.4rem;
+            color: #ffd700;
+            font-size: 1.6rem;
+            margin-bottom: 0.4rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            z-index: 1;
         }
         .game-card p {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
+            line-height: 1.3;
+            margin-bottom: 0.8rem;
+            flex-grow: 1;
+            z-index: 1;
         }
-        .game-card .play-icon {
-            font-size: 1.8rem;
+        .game-card-image {
+            width: 100%;
+            max-width: 100px;
+            height: auto;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 2;
         }
-    }
-</style>
+        .info-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #d4af37;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #d4af37);
+            color: #111;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            z-index: 5;
+            transition: transform 0.15s ease;
+        }
+        .info-btn:hover { transform: scale(1.05); }
+        .info-btn:focus-visible { outline: 2px solid #ffd700; outline-offset: 2px; }
+        .game-card-description {
+            position: absolute;
+            inset: 0;
+            background: rgba(42,26,31,0.92);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.9rem;
+            font-family: 'Lato', sans-serif;
+            line-height: 1.3;
+            border-radius: 15px;
+            border: 2px solid #d4af37;
+            box-shadow: 0 0 20px #ffd700;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            transform: translateY(8px);
+            padding: 1.2rem 1.4rem;
+            z-index: 10;
+        }
+        .game-card.show-desc .game-card-description { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .close-desc {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #d4af37;
+            background: rgba(0,0,0,0.5);
+            color: #ffffff;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .game-card.show-desc { pointer-events: none; }
+        .game-card.show-desc * { pointer-events: auto; }
+        .game-card.show-desc .game-card-image { filter: brightness(0.6); }
+        @media (max-width: 600px) { .game-cards-container { grid-template-columns: 1fr; } }
+        @media (max-width: 400px) {
+            .game-card { min-height: 140px; padding: 1rem; }
+            .game-card h3 { font-size: 1.4rem; }
+            .game-card p { font-size: 0.8rem; }
+        }
+    </style>
 </head>
-<body>
-    <div class="casino-table">
-        <h1>🎲 Game Launcher 🎲</h1>
 
-        <div class="demo-section">
-            <h2 class="text-center mb-2">Travel Games</h2>
-            <div class="game-cards-container">
-                <a href="MyDice.html" class="game-card">
-                    <img src="./images/mydice.jpeg" alt="Roll two stunning 3D casino dice! Challenge friends, customize player names, and see who gets the luckiest roll. Every turn is a new chance for glory—will you be the high roller?" class="game-card-image">
-                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
-                    <h3>Dice</h3>
-                    <p>Roll the dice and test your luck!</p>
-                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="MyDice details">
-                        <button class="close-desc" aria-label="Close">×</button>
-                        <span>Roll two stunning 3D casino dice! Challenge friends, customize player names, and see who gets the luckiest roll. Every turn is a new chance for glory—will you be the high roller?</span>
-                    </div>
-                </a>
-                <a href="GiveAndTake.html" class="game-card">
-                    <img src="./images/giveandtake.jpeg" alt="Battle head-to-head in this strategic dice game! Roll for big scores, sabotage your opponent, and trigger wild casino events like Snake Eyes and Boxcars. First to 21 wins—can you outsmart and outroll your rival?" class="game-card-image">
-                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
-                    <h3>Give And Take</h3>
-                    <p>A strategic game of giving and taking.</p>
-                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Give and Take details">
-                        <button class="close-desc" aria-label="Close">×</button>
-                        <span>Battle head-to-head in this strategic dice game! Roll for big scores, sabotage your opponent, and trigger wild casino events like Snake Eyes and Boxcars. First to 15 wins—can you outsmart and outroll your rival?</span>
-                    </div>
-                </a>
-                <a href="TicTacToe.html" class="game-card">
-                    <img src="./images/tictactoe.png" alt="Classic Tic Tac Toe with a casino twist! Play as X or O, track your win tally, and enjoy a beautiful felt table. Outsmart your opponent and claim victory in this timeless duel!" class="game-card-image">
-                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
-                    <h3>Tic Tac Toe</h3>
-                    <p>The classic game of X's and O's.</p>
-                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Tic Tac Toe details">
-                        <button class="close-desc" aria-label="Close">×</button>
-                        <span>Classic Tic Tac Toe with a casino twist! Play as X or O, track your win tally, and enjoy a beautiful felt table. Outsmart your opponent and claim victory in this timeless duel!</span>
-                    </div>
-                </a>
-                <a href="../Trigon_Game/Trigon.html" class="game-card">
-                    <img src="./images/trigon.jpeg" alt="Experience the ultimate three-player Tic Tac Toe on a hexagonal board! Play as X, O, or Δ, and race to outmaneuver two rivals in this fast-paced, strategic, and visually stunning casino challenge!" class="game-card-image">
-                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
-                    <h3>Trigon</h3>
-                    <p>A challenging strategy game for 3 with hexagons.</p>
-                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Trigon details">
-                        <button class="close-desc" aria-label="Close">×</button>
-                        <span>Experience the ultimate three-player Tic Tac Toe on a hexagonal board! Play as X, O, or Δ, and race to outmaneuver two rivals in this fast-paced, strategic, and visually stunning casino challenge!</span>
-                    </div>
-                </a>
-                <a href="ShutTheBox.html" class="game-card">
-                    <img src="./images/shutthebox.png" alt="Roll the dice and take turns shutting or opening the box! Compete with up to four players in this addictive game of luck and strategy—will you be the one to outwit your rivals and shut every number for the win?" class="game-card-image">
-                    <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
-                    <h3>Shut the Box</h3>
-                    <p>Roll dice and choose wise to win!</p>
-                    <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Shut the Box details">
-                        <button class="close-desc" aria-label="Close">×</button>
-                        <span>Roll the dice and take turns shutting or opening the box! Compete with up to four players in this addictive game of luck and strategy—will you be the one to outwit your rivals and shut every number for the win?</span>
-                    </div>
-                </a>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="felt-green p-4 sticky top-0 z-50 shadow-lg">
+        <nav class="container mx-auto flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold gold-light-text tracking-wider">🧳 Travel Games</a>
+            <a href="#games" class="btn-primary font-bold py-2 px-5 rounded-lg text-sm md:text-base">Play Now</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- 1. Hero Section -->
+        <section id="hero" class="relative text-center py-10 md:py-14 felt-green overflow-hidden">
+             <!-- Background Image Placeholder -->
+            <div class="absolute inset-0 z-0">
+                <img src="https://placehold.co/1920x1080/0a4821/0a4821?text=" alt="Abstract background of a felt game table" class="w-full h-full object-cover opacity-30">
             </div>
+            <div class="container mx-auto px-4 relative z-10">
+                <p class="text-xl md:text-2xl max-w-3xl mx-auto text-gray-200 mb-6">Travel Games turns any stop into playtime. No downloads, no pieces, no setup—just open your browser and have fun on the go.</p>
+                <a href="#games" class="btn-primary font-bold py-3 px-8 rounded-lg text-lg inline-block">Play a Game for Free</a>
+                <p class="mt-4 text-sm text-gray-300 italic">Loved by campers, families, and friends everywhere.</p>
+            </div>
+        </section>
+
+        <!-- 2. Social Proof Bar 
+        <section id="social-proof" class="py-8 bg-gray-800">
+            <div class="container mx-auto px-4 text-center">
+                <h3 class="text-sm font-bold tracking-widest text-gray-400 uppercase mb-6">As Featured In</h3>
+                <div class="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-60">
+                    <img src="https://placehold.co/200x100/374151/9CA3AF?text=Campfire+Weekly" alt="Campfire Weekly Logo" class="h-8 md:h-10">
+                    <img src="https://placehold.co/200x100/374151/9CA3AF?text=Outdoor+Adventures" alt="Outdoor Adventures Logo" class="h-8 md:h-10">
+                    <img src="https://placehold.co/200x100/374151/9CA3AF?text=Family+Fun" alt="Family Fun Magazine Logo" class="h-8 md:h-10">
+                    <img src="https://placehold.co/200x100/374151/9CA3AF?text=Getaway+Gear" alt="Getaway Gear Logo" class="h-8 md:h-10">
+                </div>
+            </div>
+        </section>  -->
+        
+        <!-- Game Launcher Section (Anchor for CTAs) -->
+        <section id="games" class="py-16 md:py-24">
+             <div class="container mx-auto px-4 text-center">
+                 <h2 class="text-3xl md:text-4xl font-bold mb-12 gold-text">Choose Your Travel Game</h2>
+                 <div class="game-cards-container">
+                    <a href="https://adbio.pages.dev/TravelGames/MyDice.html" class="game-card">
+                        <img src="./images/mydice.jpeg" alt="Roll two stunning dice anywhere you go. Quick turns, big laughs—perfect for travel downtime." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Dice</h3>
+                        <p>Roll two beautiful 3D dice. Simple, quick, and fun anywhere.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="MyDice details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Roll two stunning dice and keep score with friends. Designed for fast play while traveling—airport lounges, train rides, or camping.</span>
+                        </div>
+                    </a>
+                    <a href="https://adbio.pages.dev/TravelGames/GiveAndTake.html" class="game-card">
+                        <img src="./images/giveandtake.jpeg" alt="Strategic dice duels on the go. Add to your score or subtract from your opponent." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Give And Take</h3>
+                        <p>Head-to-head dice strategy: add to yours or subtract theirs.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Give and Take details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Battle head-to-head with quick turns and wild events. Great for two players sharing a screen when you’re on the move.</span>
+                        </div>
+                    </a>
+                    <a href="https://adbio.pages.dev/TravelGames/TicTacToe.html" class="game-card">
+                        <img src="./images/tictactoe.png" alt="Classic travel-friendly duel: X vs O." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Tic Tac Toe</h3>
+                        <p>Classic quick match, perfect for filling short waits.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Tic Tac Toe details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Play X or O with a crisp, travel-ready design. Fast, familiar, and perfect for short breaks anywhere.</span>
+                        </div>
+                    </a>
+                    <a href="https://adbio.pages.dev/Trigon_Game/Trigon.html" class="game-card">
+                        <img src="./images/trigon.jpeg" alt="Three-player hexagonal challenge for friends on the go." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Trigon</h3>
+                        <p>Three-player strategy on a hex board—unique and fast-paced.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Trigon details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Experience three-way Tic Tac Toe with strategy and style. A great travel challenge when you have a few minutes to spare.</span>
+                        </div>
+                    </a>
+                    <a href="https://adbio.pages.dev/TravelGames/ShutTheBox.html" class="game-card">
+                        <img src="./images/shutthebox.png" alt="Roll dice and shut the tiles—easy to learn, addictive to play while traveling." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Shut the Box</h3>
+                        <p>Fast dice puzzle you can play anywhere, with anyone.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Shut the Box details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Roll and flip tiles to match totals. Simple to pick up, satisfying to master—ideal for travel downtime.</span>
+                        </div>
+                    </a>
+                    <a href="https://adbio.pages.dev/TravelGames/FoxGeese.html" class="game-card">
+                        <img src="./images/tictactoe.png" alt="Fox & Geese — a classic chase game that plays perfectly on the go." class="game-card-image">
+                        <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+                        <h3>Fox & Geese</h3>
+                        <p>Chase duel: one fox vs a flock of geese. Quick, tense fun.</p>
+                        <div class="game-card-description" role="dialog" aria-modal="true" aria-label="Fox & Geese details">
+                            <button class="close-desc" aria-label="Close">×</button>
+                            <span>Play a classic travel-friendly strategy duel: the fox hunts; the geese surround. Great for short bursts while waiting to board or winding down at your stay.</span>
+                        </div>
+                    </a>
+                 </div>
+             </div>
+        </section>
+
+        <!-- 3. Problem Section -->
+        <section id="problem" class="py-16 md:py-24 bg-gray-900">
+            <div class="container mx-auto px-4 max-w-3xl text-center">
+                <h2 class="text-3xl md:text-4xl font-bold gold-text mb-4">Turn Good Moments into Great Memories</h2>
+                <p class="text-lg md:text-xl text-gray-300 leading-relaxed">The vibe is great, the company is better. It's the ideal time to introduce a little shared fun, but physical board games are a hassle to pack or teach. Travel Games bridges that gap, turning a pleasant pause into the highlight of the night—sparking laughter and friendly competition in seconds.</p>
+            </div>
+        </section>
+
+        <!-- 4. Solution / How It Works -->
+        <section id="solution" class="py-10 md:py-14">
+            <div class="container mx-auto px-4">
+                <div class="text-center max-w-3xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold gold-text mb-4">Travel-Friendly Fun in 3 Steps</h2>
+                    <p class="text-xl text-gray-300 mb-8">Open your browser, pick a game, and play. Perfect for airports, trains, road trips, hotel lobbies—anywhere.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6 md:gap-8 text-center max-w-5xl mx-auto">
+                    <!-- Step 1 -->
+                    <div class="p-3">
+                        <div class="text-4xl font-bold gold-light-text mb-2">1.</div>
+                        <h3 class="text-xl font-bold mb-2">Open Your Browser</h3>
+                        <p class="text-gray-400">No app stores, no downloads, no sign-ups. It just works—on any phone, tablet, or laptop.</p>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="p-3">
+                        <div class="text-4xl font-bold gold-light-text mb-2">2.</div>
+                        <h3 class="text-xl font-bold mb-2">Pick Your Game</h3>
+                        <p class="text-gray-400">Choose from timeless classics, strategic dice games, or unique challenges like three-player Trigon.</p>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="p-3">
+                        <div class="text-4xl font-bold gold-light-text mb-2">3.</div>
+                        <h3 class="text-xl font-bold mb-2">Start the Fun</h3>
+                        <p class="text-gray-400">Share the link with your friends and let the laughter begin instantly.</p>
+                    </div>
+                </div>
+                 
+            </div>
+        </section>
+
+        <!-- 5. Features -> Benefits -->
+        <section id="features" class="py-16 md:py-24 felt-green section-glow">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl md:text-4xl font-bold text-center gold-text mb-12">Why You'll Love Travel Games</h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <!-- Feature 1 -->
+                    <div class="flex items-start space-x-4">
+                        <span class="w-16 h-16 rounded-lg flex items-center justify-center text-3xl bg-[#0a4821] flex-shrink-0" role="img" aria-label="Design palette">🎨</span>
+                        <div>
+                            <h3 class="text-xl font-bold gold-light-text">Beautiful Travel-Ready Design</h3>
+                            <p class="text-gray-300">A premium look that feels great on any screen—perfect for quick play wherever you are.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 2 -->
+                    <div class="flex items-start space-x-4">
+                        <span class="w-16 h-16 rounded-lg flex items-center justify-center text-3xl bg-[#0a4821] flex-shrink-0" role="img" aria-label="No install, fast start">🚀</span>
+                        <div>
+                            <h3 class="text-xl font-bold gold-light-text">Zero Installation or Sign-ups</h3>
+                            <p class="text-gray-300">Get straight to the fun without any friction. No annoying app downloads or forgotten passwords.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 3 -->
+                    <div class="flex items-start space-x-4">
+                        <span class="w-16 h-16 rounded-lg flex items-center justify-center text-3xl bg-[#0a4821] flex-shrink-0" role="img" aria-label="Multiplayer">👥</span>
+                        <div>
+                            <h3 class="text-xl font-bold gold-light-text">Multiplayer Ready</h3>
+                            <p class="text-gray-300">Designed for connection. Easily play with 2, 3, or even 4+ friends for engaging competition.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 4 -->
+                    <div class="flex items-start space-x-4">
+                        <span class="w-16 h-16 rounded-lg flex items-center justify-center text-3xl bg-[#0a4821] flex-shrink-0" role="img" aria-label="Mobile friendly">📱</span>
+                        <div>
+                            <h3 class="text-xl font-bold gold-light-text">Mobile-First & Responsive</h3>
+                            <p class="text-gray-300">Play anywhere, on any device. Your game will look and work perfectly, from phones to tablets.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 5 -->
+                    <div class="flex items-start space-x-4">
+                        <span class="w-16 h-16 rounded-lg flex items-center justify-center text-3xl bg-[#0a4821] flex-shrink-0" role="img" aria-label="Dice / games library">🎲</span>
+                        <div>
+                            <h3 class="text-xl font-bold gold-light-text">A Growing Library of Games</h3>
+                            <p class="text-gray-300">There's something for every mood, from luck-based dice games to strategic challenges.</p>
+                        </div>
+                    </div>
+                     <!-- Feature 6 -->
+                    <div class="flex items-start space-x-4">
+                        <span class="w-16 h-16 rounded-lg flex items-center justify-center text-3xl bg-[#0a4821] flex-shrink-0" role="img" aria-label="Free for everyone">🎁</span>
+                        <div>
+                            <h3 class="text-xl font-bold gold-light-text">100% Free, For Everyone</h3>
+                            <p class="text-gray-300">All of the fun, with absolutely no cost or annoying ads. Our gift to help you create more moments of joy.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Founder / Brand Story -->
+        <section id="story" class="py-16 md:py-24 bg-gray-900">
+            <div class="container mx-auto px-4 max-w-4xl">
+                <div class="md:flex items-center gap-12">
+                    <img src="https://placehold.co/160x160/2a1a1f/d4af37?text=Reinier" alt="Founder of Travel Games, Reinier" class="w-40 h-40 rounded-full mx-auto md:mx-0 mb-8 md:mb-0 flex-shrink-0 border-4 gold-border">
+                    <div>
+                        <h2 class="text-3xl font-bold gold-text mb-4">For Travelers Who Love Shared Moments</h2>
+                        <p class="text-gray-300 leading-relaxed">"I built Travel Games to make spontaneous play effortless on the go—no bulky boxes, no missing pieces. I wanted something beautiful and instant—no rules to memorize, no parts to carry—just tap and play with the people you’re with."</p>
+                        <p class="text-gray-300 leading-relaxed mt-4">Each game is designed for quick, joyful moments wherever you are—from airport gates to Airbnb couches."</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 7. Testimonials -->
+        <section id="testimonials" class="py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl md:text-4xl font-bold text-center gold-text mb-12">Don't Just Take Our Word For It...</h2>
+                <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <!-- Testimonial 1 -->
+                    <div class="testimonial-card p-8 rounded-xl border gold-border">
+                        <img src="https://placehold.co/80x80/0a4821/d4af37?text=SK" alt="Avatar of Sarah K." class="w-20 h-20 rounded-full mx-auto mb-4 border-2 gold-border">
+                        <p class="text-gray-300 italic mb-4">"Travel Games is a staple on our trips now. Shut the Box is our favorite after a long hike. It's so much easier than packing a bunch of board games."</p>
+                        <p class="font-bold gold-light-text text-center">— Sarah K., Avid Camper</p>
+                    </div>
+                     <!-- Testimonial 2 -->
+                    <div class="testimonial-card p-8 rounded-xl border gold-border">
+                        <img src="https://placehold.co/80x80/0a4821/d4af37?text=MR" alt="Avatar of Mike R." class="w-20 h-20 rounded-full mx-auto mb-4 border-2 gold-border">
+                        <p class="text-gray-300 italic mb-4">"We played Give and Take for hours on the train. The wild events are hilarious! It totally broke the ice and got everyone laughing."</p>
+                        <p class="font-bold gold-light-text text-center">— Mike R., Game Night Host</p>
+                    </div>
+                     <!-- Testimonial 3 -->
+                    <div class="testimonial-card p-8 rounded-xl border gold-border">
+                        <img src="https://placehold.co/80x80/0a4821/d4af37?text=JL" alt="Avatar of Jessica L." class="w-20 h-20 rounded-full mx-auto mb-4 border-2 gold-border">
+                        <p class="text-gray-300 italic mb-4">"My kids are obsessed with Trigon. It's simple enough for them to learn quickly but has enough strategy to keep the adults engaged. A total win for family night!"</p>
+                        <p class="font-bold gold-light-text text-center">— Jessica L., Mom of Three</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 8. Value Stack / Offer -->
+        <section id="offer" class="py-16 md:py-24 felt-green section-glow">
+            <div class="container mx-auto px-4 text-center max-w-3xl">
+                 <h2 class="text-3xl md:text-4xl font-bold gold-text mb-8">Everything You Get, Absolutely Free</h2>
+                 <div class="text-left max-w-md mx-auto space-y-4 text-lg">
+                    <p class="flex items-center"><span class="text-2xl mr-3">✅</span> Full Access to All 5+ Games <span class="text-gray-400 ml-2 italic">(A $15 Value)</span></p>
+                    <p class="flex items-center"><span class="text-2xl mr-3">✅</span> Premium Travel-Ready Design <span class="text-gray-400 ml-2 italic">(A $10 Value)</span></p>
+                    <p class="flex items-center"><span class="text-2xl mr-3">✅</span> Unlimited Plays, No Ads <span class="text-gray-400 ml-2 italic">(Priceless)</span></p>
+                    <p class="flex items-center"><span class="text-2xl mr-3">✅</span> All Future Game Updates Included <span class="text-gray-400 ml-2 italic">(A $10 Value)</span></p>
+                 </div>
+                 <div class="mt-8 border-t-2 gold-border max-w-sm mx-auto pt-6">
+                    <p class="text-lg">Total Value: <span class="line-through text-gray-400">$35+</span></p>
+                    <p class="text-4xl font-bold gold-light-text mt-2">Your Price Today: $0</p>
+                 </div>
+                 <a href="#games" class="btn-primary font-bold py-4 px-10 rounded-lg text-lg inline-block mt-10">Start Playing Now</a>
+            </div>
+        </section>
+        
+        <!-- 10. FAQ Section -->
+        <section id="faq" class="py-16 md:py-24">
+            <div class="container mx-auto px-4 max-w-3xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-center gold-text mb-12">Your Questions, Answered</h2>
+                <div class="space-y-6">
+                    <!-- FAQ 1 -->
+                    <div>
+                        <h3 class="font-bold text-xl mb-2 gold-light-text">Do I need to download an app?</h3>
+                        <p class="text-gray-300">Nope! All our games run directly in your web browser on any device. Just open the link and play.</p>
+                    </div>"
+                    <!-- FAQ 2 -->
+                    <div>
+                        <h3 class="font-bold text-xl mb-2 gold-light-text">Is it really free? What's the catch?</h3>
+                        <p class="text-gray-300">It's 100% free. No ads, no hidden fees. This is a passion project meant to be shared and enjoyed by as many people as possible.</p>
+                    </div>
+                    <!-- FAQ 3 -->
+                    <div>
+                        <h3 class="font-bold text-xl mb-2 gold-light-text">How many people can play?</h3>
+                        <p class="text-gray-300">Most games are designed for 2-4 players. Games like MyDice can be played by any number of people just taking turns to see who gets the highest roll!</p>
+                    </div>
+                     <!-- FAQ 4 -->
+                    <div>
+                        <h3 class="font-bold text-xl mb-2 gold-light-text">Can I play by myself?</h3>
+                        <p class="text-gray-300">While designed for groups, you can definitely play games like Shut the Box or MyDice solo to challenge your own high score!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 11. Final CTA -->
+        <section id="final-cta" class="py-16 md:py-24 felt-green text-center">
+             <div class="container mx-auto px-4">
+                <h2 class="text-3xl md:text-5xl font-extrabold gold-light-text leading-tight mb-4">Ready to Play Anywhere?</h2>
+                <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-200 mb-8">Open a game and make the most of the moment—at the airport, on the train, or around a camp.</p>
+                <a href="#games" class="btn-primary font-bold py-4 px-10 rounded-lg text-lg inline-block">Browse the Games</a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-center py-8">
+        <div class="container mx-auto px-4 text-gray-400">
+            <p>&copy; 2025 Travel Games. All Rights Reserved.</p>
+            <p class="mt-2 text-sm">Have a question or a game idea? <a href="mailto:mymelogeni@gmail.com" class="gold-text hover:underline">Contact us</a>.</p>
         </div>
-    </div>
+    </footer>
 
     <script>
-    (function() {
-        function closestCard(el) {
-            return el.closest && el.closest('.game-card');
-        }
-        function hideAll() {
-            document.querySelectorAll('.game-card.show-desc').forEach(c => c.classList.remove('show-desc'));
-        }
-        // Toggle via info button
-        document.addEventListener('click', function(e) {
-            const infoBtn = e.target.closest && e.target.closest('.info-btn');
-            if (infoBtn) {
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                e.stopPropagation();
-                const card = closestCard(infoBtn);
-                const isOpen = card.classList.contains('show-desc');
-                hideAll();
-                if (!isOpen) {
-                    card.classList.add('show-desc');
-                    const dialog = card.querySelector('.game-card-description');
-                    if (dialog) dialog.focus({ preventScroll: true });
-                }
-                return;
-            }
-            const closeBtn = e.target.closest && e.target.closest('.close-desc');
-            if (closeBtn) {
-                e.preventDefault();
-                const card = closestCard(closeBtn);
-                if (card) card.classList.remove('show-desc');
-                return;
-            }
-            // Click outside the dialog closes it
-            const desc = e.target.closest && e.target.closest('.game-card-description');
-            if (!desc) {
-                // If user taps somewhere else while a dialog is open, close all
-                hideAll();
-            }
-        }, { passive: false });
-
-        // Escape key closes any open dialog
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') hideAll();
-        });
-
-        // Prevent navigation when description is open by intercepting link click
-        document.querySelectorAll('.game-card').forEach(card => {
-            card.addEventListener('click', function(e) {
-                if (card.classList.contains('show-desc')) {
-                    // If the description is open, do not navigate
-                    e.preventDefault();
-                }
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
             });
         });
-    })();
+        // Game card info toggles (from index)
+        (function() {
+            function closestCard(el) { return el.closest && el.closest('.game-card'); }
+            function hideAll() { document.querySelectorAll('.game-card.show-desc').forEach(c => c.classList.remove('show-desc')); }
+            document.addEventListener('click', function(e) {
+                const infoBtn = e.target.closest && e.target.closest('.info-btn');
+                if (infoBtn) {
+                    e.preventDefault(); e.stopPropagation();
+                    const card = closestCard(infoBtn);
+                    const isOpen = card.classList.contains('show-desc');
+                    hideAll();
+                    if (!isOpen) {
+                        card.classList.add('show-desc');
+                        const dialog = card.querySelector('.game-card-description');
+                        if (dialog) dialog.focus({ preventScroll: true });
+                    }
+                    return;
+                }
+                const closeBtn = e.target.closest && e.target.closest('.close-desc');
+                if (closeBtn) {
+                    e.preventDefault();
+                    const card = closestCard(closeBtn);
+                    if (card) card.classList.remove('show-desc');
+                    return;
+                }
+                const desc = e.target.closest && e.target.closest('.game-card-description');
+                if (!desc) hideAll();
+            }, { passive: false });
+            document.addEventListener('keydown', function(e) { if (e.key === 'Escape') document.querySelectorAll('.game-card.show-desc').forEach(c => c.classList.remove('show-desc')); });
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.addEventListener('click', function(e) { if (card.classList.contains('show-desc')) e.preventDefault(); });
+            });
+        })();
     </script>
+
 </body>
 </html>
