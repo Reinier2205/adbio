@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sunrise Finder | Travel Tools</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://unpkg.com/suncalc/suncalc.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #2a1a1f; color: #faf8f0; }
@@ -17,13 +14,13 @@
     .btn-primary { background-color: #d4af37; color: #2a1a1f; transition: transform .2s ease, box-shadow .2s ease; }
     .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(212,175,55,.4); }
     .panel { background:#1f2937; border:2px solid rgba(212,175,55,0.6); border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
-    #compassCanvas { background: rgba(0,0,0,0.25); border-radius: 9999px; border:2px solid rgba(255,255,255,0.08); box-shadow: inset 0 0 30px rgba(0,0,0,0.35), 0 10px 25px rgba(0,0,0,0.35); }
+    #compassCanvas { background: rgba(0,0,0,0.25); border-radius: 9999px; border:2px solid rgba(255,255,255,0.08); }
   </style>
 </head>
 <body class="antialiased">
   <header class="felt-green p-4 sticky top-0 z-50 shadow-lg">
     <nav class="container mx-auto flex justify-between items-center">
-      <a href="#" class="text-2xl font-bold gold-text tracking-wider">🌅 Sunrise Finder</a>
+      <a href="#" class="text-2xl font-bold gold-text">🌅 Sunrise Finder</a>
       <div class="flex items-center gap-3">
         <a href="/TravelGames/index.html" class="btn-primary font-bold py-2 px-5 rounded-lg text-sm md:text-base">Home</a>
         <a href="/TravelGames/index.html#games" class="btn-primary font-bold py-2 px-5 rounded-lg text-sm md:text-base">Games</a>
@@ -44,11 +41,11 @@
           <div class="space-y-3">
             <label class="block text-left">
               <span class="block text-sm text-gray-300 mb-1">Latitude</span>
-              <input id="lat" type="number" step="any" class="w-full rounded bg-gray-900/60 border border-gray-700 p-2" placeholder="e.g. -33.9249">
+              <input id="lat" type="number" step="any" class="w-full rounded bg-gray-900/60 border border-gray-700 p-2">
             </label>
             <label class="block text-left">
               <span class="block text-sm text-gray-300 mb-1">Longitude</span>
-              <input id="lon" type="number" step="any" class="w-full rounded bg-gray-900/60 border border-gray-700 p-2" placeholder="e.g. 18.4241">
+              <input id="lon" type="number" step="any" class="w-full rounded bg-gray-900/60 border border-gray-700 p-2">
             </label>
             <label class="block text-left">
               <span class="block text-sm text-gray-300 mb-1">Date</span>
@@ -56,11 +53,11 @@
             </label>
           </div>
           <div class="flex flex-wrap gap-3 mt-4">
-            <button id="btn-calc" class="btn-primary font-bold py-2.5 px-5 rounded-lg flex items-center gap-2"><i class="fas fa-sun"></i><span>Calculate Sunrise</span></button>
-            <button id="btn-gps" class="bg-gray-700 text-white font-bold py-2.5 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-600 transition"><i class="fas fa-location-crosshairs"></i><span>Use my GPS</span></button>
-            <button id="enableCompass" class="bg-gray-700 text-white font-bold py-2.5 px-5 rounded-lg flex items-center gap-2 hover:bg-gray-600 transition"><i class="fas fa-compass"></i><span>Enable Compass</span></button>
+            <button id="btn-calc" class="btn-primary font-bold py-2.5 px-5 rounded-lg flex items-center gap-2">Calculate Sunrise</button>
+            <button id="btn-gps" class="bg-gray-700 text-white font-bold py-2.5 px-5 rounded-lg hover:bg-gray-600">Use my GPS</button>
+            <button id="enableCompass" class="bg-gray-700 text-white font-bold py-2.5 px-5 rounded-lg hover:bg-gray-600">Enable Compass</button>
           </div>
-          <div id="results" class="mt-4 text-sm text-gray-200"></div>
+          <div id="results" role="status" aria-live="polite" class="mt-4 text-sm text-gray-200"></div>
         </div>
 
         <div class="flex items-center justify-center">
@@ -74,11 +71,19 @@
 let sunriseAzimuth = null;
 let liveAzimuth = null;
 let heading = 0;
+let lastHeading = 0;
+
+function smoothHeading(newH) {
+  const k = 0.1;
+  lastHeading = lastHeading * (1 - k) + newH * k;
+  return lastHeading;
+}
 
 function calcSunrise() {
   const lat = parseFloat(document.getElementById("lat").value);
   const lon = parseFloat(document.getElementById("lon").value);
-  const date = new Date(document.getElementById("date").value);
+  const dateInput = document.getElementById("date").value || new Date().toISOString().split("T")[0];
+  const date = new Date(dateInput);
 
   if (isNaN(lat) || isNaN(lon)) {
     alert("Enter latitude and longitude.");
@@ -104,8 +109,7 @@ function calcSunrise() {
         </div>
       </div>
       <div id="live" class="mt-3 text-center"></div>
-    </div>
-  `;
+    </div>`;
   drawCompass();
 }
 
@@ -117,8 +121,7 @@ function updateLiveSun(lat, lon) {
 
   document.getElementById("live").innerHTML = `
     <div class="text-xs text-gray-400">Live Sun</div>
-    <div class="text-lg"><span class="gold-text font-bold">${liveAzimuth.toFixed(1)}°</span> az • ${altitude.toFixed(1)}° alt</div>
-  `;
+    <div class="text-lg"><span class="gold-text font-bold">${liveAzimuth.toFixed(1)}°</span> az • ${altitude.toFixed(1)}° alt</div>`;
 }
 
 function useMyGPS() {
@@ -146,23 +149,15 @@ function drawCompass() {
   ctx.translate(radius, radius);
   ctx.rotate(-heading * Math.PI/180);
 
-  for (let i = 0; i < 360; i += 30) {
-    ctx.beginPath();
-    ctx.moveTo(0, -radius+10);
-    ctx.lineTo(0, -radius+2);
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+  // cardinal directions
+  for (let i = 0; i < 360; i += 90) {
     ctx.save();
-    ctx.translate(0, -radius+20);
-    ctx.rotate(heading * Math.PI/180);
-    if (i % 90 === 0) {
-      const label = i===0?"N":i===90?"E":i===180?"S":"W";
-      ctx.fillStyle = '#ffd700';
-      ctx.fillText(label, -5, 5);
-    }
+    ctx.rotate(i * Math.PI/180);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = "16px Inter";
+    const label = i===0?"N":i===90?"E":i===180?"S":"W";
+    ctx.fillText(label, -6, -radius+25);
     ctx.restore();
-    ctx.rotate(30 * Math.PI/180);
   }
 
   if (sunriseAzimuth !== null) {
@@ -199,7 +194,7 @@ document.getElementById("enableCompass").addEventListener("click", async () => {
     try {
       const response = await DeviceOrientationEvent.requestPermission();
       if (response === "granted") {
-        window.addEventListener("deviceorientation", handleOrientation);
+        window.addEventListener("deviceorientation", handleOrientation, true);
         document.getElementById("enableCompass").classList.add('hidden');
       } else {
         alert("Compass access denied.");
@@ -216,12 +211,15 @@ document.getElementById("enableCompass").addEventListener("click", async () => {
 
 function handleOrientation(event) {
   if (event.webkitCompassHeading) {
-    heading = event.webkitCompassHeading;
+    heading = smoothHeading(event.webkitCompassHeading);
   } else if (event.alpha !== null) {
-    heading = 360 - event.alpha;
+    heading = smoothHeading(360 - event.alpha);
   }
   drawCompass();
 }
+
+// set today as default date
+document.getElementById("date").value = new Date().toISOString().split("T")[0];
 </script>
 </body>
 </html>
