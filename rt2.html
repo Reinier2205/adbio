@@ -247,6 +247,34 @@
                     <p>Julle roete lei julle verby die <strong>Jock Of The Bushveld Plaque</strong>, 'n huldeblyk aan die beroemde verhaal van Jock en sy eienaar. Dit is 'n gepaste manier om julle Kruger-avontuur te beëindig. Die reis eindig by <strong>Berg-en-Dal Ruskamp</strong>, 'n pragtige kamp in die heuwelagtige terrein. Hierdie area is uitstekende <strong>renoster</strong>- en <strong>luiperd</strong>-habitat.</p>
                 </div>
             </div>
+
+			<div class="flex items-center space-x-4">
+				<button class="route-title-btn collapsible flex-grow text-left">Watergate: Verken Watergate & Skuilings</button>
+				<a href="https://www.sanparks.org/parks/kruger" target="_blank" class="btn btn-primary flex-shrink-0">Info</a>
+			</div>
+			<div class="content">
+				<div class="section-details text-left">
+					<div class="section-header">Soek en ontdek</div>
+					<p>Gebruik die soekfunksie om 'n watergat by naam te vind. Kies uit die voorstelle, druk Enter, of klik om die kaart te laat uitlig en fokus.</p>
+
+					<div class="mt-4">
+						<div id="region-filters" class="flex flex-wrap gap-2 mb-3">
+							<button class="px-3 py-1.5 rounded-full border border-slate-600 text-slate-200 bg-slate-700/60 hover:bg-slate-600 active" data-region="all">Almal</button>
+							<button class="px-3 py-1.5 rounded-full border border-slate-600 text-slate-200 bg-slate-700/60 hover:bg-slate-600" data-region="malelane">Malelane / Berg-en-Dal</button>
+							<button class="px-3 py-1.5 rounded-full border border-slate-600 text-slate-200 bg-slate-700/60 hover:bg-slate-600" data-region="skukuza">Skukuza</button>
+							<button class="px-3 py-1.5 rounded-full border border-slate-600 text-slate-200 bg-slate-700/60 hover:bg-slate-600" data-region="lower-sabie">Laer Sabie</button>
+							<button class="px-3 py-1.5 rounded-full border border-slate-600 text-slate-200 bg-slate-700/60 hover:bg-slate-600" data-region="satara">Satara</button>
+						</div>
+						<div class="relative">
+						<label for="waterhole-search" class="sr-only">Soek watergat</label>
+						<input id="waterhole-search" type="text" placeholder="Soek watergat… (bv. Sunset Dam, Lake Panic)" class="w-full rounded-md bg-slate-700/70 border border-slate-600 px-4 py-3 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+						<ul id="search-suggestions" class="absolute z-10 mt-2 w-full bg-slate-800/95 border border-slate-700 rounded-md shadow-lg hidden max-h-64 overflow-auto"></ul>
+						</div>
+
+					<div class="section-header">Watergate Kaartjies</div>
+					<div id="waterhole-grid" class="grid grid-cols-1 gap-4"></div>
+				</div>
+			</div>
         </div>
         
         <p class="body mt-8 text-sm text-slate-400">
@@ -274,6 +302,175 @@
                     this.classList.add("active");
                     currentContent.style.maxHeight = currentContent.scrollHeight + "px";
                 }
+            });
+        }
+
+        // Waterhole data (Afrikaans labels, same palette)
+        const waterholesData = [
+            { name: "Matjulu Watergat", region: "malelane", location: "S110 naby Malelane", facts: "Uitstekend vir oggendrewe. Goeie sig vir witrenosters.", lat: -25.5391, lon: 31.5177, animals: ["Witrenoster","Olifant","Sebras","Blouwildebees","Koedoe","Impala"] },
+            { name: "Gardenia Skuiling (Mpondo Dam)", region: "malelane", location: "Net af van H3", facts: "Top vir voëlkyk. Seekoeie en krokodille permanent.", lat: -25.3785, lon: 31.5302, animals: ["Seekoei","Krokodil","Olifant","Waterbok","Voëls"] },
+            { name: "Mathekanyane Watergat", region: "berg-en-dal", location: "Noord van Berg-en-Dal op S110", facts: "Bekend vir luiperd in rotsrifte.", lat: -25.4322, lon: 31.4789, animals: ["Luiperd","Koedoe","Kameelperd","Olifant","Impala"] },
+            { name: "Lake Panic Skuiling", region: "skukuza", location: "Naby Skukuza gholfklub", facts: "Beste voëlskuiling. Reusevisvanger hoogtepunt.", lat: -24.9926, lon: 31.5794, animals: ["Seekoei","Krokodil","Reusevisvanger","Visarend","Olifant","Bosbok"] },
+            { name: "De Laporte Watergat", region: "skukuza", location: "H1-1 noord van Skukuza", facts: "Groot olifanttroppe vir modderbaddens.", lat: -24.8715, lon: 31.5348, animals: ["Olifant","Buffel","Sebras","Blouwildebees","Kameelperd"] },
+            { name: "Silolweni Dam", region: "skukuza", location: "S1 Salitje loop", facts: "Groot dam; baie seekoeie en krokodille.", lat: -25.0450, lon: 31.4911, animals: ["Seekoei","Krokodil","Olifant","Waterbok","Sadelbekooievaar"] },
+            { name: "Sunset Dam", region: "lower-sabie", location: "By Laer Sabie", facts: "Ikonies vir fotografie; roofdiere teen skemer.", lat: -25.1233, lon: 31.9160, animals: ["Seekoei","Krokodil","Olifant","Leeus","Luiperd","Voëls"] },
+            { name: "Duke se Watergat", region: "lower-sabie", location: "S128 oos van Laer Sabie", facts: "Gepaste vir jagluiperd; groot buffeltroppe.", lat: -25.1768, lon: 31.8499, animals: ["Jagluiperd","Leeus","Buffel","Sebras","Blouwildebees","Kameelperd"] },
+            { name: "N'watimhiri Laevlakdrif", region: "lower-sabie", location: "H4-2 laagwaterbrug", facts: "Uitstekend vir roofdiere; riete vir skuiling.", lat: -25.1095, lon: 31.9540, animals: ["Leeus","Luiperd","Waterbok","Olifant","Buffel"] },
+            { name: "N'wanetsi Piekniek & Watergat", region: "satara", location: "H1-4 oos van Satara", facts: "Bekend vir groot leeubroeisels.", lat: -24.4321, lon: 31.8345, animals: ["Leeus","Olifant","Seekoei","Koedoe","Waterbok","Kameelperd"] },
+            { name: "Sweni Skuiling", region: "satara", location: "S126 op Swenirivier", facts: "Sweni-trop leeus gereeld; kans vir luiperd.", lat: -24.4710, lon: 31.7905, animals: ["Leeus","Luiperd","Olifant","Bobbejaan","Impala","Koedoe"] },
+            { name: "Girivana Watergat", region: "satara", location: "H1-4 noord van Satara", facts: "Betroubaar vir groot grasvretende troppe en roofdiere.", lat: -24.2882, lon: 31.7511, animals: ["Sebras","Blouwildebees","Kameelperd","Buffel","Leeus","Hiëna"] }
+        ];
+
+        const waterholeGrid = document.getElementById('waterhole-grid');
+        const searchInput = document.getElementById('waterhole-search');
+        const suggestionsList = document.getElementById('search-suggestions');
+        const regionFilters = document.getElementById('region-filters');
+        let currentRegion = 'all';
+
+        function createWaterholeCard(hole) {
+            const card = document.createElement('div');
+            card.className = 'p-4 rounded-lg border border-slate-700 bg-slate-800/70 text-left transition transform hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-blue-500';
+            card.setAttribute('data-name', hole.name.toLowerCase());
+            card.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <h3 class="text-slate-100 font-semibold text-lg">${hole.name}</h3>
+                    <span class="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">${
+                        hole.region === 'malelane' ? 'Malelane / Berg-en-Dal'
+                      : hole.region === 'skukuza' ? 'Skukuza'
+                      : hole.region === 'lower-sabie' ? 'Laer Sabie'
+                      : 'Satara'
+                    }</span>
+                </div>
+                <div class="mt-2 text-slate-300"><span class="text-slate-400">Ligging:</span> ${hole.location}</div>
+                <div class="mt-2 text-slate-300"><span class="text-slate-400">Feite:</span> ${hole.facts}</div>
+                ${hole.lat && hole.lon ? `
+                <div class="mt-2 text-slate-300"><span class="text-slate-400">Koördinate:</span> ${hole.lat.toFixed(4)}, ${hole.lon.toFixed(4)}</div>
+                <div class="mt-3">
+                    <a href="https://www.google.com/maps?q=${hole.lat},${hole.lon}" target="_blank" class="inline-flex items-center px-3 py-1.5 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-500">Open in Google Maps</a>
+                </div>` : ''}
+                <div class="mt-3 flex flex-wrap gap-2">
+                    ${hole.animals.map(a => `<span class="text-xs bg-blue-600/20 text-blue-200 px-2 py-1 rounded">${a}</span>`).join('')}
+                </div>
+            `;
+            return card;
+        }
+
+        function renderWaterholes(list) {
+            if (!waterholeGrid) return;
+            waterholeGrid.innerHTML = '';
+            list.forEach(h => waterholeGrid.appendChild(createWaterholeCard(h)));
+        }
+
+        function regionFilterPredicate(h) {
+            if (currentRegion === 'all') return true;
+            if (currentRegion === 'malelane') return h.region === 'malelane' || h.region === 'berg-en-dal';
+            return h.region === currentRegion;
+        }
+
+        function rerender() {
+            const base = waterholesData.filter(regionFilterPredicate);
+            const q = (searchInput?.value || '').trim().toLowerCase();
+            const filtered = q ? base.filter(h => h.name.toLowerCase().includes(q)) : base;
+            renderWaterholes(filtered);
+            // update suggestions to respect region
+            if (q) {
+                const matches = base.filter(h => h.name.toLowerCase().includes(q)).slice(0, 8);
+                showSuggestions(matches);
+            } else {
+                showSuggestions([]);
+            }
+        }
+
+        function showSuggestions(matches) {
+            if (!matches.length) {
+                suggestionsList.classList.add('hidden');
+                suggestionsList.innerHTML = '';
+                return;
+            }
+            suggestionsList.innerHTML = matches.map((m, idx) => `
+                <li data-index="${idx}" class="px-3 py-2 cursor-pointer hover:bg-slate-700">${m.name}</li>
+            `).join('');
+            suggestionsList.classList.remove('hidden');
+        }
+
+        function highlightCardByName(name) {
+            const cards = waterholeGrid.querySelectorAll('[data-name]');
+            let target = null;
+            cards.forEach(c => {
+                const match = c.getAttribute('data-name') === name.toLowerCase();
+                if (match) target = c;
+                c.classList.remove('ring-2','ring-blue-400','animate-pulse');
+            });
+            if (target) {
+                target.classList.add('ring-2','ring-blue-400');
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                target.animate([
+                    { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(59,130,246,0)' },
+                    { transform: 'scale(1.02)', boxShadow: '0 0 0 8px rgba(59,130,246,0.2)' },
+                    { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(59,130,246,0)' }
+                ], { duration: 700, easing: 'ease-out' });
+            }
+        }
+
+        // Initial render
+        if (waterholeGrid) {
+            renderWaterholes(waterholesData);
+        }
+
+        // Search interactions
+        if (searchInput) {
+            let activeIndex = -1;
+            searchInput.addEventListener('input', (e) => {
+                const q = e.target.value.trim().toLowerCase();
+                activeIndex = -1;
+                if (!q) { showSuggestions([]); return; }
+                const base = waterholesData.filter(regionFilterPredicate);
+                const matches = base.filter(h => h.name.toLowerCase().includes(q)).slice(0, 8);
+                showSuggestions(matches);
+            });
+
+            searchInput.addEventListener('keydown', (e) => {
+                const items = Array.from(suggestionsList.querySelectorAll('li'));
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeIndex = (activeIndex + 1) % (items.length || 1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeIndex = (activeIndex - 1 + (items.length || 1)) % (items.length || 1);
+                } else if (e.key === 'Enter') {
+                    if (items.length) {
+                        e.preventDefault();
+                        const name = (activeIndex >= 0 ? items[activeIndex].textContent : searchInput.value).trim();
+                        const found = waterholesData.find(h => h.name.toLowerCase() === name.toLowerCase());
+                        if (found) highlightCardByName(found.name);
+                        suggestionsList.classList.add('hidden');
+                    }
+                }
+                items.forEach((el, idx) => {
+                    el.classList.toggle('bg-slate-700', idx === activeIndex);
+                });
+            });
+
+            suggestionsList.addEventListener('click', (e) => {
+                const li = e.target.closest('li');
+                if (!li) return;
+                const name = li.textContent.trim();
+                searchInput.value = name;
+                const found = waterholesData.find(h => h.name.toLowerCase() === name.toLowerCase());
+                if (found) highlightCardByName(found.name);
+                suggestionsList.classList.add('hidden');
+            });
+        }
+
+        // Region filter interactions
+        if (regionFilters) {
+            regionFilters.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-region]');
+                if (!btn) return;
+                currentRegion = btn.getAttribute('data-region');
+                Array.from(regionFilters.querySelectorAll('button')).forEach(b => b.classList.remove('ring-2','ring-blue-400','bg-slate-600'));
+                btn.classList.add('ring-2','ring-blue-400','bg-slate-600');
+                rerender();
             });
         }
     </script>
