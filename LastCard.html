@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>Last Card Standing</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,7 +27,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:18px;
+  padding:10px; /* Reduced padding for mobile fit */
   min-height:100vh;
 }
 .table {
@@ -39,12 +39,12 @@ body{
   background-size:4px 4px;
   box-shadow:0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.45);
   border-radius:14px;
-  padding:20px;
+  padding:16px; /* Slightly reduced padding */
   position:relative;
 }
-.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap: wrap;}
 .title{font-family:'Inter',sans-serif;color:var(--gold-light);font-weight:700;font-size:1.6rem;text-shadow:2px 2px 5px rgba(0,0,0,0.7);}
-.controls-top{display:flex;gap:8px;align-items:center;}
+.controls-top{display:flex;gap:8px;align-items:center;flex-wrap: wrap; margin-top: 4px;}
 .players-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;justify-content:center;}
 .player{
   background:linear-gradient(145deg,#3e1e24,#2a1a1f);
@@ -64,16 +64,50 @@ body{
 .heart{width:18px;height:18px;border-radius:4px;background:linear-gradient(180deg,var(--gold),#b8860b);box-shadow:0 1px 3px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;color:var(--dark-wood);font-weight:700;font-size:12px;}
 .heart.empty{background:rgba(0,0,0,0.35);color:#666}
 .player.active{border-color:var(--gold);transform:scale(1.05);box-shadow:0 0 16px var(--gold-light), inset 0 2px 6px rgba(0,0,0,0.5);}
-.game-area{display:flex;gap:18px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;}
-.left-col{flex:1 1 520px;min-width:280px;}
-.right-col{width:260px;min-width:220px;display:flex;flex-direction:column;gap:12px;align-items:center;}
+
+/* Layout Fix: game-area centered and wraps */
+.game-area{
+  display:flex;
+  gap:18px;
+  align-items:flex-start;
+  justify-content:center; /* Center content when wrapped or side-by-side */
+  flex-wrap:wrap;
+  margin-top: 12px;
+}
+.left-col{
+  flex: 1 1 320px; /* More flexible basis */
+  min-width: 280px;
+  max-width: 520px; /* Keep max width */
+}
+/* Layout Fix: right-col structure adjustment */
+.right-col{
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 220px; /* Fixed basis to maintain side-by-side structure on desktop */
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  align-items:center;
+}
+/* New container to hold Deck and Revealed side-by-side */
+.card-piles {
+  display: flex;
+  gap: 16px;
+  justify-content: center; /* Center the piles within the right column */
+  width: 100%;
+}
+.pile-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 .grid{width:100%;max-width:520px;margin:0 auto 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;justify-items:center;}
 .card{width:100%;max-width:var(--card-width);aspect-ratio:3/4;min-height:var(--card-height);background:linear-gradient(180deg,var(--ivory),#f1eee6);border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.6);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px;font-family:'Inter',sans-serif;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;}
 .card.placeholder{background:linear-gradient(180deg,#0f5a2c,#0a4821);color:var(--light-gold);border:3px solid rgba(0,0,0,0.6);box-shadow: inset 0 0 12px rgba(0,0,0,0.5);}
 .card.selected{transform:translateY(-6px);box-shadow:0 12px 30px rgba(0,0,0,0.55), 0 0 16px var(--gold-light);}
-.deck-visual{width:calc(var(--card-width)*.86);height:calc(var(--card-height)*.86);border-radius:8px;background:linear-gradient(180deg,#2b1a1b,#1b0f10);border:3px solid #290f10;box-shadow:0 8px 20px rgba(0,0,0,0.6), inset 0 0 16px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;color:var(--light-gold);font-family:'Inter',sans-serif;font-weight:700;}
-.revealed{width:calc(var(--card-width)*1.06);aspect-ratio:3/4;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--ivory),#f7f5ec);box-shadow:0 10px 26px rgba(0,0,0,0.5);border:3px solid rgba(0,0,0,0.4);}
-.actions{display:flex;justify-content:center;gap:20px;margin-bottom:16px;}
+.deck-visual{width:var(--card-width);height:var(--card-height);border-radius:10px;background:linear-gradient(180deg,#2b1a1b,#1b0f10);border:3px solid #290f10;box-shadow:0 8px 20px rgba(0,0,0,0.6), inset 0 0 16px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;color:var(--light-gold);font-family:'Inter',sans-serif;font-weight:700;}
+.revealed{width:var(--card-width);height:var(--card-height);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--ivory),#f7f5ec);box-shadow:0 10px 26px rgba(0,0,0,0.5);border:3px solid rgba(0,0,0,0.4);font-family:'Inter',sans-serif;padding:8px;text-align:center;}
+.actions{display:flex;justify-content:center;gap:20px;margin-bottom:16px;margin-top: 16px;}
 .btn{font-family:'Inter',sans-serif;font-weight:600;padding:12px 18px;border-radius:8px;border:2px solid #111;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 0 #111,0 8px 16px rgba(0,0,0,0.45);color:white;text-shadow:1px 1px 2px #000;}
 .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #111;}
 .btn-green{background:linear-gradient(145deg,#008c3a,#005a25)}
@@ -81,6 +115,40 @@ body{
 .big-btn{font-size:1.4rem;padding:18px 32px;}
 .status{text-align:center;color:var(--light-gold);font-weight:700;font-family:'Inter',sans-serif;text-shadow:1px 1px 2px black;padding:8px 12px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,0.2),rgba(0,0,0,0.12));}
 .meta{font-size:0.95rem;color:var(--light-gold);}
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .controls-top {
+    justify-content: flex-start;
+  }
+  .big-btn {
+    font-size: 1.2rem;
+    padding: 12px 20px;
+  }
+  .game-area {
+    gap: 12px;
+  }
+  .right-col {
+    flex-basis: 100%; /* Take full width when stacked */
+    order: 3; /* Move the piles/log below the grid on mobile */
+  }
+  .left-col {
+    order: 1; /* Keep the grid at the top */
+    min-width: unset;
+  }
+  .actions {
+    order: 2; /* Put action buttons between grid and piles */
+    width: 100%;
+    margin-top: 0;
+  }
+  .grid {
+    gap: 6px;
+  }
+}
 
 /* Winner modal */
 #winnerModal{
@@ -112,15 +180,37 @@ body{
       <button class="btn" id="btnHelp">Rules</button>
     </div>
   </div>
+
+  <!-- Actions (Higher/Lower) buttons are now placed here for better layout flow on mobile -->
   <div class="actions"><button class="btn btn-green big-btn" id="btnHigher" disabled>HIGHER</button><button class="btn btn-red big-btn" id="btnLower" disabled>LOWER</button></div>
+
   <div class="game-area">
+    <!-- Card Grid -->
     <div class="left-col"><div class="grid" id="grid"></div></div>
+
+    <!-- Right Column (Piles & Log) -->
     <div class="right-col">
-      <div><div class="meta">Deck</div><div class="deck-visual" id="deckVisual">43</div></div>
-      <div><div class="meta">Revealed</div><div class="revealed" id="revealedSlot">—</div></div>
-      <div><div class="meta">Game Log</div><div class="status" id="gameLog">Ready</div></div>
+      <!-- NEW: Card Piles Container for side-by-side deck/revealed -->
+      <div class="card-piles">
+        <div class="pile-container">
+          <div class="meta">Deck</div>
+          <div class="deck-visual" id="deckVisual">43</div>
+        </div>
+        <div class="pile-container">
+          <div class="meta">Revealed</div>
+          <div class="revealed" id="revealedSlot">—</div>
+        </div>
+      </div>
+      
+      <!-- Game Log -->
+      <div>
+        <div class="meta">Game Log</div>
+        <div class="status" id="gameLog">Ready</div>
+      </div>
     </div>
   </div>
+  
+  <!-- Players Row is kept at the bottom -->
   <div class="players-row" id="playersRow"></div>
 </div>
 
@@ -152,23 +242,73 @@ function launchConfetti(){
   const deckVisual=document.getElementById('deckVisual'),revealedSlot=document.getElementById('revealedSlot'),gameLog=document.getElementById('gameLog');
   let deck=[],grid=[],players=[],currentPlayer=0,selectedIndex=null,inPlay=false;
 
+  function createCardHtml(card) {
+      const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
+      return `
+          <div style="color:${color}; font-size:1.1rem; align-self: flex-start;">${card.rank}</div>
+          <div style="color:${color}; font-size:2.2rem; font-weight:700;">${card.suit}</div>
+          <div style="color:${color}; font-size:0.9rem; align-self: flex-end; transform: rotate(180deg);">${card.rank}</div>
+      `;
+  }
+  
   function createDeck(){let out=[];for(const s of suits){for(const r of ranks){out.push({suit:s,rank:r.r,value:r.v});}}return out;}
   function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
   function buildPlayers(n){playersRow.innerHTML='';players=[];for(let i=0;i<n;i++){const p=document.createElement('div');p.className='player';p.dataset.index=i;p.innerHTML=`<div class="name">Player ${i+1}</div><span class="edit-name-icon">✎</span><div class="hearts"></div>`;playersRow.appendChild(p);players.push({name:`Player ${i+1}`,lives:3,eliminated:false});p.querySelector('.edit-name-icon').addEventListener('click',()=>{const newName=prompt("Enter new name",players[i].name);if(newName){players[i].name=newName;p.querySelector('.name').textContent=newName;}});}renderHearts();highlightActive();}
   function renderHearts(){document.querySelectorAll('.player').forEach((el,idx)=>{const hwrap=el.querySelector('.hearts');hwrap.innerHTML='';for(let i=0;i<3;i++){const h=document.createElement('div');h.className='heart'+(i<players[idx].lives?'':' empty');h.textContent=i<players[idx].lives?'❤':'✖';hwrap.appendChild(h);}el.style.opacity=players[idx].eliminated?0.45:1;});}
   function highlightActive(){document.querySelectorAll('.player').forEach((el,idx)=>{if(idx===currentPlayer&&!players[idx].eliminated){el.classList.add('active');}else{el.classList.remove('active');}});}
   function buildGrid(){gridEl.innerHTML='';grid=[];for(let i=0;i<9;i++){const slot=document.createElement('div');slot.className='card placeholder';slot.dataset.index=i;slot.textContent="Empty";slot.addEventListener('click',()=>onSelectIndex(i));gridEl.appendChild(slot);grid.push(null);}}
-  function renderGrid(){[...gridEl.children].forEach((slot,i)=>{const card=grid[i];slot.classList.remove('selected');if(card){slot.classList.remove('placeholder');slot.innerHTML=`<div>${card.rank}</div><div style="font-size:1.6rem">${card.suit}</div><div>${card.value}</div>`;}else{slot.classList.add('placeholder');slot.textContent="Empty";}slot.style.pointerEvents=inPlay?'auto':'none';});}
-  function newGame(){const pc=parseInt(playerCountSel.value,10);buildPlayers(pc);buildGrid();deck=shuffle(createDeck());for(let i=0;i<9;i++){grid[i]=deck.pop();}players.forEach(p=>{p.lives=3;p.eliminated=false;});currentPlayer=Math.floor(Math.random()*players.length);selectedIndex=null;inPlay=true;revealedSlot.textContent='—';updateDeckVisual();renderGrid();renderHearts();highlightActive();gameLog.textContent=`Game started. ${players[currentPlayer].name} goes first.`;}
+  function renderGrid(){[...gridEl.children].forEach((slot,i)=>{const card=grid[i];slot.classList.remove('selected');if(card){slot.classList.remove('placeholder');slot.innerHTML=createCardHtml(card);}else{slot.classList.add('placeholder');slot.textContent="Empty";}slot.style.pointerEvents=inPlay?'auto':'none';});}
+  function newGame(){const pc=parseInt(playerCountSel.value,10);buildPlayers(pc);buildGrid();deck=shuffle(createDeck());for(let i=0;i<9;i++){grid[i]=deck.pop();}players.forEach(p=>{p.lives=3;p.eliminated=false;});currentPlayer=Math.floor(Math.random()*players.length);selectedIndex=null;inPlay=true;revealedSlot.innerHTML='—';updateDeckVisual();renderGrid();renderHearts();highlightActive();gameLog.textContent=`Game started. ${players[currentPlayer].name} goes first.`;}
   function updateDeckVisual(){deckVisual.textContent=deck.length;}
-  function onSelectIndex(i){if(!inPlay||players[currentPlayer].eliminated)return;selectedIndex=i;document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));gridEl.children[i].classList.add('selected');btnHigher.disabled=false;btnLower.disabled=false;}
+  function onSelectIndex(i){if(!inPlay||players[currentPlayer].eliminated)return;selectedIndex=i;document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));gridEl.children[i].classList.add('selected');btnHigher.disabled=false;btnLower.disabled=false;gameLog.textContent=`${players[currentPlayer].name}: Guess Higher or Lower for ${grid[i].rank} of ${grid[i].suit}.`;}
   function drawCard(){if(deck.length===0){endGameWithWinner(currentPlayer,"Deck exhausted — instant win!");return null;}const c=deck.pop();updateDeckVisual();return c;}
-  function resolveGuess(guess){if(selectedIndex===null)return;btnHigher.disabled=true;btnLower.disabled=true;const base=grid[selectedIndex];const drawn=drawCard();if(!drawn)return;revealedSlot.innerHTML=`<div><div>${drawn.rank}</div><div style="font-size:1.6rem">${drawn.suit}</div><div>${drawn.value}</div></div>`;setTimeout(()=>{const correct=(guess==='higher'&&drawn.value>base.value)||(guess==='lower'&&drawn.value<base.value);if(correct){grid[selectedIndex]=drawn;renderGrid();gameLog.textContent=`${players[currentPlayer].name} guessed correctly.`;selectedIndex=null;}else{players[currentPlayer].lives--;if(players[currentPlayer].lives<=0){players[currentPlayer].eliminated=true;gameLog.textContent=`${players[currentPlayer].name} is eliminated.`;}else{gameLog.textContent=`${players[currentPlayer].name} guessed wrong.`;}renderHearts();advanceTurn();}highlightActive();checkForSingleWinner();},400);}
-  function advanceTurn(){let n=players.length;for(let i=1;i<=n;i++){const idx=(currentPlayer+i)%n;if(!players[idx].eliminated){currentPlayer=idx;break;}}selectedIndex=null;revealedSlot.textContent='—';btnHigher.disabled=true;btnLower.disabled=true;gameLog.textContent=`${players[currentPlayer].name}'s turn.`;highlightActive();}
-  function checkForSingleWinner(){const active=players.filter(p=>!p.eliminated);if(active.length===1){const idx=players.findIndex(p=>!p.eliminated);endGameWithWinner(idx,`${players[idx].name} wins!`);return true;}return false;}
-  function endGameWithWinner(idx,msg){inPlay=false;btnHigher.disabled=true;btnLower.disabled=true;highlightActive();gameLog.textContent=msg;document.getElementById('winnerTitle').textContent="Last Card Standing";document.getElementById('winnerMessage').textContent=msg;document.getElementById('winnerModal').style.display='flex';launchConfetti();}
-  btnNew.addEventListener('click',newGame);btnHigher.addEventListener('click',()=>resolveGuess('higher'));btnLower.addEventListener('click',()=>resolveGuess('lower'));document.getElementById('btnHelp').addEventListener('click',()=>{alert(`🃏 Last Card Standing Rules\n\nGoal: Be the last player with lives remaining.\n\nSetup: 9 cards in grid, rest in deck. 3 lives each.\n\nTurn: Pick grid card, guess higher/lower, reveal top card.\nCorrect: replace grid card, go again. Wrong: lose life, next player.\nEliminated at 0 lives.\nLast player standing or deck exhaustion wins.`);});newGame();
+  function resolveGuess(guess){if(selectedIndex===null)return;btnHigher.disabled=true;btnLower.disabled=true;const base=grid[selectedIndex];const drawn=drawCard();if(!drawn)return;revealedSlot.innerHTML=createCardHtml(drawn);setTimeout(()=>{const resultMsg = `${drawn.rank} of ${drawn.suit} (Value: ${drawn.value})`;const correct=(guess==='higher'&&drawn.value>base.value)||(guess==='lower'&&drawn.value<base.value);if(correct){grid[selectedIndex]=drawn;renderGrid();gameLog.textContent=`✅ Correct! ${players[currentPlayer].name} guessed ${guess}. New card is ${resultMsg}.`;selectedIndex=null;}else{players[currentPlayer].lives--;if(players[currentPlayer].lives<=0){players[currentPlayer].eliminated=true;gameLog.textContent=`❌ Wrong! ${players[currentPlayer].name} is eliminated by ${resultMsg}.`;}else{gameLog.textContent=`❌ Wrong! ${players[currentPlayer].name} lost a life. Card was ${resultMsg}.`;}renderHearts();advanceTurn();}highlightActive();checkForSingleWinner();},1000);} // Increased delay for visual cue
+  function advanceTurn(){let n=players.length;let nextPlayerFound = false;for(let i=1;i<=n;i++){const idx=(currentPlayer+i)%n;if(!players[idx].eliminated){currentPlayer=idx;nextPlayerFound = true;break;}}
+    if(nextPlayerFound) {
+        selectedIndex=null;
+        revealedSlot.innerHTML='—';
+        btnHigher.disabled=true;
+        btnLower.disabled=false; // Should be disabled if no card is selected
+        gameLog.textContent=`${players[currentPlayer].name}'s turn. Select a card from the grid.`;
+        highlightActive();
+    }
+  }
+  function checkForSingleWinner(){const active=players.filter(p=>!p.eliminated);if(active.length===1){const idx=players.findIndex(p=>!p.eliminated);endGameWithWinner(idx,`${players[idx].name} is the Last Card Standing winner!`);return true;}return false;}
+  function endGameWithWinner(idx,msg){inPlay=false;btnHigher.disabled=true;btnLower.disabled=true;highlightActive();gameLog.textContent=msg;document.getElementById('winnerTitle').textContent="🏆 Game Over!";document.getElementById('winnerMessage').textContent=msg;document.getElementById('winnerModal').style.display='flex';launchConfetti();}
+  
+  function showRules() {
+    const rulesBox = document.createElement('div');
+    rulesBox.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    rulesBox.innerHTML = `
+      <div style="background:var(--ivory);border-radius:10px;padding:25px;max-width:320px;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <h3 style="font-family:'Inter',sans-serif;color:var(--dark-wood);margin-bottom:15px;">🃏 Last Card Standing Rules</h3>
+        <p style="font-size:0.9rem;color:#333;margin-bottom:15px;">
+          <strong>Goal:</strong> Be the last player with lives remaining.<br><br>
+          <strong>Setup:</strong> 9 cards in the grid. 3 lives each.<br><br>
+          <strong>Turn:</strong> 
+          <ol style="margin-left: 20px;">
+            <li>Select one of the 9 grid cards.</li>
+            <li>Guess if the next drawn card will be <strong>HIGHER</strong> or <strong>LOWER</strong> in value. (Ace=1, King=13)</li>
+            <li>A card is drawn from the deck and revealed.</li>
+            <li><strong>Correct Guess:</strong> The new card replaces the old one on the grid. Your turn continues!</li>
+            <li><strong>Wrong Guess:</strong> Lose 1 life. The next player's turn begins.</li>
+          </ol>
+          <br>Eliminated at 0 lives. Last player standing wins!
+        </p>
+        <button style="background:var(--felt-green);color:white;border:none;padding:10px 15px;border-radius:5px;font-weight:700;cursor:pointer;" onclick="this.parentElement.parentElement.remove()">Got It!</button>
+      </div>
+    `;
+    document.body.appendChild(rulesBox);
+  }
+
+  btnNew.addEventListener('click',newGame);
+  btnHigher.addEventListener('click',()=>resolveGuess('higher'));
+  btnLower.addEventListener('click',()=>resolveGuess('lower'));
+  document.getElementById('btnHelp').addEventListener('click', showRules);
+  
+  newGame();
 })();
 </script>
 </body>
 </html>
+
