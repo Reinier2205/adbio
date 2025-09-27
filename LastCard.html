@@ -89,7 +89,7 @@ body{
   gap:12px;
   align-items:center;
 }
-/* New container to hold Deck and Revealed side-by-side */
+/* Container to hold Deck and Revealed side-by-side */
 .card-piles {
   display: flex;
   gap: 16px;
@@ -107,13 +107,29 @@ body{
 .card.selected{transform:translateY(-6px);box-shadow:0 12px 30px rgba(0,0,0,0.55), 0 0 16px var(--gold-light);}
 .deck-visual{width:var(--card-width);height:var(--card-height);border-radius:10px;background:linear-gradient(180deg,#2b1a1b,#1b0f10);border:3px solid #290f10;box-shadow:0 8px 20px rgba(0,0,0,0.6), inset 0 0 16px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;color:var(--light-gold);font-family:'Inter',sans-serif;font-weight:700;}
 .revealed{width:var(--card-width);height:var(--card-height);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--ivory),#f7f5ec);box-shadow:0 10px 26px rgba(0,0,0,0.5);border:3px solid rgba(0,0,0,0.4);font-family:'Inter',sans-serif;padding:8px;text-align:center;}
-.actions{display:flex;justify-content:center;gap:20px;margin-bottom:16px;margin-top: 16px;}
+.actions{display:flex;justify-content:center;gap:20px;margin-bottom:8px;margin-top: 16px;}
 .btn{font-family:'Inter',sans-serif;font-weight:600;padding:12px 18px;border-radius:8px;border:2px solid #111;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 0 #111,0 8px 16px rgba(0,0,0,0.45);color:white;text-shadow:1px 1px 2px #000;}
 .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #111;}
 .btn-green{background:linear-gradient(145deg,#008c3a,#005a25)}
 .btn-red{background:linear-gradient(145deg,#a80000,#7b0000)}
 .big-btn{font-size:1.4rem;padding:18px 32px;}
-.status{text-align:center;color:var(--light-gold);font-weight:700;font-family:'Inter',sans-serif;text-shadow:1px 1px 2px black;padding:8px 12px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,0.2),rgba(0,0,0,0.12));}
+
+/* New styles for positioning the log under the buttons */
+.log-area {
+  margin: 10px auto;
+  max-width: 520px;
+  padding: 0 10px;
+}
+.status{
+  text-align:center;
+  color:var(--light-gold);
+  font-weight:700;
+  font-family:'Inter',sans-serif;
+  text-shadow:1px 1px 2px black;
+  padding:8px 12px;
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(0,0,0,0.2),rgba(0,0,0,0.12));
+}
 .meta{font-size:0.95rem;color:var(--light-gold);}
 
 /* Mobile Adjustments */
@@ -134,16 +150,18 @@ body{
   }
   .right-col {
     flex-basis: 100%; /* Take full width when stacked */
-    order: 3; /* Move the piles/log below the grid on mobile */
+    order: 2; /* Put the piles below the grid on mobile */
   }
   .left-col {
     order: 1; /* Keep the grid at the top */
     min-width: unset;
   }
   .actions {
-    order: 2; /* Put action buttons between grid and piles */
-    width: 100%;
-    margin-top: 0;
+    margin-bottom: 4px; /* Reduced margin */
+  }
+  .log-area {
+    order: 3; /* Keep log below the actions and grid on mobile */
+    max-width: 100%;
   }
   .grid {
     gap: 6px;
@@ -181,16 +199,21 @@ body{
     </div>
   </div>
 
-  <!-- Actions (Higher/Lower) buttons are now placed here for better layout flow on mobile -->
+  <!-- HIGHER/LOWER Action Buttons -->
   <div class="actions"><button class="btn btn-green big-btn" id="btnHigher" disabled>HIGHER</button><button class="btn btn-red big-btn" id="btnLower" disabled>LOWER</button></div>
 
+  <!-- GAME LOG (NEW POSITION - below the buttons) -->
+  <div class="log-area">
+    <div class="status" id="gameLog">Ready</div>
+  </div>
+
   <div class="game-area">
-    <!-- Card Grid -->
+    <!-- Card Grid (left-col) -->
     <div class="left-col"><div class="grid" id="grid"></div></div>
 
-    <!-- Right Column (Piles & Log) -->
+    <!-- Right Column (Piles only) -->
     <div class="right-col">
-      <!-- NEW: Card Piles Container for side-by-side deck/revealed -->
+      <!-- Card Piles Container (Deck and Revealed side-by-side) -->
       <div class="card-piles">
         <div class="pile-container">
           <div class="meta">Deck</div>
@@ -200,12 +223,6 @@ body{
           <div class="meta">Revealed</div>
           <div class="revealed" id="revealedSlot">—</div>
         </div>
-      </div>
-      
-      <!-- Game Log -->
-      <div>
-        <div class="meta">Game Log</div>
-        <div class="status" id="gameLog">Ready</div>
       </div>
     </div>
   </div>
@@ -217,6 +234,8 @@ body{
 <div id="winnerModal"><div class="winner-box"><h2 id="winnerTitle">Winner!</h2><p id="winnerMessage"></p><button onclick="location.reload()">Play Again</button></div></div>
 
 <script>
+// --- Utility Functions ---
+
 function launchConfetti(){
   const duration=2000,end=Date.now()+duration;
   (function frame(){
@@ -234,14 +253,39 @@ function launchConfetti(){
   })();
 }
 
+function showModal(title, message, isError = false) {
+    const rulesBox = document.createElement('div');
+    rulesBox.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    const bgColor = isError ? '#a80000' : '#0a4821';
+    const textColor = isError ? 'white' : 'var(--light-gold)';
+    const buttonBg = isError ? 'linear-gradient(145deg,#7b0000,#5a0000)' : 'linear-gradient(145deg,#008c3a,#005a25)';
+
+    rulesBox.innerHTML = `
+      <div style="background:${bgColor};border-radius:14px;padding:25px;max-width:320px;box-shadow:0 10px 30px rgba(0,0,0,0.5); border: 4px solid var(--gold); text-align: center;">
+        <h3 style="font-family:'Inter',sans-serif;color:var(--gold-light);margin-bottom:15px; font-size:1.4rem;">${title}</h3>
+        <p style="font-size:0.95rem;color:${textColor};margin-bottom:15px;">${message}</p>
+        <button style="background:${buttonBg};color:white;border:none;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer; box-shadow: 0 4px 0 #111;" onclick="this.parentElement.parentElement.remove()">OK</button>
+      </div>
+    `;
+    document.body.appendChild(rulesBox);
+}
+
+// --- Game Logic ---
+
 (() => {
   const suits=['♠','♥','♦','♣'];
+  // Ranks defined with value for easy comparison
   const ranks=[{r:'A',v:1},{r:'2',v:2},{r:'3',v:3},{r:'4',v:4},{r:'5',v:5},{r:'6',v:6},{r:'7',v:7},{r:'8',v:8},{r:'9',v:9},{r:'10',v:10},{r:'J',v:11},{r:'Q',v:12},{r:'K',v:13}];
+  
+  // DOM elements
   const gridEl=document.getElementById('grid'),playersRow=document.getElementById('playersRow'),playerCountSel=document.getElementById('playerCount');
   const btnNew=document.getElementById('btnNew'),btnHigher=document.getElementById('btnHigher'),btnLower=document.getElementById('btnLower');
   const deckVisual=document.getElementById('deckVisual'),revealedSlot=document.getElementById('revealedSlot'),gameLog=document.getElementById('gameLog');
+  
+  // Game state
   let deck=[],grid=[],players=[],currentPlayer=0,selectedIndex=null,inPlay=false;
 
+  // Helper to render card content (rank/suit/value)
   function createCardHtml(card) {
       const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
       return `
@@ -253,59 +297,252 @@ function launchConfetti(){
   
   function createDeck(){let out=[];for(const s of suits){for(const r of ranks){out.push({suit:s,rank:r.r,value:r.v});}}return out;}
   function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
-  function buildPlayers(n){playersRow.innerHTML='';players=[];for(let i=0;i<n;i++){const p=document.createElement('div');p.className='player';p.dataset.index=i;p.innerHTML=`<div class="name">Player ${i+1}</div><span class="edit-name-icon">✎</span><div class="hearts"></div>`;playersRow.appendChild(p);players.push({name:`Player ${i+1}`,lives:3,eliminated:false});p.querySelector('.edit-name-icon').addEventListener('click',()=>{const newName=prompt("Enter new name",players[i].name);if(newName){players[i].name=newName;p.querySelector('.name').textContent=newName;}});}renderHearts();highlightActive();}
-  function renderHearts(){document.querySelectorAll('.player').forEach((el,idx)=>{const hwrap=el.querySelector('.hearts');hwrap.innerHTML='';for(let i=0;i<3;i++){const h=document.createElement('div');h.className='heart'+(i<players[idx].lives?'':' empty');h.textContent=i<players[idx].lives?'❤':'✖';hwrap.appendChild(h);}el.style.opacity=players[idx].eliminated?0.45:1;});}
-  function highlightActive(){document.querySelectorAll('.player').forEach((el,idx)=>{if(idx===currentPlayer&&!players[idx].eliminated){el.classList.add('active');}else{el.classList.remove('active');}});}
-  function buildGrid(){gridEl.innerHTML='';grid=[];for(let i=0;i<9;i++){const slot=document.createElement('div');slot.className='card placeholder';slot.dataset.index=i;slot.textContent="Empty";slot.addEventListener('click',()=>onSelectIndex(i));gridEl.appendChild(slot);grid.push(null);}}
-  function renderGrid(){[...gridEl.children].forEach((slot,i)=>{const card=grid[i];slot.classList.remove('selected');if(card){slot.classList.remove('placeholder');slot.innerHTML=createCardHtml(card);}else{slot.classList.add('placeholder');slot.textContent="Empty";}slot.style.pointerEvents=inPlay?'auto':'none';});}
-  function newGame(){const pc=parseInt(playerCountSel.value,10);buildPlayers(pc);buildGrid();deck=shuffle(createDeck());for(let i=0;i<9;i++){grid[i]=deck.pop();}players.forEach(p=>{p.lives=3;p.eliminated=false;});currentPlayer=Math.floor(Math.random()*players.length);selectedIndex=null;inPlay=true;revealedSlot.innerHTML='—';updateDeckVisual();renderGrid();renderHearts();highlightActive();gameLog.textContent=`Game started. ${players[currentPlayer].name} goes first.`;}
+  
+  function buildPlayers(n){
+    playersRow.innerHTML='';
+    players=[];
+    for(let i=0;i<n;i++){
+      const p=document.createElement('div');
+      p.className='player';
+      p.dataset.index=i;
+      p.innerHTML=`<div class="name">Player ${i+1}</div><span class="edit-name-icon">✎</span><div class="hearts"></div>`;
+      playersRow.appendChild(p);
+      players.push({name:`Player ${i+1}`,lives:3,eliminated:false});
+      
+      p.querySelector('.edit-name-icon').addEventListener('click',()=>{
+        const newName=prompt("Enter new name",players[i].name);
+        if(newName){
+          players[i].name=newName;
+          p.querySelector('.name').textContent=newName;
+        }
+      });
+    }
+    renderHearts();
+    highlightActive();
+  }
+  
+  function renderHearts(){
+    document.querySelectorAll('.player').forEach((el,idx)=>{
+      const hwrap=el.querySelector('.hearts');
+      hwrap.innerHTML='';
+      for(let i=0;i<3;i++){
+        const h=document.createElement('div');
+        h.className='heart'+(i<players[idx].lives?'':' empty');
+        h.textContent=i<players[idx].lives?'❤':'✖';
+        hwrap.appendChild(h);
+      }
+      el.style.opacity=players[idx].eliminated?0.45:1;
+    });
+  }
+  
+  function highlightActive(){
+    document.querySelectorAll('.player').forEach((el,idx)=>{
+      if(idx===currentPlayer&&!players[idx].eliminated){
+        el.classList.add('active');
+      }else{
+        el.classList.remove('active');
+      }
+    });
+  }
+  
+  function buildGrid(){
+    gridEl.innerHTML='';
+    grid=[];
+    for(let i=0;i<9;i++){
+      const slot=document.createElement('div');
+      slot.className='card placeholder';
+      slot.dataset.index=i;
+      slot.textContent="Empty";
+      slot.addEventListener('click',()=>onSelectIndex(i));
+      gridEl.appendChild(slot);
+      grid.push(null);
+    }
+  }
+  
+  function renderGrid(){
+    [...gridEl.children].forEach((slot,i)=>{
+      const card=grid[i];
+      slot.classList.remove('selected');
+      if(card){
+        slot.classList.remove('placeholder');
+        slot.innerHTML=createCardHtml(card);
+      }else{
+        slot.classList.add('placeholder');
+        slot.textContent="Empty";
+      }
+      slot.style.pointerEvents=inPlay?'auto':'none';
+    });
+  }
+  
+  function newGame(){
+    const pc=parseInt(playerCountSel.value,10);
+    buildPlayers(pc);
+    buildGrid();
+    deck=shuffle(createDeck());
+    
+    // Deal 9 cards to the grid
+    for(let i=0;i<9;i++){grid[i]=deck.pop();}
+    
+    // Reset players
+    players.forEach(p=>{p.lives=3;p.eliminated=false;});
+    
+    // Start game state
+    currentPlayer=Math.floor(Math.random()*players.length);
+    selectedIndex=null;
+    inPlay=true;
+    revealedSlot.innerHTML='—';
+    
+    updateDeckVisual();
+    renderGrid();
+    renderHearts();
+    highlightActive();
+    gameLog.textContent=`Game started. ${players[currentPlayer].name}'s turn. Select a card.`;
+  }
+  
   function updateDeckVisual(){deckVisual.textContent=deck.length;}
-  function onSelectIndex(i){if(!inPlay||players[currentPlayer].eliminated)return;selectedIndex=i;document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));gridEl.children[i].classList.add('selected');btnHigher.disabled=false;btnLower.disabled=false;gameLog.textContent=`${players[currentPlayer].name}: Guess Higher or Lower for ${grid[i].rank} of ${grid[i].suit}.`;}
-  function drawCard(){if(deck.length===0){endGameWithWinner(currentPlayer,"Deck exhausted — instant win!");return null;}const c=deck.pop();updateDeckVisual();return c;}
-  function resolveGuess(guess){if(selectedIndex===null)return;btnHigher.disabled=true;btnLower.disabled=true;const base=grid[selectedIndex];const drawn=drawCard();if(!drawn)return;revealedSlot.innerHTML=createCardHtml(drawn);setTimeout(()=>{const resultMsg = `${drawn.rank} of ${drawn.suit} (Value: ${drawn.value})`;const correct=(guess==='higher'&&drawn.value>base.value)||(guess==='lower'&&drawn.value<base.value);if(correct){grid[selectedIndex]=drawn;renderGrid();gameLog.textContent=`✅ Correct! ${players[currentPlayer].name} guessed ${guess}. New card is ${resultMsg}.`;selectedIndex=null;}else{players[currentPlayer].lives--;if(players[currentPlayer].lives<=0){players[currentPlayer].eliminated=true;gameLog.textContent=`❌ Wrong! ${players[currentPlayer].name} is eliminated by ${resultMsg}.`;}else{gameLog.textContent=`❌ Wrong! ${players[currentPlayer].name} lost a life. Card was ${resultMsg}.`;}renderHearts();advanceTurn();}highlightActive();checkForSingleWinner();},1000);} // Increased delay for visual cue
-  function advanceTurn(){let n=players.length;let nextPlayerFound = false;for(let i=1;i<=n;i++){const idx=(currentPlayer+i)%n;if(!players[idx].eliminated){currentPlayer=idx;nextPlayerFound = true;break;}}
+  
+  function onSelectIndex(i){
+    if(!inPlay||players[currentPlayer].eliminated)return;
+    selectedIndex=i;
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
+    gridEl.children[i].classList.add('selected');
+    btnHigher.disabled=false;
+    btnLower.disabled=false;
+    gameLog.textContent=`${players[currentPlayer].name}: Guess HIGHER or LOWER than ${grid[i].rank} of ${grid[i].suit}.`;
+  }
+  
+  function drawCard(){
+    if(deck.length===0){
+      endGameWithWinner(currentPlayer,"Deck exhausted. If no one is eliminated, the last player to guess wins!");
+      return null;
+    }
+    const c=deck.pop();
+    updateDeckVisual();
+    return c;
+  }
+  
+  function resolveGuess(guess){
+    if(selectedIndex===null)return;
+    btnHigher.disabled=true;
+    btnLower.disabled=true;
+    
+    const base=grid[selectedIndex];
+    const drawn=drawCard();
+    if(!drawn)return; // Deck was empty and endGameWithWinner was called
+    
+    revealedSlot.innerHTML=createCardHtml(drawn);
+    
+    // Use a timeout to allow the revealed card to be seen before turn resolves
+    setTimeout(()=>{
+      const resultMsg = `${drawn.rank} of ${drawn.suit} (Value: ${drawn.value})`;
+      const correct=(guess==='higher'&&drawn.value>base.value)||(guess==='lower'&&drawn.value<base.value);
+      
+      if(drawn.value===base.value){
+        // Tie is always a loss in this rule set
+        players[currentPlayer].lives--;
+        gameLog.textContent=`😬 Tie! ${players[currentPlayer].name} lost a life. Card was ${resultMsg}.`;
+        
+      } else if(correct){
+        // Correct guess
+        grid[selectedIndex]=drawn; // Replace card
+        renderGrid();
+        gameLog.textContent=`✅ Correct! ${players[currentPlayer].name} guessed ${guess}. New card is ${resultMsg}. Go again!`;
+        selectedIndex=null; // Reset selection for the next action in the same turn
+        btnHigher.disabled=true;
+        btnLower.disabled=false; 
+
+      } else {
+        // Wrong guess
+        players[currentPlayer].lives--;
+        gameLog.textContent=`❌ Wrong! ${players[currentPlayer].name} lost a life. Card was ${resultMsg}.`;
+      }
+      
+      if(players[currentPlayer].lives<=0){
+        players[currentPlayer].eliminated=true;
+        gameLog.textContent=`${players[currentPlayer].name} is eliminated!`;
+      }
+      
+      renderHearts();
+      
+      // Advance turn only if guess was wrong or player was eliminated, or it was a tie.
+      if (!correct || drawn.value === base.value || players[currentPlayer].eliminated) {
+        advanceTurn();
+      }
+      
+      highlightActive();
+      checkForSingleWinner();
+      
+    }, 1000); 
+  }
+  
+  function advanceTurn(){
+    const n=players.length;
+    let nextPlayerFound = false;
+    for(let i=1;i<=n;i++){
+      const idx=(currentPlayer+i)%n;
+      if(!players[idx].eliminated){
+        currentPlayer=idx;
+        nextPlayerFound = true;
+        break;
+      }
+    }
+
     if(nextPlayerFound) {
         selectedIndex=null;
         revealedSlot.innerHTML='—';
         btnHigher.disabled=true;
-        btnLower.disabled=false; // Should be disabled if no card is selected
+        btnLower.disabled=true;
         gameLog.textContent=`${players[currentPlayer].name}'s turn. Select a card from the grid.`;
         highlightActive();
     }
   }
-  function checkForSingleWinner(){const active=players.filter(p=>!p.eliminated);if(active.length===1){const idx=players.findIndex(p=>!p.eliminated);endGameWithWinner(idx,`${players[idx].name} is the Last Card Standing winner!`);return true;}return false;}
-  function endGameWithWinner(idx,msg){inPlay=false;btnHigher.disabled=true;btnLower.disabled=true;highlightActive();gameLog.textContent=msg;document.getElementById('winnerTitle').textContent="🏆 Game Over!";document.getElementById('winnerMessage').textContent=msg;document.getElementById('winnerModal').style.display='flex';launchConfetti();}
+  
+  function checkForSingleWinner(){
+    const active=players.filter(p=>!p.eliminated);
+    if(active.length===1){
+      const idx=players.findIndex(p=>!p.eliminated);
+      endGameWithWinner(idx,`${players[idx].name} is the Last Card Standing winner!`);
+      return true;
+    }
+    return false;
+  }
+  
+  function endGameWithWinner(idx,msg){
+    inPlay=false;
+    btnHigher.disabled=true;
+    btnLower.disabled=true;
+    highlightActive();
+    gameLog.textContent=msg;
+    document.getElementById('winnerTitle').textContent="🏆 Game Over!";
+    document.getElementById('winnerMessage').textContent=msg;
+    document.getElementById('winnerModal').style.display='flex';
+    launchConfetti();
+  }
   
   function showRules() {
-    const rulesBox = document.createElement('div');
-    rulesBox.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
-    rulesBox.innerHTML = `
-      <div style="background:var(--ivory);border-radius:10px;padding:25px;max-width:320px;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-        <h3 style="font-family:'Inter',sans-serif;color:var(--dark-wood);margin-bottom:15px;">🃏 Last Card Standing Rules</h3>
-        <p style="font-size:0.9rem;color:#333;margin-bottom:15px;">
-          <strong>Goal:</strong> Be the last player with lives remaining.<br><br>
-          <strong>Setup:</strong> 9 cards in the grid. 3 lives each.<br><br>
-          <strong>Turn:</strong> 
-          <ol style="margin-left: 20px;">
-            <li>Select one of the 9 grid cards.</li>
-            <li>Guess if the next drawn card will be <strong>HIGHER</strong> or <strong>LOWER</strong> in value. (Ace=1, King=13)</li>
-            <li>A card is drawn from the deck and revealed.</li>
-            <li><strong>Correct Guess:</strong> The new card replaces the old one on the grid. Your turn continues!</li>
-            <li><strong>Wrong Guess:</strong> Lose 1 life. The next player's turn begins.</li>
-          </ol>
-          <br>Eliminated at 0 lives. Last player standing wins!
-        </p>
-        <button style="background:var(--felt-green);color:white;border:none;padding:10px 15px;border-radius:5px;font-weight:700;cursor:pointer;" onclick="this.parentElement.parentElement.remove()">Got It!</button>
-      </div>
+    const rulesMessage = `
+      <strong>Goal:</strong> Be the last player with lives remaining.<br><br>
+      <strong>Setup:</strong> 9 cards are dealt to the grid. The remaining cards form the deck. Each player starts with 3 lives.<br><br>
+      <strong>Turn:</strong> 
+      <ol style="margin-left: 20px; text-align: left;">
+        <li>Select one of the 9 grid cards.</li>
+        <li>Guess if the next drawn card will be <strong>HIGHER</strong> or <strong>LOWER</strong> in value. (Ace=1, King=13)</li>
+        <li>A card is drawn from the deck and revealed.</li>
+        <li><strong>Correct Guess:</strong> The new card replaces the old one on the grid. Your turn continues!</li>
+        <li><strong>Wrong Guess or Tie:</strong> Lose 1 life. The next player's turn begins.</li>
+      </ol>
+      <br>Eliminated at 0 lives. Last player standing wins!
     `;
-    document.body.appendChild(rulesBox);
+    showModal("🃏 Last Card Standing Rules", rulesMessage);
   }
 
+  // Event Listeners
   btnNew.addEventListener('click',newGame);
   btnHigher.addEventListener('click',()=>resolveGuess('higher'));
   btnLower.addEventListener('click',()=>resolveGuess('lower'));
   document.getElementById('btnHelp').addEventListener('click', showRules);
   
+  // Initialize game on load
   newGame();
 })();
 </script>
