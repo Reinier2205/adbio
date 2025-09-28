@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Celestial Finder | Sun & Moon</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <!-- SunCalc library for celestial mechanics -->
   <script src="https://unpkg.com/suncalc/suncalc.js"></script>
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #121212; color: #e0e0e0; }
     .felt-green { background-color: #2c0e3a; } /* Deep Space Purple */
     .gold-text { color: #ffb703; } /* Vibrant Gold */
-    .btn-primary { background-color: #ffb703; color: #121212; transition: transform .2s ease, box-shadow .2s ease; font-weight: 700; }
+    .btn-primary { background-color: #ffb703; color: #121212; transition: transform .2s ease, box-shadow .2s ease; font-weight: 800; }
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255,183,3,.4); }
     .panel { background:#1f1f1f; border:2px solid rgba(255,183,3,0.5); border-radius: 16px; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
     #compassCanvas { background: rgba(255,255,255,0.05); border-radius: 9999px; border:2px solid rgba(255,255,255,0.1); }
@@ -85,6 +85,9 @@
         
         <!-- Input Fields -->
         <div class="space-y-4">
+          <!-- Heading: Location & Date Input -->
+          <h2 class="text-2xl font-extrabold text-gray-200">1. Set Location and Date</h2>
+          
           <!-- Date Input -->
           <label class="block">
             <span class="block text-sm font-medium text-gray-300 mb-1">Date</span>
@@ -113,7 +116,7 @@
 
         <!-- RELOCATED: Compass and Live Data -->
         <div class="flex flex-col items-center justify-center panel p-4 bg-gray-900/40 border-gray-700">
-            <h2 class="text-2xl font-extrabold gold-text mb-4">Live Compass Tracking</h2>
+            <h2 class="text-2xl font-extrabold gold-text mb-4">2. Live Compass Tracking</h2>
             <div class="w-full max-w-xs aspect-square p-2 relative">
               <canvas id="compassCanvas" width="300" height="300" class="w-full h-full"></canvas>
               <!-- Fixed device North indicator -->
@@ -317,15 +320,35 @@ function calcCelestialData() {
   // 1. Calculate Sun Times and Positions
   const times = SunCalc.getTimes(date, lat, lon);
   
+  const sunRises = times.sunrise instanceof Date;
+  const sunSets = times.sunset instanceof Date;
+
   const formatTime = (time) => {
-    return time instanceof Date ? time.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'}) : '24H Day/Night';
+    if (time instanceof Date) {
+      return time.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+    }
+    
+    // Logic for high-latitude events (Polar Day/Night, or Continuous Twilight)
+    if (!sunRises && !sunSets) {
+      // If the sun never rises or sets (Polar Night conditions)
+      return '24H Darkness';
+    } else if (sunRises && sunSets) {
+      // If the sun rises and sets, but a twilight phase is missed (e.g., continuous civil/nautical twilight in summer)
+      return 'Continuous Twilight';
+    } else if (!sunRises || !sunSets) {
+      // If only one is missing (Polar Day conditions, or a transition day)
+       return '24H Sunlight';
+    }
+    
+    return 'Event Missing';
   };
 
   const sunrisePos = SunCalc.getPosition(times.sunrise, lat, lon);
-  sunriseAzimuth = sunrisePos.azimuth * 180 / Math.PI + 180;
+  // Azimuth is 0-360, but SunCalc returns -180 to 180 (South = 0). Add 180 for standard 0=North compass
+  sunriseAzimuth = sunRises ? (sunrisePos.azimuth * 180 / Math.PI + 180) : null;
 
   const sunsetPos = SunCalc.getPosition(times.sunset, lat, lon);
-  sunsetAzimuth = sunsetPos.azimuth * 180 / Math.PI + 180;
+  sunsetAzimuth = sunSets ? (sunsetPos.azimuth * 180 / Math.PI + 180) : null;
 
   // 2. Calculate Moon Illumination
   const moonIllumination = SunCalc.getMoonIllumination(date);
@@ -369,7 +392,7 @@ function calcCelestialData() {
   // 6. Render Results
   const resultsHtml = `
     <div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
-      <h2 class="text-2xl font-extrabold gold-text mb-4 text-center">Sun & Moon Calculated Data</h2>
+      <h2 class="text-2xl font-extrabold gold-text mb-4 text-center">3. Sun & Moon Calculated Data</h2>
       
       <!-- Sun Times Grid -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center border-b border-gray-700 pb-4">
@@ -379,7 +402,7 @@ function calcCelestialData() {
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
           <div class="text-xs text-gray-400">Sunrise Az.</div>
-          <div class="text-xl font-bold text-red-400">${sunriseAzimuth.toFixed(1)}°</div>
+          <div class="text-xl font-bold text-red-400">${sunRises ? sunriseAzimuth.toFixed(1) + '°' : 'N/A'}</div>
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
           <div class="text-xs text-gray-400">Sunset</div>
@@ -387,7 +410,7 @@ function calcCelestialData() {
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
           <div class="text-xs text-gray-400">Sunset Az.</div>
-          <div class="text-xl font-bold text-blue-400">${sunsetAzimuth.toFixed(1)}°</div>
+          <div class="text-xl font-bold text-blue-400">${sunSets ? sunsetAzimuth.toFixed(1) + '°' : 'N/A'}</div>
         </div>
       </div>
 
