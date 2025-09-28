@@ -2,59 +2,86 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Starlink Pass Predictor (Offline)</title>
+<title>Starlink Pass Predictor (Auto TLE)</title>
 <script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
 </head>
 <body>
 <h2>Starlink Pass Predictor (Pretoria)</h2>
 
+<p>Select date and time for prediction:</p>
+<input type="datetime-local" id="datetime" value="">
+<button onclick="predictPasses()">Get Starlink Passes</button>
+
 <ul id="passes"></ul>
 
 <script>
-(async function() {
+async function predictPasses() {
+  const passesList = document.getElementById("passes");
+  passesList.innerHTML = "Loading...";
+
   const lat = -25.7479;
   const lon = 28.2293;
-  const height = 1.32; // observer altitude in km
+  const height = 1.32; // km
 
-  // Example TLE for Starlink-1130 (replace with latest from https://celestrak.com/NORAD/elements/starlink.txt)
-  const tleLine1 = "1 45127U 20029E   25271.58854167  .00001489  00000-0  84908-4 0  9996";
-  const tleLine2 = "2 45127  53.0000 305.0000 0002922 180.0000 180.0000 15.05546810  1111";
+  const inputDate = document.getElementById("datetime").value;
+  let startDate = inputDate ? new Date(inputDate) : new Date();
+  let endDate = new Date(startDate.getTime() + 48*60*60*1000); // next 48 hours
 
-  const satrec = satellite.twoline2satrec(tleLine1, tleLine2);
+  try {
+    // Download latest Starlink TLEs
+    const tleUrl = "https://celestrak.com/NORAD/elements/starlink.txt";
+    const res = await fetch(tleUrl);
+    const tleText = await res.text();
+    const tleLines = tleText.trim().split("\n");
 
-  const now = new Date();
-  const passesList = document.getElementById("passes");
-  passesList.innerHTML = "";
-
-  // Check next 48 hours in 1-minute steps
-  const end = new Date(now.getTime() + 48*60*60*1000);
-  let visible = false;
-  let passStart = null;
-
-  for(let t = new Date(now); t < end; t.setMinutes(t.getMinutes()+1)) {
-    const gmst = satellite.gstime(t);
-    const positionEcf = satellite.propagate(satrec, t);
-    if (!positionEcf.position) continue;
-    const positionGd = satellite.eciToGeodetic(positionEcf.position, gmst);
-    const lookAngles = satellite.ecfToLookAngles(
-      {latitude: lat, longitude: lon, height: height},
-      satellite.eciToEcf(positionEcf.position, gmst)
-    );
-
-    const elevation = lookAngles.elevation * 180 / Math.PI;
-
-    if(elevation > 10 && !visible) { // pass starts
-      visible = true;
-      passStart = new Date(t);
-    } else if (elevation <= 10 && visible) { // pass ends
-      visible = false;
-      const passEnd = new Date(t);
-      const li = document.createElement("li");
-      li.textContent = `Start: ${passStart.toLocaleString()} → End: ${passEnd.toLocaleString()}`;
-      passesList.appendChild(li);
+    // Parse TLEs into satellites
+    let satellites = [];
+    for(let i=0; i<tleLines.length; i+=3){
+      const name = tleLines[i].trim();
+      const line1 = tleLines[i+1];
+      const line2 = tleLines[i+2];
+      satellites.push({name, satrec: satellite.twoline2satrec(line1, line2)});
     }
+
+    passesList.innerHTML = "";
+
+    for(const sat of satellites){
+      let visible = false;
+      let passStart = null;
+
+      for(let t = new Date(startDate); t < endDate; t.setMinutes(t.getMinutes()+1)){
+        const gmst = satellite.gstime(t);
+        const eciPos = satellite.propagate(sat.satrec, t);
+        if(!eciPos.position) continue;
+
+        const lookAngles = satellite.ecfToLookAngles(
+          {latitude: lat, longitude: lon, height: height},
+          satellite.eciToEcf(eciPos.position, gmst)
+        );
+
+        const elevation = lookAngles.elevation * 180 / Math.PI;
+
+        if(elevation > 10 && !visible){
+          visible = true;
+          passStart = new Date(t);
+        } else if(elevation <= 10 && visible){
+          visible = false;
+          const li = document.createElement("li");
+          li.textContent = `${sat.name}: Start: ${passStart.toLocaleString()} → End: ${t.toLocaleString()}`;
+          passesList.appendChild(li);
+        }
+      }
+    }
+
+    if(passesList.innerHTML === ""){
+      passesList.innerHTML = "<li>No visible passes in the next 48 hours.</li>";
+    }
+
+  } catch(err){
+    passesList.innerHTML = "<li>Error fetching or processing TLE data.</li>";
+    console.error(err);
   }
-})();
+}
 </script>
 </body>
 </html>
