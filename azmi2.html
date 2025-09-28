@@ -83,10 +83,9 @@
       <!-- Main Content Container (Single Column for Mobile optimization) -->
       <div class="space-y-8"> 
         
-        <!-- Input Fields -->
+        <!-- Location & Date Input -->
         <div class="space-y-4">
-          <!-- Heading: Location & Date Input -->
-          <h2 class="text-2xl font-extrabold text-gray-200">1. Set Location and Date</h2>
+          <h2 class="text-xl font-extrabold text-gray-200 border-b border-gray-700 pb-2 mb-4">Location and Date</h2>
           
           <!-- Date Input -->
           <label class="block">
@@ -114,9 +113,9 @@
           </button>
         </div>
 
-        <!-- RELOCATED: Compass and Live Data -->
+        <!-- Live Compass Tracking -->
         <div class="flex flex-col items-center justify-center panel p-4 bg-gray-900/40 border-gray-700">
-            <h2 class="text-2xl font-extrabold gold-text mb-4 text-center">2. Live Compass Tracking</h2>
+            <h2 class="text-xl font-extrabold gold-text mb-4 text-center border-b border-gray-700 pb-2 w-full">Live Compass Tracking</h2>
             <div class="w-full max-w-xs aspect-square p-2 relative">
               <canvas id="compassCanvas" width="300" height="300" class="w-full h-full"></canvas>
               <!-- Fixed device North indicator -->
@@ -129,7 +128,7 @@
               <div class="text-sm text-gray-400" id="live-sun-alt">---</div>
             </div>
         </div>
-        <!-- END RELOCATED BLOCK -->
+        <!-- END LIVE TRACKING BLOCK -->
 
         <!-- Results Panel -->
         <div id="results" role="status" aria-live="polite">
@@ -169,21 +168,21 @@
         <thead class="text-xs gold-text uppercase bg-gray-800">
           <tr>
             <th scope="col" class="px-3 py-2">Phase</th>
-            <th scope="col" class="px-3 py-2">Description / Traveller Use</th>
+            <th scope="col" class="px-3 py-2">Angle / Traveller Use</th>
           </tr>
         </thead>
         <tbody>
           <tr class="border-b border-gray-700 hover:bg-gray-800/50">
-            <td class="px-3 py-2 font-medium text-gray-200">Civil Twilight</td>
+            <td class="px-3 py-2 font-medium text-gray-200">Civil Twilight ($0^\circ$ to $6^\circ$)</td>
             <td class="px-3 py-2 text-gray-400">Brightest twilight. Enough light for outdoor activities without artificial lighting. **Golden/Blue Hour** is around this time.</td>
           </tr>
           <tr class="border-b border-gray-700 hover:bg-gray-800/50">
-            <td class="px-3 py-2 font-medium text-gray-200">Nautical Twilight</td>
+            <td class="px-3 py-2 font-medium text-gray-200">Nautical Twilight ($6^\circ$ to $12^\circ$)</td>
             <td class="px-3 py-2 text-gray-400">The horizon is still distinguishable (useful for navigation at sea), but artificial light is required for most activities. Good for **early star visibility**.</td>
           </tr>
           <tr class="hover:bg-gray-800/50">
-            <td class="px-3 py-2 font-medium text-gray-200">Astronomical Twilight</td>
-            <td class="px-3 py-2 text-gray-400">The sky is essentially dark; the very faint stars are now visible. Used by astronomers to mark the start of **true darkness (for deep sky photography)**.</td>
+            <td class="px-3 py-2 font-medium text-gray-200">Astronomical Twilight ($12^\circ$ to $18^\circ$)</td>
+            <td class="px-3 py-2 text-gray-400">The sky is essentially dark. Used by astronomers to mark the period before **true darkness** (Sun $18^\circ$ below horizon).</td>
           </tr>
         </tbody>
       </table>
@@ -323,28 +322,29 @@ function calcCelestialData() {
   const sunRises = times.sunrise instanceof Date;
   const sunSets = times.sunset instanceof Date;
 
+  /**
+   * Formats a Date object into a readable time string, or returns a polar status.
+   */
   const formatTime = (time, type) => {
     if (time instanceof Date) {
       return time.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
     }
     
-    // Logic for high-latitude events (Polar Day/Night, or Continuous Twilight)
-    if (!sunRises && !sunSets) {
-      // Sun never rises or sets (e.g., Polar Night)
-      return '24H Darkness';
-    } else if (type === 'twilight' && sunRises && sunSets) {
-      // Sun rises and sets, but this specific twilight phase is missed (Continuous Twilight in summer)
-      return 'Continuous Twilight';
-    } else if (type === 'twilight' && (!sunRises || !sunSets)) {
-      // If the sun is only up but doesn't set (e.g., Polar Day), twilight is continuous light
-      return '24H Sunlight';
-    } else if (type === 'sun_rise_set') {
-        // Fallback for primary sunrise/sunset times
-        return !sunRises && !sunSets ? '24H Darkness' : '24H Sunlight';
+    // Logic for Polar Day/Night
+    if (type === 'twilight' || type === 'sun_rise_set') {
+      if (!sunRises && !sunSets) {
+        return '24H Darkness';
+      } else if (!sunSets || !sunRises) {
+        return '24H Sunlight';
+      }
     }
-
+    
+    // For mid-latitudes, twilight times that don't occur are handled by True Darkness calc
     return 'N/A';
   };
+  
+  // Helper to get time only for twilight periods
+  const formatTwilightTime = (time) => time instanceof Date ? time.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'}) : 'N/A';
 
   const sunrisePos = SunCalc.getPosition(times.sunrise, lat, lon);
   // Azimuth is 0-360, but SunCalc returns -180 to 180 (South = 0). Add 180 for standard 0=North compass
@@ -353,35 +353,59 @@ function calcCelestialData() {
   const sunsetPos = SunCalc.getPosition(times.sunset, lat, lon);
   sunsetAzimuth = sunSets ? (sunsetPos.azimuth * 180 / Math.PI + 180) : null;
 
-  // 2. Calculate Moon Illumination
+  // 2. Calculate True Darkness Duration (High Value Add for Travelers/Photographers)
+  let trueDarknessStatus = '';
+  let trueDarknessDuration = '0h 0m';
+  
+  if (times.astroDawn instanceof Date && times.astroDusk instanceof Date) {
+      const darkDurationMs = times.astroDawn.getTime() - times.astroDusk.getTime();
+      if (darkDurationMs > 0) {
+          const hours = Math.floor(darkDurationMs / (1000 * 60 * 60));
+          const minutes = Math.floor((darkDurationMs % (1000 * 60 * 60)) / (1000 * 60));
+          trueDarknessDuration = `${hours}h ${minutes}m`;
+          trueDarknessStatus = `True darkness lasts **${trueDarknessDuration}**`;
+      } else {
+          trueDarknessStatus = 'Sky never gets truly dark (Continuous Twilight)';
+      }
+  } else {
+      // Handles polar cases where the sun doesn't rise/set at all
+      const astroStatus = formatTime(times.astroDusk, 'twilight');
+      if (astroStatus === '24H Darkness') {
+          trueDarknessStatus = '24h (Polar Night)';
+      } else if (astroStatus === '24H Sunlight') {
+           trueDarknessStatus = '0h (Polar Day)';
+      } else {
+          // Should not happen if SunCalc is working, but a fallback
+          trueDarknessStatus = 'N/A';
+      }
+  }
+
+
+  // 3. Calculate Moon Illumination
   const moonIllumination = SunCalc.getMoonIllumination(date);
   const moonInfo = getMoonPhaseInfo(moonIllumination);
   
-  // 3. Update Live Sun data (for the current moment)
+  // 4. Update Live Sun data (for the current moment)
   updateLiveSun(); 
 
-  // 4. Build Twilight HTML
+  // 5. Build Twilight HTML
   const twilightData = [
     { name: "Civil", dawn: times.civilDawn, dusk: times.civilDusk },
     { name: "Nautical", dawn: times.nauticalDawn, dusk: times.nauticalDusk },
-    { name: "Astronomical", dawn: times.astroDawn, dusk: times.astroDusk },
   ];
 
   let twilightHtml = '';
   twilightData.forEach(t => {
-    const dawnTime = formatTime(t.dawn, 'twilight');
-    const duskTime = formatTime(t.dusk, 'twilight');
-
     twilightHtml += `
       <div class="flex justify-between items-center py-2 text-sm text-gray-400 border-b border-gray-800 last:border-b-0">
         <span class="text-gray-200 font-medium w-1/3">${t.name}</span>
-        <span class="text-center font-mono w-1/3">${dawnTime}</span>
-        <span class="text-center font-mono w-1/3">${duskTime}</span>
+        <span class="text-center font-mono w-1/3">${formatTwilightTime(t.dawn)}</span>
+        <span class="text-center font-mono w-1/3">${formatTwilightTime(t.dusk)}</span>
       </div>
     `;
   });
   
-  // 5. Build ISS Link HTML
+  // 6. Build ISS Link HTML
   const issHtml = `
     <div class="p-3 text-center bg-gray-800/20 rounded-lg text-sm text-gray-400">
       <p class="mb-2 text-gray-300 font-semibold">Get real-time ISS pass predictions:</p>
@@ -392,10 +416,10 @@ function calcCelestialData() {
     </div>
   `;
 
-  // 6. Render Results
+  // 7. Render Results
   const resultsHtml = `
     <div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
-      <h2 class="text-2xl font-extrabold gold-text mb-4 text-center">3. Sun & Moon Calculated Data</h2>
+      <h2 class="text-xl font-extrabold gold-text mb-4 text-center border-b border-gray-700 pb-2">Sun & Moon Calculated Data</h2>
       
       <!-- Sun Times Grid -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center border-b border-gray-700 pb-4">
@@ -417,10 +441,10 @@ function calcCelestialData() {
         </div>
       </div>
 
-      <!-- Twilight Times -->
+      <!-- True Darkness & Twilight Times -->
       <div class="mb-6 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
         <div class="flex justify-between items-center mb-2">
-            <h3 class="text-xl font-bold text-gray-200">Twilight Periods</h3>
+            <h3 class="text-lg font-bold text-gray-200">Twilight Periods</h3>
             <button onclick="toggleTwilightModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
@@ -433,12 +457,22 @@ function calcCelestialData() {
           <span class="w-1/3 text-center">Dusk Ends</span>
         </div>
         ${twilightHtml}
+        
+        <!-- NEW: True Darkness Row -->
+        <div class="mt-3 pt-3 border-t border-gray-700 flex justify-between items-center text-sm">
+            <span class="text-white font-bold w-1/3">True Darkness (Astr.)</span>
+            <span class="text-center font-mono w-1/3">${formatTwilightTime(times.astroDusk)}</span>
+            <span class="text-center font-mono w-1/3">${formatTwilightTime(times.astroDawn)}</span>
+        </div>
+        <p class="text-center text-sm mt-2 font-semibold text-gray-300">
+            Duration: <span class="gold-text">${trueDarknessStatus}</span>
+        </p>
       </div>
 
       <!-- ISS Passes Link -->
       <div class="mb-2 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
         <div class="flex justify-between items-center mb-2">
-            <h3 class="text-xl font-bold text-gray-200">ISS Pass Predictions</h3>
+            <h3 class="text-lg font-bold text-gray-200">ISS Pass Predictions</h3>
             <button onclick="toggleIssModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
@@ -462,7 +496,7 @@ function calcCelestialData() {
   `;
   document.getElementById("results").innerHTML = resultsHtml;
 
-  // 7. Draw the compass with new data
+  // 8. Draw the compass with new data
   drawCompass();
 }
 
