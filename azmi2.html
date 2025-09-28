@@ -35,6 +35,10 @@
       border-right: 10px solid transparent;
       border-bottom: 15px solid rgba(255, 255, 255, 0.4); /* Light arrow */
     }
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+    }
   </style>
 </head>
 <body class="antialiased min-h-screen">
@@ -46,9 +50,8 @@
         </svg>
         Celestial Finder
       </a>
-      <!-- Navigation simplified for this single tool page -->
       <div class="hidden sm:flex items-center gap-3">
-        <a href="#inputs" class="btn-primary font-bold py-2 px-4 rounded-full text-sm hover:ring-2 ring-offset-2 ring-offset-[#121212] ring-[#ffb703]">Find Data</a>
+        <a href="#inputs" class="btn-primary font-bold py-2 px-4 rounded-full text-sm hover:ring-2 ring-offset-2 ring-offset-[#121212] ring-[#ffb703]">Plan Trip</a>
       </div>
     </nav>
   </header>
@@ -74,10 +77,6 @@
         <div class="flex items-center gap-2">
           <span class="inline-block w-3 h-3 rounded-full bg-yellow-400 border border-yellow-600"></span>
           <span>Live Sun</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-4 h-1.5 bg-gray-500 rounded-full"></div>
-          <span>North Indicator</span>
         </div>
       </div>
 
@@ -126,7 +125,7 @@
           <div class="w-full max-w-xs aspect-square p-2 relative">
             <canvas id="compassCanvas" width="300" height="300" class="w-full h-full"></canvas>
              <!-- Fixed device North indicator -->
-            <div id="device-indicator"></div>
+            <div id="device-indicator" style="top: 15px;"></div>
           </div>
           <!-- Live Data Panel -->
           <div id="live-data" class="mt-4 w-full max-w-xs text-center p-3 bg-gray-900/40 rounded-xl border border-gray-700 shadow-md">
@@ -138,6 +137,38 @@
       </div>
     </section>
   </main>
+
+  <!-- Twilight Info Modal -->
+  <div id="twilight-modal" class="hidden fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4">
+    <div class="panel bg-gray-900 p-6 max-w-lg w-full transform transition-all duration-300 scale-100">
+      <h3 class="text-2xl font-bold gold-text mb-4 border-b border-gray-700 pb-2">Understanding Twilight</h3>
+      <table class="w-full text-left text-sm">
+        <thead class="text-xs gold-text uppercase bg-gray-800">
+          <tr>
+            <th scope="col" class="px-3 py-2">Phase</th>
+            <th scope="col" class="px-3 py-2">Description / Traveller Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-700 hover:bg-gray-800/50">
+            <td class="px-3 py-2 font-medium text-gray-200">Civil Twilight</td>
+            <td class="px-3 py-2 text-gray-400">Brightest twilight. Enough light for outdoor activities without artificial lighting. **Golden/Blue Hour** is around this time.</td>
+          </tr>
+          <tr class="border-b border-gray-700 hover:bg-gray-800/50">
+            <td class="px-3 py-2 font-medium text-gray-200">Nautical Twilight</td>
+            <td class="px-3 py-2 text-gray-400">The horizon is still distinguishable (useful for navigation at sea), but artificial light is required for most activities. Good for **early star visibility**.</td>
+          </tr>
+          <tr class="hover:bg-gray-800/50">
+            <td class="px-3 py-2 font-medium text-gray-200">Astronomical Twilight</td>
+            <td class="px-3 py-2 text-gray-400">The sky is essentially dark; the very faint stars are now visible. Used by astronomers to mark the start of **true darkness (for deep sky photography)**.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="mt-6 text-right">
+        <button onclick="toggleTwilightModal(false)" class="bg-indigo-600 text-white py-2 px-5 rounded-lg hover:bg-indigo-700 transition duration-200">Close</button>
+      </div>
+    </div>
+  </div>
 
 <script>
 // Global variables for calculated astronomical data
@@ -165,42 +196,42 @@ function smoothHeading(newH) {
 }
 
 /**
- * Determines the moon phase name and emoji based on the illumination phase value (0 to 1).
+ * Determines the moon phase name and emoji.
  * @param {object} moonIllumination - The object returned by SunCalc.getMoonIllumination.
- * @returns {{name: string, emoji: string, fraction: string}} Moon phase info.
  */
 function getMoonPhaseInfo(moonIllumination) {
-  const phase = moonIllumination.phase; // 0.0=New, 0.25=First Quarter, 0.5=Full, 0.75=Last Quarter
+  const phase = moonIllumination.phase;
   const fraction = moonIllumination.fraction;
   let name, emoji;
 
   if (phase < 0.03 || phase > 0.97) {
-    name = 'New Moon';
-    emoji = '🌑';
+    name = 'New Moon'; emoji = '🌑';
   } else if (phase < 0.22) {
-    name = 'Waxing Crescent';
-    emoji = '🌒';
+    name = 'Waxing Crescent'; emoji = '🌒';
   } else if (phase < 0.28) {
-    name = 'First Quarter';
-    emoji = '🌓';
+    name = 'First Quarter'; emoji = '🌓';
   } else if (phase < 0.47) {
-    name = 'Waxing Gibbous';
-    emoji = '🌔';
+    name = 'Waxing Gibbous'; emoji = '🌔';
   } else if (phase < 0.53) {
-    name = 'Full Moon';
-    emoji = '🌕';
+    name = 'Full Moon'; emoji = '🌕';
   } else if (phase < 0.72) {
-    name = 'Waning Gibbous';
-    emoji = '🌖';
+    name = 'Waning Gibbous'; emoji = '🌖';
   } else if (phase < 0.78) {
-    name = 'Last Quarter';
-    emoji = '🌗';
+    name = 'Last Quarter'; emoji = '🌗';
   } else {
-    name = 'Waning Crescent';
-    emoji = '🌘';
+    name = 'Waning Crescent'; emoji = '🌘';
   }
 
   return { name, emoji, fraction: (fraction * 100).toFixed(1) };
+}
+
+/**
+ * Toggles the visibility of the Twilight Info Modal.
+ * @param {boolean} show - True to show the modal, false to hide.
+ */
+function toggleTwilightModal(show) {
+  const modal = document.getElementById('twilight-modal');
+  modal.classList.toggle('hidden', !show);
 }
 
 // --- Main Calculation and Display Functions ---
@@ -229,29 +260,54 @@ function calcCelestialData() {
   // 1. Calculate Sun Times and Positions
   const times = SunCalc.getTimes(date, lat, lon);
   
+  const formatTime = (time) => {
+    return time instanceof Date ? time.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'}) : '24H Day/Night';
+  };
+
   const sunrisePos = SunCalc.getPosition(times.sunrise, lat, lon);
-  sunriseAzimuth = sunrisePos.azimuth * 180 / Math.PI + 180; // Convert to degrees (0-360)
+  sunriseAzimuth = sunrisePos.azimuth * 180 / Math.PI + 180;
 
   const sunsetPos = SunCalc.getPosition(times.sunset, lat, lon);
-  sunsetAzimuth = sunsetPos.azimuth * 180 / Math.PI + 180; // Convert to degrees (0-360)
+  sunsetAzimuth = sunsetPos.azimuth * 180 / Math.PI + 180;
 
   // 2. Calculate Moon Illumination
   const moonIllumination = SunCalc.getMoonIllumination(date);
   const moonInfo = getMoonPhaseInfo(moonIllumination);
+  
+  // 3. Update Live Sun data (for the current moment)
+  updateLiveSun(); 
 
-  // 3. Update Live Sun data (for the current moment, not the selected date)
-  updateLiveSun(lat, lon); 
+  // 4. Build Twilight HTML
+  const twilightData = [
+    { name: "Civil", dawn: times.civilDawn, dusk: times.civilDusk },
+    { name: "Nautical", dawn: times.nauticalDawn, dusk: times.nauticalDusk },
+    { name: "Astronomical", dawn: times.astroDawn, dusk: times.astroDusk },
+  ];
 
-  // 4. Render Results
+  let twilightHtml = '';
+  twilightData.forEach(t => {
+    const dawnTime = formatTime(t.dawn);
+    const duskTime = formatTime(t.dusk);
+
+    twilightHtml += `
+      <div class="flex justify-between items-center py-2 text-sm text-gray-400 border-b border-gray-800 last:border-b-0">
+        <span class="text-gray-200 font-medium">${t.name} Twilight</span>
+        <span class="flex-1 text-center font-mono">${dawnTime}</span>
+        <span class="flex-1 text-center font-mono">${duskTime}</span>
+      </div>
+    `;
+  });
+
+  // 5. Render Results
   const resultsHtml = `
     <div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
-      <h2 class="text-lg font-bold gold-text mb-3 text-center">Calculated Times & Directions</h2>
+      <h2 class="text-lg font-bold gold-text mb-4 text-center">Calculated Times & Directions</h2>
       
       <!-- Sun Times Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center border-b border-gray-700 pb-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center border-b border-gray-700 pb-4">
         <div class="p-2 rounded-lg bg-gray-800/50">
           <div class="text-xs text-gray-400">Sunrise Time</div>
-          <div class="text-xl font-bold">${times.sunrise.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
+          <div class="text-xl font-bold">${formatTime(times.sunrise)}</div>
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
           <div class="text-xs text-gray-400">Sunrise Azimuth</div>
@@ -259,13 +315,34 @@ function calcCelestialData() {
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
           <div class="text-xs text-gray-400">Sunset Time</div>
-          <div class="text-xl font-bold">${times.sunset.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
+          <div class="text-xl font-bold">${formatTime(times.sunset)}</div>
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
           <div class="text-xs text-gray-400">Sunset Azimuth</div>
           <div class="text-xl font-bold text-blue-400">${sunsetAzimuth.toFixed(1)}°</div>
         </div>
       </div>
+
+      <!-- Twilight Times -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="text-base font-semibold text-gray-200">Twilight Periods</h3>
+            <button onclick="toggleTwilightModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+        <div class="bg-gray-800/50 rounded-lg p-3">
+          <div class="flex justify-between font-bold text-xs gold-text mb-1">
+            <span class="w-1/3">Phase</span>
+            <span class="w-1/3 text-center">Dawn</span>
+            <span class="w-1/3 text-center">Dusk</span>
+          </div>
+          ${twilightHtml}
+        </div>
+      </div>
+
 
       <!-- Moon Phase -->
       <div class="text-center p-3 bg-gray-800/50 rounded-lg">
@@ -280,20 +357,19 @@ function calcCelestialData() {
   `;
   document.getElementById("results").innerHTML = resultsHtml;
 
-  // 5. Draw the compass with new data
+  // 6. Draw the compass with new data
   drawCompass();
 }
 
 /**
  * Updates the live sun azimuth and altitude in the separate live data box.
- * Only runs if valid lat/lon are set.
  */
 function updateLiveSun() {
   if (lat_value === null || lon_value === null) return;
   
   const now = new Date();
   const pos = SunCalc.getPosition(now, lat_value, lon_value);
-  liveAzimuth = pos.azimuth * 180 / Math.PI + 180; // 0-360 degrees
+  liveAzimuth = pos.azimuth * 180 / Math.PI + 180;
   const altitude = pos.altitude * 180 / Math.PI;
 
   const liveSunAltEl = document.getElementById("live-sun-alt");
@@ -325,10 +401,13 @@ function startGpsLocation() {
     // Error: Display error and keep placeholders
     console.error("Geolocation Error:", error);
     resultEl.innerHTML = `<div class="bg-red-900/40 border border-red-700 rounded-xl p-4 text-center text-red-300">
-      Location denied or failed (${error.message}). Please enter coordinates manually.
+      Location denied or failed (${error.message}). Please enter coordinates manually and press 'Recalculate'.
     </div>`;
     document.getElementById("lat").placeholder = "Manual entry needed";
     document.getElementById("lon").placeholder = "Manual entry needed";
+    // Set a default value so the user can calculate manually immediately
+    document.getElementById("lat").value = 34.0522; 
+    document.getElementById("lon").value = -118.2437; 
   }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 }
 
@@ -340,22 +419,20 @@ function startCompass() {
   if (typeof DeviceOrientationEvent !== "undefined" &&
       typeof DeviceOrientationEvent.requestPermission === "function") {
     
-    // Note: This call will only succeed if triggered by a user gesture.
-    // Since we call it on load, it will likely fail silently or throw an error
-    // resulting in the compass features not working.
+    // NOTE: This MUST be inside a user gesture handler (like a button click)
+    // to work in Safari. Calling it on page load will fail silently, but we 
+    // try anyway for non-iOS compliance.
     DeviceOrientationEvent.requestPermission()
       .then(response => {
         if (response === "granted") {
           window.addEventListener("deviceorientation", handleOrientation, true);
-        } else {
-          console.warn("Compass access denied by permission request.");
         }
       })
       .catch(e => {
         console.error("Error requesting motion sensor permission:", e);
       });
   } else {
-    // For non-iOS or older browsers (which often allow motion on load)
+    // For non-iOS or older browsers
     window.addEventListener("deviceorientationabsolute", handleOrientation, true);
     window.addEventListener("deviceorientation", handleOrientation, true);
   }
@@ -385,7 +462,7 @@ function drawCompass() {
   // 2. Rotate the entire compass *opposite* to the smoothed heading
   ctx.rotate(-smoothHeading(heading) * Math.PI/180);
 
-  // 3. Draw Cardinal Directions (North is aligned with the top of the device)
+  // 3. Draw Cardinal Directions 
   ctx.font = "20px Inter";
   ctx.textAlign = "center";
   const directions = [{l:'N', d:0}, {l:'E', d:90}, {l:'S', d:180}, {l:'W', d:270}];
@@ -399,13 +476,11 @@ function drawCompass() {
   });
   
   // 4. Draw Azimuth Pointers (Sunrise, Sunset)
-  
   const drawAzimuthPointer = (azimuth, color) => {
     if (azimuth !== null) {
       ctx.save();
       ctx.rotate(azimuth * Math.PI/180);
       
-      // Line from center to edge
       ctx.strokeStyle = color;
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -413,7 +488,6 @@ function drawCompass() {
       ctx.lineTo(0, -radius + 25);
       ctx.stroke();
 
-      // Arrowhead/Cap
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(0, -radius + 20, 5, 0, 2*Math.PI);
@@ -423,13 +497,10 @@ function drawCompass() {
     }
   };
 
-  // Sunrise (Red)
-  drawAzimuthPointer(sunriseAzimuth, '#ef4444');
+  drawAzimuthPointer(sunriseAzimuth, '#ef4444'); // Sunrise (Red)
+  drawAzimuthPointer(sunsetAzimuth, '#3b82f6');  // Sunset (Blue)
   
-  // Sunset (Blue)
-  drawAzimuthPointer(sunsetAzimuth, '#3b82f6');
-  
-  // 5. Draw Live Sun Position (Yellow Circle with Rays)
+  // 5. Draw Live Sun Position
   if (liveAzimuth !== null) {
     ctx.save();
     ctx.rotate(liveAzimuth * Math.PI/180);
@@ -456,10 +527,8 @@ function drawCompass() {
 function handleOrientation(event) {
   let rawHeading = 0;
   if (event.webkitCompassHeading) {
-    // iOS (Safari)
     rawHeading = event.webkitCompassHeading;
   } else if (event.alpha !== null) {
-    // Standard (non-iOS) - alpha is rotation around Z-axis (0-360)
     rawHeading = 360 - event.alpha;
   }
   
@@ -471,7 +540,7 @@ function handleOrientation(event) {
   updateLiveSun();
 }
 
-// --- Event Listeners and Initialization ---
+// --- Initialization ---
 
 document.getElementById("btn-calc").addEventListener("click", calcCelestialData);
 
@@ -482,7 +551,7 @@ function initializeApp() {
   // 1. Set today as default date
   document.getElementById("date").value = new Date().toISOString().split("T")[0];
   
-  // 2. Start the Compass sensor listener
+  // 2. Start the Compass sensor listener (may require user gesture in some browsers)
   startCompass(); 
 
   // 3. Start GPS location acquisition and initial calculation
@@ -491,9 +560,8 @@ function initializeApp() {
 
 window.onload = initializeApp;
 
-// Set up a timer to continuously update live sun position, regardless of compass heading
-// This is necessary if the device doesn't support deviceorientation events.
-setInterval(updateLiveSun, 5000); 
+// Set up a timer to continuously update live sun position and compass drawing
+setInterval(updateLiveSun, 3000); 
 </script>
 </body>
 </html>
