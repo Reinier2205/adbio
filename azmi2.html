@@ -3,69 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Celestial Finder | Sun & Moon</title>
+  <title>Celestial Tracker | Sun, Moon & Compass</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <!-- SunCalc library for celestial mechanics -->
   <script src="https://unpkg.com/suncalc/suncalc.js"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #121212; color: #e0e0e0; }
-    .felt-green { background-color: #2c0e3a; } /* Deep Space Purple */
-    .gold-text { color: #ffb703; } /* Vibrant Gold */
-    .btn-primary { background-color: #ffb703; color: #121212; transition: transform .2s ease, box-shadow .2s ease; font-weight: 800; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255,183,3,.4); }
-    .panel { background:#1f1f1f; border:2px solid rgba(255,183,3,0.5); border-radius: 16px; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
+    body { font-family: 'Inter', sans-serif; background-color: #0d1117; color: #c9d1d9; } /* GitHub Dark Mode Base */
+    .header-bg { background-color: #161b22; } /* Dark Header */
+    .gold-text { color: #fcd34d; } /* Amber/Gold for primary highlights */
+    .btn-primary { background-color: #238636; color: #ffffff; transition: transform .2s ease, box-shadow .2s ease; font-weight: 700; }
+    .btn-primary:hover { background-color: #2ea043; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(46, 160, 67, 0.4); }
+    .panel { background:#161b22; border:2px solid #30363d; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
+    
+    /* Headings Consistency */
+    .section-heading-primary { /* Used for input/live sections */
+        font-size: 1.5rem; /* xl */
+        font-weight: 700;
+        text-align: center;
+        color: #e5e7eb;
+        border-bottom: 2px solid #30363d;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .section-heading-secondary { /* Used for results block titles (Sun and Moon, Twilight, etc.) */
+        font-size: 1.5rem; /* xl */
+        font-weight: 800;
+        text-align: center;
+        color: #fcd34d;
+        border-bottom: 1px solid #30363d;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
     #compassCanvas { background: rgba(255,255,255,0.05); border-radius: 9999px; border:2px solid rgba(255,255,255,0.1); }
-    /* Hide number input arrows */
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { 
       -webkit-appearance: none;
       margin: 0;
     }
     input[type=number] { -moz-appearance: textfield; }
-    /* Custom style for the fixed compass indicator */
     #device-indicator {
       position: absolute;
-      top: 0;
+      top: 15px;
       left: 50%;
       transform: translateX(-50%);
       width: 0;
       height: 0;
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-bottom: 15px solid rgba(255, 255, 255, 0.4); /* Light arrow */
+      border-bottom: 15px solid rgba(255, 255, 255, 0.8);
     }
     .modal-backdrop {
-        background-color: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(5px);
+        background-color: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(4px);
     }
+    .data-label { color: #9ca3af; font-size: 0.875rem; } /* sm */
+    .data-value { font-size: 1.125rem; font-weight: 700; } /* lg */
   </style>
 </head>
 <body class="antialiased min-h-screen">
-  <header class="felt-green p-4 sticky top-0 z-50 shadow-xl">
+  <header class="header-bg p-4 sticky top-0 z-50 shadow-xl">
     <nav class="container mx-auto flex justify-between items-center max-w-7xl">
       <a href="#" class="text-2xl font-bold gold-text flex items-center gap-2">
-        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.106a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.06l1.59-1.591ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75ZM18.894 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.59a.75.75 0 1 0-1.06 1.06l1.59 1.59ZM12 17.25a.75.75 0 0 1-.75.75H9a.75.75 0 0 1 0-1.5h2.25a.75.75 0 0 1 .75.75ZM5.659 15.659a.75.75 0 0 0-1.06 1.06l1.59 1.59a.75.75 0 0 0 1.06-1.06l-1.59-1.59ZM3 12a.75.75 0 0 1 .75-.75h2.25a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12ZM4.566 7.166a.75.75 0 0 0 1.06-1.06l-1.59-1.59a.75.75 0 0 0-1.06 1.06l1.59 1.59Z" />
         </svg>
         Celestial Finder
       </a>
       <div class="hidden sm:flex items-center gap-3">
-        <a href="#inputs" class="btn-primary font-bold py-2 px-4 rounded-full text-sm hover:ring-2 ring-offset-2 ring-offset-[#121212] ring-[#ffb703]">Plan Trip</a>
+        <a href="#inputs" class="btn-primary font-bold py-2 px-4 rounded-full text-sm hover:ring-2 ring-offset-2 ring-offset-[#0d1117] ring-[#238636]">Plan Trip</a>
       </div>
     </nav>
   </header>
 
-  <main class="container mx-auto px-4 py-10 max-w-7xl">
-    <section class="text-center py-8">
-      <h1 class="text-3xl md:text-4xl font-extrabold gold-text mb-2">Solar, Lunar, and ISS Dynamics</h1>
+  <main class="container mx-auto px-4 py-8 max-w-2xl">
+    <section class="text-center pb-6">
+      <h1 class="text-3xl md:text-4xl font-extrabold text-gray-100 mb-2">Solar, Lunar, and ISS Dynamics</h1>
       <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-400">Track celestial events based on your location and heading.</p>
     </section>
 
-    <section id="inputs" class="max-w-4xl mx-auto panel p-6 md:p-8">
+    <section id="inputs" class="panel p-6 md:p-8">
       
       <!-- Legend -->
-      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-6 text-xs text-gray-400">
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-6 text-xs text-gray-400 border-b border-gray-700 pb-4">
         <div class="flex items-center gap-2">
           <div class="w-4 h-1.5 bg-red-500 rounded-full"></div>
           <span>Sunrise Azimuth</span>
@@ -80,61 +101,57 @@
         </div>
       </div>
 
-      <!-- Main Content Container (Single Column for Mobile optimization) -->
-      <div class="space-y-8"> 
+      <!-- Location & Date Input -->
+      <div class="space-y-4 mb-6">
+        <h2 class="section-heading-primary">Location and Date</h2>
         
-        <!-- Location & Date Input -->
-        <div class="space-y-4">
-          <h2 class="text-xl font-extrabold text-gray-200 border-b border-gray-700 pb-2 mb-4">Location and Date</h2>
-          
-          <!-- Date Input -->
-          <label class="block">
-            <span class="block text-sm font-medium text-gray-300 mb-1">Date</span>
-            <input id="date" type="date" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner">
+        <!-- Date Input -->
+        <label class="block">
+          <span class="data-label block mb-1">Date</span>
+          <input id="date" type="date" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner">
+        </label>
+        
+        <!-- Lat/Lon Input -->
+        <div class="flex gap-4">
+          <label class="flex-1 block">
+            <span class="data-label block mb-1">Latitude (S = -)</span>
+            <input id="lat" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Latitude...">
           </label>
-          
-          <!-- Lat/Lon Input -->
-          <div class="flex gap-4">
-            <label class="flex-1 block">
-              <span class="block text-sm font-medium text-gray-300 mb-1">Latitude (S = -)</span>
-              <input id="lat" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Latitude...">
-            </label>
-            <label class="flex-1 block">
-              <span class="block text-sm font-medium text-gray-300 mb-1">Longitude (W = -)</span>
-              <input id="lon" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Longitude...">
-            </label>
-          </div>
+          <label class="flex-1 block">
+            <span class="data-label block mb-1">Longitude (W = -)</span>
+            <input id="lon" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Longitude...">
+          </label>
         </div>
-        
-        <!-- Action Button -->
-        <div class="flex flex-wrap justify-center sm:justify-start gap-3 mt-6">
-          <button id="btn-calc" class="btn-primary py-3 px-6 rounded-xl flex items-center gap-2 text-sm w-full sm:w-auto">
-            Recalculate Data
-          </button>
-        </div>
+      </div>
+      
+      <!-- Action Button -->
+      <div class="flex justify-center mt-6 mb-8">
+        <button id="btn-calc" class="btn-primary py-3 px-6 rounded-xl flex items-center gap-2 text-sm w-full md:w-auto">
+          Recalculate Data
+        </button>
+      </div>
 
-        <!-- Live Compass Tracking -->
-        <div class="flex flex-col items-center justify-center panel p-4 bg-gray-900/40 border-gray-700">
-            <h2 class="text-xl font-extrabold gold-text mb-4 text-center border-b border-gray-700 pb-2 w-full">Live Compass Tracking</h2>
-            <div class="w-full max-w-xs aspect-square p-2 relative">
-              <canvas id="compassCanvas" width="300" height="300" class="w-full h-full"></canvas>
-              <!-- Fixed device North indicator -->
-              <div id="device-indicator" style="top: 15px;"></div>
-            </div>
-            <!-- Live Data Panel -->
-            <div id="live-data" class="mt-4 w-full max-w-xs text-center p-3 bg-gray-800 rounded-xl border border-gray-700 shadow-md">
-              <p class="text-sm text-gray-400 mb-1">Device Heading</p>
-              <div class="text-3xl font-bold gold-text" id="current-heading">---°</div>
-              <div class="text-sm text-gray-400" id="live-sun-alt">---</div>
-            </div>
-        </div>
-        <!-- END LIVE TRACKING BLOCK -->
-
-        <!-- Results Panel -->
-        <div id="results" role="status" aria-live="polite">
-          <div class="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-center text-gray-500">
-              Awaiting location and time data. Enter coordinates or click 'Grant Access' in the prompt.
+      <!-- Live Compass Tracking -->
+      <div class="flex flex-col items-center justify-center panel p-4 bg-gray-800/40 border-gray-700">
+          <h2 class="section-heading-primary text-center">Live Compass Tracking</h2>
+          <div class="w-full max-w-xs aspect-square p-2 relative">
+            <canvas id="compassCanvas" width="300" height="300" class="w-full h-full"></canvas>
+            <!-- Fixed device North indicator -->
+            <div id="device-indicator"></div>
           </div>
+          <!-- Live Data Panel -->
+          <div id="live-data" class="mt-4 w-full max-w-xs text-center p-3 bg-gray-700 rounded-xl border border-gray-600 shadow-md">
+            <p class="data-label mb-1">Device Heading</p>
+            <div class="text-3xl font-bold gold-text" id="current-heading">---°</div>
+            <div class="text-sm text-gray-400 mt-2" id="live-sun-alt">Awaiting Location...</div>
+          </div>
+      </div>
+      <!-- END LIVE TRACKING BLOCK -->
+
+      <!-- Results Panel -->
+      <div id="results" role="status" aria-live="polite" class="mt-8">
+        <div class="bg-gray-800/40 border border-gray-700 rounded-xl p-4 text-center text-gray-500">
+            Awaiting location and time data. Enter coordinates or click 'Grant Access' in the prompt.
         </div>
       </div>
     </section>
@@ -203,7 +220,7 @@
         <p><strong>Appearance:</strong> It looks like a bright, white pinpoint of light moving steadily across the sky, much faster than an airplane and without flashing lights.</p>
         <p><strong>Visibility:</strong> It is only visible when it is **reflecting sunlight**. This means the best times are right after **sunset** and right before **sunrise**, when your ground location is dark but the station is high enough to catch the sun's light.</p>
         <p><strong>Coverage:</strong> Due to its orbit, the ISS is visible from about $95\%$ of the Earth's inhabited surface.</p>
-        <p class="text-sm text-red-400 pt-2 border-t border-gray-700 mt-4">**Note:** For current, accurate pass predictions, you must use a dedicated online tool (like the one linked in the main results section) as those calculations require complex, real-time data.</p>
+        <p class="text-sm text-yellow-400 pt-2 border-t border-gray-700 mt-4">**Note:** For current, accurate pass predictions, you must use a dedicated online tool (like the one linked in the main results section) as those calculations require complex, real-time data.</p>
       </div>
 
       <div class="mt-6 text-right">
@@ -224,7 +241,7 @@ let lon_value = null;
 let heading = 0;
 let lastHeading = 0;
 
-// --- Utility Functions (These remain unchanged) ---
+// --- Utility Functions ---
 
 /**
  * Smooths the device heading input to prevent jittering.
@@ -325,21 +342,10 @@ function calcCelestialData() {
   /**
    * Formats a Date object into a readable time string, or returns a polar status.
    */
-  const formatTime = (time, type) => {
+  const formatTime = (time) => {
     if (time instanceof Date) {
       return time.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
     }
-    
-    // Logic for Polar Day/Night
-    if (type === 'twilight' || type === 'sun_rise_set') {
-      if (!sunRises && !sunSets) {
-        return '24H Darkness';
-      } else if (!sunSets || !sunRises) {
-        return '24H Sunlight';
-      }
-    }
-    
-    // For mid-latitudes, twilight times that don't occur are handled by True Darkness calc
     return 'N/A';
   };
   
@@ -355,28 +361,24 @@ function calcCelestialData() {
 
   // 2. Calculate True Darkness Duration 
   let trueDarknessStatus = '';
-  let trueDarknessDuration = '0h 0m';
   
   if (times.astroDawn instanceof Date && times.astroDusk instanceof Date) {
       const darkDurationMs = times.astroDawn.getTime() - times.astroDusk.getTime();
       if (darkDurationMs > 0) {
           const hours = Math.floor(darkDurationMs / (1000 * 60 * 60));
           const minutes = Math.floor((darkDurationMs % (1000 * 60 * 60)) / (1000 * 60));
-          trueDarknessDuration = `${hours}h ${minutes}m`;
-          trueDarknessStatus = `True darkness lasts **${trueDarknessDuration}**`;
+          trueDarknessStatus = `${hours}h ${minutes}m`;
       } else {
-          trueDarknessStatus = 'Sky never gets truly dark (Continuous Twilight)';
+          trueDarknessStatus = 'Never gets truly dark';
       }
   } else {
       // Handles polar cases where the sun doesn't rise/set at all
-      const astroStatus = formatTime(times.astroDusk, 'twilight');
-      if (astroStatus === '24H Darkness') {
-          trueDarknessStatus = '24h (Polar Night)';
-      } else if (astroStatus === '24H Sunlight') {
-           trueDarknessStatus = '0h (Polar Day)';
+      if (!sunRises && !sunSets) {
+        trueDarknessStatus = '24h Darkness (Polar Night)';
+      } else if (!sunSets || !sunRises) {
+        trueDarknessStatus = '0h (Polar Day)';
       } else {
-          // Should not happen if SunCalc is working, but a fallback
-          trueDarknessStatus = 'N/A';
+         trueDarknessStatus = 'Never gets truly dark'; // For mid-latitudes where astronomical twilight is continuous
       }
   }
 
@@ -386,13 +388,18 @@ function calcCelestialData() {
   const moonInfo = getMoonPhaseInfo(moonIllumination);
 
   const moonHtml = `
-    <div class="text-center p-3 bg-gray-800/50 rounded-lg">
-      <div class="text-xs text-gray-400 mb-1">Moon Phase</div>
-      <div class="text-3xl font-bold gold-text flex items-center justify-center gap-3">
-        <span class="text-4xl">${moonInfo.emoji}</span>
-        ${moonInfo.name}
-      </div>
-      <div class="text-sm text-gray-400 mt-1">${moonInfo.fraction}% illuminated</div>
+    <div class="grid grid-cols-2 gap-4">
+        <div class="p-3 rounded-lg bg-gray-700/50 text-center">
+            <div class="data-label">Phase</div>
+            <div class="text-lg font-bold text-gray-100 flex items-center justify-center gap-2 mt-1">
+                <span class="text-xl">${moonInfo.emoji}</span>
+                ${moonInfo.name}
+            </div>
+        </div>
+        <div class="p-3 rounded-lg bg-gray-700/50 text-center">
+            <div class="data-label">Illuminated</div>
+            <div class="data-value gold-text mt-1">${moonInfo.fraction}%</div>
+        </div>
     </div>
   `;
   
@@ -418,38 +425,45 @@ function calcCelestialData() {
   
   // 6. Build ISS Link HTML
   const issHtml = `
-    <div class="p-3 text-center bg-gray-800/20 rounded-lg text-sm text-gray-400">
-      <p class="mb-2 text-gray-300 font-semibold">Get real-time ISS pass predictions:</p>
-      <p class="text-xs">Use the link below and input your current coordinates (Lat: ${lat_value.toFixed(3)}, Lon: ${lon_value.toFixed(3)})</p>
-      <a href="https://spotthestation.nasa.gov/" target="_blank" class="text-indigo-400 hover:text-indigo-300 font-medium underline mt-2 block break-words">
-        spotthestation.nasa.gov
-      </a>
+    <div class="p-3 text-center bg-gray-700/20 rounded-lg text-sm text-gray-400 border border-gray-700">
+        <div class="flex justify-center items-center mb-2">
+            <p class="text-gray-300 font-semibold mr-2">ISS Pass Predictions</p>
+            <button onclick="toggleIssModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+        <p class="text-xs mb-3">Input your coordinates (Lat: **${lat_value.toFixed(3)}**, Lon: **${lon_value.toFixed(3)}**) into the NASA tool:</p>
+        <a href="https://spotthestation.nasa.gov/" target="_blank" class="text-yellow-400 hover:text-yellow-300 font-medium underline mt-2 block break-words">
+            spotthestation.nasa.gov
+        </a>
     </div>
   `;
 
   // 7. Render Results (UPDATED STRUCTURE)
   const resultsHtml = `
-    <div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
+    <div class="panel p-4">
       <!-- Main Heading Updated -->
-      <h2 class="text-xl font-extrabold gold-text mb-4 text-center border-b border-gray-700 pb-2">Sun and Moon</h2>
+      <h2 class="section-heading-secondary">Sun and Moon</h2>
       
       <!-- Sun Times Grid -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center border-b border-gray-700 pb-4">
         <div class="p-2 rounded-lg bg-gray-800/50">
-          <div class="text-xs text-gray-400">Sunrise</div>
-          <div class="text-xl font-bold">${formatTime(times.sunrise, 'sun_rise_set')}</div>
+          <div class="data-label">Sunrise</div>
+          <div class="data-value gold-text">${formatTime(times.sunrise)}</div>
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
-          <div class="text-xs text-gray-400">Sunrise Az.</div>
-          <div class="text-xl font-bold text-red-400">${sunRises ? sunriseAzimuth.toFixed(1) + '°' : 'N/A'}</div>
+          <div class="data-label">Azimuth</div>
+          <div class="data-value text-red-400">${sunRises ? sunriseAzimuth.toFixed(1) + '°' : 'N/A'}</div>
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
-          <div class="text-xs text-gray-400">Sunset</div>
-          <div class="text-xl font-bold">${formatTime(times.sunset, 'sun_rise_set')}</div>
+          <div class="data-label">Sunset</div>
+          <div class="data-value gold-text">${formatTime(times.sunset)}</div>
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
-          <div class="text-xs text-gray-400">Sunset Az.</div>
-          <div class="text-xl font-bold text-blue-400">${sunSets ? sunsetAzimuth.toFixed(1) + '°' : 'N/A'}</div>
+          <div class="data-label">Azimuth</div>
+          <div class="data-value text-blue-400">${sunSets ? sunsetAzimuth.toFixed(1) + '°' : 'N/A'}</div>
         </div>
       </div>
 
@@ -460,10 +474,10 @@ function calcCelestialData() {
 
 
       <!-- NEW SECTION: Twilight Periods -->
-      <h3 class="text-lg font-extrabold gold-text mb-3 mt-6 border-b border-gray-700 pb-1">Twilight & True Darkness</h3>
+      <h3 class="section-heading-secondary mt-6">Twilight & True Darkness</h3>
       <div class="mb-8 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
         <div class="flex justify-between items-center mb-2">
-            <h4 class="text-base font-bold text-gray-200">Twilight Definitions</h4>
+            <h4 class="text-base font-bold text-gray-200">Twilight Times</h4>
             <button onclick="toggleTwilightModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
@@ -484,13 +498,13 @@ function calcCelestialData() {
             <span class="text-center font-mono w-1/3">${formatTwilightTime(times.astroDawn)}</span>
         </div>
         <p class="text-center text-sm mt-2 font-semibold text-gray-300">
-            Duration: <span class="gold-text">${trueDarknessStatus}</span>
+            Duration of True Darkness: <span class="gold-text">${trueDarknessStatus}</span>
         </p>
       </div>
 
 
       <!-- NEW SECTION: ISS Pass Predictions -->
-      <h3 class="text-lg font-extrabold gold-text mb-3 mt-6 border-b border-gray-700 pb-1">ISS Pass Predictions</h3>
+      <h3 class="section-heading-secondary mt-6">ISS Pass Predictions</h3>
       <div class="mb-4">
         ${issHtml}
       </div>
@@ -505,13 +519,11 @@ function calcCelestialData() {
 
 /**
  * Updates the live sun azimuth and altitude in the separate live data box.
- * (Rest of the script remains unchanged)
  */
 function updateLiveSun() {
   if (lat_value === null || lon_value === null) {
-      // Cannot calculate if location is unknown
       document.getElementById("live-sun-alt").textContent = "No location data.";
-      drawCompass(); // Still draws the compass rose if possible
+      drawCompass();
       return;
   }
   
@@ -527,7 +539,6 @@ function updateLiveSun() {
      liveSunAltEl.innerHTML = `Sun is down. Altitude: ${altitude.toFixed(1)}°`;
   }
  
-  // Redraw frequently for live sun position and heading
   drawCompass(); 
 }
 
@@ -536,7 +547,7 @@ function updateLiveSun() {
  */
 function startGpsLocation() {
   const resultEl = document.getElementById("results");
-  resultEl.innerHTML = `<div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4 text-center text-gray-300">
+  resultEl.innerHTML = `<div class="bg-gray-800/40 border border-gray-700 rounded-xl p-4 text-center text-gray-300">
       Requesting GPS location... (Check browser prompt)
     </div>`;
 
@@ -557,7 +568,6 @@ function startGpsLocation() {
     document.getElementById("lon").value = ''; 
     lat_value = null;
     lon_value = null;
-    // Attempt a compass redraw just in case, but no calculation.
     drawCompass(); 
   }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 }
@@ -625,7 +635,7 @@ function drawCompass() {
   // 1. Compass Ring
   ctx.beginPath();
   ctx.arc(0, 0, radius - 5, 0, 2*Math.PI);
-  ctx.strokeStyle = '#ffb703';
+  ctx.strokeStyle = '#fcd34d';
   ctx.lineWidth = 4;
   ctx.stroke();
 
@@ -640,7 +650,7 @@ function drawCompass() {
   directions.forEach(({l, d}) => {
     ctx.save();
     ctx.rotate(d * Math.PI/180);
-    ctx.fillStyle = l === 'N' ? '#ffb703' : '#e0e0e0';
+    ctx.fillStyle = l === 'N' ? '#fcd34d' : '#c9d1d9';
     ctx.fillText(l, 0, -radius + 35);
     ctx.restore();
   });
@@ -667,8 +677,8 @@ function drawCompass() {
     }
   };
 
-  drawAzimuthPointer(sunriseAzimuth, '#ef4444'); // Sunrise (Red)
-  drawAzimuthPointer(sunsetAzimuth, '#3b82f6');  // Sunset (Blue)
+  drawAzimuthPointer(sunriseAzimuth, '#f87171'); // Sunrise (Red)
+  drawAzimuthPointer(sunsetAzimuth, '#60a5fa');  // Sunset (Blue)
   
   // 5. Draw Live Sun Position
   if (liveAzimuth !== null && lat_value !== null) {
