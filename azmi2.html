@@ -58,8 +58,8 @@
 
   <main class="container mx-auto px-4 py-10 max-w-7xl">
     <section class="text-center py-8">
-      <h1 class="text-3xl md:text-4xl font-extrabold gold-text mb-2">Solar and Lunar Dynamics</h1>
-      <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-400">Automatic location and compass tracking for current celestial data.</p>
+      <h1 class="text-3xl md:text-4xl font-extrabold gold-text mb-2">Solar, Lunar, and ISS Dynamics</h1>
+      <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-400">Track celestial events based on your location and heading.</p>
     </section>
 
     <section id="inputs" class="max-w-4xl mx-auto panel p-6 md:p-8">
@@ -95,17 +95,17 @@
             <!-- Lat/Lon Input -->
             <div class="flex gap-4">
               <label class="flex-1 block">
-                <span class="block text-sm font-medium text-gray-300 mb-1">Latitude</span>
-                <input id="lat" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Fetching...">
+                <span class="block text-sm font-medium text-gray-300 mb-1">Latitude (S = -)</span>
+                <input id="lat" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Latitude...">
               </label>
               <label class="flex-1 block">
-                <span class="block text-sm font-medium text-gray-300 mb-1">Longitude</span>
-                <input id="lon" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Fetching...">
+                <span class="block text-sm font-medium text-gray-300 mb-1">Longitude (W = -)</span>
+                <input id="lon" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Longitude...">
               </label>
             </div>
           </div>
           
-          <!-- Buttons (Only Recalculate Remains) -->
+          <!-- Buttons -->
           <div class="flex flex-wrap justify-center sm:justify-start gap-3 mt-6">
             <button id="btn-calc" class="btn-primary py-3 px-6 rounded-xl flex items-center gap-2 text-sm w-full sm:w-auto">
               Recalculate Data
@@ -115,7 +115,7 @@
           <!-- Results Panel -->
           <div id="results" role="status" aria-live="polite" class="mt-6">
             <div class="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-center text-gray-500">
-                Attempting to get location and compass permission...
+                Awaiting location and time data. Enter coordinates or click 'Grant Access' in the prompt.
             </div>
           </div>
         </div>
@@ -137,6 +137,26 @@
       </div>
     </section>
   </main>
+
+  <!-- *** MODALS *** -->
+
+  <!-- Permission Request Modal -->
+  <div id="permission-modal" class="fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4">
+    <div class="panel bg-gray-900 p-8 max-w-sm w-full transform transition-all duration-300 scale-100 text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 gold-text mx-auto mb-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m.75-9.75l.348-.285c1.458-.883 3.32-.883 4.778 0l.348.285A1.5 1.5 0 0 1 15 8.25v2.25m-4.5-9.75v6.75m.75-6.75l.348-.285c1.458-.883 3.32-.883 4.778 0l.348.285A1.5 1.5 0 0 1 15 8.25v2.25m-4.5-9.75V15M3.75 8.25v6A2.25 2.25 0 0 0 6 16.5h12A2.25 2.25 0 0 0 20.25 15v-6A2.25 2.25 0 0 0 18 6H6a2.25 2.25 0 0 0-2.25 2.25Z" />
+      </svg>
+      <h3 class="text-xl font-bold text-gray-200 mb-2">Location and Compass Required</h3>
+      <p class="text-sm text-gray-400 mb-6">To accurately calculate celestial events and provide live compass tracking, we need permission for your **current location (GPS)** and **device orientation (Compass)**.</p>
+      <button onclick="requestPermissions()" class="btn-primary py-3 px-6 rounded-xl w-full">
+        Grant Access & Start
+      </button>
+      <button onclick="togglePermissionModal(false)" class="text-gray-500 hover:text-gray-300 text-sm mt-3">
+        Skip (I will enter coordinates manually)
+      </button>
+    </div>
+  </div>
+
 
   <!-- Twilight Info Modal -->
   <div id="twilight-modal" class="hidden fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4">
@@ -170,6 +190,26 @@
     </div>
   </div>
 
+  <!-- ISS Info Modal -->
+  <div id="iss-modal" class="hidden fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4">
+    <div class="panel bg-gray-900 p-6 max-w-lg w-full transform transition-all duration-300 scale-100">
+      <h3 class="text-2xl font-bold gold-text mb-4 border-b border-gray-700 pb-2">International Space Station (ISS)</h3>
+      
+      <p class="text-gray-300 mb-4">The ISS is the third brightest object in the sky (after the Sun and Moon) and is easily visible to the naked eye.</p>
+      
+      <div class="space-y-3 text-gray-400">
+        <p><strong>Appearance:</strong> It looks like a bright, white pinpoint of light moving steadily across the sky, much faster than an airplane and without flashing lights.</p>
+        <p><strong>Visibility:</strong> It is only visible when it is **reflecting sunlight**. This means the best times are right after **sunset** and right before **sunrise**, when your ground location is dark but the station is high enough to catch the sun's light.</p>
+        <p><strong>Coverage:</strong> Due to its orbit, the ISS is visible from about $95\%$ of the Earth's inhabited surface, including all of **South Africa**.</p>
+        <p class="text-sm text-red-400 pt-2 border-t border-gray-700 mt-4">**Note:** Since real-time orbit calculation requires complex external APIs, the passes listed below are **mock data** to show the format. For live predictions, use NASA's "Spot the Station" tool.</p>
+      </div>
+
+      <div class="mt-6 text-right">
+        <button onclick="toggleIssModal(false)" class="bg-indigo-600 text-white py-2 px-5 rounded-lg hover:bg-indigo-700 transition duration-200">Close</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 // Global variables for calculated astronomical data
 let sunriseAzimuth = null;
@@ -186,18 +226,15 @@ let lastHeading = 0;
 
 /**
  * Smooths the device heading input to prevent jittering.
- * @param {number} newH - The raw compass heading.
- * @returns {number} The smoothed heading.
  */
 function smoothHeading(newH) {
-  const k = 0.1; // Smoothing factor (0.1 is aggressive, good for mobile)
+  const k = 0.1;
   lastHeading = lastHeading * (1 - k) + newH * k;
   return lastHeading;
 }
 
 /**
  * Determines the moon phase name and emoji.
- * @param {object} moonIllumination - The object returned by SunCalc.getMoonIllumination.
  */
 function getMoonPhaseInfo(moonIllumination) {
   const phase = moonIllumination.phase;
@@ -226,11 +263,39 @@ function getMoonPhaseInfo(moonIllumination) {
 }
 
 /**
+ * Generates mock data for ISS passes for demonstration purposes.
+ * NOTE: This is NOT live data.
+ */
+function getMockIssPasses() {
+    // Example passes for a South African location
+    return [
+        { time: "05:48 AM", maxAlt: "29°", start: "SSW", end: "SE", duration: "3m 30s" },
+        { time: "07:15 PM", maxAlt: "55°", start: "WNW", end: "S", duration: "5m 12s" },
+        { time: "05:01 AM", maxAlt: "15°", start: "N", end: "NE", duration: "2m 10s" }
+    ];
+}
+
+/**
+ * Toggles the visibility of the Permission Request Modal.
+ */
+function togglePermissionModal(show) {
+  const modal = document.getElementById('permission-modal');
+  modal.classList.toggle('hidden', !show);
+}
+
+/**
  * Toggles the visibility of the Twilight Info Modal.
- * @param {boolean} show - True to show the modal, false to hide.
  */
 function toggleTwilightModal(show) {
   const modal = document.getElementById('twilight-modal');
+  modal.classList.toggle('hidden', !show);
+}
+
+/**
+ * Toggles the visibility of the ISS Info Modal.
+ */
+function toggleIssModal(show) {
+  const modal = document.getElementById('iss-modal');
   modal.classList.toggle('hidden', !show);
 }
 
@@ -245,8 +310,13 @@ function calcCelestialData() {
   
   if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
     document.getElementById("results").innerHTML = `<div class="bg-red-900/40 border border-red-700 rounded-xl p-4 text-center text-red-300">
-      Please enter valid Latitude (±90) and Longitude (±180).
+      Please enter valid Latitude ($\pm 90$) and Longitude ($\pm 180$) to calculate.
     </div>`;
+    // Clear global values to prevent drawing the compass with bad data
+    lat_value = null;
+    lon_value = null;
+    sunriseAzimuth = null;
+    sunsetAzimuth = null;
     return;
   }
   
@@ -291,14 +361,28 @@ function calcCelestialData() {
 
     twilightHtml += `
       <div class="flex justify-between items-center py-2 text-sm text-gray-400 border-b border-gray-800 last:border-b-0">
-        <span class="text-gray-200 font-medium">${t.name} Twilight</span>
-        <span class="flex-1 text-center font-mono">${dawnTime}</span>
-        <span class="flex-1 text-center font-mono">${duskTime}</span>
+        <span class="text-gray-200 font-medium w-1/3">${t.name}</span>
+        <span class="text-center font-mono w-1/3">${dawnTime}</span>
+        <span class="text-center font-mono w-1/3">${duskTime}</span>
+      </div>
+    `;
+  });
+  
+  // 5. Build ISS Pass HTML (using mock data)
+  const issPasses = getMockIssPasses();
+  let issHtml = '';
+  issPasses.forEach(p => {
+    issHtml += `
+      <div class="grid grid-cols-4 gap-2 py-2 text-sm text-gray-400 border-b border-gray-800 last:border-b-0">
+        <span class="font-mono text-gray-200">${p.time}</span>
+        <span class="text-center">${p.maxAlt}</span>
+        <span class="text-center text-xs">${p.start} $\\to$ ${p.end}</span>
+        <span class="text-right text-xs">${p.duration}</span>
       </div>
     `;
   });
 
-  // 5. Render Results
+  // 6. Render Results
   const resultsHtml = `
     <div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
       <h2 class="text-lg font-bold gold-text mb-4 text-center">Calculated Times & Directions</h2>
@@ -306,25 +390,25 @@ function calcCelestialData() {
       <!-- Sun Times Grid -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center border-b border-gray-700 pb-4">
         <div class="p-2 rounded-lg bg-gray-800/50">
-          <div class="text-xs text-gray-400">Sunrise Time</div>
+          <div class="text-xs text-gray-400">Sunrise</div>
           <div class="text-xl font-bold">${formatTime(times.sunrise)}</div>
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
-          <div class="text-xs text-gray-400">Sunrise Azimuth</div>
+          <div class="text-xs text-gray-400">Sunrise Az.</div>
           <div class="text-xl font-bold text-red-400">${sunriseAzimuth.toFixed(1)}°</div>
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
-          <div class="text-xs text-gray-400">Sunset Time</div>
+          <div class="text-xs text-gray-400">Sunset</div>
           <div class="text-xl font-bold">${formatTime(times.sunset)}</div>
         </div>
         <div class="p-2 rounded-lg bg-gray-800/50">
-          <div class="text-xs text-gray-400">Sunset Azimuth</div>
+          <div class="text-xs text-gray-400">Sunset Az.</div>
           <div class="text-xl font-bold text-blue-400">${sunsetAzimuth.toFixed(1)}°</div>
         </div>
       </div>
 
       <!-- Twilight Times -->
-      <div class="mb-6">
+      <div class="mb-6 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
         <div class="flex justify-between items-center mb-2">
             <h3 class="text-base font-semibold text-gray-200">Twilight Periods</h3>
             <button onclick="toggleTwilightModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
@@ -333,14 +417,31 @@ function calcCelestialData() {
                 </svg>
             </button>
         </div>
-        <div class="bg-gray-800/50 rounded-lg p-3">
-          <div class="flex justify-between font-bold text-xs gold-text mb-1">
-            <span class="w-1/3">Phase</span>
-            <span class="w-1/3 text-center">Dawn</span>
-            <span class="w-1/3 text-center">Dusk</span>
-          </div>
-          ${twilightHtml}
+        <div class="flex justify-between font-bold text-xs gold-text mb-1 border-b border-gray-700 pb-1">
+          <span class="w-1/3">Phase</span>
+          <span class="w-1/3 text-center">Dawn Starts</span>
+          <span class="w-1/3 text-center">Dusk Ends</span>
         </div>
+        ${twilightHtml}
+      </div>
+
+      <!-- ISS Passes (Mock Data) -->
+      <div class="mb-2 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="text-base font-semibold text-gray-200">Next ISS Passes (Mock)</h3>
+            <button onclick="toggleIssModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+        <div class="grid grid-cols-4 gap-2 font-bold text-xs gold-text mb-1 border-b border-gray-700 pb-1">
+            <span>Time</span>
+            <span class="text-center">Max Alt.</span>
+            <span class="text-center">Trajectory</span>
+            <span class="text-right">Duration</span>
+        </div>
+        ${issHtml}
       </div>
 
 
@@ -357,7 +458,7 @@ function calcCelestialData() {
   `;
   document.getElementById("results").innerHTML = resultsHtml;
 
-  // 6. Draw the compass with new data
+  // 7. Draw the compass with new data
   drawCompass();
 }
 
@@ -365,7 +466,12 @@ function calcCelestialData() {
  * Updates the live sun azimuth and altitude in the separate live data box.
  */
 function updateLiveSun() {
-  if (lat_value === null || lon_value === null) return;
+  if (lat_value === null || lon_value === null) {
+      // Cannot calculate if location is unknown
+      document.getElementById("live-sun-alt").textContent = "No location data.";
+      drawCompass(); // Still draws the compass rose if possible
+      return;
+  }
   
   const now = new Date();
   const pos = SunCalc.getPosition(now, lat_value, lon_value);
@@ -374,7 +480,7 @@ function updateLiveSun() {
 
   const liveSunAltEl = document.getElementById("live-sun-alt");
   if(altitude > 0) {
-     liveSunAltEl.innerHTML = `Sun is up: <span class="gold-text font-bold">${liveAzimuth.toFixed(1)}°</span> az • <span class="gold-text font-bold">${altitude.toFixed(1)}°</span> alt`;
+     liveSunAltEl.innerHTML = `Sun is up: <span class="gold-text font-bold">${liveAzimuth.toFixed(1)}°</span> az $\bullet$ <span class="gold-text font-bold">${altitude.toFixed(1)}°</span> alt`;
   } else {
      liveSunAltEl.innerHTML = `Sun is down. Altitude: ${altitude.toFixed(1)}°`;
   }
@@ -384,7 +490,7 @@ function updateLiveSun() {
 }
 
 /**
- * Automatically requests and handles GPS location.
+ * Initiates the GPS location request.
  */
 function startGpsLocation() {
   const resultEl = document.getElementById("results");
@@ -398,44 +504,66 @@ function startGpsLocation() {
     document.getElementById("lon").value = pos.coords.longitude.toFixed(5);
     calcCelestialData();
   }, (error) => {
-    // Error: Display error and keep placeholders
+    // Error: Display error and prompt for manual entry (no default fallback)
     console.error("Geolocation Error:", error);
     resultEl.innerHTML = `<div class="bg-red-900/40 border border-red-700 rounded-xl p-4 text-center text-red-300">
-      Location denied or failed (${error.message}). Please enter coordinates manually and press 'Recalculate'.
+      Location access denied or failed (${error.message}). Please enter coordinates manually and press 'Recalculate'.
     </div>`;
     document.getElementById("lat").placeholder = "Manual entry needed";
     document.getElementById("lon").placeholder = "Manual entry needed";
-    // Set a default value so the user can calculate manually immediately
-    document.getElementById("lat").value = 34.0522; 
-    document.getElementById("lon").value = -118.2437; 
+    document.getElementById("lat").value = ''; 
+    document.getElementById("lon").value = ''; 
+    lat_value = null;
+    lon_value = null;
+    // Attempt a compass redraw just in case, but no calculation.
+    drawCompass(); 
   }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 }
 
 /**
- * Automatically requests and handles device compass.
+ * Initiates the device compass request.
  */
 function startCompass() {
-  // Check for permission API for iOS 13+
-  if (typeof DeviceOrientationEvent !== "undefined" &&
-      typeof DeviceOrientationEvent.requestPermission === "function") {
-    
-    // NOTE: This MUST be inside a user gesture handler (like a button click)
-    // to work in Safari. Calling it on page load will fail silently, but we 
-    // try anyway for non-iOS compliance.
-    DeviceOrientationEvent.requestPermission()
-      .then(response => {
-        if (response === "granted") {
-          window.addEventListener("deviceorientation", handleOrientation, true);
-        }
-      })
-      .catch(e => {
-        console.error("Error requesting motion sensor permission:", e);
-      });
+  const headingEl = document.getElementById("current-heading");
+  
+  const handlePermissionError = (e) => {
+      console.error("Error requesting motion sensor permission:", e);
+      headingEl.textContent = "Denied";
+      document.getElementById("live-sun-alt").textContent = "Compass access denied.";
+  };
+
+  if (typeof DeviceOrientationEvent !== "undefined") {
+    if (typeof DeviceOrientationEvent.requestPermission === "function") {
+      DeviceOrientationEvent.requestPermission()
+        .then(response => {
+          if (response === "granted") {
+            window.addEventListener("deviceorientation", handleOrientation, true);
+            headingEl.textContent = "Tracking...";
+          } else {
+            handlePermissionError("Permission not granted by user.");
+          }
+        })
+        .catch(handlePermissionError);
+    } else {
+      // For browsers that support deviceorientation but not requestPermission (Desktop/older Android)
+      window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+      window.addEventListener("deviceorientation", handleOrientation, true);
+      headingEl.textContent = "Tracking...";
+    }
   } else {
-    // For non-iOS or older browsers
-    window.addEventListener("deviceorientationabsolute", handleOrientation, true);
-    window.addEventListener("deviceorientation", handleOrientation, true);
+    // Device doesn't support orientation events
+    headingEl.textContent = "N/A";
+    document.getElementById("live-sun-alt").textContent = "Device compass unavailable.";
   }
+}
+
+/**
+ * Combined function called by the modal button to start both services.
+ */
+function requestPermissions() {
+    togglePermissionModal(false); // Hide the modal
+    startGpsLocation();           // Start GPS (will trigger calcCelestialData on success)
+    startCompass();               // Start Compass
 }
 
 /**
@@ -501,7 +629,7 @@ function drawCompass() {
   drawAzimuthPointer(sunsetAzimuth, '#3b82f6');  // Sunset (Blue)
   
   // 5. Draw Live Sun Position
-  if (liveAzimuth !== null) {
+  if (liveAzimuth !== null && lat_value !== null) {
     ctx.save();
     ctx.rotate(liveAzimuth * Math.PI/180);
     
@@ -545,17 +673,14 @@ function handleOrientation(event) {
 document.getElementById("btn-calc").addEventListener("click", calcCelestialData);
 
 /**
- * Function to run when the page loads. Starts GPS and Compass automatically.
+ * Function to run when the page loads. Sets default date and shows permission modal.
  */
 function initializeApp() {
   // 1. Set today as default date
   document.getElementById("date").value = new Date().toISOString().split("T")[0];
   
-  // 2. Start the Compass sensor listener (may require user gesture in some browsers)
-  startCompass(); 
-
-  // 3. Start GPS location acquisition and initial calculation
-  startGpsLocation(); 
+  // 2. Show the modal to request permissions (requires user click)
+  togglePermissionModal(true); 
 }
 
 window.onload = initializeApp;
