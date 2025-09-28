@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Starlink Pass Predictor (Auto TLE)</title>
+<title>Starlink Pass Predictor (CORS Proxy)</title>
 <script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
 </head>
 <body>
 <h2>Starlink Pass Predictor (Pretoria)</h2>
 
 <p>Select date and time for prediction:</p>
-<input type="datetime-local" id="datetime" value="">
+<input type="datetime-local" id="datetime">
 <button onclick="predictPasses()">Get Starlink Passes</button>
 
 <ul id="passes"></ul>
@@ -24,13 +24,14 @@ async function predictPasses() {
   const height = 1.32; // km
 
   const inputDate = document.getElementById("datetime").value;
-  let startDate = inputDate ? new Date(inputDate) : new Date();
-  let endDate = new Date(startDate.getTime() + 48*60*60*1000); // next 48 hours
+  const startDate = inputDate ? new Date(inputDate) : new Date();
+  const endDate = new Date(startDate.getTime() + 48*60*60*1000); // next 48 hours
 
   try {
-    // Download latest Starlink TLEs
+    // Fetch Starlink TLEs via CORS proxy
     const tleUrl = "https://celestrak.com/NORAD/elements/starlink.txt";
-    const res = await fetch(tleUrl);
+    const corsProxy = "https://api.allorigins.win/raw?url=";
+    const res = await fetch(corsProxy + encodeURIComponent(tleUrl));
     const tleText = await res.text();
     const tleLines = tleText.trim().split("\n");
 
