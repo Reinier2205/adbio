@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Starlink Pass Predictor</title>
+</head>
+<body>
+  <h2>Starlink Pass Predictor</h2>
+
+  <p>
+    Location: Pretoria, South Africa<br>
+    (Lat: -25.7479, Lon: 28.2293, Alt: 1320m)
+  </p>
+
+  <button onclick="getPasses()">Get Next Passes</button>
+
+  <ul id="passes"></ul>
+
+  <script>
+    async function getPasses() {
+      const url = "https://api.n2yo.com/rest/v1/satellite/visualpasses/45127/-25.7479/28.2293/1320/2/40&apiKey=YOUR_KEY";
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("API request failed");
+        const data = await res.json();
+
+        const passesList = document.getElementById("passes");
+        passesList.innerHTML = "";
+
+        if (data.passes && data.passes.length > 0) {
+          data.passes.forEach(p => {
+            const li = document.createElement("li");
+            li.textContent = 
+              `Start: ${new Date(p.startUTC * 1000).toLocaleString()} 
+               → End: ${new Date(p.endUTC * 1000).toLocaleString()} 
+               | Duration: ${p.duration} sec`;
+            passesList.appendChild(li);
+          });
+        } else {
+          passesList.innerHTML = "<li>No visible passes in the next 2 days.</li>";
+        }
+      } catch (err) {
+        document.getElementById("passes").innerHTML = "<li>Error fetching data.</li>";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
