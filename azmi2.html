@@ -80,58 +80,58 @@
         </div>
       </div>
 
-
-      <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Main Content Container (Single Column for Mobile optimization) -->
+      <div class="space-y-6"> 
         
-        <!-- Input and Results Column -->
-        <div>
-          <div class="space-y-4">
-            <!-- Date Input -->
-            <label class="block">
-              <span class="block text-sm font-medium text-gray-300 mb-1">Date</span>
-              <input id="date" type="date" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner">
-            </label>
-            
-            <!-- Lat/Lon Input -->
-            <div class="flex gap-4">
-              <label class="flex-1 block">
-                <span class="block text-sm font-medium text-gray-300 mb-1">Latitude (S = -)</span>
-                <input id="lat" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Latitude...">
-              </label>
-              <label class="flex-1 block">
-                <span class="block text-sm font-medium text-gray-300 mb-1">Longitude (W = -)</span>
-                <input id="lon" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Longitude...">
-              </label>
-            </div>
-          </div>
+        <!-- Input Fields -->
+        <div class="space-y-4">
+          <!-- Date Input -->
+          <label class="block">
+            <span class="block text-sm font-medium text-gray-300 mb-1">Date</span>
+            <input id="date" type="date" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner">
+          </label>
           
-          <!-- Buttons -->
-          <div class="flex flex-wrap justify-center sm:justify-start gap-3 mt-6">
-            <button id="btn-calc" class="btn-primary py-3 px-6 rounded-xl flex items-center gap-2 text-sm w-full sm:w-auto">
-              Recalculate Data
-            </button>
-          </div>
-
-          <!-- Results Panel -->
-          <div id="results" role="status" aria-live="polite" class="mt-6">
-            <div class="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-center text-gray-500">
-                Awaiting location and time data. Enter coordinates or click 'Grant Access' in the prompt.
-            </div>
+          <!-- Lat/Lon Input -->
+          <div class="flex gap-4">
+            <label class="flex-1 block">
+              <span class="block text-sm font-medium text-gray-300 mb-1">Latitude (S = -)</span>
+              <input id="lat" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Latitude...">
+            </label>
+            <label class="flex-1 block">
+              <span class="block text-sm font-medium text-gray-300 mb-1">Longitude (W = -)</span>
+              <input id="lon" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="Enter Longitude...">
+            </label>
           </div>
         </div>
+        
+        <!-- Action Button -->
+        <div class="flex flex-wrap justify-center sm:justify-start gap-3 mt-6">
+          <button id="btn-calc" class="btn-primary py-3 px-6 rounded-xl flex items-center gap-2 text-sm w-full sm:w-auto">
+            Recalculate Data
+          </button>
+        </div>
 
-        <!-- Compass Column -->
-        <div class="flex flex-col items-center justify-center">
-          <div class="w-full max-w-xs aspect-square p-2 relative">
-            <canvas id="compassCanvas" width="300" height="300" class="w-full h-full"></canvas>
-             <!-- Fixed device North indicator -->
-            <div id="device-indicator" style="top: 15px;"></div>
-          </div>
-          <!-- Live Data Panel -->
-          <div id="live-data" class="mt-4 w-full max-w-xs text-center p-3 bg-gray-900/40 rounded-xl border border-gray-700 shadow-md">
-            <p class="text-xs text-gray-400 mb-1">Device Heading</p>
-            <div class="text-3xl font-bold gold-text" id="current-heading">---°</div>
-            <div class="text-sm text-gray-400" id="live-sun-alt">---</div>
+        <!-- RELOCATED: Compass and Live Data -->
+        <div class="flex flex-col items-center justify-center panel p-4 bg-gray-900/40 border-gray-700">
+            <h2 class="text-2xl font-extrabold gold-text mb-4">Live Compass Tracking</h2>
+            <div class="w-full max-w-xs aspect-square p-2 relative">
+              <canvas id="compassCanvas" width="300" height="300" class="w-full h-full"></canvas>
+              <!-- Fixed device North indicator -->
+              <div id="device-indicator" style="top: 15px;"></div>
+            </div>
+            <!-- Live Data Panel -->
+            <div id="live-data" class="mt-4 w-full max-w-xs text-center p-3 bg-gray-800 rounded-xl border border-gray-700 shadow-md">
+              <p class="text-sm text-gray-400 mb-1">Device Heading</p>
+              <div class="text-3xl font-bold gold-text" id="current-heading">---°</div>
+              <div class="text-sm text-gray-400" id="live-sun-alt">---</div>
+            </div>
+        </div>
+        <!-- END RELOCATED BLOCK -->
+
+        <!-- Results Panel -->
+        <div id="results" role="status" aria-live="polite">
+          <div class="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-center text-gray-500">
+              Awaiting location and time data. Enter coordinates or click 'Grant Access' in the prompt.
           </div>
         </div>
       </div>
@@ -369,7 +369,7 @@ function calcCelestialData() {
   // 6. Render Results
   const resultsHtml = `
     <div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
-      <h2 class="text-lg font-bold gold-text mb-4 text-center">Calculated Times & Directions</h2>
+      <h2 class="text-2xl font-extrabold gold-text mb-4 text-center">Sun & Moon Calculated Data</h2>
       
       <!-- Sun Times Grid -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center border-b border-gray-700 pb-4">
@@ -394,7 +394,7 @@ function calcCelestialData() {
       <!-- Twilight Times -->
       <div class="mb-6 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
         <div class="flex justify-between items-center mb-2">
-            <h3 class="text-base font-semibold text-gray-200">Twilight Periods</h3>
+            <h3 class="text-xl font-bold text-gray-200">Twilight Periods</h3>
             <button onclick="toggleTwilightModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
@@ -412,7 +412,7 @@ function calcCelestialData() {
       <!-- ISS Passes Link -->
       <div class="mb-2 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
         <div class="flex justify-between items-center mb-2">
-            <h3 class="text-base font-semibold text-gray-200">ISS Pass Predictions</h3>
+            <h3 class="text-xl font-bold text-gray-200">ISS Pass Predictions</h3>
             <button onclick="toggleIssModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
