@@ -3,215 +3,393 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sunrise Finder | Travel Tools</title>
+  <title>Celestial Finder | Sun & Moon</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <!-- SunCalc library for celestial mechanics -->
   <script src="https://unpkg.com/suncalc/suncalc.js"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #2a1a1f; color: #faf8f0; }
-    .felt-green { background-color: #0a4821; }
-    .gold-text { color: #d4af37; }
-    .btn-primary { background-color: #d4af37; color: #2a1a1f; transition: transform .2s ease, box-shadow .2s ease; }
-    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(212,175,55,.4); }
-    .panel { background:#1f2937; border:2px solid rgba(212,175,55,0.6); border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
-    #compassCanvas { background: rgba(0,0,0,0.25); border-radius: 9999px; border:2px solid rgba(255,255,255,0.08); }
+    body { font-family: 'Inter', sans-serif; background-color: #121212; color: #e0e0e0; }
+    .felt-green { background-color: #2c0e3a; } /* Deep Space Purple */
+    .gold-text { color: #ffb703; } /* Vibrant Gold */
+    .btn-primary { background-color: #ffb703; color: #121212; transition: transform .2s ease, box-shadow .2s ease; font-weight: 700; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255,183,3,.4); }
+    .panel { background:#1f1f1f; border:2px solid rgba(255,183,3,0.5); border-radius: 16px; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
+    #compassCanvas { background: rgba(255,255,255,0.05); border-radius: 9999px; border:2px solid rgba(255,255,255,0.1); }
+    /* Hide number input arrows */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] { -moz-appearance: textfield; }
   </style>
 </head>
-<body class="antialiased">
-  <header class="felt-green p-4 sticky top-0 z-50 shadow-lg">
-    <nav class="container mx-auto flex justify-between items-center">
-      <a href="#" class="text-2xl font-bold gold-text">🌅 Sunrise Finder</a>
-      <div class="flex items-center gap-3">
-        <a href="/TravelGames/index.html" class="btn-primary font-bold py-2 px-5 rounded-lg text-sm md:text-base">Home</a>
-        <a href="/TravelGames/index.html#games" class="btn-primary font-bold py-2 px-5 rounded-lg text-sm md:text-base">Games</a>
-        <a href="/TravelGames/index.html#tools" class="btn-primary font-bold py-2 px-5 rounded-lg text-sm md:text-base">Tools</a>
+<body class="antialiased min-h-screen">
+  <header class="felt-green p-4 sticky top-0 z-50 shadow-xl">
+    <nav class="container mx-auto flex justify-between items-center max-w-7xl">
+      <a href="#" class="text-2xl font-bold gold-text flex items-center gap-2">
+        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM18.894 6.106a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.06l1.59-1.591ZM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75ZM18.894 18.894a.75.75 0 0 0 1.06-1.06l-1.59-1.59a.75.75 0 1 0-1.06 1.06l1.59 1.59ZM12 17.25a.75.75 0 0 1-.75.75H9a.75.75 0 0 1 0-1.5h2.25a.75.75 0 0 1 .75.75ZM5.659 15.659a.75.75 0 0 0-1.06 1.06l1.59 1.59a.75.75 0 0 0 1.06-1.06l-1.59-1.59ZM3 12a.75.75 0 0 1 .75-.75h2.25a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12ZM4.566 7.166a.75.75 0 0 0 1.06-1.06l-1.59-1.59a.75.75 0 0 0-1.06 1.06l1.59 1.59Z" />
+        </svg>
+        Celestial Finder
+      </a>
+      <!-- Navigation simplified for this single tool page -->
+      <div class="hidden sm:flex items-center gap-3">
+        <a href="#inputs" class="btn-primary font-bold py-2 px-4 rounded-full text-sm hover:ring-2 ring-offset-2 ring-offset-[#121212] ring-[#ffb703]">Find Data</a>
       </div>
     </nav>
   </header>
 
-  <main class="container mx-auto px-4 py-8">
+  <main class="container mx-auto px-4 py-10 max-w-7xl">
     <section class="text-center py-8">
-      <h1 class="text-3xl md:text-4xl font-extrabold gold-text mb-2">See Where Tomorrow’s Sun Will Rise</h1>
-      <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-200">Enter your location or use GPS, then enable the compass and align your phone with the horizon.</p>
+      <h1 class="text-3xl md:text-4xl font-extrabold gold-text mb-2">Solar and Lunar Dynamics</h1>
+      <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-400">Calculate azimuth, times, and moon phase for any date and location.</p>
     </section>
 
-    <section class="max-w-3xl mx-auto panel p-6">
-      <div class="flex justify-end mb-4">
-        <div class="bg-gray-900/60 border border-gray-700 rounded-md px-3 py-2 text-xs text-gray-200 flex items-center gap-4">
-          <div class="flex items-center gap-2">
-            <span class="relative inline-block" style="width:26px;height:2px;background:#ef4444">
-              <span style="position:absolute;right:-1px;top:-4px;width:0;height:0;border-left:6px solid #ef4444;border-top:4px solid transparent;border-bottom:4px solid transparent"></span>
-            </span>
-            <span>Sunrise direction</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="inline-block w-3 h-3 rounded-full" style="background:#ffd700;border:1px solid #b8860b"></span>
-            <span>Live sun</span>
-          </div>
+    <section id="inputs" class="max-w-4xl mx-auto panel p-6 md:p-8">
+      
+      <!-- Legend -->
+      <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-6 text-xs text-gray-400">
+        <div class="flex items-center gap-2">
+          <div class="w-4 h-1.5 bg-red-500 rounded-full"></div>
+          <span>Sunrise Azimuth</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-4 h-1.5 bg-blue-500 rounded-full"></div>
+          <span>Sunset Azimuth</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-3 h-3 rounded-full bg-yellow-400 border border-yellow-600"></span>
+          <span>Live Sun</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-4 h-1.5 bg-gray-500 rounded-full"></div>
+          <span>Device Heading (N)</span>
         </div>
       </div>
-      <div class="grid md:grid-cols-2 gap-6">
+
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        
+        <!-- Input and Results Column -->
         <div>
-          <div class="space-y-3">
-            <label class="block text-left">
-              <span class="block text-sm text-gray-300 mb-1">Date</span>
-              <input id="date" type="date" class="w-full rounded bg-gray-900/60 border border-gray-700 p-2">
+          <div class="space-y-4">
+            <!-- Date Input -->
+            <label class="block">
+              <span class="block text-sm font-medium text-gray-300 mb-1">Date</span>
+              <input id="date" type="date" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner">
             </label>
+            
+            <!-- Lat/Lon Input -->
+            <div class="flex gap-4">
+              <label class="flex-1 block">
+                <span class="block text-sm font-medium text-gray-300 mb-1">Latitude</span>
+                <input id="lat" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="-33.9249">
+              </label>
+              <label class="flex-1 block">
+                <span class="block text-sm font-medium text-gray-300 mb-1">Longitude</span>
+                <input id="lon" type="number" step="any" class="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-gray-100 placeholder-gray-500 shadow-inner" placeholder="18.4241">
+              </label>
+            </div>
           </div>
-          <div class="flex flex-wrap gap-3 mt-4">
-            <button id="btn-calc" class="btn-primary font-bold py-2.5 px-5 rounded-lg flex items-center gap-2">Calculate Sunrise</button>
-            <button id="btn-gps" class="bg-gray-700 text-white font-bold py-2.5 px-5 rounded-lg hover:bg-gray-600">Use my GPS</button>
-            <button id="enableCompass" class="bg-gray-700 text-white font-bold py-2.5 px-5 rounded-lg hover:bg-gray-600">Enable Compass</button>
+          
+          <!-- Buttons -->
+          <div class="flex flex-wrap gap-3 mt-6">
+            <button id="btn-calc" class="btn-primary py-3 px-6 rounded-xl flex items-center gap-2 text-sm">
+              Calculate Times
+            </button>
+            <button id="btn-gps" class="bg-indigo-600 text-white py-3 px-6 rounded-xl hover:bg-indigo-700 transition duration-200 text-sm">
+              Use My GPS
+            </button>
+            <button id="enableCompass" class="bg-gray-700 text-white py-3 px-6 rounded-xl hover:bg-gray-600 transition duration-200 text-sm">
+              Enable Compass
+            </button>
           </div>
-          <div id="results" role="status" aria-live="polite" class="mt-4 text-sm text-gray-200"></div>
+
+          <!-- Results Panel -->
+          <div id="results" role="status" aria-live="polite" class="mt-6">
+            <div class="bg-gray-900/40 border border-gray-800 rounded-xl p-4 text-center text-gray-500">
+                Enter location and press 'Calculate Times'
+            </div>
+          </div>
         </div>
 
-        <div class="flex items-center justify-center">
-          <canvas id="compassCanvas" width="300" height="300"></canvas>
+        <!-- Compass Column -->
+        <div class="flex flex-col items-center justify-center">
+          <div class="w-full max-w-xs aspect-square p-2">
+            <canvas id="compassCanvas" width="300" height="300" class="w-full h-full"></canvas>
+          </div>
+          <!-- Live Data Panel -->
+          <div id="live-data" class="mt-4 w-full max-w-xs text-center p-3 bg-gray-900/40 rounded-xl border border-gray-700 shadow-md">
+            <p class="text-xs text-gray-400 mb-1">Device Heading</p>
+            <div class="text-3xl font-bold gold-text" id="current-heading">---°</div>
+            <div class="text-sm text-gray-400" id="live-sun-alt">---</div>
+          </div>
         </div>
-      </div>
-      <!-- Lat/Lon compact row -->
-      <div class="mt-4 flex justify-center gap-4">
-        <label class="flex items-center gap-2 text-sm text-gray-300">
-          <span>Lat</span>
-          <input id="lat" type="number" step="any" class="w-36 rounded bg-gray-900/60 border border-gray-700 p-2" placeholder="-33.9249">
-        </label>
-        <label class="flex items-center gap-2 text-sm text-gray-300">
-          <span>Lon</span>
-          <input id="lon" type="number" step="any" class="w-36 rounded bg-gray-900/60 border border-gray-700 p-2" placeholder="18.4241">
-        </label>
       </div>
     </section>
   </main>
 
 <script>
+// Global variables for calculated astronomical data
 let sunriseAzimuth = null;
+let sunsetAzimuth = null;
 let liveAzimuth = null;
+
+// Variables for device compass
 let heading = 0;
 let lastHeading = 0;
 
+// --- Utility Functions ---
+
+/**
+ * Smooths the device heading input to prevent jittering.
+ * @param {number} newH - The raw compass heading.
+ * @returns {number} The smoothed heading.
+ */
 function smoothHeading(newH) {
-  const k = 0.1;
+  const k = 0.1; // Smoothing factor (0.1 is aggressive, good for mobile)
   lastHeading = lastHeading * (1 - k) + newH * k;
   return lastHeading;
 }
 
-function calcSunrise() {
-  const lat = parseFloat(document.getElementById("lat").value);
-  const lon = parseFloat(document.getElementById("lon").value);
-  const dateInput = document.getElementById("date").value || new Date().toISOString().split("T")[0];
-  const date = new Date(dateInput);
+/**
+ * Determines the moon phase name and emoji based on the illumination phase value (0 to 1).
+ * @param {object} moonIllumination - The object returned by SunCalc.getMoonIllumination.
+ * @returns {{name: string, emoji: string, fraction: string}} Moon phase info.
+ */
+function getMoonPhaseInfo(moonIllumination) {
+  const phase = moonIllumination.phase; // 0.0=New, 0.25=First Quarter, 0.5=Full, 0.75=Last Quarter
+  const fraction = moonIllumination.fraction;
+  let name, emoji;
 
-  if (isNaN(lat) || isNaN(lon)) {
-    alert("Enter latitude and longitude.");
+  if (phase < 0.03 || phase > 0.97) {
+    name = 'New Moon';
+    emoji = '🌑';
+  } else if (phase < 0.22) {
+    name = 'Waxing Crescent';
+    emoji = '🌒';
+  } else if (phase < 0.28) {
+    name = 'First Quarter';
+    emoji = '🌓';
+  } else if (phase < 0.47) {
+    name = 'Waxing Gibbous';
+    emoji = '🌔';
+  } else if (phase < 0.53) {
+    name = 'Full Moon';
+    emoji = '🌕';
+  } else if (phase < 0.72) {
+    name = 'Waning Gibbous';
+    emoji = '🌖';
+  } else if (phase < 0.78) {
+    name = 'Last Quarter';
+    emoji = '🌗';
+  } else {
+    name = 'Waning Crescent';
+    emoji = '🌘';
+  }
+
+  return { name, emoji, fraction: (fraction * 100).toFixed(1) };
+}
+
+// --- Main Calculation and Display Functions ---
+
+/**
+ * Calculates all sun/moon data and updates the UI.
+ */
+function calcCelestialData() {
+  const latInput = document.getElementById("lat");
+  const lonInput = document.getElementById("lon");
+  const lat = parseFloat(latInput.value);
+  const lon = parseFloat(lonInput.value);
+  
+  if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    document.getElementById("results").innerHTML = `<div class="bg-red-900/40 border border-red-700 rounded-xl p-4 text-center text-red-300">
+      Please enter valid Latitude (±90) and Longitude (±180).
+    </div>`;
     return;
   }
 
+  const dateInput = document.getElementById("date").value || new Date().toISOString().split("T")[0];
+  const date = new Date(dateInput);
+
+  // 1. Calculate Sun Times and Positions
   const times = SunCalc.getTimes(date, lat, lon);
+  
   const sunrisePos = SunCalc.getPosition(times.sunrise, lat, lon);
-  sunriseAzimuth = sunrisePos.azimuth * 180 / Math.PI + 180;
+  sunriseAzimuth = sunrisePos.azimuth * 180 / Math.PI + 180; // Convert to degrees (0-360)
 
-  updateLiveSun(lat, lon);
+  const sunsetPos = SunCalc.getPosition(times.sunset, lat, lon);
+  sunsetAzimuth = sunsetPos.azimuth * 180 / Math.PI + 180; // Convert to degrees (0-360)
 
-  document.getElementById("results").innerHTML = `
-    <div class="bg-gray-900/40 border border-gray-700 rounded-lg p-3">
-      <div class="grid grid-cols-2 gap-3 text-center">
-        <div>
-          <div class="text-xs text-gray-400">Sunrise Azimuth</div>
-          <div class="text-xl font-bold gold-text">${sunriseAzimuth.toFixed(1)}°</div>
-        </div>
-        <div>
+  // 2. Calculate Moon Illumination
+  const moonIllumination = SunCalc.getMoonIllumination(date);
+  const moonInfo = getMoonPhaseInfo(moonIllumination);
+
+  // 3. Update Live Sun data (for the current moment, not the selected date)
+  updateLiveSun(lat, lon); 
+
+  // 4. Render Results
+  const resultsHtml = `
+    <div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
+      <h2 class="text-lg font-bold gold-text mb-3 text-center">Calculated Times & Directions</h2>
+      
+      <!-- Sun Times Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-center border-b border-gray-700 pb-4">
+        <div class="p-2 rounded-lg bg-gray-800/50">
           <div class="text-xs text-gray-400">Sunrise Time</div>
-          <div class="text-xl font-bold gold-text">${times.sunrise.toLocaleTimeString()}</div>
+          <div class="text-xl font-bold">${times.sunrise.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
+        </div>
+        <div class="p-2 rounded-lg bg-gray-800/50">
+          <div class="text-xs text-gray-400">Sunrise Azimuth</div>
+          <div class="text-xl font-bold text-red-400">${sunriseAzimuth.toFixed(1)}°</div>
+        </div>
+        <div class="p-2 rounded-lg bg-gray-800/50">
+          <div class="text-xs text-gray-400">Sunset Time</div>
+          <div class="text-xl font-bold">${times.sunset.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
+        </div>
+        <div class="p-2 rounded-lg bg-gray-800/50">
+          <div class="text-xs text-gray-400">Sunset Azimuth</div>
+          <div class="text-xl font-bold text-blue-400">${sunsetAzimuth.toFixed(1)}°</div>
         </div>
       </div>
-      <div id="live" class="mt-3 text-center"></div>
-    </div>`;
+
+      <!-- Moon Phase -->
+      <div class="text-center p-3 bg-gray-800/50 rounded-lg">
+        <div class="text-xs text-gray-400 mb-1">Moon Phase</div>
+        <div class="text-3xl font-bold gold-text flex items-center justify-center gap-3">
+          <span class="text-4xl">${moonInfo.emoji}</span>
+          ${moonInfo.name}
+        </div>
+        <div class="text-sm text-gray-400 mt-1">${moonInfo.fraction}% illuminated</div>
+      </div>
+    </div>
+  `;
+  document.getElementById("results").innerHTML = resultsHtml;
+
+  // 5. Draw the compass with new data
   drawCompass();
 }
 
+/**
+ * Updates the live sun azimuth and altitude in the separate live data box.
+ * @param {number} lat - Latitude.
+ * @param {number} lon - Longitude.
+ */
 function updateLiveSun(lat, lon) {
   const now = new Date();
   const pos = SunCalc.getPosition(now, lat, lon);
-  liveAzimuth = pos.azimuth * 180 / Math.PI + 180;
+  liveAzimuth = pos.azimuth * 180 / Math.PI + 180; // 0-360 degrees
   const altitude = pos.altitude * 180 / Math.PI;
 
-  document.getElementById("live").innerHTML = `
-    <div class="text-xs text-gray-400">Live Sun</div>
-    <div class="text-lg"><span class="gold-text font-bold">${liveAzimuth.toFixed(1)}°</span> az • ${altitude.toFixed(1)}° alt</div>`;
+  const liveSunAltEl = document.getElementById("live-sun-alt");
+  if(altitude > 0) {
+     liveSunAltEl.innerHTML = `Sun is up: <span class="gold-text font-bold">${liveAzimuth.toFixed(1)}°</span> az • <span class="gold-text font-bold">${altitude.toFixed(1)}°</span> alt`;
+  } else {
+     liveSunAltEl.innerHTML = `Sun is down. Altitude: ${altitude.toFixed(1)}°`;
+  }
+ 
+  drawCompass(); // Redraw frequently for live sun position and heading
 }
 
+/**
+ * Uses GPS to get the current location.
+ */
 function useMyGPS() {
+  document.getElementById("results").innerHTML = `<div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4 text-center text-gray-300">
+      Finding your location...
+    </div>`;
   navigator.geolocation.getCurrentPosition(pos => {
     document.getElementById("lat").value = pos.coords.latitude.toFixed(5);
     document.getElementById("lon").value = pos.coords.longitude.toFixed(5);
     document.getElementById("date").value = new Date().toISOString().split("T")[0];
-    calcSunrise();
-  });
+    calcCelestialData();
+  }, (error) => {
+    console.error("Geolocation Error:", error);
+    document.getElementById("results").innerHTML = `<div class="bg-red-900/40 border border-red-700 rounded-xl p-4 text-center text-red-300">
+      GPS error: ${error.message}. Please enter coordinates manually.
+    </div>`;
+  }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
 }
 
+/**
+ * Draws the compass rose, device heading, sunrise, sunset, and live sun position.
+ */
 function drawCompass() {
   const canvas = document.getElementById("compassCanvas");
+  if (!canvas.getContext) return;
+
   const ctx = canvas.getContext("2d");
   const radius = canvas.width / 2;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.beginPath();
-  ctx.arc(radius, radius, radius-5, 0, 2*Math.PI);
-  ctx.strokeStyle = '#d4af37';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
   ctx.save();
   ctx.translate(radius, radius);
-  ctx.rotate(-heading * Math.PI/180);
+  
+  // 1. Compass Ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius - 5, 0, 2*Math.PI);
+  ctx.strokeStyle = '#ffb703';
+  ctx.lineWidth = 4;
+  ctx.stroke();
 
-  // cardinal directions
-  for (let i = 0; i < 360; i += 90) {
+  // 2. Rotate the entire compass *opposite* to the current heading
+  // This makes the device heading (the top of the canvas) point North (N)
+  // We use the smoothed heading for rotation.
+  ctx.rotate(-smoothHeading(heading) * Math.PI/180);
+
+  // 3. Draw Cardinal Directions (North is aligned with the top of the device)
+  ctx.font = "20px Inter";
+  ctx.textAlign = "center";
+  const directions = [{l:'N', d:0, c:'red'}, {l:'E', d:90, c:'white'}, {l:'S', d:180, c:'white'}, {l:'W', d:270, c:'white'}];
+  
+  directions.forEach(({l, d, c}) => {
     ctx.save();
-    ctx.rotate(i * Math.PI/180);
-    ctx.fillStyle = '#ffd700';
-    ctx.font = "16px Inter";
-    const label = i===0?"N":i===90?"E":i===180?"S":"W";
-    ctx.fillText(label, -6, -radius+25);
+    ctx.rotate(d * Math.PI/180);
+    ctx.fillStyle = l === 'N' ? '#ffb703' : '#e0e0e0';
+    ctx.fillText(l, 0, -radius + 35);
     ctx.restore();
-  }
+  });
+  
+  // 4. Draw Azimuth Pointers (Sunrise, Sunset)
+  
+  const drawAzimuthPointer = (azimuth, color) => {
+    if (azimuth !== null) {
+      ctx.save();
+      ctx.rotate(azimuth * Math.PI/180);
+      
+      // Line from center to edge
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.lineTo(0, -radius + 25);
+      ctx.stroke();
 
-  if (sunriseAzimuth !== null) {
-    ctx.save();
-    ctx.rotate(sunriseAzimuth * Math.PI/180);
-    ctx.strokeStyle = "#ef4444";
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.lineTo(0, -radius+16); // line ends a bit inside the rim
-    ctx.stroke();
-    // Arrowhead inside the compass (bigger)
-    const tipY = -radius + 8; // tip inside
-    const ah = 14; // arrowhead length
-    const aw = 8;  // arrowhead half width
-    ctx.beginPath();
-    ctx.moveTo(0, tipY);
-    ctx.lineTo(-aw, tipY+ah);
-    ctx.lineTo(aw, tipY+ah);
-    ctx.closePath();
-    ctx.fillStyle = "#ef4444";
-    ctx.fill();
-    ctx.restore();
-  }
+      // Arrowhead/Cap
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, -radius + 20, 5, 0, 2*Math.PI);
+      ctx.fill();
+      
+      ctx.restore();
+    }
+  };
 
+  // Sunrise (Red)
+  drawAzimuthPointer(sunriseAzimuth, '#ef4444');
+  
+  // Sunset (Blue)
+  drawAzimuthPointer(sunsetAzimuth, '#3b82f6');
+  
+  // 5. Draw Live Sun Position (Yellow Circle with Rays)
   if (liveAzimuth !== null) {
     ctx.save();
     ctx.rotate(liveAzimuth * Math.PI/180);
-    ctx.strokeStyle = "gold";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.lineTo(0, -radius+16);
-    ctx.stroke();
-    // Sun just inside the rim with rays
+    
     const sunY = -radius + 12;
-    const sunR = 9;
+    const sunR = 8;
     ctx.beginPath();
     ctx.arc(0, sunY, sunR, 0, 2*Math.PI);
     ctx.fillStyle = "#ffd700";
@@ -219,60 +397,95 @@ function drawCompass() {
     ctx.strokeStyle = "#b8860b";
     ctx.lineWidth = 1.2;
     ctx.stroke();
-    // Rays
-    ctx.strokeStyle = "#ffd700";
-    ctx.lineWidth = 1.5;
-    for (let a = 0; a < 2*Math.PI; a += Math.PI/6) {
-      const x1 = Math.cos(a) * (sunR + 2);
-      const y1 = sunY + Math.sin(a) * (sunR + 2);
-      const x2 = Math.cos(a) * (sunR + 7);
-      const y2 = sunY + Math.sin(a) * (sunR + 7);
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
+
     ctx.restore();
   }
+
+  ctx.restore(); // Restore translation/rotation for the overall compass
+
+  // 6. Draw Device Indicator (North Arrow pointing to device top)
+  ctx.save();
+  ctx.translate(radius, radius);
+  
+  // Fixed arrow at the top of the device pointing to the center line
+  ctx.beginPath();
+  ctx.moveTo(0, -radius + 1);
+  ctx.lineTo(-10, -radius + 15);
+  ctx.lineTo(10, -radius + 15);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(255, 255, 255, 0.2)"; // Light gray overlay
+  ctx.fill();
 
   ctx.restore();
 }
 
-document.getElementById("btn-calc").addEventListener("click", () => calcSunrise());
-document.getElementById("btn-gps").addEventListener("click", () => useMyGPS());
+/**
+ * Handles device orientation events to update the compass heading.
+ */
+function handleOrientation(event) {
+  let rawHeading = 0;
+  if (event.webkitCompassHeading) {
+    // iOS (Safari)
+    rawHeading = event.webkitCompassHeading;
+  } else if (event.alpha !== null) {
+    // Standard (non-iOS) - alpha is rotation around Z-axis (0-360)
+    rawHeading = 360 - event.alpha;
+  }
+  
+  // Update heading and redraw
+  heading = rawHeading;
+  document.getElementById("current-heading").textContent = `${heading.toFixed(0)}°`;
+  drawCompass(); 
+  
+  // Update live sun position frequently
+  const lat = parseFloat(document.getElementById("lat").value);
+  const lon = parseFloat(document.getElementById("lon").value);
+  if (!isNaN(lat) && !isNaN(lon)) {
+    updateLiveSun(lat, lon);
+  }
+}
+
+// --- Event Listeners and Initialization ---
+
+document.getElementById("btn-calc").addEventListener("click", calcCelestialData);
+document.getElementById("btn-gps").addEventListener("click", useMyGPS);
 
 document.getElementById("enableCompass").addEventListener("click", async () => {
+  const button = document.getElementById("enableCompass");
+  // Check for permission API for iOS 13+
   if (typeof DeviceOrientationEvent !== "undefined" &&
       typeof DeviceOrientationEvent.requestPermission === "function") {
     try {
       const response = await DeviceOrientationEvent.requestPermission();
       if (response === "granted") {
         window.addEventListener("deviceorientation", handleOrientation, true);
-        document.getElementById("enableCompass").classList.add('hidden');
+        button.textContent = "Compass Active";
+        button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+        button.classList.add('bg-green-600', 'hover:bg-green-700');
       } else {
-        alert("Compass access denied.");
+        alert("Compass access denied. Please allow motion sensors in your browser settings.");
       }
     } catch (e) {
-      alert("Error: " + e);
+      alert("Error requesting motion sensor permission.");
+      console.error(e);
     }
   } else {
+    // For non-iOS or older browsers
     window.addEventListener("deviceorientationabsolute", handleOrientation, true);
     window.addEventListener("deviceorientation", handleOrientation, true);
-    document.getElementById("enableCompass").classList.add('hidden');
+    button.textContent = "Compass Active";
+    button.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+    button.classList.add('bg-green-600', 'hover:bg-green-700');
   }
 });
 
-function handleOrientation(event) {
-  if (event.webkitCompassHeading) {
-    heading = smoothHeading(event.webkitCompassHeading);
-  } else if (event.alpha !== null) {
-    heading = smoothHeading(360 - event.alpha);
-  }
-  drawCompass();
+// Set today as default date on load
+window.onload = function() {
+  document.getElementById("date").value = new Date().toISOString().split("T")[0];
+  // Draw the initial blank compass
+  drawCompass(); 
 }
-
-// set today as default date
-document.getElementById("date").value = new Date().toISOString().split("T")[0];
 </script>
 </body>
 </html>
+
