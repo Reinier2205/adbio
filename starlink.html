@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Starlink Pass Predictor (CORS Proxy)</title>
+<title>Starlink Bright Pass Predictor</title>
 <script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
 </head>
 <body>
-<h2>Starlink Pass Predictor (Pretoria)</h2>
+<h2>Starlink Bright Pass Predictor (Pretoria)</h2>
 
-<p>Select date and time for prediction:</p>
+<p>Select date and time for prediction (default = now):</p>
 <input type="datetime-local" id="datetime">
 <button onclick="predictPasses()">Get Starlink Passes</button>
 
@@ -25,11 +25,11 @@ async function predictPasses() {
 
   const inputDate = document.getElementById("datetime").value;
   const startDate = inputDate ? new Date(inputDate) : new Date();
-  const endDate = new Date(startDate.getTime() + 48*60*60*1000); // next 48 hours
+  const endDate = new Date(startDate.getTime() + 24*60*60*1000); // next 24 hours
 
   try {
-    // Fetch Starlink TLEs via CORS proxy
-    const tleUrl = "https://celestrak.com/NORAD/elements/starlink.txt";
+    // Fetch Starlink Bright TLEs via CORS proxy
+    const tleUrl = "https://celestrak.com/NORAD/elements/starlink-2020.txt";
     const corsProxy = "https://api.allorigins.win/raw?url=";
     const res = await fetch(corsProxy + encodeURIComponent(tleUrl));
     const tleText = await res.text();
@@ -75,7 +75,7 @@ async function predictPasses() {
     }
 
     if(passesList.innerHTML === ""){
-      passesList.innerHTML = "<li>No visible passes in the next 48 hours.</li>";
+      passesList.innerHTML = "<li>No visible passes in the next 24 hours.</li>";
     }
 
   } catch(err){
