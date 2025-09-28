@@ -224,7 +224,7 @@ let lon_value = null;
 let heading = 0;
 let lastHeading = 0;
 
-// --- Utility Functions ---
+// --- Utility Functions (These remain unchanged) ---
 
 /**
  * Smooths the device heading input to prevent jittering.
@@ -353,7 +353,7 @@ function calcCelestialData() {
   const sunsetPos = SunCalc.getPosition(times.sunset, lat, lon);
   sunsetAzimuth = sunSets ? (sunsetPos.azimuth * 180 / Math.PI + 180) : null;
 
-  // 2. Calculate True Darkness Duration (High Value Add for Travelers/Photographers)
+  // 2. Calculate True Darkness Duration 
   let trueDarknessStatus = '';
   let trueDarknessDuration = '0h 0m';
   
@@ -381,9 +381,20 @@ function calcCelestialData() {
   }
 
 
-  // 3. Calculate Moon Illumination
+  // 3. Calculate Moon Illumination and build its HTML
   const moonIllumination = SunCalc.getMoonIllumination(date);
   const moonInfo = getMoonPhaseInfo(moonIllumination);
+
+  const moonHtml = `
+    <div class="text-center p-3 bg-gray-800/50 rounded-lg">
+      <div class="text-xs text-gray-400 mb-1">Moon Phase</div>
+      <div class="text-3xl font-bold gold-text flex items-center justify-center gap-3">
+        <span class="text-4xl">${moonInfo.emoji}</span>
+        ${moonInfo.name}
+      </div>
+      <div class="text-sm text-gray-400 mt-1">${moonInfo.fraction}% illuminated</div>
+    </div>
+  `;
   
   // 4. Update Live Sun data (for the current moment)
   updateLiveSun(); 
@@ -416,10 +427,11 @@ function calcCelestialData() {
     </div>
   `;
 
-  // 7. Render Results
+  // 7. Render Results (UPDATED STRUCTURE)
   const resultsHtml = `
     <div class="bg-gray-900/40 border border-gray-700 rounded-xl p-4">
-      <h2 class="text-xl font-extrabold gold-text mb-4 text-center border-b border-gray-700 pb-2">Sun & Moon Calculated Data</h2>
+      <!-- Main Heading Updated -->
+      <h2 class="text-xl font-extrabold gold-text mb-4 text-center border-b border-gray-700 pb-2">Sun and Moon</h2>
       
       <!-- Sun Times Grid -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center border-b border-gray-700 pb-4">
@@ -441,10 +453,17 @@ function calcCelestialData() {
         </div>
       </div>
 
-      <!-- True Darkness & Twilight Times -->
-      <div class="mb-6 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
+      <!-- Moon Phase (NEW POSITION) -->
+      <div class="mb-8">
+        ${moonHtml}
+      </div>
+
+
+      <!-- NEW SECTION: Twilight Periods -->
+      <h3 class="text-lg font-extrabold gold-text mb-3 mt-6 border-b border-gray-700 pb-1">Twilight & True Darkness</h3>
+      <div class="mb-8 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
         <div class="flex justify-between items-center mb-2">
-            <h3 class="text-lg font-bold text-gray-200">Twilight Periods</h3>
+            <h4 class="text-base font-bold text-gray-200">Twilight Definitions</h4>
             <button onclick="toggleTwilightModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
@@ -458,7 +477,7 @@ function calcCelestialData() {
         </div>
         ${twilightHtml}
         
-        <!-- NEW: True Darkness Row -->
+        <!-- True Darkness Row -->
         <div class="mt-3 pt-3 border-t border-gray-700 flex justify-between items-center text-sm">
             <span class="text-white font-bold w-1/3">True Darkness (Astr.)</span>
             <span class="text-center font-mono w-1/3">${formatTwilightTime(times.astroDusk)}</span>
@@ -469,29 +488,13 @@ function calcCelestialData() {
         </p>
       </div>
 
-      <!-- ISS Passes Link -->
-      <div class="mb-2 border border-gray-800 rounded-lg p-3 bg-gray-800/20">
-        <div class="flex justify-between items-center mb-2">
-            <h3 class="text-lg font-bold text-gray-200">ISS Pass Predictions</h3>
-            <button onclick="toggleIssModal(true)" class="text-gray-400 hover:text-gold-text transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.78a.75.75 0 1 0-1.38.62c.1.28.235.566.36.85a3.75 3.75 0 0 0 6.64 1.13.75.75 0 0 0-1.42-.48a2.25 2.25 0 0 1-3.65.71L8.94 6.78ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
-                </svg>
-            </button>
-        </div>
+
+      <!-- NEW SECTION: ISS Pass Predictions -->
+      <h3 class="text-lg font-extrabold gold-text mb-3 mt-6 border-b border-gray-700 pb-1">ISS Pass Predictions</h3>
+      <div class="mb-4">
         ${issHtml}
       </div>
 
-
-      <!-- Moon Phase -->
-      <div class="text-center p-3 bg-gray-800/50 rounded-lg">
-        <div class="text-xs text-gray-400 mb-1">Moon Phase</div>
-        <div class="text-3xl font-bold gold-text flex items-center justify-center gap-3">
-          <span class="text-4xl">${moonInfo.emoji}</span>
-          ${moonInfo.name}
-        </div>
-        <div class="text-sm text-gray-400 mt-1">${moonInfo.fraction}% illuminated</div>
-      </div>
     </div>
   `;
   document.getElementById("results").innerHTML = resultsHtml;
@@ -502,6 +505,7 @@ function calcCelestialData() {
 
 /**
  * Updates the live sun azimuth and altitude in the separate live data box.
+ * (Rest of the script remains unchanged)
  */
 function updateLiveSun() {
   if (lat_value === null || lon_value === null) {
