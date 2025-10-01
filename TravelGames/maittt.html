@@ -161,29 +161,53 @@
             box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
         }
 
+        /* --- FIXED: Darker, clearer win indicators --- */
+        .mini-board.won-x {
+            background: linear-gradient(145deg, #1a4a0a, #0f3d1a); /* Darker green base */
+        }
         .mini-board.won-x::after {
-            content: '';
+            content: 'X';
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, transparent 70%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            opacity: 0.9;
             z-index: 1;
             border-radius: 8px;
         }
 
+        .mini-board.won-o {
+            background: linear-gradient(145deg, #1a4a0a, #0f3d1a); /* Darker green base */
+        }
         .mini-board.won-o::after {
-            content: '';
+            content: 'O';
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, rgba(255,248,225,0.3) 0%, transparent 70%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--light-gold);
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+            opacity: 0.9;
             z-index: 1;
             border-radius: 8px;
         }
+        /* --- END FIX --- */
 
         .mini-board.highlight {
             box-shadow: 0 0 0 4px var(--gold), inset 0 0 15px rgba(255,255,255,0.1);
@@ -375,6 +399,11 @@
             .cell {
                 font-size: 1.4rem;
             }
+            
+            .mini-board.won-x::after,
+            .mini-board.won-o::after {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
@@ -523,6 +552,7 @@
                         miniBoard.className = 'mini-board';
                         miniBoard.dataset.big = big;
                         
+                        // --- FIXED: Clearer win state classes --- //
                         if (this.state.mainBoard[big] === 'X') {
                             miniBoard.classList.add('won-x');
                         } else if (this.state.mainBoard[big] === 'O') {
@@ -543,29 +573,21 @@
                                 cell.classList.add('o');
                             }
                             
-                            // --- CRITICAL FIX: Simplified cell disabling logic ---
-                            let isDisabled = false;
-                            // 1. Game is over
-                            if (!this.state.gameActive) {
-                                isDisabled = true;
-                            }
-                            // 2. This mini-board is already won
-                            else if (this.state.mainBoard[big] !== null) {
-                                isDisabled = true;
-                            }
-                            // 3. It's not the allowed board to play in
-                            else if (this.state.nextBoard !== null && this.state.nextBoard !== big) {
-                                isDisabled = true;
-                            }
-                            // 4. The cell is already taken
-                            else if (this.state.board[big][small] !== null) {
-                                isDisabled = true;
-                            }
+                            // --- FIXED: Simplified and correct disabling logic --- //
+                            // A cell is disabled if:
+                            // 1. The game is over.
+                            // 2. The mini-board it belongs to is already won.
+                            // 3. The cell itself is already occupied.
+                            // 4. It's not the current allowed board to play in (and a specific board is required).
+                            const isGameActive = this.state.gameActive;
+                            const isMiniBoardOpen = this.state.mainBoard[big] === null;
+                            const isCellEmpty = this.state.board[big][small] === null;
+                            const isCorrectBoard = (this.state.nextBoard === null) || (this.state.nextBoard === big);
                             
-                            if (isDisabled) {
+                            if (!isGameActive || !isMiniBoardOpen || !isCellEmpty || !isCorrectBoard) {
                                 cell.classList.add('disabled');
                             }
-                            // --- END FIX ---
+                            // --- END FIX --- //
                             
                             cell.addEventListener('click', () => this.handleCellClick(big, small));
                             miniBoard.appendChild(cell);
@@ -576,17 +598,21 @@
                 }
 
                 handleCellClick(big, small) {
+                    // --- FIXED: Corrected click handler logic --- //
                     if (!this.state.gameActive) return;
-                    // In AI mode, only X (human) can click
-                    if (this.state.isAIGame && this.state.currentPlayer !== 'X') return;
-                    // In PVP mode, the current player can click
-                    if (!this.state.isAIGame && this.state.currentPlayer !== 'X' && this.state.currentPlayer !== 'O') return;
                     
-                    if (this.state.mainBoard[big] !== null) return;
-                    if (this.state.nextBoard !== null && this.state.nextBoard !== big) return;
-                    if (this.state.board[big][small] !== null) return;
+                    // In AI mode, only Player X (human) should be able to click
+                    if (this.state.isAIGame && this.state.currentPlayer !== 'X') {
+                        return;
+                    }
+                    
+                    // The core game rules must be respected
+                    if (this.state.mainBoard[big] !== null) return; // Mini-board is won
+                    if (this.state.board[big][small] !== null) return; // Cell is taken
+                    if (this.state.nextBoard !== null && this.state.nextBoard !== big) return; // Wrong board
                     
                     this.makeMove(big, small);
+                    // --- END FIX --- //
                 }
 
                 makeMove(big, small) {
