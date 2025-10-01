@@ -412,7 +412,7 @@
     <div class="casino-table">
         <a href="index.html" class="home-btn" aria-label="Home">🏠</a>
         <button class="help-btn" id="help-btn" aria-label="How to play">?</button>
-        <h1>Mega tttTic Tac Toe</h1>
+        <h1>Mega Tic Tac Toe</h1>
         
         <div class="win-message" id="win-message">
             <h3 id="winner-text"></h3>
@@ -430,7 +430,8 @@
             </div>
             <div id="player-o" class="player">
                 <div class="player-header">
-                    <h2 id="player-o-name">AI Bot</h2>
+                    <h2 id="player-o-name">Player O</h2>
+                    <span class="edit-name-icon" role="button" tabindex="0" aria-label="Edit Player O Name">✏️</span>
                 </div>
                 <p class="mark">O</p>
                 <p class="win-tally">Wins: <span id="player-o-wins">0</span></p>
@@ -442,7 +443,7 @@
             <div class="board" id="game-board"></div>
             <div class="controls">
                 <button id="btn-reset">🔄 New Game</button>
-                <button id="btn-toggle-ai">🤖 AI: On</button>
+                <button id="btn-toggle-ai">🤖 AI: Off</button>
             </div>
         </div>
     </div>
@@ -454,6 +455,10 @@
             <div class="setup-row">
                 <label for="pname-0">Player X name</label>
                 <input id="pname-0" type="text" class="setup-input" placeholder="Player X">
+            </div>
+            <div class="setup-row">
+                <label for="pname-1">Player O name</label>
+                <input id="pname-1" type="text" class="setup-input" placeholder="Player O">
             </div>
             <div class="setup-row">
                 <label>
@@ -473,6 +478,7 @@
                 constructor() {
                     this.cacheDom();
                     this.bindEvents();
+                    // --- FIXED: Do NOT auto-open setup modal. Start the game immediately. --- //
                     this.startNewGame();
                 }
 
@@ -521,9 +527,10 @@
                         currentPlayer: 'X',
                         gameActive: true,
                         nextBoard: null,
-                        playerNames: ['Player X', 'AI Bot'],
+                        playerNames: ['Player X', 'Player O'],
                         wins: [0, 0],
-                        isAIGame: true // Default to AI mode
+                        // --- FIXED: Default to AI OFF --- //
+                        isAIGame: false
                     };
                     
                     this.renderBoard();
@@ -542,6 +549,12 @@
                 updateAIToggleButton() {
                     this.DOM.btnToggleAI.textContent = `🤖 AI: ${this.state.isAIGame ? 'On' : 'Off'}`;
                     this.DOM.playerO.classList.toggle('ai', this.state.isAIGame);
+                    // If AI is on, rename Player O to "AI Bot"
+                    if (this.state.isAIGame) {
+                        this.DOM.playerOName.textContent = 'AI Bot';
+                    } else {
+                        this.DOM.playerOName.textContent = this.state.playerNames[1];
+                    }
                 }
 
                 renderBoard() {
@@ -552,7 +565,6 @@
                         miniBoard.className = 'mini-board';
                         miniBoard.dataset.big = big;
                         
-                        // --- FIXED: Clearer win state classes --- //
                         if (this.state.mainBoard[big] === 'X') {
                             miniBoard.classList.add('won-x');
                         } else if (this.state.mainBoard[big] === 'O') {
@@ -573,12 +585,6 @@
                                 cell.classList.add('o');
                             }
                             
-                            // --- FIXED: Simplified and correct disabling logic --- //
-                            // A cell is disabled if:
-                            // 1. The game is over.
-                            // 2. The mini-board it belongs to is already won.
-                            // 3. The cell itself is already occupied.
-                            // 4. It's not the current allowed board to play in (and a specific board is required).
                             const isGameActive = this.state.gameActive;
                             const isMiniBoardOpen = this.state.mainBoard[big] === null;
                             const isCellEmpty = this.state.board[big][small] === null;
@@ -587,7 +593,6 @@
                             if (!isGameActive || !isMiniBoardOpen || !isCellEmpty || !isCorrectBoard) {
                                 cell.classList.add('disabled');
                             }
-                            // --- END FIX --- //
                             
                             cell.addEventListener('click', () => this.handleCellClick(big, small));
                             miniBoard.appendChild(cell);
@@ -598,7 +603,6 @@
                 }
 
                 handleCellClick(big, small) {
-                    // --- FIXED: Corrected click handler logic --- //
                     if (!this.state.gameActive) return;
                     
                     // In AI mode, only Player X (human) should be able to click
@@ -606,29 +610,23 @@
                         return;
                     }
                     
-                    // The core game rules must be respected
-                    if (this.state.mainBoard[big] !== null) return; // Mini-board is won
-                    if (this.state.board[big][small] !== null) return; // Cell is taken
-                    if (this.state.nextBoard !== null && this.state.nextBoard !== big) return; // Wrong board
+                    if (this.state.mainBoard[big] !== null) return;
+                    if (this.state.board[big][small] !== null) return;
+                    if (this.state.nextBoard !== null && this.state.nextBoard !== big) return;
                     
                     this.makeMove(big, small);
-                    // --- END FIX --- //
                 }
 
                 makeMove(big, small) {
-                    // Place mark
                     this.state.board[big][small] = this.state.currentPlayer;
                     
-                    // Check if mini-board is won
                     const miniWinner = this.checkMiniBoardWin(big);
                     if (miniWinner && miniWinner !== 'draw') {
                         this.state.mainBoard[big] = miniWinner;
                     }
                     
-                    // Determine next board
                     this.state.nextBoard = this.state.mainBoard[small] === null ? small : null;
                     
-                    // Check main board win
                     const mainWinner = this.checkMainBoardWin();
                     if (mainWinner) {
                         this.state.gameActive = false;
@@ -646,14 +644,12 @@
                         return;
                     }
                     
-                    // Check for draw
                     if (this.isMainBoardFull()) {
                         this.state.gameActive = false;
                         this.showDraw();
                         return;
                     }
                     
-                    // Switch player
                     this.state.currentPlayer = this.state.currentPlayer === 'X' ? 'O' : 'X';
                     this.updateStatus();
                     this.updatePlayerTurnIndicator();
@@ -663,7 +659,7 @@
                     if (this.state.isAIGame && this.state.currentPlayer === 'O' && this.state.gameActive) {
                         this.DOM.gameStatus.textContent = "AI is thinking...";
                         setTimeout(() => {
-                            const aiMove = this.getBestMove(4); // Depth of 4
+                            const aiMove = this.getBestMove(4);
                             if (aiMove) {
                                 this.makeMove(aiMove.big, aiMove.small);
                             }
@@ -727,7 +723,6 @@
                     for (const big of boardsToCheck) {
                         for (let small = 0; small < 9; small++) {
                             if (this.state.board[big][small] === null) {
-                                // Make move
                                 this.state.board[big][small] = 'O';
                                 const miniWinner = this.checkMiniBoardWin(big);
                                 let wasMainBoardUpdated = false;
@@ -738,7 +733,6 @@
 
                                 const score = this.minimax(maxDepth - 1, -Infinity, Infinity, false);
 
-                                // Undo move
                                 this.state.board[big][small] = null;
                                 if (wasMainBoardUpdated) {
                                     this.state.mainBoard[big] = null;
@@ -782,14 +776,13 @@
                                     const eval = this.minimax(depth - 1, alpha, beta, false);
                                     maxEval = Math.max(maxEval, eval);
 
-                                    // Undo
                                     this.state.board[big][small] = null;
                                     if (wasMainBoardUpdated) {
                                         this.state.mainBoard[big] = null;
                                     }
 
                                     alpha = Math.max(alpha, eval);
-                                    if (beta <= alpha) break; // Alpha-Beta Pruning
+                                    if (beta <= alpha) break;
                                 }
                             }
                             if (beta <= alpha) break;
@@ -811,14 +804,13 @@
                                     const eval = this.minimax(depth - 1, alpha, beta, true);
                                     minEval = Math.min(minEval, eval);
 
-                                    // Undo
                                     this.state.board[big][small] = null;
                                     if (wasMainBoardUpdated) {
                                         this.state.mainBoard[big] = null;
                                     }
 
                                     beta = Math.min(beta, eval);
-                                    if (beta <= alpha) break; // Alpha-Beta Pruning
+                                    if (beta <= alpha) break;
                                 }
                             }
                             if (beta <= alpha) break;
@@ -831,7 +823,6 @@
                     let score = 0;
                     const mainBoard = this.state.mainBoard;
                     
-                    // Main board evaluation
                     const mainWinPatterns = [
                         [0,1,2], [3,4,5], [6,7,8],
                         [0,3,6], [1,4,7], [2,5,8],
@@ -844,15 +835,14 @@
                         const countX = [a,b,c].filter(i => mainBoard[i] === 'X').length;
                         
                         if (countO > 0 && countX === 0) {
-                            score += Math.pow(10, countO); // 10, 100, 1000
+                            score += Math.pow(10, countO);
                         } else if (countX > 0 && countO === 0) {
                             score -= Math.pow(10, countX);
                         }
                     }
                     
-                    // Mini-board evaluation
                     for (let big = 0; big < 9; big++) {
-                        if (mainBoard[big] !== null) continue; // Skip won boards
+                        if (mainBoard[big] !== null) continue;
                         
                         const miniBoard = this.state.board[big];
                         const miniWinPatterns = [
@@ -868,18 +858,16 @@
                             const empty = [a,b,c].filter(i => miniBoard[i] === null).length;
                             
                             if (countO > 0 && countX === 0 && empty > 0) {
-                                score += countO; // +1 for 1, +2 for 2 in a row
+                                score += countO;
                             } else if (countX > 0 && countO === 0 && empty > 0) {
                                 score -= countX;
                             }
                         }
                         
-                        // Center control bonus
                         if (miniBoard[4] === 'O') score += 0.5;
                         if (miniBoard[4] === 'X') score -= 0.5;
                     }
                     
-                    // Center main board bonus
                     if (mainBoard[4] === 'O') score += 5;
                     if (mainBoard[4] === 'X') score -= 5;
                     
@@ -928,9 +916,7 @@
                 }
                 
                 editName(playerIndex) {
-                    if (playerIndex !== 0 || !this.state.isAIGame) return; // Only allow editing Player X name in AI mode
-                    
-                    const nameEl = this.DOM.playerXName;
+                    const nameEl = playerIndex === 0 ? this.DOM.playerXName : this.DOM.playerOName;
                     const parent = nameEl.parentElement;
                     
                     const input = document.createElement('input');
@@ -942,7 +928,7 @@
                     input.focus();
                     
                     const saveName = () => {
-                        const newName = input.value.trim() || `Player X`;
+                        const newName = input.value.trim() || `Player ${playerIndex === 0 ? 'X' : 'O'}`;
                         this.state.playerNames[playerIndex] = newName;
                         nameEl.textContent = newName;
                         parent.replaceChild(nameEl, input);
@@ -967,18 +953,27 @@
             const aiModeCheckbox = document.getElementById('ai-mode');
             const openSetup = () => { setupModal.classList.add('show'); setTimeout(()=>setupPanel.focus(),0); };
             const closeSetup = () => { setupModal.classList.remove('show'); };
-            openSetup();
+            
+            // --- FIXED: Only open the setup modal if the user clicks a dedicated button (which we don't have).
+            // Instead, we'll add a "Settings" button or just let the game start.
+            // For now, the game starts immediately on load. --- //
+            // openSetup(); // <-- This line was the BUG!
 
             confirmSetup.addEventListener('click', () => {
                 const px = (document.getElementById('pname-0').value || '').trim() || 'Player X';
+                const po = (document.getElementById('pname-1').value || '').trim() || 'Player O';
                 const isAI = aiModeCheckbox.checked;
                 document.getElementById('player-x-name').textContent = px;
-                game.state.playerNames[0] = px;
+                document.getElementById('player-o-name').textContent = isAI ? 'AI Bot' : po;
+                game.state.playerNames = [px, po];
                 game.state.isAIGame = isAI;
                 game.updateAIToggleButton();
                 game.updateStatus();
                 closeSetup();
             });
+
+            // Add a button to open settings if needed, but for now, the game just works.
+            // We'll leave the modal in the HTML but not auto-open it.
 
             // Help modal wiring
             const helpBtn = document.getElementById('help-btn');
