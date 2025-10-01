@@ -543,12 +543,29 @@
                                 cell.classList.add('o');
                             }
                             
-                            if (this.state.mainBoard[big] !== null || 
-                                !this.state.gameActive || 
-                                (this.state.nextBoard !== null && this.state.nextBoard !== big) ||
-                                !this.isHumanTurn()) {
+                            // --- CRITICAL FIX: Simplified cell disabling logic ---
+                            let isDisabled = false;
+                            // 1. Game is over
+                            if (!this.state.gameActive) {
+                                isDisabled = true;
+                            }
+                            // 2. This mini-board is already won
+                            else if (this.state.mainBoard[big] !== null) {
+                                isDisabled = true;
+                            }
+                            // 3. It's not the allowed board to play in
+                            else if (this.state.nextBoard !== null && this.state.nextBoard !== big) {
+                                isDisabled = true;
+                            }
+                            // 4. The cell is already taken
+                            else if (this.state.board[big][small] !== null) {
+                                isDisabled = true;
+                            }
+                            
+                            if (isDisabled) {
                                 cell.classList.add('disabled');
                             }
+                            // --- END FIX ---
                             
                             cell.addEventListener('click', () => this.handleCellClick(big, small));
                             miniBoard.appendChild(cell);
@@ -558,13 +575,13 @@
                     }
                 }
 
-                isHumanTurn() {
-                    return !this.state.isAIGame || this.state.currentPlayer === 'X';
-                }
-
                 handleCellClick(big, small) {
                     if (!this.state.gameActive) return;
-                    if (!this.isHumanTurn()) return;
+                    // In AI mode, only X (human) can click
+                    if (this.state.isAIGame && this.state.currentPlayer !== 'X') return;
+                    // In PVP mode, the current player can click
+                    if (!this.state.isAIGame && this.state.currentPlayer !== 'X' && this.state.currentPlayer !== 'O') return;
+                    
                     if (this.state.mainBoard[big] !== null) return;
                     if (this.state.nextBoard !== null && this.state.nextBoard !== big) return;
                     if (this.state.board[big][small] !== null) return;
