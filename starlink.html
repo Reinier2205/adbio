@@ -1,76 +1,103 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sunrise & Compass Helper</title>
+  <title>Starlink Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/suncalc/suncalc.js"></script>
   <style>
     body { font-family: sans-serif; background:#0d1117; color:#c9d1d9; }
     .panel { background:#161b22; border:2px solid #30363d; border-radius:1rem; padding:1rem; }
     #compassCanvas { background:rgba(255,255,255,0.05); border-radius:50%; border:2px solid rgba(255,255,255,0.1);}
-    .glow { text-shadow: 0 0 15px #fcd34d; color:#fcd34d; }
+    table { width:100%; border-collapse: collapse; margin-top:1rem; }
+    th, td { border:1px solid #30363d; padding:6px; text-align:center; }
+    th { background:#21262d; }
   </style>
 </head>
 <body class="min-h-screen p-4">
-  <h1 class="text-center text-2xl font-bold mb-4 text-yellow-400">Sunrise Compass Helper</h1>
+  <h1 class="text-center text-2xl font-bold mb-4 text-green-400">Visible Starlink Passes</h1>
 
-  <div class="panel max-w-md mx-auto text-center">
-    <p class="text-sm text-gray-400 mb-2">Grant location & orientation access for live tracking</p>
-    <button onclick="requestPermissions()" class="bg-green-600 text-white px-4 py-2 rounded">Grant Access</button>
+  <div class="panel max-w-2xl mx-auto text-center">
+    <p class="text-sm text-gray-400 mb-2">Grant location & orientation access</p>
+    <button onclick="initTracker()" class="bg-green-600 text-white px-4 py-2 rounded">Grant Access</button>
     
-    <div class="mt-6 relative">
+    <div class="mt-6">
       <canvas id="compassCanvas" width="300" height="300"></canvas>
-      <div id="device-indicator"
-           style="position:absolute;top:10px;left:50%;transform:translateX(-50%);
-           width:0;height:0;border-left:10px solid transparent;
-           border-right:10px solid transparent;border-bottom:15px solid white;">
-      </div>
     </div>
-    
-    <div class="mt-4">
-      <div class="text-lg">Heading: <span id="heading">---°</span></div>
-      <div class="text-lg">Sunrise Azimuth: <span id="sunriseAz">---°</span></div>
-      <div class="text-lg">Sunset Azimuth: <span id="sunsetAz">---°</span></div>
-      <div id="match-indicator" class="text-xl mt-2"></div>
+
+    <div class="mt-6">
+      <table>
+        <thead>
+          <tr>
+            <th>Satellite</th>
+            <th>Time</th>
+            <th>Azimuth (°)</th>
+            <th>Elevation (°)</th>
+            <th>Mag</th>
+          </tr>
+        </thead>
+        <tbody id="satTable"></tbody>
+      </table>
     </div>
   </div>
 
 <script>
-let sunriseAz = null, sunsetAz = null, heading = 0;
+let heading = 0;
+let sats = [];
+
 const canvas = document.getElementById('compassCanvas');
 const ctx = canvas.getContext('2d');
+const r = canvas.width/2;
 
-function requestPermissions() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      const times = SunCalc.getTimes(new Date(), lat, lon);
-      const sunrisePos = SunCalc.getPosition(times.sunrise, lat, lon);
-      const sunsetPos = SunCalc.getPosition(times.sunset, lat, lon);
-      sunriseAz = (sunrisePos.azimuth * 180 / Math.PI + 360) % 360;
-      sunsetAz = (sunsetPos.azimuth * 180 / Math.PI + 360) % 360;
-      document.getElementById('sunriseAz').textContent = sunriseAz.toFixed(1)+"°";
-      document.getElementById('sunsetAz').textContent = sunsetAz.toFixed(1)+"°";
-    });
-  }
+async function initTracker() {
+  // get location
+  if (!navigator.geolocation) { alert("No geolocation available"); return; }
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    // fetch satellite pass data from your Worker
+    const url = `https://starlink-tle.reinier-olivier.workers.dev/?lat=${lat}&lon=${lon}`;
+    try {
+      const res = await fetch(url);
+      sats = await res.json(); // assumes your worker returns JSON
+      updateTable();
+      drawCompass();
+    } catch(err) {
+      alert("Error fetching Starlink data");
+    }
+  });
+
+  // orientation
   if (window.DeviceOrientationEvent) {
-    window.addEventListener('deviceorientationabsolute', e=>{
-      if (e.alpha !== null) {
+    window.addEventListener("deviceorientationabsolute", e=>{
+      if (e.alpha!==null) {
         heading = (360 - e.alpha) % 360;
-        document.getElementById('heading').textContent = heading.toFixed(0)+"°";
         drawCompass();
-        checkMatch();
       }
     }, true);
+  } else {
+    alert("No device orientation available");
   }
+}
+
+function updateTable() {
+  const tbody = document.getElementById("satTable");
+  tbody.innerHTML = "";
+  sats.forEach(s => {
+    const row = `<tr>
+      <td>${s.name}</td>
+      <td>${s.time}</td>
+      <td>${s.az.toFixed(1)}</td>
+      <td>${s.el.toFixed(1)}</td>
+      <td>${s.mag.toFixed(1)}</td>
+    </tr>`;
+    tbody.innerHTML += row;
+  });
 }
 
 function drawCompass() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  const r = canvas.width/2;
   ctx.save();
   ctx.translate(r,r);
   ctx.rotate(-heading*Math.PI/180);
@@ -80,42 +107,22 @@ function drawCompass() {
   ctx.arc(0,0,r-10,0,2*Math.PI);
   ctx.strokeStyle="#555"; ctx.lineWidth=4; ctx.stroke();
 
-  // N indicator
   ctx.fillStyle="#fcd34d";
   ctx.font="20px sans-serif";
   ctx.fillText("N",-8,-r+25);
 
-  // draw sunrise arrow
-  if (sunriseAz!==null) {
+  // Starlink arrows
+  sats.forEach((s,i)=>{
     ctx.save();
-    ctx.rotate(sunriseAz*Math.PI/180);
-    ctx.strokeStyle="red"; ctx.lineWidth=3;
+    ctx.rotate(s.az*Math.PI/180);
+    ctx.strokeStyle="lime"; ctx.lineWidth=2;
     ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-r+30); ctx.stroke();
+    ctx.fillStyle="lime";
+    ctx.fillText("★", -6, -r+40);
     ctx.restore();
-  }
-  // draw sunset arrow
-  if (sunsetAz!==null) {
-    ctx.save();
-    ctx.rotate(sunsetAz*Math.PI/180);
-    ctx.strokeStyle="blue"; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-r+30); ctx.stroke();
-    ctx.restore();
-  }
-  ctx.restore();
-}
+  });
 
-function checkMatch() {
-  const indicator = document.getElementById('match-indicator');
-  indicator.classList.remove('glow');
-  if (sunriseAz && Math.abs(heading - sunriseAz) < 3) {
-    indicator.textContent="Aligned with Sunrise!";
-    indicator.classList.add('glow');
-  } else if (sunsetAz && Math.abs(heading - sunsetAz) < 3) {
-    indicator.textContent="Aligned with Sunset!";
-    indicator.classList.add('glow');
-  } else {
-    indicator.textContent="";
-  }
+  ctx.restore();
 }
 </script>
 </body>
