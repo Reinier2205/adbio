@@ -1,88 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Starlink Bright Pass Predictor</title>
-<script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Starlink Pass Predictor</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { font-size: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    th { background: #f0f0f0; }
+  </style>
 </head>
 <body>
-<h2>Starlink Bright Pass Predictor (Pretoria)</h2>
+  <h1>Starlink Passes (next 24 hours)</h1>
+  <p>Location: <span id="location">Detecting...</span></p>
+  <table>
+    <thead>
+      <tr><th>Satellite</th><th>Start</th><th>End</th><th>Max Elevation</th></tr>
+    </thead>
+    <tbody id="passes"></tbody>
+  </table>
 
-<p>Select date and time for prediction (default = now):</p>
-<input type="datetime-local" id="datetime">
-<button onclick="predictPasses()">Get Starlink Passes</button>
+  <script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
+  <script>
+    const workerURL = "https://starlink-tle.reinier-olivier.workers.dev/";
 
-<ul id="passes"></ul>
-
-<script>
-async function predictPasses() {
-  const passesList = document.getElementById("passes");
-  passesList.innerHTML = "Loading...";
-
-  const lat = -25.7479;
-  const lon = 28.2293;
-  const height = 1.32; // km
-
-  const inputDate = document.getElementById("datetime").value;
-  const startDate = inputDate ? new Date(inputDate) : new Date();
-  const endDate = new Date(startDate.getTime() + 24*60*60*1000); // next 24 hours
-
-  try {
-    // Fetch Starlink Bright TLEs via CORS proxy
-    const tleUrl = "https://celestrak.com/NORAD/elements/starlink-2020.txt";
-    const corsProxy = "https://api.allorigins.win/raw?url=";
-    const res = await fetch(corsProxy + encodeURIComponent(tleUrl));
-    const tleText = await res.text();
-    const tleLines = tleText.trim().split("\n");
-
-    // Parse TLEs into satellites
-    let satellites = [];
-    for(let i=0; i<tleLines.length; i+=3){
-      const name = tleLines[i].trim();
-      const line1 = tleLines[i+1];
-      const line2 = tleLines[i+2];
-      satellites.push({name, satrec: satellite.twoline2satrec(line1, line2)});
+    async function fetchTLEs() {
+      const res = await fetch(workerURL);
+      return (await res.text()).trim().split("\n");
     }
 
-    passesList.innerHTML = "";
+    function parseTLEs(lines) {
+      let sats = [];
+      for (let i = 0; i < lines.length; i += 3) {
+        if (lines[i+1] && lines[i+2]) {
+          sats.push({
+            name: lines[i].trim(),
+            tle1: lines[i+1].trim(),
+            tle2: lines[i+2].trim()
+          });
+        }
+      }
+      return sats;
+    }
 
-    for(const sat of satellites){
-      let visible = false;
-      let passStart = null;
+    function getPassesForSatellite(satrec, observer, startTime, endTime) {
+      const stepMinutes = 2; // time resolution
+      let passes = [];
+      let pass = null;
 
-      for(let t = new Date(startDate); t < endDate; t.setMinutes(t.getMinutes()+1)){
-        const gmst = satellite.gstime(t);
-        const eciPos = satellite.propagate(sat.satrec, t);
-        if(!eciPos.position) continue;
+      for (let time = new Date(startTime); time <= endTime; time.setMinutes(time.getMinutes() + stepMinutes)) {
+        const gmst = satellite.gstime(new Date(time));
+        const eci = satellite.propagate(satrec, time);
+        if (!eci.position) continue;
+        const geo = satellite.eciToGeodetic(eci.position, gmst);
+        const lookAngles = satellite.ecfToLookAngles(observer, satellite.eciToEcf(eci.position, gmst));
+        
+        if (lookAngles.elevation > 0) {
+          if (!pass) {
+            pass = { start: new Date(time), maxEl: lookAngles.elevation, end: null };
+          } else {
+            if (lookAngles.elevation > pass.maxEl) pass.maxEl = lookAngles.elevation;
+          }
+        } else if (pass) {
+          pass.end = new Date(time);
+          passes.push(pass);
+          pass = null;
+        }
+      }
+      return passes;
+    }
 
-        const lookAngles = satellite.ecfToLookAngles(
-          {latitude: lat, longitude: lon, height: height},
-          satellite.eciToEcf(eciPos.position, gmst)
-        );
+    async function main() {
+      // detect location
+      let lat = -25.7479, lon = 28.2293, height = 0.1; // Pretoria default
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          lat = pos.coords.latitude;
+          lon = pos.coords.longitude;
+          height = pos.coords.altitude || 0.1;
+          document.getElementById("location").textContent = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+        });
+      }
 
-        const elevation = lookAngles.elevation * 180 / Math.PI;
+      const lines = await fetchTLEs();
+      const sats = parseTLEs(lines).slice(0, 20); // limit 20 sats
+      const observer = { longitude: satellite.degreesToRadians(lon), latitude: satellite.degreesToRadians(lat), height };
 
-        if(elevation > 10 && !visible){
-          visible = true;
-          passStart = new Date(t);
-        } else if(elevation <= 10 && visible){
-          visible = false;
-          const li = document.createElement("li");
-          li.textContent = `${sat.name}: Start: ${passStart.toLocaleString()} → End: ${t.toLocaleString()}`;
-          passesList.appendChild(li);
+      const startTime = new Date();
+      const endTime = new Date(Date.now() + 24 * 3600 * 1000);
+
+      const tbody = document.getElementById("passes");
+
+      for (let sat of sats) {
+        const satrec = satellite.twoline2satrec(sat.tle1, sat.tle2);
+        const passes = getPassesForSatellite(satrec, observer, startTime, endTime);
+
+        for (let p of passes) {
+          let row = document.createElement("tr");
+          row.innerHTML = `<td>${sat.name}</td>
+                           <td>${p.start.toLocaleString()}</td>
+                           <td>${p.end.toLocaleString()}</td>
+                           <td>${(p.maxEl * 180/Math.PI).toFixed(1)}°</td>`;
+          tbody.appendChild(row);
         }
       }
     }
 
-    if(passesList.innerHTML === ""){
-      passesList.innerHTML = "<li>No visible passes in the next 24 hours.</li>";
-    }
-
-  } catch(err){
-    passesList.innerHTML = "<li>Error fetching or processing TLE data.</li>";
-    console.error(err);
-  }
-}
-</script>
+    main();
+  </script>
 </body>
 </html>
