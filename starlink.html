@@ -1,150 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <title>Visible Starlink Passes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sunrise & Compass Helper</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/suncalc/suncalc.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { font-size: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
-    th { background: #f0f0f0; }
-    #error { color: red; font-weight: bold; }
+    body { font-family: sans-serif; background:#0d1117; color:#c9d1d9; }
+    .panel { background:#161b22; border:2px solid #30363d; border-radius:1rem; padding:1rem; }
+    #compassCanvas { background:rgba(255,255,255,0.05); border-radius:50%; border:2px solid rgba(255,255,255,0.1);}
+    .glow { text-shadow: 0 0 15px #fcd34d; color:#fcd34d; }
   </style>
 </head>
-<body>
-  <h1>Visible Starlink Passes (next 12 hours)</h1>
-  <p>Location: <span id="location">Detecting...</span></p>
-  <p id="window"></p>
-  <p id="error"></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Satellite</th><th>Start</th><th>End</th>
-        <th>Start Dir</th><th>End Dir</th><th>Max Elevation</th>
-      </tr>
-    </thead>
-    <tbody id="passes"></tbody>
-  </table>
+<body class="min-h-screen p-4">
+  <h1 class="text-center text-2xl font-bold mb-4 text-yellow-400">Sunrise Compass Helper</h1>
 
-  <script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
-  <script src="https://unpkg.com/suncalc/suncalc.js"></script>
-  <script>
-    const workerURL = "https://starlink-tle.reinier-olivier.workers.dev/";
+  <div class="panel max-w-md mx-auto text-center">
+    <p class="text-sm text-gray-400 mb-2">Grant location & orientation access for live tracking</p>
+    <button onclick="requestPermissions()" class="bg-green-600 text-white px-4 py-2 rounded">Grant Access</button>
+    
+    <div class="mt-6 relative">
+      <canvas id="compassCanvas" width="300" height="300"></canvas>
+      <div id="device-indicator"
+           style="position:absolute;top:10px;left:50%;transform:translateX(-50%);
+           width:0;height:0;border-left:10px solid transparent;
+           border-right:10px solid transparent;border-bottom:15px solid white;">
+      </div>
+    </div>
+    
+    <div class="mt-4">
+      <div class="text-lg">Heading: <span id="heading">---°</span></div>
+      <div class="text-lg">Sunrise Azimuth: <span id="sunriseAz">---°</span></div>
+      <div class="text-lg">Sunset Azimuth: <span id="sunsetAz">---°</span></div>
+      <div id="match-indicator" class="text-xl mt-2"></div>
+    </div>
+  </div>
 
-    async function fetchTLEs() {
-      const res = await fetch(workerURL);
-      if (!res.ok) throw new Error("Failed to fetch TLE data");
-      return (await res.text()).trim().split("\n");
-    }
+<script>
+let sunriseAz = null, sunsetAz = null, heading = 0;
+const canvas = document.getElementById('compassCanvas');
+const ctx = canvas.getContext('2d');
 
-    function parseTLEs(lines) {
-      let sats = [];
-      for (let i = 0; i < lines.length; i += 3) {
-        if (lines[i+1] && lines[i+2]) {
-          sats.push({
-            name: lines[i].trim(),
-            tle1: lines[i+1].trim(),
-            tle2: lines[i+2].trim()
-          });
-        }
+function requestPermissions() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const times = SunCalc.getTimes(new Date(), lat, lon);
+      const sunrisePos = SunCalc.getPosition(times.sunrise, lat, lon);
+      const sunsetPos = SunCalc.getPosition(times.sunset, lat, lon);
+      sunriseAz = (sunrisePos.azimuth * 180 / Math.PI + 360) % 360;
+      sunsetAz = (sunsetPos.azimuth * 180 / Math.PI + 360) % 360;
+      document.getElementById('sunriseAz').textContent = sunriseAz.toFixed(1)+"°";
+      document.getElementById('sunsetAz').textContent = sunsetAz.toFixed(1)+"°";
+    });
+  }
+  if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientationabsolute', e=>{
+      if (e.alpha !== null) {
+        heading = (360 - e.alpha) % 360;
+        document.getElementById('heading').textContent = heading.toFixed(0)+"°";
+        drawCompass();
+        checkMatch();
       }
-      return sats;
-    }
+    }, true);
+  }
+}
 
-    function azToCompass(rad) {
-      const deg = (rad * 180 / Math.PI + 360) % 360;
-      const dirs = ["N","NE","E","SE","S","SW","W","NW"];
-      return dirs[Math.round(deg / 45) % 8];
-    }
+function drawCompass() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const r = canvas.width/2;
+  ctx.save();
+  ctx.translate(r,r);
+  ctx.rotate(-heading*Math.PI/180);
 
-    function getPassesForSatellite(satrec, observer, startTime, endTime) {
-      const stepMinutes = 1;
-      let passes = [], pass = null;
+  // compass circle
+  ctx.beginPath();
+  ctx.arc(0,0,r-10,0,2*Math.PI);
+  ctx.strokeStyle="#555"; ctx.lineWidth=4; ctx.stroke();
 
-      for (let time = new Date(startTime); time <= endTime; time.setMinutes(time.getMinutes() + stepMinutes)) {
-        const gmst = satellite.gstime(time);
-        const eci = satellite.propagate(satrec, time);
-        if (!eci.position) continue;
-        const ecf = satellite.eciToEcf(eci.position, gmst);
-        const look = satellite.ecfToLookAngles(observer, ecf);
+  // N indicator
+  ctx.fillStyle="#fcd34d";
+  ctx.font="20px sans-serif";
+  ctx.fillText("N",-8,-r+25);
 
-        if (look.elevation > 0) {
-          if (!pass) {
-            pass = { start: new Date(time), maxEl: look.elevation, end: null, startAz: look.azimuth, endAz: null };
-          } else if (look.elevation > pass.maxEl) {
-            pass.maxEl = look.elevation;
-          }
-        } else if (pass) {
-          pass.end = new Date(time);
-          pass.endAz = look.azimuth;
-          passes.push(pass);
-          pass = null;
-        }
-      }
-      return passes;
-    }
+  // draw sunrise arrow
+  if (sunriseAz!==null) {
+    ctx.save();
+    ctx.rotate(sunriseAz*Math.PI/180);
+    ctx.strokeStyle="red"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-r+30); ctx.stroke();
+    ctx.restore();
+  }
+  // draw sunset arrow
+  if (sunsetAz!==null) {
+    ctx.save();
+    ctx.rotate(sunsetAz*Math.PI/180);
+    ctx.strokeStyle="blue"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-r+30); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
 
-    async function main(lat, lon, height) {
-      document.getElementById("location").textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-
-      const now = new Date();
-      const twelveHours = new Date(Date.now() + 12*3600*1000);
-
-      const sunTimes = SunCalc.getTimes(now, lat, lon);
-      const sunset = sunTimes.sunset;
-      const sunrise = SunCalc.getTimes(new Date(now.getTime()+86400000), lat, lon).sunrise;
-      
-      const windowStart = sunset < now ? now : sunset;
-      const windowEnd = sunrise < twelveHours ? sunrise : twelveHours;
-
-      document.getElementById("window").textContent = 
-        `Showing passes between ${windowStart.toLocaleTimeString()} and ${windowEnd.toLocaleTimeString()}`;
-
-      const lines = await fetchTLEs();
-      const sats = parseTLEs(lines).slice(0, 15); // limit 15 for speed
-      const observer = {
-        longitude: satellite.degreesToRadians(lon),
-        latitude: satellite.degreesToRadians(lat),
-        height
-      };
-
-      const tbody = document.getElementById("passes");
-      for (let sat of sats) {
-        const satrec = satellite.twoline2satrec(sat.tle1, sat.tle2);
-        const passes = getPassesForSatellite(satrec, observer, windowStart, windowEnd);
-
-        for (let p of passes) {
-          let row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${sat.name}</td>
-            <td>${p.start.toLocaleTimeString()}</td>
-            <td>${p.end.toLocaleTimeString()}</td>
-            <td>${azToCompass(p.startAz)}</td>
-            <td>${azToCompass(p.endAz)}</td>
-            <td>${(p.maxEl*180/Math.PI).toFixed(0)}°</td>`;
-          tbody.appendChild(row);
-        }
-      }
-    }
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          const height = pos.coords.altitude || 0.1;
-          main(lat, lon, height);
-        },
-        err => {
-          document.getElementById("error").textContent = "Error: Location required. " + err.message;
-          document.getElementById("location").textContent = "Unavailable";
-        }
-      );
-    } else {
-      document.getElementById("error").textContent = "Error: Geolocation not supported by this device.";
-      document.getElementById("location").textContent = "Unavailable";
-    }
-  </script>
+function checkMatch() {
+  const indicator = document.getElementById('match-indicator');
+  indicator.classList.remove('glow');
+  if (sunriseAz && Math.abs(heading - sunriseAz) < 3) {
+    indicator.textContent="Aligned with Sunrise!";
+    indicator.classList.add('glow');
+  } else if (sunsetAz && Math.abs(heading - sunsetAz) < 3) {
+    indicator.textContent="Aligned with Sunset!";
+    indicator.classList.add('glow');
+  } else {
+    indicator.textContent="";
+  }
+}
+</script>
 </body>
 </html>
