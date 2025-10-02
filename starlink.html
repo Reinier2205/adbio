@@ -13,15 +13,17 @@
     th, td { border:1px solid #30363d; padding:6px; text-align:center; }
     th { background:#21262d; }
     button { margin-top: 10px; }
+    #status { margin-top: 10px; color: #9cd6ff; font-size: 0.9rem; }
   </style>
 </head>
 <body class="min-h-screen p-4">
-  <h1 class="text-center text-2xl font-bold mb-4 text-green-400">v2 Visible Starlink Passes - Pretoria</h1>
+  <h1 class="text-center text-2xl font-bold mb-4 text-green-400">v3 Visible Starlink Passes - Pretoria</h1>
 
   <div class="panel max-w-2xl mx-auto text-center">
     <p class="text-sm text-gray-400 mb-2">Click the button to fetch satellite data</p>
     
     <button onclick="fetchAndDraw()" class="bg-green-600 text-white px-4 py-2 rounded">Refresh Data</button>
+    <div id="status">No data fetched yet.</div>
 
     <div class="mt-6">
       <canvas id="compassCanvas" width="300" height="300"></canvas>
@@ -50,6 +52,7 @@ let sats = [];
 const canvas = document.getElementById('compassCanvas');
 const ctx = canvas.getContext('2d');
 const r = canvas.width/2;
+const statusEl = document.getElementById("status");
 
 // Pretoria coordinates
 const lat = -25.7479;
@@ -67,7 +70,9 @@ if (window.DeviceOrientationEvent) {
 
 // Fetch and draw function (called by button)
 async function fetchAndDraw() {
+  statusEl.textContent = "Fetching Starlink data...";
   const url = `https://starlink-tle.reinier-olivier.workers.dev/?lat=${lat}&lon=${lon}`;
+  
   try {
     const res = await fetch(url);
     const text = await res.text();
@@ -89,9 +94,11 @@ async function fetchAndDraw() {
 
     updateTable();
     drawCompass();
+    statusEl.textContent = `Data fetched successfully. ${sats.length} satellites received.`;
+
   } catch(err) {
     console.error(err);
-    alert("Error fetching Starlink data. Check console for details.");
+    statusEl.textContent = "Error fetching Starlink data. Check console for details.";
   }
 }
 
