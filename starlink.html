@@ -9,11 +9,13 @@
     table { border-collapse: collapse; width: 100%; margin-top: 15px; }
     th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
     th { background: #f0f0f0; }
+    #error { color: red; font-weight: bold; }
   </style>
 </head>
 <body>
   <h1>Starlink Passes (next 24 hours)</h1>
   <p>Location: <span id="location">Detecting...</span></p>
+  <p id="error"></p>
   <table>
     <thead>
       <tr><th>Satellite</th><th>Start</th><th>End</th><th>Max Elevation</th></tr>
@@ -27,6 +29,7 @@
 
     async function fetchTLEs() {
       const res = await fetch(workerURL);
+      if (!res.ok) throw new Error("Failed to fetch TLE data");
       return (await res.text()).trim().split("\n");
     }
 
@@ -45,7 +48,7 @@
     }
 
     function getPassesForSatellite(satrec, observer, startTime, endTime) {
-      const stepMinutes = 2; // time resolution
+      const stepMinutes = 2;
       let passes = [];
       let pass = null;
 
@@ -53,14 +56,13 @@
         const gmst = satellite.gstime(new Date(time));
         const eci = satellite.propagate(satrec, time);
         if (!eci.position) continue;
-        const geo = satellite.eciToGeodetic(eci.position, gmst);
         const lookAngles = satellite.ecfToLookAngles(observer, satellite.eciToEcf(eci.position, gmst));
         
         if (lookAngles.elevation > 0) {
           if (!pass) {
             pass = { start: new Date(time), maxEl: lookAngles.elevation, end: null };
-          } else {
-            if (lookAngles.elevation > pass.maxEl) pass.maxEl = lookAngles.elevation;
+          } else if (lookAngles.elevation > pass.maxEl) {
+            pass.maxEl = lookAngles.elevation;
           }
         } else if (pass) {
           pass.end = new Date(time);
@@ -71,20 +73,11 @@
       return passes;
     }
 
-    async function main() {
-      // detect location
-      let lat = -25.7479, lon = 28.2293, height = 0.1; // Pretoria default
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          lat = pos.coords.latitude;
-          lon = pos.coords.longitude;
-          height = pos.coords.altitude || 0.1;
-          document.getElementById("location").textContent = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
-        });
-      }
+    async function main(lat, lon, height) {
+      document.getElementById("location").textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
 
       const lines = await fetchTLEs();
-      const sats = parseTLEs(lines).slice(0, 20); // limit 20 sats
+      const sats = parseTLEs(lines).slice(0, 20); // limit 20 for speed
       const observer = { longitude: satellite.degreesToRadians(lon), latitude: satellite.degreesToRadians(lat), height };
 
       const startTime = new Date();
@@ -107,7 +100,24 @@
       }
     }
 
-    main();
+    // Require geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const height = pos.coords.altitude || 0.1;
+          main(lat, lon, height);
+        },
+        err => {
+          document.getElementById("error").textContent = "Error: Location required. " + err.message;
+          document.getElementById("location").textContent = "Unavailable";
+        }
+      );
+    } else {
+      document.getElementById("error").textContent = "Error: Geolocation not supported by this device.";
+      document.getElementById("location").textContent = "Unavailable";
+    }
   </script>
 </body>
 </html>
