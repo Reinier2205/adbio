@@ -12,14 +12,17 @@
     table { width:100%; border-collapse: collapse; margin-top:1rem; }
     th, td { border:1px solid #30363d; padding:6px; text-align:center; }
     th { background:#21262d; }
+    button { margin-top: 10px; }
   </style>
 </head>
 <body class="min-h-screen p-4">
-  <h1 class="text-center text-2xl font-bold mb-4 text-green-400"> pta Visible Starlink Passes - Pretoria</h1>
+  <h1 class="text-center text-2xl font-bold mb-4 text-green-400">v2 Visible Starlink Passes - Pretoria</h1>
 
   <div class="panel max-w-2xl mx-auto text-center">
-    <p class="text-sm text-gray-400 mb-2">Satellite data for Pretoria</p>
+    <p class="text-sm text-gray-400 mb-2">Click the button to fetch satellite data</p>
     
+    <button onclick="fetchAndDraw()" class="bg-green-600 text-white px-4 py-2 rounded">Refresh Data</button>
+
     <div class="mt-6">
       <canvas id="compassCanvas" width="300" height="300"></canvas>
     </div>
@@ -52,10 +55,6 @@ const r = canvas.width/2;
 const lat = -25.7479;
 const lon = 28.2293;
 
-// Fetch data and start updates
-fetchAndDraw(lat, lon);
-setInterval(() => fetchAndDraw(lat, lon), 45000);
-
 // Device orientation
 if (window.DeviceOrientationEvent) {
   window.addEventListener("deviceorientationabsolute", e=>{
@@ -66,7 +65,8 @@ if (window.DeviceOrientationEvent) {
   }, true);
 }
 
-async function fetchAndDraw(lat, lon) {
+// Fetch and draw function (called by button)
+async function fetchAndDraw() {
   const url = `https://starlink-tle.reinier-olivier.workers.dev/?lat=${lat}&lon=${lon}`;
   try {
     const res = await fetch(url);
@@ -91,6 +91,7 @@ async function fetchAndDraw(lat, lon) {
     drawCompass();
   } catch(err) {
     console.error(err);
+    alert("Error fetching Starlink data. Check console for details.");
   }
 }
 
