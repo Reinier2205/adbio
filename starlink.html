@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Starlink Pass Predictor</title>
+  <title>Visible Starlink Passes</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     h1 { font-size: 20px; }
@@ -13,17 +13,22 @@
   </style>
 </head>
 <body>
-  <h1>Starlink Passes (next 24 hours)</h1>
+  <h1>Visible Starlink Passes (next 12 hours)</h1>
   <p>Location: <span id="location">Detecting...</span></p>
+  <p id="window"></p>
   <p id="error"></p>
   <table>
     <thead>
-      <tr><th>Satellite</th><th>Start</th><th>End</th><th>Max Elevation</th></tr>
+      <tr>
+        <th>Satellite</th><th>Start</th><th>End</th>
+        <th>Start Dir</th><th>End Dir</th><th>Max Elevation</th>
+      </tr>
     </thead>
     <tbody id="passes"></tbody>
   </table>
 
   <script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
+  <script src="https://unpkg.com/suncalc/suncalc.js"></script>
   <script>
     const workerURL = "https://starlink-tle.reinier-olivier.workers.dev/";
 
@@ -47,25 +52,32 @@
       return sats;
     }
 
+    function azToCompass(rad) {
+      const deg = (rad * 180 / Math.PI + 360) % 360;
+      const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+      return dirs[Math.round(deg / 45) % 8];
+    }
+
     function getPassesForSatellite(satrec, observer, startTime, endTime) {
-      const stepMinutes = 2;
-      let passes = [];
-      let pass = null;
+      const stepMinutes = 1;
+      let passes = [], pass = null;
 
       for (let time = new Date(startTime); time <= endTime; time.setMinutes(time.getMinutes() + stepMinutes)) {
-        const gmst = satellite.gstime(new Date(time));
+        const gmst = satellite.gstime(time);
         const eci = satellite.propagate(satrec, time);
         if (!eci.position) continue;
-        const lookAngles = satellite.ecfToLookAngles(observer, satellite.eciToEcf(eci.position, gmst));
-        
-        if (lookAngles.elevation > 0) {
+        const ecf = satellite.eciToEcf(eci.position, gmst);
+        const look = satellite.ecfToLookAngles(observer, ecf);
+
+        if (look.elevation > 0) {
           if (!pass) {
-            pass = { start: new Date(time), maxEl: lookAngles.elevation, end: null };
-          } else if (lookAngles.elevation > pass.maxEl) {
-            pass.maxEl = lookAngles.elevation;
+            pass = { start: new Date(time), maxEl: look.elevation, end: null, startAz: look.azimuth, endAz: null };
+          } else if (look.elevation > pass.maxEl) {
+            pass.maxEl = look.elevation;
           }
         } else if (pass) {
           pass.end = new Date(time);
+          pass.endAz = look.azimuth;
           passes.push(pass);
           pass = null;
         }
@@ -76,31 +88,46 @@
     async function main(lat, lon, height) {
       document.getElementById("location").textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
 
-      const lines = await fetchTLEs();
-      const sats = parseTLEs(lines).slice(0, 20); // limit 20 for speed
-      const observer = { longitude: satellite.degreesToRadians(lon), latitude: satellite.degreesToRadians(lat), height };
+      const now = new Date();
+      const twelveHours = new Date(Date.now() + 12*3600*1000);
 
-      const startTime = new Date();
-      const endTime = new Date(Date.now() + 24 * 3600 * 1000);
+      const sunTimes = SunCalc.getTimes(now, lat, lon);
+      const sunset = sunTimes.sunset;
+      const sunrise = SunCalc.getTimes(new Date(now.getTime()+86400000), lat, lon).sunrise;
+      
+      const windowStart = sunset < now ? now : sunset;
+      const windowEnd = sunrise < twelveHours ? sunrise : twelveHours;
+
+      document.getElementById("window").textContent = 
+        `Showing passes between ${windowStart.toLocaleTimeString()} and ${windowEnd.toLocaleTimeString()}`;
+
+      const lines = await fetchTLEs();
+      const sats = parseTLEs(lines).slice(0, 15); // limit 15 for speed
+      const observer = {
+        longitude: satellite.degreesToRadians(lon),
+        latitude: satellite.degreesToRadians(lat),
+        height
+      };
 
       const tbody = document.getElementById("passes");
-
       for (let sat of sats) {
         const satrec = satellite.twoline2satrec(sat.tle1, sat.tle2);
-        const passes = getPassesForSatellite(satrec, observer, startTime, endTime);
+        const passes = getPassesForSatellite(satrec, observer, windowStart, windowEnd);
 
         for (let p of passes) {
           let row = document.createElement("tr");
-          row.innerHTML = `<td>${sat.name}</td>
-                           <td>${p.start.toLocaleString()}</td>
-                           <td>${p.end.toLocaleString()}</td>
-                           <td>${(p.maxEl * 180/Math.PI).toFixed(1)}°</td>`;
+          row.innerHTML = `
+            <td>${sat.name}</td>
+            <td>${p.start.toLocaleTimeString()}</td>
+            <td>${p.end.toLocaleTimeString()}</td>
+            <td>${azToCompass(p.startAz)}</td>
+            <td>${azToCompass(p.endAz)}</td>
+            <td>${(p.maxEl*180/Math.PI).toFixed(0)}°</td>`;
           tbody.appendChild(row);
         }
       }
     }
 
-    // Require geolocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => {
