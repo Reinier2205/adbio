@@ -18,8 +18,7 @@
   <h1 class="text-center text-2xl font-bold mb-4 text-green-400">Visible Starlink Passes</h1>
 
   <div class="panel max-w-2xl mx-auto text-center">
-    <p class="text-sm text-gray-400 mb-2">Grant location & orientation access</p>
-    <button onclick="initTracker()" class="bg-green-600 text-white px-4 py-2 rounded">Grant Access</button>
+    <p class="text-sm text-gray-400 mb-2">Requesting location and orientation access...</p>
     
     <div class="mt-6">
       <canvas id="compassCanvas" width="300" height="300"></canvas>
@@ -49,6 +48,9 @@ const canvas = document.getElementById('compassCanvas');
 const ctx = canvas.getContext('2d');
 const r = canvas.width/2;
 
+// Run automatically on page load
+window.addEventListener("load", initTracker);
+
 async function initTracker() {
   // get location
   if (!navigator.geolocation) { alert("No geolocation available"); return; }
@@ -57,35 +59,14 @@ async function initTracker() {
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
 
-    // fetch satellite data
-    const url = `https://starlink-tle.reinier-olivier.workers.dev/?lat=${lat}&lon=${lon}`;
-    try {
-      const res = await fetch(url);
-      const text = await res.text();
+    // fetch satellite data immediately
+    await fetchAndDraw(lat, lon);
 
-      // detect JSON
-      try {
-        sats = JSON.parse(text);
-      } catch {
-        // convert plain text to objects
-        sats = text.split('\n').filter(l=>l.trim()).map(line => {
-          const [name, time, az, el, mag] = line.split(',');
-          return { 
-            name: name || "N/A",
-            time: time || "N/A",
-            az: az ? +az : 0,
-            el: el ? +el : 0,
-            mag: mag ? +mag : 0
-          };
-        });
-      }
-
-      updateTable();
-      drawCompass();
-    } catch(err) {
-      console.error(err);
-      alert("Error fetching or parsing Starlink data. See console for details.");
-    }
+    // start live updates every 45s
+    setInterval(() => fetchAndDraw(lat, lon), 45000);
+  }, err => {
+    alert("Location access denied or unavailable.");
+    console.error(err);
   });
 
   // device orientation
@@ -98,6 +79,36 @@ async function initTracker() {
     }, true);
   } else {
     alert("No device orientation available");
+  }
+}
+
+async function fetchAndDraw(lat, lon) {
+  const url = `https://starlink-tle.reinier-olivier.workers.dev/?lat=${lat}&lon=${lon}`;
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+
+    // detect JSON
+    try {
+      sats = JSON.parse(text);
+    } catch {
+      // convert plain text to objects
+      sats = text.split('\n').filter(l=>l.trim()).map(line => {
+        const [name, time, az, el, mag] = line.split(',');
+        return { 
+          name: name || "N/A",
+          time: time || "N/A",
+          az: az ? +az : 0,
+          el: el ? +el : 0,
+          mag: mag ? +mag : 0
+        };
+      });
+    }
+
+    updateTable();
+    drawCompass();
+  } catch(err) {
+    console.error(err);
   }
 }
 
@@ -132,7 +143,7 @@ function drawCompass() {
   ctx.fillText("N",-8,-r+25);
 
   // Starlink arrows
-  sats.forEach((s,i)=>{
+  sats.forEach((s)=>{
     ctx.save();
     ctx.rotate(s.az*Math.PI/180);
     ctx.strokeStyle="lime"; ctx.lineWidth=2;
