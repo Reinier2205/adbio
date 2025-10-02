@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Starlink Tracker</title>
+  <title>Starlink Tracker - Pretoria</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: sans-serif; background:#0d1117; color:#c9d1d9; }
@@ -15,10 +15,10 @@
   </style>
 </head>
 <body class="min-h-screen p-4">
-  <h1 class="text-center text-2xl font-bold mb-4 text-green-400">v1 Visible Starlink Passes</h1>
+  <h1 class="text-center text-2xl font-bold mb-4 text-green-400"> pta Visible Starlink Passes - Pretoria</h1>
 
   <div class="panel max-w-2xl mx-auto text-center">
-    <p class="text-sm text-gray-400 mb-2">Requesting location and orientation access...</p>
+    <p class="text-sm text-gray-400 mb-2">Satellite data for Pretoria</p>
     
     <div class="mt-6">
       <canvas id="compassCanvas" width="300" height="300"></canvas>
@@ -48,38 +48,22 @@ const canvas = document.getElementById('compassCanvas');
 const ctx = canvas.getContext('2d');
 const r = canvas.width/2;
 
-// Run automatically on page load
-window.addEventListener("load", initTracker);
+// Pretoria coordinates
+const lat = -25.7479;
+const lon = 28.2293;
 
-async function initTracker() {
-  // get location
-  if (!navigator.geolocation) { alert("No geolocation available"); return; }
+// Fetch data and start updates
+fetchAndDraw(lat, lon);
+setInterval(() => fetchAndDraw(lat, lon), 45000);
 
-  navigator.geolocation.getCurrentPosition(async pos => {
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-
-    // fetch satellite data immediately
-    await fetchAndDraw(lat, lon);
-
-    // start live updates every 45s
-    setInterval(() => fetchAndDraw(lat, lon), 45000);
-  }, err => {
-    alert("Location access denied or unavailable.");
-    console.error(err);
-  });
-
-  // device orientation
-  if (window.DeviceOrientationEvent) {
-    window.addEventListener("deviceorientationabsolute", e=>{
-      if (e.alpha!==null) {
-        heading = (360 - e.alpha) % 360;
-        drawCompass();
-      }
-    }, true);
-  } else {
-    alert("No device orientation available");
-  }
+// Device orientation
+if (window.DeviceOrientationEvent) {
+  window.addEventListener("deviceorientationabsolute", e=>{
+    if (e.alpha!==null) {
+      heading = (360 - e.alpha) % 360;
+      drawCompass();
+    }
+  }, true);
 }
 
 async function fetchAndDraw(lat, lon) {
@@ -88,11 +72,9 @@ async function fetchAndDraw(lat, lon) {
     const res = await fetch(url);
     const text = await res.text();
 
-    // detect JSON
     try {
       sats = JSON.parse(text);
     } catch {
-      // convert plain text to objects
       sats = text.split('\n').filter(l=>l.trim()).map(line => {
         const [name, time, az, el, mag] = line.split(',');
         return { 
