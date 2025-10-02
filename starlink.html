@@ -52,23 +52,43 @@ const r = canvas.width/2;
 async function initTracker() {
   // get location
   if (!navigator.geolocation) { alert("No geolocation available"); return; }
+
   navigator.geolocation.getCurrentPosition(async pos => {
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
 
-    // fetch satellite pass data from your Worker
+    // fetch satellite data
     const url = `https://starlink-tle.reinier-olivier.workers.dev/?lat=${lat}&lon=${lon}`;
     try {
       const res = await fetch(url);
-      sats = await res.json(); // assumes your worker returns JSON
+      const text = await res.text();
+
+      // detect JSON
+      try {
+        sats = JSON.parse(text);
+      } catch {
+        // convert plain text to objects
+        sats = text.split('\n').filter(l=>l.trim()).map(line => {
+          const [name, time, az, el, mag] = line.split(',');
+          return { 
+            name: name || "N/A",
+            time: time || "N/A",
+            az: az ? +az : 0,
+            el: el ? +el : 0,
+            mag: mag ? +mag : 0
+          };
+        });
+      }
+
       updateTable();
       drawCompass();
     } catch(err) {
-      alert("Error fetching Starlink data");
+      console.error(err);
+      alert("Error fetching or parsing Starlink data. See console for details.");
     }
   });
 
-  // orientation
+  // device orientation
   if (window.DeviceOrientationEvent) {
     window.addEventListener("deviceorientationabsolute", e=>{
       if (e.alpha!==null) {
