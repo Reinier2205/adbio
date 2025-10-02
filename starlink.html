@@ -16,10 +16,10 @@
 </style>
 </head>
 <body>
-<h1 style="text-align:center; font-size:1.75rem; color:#22c55e;">v5 Visible Starlink Passes - Pretoria</h1>
+<h1 style="text-align:center; font-size:1.75rem; color:#22c55e;"> v6Visible Starlink Passes - Pretoria</h1>
 
 <div class="panel">
-  <p style="color:#9ca3af;">Click the button to fetch satellite data</p>
+  <p style="color:#9ca3af;">Click the button to fetch satellite data for the next 24 hours</p>
   
   <button onclick="fetchAndDraw()">Refresh Data</button>
   <div id="status">No data fetched yet.</div>
@@ -52,6 +52,7 @@ const statusEl = document.getElementById("status");
 // Pretoria coordinates
 const lat = -25.7479;
 const lon = 28.2293;
+const hours = 24; // fetch data for next 24 hours
 
 // Device orientation
 if (window.DeviceOrientationEvent) {
@@ -65,8 +66,8 @@ if (window.DeviceOrientationEvent) {
 
 // Fetch and draw function
 async function fetchAndDraw() {
-  statusEl.textContent = "Fetching Starlink data...";
-  const url = `https://starlink-tle.reinier-olivier.workers.dev/?lat=${lat}&lon=${lon}`;
+  statusEl.textContent = "Fetching Starlink data for next 24 hours...";
+  const url = `https://starlink-tle.reinier-olivier.workers.dev/?lat=${lat}&lon=${lon}&hours=${hours}`;
   
   try {
     const res = await fetch(url);
@@ -128,17 +129,14 @@ function drawCompass() {
   ctx.translate(r,r);
   ctx.rotate(-heading*Math.PI/180);
 
-  // compass circle
   ctx.beginPath();
   ctx.arc(0,0,r-10,0,2*Math.PI);
   ctx.strokeStyle="#555"; ctx.lineWidth=4; ctx.stroke();
 
-  // N label
   ctx.fillStyle="#fcd34d";
   ctx.font="20px sans-serif";
   ctx.fillText("N",-8,-r+25);
 
-  // Starlink arrows
   if (sats.length === 0) {
     ctx.fillStyle = "#ff4444";
     ctx.font = "16px sans-serif";
