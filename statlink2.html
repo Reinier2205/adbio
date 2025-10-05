@@ -1,53 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Starlink Worker Test</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Starlink Worker — Location + Time</title>
 <style>
-  body { font-family: monospace; background:#0d1117; color:#c9d1d9; margin:0; padding:1rem; }
-  .panel { background:#161b22; border:2px solid #30363d; border-radius:1rem; padding:1rem; max-width:800px; margin:0 auto; }
-  button { background:#16a34a; color:white; padding:0.5rem 1rem; border:none; border-radius:0.5rem; cursor:pointer; }
-  #status { margin-top:1rem; color:#9cd6ff; }
-  pre { background:#0d1117; border:1px solid #30363d; padding:1rem; border-radius:0.5rem; overflow-x:auto; white-space:pre-wrap; word-break:break-all; }
+  :root { --bg:#0d1117; --panel:#161b22; --muted:#9ca3af; --accent:#22c55e; --text:#c9d1d9; --status:#9cd6ff; }
+  html,body { height:100%; margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; background:var(--bg); color:var(--text); }
+  .wrap { max-width:900px; margin:2rem auto; padding:1rem; }
+  .panel { background:var(--panel); border:1px solid #30363d; border-radius:10px; padding:1rem; }
+  h1 { margin:0 0 0.75rem 0; font-size:1.25rem; color:var(--accent); }
+  .controls { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
+  button { background:#16a34a; color:#fff; border:0; padding:0.5rem 0.9rem; border-radius:8px; cursor:pointer; font-weight:600; }
+  .loc { font-family:monospace; color:var(--muted); font-size:0.95rem; }
+  #status { margin-top:0.75rem; color:var(--status); font-size:0.95rem; }
+  pre { margin-top:1rem; background:#0b0f14; border:1px solid #22272b; padding:1rem; border-radius:6px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); }
+  .small-btn { background:#0b5; padding:0.4rem 0.6rem; font-size:0.9rem; border-radius:6px; }
 </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="panel">
+      <h1>Starlink Worker — Raw Output</h1>
 
-<h1 style="text-align:center; color:#22c55e;">Starlink Worker Raw Output</h1>
+      <div class="controls">
+        <button id="fetchBtn">Fetch Data</button>
 
-<div class="panel">
-  <p>Press the button to call the Cloudflare Worker and display the raw response.</p>
-  <button onclick="fetchData()">Fetch Data</button>
-  <div id="status">Worker not called yet.</div>
-  <pre id="output">No data yet.</pre>
-</div>
+        <div class="loc" id="locDisplay">Lat: —  Lon: —  (time: —)</div>
+
+        <button id="getLocBtn" class="small-btn" title="Get location from device">Get Location</button>
+      </div>
+
+      <div id="status">Worker not called yet.</div>
+
+      <pre id="output">No data yet.</pre>
+    </div>
+  </div>
 
 <script>
-async function fetchData() {
-  const statusEl = document.getElementById("status");
-  const outputEl = document.getElementById("output");
-  const url = "https://starlink-tle.reinier-olivier.workers.dev/";
+let currentLat = null;
+let currentLon = null;
+let locTimestamp = null;
 
-  outputEl.textContent = "";
+const fetchBtn = document.getElementById('fetchBtn');
+const getLocBtn = document.getElementById('getLocBtn');
+const locDisplay = document.getElementById('locDisplay');
+const statusEl = document.getElementById('status');
+const outputEl = document.getElementById('output');
+
+const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/";
+
+// format helper
+function fmtNum(n) {
+  return (typeof n === 'number' && isFinite(n)) ? n.toFixed(6) : '—';
+}
+function fmtTime(d) {
+  return d ? new Date(d).toLocaleString() : '—';
+}
+function updateLocUI() {
+  locDisplay.textContent = `Lat: ${fmtNum(currentLat)}  Lon: ${fmtNum(currentLon)}  (time: ${fmtTime(locTimestamp)})`;
+}
+
+// get location from browser
+function requestLocation() {
+  if (!navigator.geolocation) {
+    locDisplay.textContent = 'Location API not available';
+    return;
+  }
+
+  locDisplay.textContent = 'Requesting location...';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      currentLat = pos.coords.latitude;
+      currentLon = pos.coords.longitude;
+      locTimestamp = pos.timestamp || Date.now();
+      updateLocUI();
+    },
+    err => {
+      if (err.code === 1) { // PERMISSION_DENIED
+        locDisplay.textContent = 'Location permission denied';
+      } else if (err.code === 2) {
+        locDisplay.textContent = 'Position unavailable';
+      } else if (err.code === 3) {
+        locDisplay.textContent = 'Location request timed out';
+      } else {
+        locDisplay.textContent = 'Location error';
+      }
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+  );
+}
+
+// fetch worker (no params for now)
+async function fetchWorker() {
+  outputEl.textContent = '';
   const start = new Date();
-  statusEl.textContent = `Request started at ${start.toLocaleTimeString()}`;
+  let statusMsg = `Request started at ${start.toLocaleTimeString()}`;
+  if (currentLat !== null && currentLon !== null) {
+    statusMsg += ` | Loc: ${currentLat.toFixed(6)}, ${currentLon.toFixed(6)} (as of ${new Date(locTimestamp).toLocaleTimeString()})`;
+  } else {
+    statusMsg += ' | Loc: not set';
+  }
+  statusEl.textContent = statusMsg;
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(WORKER_URL, { cache: "no-store" });
     const text = await res.text();
-
     const end = new Date();
-    statusEl.textContent += ` | Response received at ${end.toLocaleTimeString()}`;
-    outputEl.textContent = text || "[No data returned]";
+    statusEl.textContent = statusMsg + ` | Response received at ${end.toLocaleTimeString()}`;
+    outputEl.textContent = text || '[No data returned]';
   } catch (err) {
-    console.error(err);
     const end = new Date();
-    statusEl.textContent += ` | Error at ${end.toLocaleTimeString()}`;
-    outputEl.textContent = "Error fetching data. Check console for details.";
+    statusEl.textContent = statusMsg + ` | Error at ${end.toLocaleTimeString()}`;
+    outputEl.textContent = 'Error fetching data. See console.';
+    console.error(err);
   }
 }
-</script>
 
+// wire events
+fetchBtn.addEventListener('click', fetchWorker);
+getLocBtn.addEventListener('click', requestLocation);
+
+// auto request location on load
+window.addEventListener('load', () => {
+  requestLocation();
+});
+</script>
 </body>
 </html>
