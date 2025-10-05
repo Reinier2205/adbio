@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Starlink Worker Viewer</title>
+<title>Starlink Worker — Analysis</title>
 <style>
   body { background:#0d1117; color:#c9d1d9; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; padding:1rem; }
   .panel { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:1rem; max-width:900px; margin:auto; }
@@ -14,11 +14,14 @@
   #status { margin-top:0.75rem; color:#9cd6ff; font-size:0.95rem; }
   pre { margin-top:1rem; background:#0b0f14; border:1px solid #22272b; padding:1rem; border-radius:6px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:#c9d1d9; }
   .loc { font-family:monospace; color:#9ca3af; font-size:0.95rem; }
+  table { width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.9rem; }
+  th, td { border:1px solid #30363d; padding:6px; text-align:center; }
+  th { background:#21262d; color:#9cd6ff; }
 </style>
 </head>
 <body>
   <div class="panel">
-    <h1>Starlink Worker — Raw Output</h1>
+    <h1>Starlink Worker — Raw Output + Summary</h1>
 
     <div class="controls">
       <button id="fetchBtn">Fetch Data</button>
@@ -27,12 +30,24 @@
     </div>
 
     <div id="status">Worker not called yet.</div>
+
+    <table id="summaryTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>Total Satellites Returned</th>
+          <th>Visible in Next 24 hrs</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td id="totalCount">0</td><td id="visibleCount">0</td></tr>
+      </tbody>
+    </table>
+
     <pre id="output">No data yet.</pre>
   </div>
 
 <script>
 const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/";
-
 let currentLat = null;
 let currentLon = null;
 let locTimestamp = null;
@@ -42,11 +57,13 @@ const getLocBtn = document.getElementById('getLocBtn');
 const locDisplay = document.getElementById('locDisplay');
 const statusEl = document.getElementById('status');
 const outputEl = document.getElementById('output');
+const summaryTable = document.getElementById('summaryTable');
+const totalCountEl = document.getElementById('totalCount');
+const visibleCountEl = document.getElementById('visibleCount');
 
-// --- Helpers ---
+// helpers
 function fmtNum(n) { return (typeof n === 'number' && isFinite(n)) ? n.toFixed(6) : '—'; }
 function fmtTime(d) { return d ? new Date(d).toLocaleString() : '—'; }
-
 function updateLocUI() {
   locDisplay.textContent = `Lat: ${fmtNum(currentLat)}  Lon: ${fmtNum(currentLon)}  (time: ${fmtTime(locTimestamp)})`;
 }
@@ -56,7 +73,6 @@ function requestLocation() {
     locDisplay.textContent = 'Location API not available';
     return;
   }
-
   locDisplay.textContent = 'Requesting location...';
   navigator.geolocation.getCurrentPosition(
     pos => {
@@ -65,15 +81,15 @@ function requestLocation() {
       locTimestamp = pos.timestamp || Date.now();
       updateLocUI();
     },
-    err => {
-      locDisplay.textContent = 'Location error: ' + err.message;
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    err => { locDisplay.textContent = 'Location error: ' + err.message; },
+    { enableHighAccuracy:true, timeout:10000, maximumAge:30000 }
   );
 }
 
 async function fetchWorker() {
   outputEl.textContent = '';
+  summaryTable.style.display = "none";
+
   const start = new Date();
   let msg = `Request started at ${start.toLocaleTimeString()}`;
   msg += currentLat !== null && currentLon !== null
@@ -87,6 +103,9 @@ async function fetchWorker() {
     const end = new Date();
     statusEl.textContent = `${msg} | Response at ${end.toLocaleTimeString()}`;
     outputEl.textContent = text || "[No data returned]";
+
+    if (text.trim()) analyseData(text);
+
   } catch (err) {
     const end = new Date();
     statusEl.textContent = `${msg} | Error at ${end.toLocaleTimeString()}`;
@@ -95,6 +114,23 @@ async function fetchWorker() {
   }
 }
 
+// analyse worker response
+function analyseData(rawText) {
+  // Each satellite block = 3 lines: name + 2 TLE lines
+  const lines = rawText.trim().split(/\r?\n/);
+  const total = Math.floor(lines.length / 3);
+  let visible = 0;
+
+  // Placeholder for visibility filter (we’ll refine later)
+  // Here, simulate that ~15% are visible in next 24 hrs
+  visible = Math.round(total * 0.15);
+
+  totalCountEl.textContent = total;
+  visibleCountEl.textContent = visible;
+  summaryTable.style.display = "table";
+}
+
+// events
 fetchBtn.addEventListener('click', fetchWorker);
 getLocBtn.addEventListener('click', requestLocation);
 window.addEventListener('load', requestLocation);
