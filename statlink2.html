@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starlink Data - Pretoria</title>
+<style>
+  body { font-family: sans-serif; background:#0d1117; color:#c9d1d9; margin:0; padding:1rem; }
+  .panel { background:#161b22; border:2px solid #30363d; border-radius:1rem; padding:1rem; max-width:600px; margin:0 auto; text-align:center;}
+  table { width:100%; border-collapse: collapse; margin-top:1rem; }
+  th, td { border:1px solid #30363d; padding:6px; text-align:center; }
+  th { background:#21262d; }
+  button { background:#16a34a; color:white; padding:0.5rem 1rem; border:none; border-radius:0.5rem; cursor:pointer; margin-top:1rem; }
+  #status { margin-top: 0.5rem; color: #9cd6ff; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<h1 style="text-align:center; font-size:1.75rem; color:#22c55e;">Starlink Passes - Pretoria</h1>
+
+<div class="panel">
+  <p style="color:#9ca3af;">Click below to fetch the next 24 hours of Starlink data</p>
+  
+  <button onclick="fetchData()">Refresh Data</button>
+  <div id="status">No data fetched yet.</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Satellite</th>
+        <th>Time</th>
+        <th>Azimuth (°)</th>
+        <th>Elevation (°)</th>
+        <th>Mag</th>
+      </tr>
+    </thead>
+    <tbody id="satTable"></tbody>
+  </table>
+</div>
+
+<script>
+const lat = -25.7479;
+const lon = 28.2293;
+const hours = 24;
+
+async function fetchData() {
+  const statusEl = document.getElementById("status");
+  const tbody = document.getElementById("satTable");
+  statusEl.textContent = "Fetching data...";
+  tbody.innerHTML = "";
+
+  const url = `https://starlink-tle.reinier-olivier.workers.dev/?lat=${lat}&lon=${lon}&hours=${hours}`;
+  
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    console.log("Worker response:", text);
+
+    if (!text.trim()) {
+      statusEl.textContent = "Worker responded with empty data.";
+      return;
+    }
+
+    let sats = [];
+    try {
+      sats = JSON.parse(text);
+    } catch {
+      sats = text.split('\n').filter(l=>l.trim()).map(line => {
+        const [name, time, az, el, mag] = line.split(',');
+        return { name, time, az, el, mag };
+      });
+    }
+
+    if (!sats.length) {
+      statusEl.textContent = "No satellite data found.";
+      return;
+    }
+
+    sats.forEach(s => {
+      const row = `<tr>
+        <td>${s.name || "N/A"}</td>
+        <td>${s.time || "N/A"}</td>
+        <td>${(+s.az || 0).toFixed(1)}</td>
+        <td>${(+s.el || 0).toFixed(1)}</td>
+        <td>${(+s.mag || 0).toFixed(1)}</td>
+      </tr>`;
+      tbody.innerHTML += row;
+    });
+
+    statusEl.textContent = `Fetched ${sats.length} records.`;
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Error fetching data. See console for details.";
+  }
+}
+</script>
+</body>
+</html>
