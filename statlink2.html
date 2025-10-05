@@ -3,64 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Starlink TLE Data - Pretoria</title>
+<title>Starlink Worker Test</title>
 <style>
-  body { font-family: sans-serif; background:#0d1117; color:#c9d1d9; margin:0; padding:1rem; }
-  .panel { background:#161b22; border:2px solid #30363d; border-radius:1rem; padding:1rem; max-width:700px; margin:0 auto; text-align:center; }
-  table { width:100%; border-collapse: collapse; margin-top:1rem; }
-  th, td { border:1px solid #30363d; padding:6px; text-align:left; font-family: monospace; }
-  th { background:#21262d; text-align:center; }
-  button { background:#16a34a; color:white; padding:0.5rem 1rem; border:none; border-radius:0.5rem; cursor:pointer; margin-top:1rem; }
-  #status { margin-top: 0.5rem; color: #9cd6ff; font-size: 0.9rem; }
+  body { font-family: monospace; background:#0d1117; color:#c9d1d9; margin:0; padding:1rem; }
+  .panel { background:#161b22; border:2px solid #30363d; border-radius:1rem; padding:1rem; max-width:800px; margin:0 auto; }
+  button { background:#16a34a; color:white; padding:0.5rem 1rem; border:none; border-radius:0.5rem; cursor:pointer; }
+  #status { margin-top:1rem; color:#9cd6ff; }
+  pre { background:#0d1117; border:1px solid #30363d; padding:1rem; border-radius:0.5rem; overflow-x:auto; white-space:pre-wrap; word-break:break-all; }
 </style>
 </head>
 <body>
-<h1 style="text-align:center; font-size:1.75rem; color:#22c55e;">Starlink TLE Data - Pretoria</h1>
+
+<h1 style="text-align:center; color:#22c55e;">Starlink Worker Raw Output</h1>
 
 <div class="panel">
-  <p style="color:#9ca3af;">Click below to fetch current Starlink TLE data (from worker)</p>
-  
+  <p>Press the button to call the Cloudflare Worker and display the raw response.</p>
   <button onclick="fetchData()">Fetch Data</button>
-  <div id="status">No data fetched yet.</div>
-
-  <table>
-    <thead>
-      <tr><th>Raw TLE Data</th></tr>
-    </thead>
-    <tbody id="satTable"></tbody>
-  </table>
+  <div id="status">Worker not called yet.</div>
+  <pre id="output">No data yet.</pre>
 </div>
 
 <script>
 async function fetchData() {
   const statusEl = document.getElementById("status");
-  const tbody = document.getElementById("satTable");
-  statusEl.textContent = "Fetching raw TLE data...";
-  tbody.innerHTML = "";
+  const outputEl = document.getElementById("output");
+  const url = "https://starlink-tle.reinier-olivier.workers.dev/";
 
-  const url = "https://starlink-tle.reinier-olivier.workers.dev/?lat=-25.7479&lon=28.2293&hours=24";
+  outputEl.textContent = "";
+  const start = new Date();
+  statusEl.textContent = `Request started at ${start.toLocaleTimeString()}`;
 
   try {
     const res = await fetch(url);
     const text = await res.text();
-    console.log("Worker response:", text);
 
-    if (!text.trim()) {
-      statusEl.textContent = "No data returned.";
-      return;
-    }
-
-    const lines = text.split(/\r?\n/).filter(l => l.trim());
-    lines.forEach(line => {
-      tbody.innerHTML += `<tr><td>${line}</td></tr>`;
-    });
-
-    statusEl.textContent = `${lines.length} lines received.`;
+    const end = new Date();
+    statusEl.textContent += ` | Response received at ${end.toLocaleTimeString()}`;
+    outputEl.textContent = text || "[No data returned]";
   } catch (err) {
     console.error(err);
-    statusEl.textContent = "Error fetching data. See console for details.";
+    const end = new Date();
+    statusEl.textContent += ` | Error at ${end.toLocaleTimeString()}`;
+    outputEl.textContent = "Error fetching data. Check console for details.";
   }
 }
 </script>
+
 </body>
 </html>
