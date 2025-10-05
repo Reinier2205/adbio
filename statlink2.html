@@ -1,65 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Starlink Raw Data Viewer</title>
-  <style>
-    body { font-family: monospace; background: #000; color: #0f0; padding: 10px; }
-    button { background: #111; color: #0f0; border: 1px solid #0f0; padding: 5px 10px; }
-    pre { white-space: pre-wrap; word-wrap: break-word; }
-    #status { margin-bottom: 10px; color: #0f0; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Starlink Worker Viewer</title>
+<style>
+  body { background:#0d1117; color:#c9d1d9; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; padding:1rem; }
+  .panel { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:1rem; max-width:900px; margin:auto; }
+  h1 { color:#22c55e; font-size:1.2rem; margin:0 0 1rem 0; }
+  button { background:#16a34a; color:#fff; border:0; padding:0.5rem 0.9rem; border-radius:8px; cursor:pointer; font-weight:600; }
+  .small-btn { background:#0b5; padding:0.4rem 0.6rem; font-size:0.9rem; border-radius:6px; }
+  .controls { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
+  #status { margin-top:0.75rem; color:#9cd6ff; font-size:0.95rem; }
+  pre { margin-top:1rem; background:#0b0f14; border:1px solid #22272b; padding:1rem; border-radius:6px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:#c9d1d9; }
+  .loc { font-family:monospace; color:#9ca3af; font-size:0.95rem; }
+</style>
 </head>
 <body>
-  <div id="status">Status: Waiting for action...</div>
-  <button onclick="refreshData()">🔄 Refresh Data</button>
-  <span id="location"></span>
-  <pre id="data">No data yet...</pre>
+  <div class="panel">
+    <h1>Starlink Worker — Raw Output</h1>
 
-  <script>
-    let lat = null, lon = null;
+    <div class="controls">
+      <button id="fetchBtn">Fetch Data</button>
+      <div class="loc" id="locDisplay">Lat: —  Lon: —  (time: —)</div>
+      <button id="getLocBtn" class="small-btn">Get Location</button>
+    </div>
 
-    async function getLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          lat = pos.coords.latitude.toFixed(4);
-          lon = pos.coords.longitude.toFixed(4);
-          const now = new Date().toLocaleString();
-          document.getElementById("location").textContent =
-            `📍 Lat: ${lat}, Lon: ${lon}, Time: ${now}`;
-        }, () => {
-          document.getElementById("location").textContent = "Location not available.";
-        });
-      } else {
-        document.getElementById("location").textContent = "Geolocation not supported.";
-      }
-    }
+    <div id="status">Worker not called yet.</div>
+    <pre id="output">No data yet.</pre>
+  </div>
 
-    async function refreshData() {
-      const status = document.getElementById("status");
-      const dataDiv = document.getElementById("data");
+<script>
+const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/";
 
-      status.textContent = "Status: Fetching data from worker...";
-      const startTime = new Date();
+let currentLat = null;
+let currentLon = null;
+let locTimestamp = null;
 
-      try {
-        const res = await fetch("https://starlink-worker.r2.dev/starlink.txt");
-        const text = await res.text();
+const fetchBtn = document.getElementById('fetchBtn');
+const getLocBtn = document.getElementById('getLocBtn');
+const locDisplay = document.getElementById('locDisplay');
+const statusEl = document.getElementById('status');
+const outputEl = document.getElementById('output');
 
-        const endTime = new Date();
-        const duration = ((endTime - startTime) / 1000).toFixed(2);
-        const lines = text.trim().split("\n");
-        const totalRows = lines.length / 3;
+// --- Helpers ---
+function fmtNum(n) { return (typeof n === 'number' && isFinite(n)) ? n.toFixed(6) : '—'; }
+function fmtTime(d) { return d ? new Date(d).toLocaleString() : '—'; }
 
-        status.textContent = `✅ Data received in ${duration}s — ${totalRows} rows total`;
-        dataDiv.textContent = text;
-      } catch (err) {
-        status.textContent = "❌ Error fetching data: " + err;
-      }
-    }
+function updateLocUI() {
+  locDisplay.textContent = `Lat: ${fmtNum(currentLat)}  Lon: ${fmtNum(currentLon)}  (time: ${fmtTime(locTimestamp)})`;
+}
 
-    getLocation();
-  </script>
+function requestLocation() {
+  if (!navigator.geolocation) {
+    locDisplay.textContent = 'Location API not available';
+    return;
+  }
+
+  locDisplay.textContent = 'Requesting location...';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      currentLat = pos.coords.latitude;
+      currentLon = pos.coords.longitude;
+      locTimestamp = pos.timestamp || Date.now();
+      updateLocUI();
+    },
+    err => {
+      locDisplay.textContent = 'Location error: ' + err.message;
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+  );
+}
+
+async function fetchWorker() {
+  outputEl.textContent = '';
+  const start = new Date();
+  let msg = `Request started at ${start.toLocaleTimeString()}`;
+  msg += currentLat !== null && currentLon !== null
+    ? ` | Loc: ${currentLat.toFixed(6)}, ${currentLon.toFixed(6)}`
+    : ` | Loc: not set`;
+  statusEl.textContent = msg;
+
+  try {
+    const res = await fetch(WORKER_URL, { cache: "no-store" });
+    const text = await res.text();
+    const end = new Date();
+    statusEl.textContent = `${msg} | Response at ${end.toLocaleTimeString()}`;
+    outputEl.textContent = text || "[No data returned]";
+  } catch (err) {
+    const end = new Date();
+    statusEl.textContent = `${msg} | Error at ${end.toLocaleTimeString()}`;
+    outputEl.textContent = "Error fetching data. See console.";
+    console.error(err);
+  }
+}
+
+fetchBtn.addEventListener('click', fetchWorker);
+getLocBtn.addEventListener('click', requestLocation);
+window.addEventListener('load', requestLocation);
+</script>
 </body>
 </html>
