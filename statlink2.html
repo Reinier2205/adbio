@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Starlink Data (24hr Filter)</title>
+  <title>Starlink Raw Data Viewer</title>
   <style>
     body { font-family: monospace; background: #000; color: #0f0; padding: 10px; }
     button { background: #111; color: #0f0; border: 1px solid #0f0; padding: 5px 10px; }
@@ -26,11 +26,13 @@
           lat = pos.coords.latitude.toFixed(4);
           lon = pos.coords.longitude.toFixed(4);
           const now = new Date().toLocaleString();
-          document.getElementById("location").textContent = 
+          document.getElementById("location").textContent =
             `📍 Lat: ${lat}, Lon: ${lon}, Time: ${now}`;
-        }, (err) => {
+        }, () => {
           document.getElementById("location").textContent = "Location not available.";
         });
+      } else {
+        document.getElementById("location").textContent = "Geolocation not supported.";
       }
     }
 
@@ -45,32 +47,13 @@
         const res = await fetch("https://starlink-worker.r2.dev/starlink.txt");
         const text = await res.text();
 
+        const endTime = new Date();
+        const duration = ((endTime - startTime) / 1000).toFixed(2);
         const lines = text.trim().split("\n");
         const totalRows = lines.length / 3;
 
-        // Filter logic: Keep only satellites with TLE timestamp within next 24h
-        const now = new Date();
-        const nowDay = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-        const currentYear = now.getFullYear() % 100; // last two digits
-        const currentDay = currentYear * 1000 + nowDay;
-        const nextDay = currentDay + 1;
-
-        let filtered = [];
-        for (let i = 0; i < lines.length; i += 3) {
-          const name = lines[i].trim();
-          const line1 = lines[i + 1];
-          const dayNumber = parseFloat(line1.slice(18, 32));
-          if (dayNumber >= currentDay && dayNumber <= nextDay) {
-            filtered.push(`${name}\n${line1}\n${lines[i + 2]}`);
-          }
-        }
-
-        const endTime = new Date();
-        const duration = ((endTime - startTime) / 1000).toFixed(2);
-
-        status.textContent = 
-          `✅ Data received in ${duration}s — ${totalRows} rows total, ${filtered.length} within 24h`;
-        dataDiv.textContent = filtered.join("\n\n") || "No satellites found in the next 24h.";
+        status.textContent = `✅ Data received in ${duration}s — ${totalRows} rows total`;
+        dataDiv.textContent = text;
       } catch (err) {
         status.textContent = "❌ Error fetching data: " + err;
       }
