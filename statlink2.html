@@ -1,57 +1,89 @@
+<!-- Reinier -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Starlink Worker — Analysis</title>
+<title>Starlink — 24h Visibility (10-min steps)</title>
+<link rel="preconnect" href="https://unpkg.com">
 <style>
-  body { background:#0d1117; color:#c9d1d9; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; padding:1rem; }
-  .panel { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:1rem; max-width:900px; margin:auto; }
-  h1 { color:#22c55e; font-size:1.2rem; margin:0 0 1rem 0; }
+  :root { --bg:#0d1117; --panel:#161b22; --muted:#9ca3af; --accent:#22c55e; --text:#c9d1d9; --status:#9cd6ff; }
+  html,body { height:100%; margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--text); }
+  .wrap { max-width:1000px; margin:1.5rem auto; padding:1rem; }
+  .panel { background:var(--panel); border:1px solid #30363d; border-radius:10px; padding:1rem; }
+  h1 { color:var(--accent); margin:0 0 0.75rem 0; font-size:1.2rem; }
+  .controls { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
   button { background:#16a34a; color:#fff; border:0; padding:0.5rem 0.9rem; border-radius:8px; cursor:pointer; font-weight:600; }
   .small-btn { background:#0b5; padding:0.4rem 0.6rem; font-size:0.9rem; border-radius:6px; }
-  .controls { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
-  #status { margin-top:0.75rem; color:#9cd6ff; font-size:0.95rem; }
-  pre { margin-top:1rem; background:#0b0f14; border:1px solid #22272b; padding:1rem; border-radius:6px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:#c9d1d9; }
-  .loc { font-family:monospace; color:#9ca3af; font-size:0.95rem; }
-  table { width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.9rem; }
-  th, td { border:1px solid #30363d; padding:6px; text-align:center; }
-  th { background:#21262d; color:#9cd6ff; }
+  .loc { font-family:monospace; color:var(--muted); font-size:0.95rem; }
+  #status { margin-top:0.75rem; color:var(--status); font-size:0.95rem; }
+  pre { margin-top:1rem; background:#0b0f14; border:1px solid #22272b; padding:1rem; border-radius:6px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); }
+  table { width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.95rem; }
+  th, td { border:1px solid #30363d; padding:8px; text-align:left; vertical-align:middle; }
+  th { background:#21262d; color:var(--status); }
+  .center { text-align:center; }
 </style>
 </head>
 <body>
-  <div class="panel">
-    <h1>Starlink Worker — Raw Output + Summary</h1>
+  <div class="wrap">
+    <div class="panel">
+      <h1>Starlink — 24h Visibility (10-minute steps)</h1>
 
-    <div class="controls">
-      <button id="fetchBtn">Fetch Data</button>
-      <div class="loc" id="locDisplay">Lat: —  Lon: —  (time: —)</div>
-      <button id="getLocBtn" class="small-btn">Get Location</button>
+      <div class="controls">
+        <button id="fetchBtn">Fetch TLEs & Analyze</button>
+        <div class="loc" id="locDisplay">Lat: —  Lon: —  (time: —)</div>
+        <button id="getLocBtn" class="small-btn">Get Location</button>
+      </div>
+
+      <div id="status">Idle.</div>
+
+      <table id="summaryTable" style="display:none;">
+        <thead>
+          <tr>
+            <th class="center">Total Satellites (TLEs)</th>
+            <th class="center">Satellites Visible (next 24h)</th>
+            <th class="center">Time Resolution</th>
+            <th class="center">Analysis Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="totalCount" class="center">0</td>
+            <td id="visibleCount" class="center">0</td>
+            <td id="resolution" class="center">—</td>
+            <td id="analysisTime" class="center">—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table id="visibleTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>Satellite</th>
+            <th>First Visible (local)</th>
+            <th>Max Elevation (°)</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="visibleBody"></tbody>
+      </table>
+
+      <pre id="output">Raw TLE output will appear here after fetch.</pre>
     </div>
-
-    <div id="status">Worker not called yet.</div>
-
-    <table id="summaryTable" style="display:none;">
-      <thead>
-        <tr>
-          <th>Total Satellites Returned</th>
-          <th>Visible in Next 24 hrs</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td id="totalCount">0</td><td id="visibleCount">0</td></tr>
-      </tbody>
-    </table>
-
-    <pre id="output">No data yet.</pre>
   </div>
 
-<script>
-const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/";
-let currentLat = null;
-let currentLon = null;
-let locTimestamp = null;
+<!-- satellite.js CDN -->
+<script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
 
+<script>
+/* Configuration */
+const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/"; // your worker
+const STEP_MINUTES = 10; // 10-minute steps
+const HOURS = 24; // next 24 hours
+const DEG2RAD = Math.PI / 180;
+const RAD2DEG = 180 / Math.PI;
+
+/* UI elements */
 const fetchBtn = document.getElementById('fetchBtn');
 const getLocBtn = document.getElementById('getLocBtn');
 const locDisplay = document.getElementById('locDisplay');
@@ -60,78 +92,196 @@ const outputEl = document.getElementById('output');
 const summaryTable = document.getElementById('summaryTable');
 const totalCountEl = document.getElementById('totalCount');
 const visibleCountEl = document.getElementById('visibleCount');
+const resolutionEl = document.getElementById('resolution');
+const analysisTimeEl = document.getElementById('analysisTime');
+const visibleTable = document.getElementById('visibleTable');
+const visibleBody = document.getElementById('visibleBody');
 
-// helpers
-function fmtNum(n) { return (typeof n === 'number' && isFinite(n)) ? n.toFixed(6) : '—'; }
-function fmtTime(d) { return d ? new Date(d).toLocaleString() : '—'; }
-function updateLocUI() {
-  locDisplay.textContent = `Lat: ${fmtNum(currentLat)}  Lon: ${fmtNum(currentLon)}  (time: ${fmtTime(locTimestamp)})`;
+let currentLat = null;
+let currentLon = null;
+let locTimestamp = null;
+
+/* Helpers */
+function fmtNum(n, d=6){ return (typeof n === 'number' && isFinite(n)) ? n.toFixed(d) : '—'; }
+function fmtLocal(ts){ return ts ? new Date(ts).toLocaleString() : '—'; }
+function updateLocUI(){ locDisplay.textContent = `Lat: ${fmtNum(currentLat,4)}  Lon: ${fmtNum(currentLon,4)}  (time: ${fmtLocal(locTimestamp)})`; }
+
+/* Geolocation */
+function requestLocation(){
+  if (!navigator.geolocation){ locDisplay.textContent = 'Location API not available'; return; }
+  locDisplay.textContent = 'Requesting location...';
+  navigator.geolocation.getCurrentPosition(pos => {
+    currentLat = pos.coords.latitude;
+    currentLon = pos.coords.longitude;
+    locTimestamp = pos.timestamp || Date.now();
+    updateLocUI();
+  }, err => {
+    locDisplay.textContent = 'Location error: ' + (err.message || 'unknown');
+  }, { enableHighAccuracy:true, timeout:10000, maximumAge:30000 });
 }
 
-function requestLocation() {
-  if (!navigator.geolocation) {
-    locDisplay.textContent = 'Location API not available';
+/* Parse TLEs into array of {name,line1,line2} */
+function parseTLEs(raw){
+  const lines = raw.split(/\r?\n/).map(l => l.replace(/\r/g,'')).filter(l => l.trim().length > 0);
+  const sats = [];
+  let i = 0;
+  while (i < lines.length){
+    // find satellite name followed by line1 and line2
+    if (i+2 < lines.length && lines[i+1].startsWith('1 ') && lines[i+2].startsWith('2 ')){
+      sats.push({ name: lines[i].trim(), line1: lines[i+1].trim(), line2: lines[i+2].trim() });
+      i += 3;
+    } else {
+      // skip malformed or stray lines
+      i++;
+    }
+  }
+  return sats;
+}
+
+/* Main analysis: for each sat, sample times and test elevation > 0 */
+async function analyzeTLEs(rawText){
+  const t0 = performance.now();
+  const sats = parseTLEs(rawText);
+  const total = sats.length;
+  totalCountEl.textContent = total;
+
+  if (total === 0){
+    statusEl.textContent = 'No TLEs found in worker response.';
+    summaryTable.style.display = 'table';
+    visibleTable.style.display = 'none';
+    visibleCountEl.textContent = 0;
+    resolutionEl.textContent = `${STEP_MINUTES} min`;
+    analysisTimeEl.textContent = '0 ms';
     return;
   }
-  locDisplay.textContent = 'Requesting location...';
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      currentLat = pos.coords.latitude;
-      currentLon = pos.coords.longitude;
-      locTimestamp = pos.timestamp || Date.now();
-      updateLocUI();
-    },
-    err => { locDisplay.textContent = 'Location error: ' + err.message; },
-    { enableHighAccuracy:true, timeout:10000, maximumAge:30000 }
-  );
+
+  statusEl.textContent = `Analyzing ${total} satellites (this may take a moment)...`;
+  resolutionEl.textContent = `${STEP_MINUTES} min`;
+
+  // time range
+  const now = new Date();
+  const end = new Date(now.getTime() + HOURS * 3600 * 1000);
+  const stepMs = STEP_MINUTES * 60 * 1000;
+
+  // prepare observer geodetic for satellite.js (radians for lat/lon, km for height)
+  const observerGd = {
+    latitude: (currentLat !== null ? currentLat * DEG2RAD : 0),
+    longitude: (currentLon !== null ? currentLon * DEG2RAD : 0),
+    height: 0
+  };
+
+  const visibleResults = [];
+
+  // iterate satellites
+  for (let si = 0; si < sats.length; si++){
+    const s = sats[si];
+    let satrec;
+    try {
+      satrec = satellite.twoline2satrec(s.line1, s.line2);
+    } catch (e){
+      // skip malformed
+      continue;
+    }
+
+    let isVisible = false;
+    let firstVisibleTs = null;
+    let maxElev = -Infinity;
+
+    // sample times from now..end
+    for (let t = now.getTime(); t <= end.getTime(); t += stepMs){
+      const date = new Date(t);
+      try {
+        const pv = satellite.propagate(satrec, date);
+        if (!pv || !pv.position) continue;
+        const gmst = satellite.gstime(date);
+        const positionEcf = satellite.eciToEcf(pv.position, gmst);
+        const look = satellite.ecfToLookAngles(observerGd, positionEcf);
+        const elevDeg = look.elevation * RAD2DEG;
+        if (elevDeg > maxElev) maxElev = elevDeg;
+        if (!isVisible && elevDeg > 0){
+          isVisible = true;
+          firstVisibleTs = date.getTime();
+          // keep scanning to find max elevation
+        }
+      } catch (err) {
+        // ignore propagation errors for this sample
+        continue;
+      }
+    }
+
+    if (isVisible){
+      visibleResults.push({
+        name: s.name,
+        firstVisible: firstVisibleTs,
+        maxElevation: isFinite(maxElev) ? maxElev : 0
+      });
+    }
+
+    // keep UI responsive: yield every 50 satellites
+    if (si % 50 === 0){
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+
+  // sort visible by firstVisible time
+  visibleResults.sort((a,b) => (a.firstVisible||0) - (b.firstVisible||0));
+
+  // populate visible table
+  visibleBody.innerHTML = '';
+  for (const v of visibleResults){
+    const tr = document.createElement('tr');
+    const firstLocal = v.firstVisible ? new Date(v.firstVisible).toLocaleString() : '—';
+    tr.innerHTML = `
+      <td>${v.name}</td>
+      <td>${firstLocal}</td>
+      <td>${v.maxElevation.toFixed(1)}</td>
+      <td>${v.maxElevation > 30 ? 'Good pass' : (v.maxElevation > 10 ? 'Low pass' : 'Near horizon')}</td>
+    `;
+    visibleBody.appendChild(tr);
+  }
+
+  // update summary
+  visibleCountEl.textContent = visibleResults.length;
+  summaryTable.style.display = 'table';
+  visibleTable.style.display = visibleResults.length ? 'table' : 'none';
+
+  const t1 = performance.now();
+  analysisTimeEl.textContent = `${Math.round(t1 - t0)} ms`;
+  statusEl.textContent = `Analysis complete. ${total} satellites processed — ${visibleResults.length} visible in next ${HOURS}h.`;
 }
 
-async function fetchWorker() {
+/* Wire events */
+async function fetchAndAnalyze(){
   outputEl.textContent = '';
-  summaryTable.style.display = "none";
+  visibleBody.innerHTML = '';
+  summaryTable.style.display = 'none';
+  visibleTable.style.display = 'none';
+  totalCountEl.textContent = 0;
+  visibleCountEl.textContent = 0;
+  analysisTimeEl.textContent = '—';
+  resolutionEl.textContent = '—';
 
   const start = new Date();
-  let msg = `Request started at ${start.toLocaleTimeString()}`;
-  msg += currentLat !== null && currentLon !== null
-    ? ` | Loc: ${currentLat.toFixed(6)}, ${currentLon.toFixed(6)}`
-    : ` | Loc: not set`;
-  statusEl.textContent = msg;
+  statusEl.textContent = `Request started at ${start.toLocaleTimeString()} | Loc: ${currentLat !== null ? `${currentLat.toFixed(4)}, ${currentLon.toFixed(4)}` : 'not set'}`;
 
   try {
     const res = await fetch(WORKER_URL, { cache: "no-store" });
     const text = await res.text();
-    const end = new Date();
-    statusEl.textContent = `${msg} | Response at ${end.toLocaleTimeString()}`;
-    outputEl.textContent = text || "[No data returned]";
+    const endFetch = new Date();
+    statusEl.textContent = `Worker response received at ${endFetch.toLocaleTimeString()}`;
+    outputEl.textContent = text || '[No data returned]';
 
-    if (text.trim()) analyseData(text);
+    // analyze
+    await analyzeTLEs(text);
 
   } catch (err) {
-    const end = new Date();
-    statusEl.textContent = `${msg} | Error at ${end.toLocaleTimeString()}`;
-    outputEl.textContent = "Error fetching data. See console.";
     console.error(err);
+    statusEl.textContent = `Error: ${err && err.message ? err.message : err}`;
+    outputEl.textContent = 'Error fetching data. See console.';
   }
 }
 
-// analyse worker response
-function analyseData(rawText) {
-  // Each satellite block = 3 lines: name + 2 TLE lines
-  const lines = rawText.trim().split(/\r?\n/);
-  const total = Math.floor(lines.length / 3);
-  let visible = 0;
-
-  // Placeholder for visibility filter (we’ll refine later)
-  // Here, simulate that ~15% are visible in next 24 hrs
-  visible = Math.round(total * 0.15);
-
-  totalCountEl.textContent = total;
-  visibleCountEl.textContent = visible;
-  summaryTable.style.display = "table";
-}
-
-// events
-fetchBtn.addEventListener('click', fetchWorker);
+fetchBtn.addEventListener('click', fetchAndAnalyze);
 getLocBtn.addEventListener('click', requestLocation);
 window.addEventListener('load', requestLocation);
 </script>
