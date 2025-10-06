@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Starlink — 24h Visibility (10-min steps)</title>
+<title>Starlink — Visibility (12h, 10-min steps)</title>
 <link rel="preconnect" href="https://unpkg.com">
 <style>
   :root { --bg:#0d1117; --panel:#161b22; --muted:#9ca3af; --accent:#22c55e; --text:#c9d1d9; --status:#9cd6ff; }
@@ -27,7 +27,7 @@
 <body>
   <div class="wrap">
     <div class="panel">
-      <h1>Starlink — 24h Visibility (10-minute steps)</h1>
+      <h1>Starlink — Visibility (Next 12h, 10-min steps)</h1>
 
       <div class="controls">
         <button id="fetchBtn">Fetch TLEs & Analyze</button>
@@ -40,9 +40,9 @@
       <table id="summaryTable" style="display:none;">
         <thead>
           <tr>
-            <th class="center">Total Satellites (TLEs)</th>
-            <th class="center">Satellites Visible (next 24h)</th>
-            <th class="center">Time Resolution</th>
+            <th class="center">Total Satellites</th>
+            <th class="center">Visible (next 12h)</th>
+            <th class="center">Step</th>
             <th class="center">Analysis Time</th>
           </tr>
         </thead>
@@ -60,7 +60,7 @@
         <thead>
           <tr>
             <th>Satellite</th>
-            <th>First Visible (local)</th>
+            <th>First Visible (local time)</th>
             <th>Max Elevation (°)</th>
             <th>Notes</th>
           </tr>
@@ -72,18 +72,15 @@
     </div>
   </div>
 
-<!-- satellite.js CDN -->
 <script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
 
 <script>
-/* Configuration */
-const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/"; // your worker
-const STEP_MINUTES = 10; // 10-minute steps
-const HOURS = 24; // next 24 hours
+const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/";
+const STEP_MINUTES = 10;  // 10-minute intervals
+const HOURS = 12;         // Next 12 hours
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
 
-/* UI elements */
 const fetchBtn = document.getElementById('fetchBtn');
 const getLocBtn = document.getElementById('getLocBtn');
 const locDisplay = document.getElementById('locDisplay');
@@ -97,16 +94,12 @@ const analysisTimeEl = document.getElementById('analysisTime');
 const visibleTable = document.getElementById('visibleTable');
 const visibleBody = document.getElementById('visibleBody');
 
-let currentLat = null;
-let currentLon = null;
-let locTimestamp = null;
+let currentLat = null, currentLon = null, locTimestamp = null;
 
-/* Helpers */
-function fmtNum(n, d=6){ return (typeof n === 'number' && isFinite(n)) ? n.toFixed(d) : '—'; }
-function fmtLocal(ts){ return ts ? new Date(ts).toLocaleString() : '—'; }
-function updateLocUI(){ locDisplay.textContent = `Lat: ${fmtNum(currentLat,4)}  Lon: ${fmtNum(currentLon,4)}  (time: ${fmtLocal(locTimestamp)})`; }
+function fmtNum(n,d=6){ return (typeof n === 'number' && isFinite(n)) ? n.toFixed(d) : '—'; }
+function fmtTime(ts){ return ts ? new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '—'; }
+function updateLocUI(){ locDisplay.textContent = `Lat: ${fmtNum(currentLat,4)}  Lon: ${fmtNum(currentLon,4)}  (time: ${fmtTime(locTimestamp)})`; }
 
-/* Geolocation */
 function requestLocation(){
   if (!navigator.geolocation){ locDisplay.textContent = 'Location API not available'; return; }
   locDisplay.textContent = 'Requesting location...';
@@ -120,170 +113,91 @@ function requestLocation(){
   }, { enableHighAccuracy:true, timeout:10000, maximumAge:30000 });
 }
 
-/* Parse TLEs into array of {name,line1,line2} */
 function parseTLEs(raw){
-  const lines = raw.split(/\r?\n/).map(l => l.replace(/\r/g,'')).filter(l => l.trim().length > 0);
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
   const sats = [];
-  let i = 0;
-  while (i < lines.length){
-    // find satellite name followed by line1 and line2
-    if (i+2 < lines.length && lines[i+1].startsWith('1 ') && lines[i+2].startsWith('2 ')){
-      sats.push({ name: lines[i].trim(), line1: lines[i+1].trim(), line2: lines[i+2].trim() });
-      i += 3;
-    } else {
-      // skip malformed or stray lines
-      i++;
+  for (let i=0; i<lines.length; i++){
+    if (i+2<lines.length && lines[i+1].startsWith('1 ') && lines[i+2].startsWith('2 ')){
+      sats.push({ name: lines[i].replace(/^STARLINK[- ]?/i,''), line1: lines[i+1], line2: lines[i+2] });
+      i+=2;
     }
   }
   return sats;
 }
 
-/* Main analysis: for each sat, sample times and test elevation > 0 */
 async function analyzeTLEs(rawText){
-  const t0 = performance.now();
+  const startT = performance.now();
   const sats = parseTLEs(rawText);
   const total = sats.length;
   totalCountEl.textContent = total;
+  if (total === 0){ statusEl.textContent = 'No TLEs found.'; return; }
 
-  if (total === 0){
-    statusEl.textContent = 'No TLEs found in worker response.';
-    summaryTable.style.display = 'table';
-    visibleTable.style.display = 'none';
-    visibleCountEl.textContent = 0;
-    resolutionEl.textContent = `${STEP_MINUTES} min`;
-    analysisTimeEl.textContent = '0 ms';
-    return;
-  }
-
-  statusEl.textContent = `Analyzing ${total} satellites (this may take a moment)...`;
-  resolutionEl.textContent = `${STEP_MINUTES} min`;
-
-  // time range
   const now = new Date();
   const end = new Date(now.getTime() + HOURS * 3600 * 1000);
   const stepMs = STEP_MINUTES * 60 * 1000;
 
-  // prepare observer geodetic for satellite.js (radians for lat/lon, km for height)
-  const observerGd = {
-    latitude: (currentLat !== null ? currentLat * DEG2RAD : 0),
-    longitude: (currentLon !== null ? currentLon * DEG2RAD : 0),
-    height: 0
-  };
+  const observer = { latitude: (currentLat || 0)*DEG2RAD, longitude: (currentLon || 0)*DEG2RAD, height:0 };
+  const visible = [];
 
-  const visibleResults = [];
-
-  // iterate satellites
-  for (let si = 0; si < sats.length; si++){
-    const s = sats[si];
-    let satrec;
-    try {
-      satrec = satellite.twoline2satrec(s.line1, s.line2);
-    } catch (e){
-      // skip malformed
-      continue;
+  for (let s of sats){
+    let rec;
+    try { rec = satellite.twoline2satrec(s.line1, s.line2); } catch { continue; }
+    let vis=false, first=null, maxElev=-90;
+    for (let t=now.getTime(); t<=end.getTime(); t+=stepMs){
+      const d = new Date(t);
+      const pv = satellite.propagate(rec,d);
+      if (!pv || !pv.position) continue;
+      const gmst = satellite.gstime(d);
+      const ecf = satellite.eciToEcf(pv.position, gmst);
+      const look = satellite.ecfToLookAngles(observer, ecf);
+      const elev = look.elevation * RAD2DEG;
+      if (elev>maxElev) maxElev = elev;
+      if (!vis && elev>0){ vis=true; first=t; }
     }
-
-    let isVisible = false;
-    let firstVisibleTs = null;
-    let maxElev = -Infinity;
-
-    // sample times from now..end
-    for (let t = now.getTime(); t <= end.getTime(); t += stepMs){
-      const date = new Date(t);
-      try {
-        const pv = satellite.propagate(satrec, date);
-        if (!pv || !pv.position) continue;
-        const gmst = satellite.gstime(date);
-        const positionEcf = satellite.eciToEcf(pv.position, gmst);
-        const look = satellite.ecfToLookAngles(observerGd, positionEcf);
-        const elevDeg = look.elevation * RAD2DEG;
-        if (elevDeg > maxElev) maxElev = elevDeg;
-        if (!isVisible && elevDeg > 0){
-          isVisible = true;
-          firstVisibleTs = date.getTime();
-          // keep scanning to find max elevation
-        }
-      } catch (err) {
-        // ignore propagation errors for this sample
-        continue;
-      }
-    }
-
-    if (isVisible){
-      visibleResults.push({
-        name: s.name,
-        firstVisible: firstVisibleTs,
-        maxElevation: isFinite(maxElev) ? maxElev : 0
-      });
-    }
-
-    // keep UI responsive: yield every 50 satellites
-    if (si % 50 === 0){
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
+    if (vis) visible.push({ name:s.name, first:first, elev:maxElev });
+    await new Promise(r=>setTimeout(r,0));
   }
 
-  // sort visible by firstVisible time
-  visibleResults.sort((a,b) => (a.firstVisible||0) - (b.firstVisible||0));
-
-  // populate visible table
-  visibleBody.innerHTML = '';
-  for (const v of visibleResults){
-    const tr = document.createElement('tr');
-    const firstLocal = v.firstVisible ? new Date(v.firstVisible).toLocaleString() : '—';
-    tr.innerHTML = `
+  visible.sort((a,b)=>(a.first||0)-(b.first||0));
+  visibleBody.innerHTML='';
+  for (let v of visible){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
       <td>${v.name}</td>
-      <td>${firstLocal}</td>
-      <td>${v.maxElevation.toFixed(1)}</td>
-      <td>${v.maxElevation > 30 ? 'Good pass' : (v.maxElevation > 10 ? 'Low pass' : 'Near horizon')}</td>
-    `;
+      <td>${fmtTime(v.first)}</td>
+      <td>${v.elev.toFixed(1)}</td>
+      <td>${v.elev>30?'Good pass':v.elev>10?'Low pass':'Horizon'}</td>`;
     visibleBody.appendChild(tr);
   }
 
-  // update summary
-  visibleCountEl.textContent = visibleResults.length;
-  summaryTable.style.display = 'table';
-  visibleTable.style.display = visibleResults.length ? 'table' : 'none';
-
-  const t1 = performance.now();
-  analysisTimeEl.textContent = `${Math.round(t1 - t0)} ms`;
-  statusEl.textContent = `Analysis complete. ${total} satellites processed — ${visibleResults.length} visible in next ${HOURS}h.`;
+  visibleCountEl.textContent=visible.length;
+  resolutionEl.textContent=`${STEP_MINUTES} min`;
+  analysisTimeEl.textContent=`${Math.round(performance.now()-startT)} ms`;
+  summaryTable.style.display='table';
+  visibleTable.style.display='table';
+  statusEl.textContent=`Analyzed ${total} sats — ${visible.length} visible in next ${HOURS}h.`;
 }
 
-/* Wire events */
 async function fetchAndAnalyze(){
-  outputEl.textContent = '';
-  visibleBody.innerHTML = '';
-  summaryTable.style.display = 'none';
-  visibleTable.style.display = 'none';
-  totalCountEl.textContent = 0;
-  visibleCountEl.textContent = 0;
-  analysisTimeEl.textContent = '—';
-  resolutionEl.textContent = '—';
-
-  const start = new Date();
-  statusEl.textContent = `Request started at ${start.toLocaleTimeString()} | Loc: ${currentLat !== null ? `${currentLat.toFixed(4)}, ${currentLon.toFixed(4)}` : 'not set'}`;
-
-  try {
-    const res = await fetch(WORKER_URL, { cache: "no-store" });
-    const text = await res.text();
-    const endFetch = new Date();
-    statusEl.textContent = `Worker response received at ${endFetch.toLocaleTimeString()}`;
-    outputEl.textContent = text || '[No data returned]';
-
-    // analyze
+  outputEl.textContent='';
+  summaryTable.style.display='none'; visibleTable.style.display='none';
+  const start=new Date();
+  statusEl.textContent=`Fetching at ${start.toLocaleTimeString()}...`;
+  try{
+    const res=await fetch(WORKER_URL,{cache:"no-store"});
+    const text=await res.text();
+    outputEl.textContent=text||'[No data returned]';
     await analyzeTLEs(text);
-
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = `Error: ${err && err.message ? err.message : err}`;
-    outputEl.textContent = 'Error fetching data. See console.';
+  }catch(e){
+    console.error(e);
+    statusEl.textContent='Error fetching data';
+    outputEl.textContent='Fetch error.';
   }
 }
 
-fetchBtn.addEventListener('click', fetchAndAnalyze);
-getLocBtn.addEventListener('click', requestLocation);
-window.addEventListener('load', requestLocation);
+fetchBtn.addEventListener('click',fetchAndAnalyze);
+getLocBtn.addEventListener('click',requestLocation);
+window.addEventListener('load',requestLocation);
 </script>
 </body>
 </html>
