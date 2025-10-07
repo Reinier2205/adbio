@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +23,7 @@
   th { background:#21262d; color:var(--status); }
   .center { text-align:center; }
   .warning { color:#fbbf24; font-size:0.9rem; margin-top:0.5rem; }
+  .coord { font-family:monospace; }
 </style>
 </head>
 <body>
@@ -63,6 +65,7 @@
             <th>Satellite</th>
             <th>First Visible (local)</th>
             <th>Max Elevation (°)</th>
+            <th>Satellite Lat/Lon at Max Elev</th>
             <th>Notes</th>
           </tr>
         </thead>
@@ -139,7 +142,6 @@ function parseTLEs(raw){
 }
 
 async function analyzeTLEs(rawText){
-  // Ensure location is set
   if (currentLat === null || currentLon === null) {
     statusEl.textContent = "Location not available. Please allow location access.";
     locationWarning.style.display = 'block';
@@ -177,6 +179,7 @@ async function analyzeTLEs(rawText){
     let visible = false;
     let firstVisible = null;
     let maxElev = -Infinity;
+    let maxElevTime = null;
 
     for (let t = now.getTime(); t <= end.getTime(); t += stepMs) {
       const date = new Date(t);
@@ -188,16 +191,40 @@ async function analyzeTLEs(rawText){
         const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
         const elev = lookAngles.elevation * RAD2DEG;
         if (elev > 0 && !visible) { visible = true; firstVisible = date.getTime(); }
-        if (elev > maxElev) maxElev = elev;
+        if (elev > maxElev) {
+          maxElev = elev;
+          maxElevTime = date;
+        }
       } catch { continue; }
     }
 
-    if (visible) {
-      visibleResults.push({
-        name: s.name,
-        firstVisible,
-        maxElevation: maxElev
-      });
+    if (visible && maxElevTime) {
+      // Get satellite position at max elevation time
+      try {
+        const pvMax = satellite.propagate(satrec, maxElevTime);
+        const gmstMax = satellite.gstime(maxElevTime);
+        const positionEcfMax = satellite.eciToEcf(pvMax.position, gmstMax);
+        const satGd = satellite.ecfToGeodetic(positionEcfMax);
+        const satLat = satGd.latitude * RAD2DEG;
+        const satLon = satGd.longitude * RAD2DEG;
+
+        visibleResults.push({
+          name: s.name,
+          firstVisible,
+          maxElevation: maxElev,
+          satLat,
+          satLon
+        });
+      } catch (e) {
+        // If coordinate calculation fails, still include the entry without coordinates
+        visibleResults.push({
+          name: s.name,
+          firstVisible,
+          maxElevation: maxElev,
+          satLat: null,
+          satLon: null
+        });
+      }
     }
 
     if (si % 50 === 0) await new Promise(r => setTimeout(r, 0));
@@ -215,9 +242,18 @@ async function analyzeTLEs(rawText){
   for (const v of visibleResults) {
     const tr = document.createElement("tr");
     const firstLocal = fmtLocal(v.firstVisible);
+    const coordText = (v.satLat !== null && v.satLon !== null)
+      ? `${fmtNum(v.satLat, 4)}, ${fmtNum(v.satLon, 4)}`
+      : "—";
     const note = v.maxElevation > 30 ? "Good pass" :
                  v.maxElevation > 10 ? "Low pass" : "Near horizon";
-    tr.innerHTML = `<td>${v.name}</td><td>${firstLocal}</td><td>${v.maxElevation.toFixed(1)}</td><td>${note}</td>`;
+    tr.innerHTML = `
+      <td>${v.name}</td>
+      <td>${firstLocal}</td>
+      <td>${v.maxElevation.toFixed(1)}</td>
+      <td class="coord">${coordText}</td>
+      <td>${note}</td>
+    `;
     visibleBody.appendChild(tr);
   }
 
@@ -235,16 +271,12 @@ async function fetchAndAnalyze(){
   visibleBody.innerHTML = '';
   summaryTable.style.display = 'none';
   visibleTable.style.display = 'none';
-  
-  // Hide raw output by default
   outputEl.style.display = 'none';
   
   statusEl.textContent = 'Fetching TLEs...';
   try {
     const res = await fetch(WORKER_URL, { cache:"no-store" });
     const text = await res.text();
-    // Only show raw output if needed for debugging
-    // outputEl.textContent = text || '[No data]';
     await analyzeTLEs(text);
   } catch (e) {
     outputEl.textContent = `Error: ${e.message}`;
