@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,7 +76,7 @@
     </div>
   </div>
 
-<script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
+<script src="https://unpkg.com/satellite.js@4.0.2/dist/satellite.min.js"></script>
 
 <script>
 const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/";
@@ -103,7 +103,10 @@ let currentLat = null;
 let currentLon = null;
 let locTimestamp = null;
 
-function fmtNum(n, d=6){ return (typeof n === 'number' && isFinite(n)) ? n.toFixed(d) : '—'; }
+function fmtNum(n, d=6){ 
+  if (typeof n !== 'number' || !isFinite(n)) return '—';
+  return n.toFixed(d);
+}
 function fmtLocal(ts){ return ts ? new Date(ts).toLocaleString() : '—'; }
 function updateLocUI(){ 
   locDisplay.textContent = `Lat: ${fmtNum(currentLat,4)}  Lon: ${fmtNum(currentLon,4)}  (time: ${fmtLocal(locTimestamp)})`;
@@ -199,32 +202,30 @@ async function analyzeTLEs(rawText){
     }
 
     if (visible && maxElevTime) {
-      // Get satellite position at max elevation time
+      let satLat = null, satLon = null;
       try {
         const pvMax = satellite.propagate(satrec, maxElevTime);
-        const gmstMax = satellite.gstime(maxElevTime);
-        const positionEcfMax = satellite.eciToEcf(pvMax.position, gmstMax);
-        const satGd = satellite.ecfToGeodetic(positionEcfMax);
-        const satLat = satGd.latitude * RAD2DEG;
-        const satLon = satGd.longitude * RAD2DEG;
-
-        visibleResults.push({
-          name: s.name,
-          firstVisible,
-          maxElevation: maxElev,
-          satLat,
-          satLon
-        });
+        if (pvMax.position) {
+          const gmstMax = satellite.gstime(maxElevTime);
+          // Use eciToGeodetic — this is a public method in satellite.js
+          const geodetic = satellite.eciToGeodetic(pvMax.position, gmstMax);
+          satLat = geodetic.latitude * RAD2DEG;
+          satLon = geodetic.longitude * RAD2DEG;
+          // Normalize longitude to [-180, 180]
+          if (satLon > 180) satLon -= 360;
+          else if (satLon < -180) satLon += 360;
+        }
       } catch (e) {
-        // If coordinate calculation fails, still include the entry without coordinates
-        visibleResults.push({
-          name: s.name,
-          firstVisible,
-          maxElevation: maxElev,
-          satLat: null,
-          satLon: null
-        });
+        // Coordinate calculation failed
       }
+
+      visibleResults.push({
+        name: s.name,
+        firstVisible,
+        maxElevation: maxElev,
+        satLat,
+        satLon
+      });
     }
 
     if (si % 50 === 0) await new Promise(r => setTimeout(r, 0));
