@@ -1,12 +1,13 @@
+1
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Starlink — 12h Visibility (10-min steps)</title>
+<title>Starlink — 12h Proximity (All Satellites)</title>
 <link rel="preconnect" href="https://unpkg.com">
 <style>
-  :root { --bg:#0d1117; --panel:#161b22; --muted:#9ca3af; --accent:#22c55e; --text:#c9d1d9; --status:#9cd6ff; }
+  :root { --bg:#0d1117; --panel:#161b22; --muted:#9ca3af; --accent:#22c55e; --text:#c9d1d9; --status:#9cd6ff; --visible:#22c55e; --not-visible:#f87171; }
   html,body { height:100%; margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--text); }
   .wrap { max-width:1000px; margin:1.5rem auto; padding:1rem; }
   .panel { background:var(--panel); border:1px solid #30363d; border-radius:10px; padding:1rem; }
@@ -23,12 +24,14 @@
   .center { text-align:center; }
   .warning { color:#fbbf24; font-size:0.9rem; margin-top:0.5rem; }
   .coord { font-family:monospace; }
+  .visible-yes { color: var(--visible); font-weight: bold; }
+  .visible-no { color: var(--not-visible); }
 </style>
 </head>
 <body>
   <div class="wrap">
     <div class="panel">
-      <h1>Starlink — 12h Visibility (10-min steps)</h1>
+      <h1>Starlink — 12h Proximity (All Satellites)</h1>
 
       <div class="controls">
         <button id="fetchBtn">Fetch TLEs & Analyze</button>
@@ -37,13 +40,13 @@
       </div>
 
       <div id="status">Idle.</div>
-      <div id="locationWarning" class="warning" style="display:none;">⚠️ Location required to filter visible satellites.</div>
+      <div id="locationWarning" class="warning" style="display:none;">⚠️ Location helps rank by proximity (optional).</div>
 
       <table id="summaryTable" style="display:none;">
         <thead>
           <tr>
             <th class="center">Total Satellites (TLEs)</th>
-            <th class="center">Satellites Visible (next 12h)</th>
+            <th class="center">Satellites Analyzed</th>
             <th class="center">Time Resolution</th>
             <th class="center">Analysis Time</th>
           </tr>
@@ -62,10 +65,11 @@
         <thead>
           <tr>
             <th>Satellite</th>
-            <th>First Visible (local)</th>
+            <th>Max Elev Time (local)</th>
             <th>Max Elevation (°)</th>
-            <th>Satellite Lat/Lon at Max Elev</th>
-            <th>Notes</th>
+            <th>Sat Lat/Lon</th>
+            <th>Distance to You</th>
+            <th>Visible?</th>
           </tr>
         </thead>
         <tbody id="visibleBody"></tbody>
@@ -79,11 +83,11 @@
 
 <script>
 const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/";
-const DISPLAY_STEP_MINUTES = 10;   // For user-facing label
-const ANALYSIS_STEP_MINUTES = 1;   // For accurate detection (1-minute steps)
+const ANALYSIS_STEP_MINUTES = 1;
 const HOURS = 12;
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
+const EARTH_RADIUS_KM = 6371;
 
 const fetchBtn = document.getElementById('fetchBtn');
 const getLocBtn = document.getElementById('getLocBtn');
@@ -144,13 +148,18 @@ function parseTLEs(raw){
   return sats;
 }
 
-async function analyzeTLEs(rawText){
-  if (currentLat === null || currentLon === null) {
-    statusEl.textContent = "Location not available. Please allow location access.";
-    locationWarning.style.display = 'block';
-    return;
-  }
+// Haversine distance between two points (lat1, lon1) and (lat2, lon2) in km
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const dLat = (lat2 - lat1) * DEG2RAD;
+  const dLon = (lon2 - lon1) * DEG2RAD;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * DEG2RAD) * Math.cos(lat2 * DEG2RAD) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return EARTH_RADIUS_KM * c;
+}
 
+async function analyzeTLEs(rawText){
   const t0 = performance.now();
   const sats = parseTLEs(rawText);
   totalCountEl.textContent = sats.length;
@@ -159,28 +168,29 @@ async function analyzeTLEs(rawText){
     return;
   }
 
-  statusEl.textContent = `Analyzing ${sats.length} satellites from your location...`;
-  resolutionEl.textContent = `${DISPLAY_STEP_MINUTES}-min steps (analyzed at ${ANALYSIS_STEP_MINUTES}-min)`;
+  statusEl.textContent = `Analyzing ${sats.length} satellites...`;
+  resolutionEl.textContent = `1-min steps`;
 
   const now = new Date();
   const end = new Date(now.getTime() + HOURS * 3600 * 1000);
   const stepMs = ANALYSIS_STEP_MINUTES * 60 * 1000;
 
-  const observerGd = {
-    latitude: currentLat * DEG2RAD,
-    longitude: currentLon * DEG2RAD,
-    height: 0
-  };
+  let observerGd = null;
+  if (currentLat !== null && currentLon !== null) {
+    observerGd = {
+      latitude: currentLat * DEG2RAD,
+      longitude: currentLon * DEG2RAD,
+      height: 0
+    };
+  }
 
-  const visibleResults = [];
+  const results = [];
 
   for (let si = 0; si < sats.length; si++){
     const s = sats[si];
     let satrec;
     try { satrec = satellite.twoline2satrec(s.line1, s.line2); } catch { continue; }
 
-    let visible = false;
-    let firstVisible = null;
     let maxElev = -Infinity;
     let maxElevTime = null;
 
@@ -190,22 +200,24 @@ async function analyzeTLEs(rawText){
         const pv = satellite.propagate(satrec, date);
         if (!pv.position) continue;
         const gmst = satellite.gstime(date);
-        const positionEcf = satellite.eciToEcf(pv.position, gmst);
-        const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
-        const elev = lookAngles.elevation * RAD2DEG;
-        if (elev > 0 && !visible) { 
-          visible = true; 
-          firstVisible = date.getTime(); 
-        }
-        if (elev > maxElev) {
-          maxElev = elev;
-          maxElevTime = date;
+        if (observerGd) {
+          const positionEcf = satellite.eciToEcf(pv.position, gmst);
+          const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
+          const elev = lookAngles.elevation * RAD2DEG;
+          if (elev > maxElev) {
+            maxElev = elev;
+            maxElevTime = date;
+          }
+        } else {
+          // No location: just pick earliest time (fallback)
+          if (maxElevTime === null) maxElevTime = date;
+          maxElev = 0; // placeholder
         }
       } catch { continue; }
     }
 
-    if (visible && maxElevTime) {
-      let satLat = null, satLon = null;
+    if (maxElevTime) {
+      let satLat = null, satLon = null, distanceKm = null;
       try {
         const pvMax = satellite.propagate(satrec, maxElevTime);
         if (pvMax.position) {
@@ -213,61 +225,70 @@ async function analyzeTLEs(rawText){
           const geodetic = satellite.eciToGeodetic(pvMax.position, gmstMax);
           satLat = geodetic.latitude * RAD2DEG;
           satLon = geodetic.longitude * RAD2DEG;
-          // Normalize longitude to [-180, 180]
           if (satLon > 180) satLon -= 360;
           else if (satLon < -180) satLon += 360;
+
+          if (currentLat !== null && currentLon !== null) {
+            distanceKm = haversineDistance(currentLat, currentLon, satLat, satLon);
+          }
         }
       } catch (e) {
-        // Coordinate calculation failed; leave as null
+        // Skip coordinate
       }
 
-      visibleResults.push({
+      results.push({
         name: s.name,
-        firstVisible,
+        maxElevTime: maxElevTime.getTime(),
         maxElevation: maxElev,
         satLat,
-        satLon
+        satLon,
+        distanceKm
       });
     }
 
-    // Yield to keep UI responsive
     if (si % 50 === 0) await new Promise(r => setTimeout(r, 0));
   }
 
-  // Sort by date/time first, then by max elevation ascending
-  visibleResults.sort((a, b) => {
-    if (a.firstVisible !== b.firstVisible) {
-      return a.firstVisible - b.firstVisible;
+  // Sort: closest to your location first (if available), then by time
+  results.sort((a, b) => {
+    if (a.distanceKm !== null && b.distanceKm !== null) {
+      return a.distanceKm - b.distanceKm;
     }
-    return a.maxElevation - b.maxElevation;
+    if (a.distanceKm !== null) return -1;
+    if (b.distanceKm !== null) return 1;
+    return a.maxElevTime - b.maxElevTime;
   });
 
   visibleBody.innerHTML = "";
-  for (const v of visibleResults) {
+  for (const v of results) {
     const tr = document.createElement("tr");
-    const firstLocal = fmtLocal(v.firstVisible);
+    const timeLocal = fmtLocal(v.maxElevTime);
     const coordText = (v.satLat !== null && v.satLon !== null)
       ? `${fmtNum(v.satLat, 4)}, ${fmtNum(v.satLon, 4)}`
       : "—";
-    const note = v.maxElevation > 30 ? "Good pass" :
-                 v.maxElevation > 10 ? "Low pass" : "Near horizon";
+    const distText = v.distanceKm !== null ? `${v.distanceKm.toFixed(0)} km` : "—";
+    const isVisible = v.maxElevation > 0;
+    const noteClass = isVisible ? "visible-yes" : "visible-no";
+    const noteText = isVisible ? "Yes" : "No";
+
     tr.innerHTML = `
       <td>${v.name}</td>
-      <td>${firstLocal}</td>
+      <td>${timeLocal}</td>
       <td>${v.maxElevation.toFixed(1)}</td>
       <td class="coord">${coordText}</td>
-      <td>${note}</td>
+      <td>${distText}</td>
+      <td class="${noteClass}">${noteText}</td>
     `;
     visibleBody.appendChild(tr);
   }
 
-  visibleCountEl.textContent = visibleResults.length;
+  visibleCountEl.textContent = results.length;
   summaryTable.style.display = "table";
-  visibleTable.style.display = visibleResults.length ? "table" : "none";
+  visibleTable.style.display = results.length ? "table" : "none";
 
   const t1 = performance.now();
   analysisTimeEl.textContent = `${Math.round(t1 - t0)} ms`;
-  statusEl.textContent = `Done. ${visibleResults.length} visible from your location in next ${HOURS}h.`;
+  statusEl.textContent = `Done. ${results.length} satellites analyzed.`;
 }
 
 async function fetchAndAnalyze(){
