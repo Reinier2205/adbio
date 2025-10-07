@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,11 +16,12 @@
   .small-btn { background:#0b5; padding:0.4rem 0.6rem; font-size:0.9rem; border-radius:6px; }
   .loc { font-family:monospace; color:var(--muted); font-size:0.95rem; }
   #status { margin-top:0.75rem; color:var(--status); font-size:0.95rem; }
-  pre { margin-top:1rem; background:#0b0f14; border:1px solid #22272b; padding:1rem; border-radius:6px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); }
+  pre { margin-top:1rem; background:#0b0f14; border:1px solid #22272b; padding:1rem; border-radius:6px; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); display:none; }
   table { width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.95rem; }
   th, td { border:1px solid #30363d; padding:8px; text-align:left; vertical-align:middle; }
   th { background:#21262d; color:var(--status); }
   .center { text-align:center; }
+  .warning { color:#fbbf24; font-size:0.9rem; margin-top:0.5rem; }
 </style>
 </head>
 <body>
@@ -36,6 +36,7 @@
       </div>
 
       <div id="status">Idle.</div>
+      <div id="locationWarning" class="warning" style="display:none;">⚠️ Location required to filter visible satellites.</div>
 
       <table id="summaryTable" style="display:none;">
         <thead>
@@ -93,6 +94,7 @@ const resolutionEl = document.getElementById('resolution');
 const analysisTimeEl = document.getElementById('analysisTime');
 const visibleTable = document.getElementById('visibleTable');
 const visibleBody = document.getElementById('visibleBody');
+const locationWarning = document.getElementById('locationWarning');
 
 let currentLat = null;
 let currentLon = null;
@@ -100,11 +102,19 @@ let locTimestamp = null;
 
 function fmtNum(n, d=6){ return (typeof n === 'number' && isFinite(n)) ? n.toFixed(d) : '—'; }
 function fmtLocal(ts){ return ts ? new Date(ts).toLocaleString() : '—'; }
-function updateLocUI(){ locDisplay.textContent = `Lat: ${fmtNum(currentLat,4)}  Lon: ${fmtNum(currentLon,4)}  (time: ${fmtLocal(locTimestamp)})`; }
+function updateLocUI(){ 
+  locDisplay.textContent = `Lat: ${fmtNum(currentLat,4)}  Lon: ${fmtNum(currentLon,4)}  (time: ${fmtLocal(locTimestamp)})`;
+  locationWarning.style.display = (currentLat === null || currentLon === null) ? 'block' : 'none';
+}
 
 function requestLocation(){
-  if (!navigator.geolocation){ locDisplay.textContent = 'Location API not available'; return; }
+  if (!navigator.geolocation){ 
+    locDisplay.textContent = 'Location API not available'; 
+    locationWarning.style.display = 'block';
+    return; 
+  }
   locDisplay.textContent = 'Requesting location...';
+  locationWarning.style.display = 'none';
   navigator.geolocation.getCurrentPosition(pos => {
     currentLat = pos.coords.latitude;
     currentLon = pos.coords.longitude;
@@ -112,6 +122,7 @@ function requestLocation(){
     updateLocUI();
   }, err => {
     locDisplay.textContent = 'Location error: ' + (err.message || 'unknown');
+    locationWarning.style.display = 'block';
   }, { enableHighAccuracy:true, timeout:10000, maximumAge:30000 });
 }
 
@@ -128,6 +139,13 @@ function parseTLEs(raw){
 }
 
 async function analyzeTLEs(rawText){
+  // Ensure location is set
+  if (currentLat === null || currentLon === null) {
+    statusEl.textContent = "Location not available. Please allow location access.";
+    locationWarning.style.display = 'block';
+    return;
+  }
+
   const t0 = performance.now();
   const sats = parseTLEs(rawText);
   totalCountEl.textContent = sats.length;
@@ -136,7 +154,7 @@ async function analyzeTLEs(rawText){
     return;
   }
 
-  statusEl.textContent = `Analyzing ${sats.length} satellites...`;
+  statusEl.textContent = `Analyzing ${sats.length} satellites from your location...`;
   resolutionEl.textContent = `${STEP_MINUTES} min`;
 
   const now = new Date();
@@ -144,8 +162,8 @@ async function analyzeTLEs(rawText){
   const stepMs = STEP_MINUTES * 60 * 1000;
 
   const observerGd = {
-    latitude: (currentLat ?? 0) * DEG2RAD,
-    longitude: (currentLon ?? 0) * DEG2RAD,
+    latitude: currentLat * DEG2RAD,
+    longitude: currentLon * DEG2RAD,
     height: 0
   };
 
@@ -209,7 +227,7 @@ async function analyzeTLEs(rawText){
 
   const t1 = performance.now();
   analysisTimeEl.textContent = `${Math.round(t1 - t0)} ms`;
-  statusEl.textContent = `Done. ${visibleResults.length} visible in next ${HOURS}h.`;
+  statusEl.textContent = `Done. ${visibleResults.length} visible from your location in next ${HOURS}h.`;
 }
 
 async function fetchAndAnalyze(){
@@ -217,14 +235,20 @@ async function fetchAndAnalyze(){
   visibleBody.innerHTML = '';
   summaryTable.style.display = 'none';
   visibleTable.style.display = 'none';
+  
+  // Hide raw output by default
+  outputEl.style.display = 'none';
+  
   statusEl.textContent = 'Fetching TLEs...';
   try {
     const res = await fetch(WORKER_URL, { cache:"no-store" });
     const text = await res.text();
-    outputEl.textContent = text || '[No data]';
+    // Only show raw output if needed for debugging
+    // outputEl.textContent = text || '[No data]';
     await analyzeTLEs(text);
   } catch (e) {
     outputEl.textContent = `Error: ${e.message}`;
+    outputEl.style.display = 'block';
     statusEl.textContent = `Error fetching data.`;
   }
 }
@@ -235,4 +259,3 @@ window.addEventListener('load', requestLocation);
 </script>
 </body>
 </html>
-```
