@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -184,7 +185,13 @@ async function analyzeTLEs(rawText){
     if (si % 50 === 0) await new Promise(r => setTimeout(r, 0));
   }
 
-  visibleResults.sort((a,b) => a.firstVisible - b.firstVisible);
+  // Sort by date/time first, then by max elevation ascending
+  visibleResults.sort((a, b) => {
+    if (a.firstVisible !== b.firstVisible) {
+      return a.firstVisible - b.firstVisible;
+    }
+    return a.maxElevation - b.maxElevation;
+  });
 
   visibleBody.innerHTML = "";
   for (const v of visibleResults) {
@@ -228,3 +235,4 @@ window.addEventListener('load', requestLocation);
 </script>
 </body>
 </html>
+```
