@@ -21,6 +21,7 @@
   th, td { border:1px solid #30363d; padding:8px; text-align:left; vertical-align:middle; }
   th { background:#21262d; color:var(--status); }
   .center { text-align:center; }
+  .coord { font-family:monospace; }
 </style>
 </head>
 <body>
@@ -61,6 +62,7 @@
             <th>Satellite</th>
             <th>First Visible (local)</th>
             <th>Max Elevation (°)</th>
+            <th>Satellite Lat/Lon</th>
             <th>Notes</th>
           </tr>
         </thead>
@@ -71,11 +73,12 @@
     </div>
   </div>
 
-<script src="https://unpkg.com/satellite.js/dist/satellite.min.js"></script>
+<script src="https://unpkg.com/satellite.js@4.0.2/dist/satellite.min.js"></script>
 
 <script>
 const WORKER_URL = "https://starlink-tle.reinier-olivier.workers.dev/";
-const STEP_MINUTES = 10;
+const DISPLAY_STEP_MINUTES = 10;
+const ANALYSIS_STEP_MINUTES = 1; // For accurate detection
 const HOURS = 12;
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
@@ -136,11 +139,11 @@ async function analyzeTLEs(rawText){
   }
 
   statusEl.textContent = `Analyzing ${sats.length} satellites...`;
-  resolutionEl.textContent = `${STEP_MINUTES} min`;
+  resolutionEl.textContent = `${DISPLAY_STEP_MINUTES}-min steps (analyzed at ${ANALYSIS_STEP_MINUTES}-min)`;
 
   const now = new Date();
   const end = new Date(now.getTime() + HOURS * 3600 * 1000);
-  const stepMs = STEP_MINUTES * 60 * 1000;
+  const stepMs = ANALYSIS_STEP_MINUTES * 60 * 1000;
 
   const observerGd = {
     latitude: (currentLat ?? 0) * DEG2RAD,
@@ -158,6 +161,7 @@ async function analyzeTLEs(rawText){
     let visible = false;
     let firstVisible = null;
     let maxElev = -Infinity;
+    let maxElevTime = null;
 
     for (let t = now.getTime(); t <= end.getTime(); t += stepMs) {
       const date = new Date(t);
@@ -169,15 +173,32 @@ async function analyzeTLEs(rawText){
         const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
         const elev = lookAngles.elevation * RAD2DEG;
         if (elev > 0 && !visible) { visible = true; firstVisible = date.getTime(); }
-        if (elev > maxElev) maxElev = elev;
+        if (elev > maxElev) { maxElev = elev; maxElevTime = date; }
       } catch { continue; }
     }
 
-    if (visible) {
+    if (visible && maxElevTime) {
+      let satLat = null, satLon = null;
+      try {
+        const pvMax = satellite.propagate(satrec, maxElevTime);
+        if (pvMax.position) {
+          const gmstMax = satellite.gstime(maxElevTime);
+          const geodetic = satellite.eciToGeodetic(pvMax.position, gmstMax);
+          satLat = geodetic.latitude * RAD2DEG;
+          satLon = geodetic.longitude * RAD2DEG;
+          if (satLon > 180) satLon -= 360;
+          else if (satLon < -180) satLon += 360;
+        }
+      } catch (e) {
+        // Coordinate calculation failed; leave as null (should be rare)
+      }
+
       visibleResults.push({
         name: s.name,
         firstVisible,
-        maxElevation: maxElev
+        maxElevation: maxElev,
+        satLat,
+        satLon
       });
     }
 
@@ -196,9 +217,18 @@ async function analyzeTLEs(rawText){
   for (const v of visibleResults) {
     const tr = document.createElement("tr");
     const firstLocal = fmtLocal(v.firstVisible);
+    const coordText = (v.satLat !== null && v.satLon !== null)
+      ? `${fmtNum(v.satLat, 4)}, ${fmtNum(v.satLon, 4)}`
+      : "—";
     const note = v.maxElevation > 30 ? "Good pass" :
                  v.maxElevation > 10 ? "Low pass" : "Near horizon";
-    tr.innerHTML = `<td>${v.name}</td><td>${firstLocal}</td><td>${v.maxElevation.toFixed(1)}</td><td>${note}</td>`;
+    tr.innerHTML = `
+      <td>${v.name}</td>
+      <td>${firstLocal}</td>
+      <td>${v.maxElevation.toFixed(1)}</td>
+      <td class="coord">${coordText}</td>
+      <td>${note}</td>
+    `;
     visibleBody.appendChild(tr);
   }
 
@@ -234,5 +264,3 @@ window.addEventListener('load', requestLocation);
 </script>
 </body>
 </html>
-
-4
