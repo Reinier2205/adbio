@@ -3,216 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Morabaraba Board</title>
+    <title>Node Graph Recreation</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Set body font to Inter and provide a dark canvas background */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f0f0f0;
             margin: 0;
+            padding: 1rem;
         }
 
-        .game-container {
-            position: relative;
-            width: 500px; /* Adjust size as needed */
-            height: 500px;
-            background-color: #fff;
-            border: 2px solid #333;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        /* Canvas styling to match the inner light gray area of the original image */
+        #graphCanvas {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #f0f0f0; /* Light gray background for the graph area */
+            border: 8px solid #333; /* Dark border to frame the canvas */
+            border-radius: 1.5rem; /* Rounded corners for the container */
+            max-width: 100%;
+            height: auto; /* Maintain aspect ratio */
+            display: block;
         }
-
-        .board {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: grid;
-            grid-template-columns: repeat(7, 1fr); /* 7x7 grid for layout */
-            grid-template-rows: repeat(7, 1fr);
-        }
-
-        .line {
-            position: absolute;
-            background-color: black;
-            height: 2px;
-            transform-origin: 0 0;
-        }
-
-        /* Horizontal lines */
-        .line.h1 { top: calc(500px / 12); left: calc(500px / 12); width: calc(500px * 10 / 12); }
-        .line.h2 { top: calc(500px * 3.5 / 12); left: calc(500px * 3.5 / 12); width: calc(500px * 5 / 12); }
-        .line.h3 { top: calc(500px * 6 / 12); left: calc(500px / 12); width: calc(500px * 10 / 12); }
-        .line.h4 { top: calc(500px * 8.5 / 12); left: calc(500px * 3.5 / 12); width: calc(500px * 5 / 12); }
-        .line.h5 { top: calc(500px * 11 / 12); left: calc(500px / 12); width: calc(500px * 10 / 12); }
-
-        /* Vertical lines */
-        .line.v1 { left: calc(500px / 12); top: calc(500px / 12); height: calc(500px * 10 / 12); }
-        .line.v2 { left: calc(500px * 3.5 / 12); top: calc(500px * 3.5 / 12); height: calc(500px * 5 / 12); }
-        .line.v3 { left: calc(500px * 6 / 12); top: calc(500px / 12); height: calc(500px * 10 / 12); }
-        .line.v4 { left: calc(500px * 8.5 / 12); top: calc(500px * 3.5 / 12); height: calc(500px * 5 / 12); }
-        .line.v5 { left: calc(500px * 11 / 12); top: calc(500px / 12); height: calc(500px * 10 / 12); }
-
-        /* Diagonal lines - These are tricky with simple CSS borders/backgrounds.
-           Using SVG or calculating transform: rotate is more precise.
-           For simplicity and matching the reference, we'll place points and connect visually
-           or use explicit divs for lines as shown. */
-        .line.d1 { /* Top-left to center-middle */
-            top: calc(500px / 12);
-            left: calc(500px / 12);
-            width: calc(500px * 4.5 / 12);
-            transform: rotate(45deg);
-            transform-origin: top left;
-        }
-        .line.d2 { /* Top-right to center-middle */
-            top: calc(500px / 12);
-            right: calc(500px / 12);
-            width: calc(500px * 4.5 / 12);
-            transform: rotate(-45deg);
-            transform-origin: top right;
-        }
-        .line.d3 { /* Bottom-left to center-middle */
-            bottom: calc(500px / 12);
-            left: calc(500px / 12);
-            width: calc(500px * 4.5 / 12);
-            transform: rotate(-45deg);
-            transform-origin: bottom left;
-        }
-        .line.d4 { /* Bottom-right to center-middle */
-            bottom: calc(500px / 12);
-            right: calc(500px / 12);
-            width: calc(500px * 4.5 / 12);
-            transform: rotate(45deg);
-            transform-origin: bottom right;
-        }
-
-        /* Inner diagonal lines */
-        .line.id1 { /* Inner top-left to inner center-middle */
-            top: calc(500px * 3.5 / 12);
-            left: calc(500px * 3.5 / 12);
-            width: calc(500px * 2.5 / 12);
-            transform: rotate(45deg);
-            transform-origin: top left;
-        }
-        .line.id2 { /* Inner top-right to inner center-middle */
-            top: calc(500px * 3.5 / 12);
-            right: calc(500px * 3.5 / 12);
-            width: calc(500px * 2.5 / 12);
-            transform: rotate(-45deg);
-            transform-origin: top right;
-        }
-        .line.id3 { /* Inner bottom-left to inner center-middle */
-            bottom: calc(500px * 3.5 / 12);
-            left: calc(500px * 3.5 / 12);
-            width: calc(500px * 2.5 / 12);
-            transform: rotate(-45deg);
-            transform-origin: bottom left;
-        }
-        .line.id4 { /* Inner bottom-right to inner center-middle */
-            bottom: calc(500px * 3.5 / 12);
-            right: calc(500px * 3.5 / 12);
-            width: calc(500px * 2.5 / 12);
-            transform: rotate(45deg);
-            transform-origin: bottom right;
-        }
-
-
-        .point {
-            position: absolute;
-            width: 20px; /* Size of the clickable area for a point */
-            height: 20px;
-            border-radius: 50%;
-            background-color: rgba(0, 0, 0, 0.1); /* Visible for debugging/placement */
-            transform: translate(-50%, -50%); /* Center the point */
-            z-index: 10; /* Ensure points are above lines */
-        }
-
-        .checker {
-            position: absolute;
-            width: 40px; /* Size of the checker piece */
-            height: 40px;
-            border-radius: 50%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            transform: translate(-50%, -50%); /* Center the checker over the point */
-            z-index: 20; /* Ensure checkers are above points */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.8em;
-            color: #fff;
-            cursor: grab;
-        }
-
-        .checker.red {
-            background-color: #d32f2f;
-            border: 2px solid #a00;
-        }
-
-        .checker.wood {
-            background-color: #a1887f;
-            border: 2px solid #795548;
-            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 70%),
-                              repeating-conic-gradient(#8d6e63 0deg 10deg, #795548 10deg 20deg);
-        }
-
-        /* Point coordinates (adjust these based on your board size) */
-        /* Outer Square */
-        .p1 { top: calc(500px / 12); left: calc(500px / 12); } /* Top-left */
-        .p2 { top: calc(500px / 12); left: calc(500px * 6 / 12); } /* Top-middle */
-        .p3 { top: calc(500px / 12); left: calc(500px * 11 / 12); } /* Top-right */
-        .p4 { top: calc(500px * 6 / 12); left: calc(500px / 12); } /* Middle-left */
-        .p5 { top: calc(500px * 6 / 12); left: calc(500px * 11 / 12); } /* Middle-right */
-        .p6 { top: calc(500px * 11 / 12); left: calc(500px / 12); } /* Bottom-left */
-        .p7 { top: calc(500px * 11 / 12); left: calc(500px * 6 / 12); } /* Bottom-middle */
-        .p8 { top: calc(500px * 11 / 12); left: calc(500px * 11 / 12); } /* Bottom-right */
-
-        /* Middle Square (diagonal intersection points) */
-        .p9 { top: calc(500px * 3.5 / 12); left: calc(500px * 3.5 / 12); } /* Inner Top-left */
-        .p10 { top: calc(500px * 3.5 / 12); left: calc(500px * 6 / 12); } /* Inner Top-middle */
-        .p11 { top: calc(500px * 3.5 / 12); left: calc(500px * 8.5 / 12); } /* Inner Top-right */
-        .p12 { top: calc(500px * 6 / 12); left: calc(500px * 3.5 / 12); } /* Inner Middle-left */
-        .p13 { top: calc(500px * 6 / 12); left: calc(500px * 6 / 12); } /* Center */
-        .p14 { top: calc(500px * 6 / 12); left: calc(500px * 8.5 / 12); } /* Inner Middle-right */
-        .p15 { top: calc(500px * 8.5 / 12); left: calc(500px * 3.5 / 12); } /* Inner Bottom-left */
-        .p16 { top: calc(500px * 8.5 / 12); left: calc(500px * 6 / 12); } /* Inner Bottom-middle */
-        .p17 { top: calc(500px * 8.5 / 12); left: calc(500px * 8.5 / 12); } /* Inner Bottom-right */
     </style>
 </head>
-<body>
-    <div class="game-container">
-        <div class="board">
-            <div class="line h1"></div><div class="line h2"></div><div class="line h3"></div><div class="line h4"></div><div class="line h5"></div>
-            <div class="line v1"></div><div class="line v2"></div><div class="line v3"></div><div class="line v4"></div><div class="line v5"></div>
+<body class="selection:bg-red-400 selection:text-white">
 
-            <div class="line d1"></div><div class="line d2"></div><div class="line d3"></div><div class="line d4"></div>
-            <div class="line id1"></div><div class="line id2"></div><div class="line id3"></div><div class="line id4"></div>
+<div class="w-full max-w-lg mx-auto">
+    <!-- Canvas element where the graph will be drawn -->
+    <canvas id="graphCanvas" width="600" height="600"></canvas>
+</div>
 
-            <div class="point p1"></div><div class="point p2"></div><div class="point p3"></div>
-            <div class="point p4"></div><div class="point p5"></div>
-            <div class="point p6"></div><div class="point p7"></div><div class="point p8"></div>
+<script>
+    // Constants for drawing
+    const CANVAS_WIDTH = 600;
+    const CANVAS_HEIGHT = 600;
+    const NODE_RADIUS = 28;
+    const LINE_COLOR = '#333333';
+    const LINE_WIDTH = 4;
+    const FONT_STYLE = `${NODE_RADIUS * 0.5}px Inter`;
+    const TEXT_COLOR = '#333333';
 
-            <div class="point p9"></div><div class="point p10"></div><div class="point p11"></div>
-            <div class="point p12"></div><div class="point p13"></div><div class="point p14"></div>
-            <div class="point p15"></div><div class="point p16"></div><div class="point p17"></div>
+    /* * Node coordinates have been adjusted to create maximum space in the middle.
+     * The gap between the two closest inner columns (C and K) is now 250 units.
+     */
+    const nodes = {
+        // Left Cluster (Brown/Gray)
+        A: { x: 75, y: 150, label: 'A', color: '#B5A599' }, // 100 -> 75
+        C: { x: 175, y: 150, label: 'C', color: '#B5A599' }, // 200 -> 175
+        D: { x: 75, y: 300, label: 'D', color: '#B5A599' },
+        F: { x: 175, y: 300, label: 'F', color: '#B5A599' },
+        G: { x: 75, y: 450, label: 'G', color: '#B5A599' },
+        H: { x: 175, y: 450, label: 'H', color: '#B5A599' },
 
-            <div class="checker red p1"></div>
-            <div class="checker red p2"></div>
-            <div class="checker red p3"></div>
-            <div class="checker red p4"></div>
-            <div class="checker red p5"></div>
-            <div class="checker red p9"></div>
-            <div class="checker red p10"></div>
-            <div class="checker red p11"></div>
-            <div class="checker red p12"></div>
-            <div class="checker red p14"></div>
-            <div class="checker red p13"></div> <div class="checker wood p6"></div>
-            <div class="checker wood p7"></div>
-            <div class="checker wood p8"></div>
-            <div class="checker wood p15"></div>
-            <div class="checker wood p16"></div>
-            <div class="checker wood p17"></div>
-        </div>
-    </div>
+        // Central Node (New)
+        M: { x: 300, y: 300, label: 'M', color: '#FFD700' }, // Gold color for central connector
+
+        // Right Cluster (Red)
+        K: { x: 425, y: 150, label: 'K', color: '#E57373' }, // 400 -> 425
+        L: { x: 525, y: 150, label: 'L', color: '#E57373' }, // 500 -> 525
+        N: { x: 425, y: 300, label: 'N', color: '#E57373' },
+        O: { x: 525, y: 300, label: 'O', color: '#E57373' },
+        P: { x: 425, y: 450, label: 'P', color: '#E57373' },
+        R: { x: 525, y: 450, label: 'R', color: '#E57373' },
+    };
+
+    // Edge data: connections adjusted to flow through the central 'M' node
+    const edges = [
+        // Left Internal (Horizontal)
+        ['A', 'C'], ['D', 'F'], ['G', 'H'],
+        // Left Internal (Vertical)
+        ['A', 'D'], ['D', 'G'], ['C', 'F'], ['F', 'H'],
+
+        // Right Internal (Horizontal)
+        ['K', 'L'], ['N', 'O'], ['P', 'R'],
+        // Right Internal (Vertical)
+        ['K', 'N'], ['N', 'P'], ['L', 'O'], ['O', 'R'],
+
+        // Connecting (Crossover) - All connections now pass through 'M'
+        ['C', 'M'], ['M', 'P'], // C to P via M
+        ['H', 'M'], ['M', 'K'], // H to K via M
+        ['F', 'M'], ['M', 'N'], // F to N via M
+    ];
+
+    // External Labels removed as requested
+    const externalLabels = [];
+
+
+    function drawGraph() {
+        const canvas = document.getElementById('graphCanvas');
+        if (!canvas) return;
+
+        // Reset canvas size to handle potential responsiveness issues on redraw
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        const ctx = canvas.getContext('2d');
+        // Clear the canvas
+        ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // --- 1. Draw Edges (Lines) ---
+        ctx.strokeStyle = LINE_COLOR;
+        ctx.lineWidth = LINE_WIDTH;
+        ctx.lineCap = 'round';
+
+        ctx.beginPath();
+        edges.forEach(([node1Key, node2Key]) => {
+            const n1 = nodes[node1Key];
+            const n2 = nodes[node2Key];
+            if (n1 && n2) {
+                ctx.moveTo(n1.x, n1.y);
+                ctx.lineTo(n2.x, n2.y);
+            }
+        });
+        ctx.stroke();
+
+        // --- 2. Draw Nodes (Circles) and Labels ---
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = FONT_STYLE;
+        ctx.fillStyle = TEXT_COLOR;
+
+        // Draw nodes in an order that ensures 'M' is drawn last to overlap lines, if necessary
+        const allNodes = Object.values(nodes);
+        
+        // Draw all nodes except M first
+        allNodes.filter(node => node.label !== 'M').forEach(node => {
+            drawNode(ctx, node);
+        });
+
+        // Draw node M last to ensure it sits on top of all connecting lines
+        const nodeM = nodes.M;
+        if (nodeM) {
+            drawNode(ctx, nodeM);
+        }
+    }
+
+    // Helper function to draw a single node (circle and label)
+    function drawNode(ctx, node) {
+        // Draw Node Circle
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
+
+        // Apply fill color
+        ctx.fillStyle = node.color;
+        
+        // Add a subtle shadow to mimic the original image's depth
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.fill();
+
+        // Reset shadow for text drawing (important for clear text)
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        // Draw Node Label
+        ctx.fillStyle = TEXT_COLOR;
+        ctx.fillText(node.label, node.x, node.y);
+    }
+
+    // Run the drawing function when the window loads
+    window.onload = drawGraph;
+
+    // Optional: Redraw on window resize (for responsiveness, though dimensions are fixed)
+    window.addEventListener('resize', drawGraph);
+</script>
 </body>
 </html>
+
