@@ -8,7 +8,7 @@
     <!-- Font Imports for the theme -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght=700&display=swap" rel="stylesheet">
     
     <style>
         /* CSS Variables from the game styling */
@@ -70,6 +70,125 @@
             display: block;
             margin: 0 auto;
         }
+
+        /* --- Player Indicators --- */
+        .player-info {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            margin: 1rem 0; /* Reduced margin */
+            gap: 1rem;
+            flex-wrap: wrap; 
+        }
+        .player-card {
+            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+            padding: 0.4rem; /* Significantly reduced padding */
+            border-radius: 10px;
+            /* Calculate width to fit exactly half the container minus the gap */
+            width: calc(50% - 0.5rem); 
+            min-width: unset; /* Removed minimum width constraint */
+            border: 3px solid #1a1a1a;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
+            color: var(--light-gold);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player-card.active {
+            border-color: var(--gold);
+            transform: scale(1.05);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
+        }
+        .piece-display {
+            width: 18px; /* Reduced size */
+            height: 18px; /* Reduced size */
+            border-radius: 50%;
+            margin-bottom: 0.2rem; /* Reduced margin */
+            /* Match piece styling */
+            box-shadow: 
+                inset 6px 6px 12px rgba(0,0,0,0.3),
+                inset -3px -3px 8px rgba(255,255,255,0.06),
+                0 6px 12px rgba(0,0,0,0.4);
+        }
+        .piece-display.yellow { 
+            background: radial-gradient(120% 120% at 30% 20%, #dcdcdc, #B5A599 40%, #8c7f76 100%);
+            border: 2px solid #8c7f76;
+        }
+        .piece-display.red { 
+            background: radial-gradient(120% 120% at 30% 20%, #ffaaaa, #E57373 40%, #b34a4a 100%);
+            border: 2px solid #b34a4a;
+        }
+        .player-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.3rem; 
+            margin-bottom: 0.2rem; 
+        }
+        .player-header h2 {
+            font-size: 0.9rem; /* Significantly reduced font size */
+            color: var(--light-gold);
+            font-weight: 700;
+        }
+
+        /* Removed unused editing and player-name styles */
+
+        /* --- Game Controls (New Section) --- */
+        .game-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .control-button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--dark-wood);
+            background-color: var(--gold);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+        .control-button:hover {
+            background-color: var(--gold-light);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
+            transform: translateY(-2px);
+        }
+        .control-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-status {
+            background: linear-gradient(90deg, #1a1a1a, #3e1e24, #1a1a1a);
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--gold);
+            min-width: 250px;
+            box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Mobile Adjustments (Ensures cards stay side-by-side) */
+        @media (max-width: 500px) {
+            .table {
+                padding: 1rem;
+            }
+            .player-card {
+                width: calc(50% - 0.5rem); /* Keeps them side-by-side */
+            }
+            .title {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -78,11 +197,43 @@
 <div class="table">
     <div class="title">Centralized Node Graph</div>
     
+    <!-- Player Info (Now simplified and compact) -->
+    <div class="player-info">
+        <!-- Player 1 -->
+        <div class="player-card active" data-player="P1" id="player1Card">
+            <div class="player-header">
+                <h2 id="player1Name">Player 1</h2>
+            </div>
+            <div class="piece-display yellow"></div>
+        </div>
+        <!-- Player 2 -->
+        <div class="player-card" data-player="P2" id="player2Card">
+            <div class="player-header">
+                <h2 id="player2Name">Player 2</h2>
+            </div>
+            <div class="piece-display red"></div>
+        </div>
+    </div>
+    
+    <!-- Game Controls and Status -->
+    <div class="game-controls">
+        <button id="newGameButton" class="control-button">Start New Game</button>
+        <div id="statusMessage" class="game-status">Game status updates here.</div>
+    </div>
+
     <!-- Canvas element where the graph will be drawn -->
     <canvas id="graphCanvas" width="600" height="600"></canvas>
 </div>
 
 <script>
+    // --- Global Game State ---
+    let gameState = {
+        currentPlayer: 'P1', // 'P1' (Yellow) or 'P2' (Red)
+        status: 'Ready to start!',
+        p1Name: 'Player 1', // Simplified name for status messages
+        p2Name: 'Player 2'  // Simplified name for status messages
+    };
+    
     // Constants for drawing
     const CANVAS_WIDTH = 600;
     const CANVAS_HEIGHT = 600;
@@ -99,7 +250,7 @@
 
     /* Node coordinates maintained from the last step, creating separation with central node M. */
     const nodes = {
-        // Left Cluster (Brown/Gray)
+        // Left Cluster (Brown/Gray: #B5A599)
         A: { x: 75, y: 150, label: 'A', color: '#B5A599' }, 
         C: { x: 175, y: 150, label: 'C', color: '#B5A599' }, 
         D: { x: 75, y: 300, label: 'D', color: '#B5A599' },
@@ -107,10 +258,10 @@
         G: { x: 75, y: 450, label: 'G', color: '#B5A599' },
         H: { x: 175, y: 450, label: 'H', color: '#B5A599' },
 
-        // Central Node (New Connector)
+        // Central Node (Connector: #FFD700)
         M: { x: 300, y: 300, label: 'M', color: '#FFD700' }, // Gold color 
 
-        // Right Cluster (Red)
+        // Right Cluster (Red: #E57373)
         K: { x: 425, y: 150, label: 'K', color: '#E57373' }, 
         L: { x: 525, y: 150, label: 'L', color: '#E57373' }, 
         N: { x: 425, y: 300, label: 'N', color: '#E57373' },
@@ -219,9 +370,65 @@
         ctx.fillStyle = TEXT_COLOR;
         ctx.fillText(node.label, node.x, node.y);
     }
+    
+    // --- Removed Player Name Editing Functions (Not needed for static Player 1/2 labels) ---
 
-    // Run the drawing function when the window loads
-    window.onload = drawGraph;
+    /**
+     * Stub function to reset the game state.
+     */
+    function resetGame() {
+        // Reset game state variables
+        gameState.currentPlayer = 'P1';
+        gameState.status = `${gameState.p1Name}'s turn. Make your first move!`;
+        
+        // Update UI
+        updateStatus();
+        updateTurnIndicator();
+        drawGraph(); // Redraw board if necessary
+        
+        console.log('Game reset! Current player:', gameState.p1Name);
+    }
+
+    /**
+     * Updates the status message in the UI.
+     */
+    function updateStatus() {
+        const statusMessageEl = document.getElementById('statusMessage');
+        statusMessageEl.textContent = gameState.status;
+    }
+    
+    /**
+     * Updates the active styling on player cards based on the current player.
+     */
+    function updateTurnIndicator() {
+        const p1Card = document.getElementById('player1Card');
+        const p2Card = document.getElementById('player2Card');
+
+        if (gameState.currentPlayer === 'P1') {
+            p1Card.classList.add('active');
+            p2Card.classList.remove('active');
+        } else {
+            p1Card.classList.remove('active');
+            p2Card.classList.add('active');
+        }
+    }
+
+    function setupControls() {
+        const newGameButton = document.getElementById('newGameButton');
+        newGameButton.addEventListener('click', resetGame);
+    }
+
+    function initializeApp() {
+        // Initial setup
+        setupControls();
+        drawGraph();
+        
+        // Set initial game status
+        resetGame(); // Calls updateStatus and updateTurnIndicator
+    }
+    
+    // Run the drawing function and initialize when the window loads
+    window.onload = initializeApp;
 
     // Redraw on window resize
     window.addEventListener('resize', drawGraph);
