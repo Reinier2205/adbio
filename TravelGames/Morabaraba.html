@@ -8,7 +8,7 @@
     <!-- Font Imports for the theme -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght=700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     
     <style>
         /* CSS Variables from the game styling */
@@ -18,8 +18,8 @@
             --gold:#ffd700;
             --gold-light:#fff8e1; /* Using this for general light text/lines */
             --light-gold:#fff8e1; 
-            --ivory:#faf8f0;
-            --piece-size: 56px; /* Matching NODE_RADIUS * 2 */
+            --ivory:#FAF8F0; /* Actual color for empty nodes */
+            --piece-size: 56px; 
         }
         *{box-sizing:border-box;margin:0;padding:0}
         
@@ -44,7 +44,7 @@
             border-radius: 15px;
             padding: 2rem;
             width: 100%;
-            max-width: 700px; /* Increased max-width for the wider graph */
+            max-width: 700px; 
             text-align: center;
             position: relative;
         }
@@ -61,7 +61,6 @@
 
         /* Canvas styling adjusted to fit the dark theme inside the felt area */
         #graphCanvas {
-            /* Using ivory for a warm white canvas contrast, with subtle shadow */
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0,0,0,0.2);
             background-color: var(--ivory); 
             border-radius: 0.75rem; 
@@ -69,6 +68,7 @@
             height: auto; 
             display: block;
             margin: 0 auto;
+            cursor: pointer;
         }
 
         /* --- Player Indicators --- */
@@ -76,17 +76,16 @@
             display: flex;
             justify-content: space-around;
             padding: 10px 0;
-            margin: 1rem 0; /* Reduced margin */
+            margin: 1rem 0; 
             gap: 1rem;
             flex-wrap: wrap; 
         }
         .player-card {
             background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-            padding: 0.4rem; /* Significantly reduced padding */
+            padding: 0.4rem; 
             border-radius: 10px;
-            /* Calculate width to fit exactly half the container minus the gap */
             width: calc(50% - 0.5rem); 
-            min-width: unset; /* Removed minimum width constraint */
+            min-width: unset; 
             border: 3px solid #1a1a1a;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
             color: var(--light-gold);
@@ -98,24 +97,24 @@
         .player-card.active {
             border-color: var(--gold);
             transform: scale(1.05);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 0 20px var(--gold);
         }
         .piece-display {
-            width: 18px; /* Reduced size */
-            height: 18px; /* Reduced size */
+            width: 18px; 
+            height: 18px; 
             border-radius: 50%;
-            margin-bottom: 0.2rem; /* Reduced margin */
-            /* Match piece styling */
+            margin-bottom: 0.2rem; 
             box-shadow: 
                 inset 6px 6px 12px rgba(0,0,0,0.3),
                 inset -3px -3px 8px rgba(255,255,255,0.06),
                 0 6px 12px rgba(0,0,0,0.4);
         }
-        .piece-display.yellow { 
-            background: radial-gradient(120% 120% at 30% 20%, #dcdcdc, #B5A599 40%, #8c7f76 100%);
-            border: 2px solid #8c7f76;
+        /* UPDATED: Player 1 (P1) is Yellow/Gold */
+        .piece-display.p1 { 
+            background: radial-gradient(120% 120% at 30% 20%, var(--gold-light), var(--gold) 40%, #cc9900 100%);
+            border: 2px solid #cc9900;
         }
-        .piece-display.red { 
+        .piece-display.p2 { 
             background: radial-gradient(120% 120% at 30% 20%, #ffaaaa, #E57373 40%, #b34a4a 100%);
             border: 2px solid #b34a4a;
         }
@@ -127,42 +126,67 @@
             margin-bottom: 0.2rem; 
         }
         .player-header h2 {
-            font-size: 0.9rem; /* Significantly reduced font size */
+            font-size: 0.9rem; 
             color: var(--light-gold);
             font-weight: 700;
         }
 
-        /* Removed unused editing and player-name styles */
-
-        /* --- Game Controls (New Section) --- */
+        /* --- Name Editing Styles --- */
+        .edit-name-icon {
+            cursor: pointer;
+            font-size: 0.8rem; 
+            color: var(--gold);
+            transition: transform 0.2s;
+            border-radius: 4px;
+            margin-left: 0.2rem;
+            line-height: 1; 
+        }
+        .edit-name-icon:hover {
+            transform: scale(1.2);
+        }
+        .player-name-input {
+            background-color: var(--ivory);
+            color: #1a1a1a;
+            border: 1px solid var(--gold);
+            border-radius: 4px;
+            padding: 1px 2px; 
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+            width: 80%;
+            font-size: 0.8rem; 
+            line-height: 1.2;
+        }
+        
+        /* --- Game Controls (Bottom section, smaller buttons) --- */
         .game-controls {
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 1.5rem; 
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem; 
         }
         .control-button {
-            padding: 0.75rem 1.5rem;
-            font-size: 1.1rem;
+            padding: 0.5rem 1rem; 
+            font-size: 0.9rem; 
             font-weight: 700;
             color: var(--dark-wood);
             background-color: var(--gold);
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4); 
             transition: all 0.2s ease;
             text-transform: uppercase;
         }
         .control-button:hover {
             background-color: var(--gold-light);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
-            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+            transform: translateY(-1px);
         }
         .control-button:active {
             transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         .game-status {
@@ -174,19 +198,84 @@
             border-radius: 6px;
             border: 1px solid var(--gold);
             min-width: 250px;
+            margin-top: 1.5rem;
             box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.5);
         }
 
-        /* Mobile Adjustments (Ensures cards stay side-by-side) */
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .modal-overlay.hidden {
+            display: none;
+        }
+        .modal-content {
+            background-color: var(--ivory);
+            color: var(--dark-wood);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            position: relative;
+            text-align: left;
+        }
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: #4a2c2a;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 0.5rem;
+        }
+        .modal-content p {
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4a2c2a;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-button:hover {
+            color: #b34a4a;
+        }
+
+        /* Mobile Adjustments */
         @media (max-width: 500px) {
             .table {
                 padding: 1rem;
             }
             .player-card {
-                width: calc(50% - 0.5rem); /* Keeps them side-by-side */
+                width: calc(50% - 0.5rem); 
             }
             .title {
                 font-size: 2rem;
+            }
+            .game-controls {
+                gap: 1rem;
+            }
+            .control-button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .game-status {
+                font-size: 1rem;
             }
         }
     </style>
@@ -197,42 +286,76 @@
 <div class="table">
     <div class="title">Centralized Node Graph</div>
     
-    <!-- Player Info (Now simplified and compact) -->
+    <!-- Player Info -->
     <div class="player-info">
-        <!-- Player 1 -->
+        <!-- Player 1 (P1 - Yellow/Gold) -->
         <div class="player-card active" data-player="P1" id="player1Card">
             <div class="player-header">
                 <h2 id="player1Name">Player 1</h2>
+                <span class="edit-name-icon" id="editPlayer1" aria-label="Edit Player 1 Name">✏️</span>
             </div>
-            <div class="piece-display yellow"></div>
+            <div class="piece-display p1"></div> <!-- Updated class to p1 -->
         </div>
-        <!-- Player 2 -->
+        <!-- Player 2 (P2 - Red) -->
         <div class="player-card" data-player="P2" id="player2Card">
             <div class="player-header">
                 <h2 id="player2Name">Player 2</h2>
+                <span class="edit-name-icon" id="editPlayer2" aria-label="Edit Player 2 Name">✏️</span>
             </div>
-            <div class="piece-display red"></div>
+            <div class="piece-display p2"></div> <!-- Updated class to p2 -->
         </div>
-    </div>
-    
-    <!-- Game Controls and Status -->
-    <div class="game-controls">
-        <button id="newGameButton" class="control-button">Start New Game</button>
-        <div id="statusMessage" class="game-status">Game status updates here.</div>
     </div>
 
     <!-- Canvas element where the graph will be drawn -->
     <canvas id="graphCanvas" width="600" height="600"></canvas>
+    
+    <!-- Game Status Display -->
+    <div id="statusMessage" class="game-status">Game status updates here.</div>
+
+    <!-- Game Controls (Smaller and positioned below canvas) -->
+    <div class="game-controls">
+        <button id="rulesButton" class="control-button rules-button">Rules</button>
+        <button id="newGameButton" class="control-button new-game-button">New Game</button>
+    </div>
+</div>
+
+<!-- Rules Modal (Hidden by default) -->
+<div id="rulesModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <span class="close-button" id="closeRulesModal">&times;</span>
+        <h3 class="modal-title">Centralized Node Graph Rules</h3>
+        <p id="rulesText">
+            The game begins with all pieces placed on the left and right clusters of nodes. 
+            The first player must move one of their pieces to the central **M** node. 
+            <br><br>
+            On subsequent turns, a player can choose one of the following moves:
+            <ul>
+                <li>Move a piece to an **adjacent, unoccupied node (Simple Move)**.</li>
+                <li>**Jump over an opponent's token** to an adjacent unoccupied node, thereby **capturing** and removing the opponent's piece (Capture Jump).</li>
+            </ul>
+            **Crucially: All moves and jumps must follow the straight lines of the graph.**
+            Jumps are optional. A player can choose a simple move even if a capture jump is available. The game continues until a player is left with only two pieces, or if a player is completely blocked and cannot make any valid move. The player who cannot move or is reduced to two pieces loses.
+        </p>
+    </div>
 </div>
 
 <script>
     // --- Global Game State ---
     let gameState = {
-        currentPlayer: 'P1', // 'P1' (Yellow) or 'P2' (Red)
+        currentPlayer: 'P1', // 'P1' (Yellow/Gold) or 'P2' (Red)
         status: 'Ready to start!',
-        p1Name: 'Player 1', // Simplified name for status messages
-        p2Name: 'Player 2'  // Simplified name for status messages
+        p1Name: 'Player 1', 
+        p2Name: 'Player 2',
+        phase: 'initial_move', // 'initial_move' or 'normal_play'
+        selectedNode: null, // Node key of the piece currently selected
+        possibleMoves: [], // Array of valid target node keys
+        p1Pieces: [], // List of node keys P1 occupies
+        p2Pieces: [], // List of node keys P2 occupies
+        isGameOver: false
     };
+
+    // Tracks node occupancy: key is node label (A, M, K, etc.), value is 'P1', 'P2', or null
+    let boardState = {}; 
     
     // Constants for drawing
     const CANVAS_WIDTH = 600;
@@ -241,64 +364,373 @@
     const LINE_WIDTH = 4;
     
     // Casino Theme Colors for JS Drawing
-    const LINE_COLOR = '#4a2c2a'; // Dark wood color for lines on ivory background
-    const TEXT_COLOR = '#1a1a1a'; // Very dark text
-    const NODE_BORDER_COLOR = '#4a2c2a'; // Dark wood border for nodes
+    const LINE_COLOR = '#4a2c2a'; 
+    const TEXT_COLOR = '#1a1a1a'; 
+    const NODE_BORDER_COLOR = '#4a2c2a'; 
+    const EMPTY_NODE_COLOR = '#FAF8F0'; // Ivory/White for empty nodes
     
-    // Using Inter font for node labels (Roboto is the body font)
     const FONT_STYLE = `${NODE_RADIUS * 0.5}px Inter`; 
 
-    /* Node coordinates maintained from the last step, creating separation with central node M. */
+    /* Node coordinates */
+    // M is now explicitly set to EMPTY_NODE_COLOR, ensuring it draws as a white circle when empty.
     const nodes = {
-        // Left Cluster (Brown/Gray: #B5A599)
-        A: { x: 75, y: 150, label: 'A', color: '#B5A599' }, 
-        C: { x: 175, y: 150, label: 'C', color: '#B5A599' }, 
-        D: { x: 75, y: 300, label: 'D', color: '#B5A599' },
-        F: { x: 175, y: 300, label: 'F', color: '#B5A599' },
-        G: { x: 75, y: 450, label: 'G', color: '#B5A599' },
-        H: { x: 175, y: 450, label: 'H', color: '#B5A599' },
-
-        // Central Node (Connector: #FFD700)
-        M: { x: 300, y: 300, label: 'M', color: '#FFD700' }, // Gold color 
-
-        // Right Cluster (Red: #E57373)
-        K: { x: 425, y: 150, label: 'K', color: '#E57373' }, 
-        L: { x: 525, y: 150, label: 'L', color: '#E57373' }, 
-        N: { x: 425, y: 300, label: 'N', color: '#E57373' },
-        O: { x: 525, y: 300, label: 'O', color: '#E57373' },
-        P: { x: 425, y: 450, label: 'P', color: '#E57373' },
-        R: { x: 525, y: 450, label: 'R', color: '#E57373' },
+        A: { x: 75, y: 150, label: 'A', color: EMPTY_NODE_COLOR }, 
+        C: { x: 175, y: 150, label: 'C', color: EMPTY_NODE_COLOR }, 
+        D: { x: 75, y: 300, label: 'D', color: EMPTY_NODE_COLOR },
+        F: { x: 175, y: 300, label: 'F', color: EMPTY_NODE_COLOR },
+        G: { x: 75, y: 450, label: 'G', color: EMPTY_NODE_COLOR },
+        H: { x: 175, y: 450, label: 'H', color: EMPTY_NODE_COLOR },
+        M: { x: 300, y: 300, label: 'M', color: EMPTY_NODE_COLOR }, // <<< CENTRAL NODE
+        K: { x: 425, y: 150, label: 'K', color: EMPTY_NODE_COLOR }, 
+        L: { x: 525, y: 150, label: 'L', color: EMPTY_NODE_COLOR }, 
+        N: { x: 425, y: 300, label: 'N', color: EMPTY_NODE_COLOR },
+        O: { x: 525, y: 300, label: 'O', color: EMPTY_NODE_COLOR },
+        P: { x: 425, y: 450, label: 'P', color: EMPTY_NODE_COLOR },
+        R: { x: 525, y: 450, label: 'R', color: EMPTY_NODE_COLOR },
     };
 
-    // Edge data: connections flow through the central 'M' node
+    // Adjacency: { node: [neighbor1, neighbor2, ...] }
+    const adjacency = {
+        A: ['D', 'C'], C: ['A', 'F', 'M'], D: ['A', 'G', 'F'], F: ['C', 'D', 'H', 'M'],
+        G: ['D', 'H'], H: ['G', 'F', 'M'], M: ['C', 'F', 'H', 'K', 'N', 'P'], 
+        K: ['L', 'N', 'M'], L: ['K', 'O'], N: ['K', 'L', 'P', 'O', 'M'], O: ['L', 'N', 'R'],
+        P: ['N', 'R', 'M'], R: ['O', 'P'],
+    };
+
+    /**
+     * Jump Paths: { start: { end: 'over_node' } }
+     */
+    const jumpDestinations = {
+        // Vertical Jumps (Left)
+        A: { G: 'D' }, G: { A: 'D' }, 
+        C: { H: 'F' }, H: { C: 'F' }, 
+        
+        // Vertical Jumps (Right)
+        K: { P: 'N' }, P: { K: 'N' }, 
+        L: { R: 'O' }, R: { L: 'O' }, 
+        
+        // Horizontal/Straight Jumps involving M
+        D: { M: 'F' }, 
+        O: { M: 'N' }, 
+        F: { N: 'M' }, 
+        N: { F: 'M' },
+
+        // Central Node M Jumps (symmetrical reverses for straight paths)
+        M: { 
+            D: 'F', 
+            O: 'N', 
+            N: 'F'  
+        },
+        
+        // V-SHAPED JUMPS OVER M 
+        K: { H: 'M' }, H: { K: 'M' }, 
+        C: { P: 'M' }, P: { C: 'M' },
+    };
+
+    // Edge data for drawing the lines
     const edges = [
-        // Left Internal (Horizontal)
-        ['A', 'C'], ['D', 'F'], ['G', 'H'],
-        // Left Internal (Vertical)
-        ['A', 'D'], ['D', 'G'], ['C', 'F'], ['F', 'H'],
-
-        // Right Internal (Horizontal)
-        ['K', 'L'], ['N', 'O'], ['P', 'R'],
-        // Right Internal (Vertical)
-        ['K', 'N'], ['N', 'P'], ['L', 'O'], ['O', 'R'],
-
-        // Connecting (Crossover) - All connections now pass through 'M'
-        ['C', 'M'], ['M', 'P'], 
-        ['H', 'M'], ['M', 'K'], 
-        ['F', 'M'], ['M', 'N'], 
+        ['A', 'C'], ['D', 'F'], ['G', 'H'], ['A', 'D'], ['D', 'G'], ['C', 'F'], ['F', 'H'],
+        ['K', 'L'], ['N', 'O'], ['P', 'R'], ['K', 'N'], ['N', 'P'], ['L', 'O'], ['O', 'R'],
+        ['C', 'M'], ['F', 'M'], ['H', 'M'], ['M', 'K'], ['M', 'N'], ['M', 'P'], 
     ];
 
+    // --- Core Game Functions ---
+
+    function getOpponent() {
+        return gameState.currentPlayer === 'P1' ? 'P2' : 'P1';
+    }
+
+    function getPlayerPieces(player) {
+        return player === 'P1' ? gameState.p1Pieces : gameState.p2Pieces;
+    }
+
+    /**
+     * Calculates all jump moves available to the current player.
+     * @param {string} player 'P1' or 'P2'
+     * @returns {Array<{from: string, to: string, over: string}>}
+     */
+    function getAvailableJumps(player) {
+        const jumps = [];
+        const opponent = getOpponent();
+        const playerPieces = getPlayerPieces(player);
+        
+        for (const fromNode of playerPieces) {
+            const possibleEnds = jumpDestinations[fromNode];
+            if (possibleEnds) {
+                for (const toNode in possibleEnds) {
+                    const overNode = possibleEnds[toNode];
+                    
+                    // Jump conditions:
+                    // 1. Target node (toNode) must be empty
+                    // 2. Over node (overNode) must be occupied by the opponent
+                    if (boardState[toNode] === null && boardState[overNode] === opponent) {
+                        jumps.push({ from: fromNode, to: toNode, over: overNode });
+                    }
+                }
+            }
+        }
+        return jumps;
+    }
+
+    /**
+     * Calculates all valid moves (simple or jump) for a given piece.
+     * @param {string} fromNode - The key of the node the piece is starting from.
+     * @returns {Array<{to: string, type: string, over: string | null}>}
+     */
+    function getValidMoves(fromNode) {
+        const moves = [];
+        const player = gameState.currentPlayer;
+
+        // 1. Initial Move Phase (P1 must move one piece to M)
+        if (gameState.phase === 'initial_move') {
+            if (boardState[fromNode] === player && fromNode !== 'M' && boardState.M === null) {
+                // If it's a P1 piece and M is empty, M is the only valid target
+                moves.push({ to: 'M', type: 'initial', over: null });
+            }
+            return moves;
+        }
+        
+        // 2. Normal Play Phase: Jumps and simple moves are optional choices.
+
+        // A. Check for Jumps (Capture moves) for the selected piece
+        const allAvailableJumps = getAvailableJumps(player);
+        const jumpsForThisPiece = allAvailableJumps.filter(j => j.from === fromNode);
+        
+        jumpsForThisPiece.forEach(j => {
+            moves.push({ to: j.to, type: 'jump', over: j.over });
+        });
+        
+        // B. Check for Simple adjacent moves (to an adjacent, unoccupied node)
+        if (adjacency[fromNode]) {
+            adjacency[fromNode].forEach(toNode => {
+                if (boardState[toNode] === null) {
+                    moves.push({ to: toNode, type: 'simple', over: null });
+                }
+            });
+        }
+        
+        return moves;
+    }
+
+    /**
+     * Checks if a player has won or lost. Updates status and sets isGameOver.
+     * @returns {boolean} True if the game is over.
+     */
+    function checkWinCondition() {
+        if (gameState.isGameOver) return true;
+
+        const p1PiecesCount = gameState.p1Pieces.length;
+        const p2PiecesCount = gameState.p2Pieces.length;
+        const currentPlayer = gameState.currentPlayer;
+        const opponent = getOpponent();
+        
+        let winner = null;
+        let loserName = null;
+        
+        // Condition 1: Player reduced to two pieces (they lose)
+        if (p1PiecesCount <= 2) {
+            winner = gameState.p2Name;
+            loserName = gameState.p1Name;
+        } else if (p2PiecesCount <= 2) {
+            winner = gameState.p1Name;
+            loserName = gameState.p2Name;
+        }
+        
+        if (winner) {
+            const loserPieceCount = currentPlayer === 'P1' ? p2PiecesCount : p1PiecesCount;
+            gameState.status = `Game Over! ${loserName} has only ${loserPieceCount} pieces left. ${winner} wins!`;
+            gameState.isGameOver = true;
+            return true;
+        }
+
+        // Condition 2: Player is blocked (cannot move - they lose)
+        let canMove = false;
+        if (gameState.phase === 'normal_play') {
+            for (const piece of getPlayerPieces(currentPlayer)) {
+                if (getValidMoves(piece).length > 0) {
+                    canMove = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!canMove && gameState.phase === 'normal_play') {
+            winner = opponent === 'P1' ? gameState.p1Name : gameState.p2Name;
+            loserName = currentPlayer === 'P1' ? gameState.p1Name : gameState.p2Name;
+            gameState.status = `Game Over! ${loserName} is blocked and cannot move. ${winner} wins!`;
+            gameState.isGameOver = true;
+            return true;
+        }
+        
+        return false;
+    }
+
+    function switchTurn() {
+        if (gameState.isGameOver) return;
+
+        gameState.selectedNode = null;
+        gameState.possibleMoves = [];
+
+        // Check if the current player is blocked before switching
+        if (checkWinCondition()) {
+             updateTurnIndicator();
+             return; 
+        }
+
+        gameState.currentPlayer = getOpponent();
+        
+        if (checkWinCondition()) { // Check if the new player is immediately blocked
+            updateTurnIndicator();
+            return;
+        }
+        
+        const currentPlayerName = gameState.currentPlayer === 'P1' ? gameState.p1Name : gameState.p2Name;
+        
+        if (gameState.phase === 'initial_move') {
+            gameState.status = `${currentPlayerName}'s turn. Move one piece to M.`;
+        } else {
+            gameState.status = `It's ${currentPlayerName}'s turn. Make your move (simple or jump).`;
+        }
+        
+        updateStatus();
+        updateTurnIndicator();
+    }
+
+    function processMove(fromKey, toKey, overKey) {
+        const player = gameState.currentPlayer;
+        const playerPieces = getPlayerPieces(player);
+
+        // 1. Move piece
+        boardState[toKey] = player;
+        boardState[fromKey] = null;
+
+        // Update player's piece list (replace old position with new)
+        const fromIndex = playerPieces.indexOf(fromKey);
+        if (fromIndex !== -1) {
+            playerPieces[fromIndex] = toKey;
+        }
+        
+        let statusUpdate = '';
+        
+        // 2. Handle Capture (if it was a jump)
+        if (overKey) {
+            const opponent = getOpponent();
+            const opponentPieces = getPlayerPieces(opponent);
+            
+            boardState[overKey] = null;
+            
+            // Remove captured piece from opponent's list
+            const overIndex = opponentPieces.indexOf(overKey);
+            if (overIndex !== -1) {
+                opponentPieces.splice(overIndex, 1);
+            }
+            
+            statusUpdate = `captured a piece on ${overKey}!`;
+        } else {
+            statusUpdate = 'made a simple move.';
+        }
+        
+        // If this was the initial move, P2 starts in normal play phase
+        if (player === 'P1' && toKey === 'M' && gameState.phase === 'initial_move') {
+            gameState.phase = 'normal_play';
+        }
+
+        // Update status for the move
+        const playerName = player === 'P1' ? gameState.p1Name : gameState.p2Name;
+        gameState.status = `${playerName} ${statusUpdate}`;
+
+        // After move, switch turn
+        switchTurn();
+        drawGraph();
+    }
+
+
+    function handleClick(nodeKey) {
+        if (gameState.isGameOver) {
+            gameState.status = 'Game over! Click "New Game" to play again.';
+            updateStatus();
+            return;
+        }
+
+        const player = gameState.currentPlayer;
+        const nodeOwner = boardState[nodeKey];
+
+        // --- PHASE 1: Try to select a piece ---
+        if (gameState.selectedNode === null) {
+            if (nodeOwner === player) {
+                // Select the player's piece
+                gameState.selectedNode = nodeKey;
+                
+                // Calculate and display possible moves
+                const moves = getValidMoves(nodeKey);
+                gameState.possibleMoves = moves.map(m => m.to);
+                
+                if (gameState.possibleMoves.length > 0) {
+                     gameState.status = `Piece on ${nodeKey} selected. Tap a cyan node to move.`;
+                } else {
+                    gameState.status = `Piece on ${nodeKey} is blocked or has no valid moves. Select another piece.`;
+                    gameState.selectedNode = null; // Deselect if no moves
+                }
+
+            } else if (nodeOwner === getOpponent()) {
+                gameState.status = `That's ${getOpponent() === 'P1' ? gameState.p1Name : gameState.p2Name}'s piece. Select your own.`;
+            } else {
+                gameState.status = `Select one of your pieces to move.`;
+            }
+            
+        // --- PHASE 2: A piece is selected (try to move or change selection) ---
+        } else {
+            const fromKey = gameState.selectedNode;
+            const moves = getValidMoves(fromKey);
+            const targetMove = moves.find(m => m.to === nodeKey);
+
+            if (nodeKey === fromKey) {
+                // Deselect the same piece
+                gameState.selectedNode = null;
+                gameState.possibleMoves = [];
+                gameState.status = 'Deselected. Select a piece to move.';
+            
+            } else if (targetMove) {
+                // Valid Move/Jump/Initial Move detected!
+                processMove(fromKey, targetMove.to, targetMove.over);
+
+            } else {
+                // Invalid move, check if we're trying to select a new piece
+                if (nodeOwner === player) {
+                     // Change selection to the newly clicked piece
+                     gameState.selectedNode = nodeKey;
+                     const newMoves = getValidMoves(nodeKey);
+                     gameState.possibleMoves = newMoves.map(m => m.to);
+                     
+                     if (gameState.possibleMoves.length > 0) {
+                         gameState.status = `Selection changed to ${nodeKey}. Tap a cyan node to move.`;
+                     } else {
+                        gameState.status = `Piece on ${nodeKey} is blocked. Select another piece.`;
+                        gameState.selectedNode = null;
+                        gameState.possibleMoves = [];
+                     }
+                     
+                } else {
+                    // Clicked an invalid target or opponent's piece
+                    gameState.status = 'Invalid move. Tap a cyan node, or deselect your current piece.';
+                }
+            }
+        }
+        
+        drawGraph();
+        updateStatus();
+    }
+    
+    // --- Drawing Functions ---
 
     function drawGraph() {
         const canvas = document.getElementById('graphCanvas');
         if (!canvas) return;
 
-        // Reset canvas size 
         canvas.width = CANVAS_WIDTH;
         canvas.height = CANVAS_HEIGHT;
 
         const ctx = canvas.getContext('2d');
-        // Clear the canvas 
         ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
         // --- 1. Draw Edges (Lines) ---
@@ -317,38 +749,29 @@
         });
         ctx.stroke();
 
-        // --- 2. Draw Nodes (Circles) and Labels ---
+        // --- 2. Draw Nodes, Pieces, and Labels ---
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = FONT_STYLE;
 
-        // Draw nodes in an order that ensures 'M' is drawn last to overlap lines
         const allNodes = Object.values(nodes);
         
-        // Draw all nodes except M first
-        allNodes.filter(node => node.label !== 'M').forEach(node => {
-            drawNode(ctx, node);
-        });
-
-        // Draw node M last 
-        const nodeM = nodes.M;
-        if (nodeM) {
-            drawNode(ctx, nodeM);
-        }
+        // Draw all nodes (M last to overlap lines)
+        allNodes.filter(node => node.label !== 'M').forEach(node => drawNode(ctx, node));
+        drawNode(ctx, nodes.M);
     }
 
     /**
-     * Helper function to draw a single node with casino-style shadow and border.
+     * Helper function to draw a single node, its piece, and highlighting.
      */
     function drawNode(ctx, node) {
-        // Draw Node Circle
+        // 1. Draw Node Circle (Background)
         ctx.beginPath();
         ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
 
-        // Apply fill color
-        ctx.fillStyle = node.color;
+        // All nodes use EMPTY_NODE_COLOR for the background.
+        ctx.fillStyle = EMPTY_NODE_COLOR; 
         
-        // Add a casino-style shadow/depth to the nodes
         ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
         ctx.shadowBlur = 6;
         ctx.shadowOffsetX = 3;
@@ -360,33 +783,172 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
-
-        // Reset shadow for clear text
+        // Reset shadow for clear rendering
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
 
-        // Draw Node Label
+        // 2. Draw Highlighting (Selection/Target)
+        const isSelected = gameState.selectedNode === node.label;
+        const isPossibleMove = gameState.possibleMoves && gameState.possibleMoves.includes(node.label);
+
+        if (isSelected || isPossibleMove) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI * 2);
+            ctx.strokeStyle = isSelected ? '#32CD32' : '#00FFFF'; // Lime Green for Selected, Cyan for Target
+            ctx.lineWidth = 6;
+            ctx.stroke();
+        }
+
+        // 3. Draw the Piece (on top of the node)
+        const pieceOwner = boardState[node.label];
+        if (pieceOwner) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, NODE_RADIUS * 0.8, 0, Math.PI * 2);
+            
+            // Piece styling
+            if (pieceOwner === 'P1') {
+                // Player 1 (Yellow/Gold) gradient
+                const gradient = ctx.createRadialGradient(node.x - NODE_RADIUS * 0.4, node.y - NODE_RADIUS * 0.4, 1, node.x, node.y, NODE_RADIUS * 0.8);
+                gradient.addColorStop(0, '#fff');
+                gradient.addColorStop(0.4, '#FFEB3B'); // Distinct Yellow
+                gradient.addColorStop(1, '#FFC107');  // Gold/Amber
+                ctx.fillStyle = gradient;
+                ctx.strokeStyle = '#FFC107';
+            } else {
+                // Player 2 (Red) gradient
+                const gradient = ctx.createRadialGradient(node.x - NODE_RADIUS * 0.4, node.y - NODE_RADIUS * 0.4, 1, node.x, node.y, NODE_RADIUS * 0.8);
+                gradient.addColorStop(0, '#fff');
+                gradient.addColorStop(0.4, '#E57373');
+                gradient.addColorStop(1, '#b34a4a');
+                ctx.fillStyle = gradient;
+                ctx.strokeStyle = '#b34a4a';
+            }
+            
+            ctx.lineWidth = 3;
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        // 4. Draw Node Label (always visible)
         ctx.fillStyle = TEXT_COLOR;
         ctx.fillText(node.label, node.x, node.y);
     }
     
-    // --- Removed Player Name Editing Functions (Not needed for static Player 1/2 labels) ---
+    // --- UI/Setup Functions ---
+
+    function setupPlayerNameEditing() {
+        const editPlayer1 = document.getElementById('editPlayer1');
+        const editPlayer2 = document.getElementById('editPlayer2');
+        const player1NameEl = document.getElementById('player1Name');
+        const player2NameEl = document.getElementById('player2Name');
+
+        player1NameEl.textContent = gameState.p1Name;
+        player2NameEl.textContent = gameState.p2Name;
+        
+        function setupEditFunctionality(editIcon, nameElement, playerKey) {
+            editIcon.addEventListener('click', () => {
+                if (nameElement.nextElementSibling && nameElement.nextElementSibling.tagName === 'INPUT') return;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = nameElement.textContent;
+                input.placeholder = 'Enter name';
+                input.className = 'player-name-input';
+                
+                const parentHeader = nameElement.parentNode;
+                parentHeader.replaceChild(input, nameElement);
+                input.focus();
+                
+                const tempH2 = nameElement;
+
+                const save = () => {
+                    const defaultName = playerKey === 'p1Name' ? 'Player 1' : 'Player 2';
+                    const val = (input.value || '').trim();
+                    const newName = val.length ? val : defaultName;
+                    
+                    tempH2.textContent = newName;
+                    gameState[playerKey] = newName; 
+                    updateStatus(); 
+                    
+                    parentHeader.replaceChild(tempH2, input);
+                };
+                
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', (e) => { 
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        input.blur();
+                    }
+                });
+            });
+        }
+
+        setupEditFunctionality(editPlayer1, player1NameEl, 'p1Name');
+        setupEditFunctionality(editPlayer2, player2NameEl, 'p2Name');
+    }
+
+    const rulesModal = document.getElementById('rulesModal');
+    
+    function showRulesModal() {
+        rulesModal.classList.remove('hidden');
+    }
+
+    function hideRulesModal() {
+        rulesModal.classList.add('hidden');
+    }
+
+    function setupCanvasInteractions() {
+        const canvas = document.getElementById('graphCanvas');
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            // Scale click coordinates to canvas dimensions
+            const x = (e.clientX - rect.left) * (CANVAS_WIDTH / rect.width);
+            const y = (e.clientY - rect.top) * (CANVAS_HEIGHT / rect.height);
+            
+            let clickedNodeKey = null;
+            for (const key in nodes) {
+                const node = nodes[key];
+                const distance = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
+                if (distance < NODE_RADIUS) {
+                    clickedNodeKey = key;
+                    break;
+                }
+            }
+            
+            if (clickedNodeKey) {
+                handleClick(clickedNodeKey);
+            }
+        });
+    }
 
     /**
-     * Stub function to reset the game state.
+     * Resets the game to its initial state.
      */
     function resetGame() {
+        const p1StartNodes = ['A', 'C', 'D', 'F', 'G', 'H'];
+        const p2StartNodes = ['K', 'L', 'N', 'O', 'P', 'R'];
+
+        gameState.p1Pieces = [...p1StartNodes];
+        gameState.p2Pieces = [...p2StartNodes];
+
+        // Reset board state
+        boardState = { M: null }; 
+        p1StartNodes.forEach(node => boardState[node] = 'P1');
+        p2StartNodes.forEach(node => boardState[node] = 'P2');
+        
         // Reset game state variables
         gameState.currentPlayer = 'P1';
-        gameState.status = `${gameState.p1Name}'s turn. Make your first move!`;
-        
+        gameState.phase = 'initial_move'; 
+        gameState.selectedNode = null;
+        gameState.possibleMoves = [];
+        gameState.isGameOver = false;
+
         // Update UI
+        gameState.status = `${gameState.p1Name}'s turn. Move one piece to M.`;
         updateStatus();
         updateTurnIndicator();
-        drawGraph(); // Redraw board if necessary
-        
-        console.log('Game reset! Current player:', gameState.p1Name);
+        drawGraph(); 
     }
 
     /**
@@ -403,28 +965,45 @@
     function updateTurnIndicator() {
         const p1Card = document.getElementById('player1Card');
         const p2Card = document.getElementById('player2Card');
-
-        if (gameState.currentPlayer === 'P1') {
+        
+        if (gameState.currentPlayer === 'P1' && !gameState.isGameOver) {
             p1Card.classList.add('active');
             p2Card.classList.remove('active');
-        } else {
+        } else if (gameState.currentPlayer === 'P2' && !gameState.isGameOver) {
             p1Card.classList.remove('active');
             p2Card.classList.add('active');
+        } else {
+            p1Card.classList.remove('active');
+            p2Card.classList.remove('active');
         }
     }
 
     function setupControls() {
         const newGameButton = document.getElementById('newGameButton');
+        const rulesButton = document.getElementById('rulesButton');
+        const closeRulesModalButton = document.getElementById('closeRulesModal');
+        const modalOverlay = document.getElementById('rulesModal');
+
+        // Game Button
         newGameButton.addEventListener('click', resetGame);
+        
+        // Rules Button/Modal
+        rulesButton.addEventListener('click', showRulesModal);
+        closeRulesModalButton.addEventListener('click', hideRulesModal);
+        
+        // Close modal on outside click
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                hideRulesModal();
+            }
+        });
     }
 
     function initializeApp() {
-        // Initial setup
+        setupPlayerNameEditing(); 
         setupControls();
-        drawGraph();
-        
-        // Set initial game status
-        resetGame(); // Calls updateStatus and updateTurnIndicator
+        setupCanvasInteractions();
+        resetGame(); // Calls drawGraph and sets initial status
     }
     
     // Run the drawing function and initialize when the window loads
