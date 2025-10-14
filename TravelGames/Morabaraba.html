@@ -3,37 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Node Graph Recreation</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Styled Node Graph</title>
+    
+    <!-- Font Imports for the theme -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
     <style>
-        /* Set body font to Inter and provide a dark canvas background */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #1a1a1a;
+        /* CSS Variables from the game styling */
+        :root{
+            --felt-green:#0a4821;
+            --dark-wood:#2a1a1f;
+            --gold:#ffd700;
+            --gold-light:#fff8e1; /* Using this for general light text/lines */
+            --light-gold:#fff8e1; 
+            --ivory:#faf8f0;
+            --piece-size: 56px; /* Matching NODE_RADIUS * 2 */
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        
+        /* Body Styling - Dark wood background */
+        body{
+            font-family:'Roboto',sans-serif;
+            background-color: var(--dark-wood);
+            background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
             padding: 1rem;
+            color: var(--light-gold);
+        }
+        
+        /* Table Styling - Felt green background with gold border */
+        .table {
+            background: var(--felt-green);
+            border: 10px solid #4a2c2a;
+            box-shadow: 0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 700px; /* Increased max-width for the wider graph */
+            text-align: center;
+            position: relative;
         }
 
-        /* Canvas styling to match the inner light gray area of the original image */
+        /* Title Styling */
+        .title{
+            font-family:'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Canvas styling adjusted to fit the dark theme inside the felt area */
         #graphCanvas {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            background-color: #f0f0f0; /* Light gray background for the graph area */
-            border: 8px solid #333; /* Dark border to frame the canvas */
-            border-radius: 1.5rem; /* Rounded corners for the container */
+            /* Using ivory for a warm white canvas contrast, with subtle shadow */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0,0,0,0.2);
+            background-color: var(--ivory); 
+            border-radius: 0.75rem; 
             max-width: 100%;
-            height: auto; /* Maintain aspect ratio */
+            height: auto; 
             display: block;
+            margin: 0 auto;
         }
     </style>
 </head>
-<body class="selection:bg-red-400 selection:text-white">
+<body>
 
-<div class="w-full max-w-lg mx-auto">
+<!-- Apply .table styling to the main container -->
+<div class="table">
+    <div class="title">Centralized Node Graph</div>
+    
     <!-- Canvas element where the graph will be drawn -->
     <canvas id="graphCanvas" width="600" height="600"></canvas>
 </div>
@@ -43,36 +87,39 @@
     const CANVAS_WIDTH = 600;
     const CANVAS_HEIGHT = 600;
     const NODE_RADIUS = 28;
-    const LINE_COLOR = '#333333';
     const LINE_WIDTH = 4;
-    const FONT_STYLE = `${NODE_RADIUS * 0.5}px Inter`;
-    const TEXT_COLOR = '#333333';
+    
+    // Casino Theme Colors for JS Drawing
+    const LINE_COLOR = '#4a2c2a'; // Dark wood color for lines on ivory background
+    const TEXT_COLOR = '#1a1a1a'; // Very dark text
+    const NODE_BORDER_COLOR = '#4a2c2a'; // Dark wood border for nodes
+    
+    // Using Inter font for node labels (Roboto is the body font)
+    const FONT_STYLE = `${NODE_RADIUS * 0.5}px Inter`; 
 
-    /* * Node coordinates have been adjusted to create maximum space in the middle.
-     * The gap between the two closest inner columns (C and K) is now 250 units.
-     */
+    /* Node coordinates maintained from the last step, creating separation with central node M. */
     const nodes = {
         // Left Cluster (Brown/Gray)
-        A: { x: 75, y: 150, label: 'A', color: '#B5A599' }, // 100 -> 75
-        C: { x: 175, y: 150, label: 'C', color: '#B5A599' }, // 200 -> 175
+        A: { x: 75, y: 150, label: 'A', color: '#B5A599' }, 
+        C: { x: 175, y: 150, label: 'C', color: '#B5A599' }, 
         D: { x: 75, y: 300, label: 'D', color: '#B5A599' },
         F: { x: 175, y: 300, label: 'F', color: '#B5A599' },
         G: { x: 75, y: 450, label: 'G', color: '#B5A599' },
         H: { x: 175, y: 450, label: 'H', color: '#B5A599' },
 
-        // Central Node (New)
-        M: { x: 300, y: 300, label: 'M', color: '#FFD700' }, // Gold color for central connector
+        // Central Node (New Connector)
+        M: { x: 300, y: 300, label: 'M', color: '#FFD700' }, // Gold color 
 
         // Right Cluster (Red)
-        K: { x: 425, y: 150, label: 'K', color: '#E57373' }, // 400 -> 425
-        L: { x: 525, y: 150, label: 'L', color: '#E57373' }, // 500 -> 525
+        K: { x: 425, y: 150, label: 'K', color: '#E57373' }, 
+        L: { x: 525, y: 150, label: 'L', color: '#E57373' }, 
         N: { x: 425, y: 300, label: 'N', color: '#E57373' },
         O: { x: 525, y: 300, label: 'O', color: '#E57373' },
         P: { x: 425, y: 450, label: 'P', color: '#E57373' },
         R: { x: 525, y: 450, label: 'R', color: '#E57373' },
     };
 
-    // Edge data: connections adjusted to flow through the central 'M' node
+    // Edge data: connections flow through the central 'M' node
     const edges = [
         // Left Internal (Horizontal)
         ['A', 'C'], ['D', 'F'], ['G', 'H'],
@@ -85,25 +132,22 @@
         ['K', 'N'], ['N', 'P'], ['L', 'O'], ['O', 'R'],
 
         // Connecting (Crossover) - All connections now pass through 'M'
-        ['C', 'M'], ['M', 'P'], // C to P via M
-        ['H', 'M'], ['M', 'K'], // H to K via M
-        ['F', 'M'], ['M', 'N'], // F to N via M
+        ['C', 'M'], ['M', 'P'], 
+        ['H', 'M'], ['M', 'K'], 
+        ['F', 'M'], ['M', 'N'], 
     ];
-
-    // External Labels removed as requested
-    const externalLabels = [];
 
 
     function drawGraph() {
         const canvas = document.getElementById('graphCanvas');
         if (!canvas) return;
 
-        // Reset canvas size to handle potential responsiveness issues on redraw
+        // Reset canvas size 
         canvas.width = CANVAS_WIDTH;
         canvas.height = CANVAS_HEIGHT;
 
         const ctx = canvas.getContext('2d');
-        // Clear the canvas
+        // Clear the canvas 
         ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
         // --- 1. Draw Edges (Lines) ---
@@ -126,9 +170,8 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = FONT_STYLE;
-        ctx.fillStyle = TEXT_COLOR;
 
-        // Draw nodes in an order that ensures 'M' is drawn last to overlap lines, if necessary
+        // Draw nodes in an order that ensures 'M' is drawn last to overlap lines
         const allNodes = Object.values(nodes);
         
         // Draw all nodes except M first
@@ -136,14 +179,16 @@
             drawNode(ctx, node);
         });
 
-        // Draw node M last to ensure it sits on top of all connecting lines
+        // Draw node M last 
         const nodeM = nodes.M;
         if (nodeM) {
             drawNode(ctx, nodeM);
         }
     }
 
-    // Helper function to draw a single node (circle and label)
+    /**
+     * Helper function to draw a single node with casino-style shadow and border.
+     */
     function drawNode(ctx, node) {
         // Draw Node Circle
         ctx.beginPath();
@@ -152,14 +197,20 @@
         // Apply fill color
         ctx.fillStyle = node.color;
         
-        // Add a subtle shadow to mimic the original image's depth
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-        ctx.shadowBlur = 4;
-        ctx.shadowOffsetX = 2;
-        ctx.shadowOffsetY = 2;
+        // Add a casino-style shadow/depth to the nodes
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 3;
         ctx.fill();
 
-        // Reset shadow for text drawing (important for clear text)
+        // Draw the dark border for definition
+        ctx.strokeStyle = NODE_BORDER_COLOR;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+
+        // Reset shadow for clear text
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
@@ -172,7 +223,7 @@
     // Run the drawing function when the window loads
     window.onload = drawGraph;
 
-    // Optional: Redraw on window resize (for responsiveness, though dimensions are fixed)
+    // Redraw on window resize
     window.addEventListener('resize', drawGraph);
 </script>
 </body>
