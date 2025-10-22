@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Casino Blackjack</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
         body {
-            background: linear-gradient(135deg, #1a3c34, #004d40); /* Refined casino gradient */
+            background: linear-gradient(135deg, #0a2f2a, #003d33); /* Deep casino gradient */
             color: #FFD700; /* Gold text */
-            font-family: 'Playfair Display', serif;
+            font-family: 'Roboto Condensed', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -20,17 +20,17 @@
             overflow: auto;
         }
         h1 {
-            text-shadow: 4px 4px 6px rgba(0, 0, 0, 0.8);
-            font-size: 3em;
-            margin-bottom: 25px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+            font-size: 2.8em;
+            margin-bottom: 20px;
             animation: glow 2s ease-in-out infinite alternate;
         }
         @keyframes glow {
-            from { text-shadow: 4px 4px 6px rgba(0, 0, 0, 0.8); }
-            to { text-shadow: 4px 4px 12px rgba(255, 215, 0, 1); }
+            from { text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8); }
+            to { text-shadow: 3px 3px 12px rgba(255, 215, 0, 1); }
         }
         #game {
-            background: #1b5e20; /* Deep casino green */
+            background: #145214; /* Deep green table */
             padding: 25px;
             border: 10px solid #FFD700;
             border-radius: 20px;
@@ -47,7 +47,7 @@
             justify-content: center;
         }
         .card {
-            background: linear-gradient(145deg, #ffffff, #f5f5f5); /* Clean card white */
+            background: linear-gradient(145deg, #ffffff, #f8f8f8); /* Clean card white */
             width: 90px;
             height: 135px;
             border: 2px solid #FFD700;
@@ -55,9 +55,9 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 8px;
-            font-size: 20px;
-            font-weight: bold;
+            padding: 10px;
+            font-size: 24px;
+            font-weight: 700;
             color: #000;
             box-shadow: 6px 6px 20px rgba(0, 0, 0, 0.5), inset 2px 2px 5px rgba(255, 255, 255, 0.5);
             transform: rotateY(0deg);
@@ -81,7 +81,7 @@
             color: #c62828; /* Deep red */
         }
         .card .suit {
-            font-size: 24px;
+            font-size: 40px; /* Large suit symbol */
             text-align: center;
             flex-grow: 1;
             display: flex;
@@ -89,28 +89,29 @@
             justify-content: center;
         }
         .card .value-top, .card .value-bottom {
-            font-size: 18px;
+            font-size: 24px; /* Larger values */
             line-height: 1;
+            font-weight: 700;
         }
         .card .value-bottom {
             transform: rotate(180deg);
             align-self: flex-end;
         }
         .card.hidden {
-            background: linear-gradient(145deg, #8B0000, #B22222);
+            background: linear-gradient(145deg, #8B0000, #B22222); /* Red card back */
             box-shadow: 6px 6px 20px rgba(0, 0, 0, 0.5);
         }
         .card.hidden .value-top, .card.hidden .value-bottom, .card.hidden .suit {
             display: none;
         }
-        #player-score, #dealer-score {
-            font-size: 26px;
-            margin: 15px 0;
+        #player-score, #dealer-score, #tokens, #score {
+            font-size: 24px;
+            margin: 10px 0;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
         }
         #status {
-            font-size: 30px;
-            margin: 25px 0;
+            font-size: 28px;
+            margin: 20px 0;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
             animation: pulse 1.5s infinite;
         }
@@ -119,17 +120,18 @@
             50% { transform: scale(1.06); }
             100% { transform: scale(1); }
         }
-        .controls {
+        .controls, .bet-controls {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             justify-content: center;
+            margin: 15px 0;
         }
         button {
             background: linear-gradient(45deg, #FFD700, #FFA500);
-            color: #1a3c34;
-            font-family: 'Playfair Display', serif;
-            font-size: 22px;
-            padding: 12px 30px;
+            color: #0a2f2a;
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 20px;
+            padding: 12px 25px;
             border: none;
             border-radius: 10px;
             cursor: pointer;
@@ -146,6 +148,12 @@
             transform: none;
             box-shadow: none;
         }
+        .bet-controls button {
+            background: linear-gradient(45deg, #4682b4, #87ceeb); /* Blue for bet buttons */
+        }
+        .bet-controls button:hover {
+            box-shadow: 10px 10px 25px rgba(135, 206, 235, 0.8);
+        }
         @media (max-width: 600px) {
             #game {
                 padding: 15px;
@@ -153,18 +161,18 @@
             .card {
                 width: 65px;
                 height: 97px;
-                font-size: 14px;
+                font-size: 16px;
             }
             .card .suit {
-                font-size: 18px;
+                font-size: 28px;
             }
             .card .value-top, .card .value-bottom {
-                font-size: 12px;
+                font-size: 16px;
             }
             h1 {
                 font-size: 8vw;
             }
-            #status, #player-score, #dealer-score {
+            #status, #player-score, #dealer-score, #tokens, #score {
                 font-size: 6vw;
             }
             button {
@@ -181,10 +189,19 @@
         <div id="dealer-score">Dealer Score: 0</div>
         <div id="player-hand"></div>
         <div id="player-score">Your Score: 0</div>
-        <div id="status">Click New Game to start!</div>
+        <div id="tokens">Tokens: 1000</div>
+        <div id="score">Wins: 0 | Losses: 0 | Pushes: 0</div>
+        <div id="status">Select a bet to start!</div>
+        <div class="bet-controls">
+            <button id="bet10" disabled>Bet 10</button>
+            <button id="bet50" disabled>Bet 50</button>
+            <button id="bet100" disabled>Bet 100</button>
+            <button id="bet500" disabled>Bet 500</button>
+        </div>
         <div class="controls">
             <button id="hit" disabled>Hit</button>
             <button id="stand" disabled>Stand</button>
+            <button id="nextHand" disabled>Next Hand</button>
             <button id="newGame">New Game</button>
         </div>
     </div>
@@ -200,18 +217,34 @@
         let playerHand = [];
         let dealerHand = [];
         let gameActive = false;
+        let currentBet = 0;
+        let tokens = 1000;
+        let score = { wins: 0, losses: 0, pushes: 0 };
         const playerHandDiv = document.getElementById('player-hand');
         const dealerHandDiv = document.getElementById('dealer-hand');
         const playerScoreDiv = document.getElementById('player-score');
         const dealerScoreDiv = document.getElementById('dealer-score');
+        const tokensDiv = document.getElementById('tokens');
+        const scoreDiv = document.getElementById('score');
         const statusDiv = document.getElementById('status');
         const hitButton = document.getElementById('hit');
         const standButton = document.getElementById('stand');
+        const nextHandButton = document.getElementById('nextHand');
         const newGameButton = document.getElementById('newGame');
+        const betButtons = {
+            10: document.getElementById('bet10'),
+            50: document.getElementById('bet50'),
+            100: document.getElementById('bet100'),
+            500: document.getElementById('bet500')
+        };
 
         hitButton.addEventListener('click', hit);
         standButton.addEventListener('click', stand);
-        newGameButton.addEventListener('click', startNewGame);
+        nextHandButton.addEventListener('click', nextHand);
+        newGameButton.addEventListener('click', newGame);
+        Object.values(betButtons).forEach(button => {
+            button.addEventListener('click', () => placeBet(parseInt(button.textContent.split(' ')[1])));
+        });
 
         function createDeck() {
             deck = [];
@@ -220,7 +253,7 @@
                     deck.push({ suit, value });
                 }
             }
-            deck = deck.sort(() => Math.random() - 0.5); // Shuffle
+            deck = deck.sort(() => Math.random() - 0.5);
         }
 
         function getCardValue(card) {
@@ -282,6 +315,18 @@
         function updateScores() {
             playerScoreDiv.textContent = `Your Score: ${calculateScore(playerHand)}`;
             dealerScoreDiv.textContent = `Dealer Score: ${dealerHand.length > 0 ? (gameActive ? '?' : calculateScore(dealerHand)) : 0}`;
+            tokensDiv.textContent = `Tokens: ${tokens}`;
+            scoreDiv.textContent = `Wins: ${score.wins} | Losses: ${score.losses} | Pushes: ${score.pushes}`;
+        }
+
+        function placeBet(amount) {
+            if (tokens < amount) {
+                statusDiv.textContent = 'Not enough tokens!';
+                return;
+            }
+            currentBet = amount;
+            tokens -= currentBet;
+            startHand();
         }
 
         function hit() {
@@ -290,7 +335,8 @@
             renderHand(playerHand, playerHandDiv);
             updateScores();
             if (calculateScore(playerHand) > 21) {
-                endGame('You bust! Dealer wins.');
+                score.losses++;
+                endGame(`You bust! Dealer wins. (-${currentBet} tokens)`);
             }
         }
 
@@ -308,7 +354,9 @@
             while (true) {
                 let dealerScore = calculateScore(dealerHand);
                 if (dealerScore > 21) {
-                    endGame('Dealer busts! You win!');
+                    tokens += currentBet * 2;
+                    score.wins++;
+                    endGame(`Dealer busts! You win! (+${currentBet} tokens)`);
                     return;
                 }
                 if (hasSoft17(dealerHand) || dealerScore < 17) {
@@ -329,11 +377,16 @@
             updateScores();
             let dealerScore = calculateScore(dealerHand);
             if (playerScore > dealerScore) {
-                endGame('You win!');
+                tokens += currentBet * 2;
+                score.wins++;
+                endGame(`You win! (+${currentBet} tokens)`);
             } else if (dealerScore > playerScore) {
-                endGame('Dealer wins!');
+                score.losses++;
+                endGame(`Dealer wins! (-${currentBet} tokens)`);
             } else {
-                endGame('Push!');
+                tokens += currentBet;
+                score.pushes++;
+                endGame(`Push! (${currentBet} tokens returned)`);
             }
         }
 
@@ -341,25 +394,62 @@
             gameActive = false;
             hitButton.disabled = true;
             standButton.disabled = true;
+            nextHandButton.disabled = tokens < 10;
+            Object.values(betButtons).forEach(button => {
+                const amount = parseInt(button.textContent.split(' ')[1]);
+                button.disabled = tokens < amount;
+            });
             statusDiv.textContent = message;
             renderHand(dealerHand, dealerHandDiv);
+            updateScores();
         }
 
-        function startNewGame() {
+        function startHand() {
             createDeck();
             playerHand = [deck.pop(), deck.pop()];
             dealerHand = [deck.pop(), deck.pop()];
             gameActive = true;
             hitButton.disabled = false;
             standButton.disabled = false;
+            nextHandButton.disabled = true;
+            Object.values(betButtons).forEach(button => button.disabled = true);
             renderHand(playerHand, playerHandDiv);
             renderHand(dealerHand, dealerHandDiv, true);
             updateScores();
             statusDiv.textContent = 'Your turn!';
             if (calculateScore(playerHand) === 21) {
-                endGame('Blackjack! You win!');
+                tokens += currentBet * 3; // 2:1 for Blackjack
+                score.wins++;
+                endGame(`Blackjack! You win! (+${currentBet * 2} tokens)`);
             }
         }
+
+        function nextHand() {
+            playerHand = [];
+            dealerHand = [];
+            currentBet = 0;
+            gameActive = false;
+            hitButton.disabled = true;
+            standButton.disabled = true;
+            nextHandButton.disabled = true;
+            Object.values(betButtons).forEach(button => {
+                const amount = parseInt(button.textContent.split(' ')[1]);
+                button.disabled = tokens < amount;
+            });
+            renderHand(playerHand, playerHandDiv);
+            renderHand(dealerHand, dealerHandDiv);
+            updateScores();
+            statusDiv.textContent = 'Select a bet to start!';
+        }
+
+        function newGame() {
+            tokens = 1000;
+            score = { wins: 0, losses: 0, pushes: 0 };
+            nextHand();
+        }
+
+        // Initialize bet buttons
+        newGame();
     </script>
 </body>
 </html>
