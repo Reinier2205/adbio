@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Tic Tac Toe</title>
+    <style>
+        body {
+            background-color: #006400; /* Dark green like casino felt */
+            color: gold;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        h1 {
+            text-shadow: 2px 2px 4px black;
+            margin-bottom: 20px;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: 300px;
+            height: 300px;
+            background-color: #228B22; /* Forest green */
+            padding: 10px;
+            border: 5px solid gold;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        .cell {
+            background-color: #FFFACD; /* Lemon chiffon for card-like feel */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid gold;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .cell:hover {
+            background-color: #FFD700; /* Gold on hover */
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 24px;
+            text-shadow: 1px 1px 2px black;
+        }
+        @media (max-width: 600px) {
+            #board {
+                width: 90vw;
+                height: 90vw;
+            }
+            .cell {
+                font-size: 20vw;
+            }
+            h1 {
+                font-size: 8vw;
+            }
+            #status {
+                font-size: 6vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Casino Tic Tac Toe</h1>
+    <div id="board">
+        <div class="cell" data-row="0" data-col="0"></div>
+        <div class="cell" data-row="0" data-col="1"></div>
+        <div class="cell" data-row="0" data-col="2"></div>
+        <div class="cell" data-row="1" data-col="0"></div>
+        <div class="cell" data-row="1" data-col="1"></div>
+        <div class="cell" data-row="1" data-col="2"></div>
+        <div class="cell" data-row="2" data-col="0"></div>
+        <div class="cell" data-row="2" data-col="1"></div>
+        <div class="cell" data-row="2" data-col="2"></div>
+    </div>
+    <div id="status">Player X's turn</div>
+    <script>
+        let board = [
+            ['', '', ''],
+            ['', '', ''],
+            ['', '', '']
+        ];
+        let currentPlayer = 'X';
+        let moves = []; // Array of {row, col}
+        const cells = document.querySelectorAll('.cell');
+        const status = document.getElementById('status');
+        const winPatterns = [
+            [[0,0], [0,1], [0,2]],
+            [[1,0], [1,1], [1,2]],
+            [[2,0], [2,1], [2,2]],
+            [[0,0], [1,0], [2,0]],
+            [[0,1], [1,1], [2,1]],
+            [[0,2], [1,2], [2,2]],
+            [[0,0], [1,1], [2,2]],
+            [[0,2], [1,1], [2,0]]
+        ];
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleClick);
+        });
+
+        function handleClick(e) {
+            const row = parseInt(e.target.dataset.row);
+            const col = parseInt(e.target.dataset.col);
+            if (board[row][col] !== '') return;
+
+            board[row][col] = currentPlayer;
+            e.target.textContent = currentPlayer;
+            moves.push({row, col});
+
+            let winner = checkWinner();
+            if (winner) {
+                status.textContent = `Player ${winner} wins!`;
+                disableBoard();
+                return;
+            }
+
+            let emptyCount = getEmptyCount();
+            if (emptyCount === 2) {
+                const oldest = moves.shift();
+                board[oldest.row][oldest.col] = '';
+                document.querySelector(`[data-row="${oldest.row}"][data-col="${oldest.col}"]`).textContent = '';
+
+                winner = checkWinner();
+                if (winner) {
+                    status.textContent = `Player ${winner} wins after remove!`;
+                    disableBoard();
+                    return;
+                }
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            status.textContent = `Player ${currentPlayer}'s turn`;
+        }
+
+        function checkWinner() {
+            for (let player of ['X', 'O']) {
+                if (winPatterns.some(pattern => pattern.every(([r, c]) => board[r][c] === player))) {
+                    return player;
+                }
+            }
+            return null;
+        }
+
+        function getEmptyCount() {
+            let count = 0;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (board[i][j] === '') count++;
+                }
+            }
+            return count;
+        }
+
+        function disableBoard() {
+            cells.forEach(cell => {
+                cell.removeEventListener('click', handleClick);
+            });
+        }
+    </script>
+</body>
+</html>
