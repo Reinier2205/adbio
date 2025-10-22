@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Blackjack</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a3c34, #006400); /* Casino gradient */
+            color: #FFD700; /* Gold text */
+            font-family: 'Verdana', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            overflow: auto;
+        }
+        h1 {
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7); }
+            to { text-shadow: 3px 3px 12px rgba(255, 215, 0, 1); }
+        }
+        #game {
+            background: #2e8b57; /* Rich green table */
+            padding: 20px;
+            border: 8px solid #FFD700;
+            border-radius: 15px;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.7), inset 0 0 12px rgba(0, 0, 0, 0.6);
+            width: 90%;
+            max-width: 600px;
+            perspective: 1200px;
+        }
+        #player-hand, #dealer-hand {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+        .card {
+            background: linear-gradient(145deg, #ffffff, #f0e68c); /* Brighter card gradient */
+            width: 80px;
+            height: 120px;
+            border: 3px solid #FFD700;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.5), inset 3px 3px 6px rgba(255, 255, 255, 0.4);
+            transform: rotateY(0deg);
+            transition: transform 0.4s, box-shadow 0.4s;
+            box-sizing: border-box;
+            animation: deal 0.5s ease-out;
+        }
+        @keyframes deal {
+            from { transform: translateY(-100px) rotateY(90deg); opacity: 0; }
+            to { transform: translateY(0) rotateY(0deg); opacity: 1; }
+        }
+        .card:hover {
+            transform: translateY(-8px) rotateY(15deg);
+            box-shadow: 10px 10px 25px rgba(255, 215, 0, 0.8);
+        }
+        .card.spade, .card.club {
+            color: #000;
+        }
+        .card.heart, .card.diamond {
+            color: #FF4500; /* Vibrant red */
+        }
+        .card.hidden {
+            background: linear-gradient(145deg, #8B0000, #B22222); /* Red card back */
+            color: transparent;
+            box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.5);
+        }
+        #player-score, #dealer-score {
+            font-size: 24px;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+        }
+        #status {
+            font-size: 28px;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+            100% { transform: scale(1); }
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        button {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #1a3c34;
+            font-size: 20px;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        button:hover {
+            transform: translateY(-4px);
+            box-shadow: 10px 10px 20px rgba(255, 215, 0, 0.8);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        @media (max-width: 600px) {
+            #game {
+                padding: 15px;
+            }
+            .card {
+                width: 60px;
+                height: 90px;
+                font-size: 18px;
+            }
+            h1 {
+                font-size: 8vw;
+            }
+            #status, #player-score, #dealer-score {
+                font-size: 6vw;
+            }
+            button {
+                font-size: 5vw;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Casino Blackjack</h1>
+    <div id="game">
+        <div id="dealer-hand"></div>
+        <div id="dealer-score">Dealer Score: 0</div>
+        <div id="player-hand"></div>
+        <div id="player-score">Your Score: 0</div>
+        <div id="status">Click New Game to start!</div>
+        <div class="controls">
+            <button id="hit" disabled>Hit</button>
+            <button id="stand" disabled>Stand</button>
+            <button id="newGame">New Game</button>
+        </div>
+    </div>
+    <script>
+        const suits = ['spade', 'heart', 'club', 'diamond'];
+        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        let deck = [];
+        let playerHand = [];
+        let dealerHand = [];
+        let gameActive = false;
+        const playerHandDiv = document.getElementById('player-hand');
+        const dealerHandDiv = document.getElementById('dealer-hand');
+        const playerScoreDiv = document.getElementById('player-score');
+        const dealerScoreDiv = document.getElementById('dealer-score');
+        const statusDiv = document.getElementById('status');
+        const hitButton = document.getElementById('hit');
+        const standButton = document.getElementById('stand');
+        const newGameButton = document.getElementById('newGame');
+
+        hitButton.addEventListener('click', hit);
+        standButton.addEventListener('click', stand);
+        newGameButton.addEventListener('click', startNewGame);
+
+        function createDeck() {
+            deck = [];
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({ suit, value });
+                }
+            }
+            deck = deck.sort(() => Math.random() - 0.5); // Shuffle
+        }
+
+        function getCardValue(card) {
+            if (['J', 'Q', 'K'].includes(card.value)) return 10;
+            if (card.value === 'A') return 11; // Adjusted in calculateScore
+            return parseInt(card.value);
+        }
+
+        function calculateScore(hand) {
+            let score = 0;
+            let aces = 0;
+            for (let card of hand) {
+                if (card.value === 'A') {
+                    aces++;
+                    score += 11;
+                } else {
+                    score += getCardValue(card);
+                }
+            }
+            while (score > 21 && aces > 0) {
+                score -= 10;
+                aces--;
+            }
+            return score;
+        }
+
+        function hasSoft17(hand) {
+            let score = calculateScore(hand);
+            let aces = hand.filter(card => card.value === 'A').length;
+            return score === 17 && aces > 0;
+        }
+
+        function estimateBustProbability(score, deck) {
+            let highCards = deck.filter(card => {
+                let value = getCardValue(card);
+                return (value === 10 || card.value === 'A') && (score + value > 21);
+            }).length;
+            return highCards / deck.length;
+        }
+
+        function renderHand(hand, container, hideFirst = false) {
+            container.innerHTML = '';
+            hand.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.classList.add('card', card.suit);
+                cardDiv.textContent = `${card.value} ${card.suit[0].toUpperCase()}`;
+                if (hideFirst && index === 0) {
+                    cardDiv.classList.add('hidden');
+                }
+                container.appendChild(cardDiv);
+            });
+        }
+
+        function updateScores() {
+            playerScoreDiv.textContent = `Your Score: ${calculateScore(playerHand)}`;
+            dealerScoreDiv.textContent = `Dealer Score: ${dealerHand.length > 0 ? (gameActive ? '?' : calculateScore(dealerHand)) : 0}`;
+        }
+
+        function hit() {
+            if (!gameActive) return;
+            playerHand.push(deck.pop());
+            renderHand(playerHand, playerHandDiv);
+            updateScores();
+            if (calculateScore(playerHand) > 21) {
+                endGame('You bust! Dealer wins.');
+            }
+        }
+
+        function stand() {
+            if (!gameActive) return;
+            gameActive = false;
+            hitButton.disabled = true;
+            standButton.disabled = true;
+            dealerTurn();
+        }
+
+        function dealerTurn() {
+            renderHand(dealerHand, dealerHandDiv); // Reveal dealer's hidden card
+            let playerScore = calculateScore(playerHand);
+            while (true) {
+                let dealerScore = calculateScore(dealerHand);
+                if (dealerScore > 21) {
+                    endGame('Dealer busts! You win!');
+                    return;
+                }
+                if (hasSoft17(dealerHand) || dealerScore < 17) {
+                    // Always hit on soft 17 or < 17
+                    dealerHand.push(deck.pop());
+                    renderHand(dealerHand, dealerHandDiv);
+                    continue;
+                }
+                if (dealerScore >= 17 && dealerScore <= 21) {
+                    // Probabilistic decision if player has a strong hand
+                    let bustProbability = estimateBustProbability(dealerScore, deck);
+                    if (playerScore >= 18 && dealerScore < playerScore && bustProbability < 0.4) {
+                        // Hit if player has a strong hand and bust risk is low
+                        dealerHand.push(deck.pop());
+                        renderHand(dealerHand, dealerHandDiv);
+                        continue;
+                    }
+                    break; // Stand
+                }
+            }
+            updateScores();
+            let dealerScore = calculateScore(dealerHand);
+            if (playerScore > dealerScore) {
+                endGame('You win!');
+            } else if (dealerScore > playerScore) {
+                endGame('Dealer wins!');
+            } else {
+                endGame('Push!');
+            }
+        }
+
+        function endGame(message) {
+            gameActive = false;
+            hitButton.disabled = true;
+            standButton.disabled = true;
+            statusDiv.textContent = message;
+            renderHand(dealerHand, dealerHandDiv);
+        }
+
+        function startNewGame() {
+            createDeck();
+            playerHand = [deck.pop(), deck.pop()];
+            dealerHand = [deck.pop(), deck.pop()];
+            gameActive = true;
+            hitButton.disabled = false;
+            standButton.disabled = false;
+            renderHand(playerHand, playerHandDiv);
+            renderHand(dealerHand, dealerHandDiv, true);
+            updateScores();
+            statusDiv.textContent = 'Your turn!';
+            if (calculateScore(playerHand) === 21) {
+                endGame('Blackjack! You win!');
+            }
+        }
+    </script>
+</body>
+</html>
