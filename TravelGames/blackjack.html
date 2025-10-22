@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Casino Blackjack</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
         body {
-            background: linear-gradient(135deg, #1a3c34, #006400); /* Casino gradient */
+            background: linear-gradient(135deg, #1a3c34, #004d40); /* Refined casino gradient */
             color: #FFD700; /* Gold text */
-            font-family: 'Verdana', sans-serif;
+            font-family: 'Playfair Display', serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -19,78 +20,98 @@
             overflow: auto;
         }
         h1 {
-            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
-            font-size: 2.5em;
-            margin-bottom: 20px;
+            text-shadow: 4px 4px 6px rgba(0, 0, 0, 0.8);
+            font-size: 3em;
+            margin-bottom: 25px;
             animation: glow 2s ease-in-out infinite alternate;
         }
         @keyframes glow {
-            from { text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7); }
-            to { text-shadow: 3px 3px 12px rgba(255, 215, 0, 1); }
+            from { text-shadow: 4px 4px 6px rgba(0, 0, 0, 0.8); }
+            to { text-shadow: 4px 4px 12px rgba(255, 215, 0, 1); }
         }
         #game {
-            background: #2e8b57; /* Rich green table */
-            padding: 20px;
-            border: 8px solid #FFD700;
-            border-radius: 15px;
-            box-shadow: 0 0 40px rgba(255, 215, 0, 0.7), inset 0 0 12px rgba(0, 0, 0, 0.6);
+            background: #1b5e20; /* Deep casino green */
+            padding: 25px;
+            border: 10px solid #FFD700;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.7), inset 0 0 15px rgba(0, 0, 0, 0.6);
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
             perspective: 1200px;
         }
         #player-hand, #dealer-hand {
-            margin: 20px 0;
+            margin: 25px 0;
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 15px;
             justify-content: center;
         }
         .card {
-            background: linear-gradient(145deg, #ffffff, #f0e68c); /* Brighter card gradient */
-            width: 80px;
-            height: 120px;
-            border: 3px solid #FFD700;
-            border-radius: 10px;
+            background: linear-gradient(145deg, #ffffff, #f5f5f5); /* Clean card white */
+            width: 90px;
+            height: 135px;
+            border: 2px solid #FFD700;
+            border-radius: 12px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px;
+            font-size: 20px;
             font-weight: bold;
             color: #000;
-            box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.5), inset 3px 3px 6px rgba(255, 255, 255, 0.4);
+            box-shadow: 6px 6px 20px rgba(0, 0, 0, 0.5), inset 2px 2px 5px rgba(255, 255, 255, 0.5);
             transform: rotateY(0deg);
             transition: transform 0.4s, box-shadow 0.4s;
             box-sizing: border-box;
             animation: deal 0.5s ease-out;
+            position: relative;
         }
         @keyframes deal {
             from { transform: translateY(-100px) rotateY(90deg); opacity: 0; }
             to { transform: translateY(0) rotateY(0deg); opacity: 1; }
         }
         .card:hover {
-            transform: translateY(-8px) rotateY(15deg);
+            transform: translateY(-10px) rotateY(15deg);
             box-shadow: 10px 10px 25px rgba(255, 215, 0, 0.8);
         }
         .card.spade, .card.club {
             color: #000;
         }
         .card.heart, .card.diamond {
-            color: #FF4500; /* Vibrant red */
+            color: #c62828; /* Deep red */
+        }
+        .card .suit {
+            font-size: 24px;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card .value-top, .card .value-bottom {
+            font-size: 18px;
+            line-height: 1;
+        }
+        .card .value-bottom {
+            transform: rotate(180deg);
+            align-self: flex-end;
         }
         .card.hidden {
-            background: linear-gradient(145deg, #8B0000, #B22222); /* Red card back */
-            color: transparent;
-            box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(145deg, #8B0000, #B22222);
+            box-shadow: 6px 6px 20px rgba(0, 0, 0, 0.5);
+        }
+        .card.hidden .value-top, .card.hidden .value-bottom, .card.hidden .suit {
+            display: none;
         }
         #player-score, #dealer-score {
-            font-size: 24px;
-            margin: 10px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+            font-size: 26px;
+            margin: 15px 0;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
         }
         #status {
-            font-size: 28px;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+            font-size: 30px;
+            margin: 25px 0;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse {
@@ -100,26 +121,27 @@
         }
         .controls {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             justify-content: center;
         }
         button {
             background: linear-gradient(45deg, #FFD700, #FFA500);
             color: #1a3c34;
-            font-size: 20px;
-            padding: 12px 25px;
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            padding: 12px 30px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.4);
+            box-shadow: 6px 6px 20px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s, box-shadow 0.3s;
         }
         button:hover {
             transform: translateY(-4px);
-            box-shadow: 10px 10px 20px rgba(255, 215, 0, 0.8);
+            box-shadow: 10px 10px 25px rgba(255, 215, 0, 0.8);
         }
         button:disabled {
-            background: #666;
+            background: #555;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
@@ -129,9 +151,15 @@
                 padding: 15px;
             }
             .card {
-                width: 60px;
-                height: 90px;
+                width: 65px;
+                height: 97px;
+                font-size: 14px;
+            }
+            .card .suit {
                 font-size: 18px;
+            }
+            .card .value-top, .card .value-bottom {
+                font-size: 12px;
             }
             h1 {
                 font-size: 8vw;
@@ -161,7 +189,12 @@
         </div>
     </div>
     <script>
-        const suits = ['spade', 'heart', 'club', 'diamond'];
+        const suits = {
+            spade: '♠',
+            heart: '♥',
+            club: '♣',
+            diamond: '♦'
+        };
         const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         let deck = [];
         let playerHand = [];
@@ -182,7 +215,7 @@
 
         function createDeck() {
             deck = [];
-            for (let suit of suits) {
+            for (let suit in suits) {
                 for (let value of values) {
                     deck.push({ suit, value });
                 }
@@ -192,7 +225,7 @@
 
         function getCardValue(card) {
             if (['J', 'Q', 'K'].includes(card.value)) return 10;
-            if (card.value === 'A') return 11; // Adjusted in calculateScore
+            if (card.value === 'A') return 11;
             return parseInt(card.value);
         }
 
@@ -233,9 +266,14 @@
             hand.forEach((card, index) => {
                 const cardDiv = document.createElement('div');
                 cardDiv.classList.add('card', card.suit);
-                cardDiv.textContent = `${card.value} ${card.suit[0].toUpperCase()}`;
                 if (hideFirst && index === 0) {
                     cardDiv.classList.add('hidden');
+                } else {
+                    cardDiv.innerHTML = `
+                        <div class="value-top">${card.value}</div>
+                        <div class="suit">${suits[card.suit]}</div>
+                        <div class="value-bottom">${card.value}</div>
+                    `;
                 }
                 container.appendChild(cardDiv);
             });
@@ -265,7 +303,7 @@
         }
 
         function dealerTurn() {
-            renderHand(dealerHand, dealerHandDiv); // Reveal dealer's hidden card
+            renderHand(dealerHand, dealerHandDiv);
             let playerScore = calculateScore(playerHand);
             while (true) {
                 let dealerScore = calculateScore(dealerHand);
@@ -274,21 +312,18 @@
                     return;
                 }
                 if (hasSoft17(dealerHand) || dealerScore < 17) {
-                    // Always hit on soft 17 or < 17
                     dealerHand.push(deck.pop());
                     renderHand(dealerHand, dealerHandDiv);
                     continue;
                 }
                 if (dealerScore >= 17 && dealerScore <= 21) {
-                    // Probabilistic decision if player has a strong hand
                     let bustProbability = estimateBustProbability(dealerScore, deck);
                     if (playerScore >= 18 && dealerScore < playerScore && bustProbability < 0.4) {
-                        // Hit if player has a strong hand and bust risk is low
                         dealerHand.push(deck.pop());
                         renderHand(dealerHand, dealerHandDiv);
                         continue;
                     }
-                    break; // Stand
+                    break;
                 }
             }
             updateScores();
