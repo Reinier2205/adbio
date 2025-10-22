@@ -6,78 +6,110 @@
     <title>Casino Tic Tac Toe</title>
     <style>
         body {
-            background-color: #006400; /* Dark green like casino felt */
-            color: gold;
-            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a3c34, #006400); /* Vibrant casino gradient */
+            color: #FFD700; /* Gold text */
+            font-family: 'Verdana', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             text-align: center;
+            overflow: auto;
         }
         h1 {
-            text-shadow: 2px 2px 4px black;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
+            font-size: 2.5em;
             margin-bottom: 20px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7); }
+            to { text-shadow: 3px 3px 10px rgba(255, 215, 0, 0.9); }
         }
         #board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            width: 300px;
-            height: 300px;
-            background-color: #228B22; /* Forest green */
-            padding: 10px;
-            border: 5px solid gold;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            gap: 8px;
+            width: 360px;
+            height: 360px;
+            background: #2e8b57; /* Richer green */
+            padding: 15px;
+            border: 8px solid #FFD700;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(0, 0, 0, 0.5);
+            perspective: 1000px; /* For 3D effect */
         }
         .cell {
-            background-color: #FFFACD; /* Lemon chiffon for card-like feel */
+            background: linear-gradient(145deg, #f0e68c, #FFFACD); /* 3D card-like gradient */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60px;
+            font-size: 80px;
             font-weight: bold;
             cursor: pointer;
-            border: 2px solid gold;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+            border: 3px solid #FFD700;
+            border-radius: 10px;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.4), inset 2px 2px 5px rgba(255, 255, 255, 0.3);
+            transform: rotateY(0deg);
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-sizing: border-box; /* Prevent resizing */
         }
         .cell:hover {
-            background-color: #FFD700; /* Gold on hover */
+            transform: translateY(-5px) rotateY(10deg); /* 3D lift effect */
+            box-shadow: 8px 8px 20px rgba(255, 215, 0, 0.7);
         }
         .cell.played {
-            background-color: #FFFACD; /* Reset to original after play */
+            background: linear-gradient(145deg, #FFFACD, #f0e68c); /* Consistent background */
             cursor: default;
+            transform: translateY(0) rotateY(0deg); /* Reset transform */
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+        }
+        .cell.played.x {
+            color: #FF4500; /* Vibrant orange for X */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .cell.played.o {
+            color: #00BFFF; /* Bright blue for O */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
         #status {
-            margin: 20px 0;
-            font-size: 24px;
-            text-shadow: 1px 1px 2px black;
+            margin: 25px 0;
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         #newGame {
-            background-color: gold;
-            color: #006400;
-            font-size: 18px;
-            padding: 10px 20px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #1a3c34;
+            font-size: 20px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-            transition: background-color 0.3s;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
         }
         #newGame:hover {
-            background-color: #FFD700;
+            transform: translateY(-3px);
+            box-shadow: 8px 8px 20px rgba(255, 215, 0, 0.7);
         }
         @media (max-width: 600px) {
             #board {
                 width: 90vw;
                 height: 90vw;
+                gap: 5px;
+                padding: 10px;
             }
             .cell {
-                font-size: 20vw;
+                font-size: 22vw;
+                border: 2px solid #FFD700;
             }
             h1 {
                 font-size: 8vw;
@@ -87,7 +119,7 @@
             }
             #newGame {
                 font-size: 5vw;
-                padding: 8px 16px;
+                padding: 10px 20px;
             }
         }
     </style>
@@ -151,7 +183,7 @@
             board[row][col] = player;
             const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
             cell.textContent = player;
-            cell.classList.add('played');
+            cell.classList.add('played', player.toLowerCase());
             moves.push({row, col, player});
 
             let winner = checkWinner();
@@ -165,8 +197,9 @@
             if (emptyCount === 2) {
                 const oldest = moves.shift();
                 board[oldest.row][oldest.col] = '';
-                document.querySelector(`[data-row="${oldest.row}"][data-col="${oldest.col}"]`).textContent = '';
-                document.querySelector(`[data-row="${oldest.row}"][data-col="${oldest.col}"]`).classList.remove('played');
+                const oldCell = document.querySelector(`[data-row="${oldest.row}"][data-col="${oldest.col}"]`);
+                oldCell.textContent = '';
+                oldCell.classList.remove('played', 'x', 'o');
 
                 winner = checkWinner();
                 if (winner) {
@@ -256,7 +289,7 @@
             gameActive = true;
             cells.forEach(cell => {
                 cell.textContent = '';
-                cell.classList.remove('played');
+                cell.classList.remove('played', 'x', 'o');
                 cell.addEventListener('click', handleClick);
             });
             status.textContent = 'Your turn (X)';
