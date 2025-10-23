@@ -94,17 +94,12 @@
   <h1>KampBingo – Birthday Camp Photo Bingo</h1>
 
   <div class="controls">
-    <div>
-      <label for="playerSelect">Select your name:</label>
-      <select id="playerSelect">
-        <option value="">-- Choose a player --</option>
-      </select>
-    </div>
-    <div>
-      <label for="newPlayerInput">Or enter a new name:</label>
-      <input type="text" id="newPlayerInput" placeholder="Enter new name" />
-      <button id="useNewPlayer">Start</button>
-    </div>
+    <select id="playerSelect">
+      <option value="">-- Choose a player --</option>
+    </select>
+    <br>
+    <input type="text" id="newPlayerInput" placeholder="Or enter a new name" />
+    <button id="startBtn">Start</button>
     <div id="progressDisplay"></div>
     <div class="leaderboard" id="leaderDisplay"></div>
   </div>
@@ -112,94 +107,80 @@
   <div class="grid" id="bingoGrid"></div>
 
   <script>
-    const squares = [/* same 25 square strings as before */];
+    const squares = [/* same 25 square strings */];
+    const workerURL = "https://rapid-hill-7b92.reinier-olivier.workers.dev/";
     const grid = document.getElementById("bingoGrid");
     const playerSelect = document.getElementById("playerSelect");
     const newPlayerInput = document.getElementById("newPlayerInput");
-    const useNewPlayerBtn = document.getElementById("useNewPlayer");
+    const startBtn = document.getElementById("startBtn");
     const progressDisplay = document.getElementById("progressDisplay");
     const leaderDisplay = document.getElementById("leaderDisplay");
-    const workerURL = "https://rapid-hill-7b92.reinier-olivier.workers.dev/";
 
     let currentPlayer = "";
 
-    function createCard(square, index) {
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `
-        <p>${square}</p>
-        <input type="file" id="file${index}" />
-        <div id="result${index}"></div>
-      `;
-      grid.appendChild(div);
+    function createGrid() {
+      grid.innerHTML = "";
+      squares.forEach((square, index) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <p>${square}</p>
+          <input type="file" id="file${index}" />
+          <div id="result${index}"></div>
+        `;
+        grid.appendChild(div);
 
-      const fileInput = div.querySelector(`#file${index}`);
-      const resultDiv = div.querySelector(`#result${index}`);
+        const fileInput = div.querySelector(`#file${index}`);
+        const resultDiv = div.querySelector(`#result${index}`);
 
-      fileInput.addEventListener("change", async (e) => {
-        if (!currentPlayer) {
-          alert("Please select or enter your name first.");
-          fileInput.value = "";
-          return;
-        }
+        fileInput.addEventListener("change", async (e) => {
+          if (!currentPlayer) return alert("Select or enter your name first.");
+          const file = e.target.files[0];
+          if (!file) return;
 
-        const file = e.target.files[0];
-        if (!file) return;
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("player", currentPlayer);
+          formData.append("square", square);
 
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("player", currentPlayer);
-        formData.append("square", square);
+          resultDiv.textContent = "Uploading...";
 
-        resultDiv.textContent = "Uploading...";
-
-        try {
-          const res = await fetch(workerURL, {
-            method: "POST",
-            body: formData,
-          });
-          const data = await res.json();
-
-          if (data.url) {
-            resultDiv.innerHTML = `
-              <a href="${data.url}" target="_blank">View Photo</a>
-              <br><img src="${data.url}" alt="Uploaded Photo" />
-            `;
-            updateProgress();
-          } else {
-            resultDiv.textContent = "Upload failed.";
+          try {
+            const res = await fetch(workerURL, { method: "POST", body: formData });
+            const data = await res.json();
+            if (data.url) {
+              resultDiv.innerHTML = `<a href="${data.url}" target="_blank">View Photo</a><br><img src="${data.url}" />`;
+              updateProgress();
+              updateLeaderboard();
+            } else {
+              resultDiv.textContent = "Upload failed.";
+            }
+          } catch (err) {
+            resultDiv.textContent = "Error uploading photo.";
           }
-        } catch (err) {
-          console.error(err);
-          resultDiv.textContent = "Error uploading photo.";
-        }
+        });
       });
     }
 
     async function loadPlayers() {
       const res = await fetch(`${workerURL}players`);
-      const players = await res.json();
-      players.sort();
-      players.forEach(name => {
+      const names = await res.json();
+      names.sort().forEach(name => {
         const option = document.createElement("option");
         option.value = name;
         option.textContent = name;
         playerSelect.appendChild(option);
       });
-      updateLeaderboard();
     }
 
-    async function loadPreviousPhotos(player) {
+    async function loadPhotos(player) {
       const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}`);
       const data = await res.json();
       squares.forEach((square, index) => {
         const resultDiv = document.getElementById(`result${index}`);
         const url = data[square];
-        if (typeof url === "string") {
-          resultDiv.innerHTML = `
-            <a href="${url}" target="_blank">View Photo</a>
-            <br><img src="${url}" alt="Uploaded Photo" />
-          `;
+        if (url) {
+          resultDiv.innerHTML = `<a href="${url}" target="_blank">View Photo</a><br><img src="${url}" />`;
         } else {
           resultDiv.innerHTML = "";
         }
@@ -215,24 +196,27 @@
     async function updateLeaderboard() {
       const res = await fetch(`${workerURL}leader`);
       const data = await res.json();
-      leaderDisplay.textContent = `🏆 Current leader: ${data.name} (${data.count}/${squares.length})`;
+      leaderDisplay.textContent = `🏆 Leader: ${data.name} (${data.count}/${squares.length})`;
     }
+
+    startBtn.addEventListener("click", () => {
+      currentPlayer = newPlayerInput.value.trim();
+      if (!currentPlayer) return;
+      playerSelect.value = "";
+      createGrid();
+      loadPhotos(currentPlayer);
+    });
 
     playerSelect.addEventListener("change", () => {
       currentPlayer = playerSelect.value;
-      if (currentPlayer) loadPreviousPhotos(currentPlayer);
+      newPlayerInput.value = "";
+      createGrid();
+      loadPhotos(currentPlayer);
     });
 
-    useNewPlayerBtn.addEventListener("click", () => {
-      const name = newPlayerInput.value.trim();
-      if (!name) return alert("Please enter a name.");
-      currentPlayer = name;
-      playerSelect.value = "";
-      loadPreviousPhotos(currentPlayer);
-    });
-
-    squares.forEach((square, index) => createCard(square, index));
+    createGrid();
     loadPlayers();
+    updateLeaderboard();
   </script>
 </body>
 </html>
