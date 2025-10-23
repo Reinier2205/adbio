@@ -64,12 +64,9 @@ export default {
       const proxyUrl = `https://rapid-hill-7b92.reinier-olivier.workers.dev/${filename}`;
       const urlKey = `${safePlayer}_${safeSquare}`;
       
-      console.log(`Storing photo URL: ${urlKey} -> ${proxyUrl}`);
-      await env.KampBingoProgress.put(urlKey, proxyUrl);
-      
-      // Verify storage
-      const storedUrl = await env.KampBingoProgress.get(urlKey);
-      console.log(`Verification - stored URL: ${storedUrl}, type: ${typeof storedUrl}`);
+      await env.KampBingoProgress.put(urlKey, proxyUrl, {
+        httpMetadata: { contentType: "text/plain" }
+      });
 
       return new Response(JSON.stringify({ url: proxyUrl }), {
         status: 200,
@@ -124,7 +121,6 @@ export default {
           return new Response("Missing player name", { status: 400, headers: corsHeaders });
         }
 
-        console.log(`Fetching photos for player: ${player}`);
         const safePlayer = player.replace(/\s+/g, "_");
         const results = {};
 
@@ -132,17 +128,21 @@ export default {
           const safeSquare = square.replace(/\s+/g, "_");
           const key = `${safePlayer}_${safeSquare}`;
           const photoUrl = await env.KampBingoProgress.get(key);
-          console.log(`Key: ${key}, PhotoUrl: ${photoUrl}, Type: ${typeof photoUrl}`);
           
           if (photoUrl) {
-            // Handle both string URLs and object responses
-            const url = typeof photoUrl === 'string' ? photoUrl : photoUrl.toString();
+            // Handle GetResult object from Cloudflare Workers R2
+            let url;
+            if (typeof photoUrl === 'string') {
+              url = photoUrl;
+            } else if (photoUrl && typeof photoUrl === 'object') {
+              // For GetResult objects, we need to get the actual value
+              url = await photoUrl.text();
+            } else {
+              url = photoUrl.toString();
+            }
             results[square] = url;
-            console.log(`Added to results: ${square} -> ${url}`);
           }
         }
-
-        console.log(`Final results for ${player}:`, results);
         return new Response(JSON.stringify(results), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -156,33 +156,44 @@ export default {
       }
     }
 
-    // Return sorted list of players
+    // Return sorted list of players with counts
     if (request.method === "GET" && url.pathname === "/players") {
       try {
-        console.log("Fetching players list...");
-        console.log("Environment variable exists:", !!env.KampBingoProgress);
-        
         const list = await env.KampBingoProgress.list();
-        console.log("List object:", list);
-        console.log("List keys:", list.keys);
-        console.log("Raw list keys:", list.keys ? list.keys.map(k => k.name) : "No keys");
+        const items = list.objects || list.keys || [];
+        const playerCounts = {};
         
-        const names = new Set();
-
-        if (list.keys && list.keys.length > 0) {
-          for (const item of list.keys) {
-            const [name, square] = item.name.split("_");
-            console.log(`Processing item: ${item.name} -> name: ${name}, square: ${square}`);
-            if (name && square && squaresList.some(s => square === s.replace(/\s+/g, "_"))) {
-              names.add(name.replace(/_/g, " "));
+        // Process all items to get player counts
+        for (const item of items) {
+          const keyName = item.key || item.name;
+          
+          // Skip image files (they have timestamps and file extensions)
+          if (keyName.match(/\d{13}/) || keyName.includes('.')) {
+            continue;
+          }
+          
+          // Look for URL keys (player_square format)
+          const parts = keyName.split("_");
+          if (parts.length >= 2) {
+            const playerName = parts[0];
+            const squarePart = parts.slice(1).join("_");
+            
+            // Check if this matches any of our squares
+            const matchingSquare = squaresList.find(s => 
+              squarePart === s.replace(/\s+/g, "_")
+            );
+            
+            if (matchingSquare) {
+              playerCounts[playerName] = (playerCounts[playerName] || 0) + 1;
             }
           }
-        } else {
-          console.log("No keys found in storage");
         }
 
-        const result = [...names].sort();
-        console.log("Final player names:", result);
+        // Return both player names and their counts
+        const result = Object.keys(playerCounts).sort().map(name => ({
+          name: name,
+          count: playerCounts[name]
+        }));
         
         return new Response(JSON.stringify(result), {
           status: 200,
@@ -190,12 +201,7 @@ export default {
         });
       } catch (error) {
         console.error("Error in /players endpoint:", error);
-        console.error("Error stack:", error.stack);
-        return new Response(JSON.stringify({ 
-          error: error.message,
-          stack: error.stack,
-          type: error.constructor.name
-        }), {
+        return new Response(JSON.stringify({ error: error.message }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

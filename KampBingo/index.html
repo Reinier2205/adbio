@@ -54,6 +54,80 @@
       color: var(--red);
     }
 
+    .loading-spinner {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--gray);
+      border-top: 2px solid var(--green);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .progress-table {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      min-width: 200px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .progress-table h3 {
+      margin: 0 0 10px 0;
+      color: var(--green);
+      font-size: 1rem;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--gray);
+    }
+
+    .progress-row:last-child {
+      border-bottom: none;
+    }
+
+    .progress-name {
+      font-weight: bold;
+      color: var(--black);
+    }
+
+    .progress-count {
+      background: var(--green);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -99,9 +173,18 @@
     </select>
     <br>
     <input type="text" id="newPlayerInput" placeholder="Or enter a new name" />
-    <button id="startBtn">Start</button>
     <div id="progressDisplay"></div>
     <div class="leaderboard" id="leaderDisplay"></div>
+  </div>
+
+  <div class="loading-spinner" id="loadingSpinner">
+    <div class="spinner"></div>
+    <span>Loading...</span>
+  </div>
+
+  <div class="progress-table" id="progressTable" style="display: none;">
+    <h3>🏆 Progress</h3>
+    <div id="progressList"></div>
   </div>
 
   <div class="grid" id="bingoGrid"></div>
@@ -139,11 +222,21 @@
     const grid = document.getElementById("bingoGrid");
     const playerSelect = document.getElementById("playerSelect");
     const newPlayerInput = document.getElementById("newPlayerInput");
-    const startBtn = document.getElementById("startBtn");
     const progressDisplay = document.getElementById("progressDisplay");
     const leaderDisplay = document.getElementById("leaderDisplay");
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const progressTable = document.getElementById("progressTable");
+    const progressList = document.getElementById("progressList");
 
     let currentPlayer = "";
+
+    function showLoading() {
+      loadingSpinner.style.display = "block";
+    }
+
+    function hideLoading() {
+      loadingSpinner.style.display = "none";
+    }
 
     function createGrid() {
       grid.innerHTML = "";
@@ -171,6 +264,7 @@
           formData.append("square", square);
 
           resultDiv.textContent = "Uploading...";
+          showLoading();
 
           try {
             const res = await fetch(workerURL, { method: "POST", body: formData });
@@ -179,13 +273,15 @@
               resultDiv.innerHTML = `<a href="${data.url}" target="_blank">View Photo</a><br><img src="${data.url}" />`;
               updateProgress();
               updateLeaderboard();
-              // Refresh player list to include new players
+              // Refresh player list to include new players and update progress table
               loadPlayers();
             } else {
               resultDiv.textContent = "Upload failed.";
             }
           } catch (err) {
             resultDiv.textContent = "Error uploading photo.";
+          } finally {
+            hideLoading();
           }
         });
       });
@@ -193,48 +289,61 @@
 
     async function loadPlayers() {
       try {
-        console.log("Fetching players from:", `${workerURL}players`);
+        showLoading();
         const res = await fetch(`${workerURL}players`);
         
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
         
-        const names = await res.json();
-        console.log("Received players:", names);
+        const players = await res.json();
         
         // Clear existing options except the first one
         playerSelect.innerHTML = '<option value="">-- Choose a player --</option>';
-        names.sort().forEach(name => {
+        players.forEach(player => {
           const option = document.createElement("option");
-          option.value = name;
-          option.textContent = name;
+          option.value = player.name;
+          option.textContent = player.name;
           playerSelect.appendChild(option);
         });
+        
+        // Update progress table
+        updateProgressTable(players);
+        
       } catch (err) {
         console.error("Error loading players:", err);
-        console.error("Worker URL:", workerURL);
         playerSelect.innerHTML = '<option value="">-- Error loading players --</option>';
-        
-        // Show more detailed error to user
-        const errorMsg = document.createElement("div");
-        errorMsg.style.color = "red";
-        errorMsg.style.fontSize = "0.9rem";
-        errorMsg.style.marginTop = "10px";
-        errorMsg.textContent = `Failed to load players: ${err.message}`;
-        playerSelect.parentNode.appendChild(errorMsg);
-        
-        // Remove error message after 5 seconds
-        setTimeout(() => {
-          if (errorMsg.parentNode) {
-            errorMsg.parentNode.removeChild(errorMsg);
-          }
-        }, 5000);
+      } finally {
+        hideLoading();
       }
+    }
+
+    function updateProgressTable(players) {
+      if (players.length === 0) {
+        progressTable.style.display = "none";
+        return;
+      }
+      
+      progressTable.style.display = "block";
+      progressList.innerHTML = "";
+      
+      // Sort players by count (descending)
+      players.sort((a, b) => b.count - a.count);
+      
+      players.forEach(player => {
+        const row = document.createElement("div");
+        row.className = "progress-row";
+        row.innerHTML = `
+          <span class="progress-name">${player.name}</span>
+          <span class="progress-count">${player.count}/${squares.length}</span>
+        `;
+        progressList.appendChild(row);
+      });
     }
 
     async function loadPhotos(player) {
       try {
+        showLoading();
         const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}`);
         const data = await res.json();
         squares.forEach((square, index) => {
@@ -247,6 +356,8 @@
           }
         });
         updateProgress();
+        // Refresh progress table after loading photos
+        loadPlayers();
       } catch (err) {
         console.error("Error loading photos:", err);
         // Clear all photo displays on error
@@ -254,6 +365,8 @@
           const resultDiv = document.getElementById(`result${index}`);
           resultDiv.innerHTML = "";
         });
+      } finally {
+        hideLoading();
       }
     }
 
@@ -270,12 +383,15 @@
         : "";
     }
 
-    startBtn.addEventListener("click", () => {
-      currentPlayer = newPlayerInput.value.trim();
-      if (!currentPlayer) return alert("Enter your name.");
-      playerSelect.value = "";
-      createGrid();
-      loadPhotos(currentPlayer);
+    // Handle new player input - automatically set as current player
+    newPlayerInput.addEventListener("input", () => {
+      const newName = newPlayerInput.value.trim();
+      if (newName && newName !== currentPlayer) {
+        currentPlayer = newName;
+        playerSelect.value = "";
+        createGrid();
+        loadPhotos(currentPlayer);
+      }
     });
 
     playerSelect.addEventListener("change", () => {
