@@ -107,7 +107,34 @@
   <div class="grid" id="bingoGrid"></div>
 
   <script>
-    const squares = [/* same 25 square strings */];
+    const squares = [
+      "An old photo with Anneke",
+      "A photo from a past birthday or braai",
+      "The oldest selfie you have together",
+      "Anneke walking barefoot (bonus: dirty feet)",
+      "Anneke drinking beer (bonus: a cheers moment)",
+      "Someone borrowing something from Anneke",
+      "Oliver playing ball with someone",
+      "The baby with a new 'aunt' or 'uncle'",
+      "Everyone gathered around the fire",
+      "Anneke reading a book in peace",
+      "Morning coffee in a mug that’s not yours",
+      "Oliver 'helping' with something (e.g., pouring tea, fixing, or cooking)",
+      "A photo of the sunset or campfire glow",
+      "Someone with muddy or sandy feet",
+      "Anneke’s laugh caught in a candid photo",
+      "A camp game or activity moment",
+      "A creative photo of beer or tea (bonus: both)",
+      "Oliver on his bike",
+      "A group photo of everyone",
+      "Someone looking for their lost item (e.g., phone, shoe, drink)",
+      "A photo showing borrowed camping gear",
+      "Oliver dunking something in tea",
+      "Anneke relaxing with a book and drink",
+      "The baby smiling",
+      "Everyone waving goodnight at the fire"
+    ];
+
     const workerURL = "https://rapid-hill-7b92.reinier-olivier.workers.dev/";
     const grid = document.getElementById("bingoGrid");
     const playerSelect = document.getElementById("playerSelect");
@@ -196,12 +223,14 @@
     async function updateLeaderboard() {
       const res = await fetch(`${workerURL}leader`);
       const data = await res.json();
-      leaderDisplay.textContent = `🏆 Leader: ${data.name} (${data.count}/${squares.length})`;
+      leaderDisplay.textContent = data.name
+        ? `🏆 Leader: ${data.name} (${data.count}/${squares.length})`
+        : "";
     }
 
     startBtn.addEventListener("click", () => {
       currentPlayer = newPlayerInput.value.trim();
-      if (!currentPlayer) return;
+      if (!currentPlayer) return alert("Enter your name.");
       playerSelect.value = "";
       createGrid();
       loadPhotos(currentPlayer);
@@ -214,6 +243,7 @@
       loadPhotos(currentPlayer);
     });
 
+    // Initialize app
     createGrid();
     loadPlayers();
     updateLeaderboard();
