@@ -193,8 +193,16 @@
 
     async function loadPlayers() {
       try {
+        console.log("Fetching players from:", `${workerURL}players`);
         const res = await fetch(`${workerURL}players`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const names = await res.json();
+        console.log("Received players:", names);
+        
         // Clear existing options except the first one
         playerSelect.innerHTML = '<option value="">-- Choose a player --</option>';
         names.sort().forEach(name => {
@@ -205,7 +213,23 @@
         });
       } catch (err) {
         console.error("Error loading players:", err);
+        console.error("Worker URL:", workerURL);
         playerSelect.innerHTML = '<option value="">-- Error loading players --</option>';
+        
+        // Show more detailed error to user
+        const errorMsg = document.createElement("div");
+        errorMsg.style.color = "red";
+        errorMsg.style.fontSize = "0.9rem";
+        errorMsg.style.marginTop = "10px";
+        errorMsg.textContent = `Failed to load players: ${err.message}`;
+        playerSelect.parentNode.appendChild(errorMsg);
+        
+        // Remove error message after 5 seconds
+        setTimeout(() => {
+          if (errorMsg.parentNode) {
+            errorMsg.parentNode.removeChild(errorMsg);
+          }
+        }, 5000);
       }
     }
 
@@ -263,10 +287,30 @@
       }
     });
 
+    // Test worker connection
+    async function testWorkerConnection() {
+      try {
+        console.log("Testing worker connection...");
+        const res = await fetch(workerURL);
+        const text = await res.text();
+        console.log("Worker response:", text);
+        return true;
+      } catch (err) {
+        console.error("Worker connection failed:", err);
+        return false;
+      }
+    }
+
     // Initialize app
     createGrid();
-    loadPlayers();
-    updateLeaderboard();
+    testWorkerConnection().then(connected => {
+      if (connected) {
+        loadPlayers();
+        updateLeaderboard();
+      } else {
+        console.error("Cannot connect to worker, skipping player load");
+      }
+    });
   </script>
 </body>
 </html>
