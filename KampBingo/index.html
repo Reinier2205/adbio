@@ -5,38 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KampBingo – Birthday Camp Photo Bingo</title>
   <style>
+    :root {
+      --green: #2ecc71;
+      --red: #e74c3c;
+      --black: #1e1e1e;
+      --gray: #f4f4f4;
+      --card-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: 0 auto;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--gray);
+      color: var(--black);
+      margin: 0;
       padding: 20px;
     }
+
     h1 {
       text-align: center;
+      color: var(--green);
+      font-size: 2rem;
+      margin-bottom: 10px;
     }
+
+    p {
+      text-align: center;
+      font-size: 1.1rem;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      font-size: 1rem;
+      border: 2px solid var(--green);
+      border-radius: 5px;
+      width: 250px;
+      margin-top: 10px;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 30px;
     }
+
     .card {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 10px;
-      text-align: center;
+      background-color: var(--card-bg);
+      border: 2px solid var(--black);
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
     }
+
+    .card:hover {
+      transform: scale(1.02);
+      border-color: var(--green);
+    }
+
+    .card p {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--black);
+    }
+
+    input[type="file"] {
+      margin-top: 5px;
+      border: none;
+      background-color: var(--green);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+      background-color: var(--black);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    a {
+      color: var(--red);
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
     img {
       width: 100%;
       max-height: 200px;
       object-fit: cover;
       margin-top: 10px;
       border-radius: 8px;
+      border: 2px solid var(--green);
+    }
+
+    @media (max-width: 600px) {
+      input[type="text"] {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <h1>KampBingo – Birthday Camp Photo Bingo</h1>
-  <p>Select your name: <input type="text" id="playerName" placeholder="Enter your name" /></p>
+  <p>
+    Select your name:<br />
+    <input type="text" id="playerName" placeholder="Enter your name" />
+  </p>
 
   <div class="grid" id="bingoGrid"></div>
 
@@ -71,10 +158,9 @@
 
     const grid = document.getElementById("bingoGrid");
     const playerNameInput = document.getElementById("playerName");
+    const workerURL = "https://rapid-hill-7b92.reinier-olivier.workers.dev/";
 
-    const workerURL = "https://rapid-hill-7b92.reinier-olivier.workers.dev/"; // Replace with your Worker URL
-
-    squares.forEach((square, index) => {
+    function createCard(square, index) {
       const div = document.createElement("div");
       div.className = "card";
       div.innerHTML = `
@@ -125,6 +211,33 @@
           resultDiv.textContent = "Error uploading photo.";
         }
       });
+    }
+
+    // Create all cards
+    squares.forEach((square, index) => createCard(square, index));
+
+    // Load previous photos when player name is entered
+    playerNameInput.addEventListener("change", async () => {
+      const player = playerNameInput.value.trim();
+      if (!player) return;
+
+      try {
+        const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}`);
+        const data = await res.json();
+
+        squares.forEach((square, index) => {
+          const resultDiv = document.getElementById(`result${index}`);
+          const url = data[square];
+          if (url) {
+            resultDiv.innerHTML = `
+              <a href="${url}" target="_blank">View Photo</a>
+              <br><img src="${url}" alt="Uploaded Photo" />
+            `;
+          }
+        });
+      } catch (err) {
+        console.error("Error loading previous photos:", err);
+      }
     });
   </script>
 </body>
