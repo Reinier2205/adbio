@@ -1,19 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KampBingo</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KampBingo – Birthday Camp Photo Bingo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+    img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 <body>
-<h1>KampBingo – Birthday Camp Photo Bingo</h1>
+  <h1>KampBingo – Birthday Camp Photo Bingo</h1>
+  <p>Select your name: <input type="text" id="playerName" placeholder="Enter your name" /></p>
 
-<label for="player">Select your name:</label>
-<input type="text" id="player" placeholder="Enter your name">
+  <div class="grid" id="bingoGrid"></div>
 
-<div id="bingoGrid"></div>
+  <script>
+    const squares = [
+      "An old photo with Anneke",
+      "A photo from a past birthday or braai",
+      "The oldest selfie you have together",
+      "Anneke walking barefoot (bonus: dirty feet)",
+      "Anneke drinking beer (bonus: a cheers moment)",
+      "Someone borrowing something from Anneke",
+      "Oliver playing ball with someone",
+      "The baby with a new 'aunt' or 'uncle'",
+      "Everyone gathered around the fire",
+      "Anneke reading a book in peace",
+      "Morning coffee in a mug that’s not yours",
+      "Oliver 'helping' with something (e.g., pouring tea, fixing, or cooking)",
+      "A photo of the sunset or campfire glow",
+      "Someone with muddy or sandy feet",
+      "Anneke’s laugh caught in a candid photo",
+      "A camp game or activity moment",
+      "A creative photo of beer or tea (bonus: both)",
+      "Oliver on his bike",
+      "A group photo of everyone",
+      "Someone looking for their lost item (e.g., phone, shoe, drink)",
+      "A photo showing borrowed camping gear",
+      "Oliver dunking something in tea",
+      "Anneke relaxing with a book and drink",
+      "The baby smiling",
+      "Everyone waving goodnight at the fire"
+    ];
 
-<script src="script.js"></script>
+    const grid = document.getElementById("bingoGrid");
+    const playerNameInput = document.getElementById("playerName");
+
+    const workerURL = "https://rapid-hill-7b92.reinier-olivier.workers.dev/"; // Replace with your Worker URL
+
+    squares.forEach((square, index) => {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <p>${square}</p>
+        <input type="file" id="file${index}" />
+        <div id="result${index}"></div>
+      `;
+      grid.appendChild(div);
+
+      const fileInput = div.querySelector(`#file${index}`);
+      const resultDiv = div.querySelector(`#result${index}`);
+
+      fileInput.addEventListener("change", async (e) => {
+        const player = playerNameInput.value.trim();
+        if (!player) {
+          alert("Please enter your name first.");
+          fileInput.value = "";
+          return;
+        }
+
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("player", player);
+        formData.append("square", square);
+
+        resultDiv.textContent = "Uploading...";
+
+        try {
+          const res = await fetch(workerURL, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+
+          if (data.url) {
+            resultDiv.innerHTML = `
+              <a href="${data.url}" target="_blank">View Photo</a>
+              <br><img src="${data.url}" alt="Uploaded Photo" />
+            `;
+          } else {
+            resultDiv.textContent = "Upload failed.";
+          }
+        } catch (err) {
+          console.error(err);
+          resultDiv.textContent = "Error uploading photo.";
+        }
+      });
+    });
+  </script>
 </body>
 </html>
