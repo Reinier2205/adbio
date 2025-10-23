@@ -179,6 +179,8 @@
               resultDiv.innerHTML = `<a href="${data.url}" target="_blank">View Photo</a><br><img src="${data.url}" />`;
               updateProgress();
               updateLeaderboard();
+              // Refresh player list to include new players
+              loadPlayers();
             } else {
               resultDiv.textContent = "Upload failed.";
             }
@@ -190,29 +192,45 @@
     }
 
     async function loadPlayers() {
-      const res = await fetch(`${workerURL}players`);
-      const names = await res.json();
-      names.sort().forEach(name => {
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        playerSelect.appendChild(option);
-      });
+      try {
+        const res = await fetch(`${workerURL}players`);
+        const names = await res.json();
+        // Clear existing options except the first one
+        playerSelect.innerHTML = '<option value="">-- Choose a player --</option>';
+        names.sort().forEach(name => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          playerSelect.appendChild(option);
+        });
+      } catch (err) {
+        console.error("Error loading players:", err);
+        playerSelect.innerHTML = '<option value="">-- Error loading players --</option>';
+      }
     }
 
     async function loadPhotos(player) {
-      const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}`);
-      const data = await res.json();
-      squares.forEach((square, index) => {
-        const resultDiv = document.getElementById(`result${index}`);
-        const url = data[square];
-        if (url) {
-          resultDiv.innerHTML = `<a href="${url}" target="_blank">View Photo</a><br><img src="${url}" />`;
-        } else {
+      try {
+        const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}`);
+        const data = await res.json();
+        squares.forEach((square, index) => {
+          const resultDiv = document.getElementById(`result${index}`);
+          const url = data[square];
+          if (url) {
+            resultDiv.innerHTML = `<a href="${url}" target="_blank">View Photo</a><br><img src="${url}" />`;
+          } else {
+            resultDiv.innerHTML = "";
+          }
+        });
+        updateProgress();
+      } catch (err) {
+        console.error("Error loading photos:", err);
+        // Clear all photo displays on error
+        squares.forEach((square, index) => {
+          const resultDiv = document.getElementById(`result${index}`);
           resultDiv.innerHTML = "";
-        }
-      });
-      updateProgress();
+        });
+      }
     }
 
     async function updateProgress() {
@@ -237,10 +255,12 @@
     });
 
     playerSelect.addEventListener("change", () => {
-      currentPlayer = playerSelect.value;
-      newPlayerInput.value = "";
-      createGrid();
-      loadPhotos(currentPlayer);
+      if (playerSelect.value) {
+        currentPlayer = playerSelect.value;
+        newPlayerInput.value = "";
+        createGrid();
+        loadPhotos(currentPlayer);
+      }
     });
 
     // Initialize app
