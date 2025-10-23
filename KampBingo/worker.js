@@ -62,7 +62,14 @@ export default {
       });
 
       const proxyUrl = `https://rapid-hill-7b92.reinier-olivier.workers.dev/${filename}`;
-      await env.KampBingoProgress.put(`${safePlayer}_${safeSquare}`, proxyUrl);
+      const urlKey = `${safePlayer}_${safeSquare}`;
+      
+      console.log(`Storing photo URL: ${urlKey} -> ${proxyUrl}`);
+      await env.KampBingoProgress.put(urlKey, proxyUrl);
+      
+      // Verify storage
+      const storedUrl = await env.KampBingoProgress.get(urlKey);
+      console.log(`Verification - stored URL: ${storedUrl}, type: ${typeof storedUrl}`);
 
       return new Response(JSON.stringify({ url: proxyUrl }), {
         status: 200,
@@ -70,8 +77,29 @@ export default {
       });
     }
 
+    // Test endpoint to check environment
+    if (request.method === "GET" && url.pathname === "/test") {
+      try {
+        const testResult = {
+          message: "Worker is running",
+          hasEnv: !!env.KampBingoProgress,
+          timestamp: new Date().toISOString()
+        };
+        
+        return new Response(JSON.stringify(testResult), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Serve image proxy
-    if (request.method === "GET" && !["/player", "/players", "/leader"].includes(url.pathname)) {
+    if (request.method === "GET" && !["/player", "/players", "/leader", "/test"].includes(url.pathname)) {
       const key = url.pathname.slice(1);
       const object = await env.KampBingoProgress.get(key);
 
@@ -90,71 +118,128 @@ export default {
 
     // Return all photo URLs for a player
     if (request.method === "GET" && url.pathname === "/player") {
-      const player = url.searchParams.get("name");
-      if (!player) {
-        return new Response("Missing player name", { status: 400, headers: corsHeaders });
+      try {
+        const player = url.searchParams.get("name");
+        if (!player) {
+          return new Response("Missing player name", { status: 400, headers: corsHeaders });
+        }
+
+        console.log(`Fetching photos for player: ${player}`);
+        const safePlayer = player.replace(/\s+/g, "_");
+        const results = {};
+
+        for (const square of squaresList) {
+          const safeSquare = square.replace(/\s+/g, "_");
+          const key = `${safePlayer}_${safeSquare}`;
+          const photoUrl = await env.KampBingoProgress.get(key);
+          console.log(`Key: ${key}, PhotoUrl: ${photoUrl}, Type: ${typeof photoUrl}`);
+          
+          if (photoUrl) {
+            // Handle both string URLs and object responses
+            const url = typeof photoUrl === 'string' ? photoUrl : photoUrl.toString();
+            results[square] = url;
+            console.log(`Added to results: ${square} -> ${url}`);
+          }
+        }
+
+        console.log(`Final results for ${player}:`, results);
+        return new Response(JSON.stringify(results), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        console.error("Error in /player endpoint:", error);
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-
-      const safePlayer = player.replace(/\s+/g, "_");
-      const results = {};
-
-      for (const square of squaresList) {
-        const safeSquare = square.replace(/\s+/g, "_");
-        const key = `${safePlayer}_${safeSquare}`;
-        const photoUrl = await env.KampBingoProgress.get(key);
-        if (photoUrl) results[square] = photoUrl;
-      }
-
-      return new Response(JSON.stringify(results), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
 
     // Return sorted list of players
     if (request.method === "GET" && url.pathname === "/players") {
-      const list = await env.KampBingoProgress.list();
-      const names = new Set();
+      try {
+        console.log("Fetching players list...");
+        console.log("Environment variable exists:", !!env.KampBingoProgress);
+        
+        const list = await env.KampBingoProgress.list();
+        console.log("List object:", list);
+        console.log("List keys:", list.keys);
+        console.log("Raw list keys:", list.keys ? list.keys.map(k => k.name) : "No keys");
+        
+        const names = new Set();
 
-      for (const item of list.keys) {
-        const [name, square] = item.name.split("_");
-        if (name && square && squaresList.some(s => square === s.replace(/\s+/g, "_"))) {
-          names.add(name.replace(/_/g, " "));
+        if (list.keys && list.keys.length > 0) {
+          for (const item of list.keys) {
+            const [name, square] = item.name.split("_");
+            console.log(`Processing item: ${item.name} -> name: ${name}, square: ${square}`);
+            if (name && square && squaresList.some(s => square === s.replace(/\s+/g, "_"))) {
+              names.add(name.replace(/_/g, " "));
+            }
+          }
+        } else {
+          console.log("No keys found in storage");
         }
-      }
 
-      return new Response(JSON.stringify([...names].sort()), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        const result = [...names].sort();
+        console.log("Final player names:", result);
+        
+        return new Response(JSON.stringify(result), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        console.error("Error in /players endpoint:", error);
+        console.error("Error stack:", error.stack);
+        return new Response(JSON.stringify({ 
+          error: error.message,
+          stack: error.stack,
+          type: error.constructor.name
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Return leaderboard
     if (request.method === "GET" && url.pathname === "/leader") {
-      const list = await env.KampBingoProgress.list();
-      const counts = {};
+      try {
+        console.log("Fetching leaderboard...");
+        const list = await env.KampBingoProgress.list();
+        const counts = {};
 
-      for (const item of list.keys) {
-        const [name, square] = item.name.split("_");
-        if (name && square && squaresList.some(s => square === s.replace(/\s+/g, "_"))) {
-          const cleanName = name.replace(/_/g, " ");
-          counts[cleanName] = (counts[cleanName] || 0) + 1;
+        for (const item of list.keys) {
+          const [name, square] = item.name.split("_");
+          if (name && square && squaresList.some(s => square === s.replace(/\s+/g, "_"))) {
+            const cleanName = name.replace(/_/g, " ");
+            counts[cleanName] = (counts[cleanName] || 0) + 1;
+          }
         }
-      }
 
-      let leader = "";
-      let max = 0;
-      for (const [name, count] of Object.entries(counts)) {
-        if (count > max) {
-          max = count;
-          leader = name;
+        let leader = "";
+        let max = 0;
+        for (const [name, count] of Object.entries(counts)) {
+          if (count > max) {
+            max = count;
+            leader = name;
+          }
         }
-      }
 
-      return new Response(JSON.stringify({ name: leader, count: max }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        const result = { name: leader, count: max };
+        console.log("Leaderboard result:", result);
+
+        return new Response(JSON.stringify(result), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        console.error("Error in /leader endpoint:", error);
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Default fallback
