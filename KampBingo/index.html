@@ -286,6 +286,21 @@
       box-shadow: 0 6px 20px rgba(0,0,0,0.2);
     }
 
+    /* Clickable photo styling */
+    img[onclick] {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    img[onclick]:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+    }
+
+    img[onclick]:active {
+      transform: scale(0.98);
+    }
+
     /* Photo loading states */
     .photo-loading {
       display: flex;
@@ -316,6 +331,27 @@
       max-height: 400px;
       object-fit: contain;
       background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Add a subtle overlay to indicate clickability */
+    .card-photo img[onclick]::after {
+      content: "🔍 Click to view full size";
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .card-photo:hover img[onclick]::after {
+      opacity: 1;
     }
 
     /* Photo link styling */
@@ -436,6 +472,11 @@
         const fileInput = div.querySelector(`#file${index}`);
         const resultDiv = div.querySelector(`#result${index}`);
 
+        // Initially hide file input if there's already a photo
+        if (resultDiv.innerHTML.trim() !== "") {
+          fileInput.style.display = 'none';
+        }
+
         fileInput.addEventListener("change", async (e) => {
           if (!currentPlayer) return alert("Select or enter your name first.");
           const file = e.target.files[0];
@@ -454,9 +495,10 @@
             const data = await res.json();
             if (data.url) {
               resultDiv.innerHTML = `
-                <a href="${data.url}" target="_blank">📸 View Full Photo</a>
-                <img src="${data.url}" alt="Uploaded photo" onload="this.style.opacity='1'" onerror="this.parentElement.innerHTML='<div class=\\"photo-error\\">Failed to load photo</div>'" style="opacity:0; transition: opacity 0.3s ease;" />
+                <img src="${data.url}" alt="Uploaded photo" onclick="window.open('${data.url}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
               `;
+              // Hide the file input since photo is now loaded
+              fileInput.style.display = 'none';
               updateProgress();
               updateLeaderboard();
               // Refresh player list to include new players and update progress table
@@ -534,14 +576,22 @@
         const data = await res.json();
         squares.forEach((square, index) => {
           const resultDiv = document.getElementById(`result${index}`);
+          const fileInput = document.getElementById(`file${index}`);
           const url = data[square];
           if (url) {
             resultDiv.innerHTML = `
-              <a href="${url}" target="_blank">📸 View Full Photo</a>
-              <img src="${url}" alt="${square}" onload="this.style.opacity='1'" onerror="this.parentElement.innerHTML='<div class=\\"photo-error\\">Failed to load photo</div>'" style="opacity:0; transition: opacity 0.3s ease;" />
+              <img src="${url}" alt="${square}" onclick="window.open('${url}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
             `;
+            // Hide the file input since photo is already loaded
+            if (fileInput) {
+              fileInput.style.display = 'none';
+            }
           } else {
             resultDiv.innerHTML = "";
+            // Show the file input if no photo is loaded
+            if (fileInput) {
+              fileInput.style.display = 'block';
+            }
           }
         });
         updateProgress();
