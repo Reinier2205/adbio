@@ -6,17 +6,20 @@
   <title>KampBingo – Birthday Camp Photo Bingo</title>
   <style>
     :root {
-      --green: #2ecc71;
-      --red: #e74c3c;
-      --black: #1e1e1e;
-      --gray: #f9f9f9;
-      --card-bg: #ffffff;
+      --primary: #4a90e2;
+      --secondary: #7b68ee;
+      --accent: #ff6b6b;
+      --success: #51cf66;
+      --text-dark: #2c3e50;
+      --text-light: #ffffff;
+      --bg-light: rgba(255, 255, 255, 0.95);
+      --bg-dark: rgba(44, 62, 80, 0.9);
     }
 
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: var(--black);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: var(--text-dark);
       margin: 0;
       padding: 20px;
       min-height: 100vh;
@@ -24,7 +27,7 @@
 
     h1 {
       text-align: center;
-      color: white;
+      color: var(--text-light);
       font-size: 2.2rem;
       margin-bottom: 20px;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
@@ -34,7 +37,7 @@
     .controls {
       text-align: center;
       margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--bg-light);
       padding: 20px;
       border-radius: 15px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -46,55 +49,71 @@
       font-size: 1rem;
       margin: 8px;
       border-radius: 10px;
-      border: 2px solid var(--green);
-      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid var(--primary);
+      background: var(--bg-light);
       backdrop-filter: blur(10px);
       transition: all 0.2s ease;
     }
 
     select:focus, input[type="text"]:focus {
       outline: none;
-      border-color: #27ae60;
-      box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
       transform: translateY(-1px);
     }
 
     button {
-      background-color: var(--black);
-      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--text-light);
       cursor: pointer;
+      border: none;
+      font-weight: 600;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
     }
 
     .leaderboard {
       text-align: center;
       margin-top: 10px;
       font-size: 1rem;
-      color: var(--red);
+      color: var(--accent);
     }
 
     .loading-spinner {
       display: none;
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255, 255, 255, 0.95);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      z-index: 1000;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-spinner .spinner-container {
+      background: var(--bg-light);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 15px;
     }
 
     .spinner {
       width: 30px;
       height: 30px;
-      border: 3px solid rgba(46, 204, 113, 0.3);
-      border-top: 3px solid var(--green);
+      border: 3px solid rgba(74, 144, 226, 0.3);
+      border-top: 3px solid var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       display: inline-block;
-      margin-right: 15px;
     }
 
     @keyframes spin {
@@ -106,7 +125,7 @@
       position: fixed;
       top: 20px;
       right: 20px;
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--bg-light);
       padding: 15px;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -162,7 +181,7 @@
 
     .progress-table h3 {
       margin: 0 0 10px 0;
-      color: var(--green);
+      color: var(--primary);
       font-size: 1rem;
     }
 
@@ -180,12 +199,12 @@
 
     .progress-name {
       font-weight: bold;
-      color: var(--black);
+      color: var(--text-dark);
     }
 
     .progress-count {
-      background: var(--green);
-      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--text-light);
       padding: 2px 8px;
       border-radius: 12px;
       font-size: 0.8rem;
@@ -200,11 +219,11 @@
     }
 
     .card {
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--bg-light);
       border-radius: 15px;
       padding: 20px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      border-left: 6px solid var(--green);
+      border-left: 6px solid var(--primary);
       backdrop-filter: blur(10px);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
@@ -258,8 +277,10 @@
   </div>
 
   <div class="loading-spinner" id="loadingSpinner">
-    <div class="spinner"></div>
-    <span>Loading...</span>
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <span>Loading...</span>
+    </div>
   </div>
 
   <script>
