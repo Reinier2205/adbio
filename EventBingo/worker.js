@@ -35,14 +35,12 @@ export default {
     };
 
     const url = new URL(request.url);
-    console.log("Request path:", url.pathname, "Method:", request.method);
+    const path = url.pathname;
 
-    // Handle CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Handle photo upload
     if (request.method === "POST") {
       const form = await request.formData();
       const file = form.get("file");
@@ -64,7 +62,7 @@ export default {
 
       const proxyUrl = `https://rapid-hill-7b92.reinier-olivier.workers.dev/${filename}`;
       const urlKey = `${safePlayer}_${safeSquare}`;
-      
+
       await env.EventBingoProgress.put(urlKey, proxyUrl, {
         httpMetadata: { contentType: "text/plain" }
       });
@@ -75,30 +73,115 @@ export default {
       });
     }
 
-    // Test endpoint to check environment
-    if (request.method === "GET" && url.pathname === "/test") {
-      try {
-        const testResult = {
-          message: "Worker is running",
-          hasEnv: !!env.EventBingoProgress,
-          timestamp: new Date().toISOString()
-        };
-        
-        return new Response(JSON.stringify(testResult), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    if (request.method === "GET" && path === "/test") {
+      const testResult = {
+        message: "Worker is running",
+        hasEnv: !!env.EventBingoProgress,
+        timestamp: new Date().toISOString()
+      };
+      return new Response(JSON.stringify(testResult), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Serve image proxy
-    if (request.method === "GET" && !["/player", "/players", "/leader", "/test"].includes(url.pathname)) {
-      const key = url.pathname.slice(1);
+    if (request.method === "GET" && path === "/player") {
+      const player = url.searchParams.get("name");
+      if (!player) {
+        return new Response("Missing player name", { status: 400, headers: corsHeaders });
+      }
+
+      const safePlayer = player.replace(/\s+/g, "_");
+      const results = {};
+
+      for (const square of squaresList) {
+        const safeSquare = square.replace(/\s+/g, "_");
+        const key = `${safePlayer}_${safeSquare}`;
+        const photoUrl = await env.EventBingoProgress.get(key);
+
+        if (photoUrl) {
+          let url;
+          if (typeof photoUrl === 'string') {
+            url = photoUrl;
+          } else if (photoUrl && typeof photoUrl === 'object') {
+            url = await photoUrl.text();
+          } else {
+            url = photoUrl.toString();
+          }
+          results[square] = url;
+        }
+      }
+
+      return new Response(JSON.stringify(results), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (request.method === "GET" && path === "/players") {
+      const list = await env.EventBingoProgress.list();
+      const items = list.keys || list.objects || [];
+      const playerCounts = {};
+      const normalizedSquares = squaresList.map(s => s.replace(/\s+/g, "_"));
+
+      for (const item of items) {
+        const keyName = item.key || item.name;
+        if (keyName.match(/\d{13}/) || keyName.includes('.')) continue;
+
+        const match = normalizedSquares.find(square => keyName.endsWith(`_${square}`));
+        if (match) {
+          const playerName = keyName.slice(0, keyName.length - match.length - 1);
+          playerCounts[playerName] = (playerCounts[playerName] || 0) + 1;
+        }
+      }
+
+      const result = Object.keys(playerCounts).sort().map(name => ({
+        name,
+        count: playerCounts[name]
+      }));
+
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (request.method === "GET" && path === "/leader") {
+      const list = await env.EventBingoProgress.list();
+      const counts = {};
+
+      for (const item of list.keys || []) {
+        const [name, square] = item.name.split("_");
+        if (name && square && squaresList.some(s => square === s.replace(/\s+/g, "_"))) {
+          const cleanName = name.replace(/_/g, " ");
+          counts[cleanName] = (counts[cleanName] || 0) + 1;
+        }
+      }
+
+      let leader = "";
+      let max = 0;
+      for (const [name, count] of Object.entries(counts)) {
+        if (count > max) {
+          max = count;
+          leader = name;
+        }
+      }
+
+      return new Response(JSON.stringify({ name: leader, count: max }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (request.method === "GET" && (path === "/" || path === "")) {
+      return new Response("EventBingo Worker is running.", {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "text/plain" },
+      });
+    }
+
+    if (request.method === "GET") {
+      const key = path.slice(1);
       const object = await env.EventBingoProgress.get(key);
 
       if (!object || !object.body) {
@@ -114,152 +197,6 @@ export default {
       });
     }
 
-    // Return all photo URLs for a player
-    if (request.method === "GET" && url.pathname === "/player") {
-      try {
-        const player = url.searchParams.get("name");
-        if (!player) {
-          return new Response("Missing player name", { status: 400, headers: corsHeaders });
-        }
-
-        const safePlayer = player.replace(/\s+/g, "_");
-        const results = {};
-
-        for (const square of squaresList) {
-          const safeSquare = square.replace(/\s+/g, "_");
-          const key = `${safePlayer}_${safeSquare}`;
-          const photoUrl = await env.EventBingoProgress.get(key);
-          
-          if (photoUrl) {
-            // Handle GetResult object from Cloudflare Workers R2
-            let url;
-            if (typeof photoUrl === 'string') {
-              url = photoUrl;
-            } else if (photoUrl && typeof photoUrl === 'object') {
-              // For GetResult objects, we need to get the actual value
-              url = await photoUrl.text();
-            } else {
-              url = photoUrl.toString();
-            }
-            results[square] = url;
-          }
-        }
-        return new Response(JSON.stringify(results), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } catch (error) {
-        console.error("Error in /player endpoint:", error);
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    // Return sorted list of players with counts
-    if (request.method === "GET" && url.pathname === "/players") {
-      try {
-        const list = await env.EventBingoProgress.list();
-        const items = list.objects || list.keys || [];
-        const playerCounts = {};
-        
-        // Process all items to get player counts
-        for (const item of items) {
-          const keyName = item.key || item.name;
-          
-          // Skip image files (they have timestamps and file extensions)
-          if (keyName.match(/\d{13}/) || keyName.includes('.')) {
-            continue;
-          }
-          
-          // Look for URL keys (player_square format)
-          const parts = keyName.split("_");
-          if (parts.length >= 2) {
-            const playerName = parts[0];
-            const squarePart = parts.slice(1).join("_");
-            
-            // Check if this matches any of our squares
-            const matchingSquare = squaresList.find(s => 
-              squarePart === s.replace(/\s+/g, "_")
-            );
-            
-            if (matchingSquare) {
-              playerCounts[playerName] = (playerCounts[playerName] || 0) + 1;
-            }
-          }
-        }
-
-        // Return both player names and their counts
-        const result = Object.keys(playerCounts).sort().map(name => ({
-          name: name,
-          count: playerCounts[name]
-        }));
-        
-        return new Response(JSON.stringify(result), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } catch (error) {
-        console.error("Error in /players endpoint:", error);
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    // Return leaderboard
-    if (request.method === "GET" && url.pathname === "/leader") {
-      try {
-        console.log("Fetching leaderboard...");
-        const list = await env.EventBingoProgress.list();
-        const counts = {};
-
-        for (const item of list.keys) {
-          const [name, square] = item.name.split("_");
-          if (name && square && squaresList.some(s => square === s.replace(/\s+/g, "_"))) {
-            const cleanName = name.replace(/_/g, " ");
-            counts[cleanName] = (counts[cleanName] || 0) + 1;
-          }
-        }
-
-        let leader = "";
-        let max = 0;
-        for (const [name, count] of Object.entries(counts)) {
-          if (count > max) {
-            max = count;
-            leader = name;
-          }
-        }
-
-        const result = { name: leader, count: max };
-        console.log("Leaderboard result:", result);
-
-        return new Response(JSON.stringify(result), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } catch (error) {
-        console.error("Error in /leader endpoint:", error);
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    // Handle root path specifically
-    if (request.method === "GET" && (url.pathname === "/" || url.pathname === "")) {
-      console.log("Handling root path request");
-      return new Response("EventBingo Worker is running.", {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "text/plain" },
-      });
-    }
-
-    // Default fallback
-    console.log("No matching route found for:", url.pathname);
     return new Response("EventBingo Worker is running.", {
       status: 200,
       headers: corsHeaders,
