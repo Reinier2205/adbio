@@ -481,7 +481,7 @@
 
 
 
-    const workerURL = "https://rapid-hill-7b92.reinier-olivier.workers.dev/";
+    const workerURL = "https://eventbingo-worker.your-subdomain.workers.dev/";
     const grid = document.getElementById("bingoGrid");
     const playerSelect = document.getElementById("playerSelect");
     const newPlayerInput = document.getElementById("newPlayerInput");
@@ -718,7 +718,8 @@
         return true;
       } catch (err) {
         console.error("Worker connection failed:", err);
-        // Show user-friendly error message
+        
+        // Show user-friendly error message with deployment instructions
         const errorDiv = document.createElement('div');
         errorDiv.style.cssText = `
           position: fixed;
@@ -727,7 +728,7 @@
           transform: translateX(-50%);
           background: #ff6b6b;
           color: white;
-          padding: 15px 25px;
+          padding: 20px 25px;
           border-radius: 10px;
           box-shadow: 0 4px 15px rgba(0,0,0,0.2);
           z-index: 10000;
@@ -736,17 +737,20 @@
           max-width: 90%;
         `;
         errorDiv.innerHTML = `
-          ⚠️ Cannot connect to EventBingo server<br>
-          <small>Check your internet connection and try refreshing the page</small>
+          ⚠️ EventBingo Worker Not Deployed<br>
+          <small style="font-size: 0.9em; margin-top: 10px; display: block;">
+            The worker needs to be deployed to Cloudflare Workers.<br>
+            Check the EventBingo/worker.js file and deploy it to your Cloudflare account.
+          </small>
         `;
         document.body.appendChild(errorDiv);
         
-        // Auto-hide after 5 seconds
+        // Auto-hide after 8 seconds (longer for instructions)
         setTimeout(() => {
           if (errorDiv.parentNode) {
             errorDiv.parentNode.removeChild(errorDiv);
           }
-        }, 5000);
+        }, 8000);
         
         return false;
       }
