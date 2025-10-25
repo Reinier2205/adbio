@@ -35,6 +35,7 @@ export default {
     };
 
     const url = new URL(request.url);
+    console.log("Request path:", url.pathname, "Method:", request.method);
 
     // Handle CORS preflight
     if (request.method === "OPTIONS") {
@@ -248,7 +249,17 @@ export default {
       }
     }
 
+    // Handle root path specifically
+    if (request.method === "GET" && (url.pathname === "/" || url.pathname === "")) {
+      console.log("Handling root path request");
+      return new Response("EventBingo Worker is running.", {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "text/plain" },
+      });
+    }
+
     // Default fallback
+    console.log("No matching route found for:", url.pathname);
     return new Response("EventBingo Worker is running.", {
       status: 200,
       headers: corsHeaders,
