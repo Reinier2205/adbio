@@ -708,11 +708,46 @@
       try {
         console.log("Testing worker connection...");
         const res = await fetch(workerURL);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const text = await res.text();
         console.log("Worker response:", text);
         return true;
       } catch (err) {
         console.error("Worker connection failed:", err);
+        // Show user-friendly error message
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #ff6b6b;
+          color: white;
+          padding: 15px 25px;
+          border-radius: 10px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          z-index: 10000;
+          font-weight: 600;
+          text-align: center;
+          max-width: 90%;
+        `;
+        errorDiv.innerHTML = `
+          ⚠️ Cannot connect to EventBingo server<br>
+          <small>Check your internet connection and try refreshing the page</small>
+        `;
+        document.body.appendChild(errorDiv);
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          if (errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+          }
+        }, 5000);
+        
         return false;
       }
     }
