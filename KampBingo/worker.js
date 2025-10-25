@@ -57,14 +57,14 @@ export default {
       const timestamp = Date.now();
       const filename = `${safePlayer}_${safeSquare}_${timestamp}_${file.name}`;
 
-      await env.KampBingoProgress.put(filename, file.stream(), {
+      await env.EventBingoProgress.put(filename, file.stream(), {
         httpMetadata: { contentType: file.type },
       });
 
       const proxyUrl = `https://rapid-hill-7b92.reinier-olivier.workers.dev/${filename}`;
       const urlKey = `${safePlayer}_${safeSquare}`;
       
-      await env.KampBingoProgress.put(urlKey, proxyUrl, {
+      await env.EventBingoProgress.put(urlKey, proxyUrl, {
         httpMetadata: { contentType: "text/plain" }
       });
 
@@ -79,7 +79,7 @@ export default {
       try {
         const testResult = {
           message: "Worker is running",
-          hasEnv: !!env.KampBingoProgress,
+          hasEnv: !!env.EventBingoProgress,
           timestamp: new Date().toISOString()
         };
         
@@ -98,7 +98,7 @@ export default {
     // Serve image proxy
     if (request.method === "GET" && !["/player", "/players", "/leader", "/test"].includes(url.pathname)) {
       const key = url.pathname.slice(1);
-      const object = await env.KampBingoProgress.get(key);
+      const object = await env.EventBingoProgress.get(key);
 
       if (!object || !object.body) {
         return new Response("Image not found", { status: 404, headers: corsHeaders });
@@ -127,7 +127,7 @@ export default {
         for (const square of squaresList) {
           const safeSquare = square.replace(/\s+/g, "_");
           const key = `${safePlayer}_${safeSquare}`;
-          const photoUrl = await env.KampBingoProgress.get(key);
+          const photoUrl = await env.EventBingoProgress.get(key);
           
           if (photoUrl) {
             // Handle GetResult object from Cloudflare Workers R2
@@ -159,7 +159,7 @@ export default {
     // Return sorted list of players with counts
     if (request.method === "GET" && url.pathname === "/players") {
       try {
-        const list = await env.KampBingoProgress.list();
+        const list = await env.EventBingoProgress.list();
         const items = list.objects || list.keys || [];
         const playerCounts = {};
         
@@ -212,7 +212,7 @@ export default {
     if (request.method === "GET" && url.pathname === "/leader") {
       try {
         console.log("Fetching leaderboard...");
-        const list = await env.KampBingoProgress.list();
+        const list = await env.EventBingoProgress.list();
         const counts = {};
 
         for (const item of list.keys) {
@@ -249,7 +249,7 @@ export default {
     }
 
     // Default fallback
-    return new Response("KampBingo Worker is running.", {
+    return new Response("EventBingo Worker is running.", {
       status: 200,
       headers: corsHeaders,
     });
