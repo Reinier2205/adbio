@@ -60,7 +60,7 @@ export default {
         httpMetadata: { contentType: file.type },
       });
 
-      const proxyUrl = `https://rapid-hill-7b92.reinier-olivier.workers.dev/${filename}`;
+      const proxyUrl = `https://shy-recipe-5fb1.reinier-olivier.workers.dev/${filename}`;
       const urlKey = `${safePlayer}_${safeSquare}`;
 
       await env.EventBingoProgress.put(urlKey, proxyUrl, {
@@ -94,23 +94,27 @@ export default {
       const safePlayer = player.replace(/\s+/g, "_");
       const results = {};
 
-      for (const square of squaresList) {
-        const safeSquare = square.replace(/\s+/g, "_");
-        const key = `${safePlayer}_${safeSquare}`;
-        const photoUrl = await env.EventBingoProgress.get(key);
+       for (const square of squaresList) {
+         const safeSquare = square.replace(/\s+/g, "_");
+         const key = `${safePlayer}_${safeSquare}`;
+         console.log("Looking for photo with key:", key);
+         const photoUrl = await env.EventBingoProgress.get(key);
 
-        if (photoUrl) {
-          let url;
-          if (typeof photoUrl === 'string') {
-            url = photoUrl;
-          } else if (photoUrl && typeof photoUrl === 'object') {
-            url = await photoUrl.text();
-          } else {
-            url = photoUrl.toString();
-          }
-          results[square] = url;
-        }
-      }
+         if (photoUrl) {
+           let url;
+           if (typeof photoUrl === 'string') {
+             url = photoUrl;
+           } else if (photoUrl && typeof photoUrl === 'object') {
+             url = await photoUrl.text();
+           } else {
+             url = photoUrl.toString();
+           }
+           console.log("Found photo URL for", square, ":", url);
+           results[square] = url;
+         } else {
+           console.log("No photo found for", square);
+         }
+       }
 
       return new Response(JSON.stringify(results), {
         status: 200,
@@ -180,22 +184,25 @@ export default {
       });
     }
 
-    if (request.method === "GET") {
-      const key = path.slice(1);
-      const object = await env.EventBingoProgress.get(key);
+     if (request.method === "GET") {
+       const key = path.slice(1);
+       console.log("Trying to serve image with key:", key);
+       const object = await env.EventBingoProgress.get(key);
 
-      if (!object || !object.body) {
-        return new Response("Image not found", { status: 404, headers: corsHeaders });
-      }
+       if (!object || !object.body) {
+         console.log("Image not found for key:", key);
+         return new Response("Image not found", { status: 404, headers: corsHeaders });
+       }
 
-      return new Response(object.body, {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": object.httpMetadata?.contentType || "application/octet-stream",
-        },
-      });
-    }
+       console.log("Serving image for key:", key);
+       return new Response(object.body, {
+         status: 200,
+         headers: {
+           ...corsHeaders,
+           "Content-Type": object.httpMetadata?.contentType || "application/octet-stream",
+         },
+       });
+     }
 
     return new Response("EventBingo Worker is running.", {
       status: 200,
