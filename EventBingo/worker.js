@@ -64,9 +64,15 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Admin endpoints
-    if (path.startsWith('/admin/')) {
-      return handleAdminRequest(request, env, corsHeaders);
+    // Test endpoint to see all keys in bucket
+    if (request.method === "GET" && path === "/debug/keys") {
+      const list = await env.EventBingoProgress.list();
+      const keys = (list.keys || []).map(item => item.key || item.name);
+      
+      return new Response(JSON.stringify(keys), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Event-specific endpoints
