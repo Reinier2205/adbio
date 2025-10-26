@@ -1207,6 +1207,8 @@
     let allPhotos = [];
     let isDarkMode = false;
     let isMusicPlaying = false;
+    let currentEvent = null;
+    let eventCode = 'default';
 
     // Instagram-style functions
     function selectPlayer(playerName) {
@@ -1284,7 +1286,7 @@
     async function loadLeaderboardData() {
       try {
         showLoading();
-        const res = await fetch(`${workerURL}players`);
+        const res = await fetch(`${workerURL}players?event=${eventCode}`);
         
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -1659,10 +1661,11 @@
           const file = e.target.files[0];
           if (!file) return;
 
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("player", currentPlayer);
-          formData.append("square", square);
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("player", currentPlayer);
+            formData.append("square", square);
+            formData.append("event", eventCode);
 
           resultDiv.innerHTML = '<div class="photo-loading">Uploading photo...</div>';
           showLoading();
@@ -1698,7 +1701,7 @@
     async function loadPlayers() {
       try {
         showLoading();
-        const res = await fetch(`${workerURL}players`);
+        const res = await fetch(`${workerURL}players?event=${eventCode}`);
         
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -1763,7 +1766,7 @@
     async function loadPhotos(player) {
       try {
         showLoading();
-        const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}`);
+        const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}&event=${eventCode}`);
         const data = await res.json();
         squares.forEach((square, index) => {
           const resultDiv = document.getElementById(`result${index}`);
@@ -1815,7 +1818,7 @@
     }
 
     async function updateLeaderboard() {
-      const res = await fetch(`${workerURL}leader`);
+      const res = await fetch(`${workerURL}leader?event=${eventCode}`);
       const data = await res.json();
       leaderDisplay.textContent = data.name
         ? `🏆 Leader: ${data.name} (${data.count}/${squares.length})`
@@ -1903,6 +1906,60 @@
         addNewPlayer();
       }
     });
-  </script>
-</body>
-</html>
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get event code from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      eventCode = urlParams.get('event') || 'default';
+      
+      // Load event information
+      loadEventInfo();
+    });
+
+    async function loadEventInfo() {
+      try {
+        const res = await fetch(`${workerURL}event-info?event=${eventCode}`);
+        if (res.ok) {
+          currentEvent = await res.json();
+          updateEventDisplay();
+        }
+      } catch (err) {
+        console.log('Using default event');
+        currentEvent = {
+          title: "EventBingo",
+          description: "A fun photo challenge game!",
+          code: "default"
+        };
+        updateEventDisplay();
+      }
+    }
+
+    function updateEventDisplay() {
+      if (currentEvent) {
+        // Update page title
+        document.title = `${currentEvent.title} - EventBingo`;
+        
+        // Add event description to the page
+        const eventInfo = document.createElement('div');
+        eventInfo.className = 'event-info';
+        eventInfo.style.cssText = `
+          background: rgba(255, 255, 255, 0.1);
+          padding: 15px 20px;
+          margin-bottom: 20px;
+          border-radius: 12px;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #e0e0e0;
+          text-align: center;
+        `;
+        eventInfo.innerHTML = `
+          <h3 style="margin: 0 0 10px 0; color: #ffd700;">${currentEvent.title}</h3>
+          <p style="margin: 0; opacity: 0.9;">${currentEvent.description}</p>
+        `;
+        
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent && !document.querySelector('.event-info')) {
+          mainContent.insertBefore(eventInfo, mainContent.firstChild);
+        }
+      }
+    }
