@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventBingo - How to Play</title>
+  <style>
+    :root {
+      --primary: #4a90e2;
+      --secondary: #7b68ee;
+      --accent: #ff6b6b;
+      --success: #51cf66;
+      --text-dark: #2c3e50;
+      --text-light: #ffffff;
+      --bg-light: rgba(255, 255, 255, 0.95);
+      --bg-dark: rgba(44, 62, 80, 0.9);
+      --instagram-pink: #E4405F;
+      --instagram-purple: #833AB4;
+      --instagram-orange: #F77737;
+      --instagram-yellow: #FCAF45;
+      --story-gradient: linear-gradient(45deg, var(--instagram-pink), var(--instagram-purple), var(--instagram-orange), var(--instagram-yellow));
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fafafa;
+      color: var(--text-dark);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Instagram-style Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: var(--bg-light);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .back-button {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+      text-decoration: none;
+      color: var(--text-dark);
+    }
+
+    .back-button:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--text-dark);
+    }
+
+    .share-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+    }
+
+    .share-icon:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-bottom: 80px;
+    }
+
+    .hero-section {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px 20px;
+      background: var(--story-gradient);
+      border-radius: 20px;
+      color: white;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .hero-subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    .hero-description {
+      font-size: 1rem;
+      opacity: 0.8;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .section {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--instagram-pink);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-content {
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border-left: 4px solid var(--instagram-pink);
+    }
+
+    .step-number {
+      background: var(--story-gradient);
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: var(--text-dark);
+    }
+
+    .step-description {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .feature-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      border-color: var(--instagram-pink);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .feature-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: var(--text-dark);
+    }
+
+    .feature-description {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(228, 64, 95, 0.1), rgba(131, 58, 180, 0.1));
+      border: 2px solid var(--instagram-pink);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .highlight-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--instagram-pink);
+      margin-bottom: 10px;
+    }
+
+    .highlight-text {
+      color: var(--text-dark);
+      font-size: 1rem;
+    }
+
+    .example-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid var(--instagram-orange);
+    }
+
+    .example-title {
+      font-weight: bold;
+      color: var(--instagram-orange);
+      margin-bottom: 10px;
+    }
+
+    .example-text {
+      color: #666;
+      font-style: italic;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-light);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+    }
+
+    .nav-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+      text-decoration: none;
+      color: var(--text-dark);
+    }
+
+    .nav-icon:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    .nav-icon.active {
+      background-color: var(--instagram-pink);
+      color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+      
+      .main-content {
+        padding: 15px;
+      }
+      
+      .section {
+        padding: 20px;
+      }
+      
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Instagram-style Top Bar -->
+  <div class="top-bar">
+    <a href="index.html" class="back-button">←</a>
+    <div class="page-title">How to Play EventBingo</div>
+    <div class="share-icon" onclick="shareInfo()">🔗</div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-title">🎉 EventBingo</div>
+      <div class="hero-subtitle">Anneke word 35!!</div>
+      <div class="hero-description">
+        Turn your celebration into an interactive photo adventure! 
+        Complete challenges, capture memories, and compete with friends.
+      </div>
+    </div>
+
+    <!-- What is EventBingo -->
+    <div class="section">
+      <div class="section-title">
+        <span>🎯</span>
+        What is EventBingo?
+      </div>
+      <div class="section-content">
+        <p>EventBingo is a fun, interactive way to capture memories during special occasions. Instead of a traditional bingo game with numbers, you complete photo challenges that celebrate the person and the event.</p>
+        
+        <div class="highlight-box">
+          <div class="highlight-title">🎊 The Goal</div>
+          <div class="highlight-text">
+            Complete as many photo challenges as possible during the event. 
+            The more squares you complete, the more memories you'll capture!
+          </div>
+        </div>
+
+        <p>Each square represents a specific photo challenge related to Anneke's 35th birthday celebration. From capturing spontaneous moments to finding specific items or activities, each challenge is designed to create lasting memories.</p>
+      </div>
+    </div>
+
+    <!-- How to Play -->
+    <div class="section">
+      <div class="section-title">
+        <span>📱</span>
+        How to Play
+      </div>
+      <div class="section-content">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Choose Your Player</div>
+            <div class="step-description">Click on a player circle at the top, or create a new player by clicking in the empty space.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Read the Challenge</div>
+            <div class="step-description">Each card shows a specific photo challenge. Read it carefully to understand what you need to capture.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">Take Your Photo</div>
+            <div class="step-description">Click the "+" button to upload a photo that matches the challenge. Make sure it's a good shot!</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <div class="step-title">Complete & Celebrate</div>
+            <div class="step-description">Once uploaded, the card shows ✅ and you can react with emojis. Complete all 25 squares for a confetti celebration!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="section">
+      <div class="section-title">
+        <span>✨</span>
+        App Features
+      </div>
+      <div class="section-content">
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">👥</div>
+            <div class="feature-title">Multiple Players</div>
+            <div class="feature-description">Switch between different players to see everyone's progress</div>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">📸</div>
+            <div class="feature-title">Photo Gallery</div>
+            <div class="feature-description">View all uploaded photos in a beautiful carousel</div>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🏆</div>
+            <div class="feature-title">Leaderboard</div>
+            <div class="feature-description">See who's completed the most challenges</div>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🔍</div>
+            <div class="feature-title">Filter View</div>
+            <div class="feature-description">Show only completed squares to focus on achievements</div>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🌓</div>
+            <div class="feature-title">Dark Mode</div>
+            <div class="feature-description">Switch between light and dark themes</div>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🔗</div>
+            <div class="feature-title">Share Progress</div>
+            <div class="feature-description">Share your EventBingo link with friends</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenge Examples -->
+    <div class="section">
+      <div class="section-title">
+        <span>📋</span>
+        Challenge Examples
+      </div>
+      <div class="section-content">
+        <p>Here are some examples of the photo challenges you'll find:</p>
+        
+        <div class="example-card">
+          <div class="example-title">"'n Ou foto saam met Anneke"</div>
+          <div class="example-text">Find an old photo of you with Anneke and take a picture of it</div>
+        </div>
+        
+        <div class="example-card">
+          <div class="example-title">"Anneke wat 'n bier drink (bonus: cheers oomblik)"</div>
+          <div class="example-text">Capture Anneke enjoying a beer - bonus points for a cheers moment!</div>
+        </div>
+        
+        <div class="example-card">
+          <div class="example-title">"Almal bymekaar om die kampvuur"</div>
+          <div class="example-text">Get everyone together around the campfire for a group photo</div>
+        </div>
+        
+        <div class="example-card">
+          <div class="example-title">"Anneke se lag vasgevang in 'n spontane foto"</div>
+          <div class="example-text">Capture Anneke's genuine laugh in a candid moment</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="section">
+      <div class="section-title">
+        <span>💡</span>
+        Pro Tips
+      </div>
+      <div class="section-content">
+        <div class="step">
+          <div class="step-number">📱</div>
+          <div class="step-content">
+            <div class="step-title">Use Your Phone</div>
+            <div class="step-description">The app works best on mobile devices. Keep your phone handy throughout the event!</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">⚡</div>
+          <div class="step-content">
+            <div class="step-title">Be Quick</div>
+            <div class="step-description">Some moments are fleeting - don't hesitate to capture spontaneous moments!</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">🎨</div>
+          <div class="step-content">
+            <div class="step-title">Get Creative</div>
+            <div class="step-description">Think outside the box for creative interpretations of the challenges</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">👥</div>
+          <div class="step-content">
+            <div class="step-title">Work Together</div>
+            <div class="step-description">Help each other complete challenges - it's more fun as a team!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ready to Play -->
+    <div class="section">
+      <div class="section-title">
+        <span>🚀</span>
+        Ready to Start?
+      </div>
+      <div class="section-content">
+        <div class="highlight-box">
+          <div class="highlight-title">Let's Capture Some Memories!</div>
+          <div class="highlight-text">
+            Click the back button to return to the main EventBingo game and start completing challenges. 
+            Remember to have fun and capture the special moments of Anneke's 35th birthday celebration!
+          </div>
+        </div>
+        
+        <p style="text-align: center; margin-top: 20px;">
+          <a href="index.html" style="background: var(--story-gradient); color: white; padding: 15px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; display: inline-block;">
+            🎉 Start Playing EventBingo
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-icon">🏠</a>
+    <a href="info.html" class="nav-icon active">ℹ️</a>
+    <div class="nav-icon" onclick="openCarousel()">📸</div>
+    <div class="nav-icon" onclick="toggleDarkMode()">🌓</div>
+    <div class="nav-icon" onclick="toggleMusic()">🎵</div>
+  </div>
+
+  <script>
+    // Instagram-style functions
+    function shareInfo() {
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({
+          title: 'EventBingo - How to Play',
+          text: 'Learn how to play EventBingo and capture amazing memories!',
+          url: url
+        });
+      } else {
+        navigator.clipboard.writeText(url).then(() => {
+          alert('Link copied to clipboard!');
+        });
+      }
+    }
+
+    function openCarousel() {
+      alert('Carousel view available in the main game!');
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+    }
+
+    function toggleMusic() {
+      console.log('Music toggle - feature coming soon!');
+    }
+
+    // Add smooth scrolling for better UX
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+</body>
+</html>
