@@ -605,6 +605,48 @@
       cursor: pointer;
     }
 
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+
+    .carousel-prev,
+    .carousel-next {
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      font-size: 2rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      pointer-events: all;
+      transition: background-color 0.2s ease;
+    }
+
+    .carousel-prev:hover,
+    .carousel-next:hover {
+      background: rgba(0,0,0,0.7);
+    }
+
+    .carousel-counter {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
     /* Filter Bar */
     .filter-bar {
       background: white;
@@ -884,8 +926,89 @@
     }
 
     function loadAllPhotosForCarousel() {
-      // This will be implemented to show all uploaded photos
-      carouselCaption.textContent = 'All uploaded photos will appear here';
+      // Collect all uploaded photos from the current view
+      const allImages = document.querySelectorAll('.card-photo img');
+      const photos = [];
+      
+      allImages.forEach((img, index) => {
+        if (img.src && img.src !== '') {
+          photos.push({
+            src: img.src,
+            alt: img.alt || `Photo ${index + 1}`,
+            caption: img.alt || `Photo ${index + 1}`
+          });
+        }
+      });
+      
+      if (photos.length === 0) {
+        carouselCaption.textContent = 'No photos uploaded yet. Start completing challenges to see them here!';
+        carouselImage.style.display = 'none';
+        return;
+      }
+      
+      // Show first photo
+      let currentPhotoIndex = 0;
+      showPhotoInCarousel(photos[currentPhotoIndex]);
+      
+      // Add navigation controls
+      carouselContent.innerHTML = `
+        <div class="carousel-close" onclick="closeCarousel()">×</div>
+        <div class="carousel-nav">
+          <button class="carousel-prev" onclick="previousPhoto()" ${photos.length <= 1 ? 'style="display:none"' : ''}>‹</button>
+          <button class="carousel-next" onclick="nextPhoto()" ${photos.length <= 1 ? 'style="display:none"' : ''}>›</button>
+        </div>
+        <img id="carouselImage" class="carousel-image" src="" alt="">
+        <div id="carouselCaption"></div>
+        <div class="carousel-counter">${currentPhotoIndex + 1} / ${photos.length}</div>
+      `;
+      
+      // Update references after recreating elements
+      carouselImage = document.getElementById('carouselImage');
+      carouselCaption = document.getElementById('carouselCaption');
+      
+      // Global variables for navigation
+      window.carouselPhotos = photos;
+      window.currentPhotoIndex = currentPhotoIndex;
+      
+      function showPhotoInCarousel(photo) {
+        carouselImage.src = photo.src;
+        carouselImage.alt = photo.alt;
+        carouselCaption.textContent = photo.caption;
+        carouselImage.style.display = 'block';
+      }
+      
+      // Navigation functions
+      window.nextPhoto = function() {
+        if (window.carouselPhotos && window.carouselPhotos.length > 1) {
+          window.currentPhotoIndex = (window.currentPhotoIndex + 1) % window.carouselPhotos.length;
+          showPhotoInCarousel(window.carouselPhotos[window.currentPhotoIndex]);
+          updateCounter();
+        }
+      };
+      
+      window.previousPhoto = function() {
+        if (window.carouselPhotos && window.carouselPhotos.length > 1) {
+          window.currentPhotoIndex = (window.currentPhotoIndex - 1 + window.carouselPhotos.length) % window.carouselPhotos.length;
+          showPhotoInCarousel(window.carouselPhotos[window.currentPhotoIndex]);
+          updateCounter();
+        }
+      };
+      
+      function updateCounter() {
+        const counter = document.querySelector('.carousel-counter');
+        if (counter) {
+          counter.textContent = `${window.currentPhotoIndex + 1} / ${window.carouselPhotos.length}`;
+        }
+      }
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (carouselModal.classList.contains('show')) {
+          if (e.key === 'ArrowLeft') previousPhoto();
+          if (e.key === 'ArrowRight') nextPhoto();
+          if (e.key === 'Escape') closeCarousel();
+        }
+      });
     }
 
     function toggleCompleted() {
