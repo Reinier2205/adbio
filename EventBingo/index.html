@@ -1914,22 +1914,21 @@
           currentEvent = await res.json();
           squares = currentEvent.squares || [];
           const debugBanner = document.getElementById("debugBanner");
-debugBanner.textContent = `Event: ${currentEvent.title} (${currentEvent.code}) — Squares loaded: ${squares.length}`;
-
+          debugBanner.textContent = `Event: ${currentEvent.title} (${currentEvent.code}) — Squares loaded: ${squares.length}`;
           console.log("Loaded squares:", squares);
           createGrid();
           updateEventDisplay();
         }
       } catch (err) {
         console.log('Using default event');
-        debugBanner.textContent = `Using default event — Squares loaded: ${squares.length}`;
-
         currentEvent = {
           title: "EventBingo",
           description: "A fun photo challenge game!",
           code: "default"
         };
         squares = defaultSquaresList; // fallback
+        debugBanner.textContent = `Using default event — Squares loaded: ${squares.length}`;
+
         console.log("Loaded squares:", squares);
         createGrid();
         updateEventDisplay();
