@@ -452,10 +452,6 @@
   </div>
 
   <script>
-    function escapeQuotes(str) {
-      return str.replace(/'/g, "\\'");
-    }
-
     const squares = [
   "'n Ou foto saam met Anneke",
   "'n Foto van 'n vorige verjaarsdag of braai",
@@ -560,7 +556,7 @@
             const data = await res.json();
             if (data.url) {
               resultDiv.innerHTML = `
-                <img src="${data.url}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(data.url)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
+                <img src="${data.url}" alt="Uploaded photo" onclick="window.open('${data.url}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
               `;
               // Hide the upload section since photo is now loaded
               uploadSection.classList.add('hidden');
@@ -645,7 +641,7 @@
           const url = data[square];
           if (url) {
             resultDiv.innerHTML = `
-              <img src="${url}" alt="${escapeQuotes(square)}" onclick="window.open('${escapeQuotes(url)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
+              <img src="${url}" alt="${square}" onclick="window.open('${url}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
             `;
             // Hide the upload section since photo is already loaded
             if (uploadSection) {
