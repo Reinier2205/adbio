@@ -62,6 +62,11 @@
       transform: translateY(-1px);
     }
 
+    /* Smooth transitions for input styling changes */
+    input[type="text"] {
+      transition: all 0.3s ease;
+    }
+
     button {
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       color: var(--text-light);
@@ -436,7 +441,7 @@
         <option value="">-- Choose a player --</option>
       </select>
       <br>
-      <input type="text" id="newPlayerInput" placeholder="Or enter a new name" />
+      <input type="text" id="newPlayerInput" placeholder="Type new name (press Enter or wait 1 second)" />
       <div id="progressDisplay"></div>
       <div class="leaderboard" id="leaderDisplay"></div>
     </div>
@@ -687,14 +692,51 @@
         : "";
     }
 
-    // Handle new player input - automatically set as current player
+    // Handle new player input with debounce
+    let inputTimeout;
     newPlayerInput.addEventListener("input", () => {
+      clearTimeout(inputTimeout);
       const newName = newPlayerInput.value.trim();
+      
       if (newName && newName !== currentPlayer) {
-        currentPlayer = newName;
-        playerSelect.value = "";
-        createGrid();
-        loadPhotos(currentPlayer);
+        // Show visual feedback that we're preparing to create a new player
+        newPlayerInput.style.borderColor = "var(--primary)";
+        newPlayerInput.style.backgroundColor = "rgba(74, 144, 226, 0.1)";
+        
+        // Debounce the actual player creation
+        inputTimeout = setTimeout(() => {
+          currentPlayer = newName;
+          playerSelect.value = "";
+          createGrid();
+          loadPhotos(currentPlayer);
+          
+          // Reset input styling
+          newPlayerInput.style.borderColor = "var(--primary)";
+          newPlayerInput.style.backgroundColor = "var(--bg-light)";
+        }, 1000); // 1 second delay
+      } else if (!newName) {
+        // Reset styling when input is empty
+        newPlayerInput.style.borderColor = "var(--primary)";
+        newPlayerInput.style.backgroundColor = "var(--bg-light)";
+        clearTimeout(inputTimeout);
+      }
+    });
+
+    // Handle Enter key to immediately create player
+    newPlayerInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        clearTimeout(inputTimeout);
+        const newName = newPlayerInput.value.trim();
+        if (newName && newName !== currentPlayer) {
+          currentPlayer = newName;
+          playerSelect.value = "";
+          createGrid();
+          loadPhotos(currentPlayer);
+          
+          // Reset input styling
+          newPlayerInput.style.borderColor = "var(--primary)";
+          newPlayerInput.style.backgroundColor = "var(--bg-light)";
+        }
       }
     });
 
