@@ -1183,7 +1183,8 @@
     let isDarkMode = false;
     let isMusicPlaying = false;
     let currentEvent = null;
-    let eventCode = 'default';
+    const params = new URLSearchParams(window.location.search);
+    const eventCode = params.get("event") || "default";
 
     // Instagram-style functions
     function selectPlayer(playerName) {
@@ -1897,6 +1898,8 @@
         if (res.ok) {
           currentEvent = await res.json();
           squares = currentEvent.squares || [];
+          console.log("Loaded squares:", squares);
+
           createGrid();
           updateEventDisplay();
         }
