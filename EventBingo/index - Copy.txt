@@ -1166,32 +1166,7 @@
       return str.replace(/'/g, "\\'");
     }
 
-    const squares = [
-  "'n Ou foto saam met Anneke",
-  "'n Foto van 'n vorige verjaarsdag of braai",
-  "Die oudste selfie wat julle saam het",
-  "Anneke wat kaalvoet loop (bonus: vuil voete)",
-  "Anneke wat 'n bier drink (bonus: cheers oomblik)",
-  "Iemand wat iets by Anneke leen",
-  "Oliver wat saam met iemand bal speel",
-  "Kesia saam met 'n 'tannie' of 'oom'",
-  "Almal bymekaar om die kampvuur",
-  "Anneke wat in vrede sit en lees",
-  "Oggendkoffie in 'n beker wat nie aan jou behoort nie",
-  "Oliver wat 'help' met iets",
-  "'n Foto van die sonsondergang",
-  "Iemand wat sukkel met kamp opslaan",
-  "Anneke se lag vasgevang in 'n spontane foto",
-  "'n Kamp speletjie of aktiwiteit",
-  "'n Kreatiewe foto van bier of koffie (bonus: albei)",
-  "Oliver op sy fiets",
-  "'n Groepsfoto van almal",
-  "Iemand wat iets soek wat verlore is (bv. foon, skoen, drankie)",
-  "'n Foto wat gewys iets is geleen vir kamp",
-  "Oliver wat iets in tee doop",
-  "Anneke wat ontspan met 'n boek",
-  "Kesia wat glimlag",
-  "Almal wat totsiens waai by die vuur"];
+    let squares = [];
 
 
 
@@ -1208,7 +1183,8 @@
     let isDarkMode = false;
     let isMusicPlaying = false;
     let currentEvent = null;
-    let eventCode = 'default';
+    const params = new URLSearchParams(window.location.search);
+    const eventCode = params.get("event") || "default";
 
     // Instagram-style functions
     function selectPlayer(playerName) {
@@ -1921,6 +1897,10 @@
         const res = await fetch(`${workerURL}event-info?event=${eventCode}`);
         if (res.ok) {
           currentEvent = await res.json();
+          squares = currentEvent.squares || [];
+          console.log("Loaded squares:", squares);
+
+          createGrid();
           updateEventDisplay();
         }
       } catch (err) {
@@ -1930,7 +1910,9 @@
           description: "A fun photo challenge game!",
           code: "default"
         };
+        squares = defaultSquaresList; // fallback
         updateEventDisplay();
+        createGrid();
       }
     }
 
