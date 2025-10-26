@@ -689,6 +689,176 @@
       font-size: 0.9rem;
     }
 
+    /* Leaderboard Modal */
+    .leaderboard-content {
+      max-width: 90%;
+      max-height: 90%;
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .leaderboard-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 2rem;
+      color: var(--text-dark);
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .leaderboard-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .leaderboard-header h2 {
+      font-size: 2rem;
+      color: var(--instagram-pink);
+      margin: 0 0 10px 0;
+      font-weight: bold;
+    }
+
+    .leaderboard-header p {
+      color: #666;
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .leaderboard-list {
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 30px;
+    }
+
+    .leaderboard-entry {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      margin-bottom: 10px;
+      background: #f8f9fa;
+      border-radius: 15px;
+      border-left: 4px solid var(--instagram-pink);
+      transition: all 0.3s ease;
+    }
+
+    .leaderboard-entry:hover {
+      transform: translateX(5px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .leaderboard-entry.first {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      color: white;
+      border-left-color: #FFD700;
+    }
+
+    .leaderboard-entry.second {
+      background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
+      color: white;
+      border-left-color: #C0C0C0;
+    }
+
+    .leaderboard-entry.third {
+      background: linear-gradient(135deg, #CD7F32, #B8860B);
+      color: white;
+      border-left-color: #CD7F32;
+    }
+
+    .rank {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-right: 15px;
+      min-width: 40px;
+    }
+
+    .player-info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .player-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--story-gradient);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .player-details {
+      flex: 1;
+    }
+
+    .player-name {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 2px;
+    }
+
+    .player-progress {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .progress-bar {
+      width: 100px;
+      height: 8px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--story-gradient);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .leaderboard-stats {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      min-width: 80px;
+    }
+
+    .stat-number {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--instagram-pink);
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
     /* Filter Bar */
     .filter-bar {
       background: white;
@@ -821,16 +991,36 @@
     <div class="nav-icon active" onclick="goHome()">🏠</div>
     <div class="nav-icon" onclick="openSearch()">🔍</div>
     <div class="nav-icon" onclick="openCarousel()">📸</div>
+    <div class="nav-icon" onclick="openLeaderboard()">🥇</div>
     <a href="info.html" class="nav-icon">ℹ️</a>
     <div class="nav-icon" onclick="toggleDarkMode()">🌓</div>
   </div>
 
-  <!-- Carousel Modal -->
-  <div id="carouselModal" class="modal">
-    <div class="carousel-content">
-      <div class="carousel-close" onclick="closeCarousel()">×</div>
-      <img id="carouselImage" class="carousel-image" src="" alt="">
-      <div id="carouselCaption"></div>
+  <!-- Leaderboard Modal -->
+  <div id="leaderboardModal" class="modal">
+    <div class="leaderboard-content">
+      <div class="leaderboard-close" onclick="closeLeaderboard()">×</div>
+      <div class="leaderboard-header">
+        <h2>🏆 EventBingo Leaderboard</h2>
+        <p>See who's leading the photo challenge race!</p>
+      </div>
+      <div id="leaderboardList" class="leaderboard-list">
+        <!-- Leaderboard entries will be populated here -->
+      </div>
+      <div class="leaderboard-stats">
+        <div class="stat-item">
+          <span class="stat-number" id="totalPlayers">0</span>
+          <span class="stat-label">Players</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="totalPhotos">0</span>
+          <span class="stat-label">Photos</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="completionRate">0%</span>
+          <span class="stat-label">Complete</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -943,6 +1133,105 @@
     function openCarousel() {
       setActiveNavIcon(2);
       showCarousel();
+    }
+
+    function openLeaderboard() {
+      setActiveNavIcon(3);
+      showLeaderboard();
+    }
+
+    function showLeaderboard() {
+      const leaderboardModal = document.getElementById('leaderboardModal');
+      leaderboardModal.classList.add('show');
+      loadLeaderboardData();
+    }
+
+    function closeLeaderboard() {
+      const leaderboardModal = document.getElementById('leaderboardModal');
+      leaderboardModal.classList.remove('show');
+    }
+
+    async function loadLeaderboardData() {
+      try {
+        showLoading();
+        const res = await fetch(`${workerURL}players`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const players = await res.json();
+        
+        // Sort players by count (descending)
+        players.sort((a, b) => b.count - a.count);
+        
+        // Calculate stats
+        const totalPlayers = players.length;
+        const totalPhotos = players.reduce((sum, player) => sum + player.count, 0);
+        const totalPossible = totalPlayers * squares.length;
+        const completionRate = totalPossible > 0 ? Math.round((totalPhotos / totalPossible) * 100) : 0;
+        
+        // Update stats
+        document.getElementById('totalPlayers').textContent = totalPlayers;
+        document.getElementById('totalPhotos').textContent = totalPhotos;
+        document.getElementById('completionRate').textContent = completionRate + '%';
+        
+        // Populate leaderboard
+        const leaderboardList = document.getElementById('leaderboardList');
+        leaderboardList.innerHTML = '';
+        
+        if (players.length === 0) {
+          leaderboardList.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #666;">
+              <div style="font-size: 3rem; margin-bottom: 20px;">📸</div>
+              <h3>No players yet!</h3>
+              <p>Start uploading photos to see the leaderboard.</p>
+            </div>
+          `;
+          return;
+        }
+        
+        players.forEach((player, index) => {
+          const entry = document.createElement('div');
+          entry.className = 'leaderboard-entry';
+          
+          // Add special styling for top 3
+          if (index === 0) entry.classList.add('first');
+          else if (index === 1) entry.classList.add('second');
+          else if (index === 2) entry.classList.add('third');
+          
+          const progressPercentage = Math.round((player.count / squares.length) * 100);
+          
+          entry.innerHTML = `
+            <div class="rank">${index + 1}</div>
+            <div class="player-info">
+              <div class="player-avatar">${player.name.charAt(0).toUpperCase()}</div>
+              <div class="player-details">
+                <div class="player-name">${player.name}</div>
+                <div class="player-progress">${player.count}/${squares.length} challenges</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          leaderboardList.appendChild(entry);
+        });
+        
+      } catch (err) {
+        console.error("Error loading leaderboard:", err);
+        const leaderboardList = document.getElementById('leaderboardList');
+        leaderboardList.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #ff6b6b;">
+            <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+            <h3>Error loading leaderboard</h3>
+            <p>Please try again later.</p>
+          </div>
+        `;
+      } finally {
+        hideLoading();
+      }
     }
 
     function toggleDarkMode() {
