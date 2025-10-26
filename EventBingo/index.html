@@ -21,7 +21,7 @@
       --story-gradient: linear-gradient(45deg, var(--instagram-pink), var(--instagram-purple), var(--instagram-orange), var(--instagram-yellow));
     }
 
-    body {
+    html, body {
       font-family: 'Segoe UI', sans-serif;
       background: #fafafa;
       color: var(--text-dark);
@@ -29,6 +29,12 @@
       padding: 0;
       min-height: 100vh;
       overflow-x: hidden;
+      height: 100%;
+    }
+
+    /* Reset any potential conflicts */
+    * {
+      box-sizing: border-box;
     }
 
     /* Instagram-style Top Bar */
@@ -96,6 +102,25 @@
       opacity: 1;
     }
 
+    .player-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .player-name {
+      font-size: 0.7rem;
+      color: var(--text-dark);
+      font-weight: 500;
+      text-align: center;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .share-icon {
       font-size: 1.5rem;
       cursor: pointer;
@@ -113,7 +138,8 @@
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
-      padding-bottom: 80px; /* Space for bottom nav */
+      padding-bottom: 100px; /* Extra space for bottom nav */
+      min-height: calc(100vh - 200px);
     }
 
     h1 {
@@ -330,6 +356,8 @@
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       overflow: hidden;
       position: relative;
+      padding: 20px;
+      border: 1px solid rgba(0,0,0,0.05);
     }
 
     .card:hover {
@@ -356,6 +384,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      margin-bottom: 15px;
     }
 
     .card-photo {
@@ -366,9 +395,11 @@
     }
 
     .card p {
-      margin-bottom: 10px;
-      font-size: 0.95rem;
-      line-height: 1.4;
+      margin: 0 0 15px 0;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--text-dark);
+      font-weight: 500;
     }
 
     input[type="file"] {
@@ -530,20 +561,31 @@
 
     /* Bottom Navigation Bar */
     .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      width: 100%;
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100vw !important;
       background: var(--bg-light);
       display: flex;
       justify-content: space-around;
       padding: 12px 0;
       box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
       backdrop-filter: blur(10px);
-      z-index: 1000;
-      margin: 0;
+      z-index: 9999 !important;
+      margin: 0 !important;
       border-top: 1px solid rgba(0,0,0,0.1);
+      transform: translateZ(0);
+    }
+
+    /* Force bottom navigation to stay at bottom */
+    .bottom-nav {
+      position: fixed !important;
+      bottom: 0 !important;
+      top: auto !important;
+      left: 0 !important;
+      right: 0 !important;
+      transform: none !important;
     }
 
     .nav-icon {
@@ -654,6 +696,9 @@
       margin-bottom: 20px;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .filter-bar label {
@@ -760,6 +805,10 @@
       <label>
         <input type="checkbox" id="showCompletedOnly" onchange="toggleCompleted()">
         Show only completed squares
+      </label>
+      <label>
+        <input type="checkbox" id="showOutstandingOnly" onchange="toggleOutstanding()">
+        Show only outstanding squares
       </label>
     </div>
 
@@ -1013,12 +1062,40 @@
 
     function toggleCompleted() {
       const showCompletedOnly = document.getElementById('showCompletedOnly').checked;
+      const showOutstandingOnly = document.getElementById('showOutstandingOnly');
+      
+      // If completed is checked, uncheck outstanding
+      if (showCompletedOnly) {
+        showOutstandingOnly.checked = false;
+      }
+      
       const cards = document.querySelectorAll('.card');
       
       cards.forEach(card => {
         const hasPhoto = card.querySelector('img');
         if (showCompletedOnly) {
           card.style.display = hasPhoto ? 'block' : 'none';
+        } else {
+          card.style.display = 'block';
+        }
+      });
+    }
+
+    function toggleOutstanding() {
+      const showOutstandingOnly = document.getElementById('showOutstandingOnly').checked;
+      const showCompletedOnly = document.getElementById('showCompletedOnly');
+      
+      // If outstanding is checked, uncheck completed
+      if (showOutstandingOnly) {
+        showCompletedOnly.checked = false;
+      }
+      
+      const cards = document.querySelectorAll('.card');
+      
+      cards.forEach(card => {
+        const hasPhoto = card.querySelector('img');
+        if (showOutstandingOnly) {
+          card.style.display = hasPhoto ? 'none' : 'block';
         } else {
           card.style.display = 'block';
         }
@@ -1148,6 +1225,9 @@
         // Update player circles in top bar
         playerScroll.innerHTML = "";
         players.forEach(player => {
+          const playerItem = document.createElement("div");
+          playerItem.className = "player-item";
+          
           const circle = document.createElement("div");
           circle.className = "player-circle";
           circle.textContent = player.name.charAt(0).toUpperCase();
@@ -1156,7 +1236,14 @@
           if (player.name === currentPlayer) {
             circle.classList.add('active');
           }
-          playerScroll.appendChild(circle);
+          
+          const name = document.createElement("div");
+          name.className = "player-name";
+          name.textContent = player.name;
+          
+          playerItem.appendChild(circle);
+          playerItem.appendChild(name);
+          playerScroll.appendChild(playerItem);
         });
         
       } catch (err) {
