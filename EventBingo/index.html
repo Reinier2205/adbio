@@ -689,11 +689,11 @@
       font-size: 0.9rem;
     }
 
-    /* Leaderboard Modal */
+    /* Leaderboard Modal - Dark Celebration Theme */
     .leaderboard-content {
       max-width: 90%;
       max-height: 90%;
-      background: white;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       border-radius: 20px;
       padding: 30px;
       display: flex;
@@ -701,6 +701,8 @@
       align-items: center;
       position: relative;
       overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      border: 2px solid #ffd700;
     }
 
     .leaderboard-close {
@@ -708,9 +710,10 @@
       top: 15px;
       right: 15px;
       font-size: 2rem;
-      color: var(--text-dark);
+      color: #ffd700;
       cursor: pointer;
       z-index: 10;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
     }
 
     .leaderboard-header {
@@ -719,16 +722,22 @@
     }
 
     .leaderboard-header h2 {
-      font-size: 2rem;
-      color: var(--instagram-pink);
+      font-size: 2.5rem;
+      color: #ffd700;
       margin: 0 0 10px 0;
       font-weight: bold;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .leaderboard-header p {
-      color: #666;
+      color: #e0e0e0;
       margin: 0;
-      font-size: 1rem;
+      font-size: 1.1rem;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
     }
 
     .leaderboard-list {
@@ -740,54 +749,76 @@
     .leaderboard-entry {
       display: flex;
       align-items: center;
-      padding: 15px 20px;
-      margin-bottom: 10px;
-      background: #f8f9fa;
-      border-radius: 15px;
-      border-left: 4px solid var(--instagram-pink);
+      padding: 20px;
+      margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      border: 2px solid transparent;
       transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .leaderboard-entry::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .leaderboard-entry:hover::before {
+      left: 100%;
     }
 
     .leaderboard-entry:hover {
-      transform: translateX(5px);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
 
     .leaderboard-entry.first {
-      background: linear-gradient(135deg, #FFD700, #FFA500);
-      color: white;
-      border-left-color: #FFD700;
+      background: linear-gradient(135deg, #ffd700, #ffed4e);
+      color: #1a1a2e;
+      border-color: #ffd700;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
     }
 
     .leaderboard-entry.second {
-      background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
-      color: white;
-      border-left-color: #C0C0C0;
+      background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+      color: #1a1a2e;
+      border-color: #c0c0c0;
+      box-shadow: 0 0 25px rgba(192, 192, 192, 0.4);
     }
 
     .leaderboard-entry.third {
-      background: linear-gradient(135deg, #CD7F32, #B8860B);
-      color: white;
-      border-left-color: #CD7F32;
+      background: linear-gradient(135deg, #cd7f32, #daa520);
+      color: #1a1a2e;
+      border-color: #cd7f32;
+      box-shadow: 0 0 20px rgba(205, 127, 50, 0.4);
     }
 
     .rank {
-      font-size: 1.5rem;
+      font-size: 2rem;
       font-weight: bold;
-      margin-right: 15px;
-      min-width: 40px;
+      margin-right: 20px;
+      min-width: 50px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     }
 
     .player-info {
       flex: 1;
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 20px;
     }
 
     .player-avatar {
-      width: 40px;
-      height: 40px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       background: var(--story-gradient);
       color: white;
@@ -795,7 +826,9 @@
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      font-size: 1.1rem;
+      font-size: 1.3rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      border: 3px solid rgba(255, 255, 255, 0.3);
     }
 
     .player-details {
@@ -804,59 +837,106 @@
 
     .player-name {
       font-weight: bold;
-      font-size: 1.1rem;
-      margin-bottom: 2px;
+      font-size: 1.3rem;
+      margin-bottom: 5px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
     }
 
-    .player-progress {
-      font-size: 0.9rem;
-      opacity: 0.8;
-    }
-
-    .progress-bar {
-      width: 100px;
-      height: 8px;
-      background: rgba(0,0,0,0.1);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 5px;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--story-gradient);
-      border-radius: 4px;
-      transition: width 0.3s ease;
+    .player-title {
+      font-size: 1rem;
+      opacity: 0.9;
+      font-style: italic;
     }
 
     .leaderboard-stats {
       display: flex;
-      gap: 30px;
+      gap: 20px;
       justify-content: center;
       flex-wrap: wrap;
+      margin-bottom: 20px;
     }
 
     .stat-item {
       text-align: center;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 12px;
-      min-width: 80px;
+      padding: 15px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      backdrop-filter: blur(10px);
     }
 
     .stat-number {
       display: block;
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       font-weight: bold;
-      color: var(--instagram-pink);
+      color: #ffd700;
       margin-bottom: 5px;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
     }
 
     .stat-label {
       font-size: 0.9rem;
-      color: #666;
+      color: #e0e0e0;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+
+    .celebrate-button {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 25px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .celebrate-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+    }
+
+    .celebrate-button:active {
+      transform: translateY(-1px);
+    }
+
+    /* Fireworks animation */
+    .fireworks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .firework {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      animation: firework-explode 2s ease-out infinite;
+    }
+
+    @keyframes firework-explode {
+      0% {
+        transform: scale(0);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(2);
+        opacity: 0;
+      }
     }
 
     /* Filter Bar */
@@ -1001,26 +1081,15 @@
     <div class="leaderboard-content">
       <div class="leaderboard-close" onclick="closeLeaderboard()">×</div>
       <div class="leaderboard-header">
-        <h2>🏆 EventBingo Leaderboard</h2>
-        <p>See who's leading the photo challenge race!</p>
+        <h2>🎆 Bingo Boss Hall of Fame 🎆</h2>
+        <p>Celebrating our photo challenge champions!</p>
       </div>
       <div id="leaderboardList" class="leaderboard-list">
         <!-- Leaderboard entries will be populated here -->
       </div>
-      <div class="leaderboard-stats">
-        <div class="stat-item">
-          <span class="stat-number" id="totalPlayers">0</span>
-          <span class="stat-label">Players</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number" id="totalPhotos">0</span>
-          <span class="stat-label">Photos</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number" id="completionRate">0%</span>
-          <span class="stat-label">Complete</span>
-        </div>
-      </div>
+      <button class="celebrate-button" onclick="celebrateLeaderboard()">
+        🎉 Celebrate! 🎉
+      </button>
     </div>
   </div>
 
@@ -1165,27 +1234,16 @@
         // Sort players by count (descending)
         players.sort((a, b) => b.count - a.count);
         
-        // Calculate stats
-        const totalPlayers = players.length;
-        const totalPhotos = players.reduce((sum, player) => sum + player.count, 0);
-        const totalPossible = totalPlayers * squares.length;
-        const completionRate = totalPossible > 0 ? Math.round((totalPhotos / totalPossible) * 100) : 0;
-        
-        // Update stats
-        document.getElementById('totalPlayers').textContent = totalPlayers;
-        document.getElementById('totalPhotos').textContent = totalPhotos;
-        document.getElementById('completionRate').textContent = completionRate + '%';
-        
         // Populate leaderboard
         const leaderboardList = document.getElementById('leaderboardList');
         leaderboardList.innerHTML = '';
         
         if (players.length === 0) {
           leaderboardList.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #666;">
-              <div style="font-size: 3rem; margin-bottom: 20px;">📸</div>
-              <h3>No players yet!</h3>
-              <p>Start uploading photos to see the leaderboard.</p>
+            <div style="text-align: center; padding: 40px; color: #e0e0e0;">
+              <div style="font-size: 4rem; margin-bottom: 20px;">🎲</div>
+              <h3 style="color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);">No Bingo Bosses Yet!</h3>
+              <p>Start snapping photos to join the Hall of Fame!</p>
             </div>
           `;
           return;
@@ -1200,18 +1258,24 @@
           else if (index === 1) entry.classList.add('second');
           else if (index === 2) entry.classList.add('third');
           
-          const progressPercentage = Math.round((player.count / squares.length) * 100);
+          // Bingo gaming titles
+          let title = '';
+          if (index === 0) title = '🎯 Bingo Boss Supreme';
+          else if (index === 1) title = '⭐ Photo Master';
+          else if (index === 2) title = '🏅 Challenge Champion';
+          else if (player.count >= 20) title = '🔥 Hot Streak Player';
+          else if (player.count >= 15) title = '📸 Photo Pro';
+          else if (player.count >= 10) title = '🎪 Rising Star';
+          else if (player.count >= 5) title = '🌟 Getting Started';
+          else title = '🎲 New Player';
           
           entry.innerHTML = `
-            <div class="rank">${index + 1}</div>
+            <div class="rank">${getRankEmoji(index + 1)}</div>
             <div class="player-info">
               <div class="player-avatar">${player.name.charAt(0).toUpperCase()}</div>
               <div class="player-details">
                 <div class="player-name">${player.name}</div>
-                <div class="player-progress">${player.count}/${squares.length} challenges</div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: ${progressPercentage}%"></div>
-                </div>
+                <div class="player-title">${title}</div>
               </div>
             </div>
           `;
@@ -1224,13 +1288,83 @@
         const leaderboardList = document.getElementById('leaderboardList');
         leaderboardList.innerHTML = `
           <div style="text-align: center; padding: 40px; color: #ff6b6b;">
-            <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
-            <h3>Error loading leaderboard</h3>
-            <p>Please try again later.</p>
+            <div style="font-size: 4rem; margin-bottom: 20px;">⚠️</div>
+            <h3 style="color: #ffd700;">Oops! Something went wrong</h3>
+            <p>Please try again later, Bingo Boss!</p>
           </div>
         `;
       } finally {
         hideLoading();
+      }
+    }
+
+    function getRankEmoji(rank) {
+      if (rank === 1) return '👑';
+      if (rank === 2) return '🥈';
+      if (rank === 3) return '🥉';
+      if (rank <= 5) return '🏆';
+      if (rank <= 10) return '🎖️';
+      return '🎯';
+    }
+
+    function celebrateLeaderboard() {
+      // Trigger confetti
+      showConfetti();
+      
+      // Add fireworks effect
+      createFireworks();
+      
+      // Play celebration sound (if available)
+      playCelebrationSound();
+    }
+
+    function createFireworks() {
+      const leaderboardContent = document.querySelector('.leaderboard-content');
+      const fireworks = document.createElement('div');
+      fireworks.className = 'fireworks';
+      
+      // Create multiple fireworks
+      for (let i = 0; i < 20; i++) {
+        const firework = document.createElement('div');
+        firework.className = 'firework';
+        firework.style.left = Math.random() * 100 + '%';
+        firework.style.top = Math.random() * 100 + '%';
+        firework.style.backgroundColor = ['#ffd700', '#ff6b6b', '#4a90e2', '#51cf66', '#ff8e8e'][Math.floor(Math.random() * 5)];
+        firework.style.animationDelay = Math.random() * 2 + 's';
+        fireworks.appendChild(firework);
+      }
+      
+      leaderboardContent.appendChild(fireworks);
+      
+      // Remove fireworks after animation
+      setTimeout(() => {
+        if (fireworks.parentNode) {
+          fireworks.parentNode.removeChild(fireworks);
+        }
+      }, 3000);
+    }
+
+    function playCelebrationSound() {
+      // Create a simple celebration sound using Web Audio API
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      } catch (err) {
+        console.log('Audio not available');
       }
     }
 
