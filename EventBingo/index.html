@@ -14,15 +14,106 @@
       --text-light: #ffffff;
       --bg-light: rgba(255, 255, 255, 0.95);
       --bg-dark: rgba(44, 62, 80, 0.9);
+      --instagram-pink: #E4405F;
+      --instagram-purple: #833AB4;
+      --instagram-orange: #F77737;
+      --instagram-yellow: #FCAF45;
+      --story-gradient: linear-gradient(45deg, var(--instagram-pink), var(--instagram-purple), var(--instagram-orange), var(--instagram-yellow));
     }
 
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      background: #fafafa;
       color: var(--text-dark);
       margin: 0;
-      padding: 20px;
+      padding: 0;
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Instagram-style Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: var(--bg-light);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .player-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 5px 0;
+    }
+
+    .player-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .player-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--story-gradient);
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .player-circle:hover {
+      transform: scale(1.05);
+    }
+
+    .player-circle.active {
+      border: 3px solid var(--instagram-pink);
+    }
+
+    .player-circle::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: var(--story-gradient);
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .player-circle:hover::before {
+      opacity: 1;
+    }
+
+    .share-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+    }
+
+    .share-icon:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-bottom: 80px; /* Space for bottom nav */
     }
 
     h1 {
@@ -232,22 +323,33 @@
     }
 
     .card {
-      background: var(--bg-light);
-      border-radius: 15px;
-      padding: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      border-left: 6px solid var(--primary);
-      backdrop-filter: blur(10px);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      min-height: fit-content;
-      height: auto;
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+      position: relative;
     }
 
     .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      transform: scale(1.02);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .card::after {
+      content: "📸";
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 1.2rem;
+      opacity: 0.7;
+      z-index: 10;
+    }
+
+    .card.completed::after {
+      content: "✅";
+      opacity: 1;
     }
 
     .card-content {
@@ -425,28 +527,214 @@
     .upload-section.hidden {
       display: none;
     }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-light);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+    }
+
+    .nav-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+    }
+
+    .nav-icon:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    .nav-icon.active {
+      background-color: var(--instagram-pink);
+      color: white;
+    }
+
+    /* Carousel Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .carousel-content {
+      max-width: 90%;
+      max-height: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .carousel-image {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .carousel-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: white;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .filter-bar label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .filter-bar input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--instagram-pink);
+    }
+
+    /* Reactions */
+    .reactions {
+      display: flex;
+      gap: 15px;
+      padding: 10px 20px;
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+    }
+
+    .reaction {
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .reaction:hover {
+      transform: scale(1.2);
+    }
+
+    .reaction.active {
+      transform: scale(1.3);
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      background: #1a1a1a;
+      color: #ffffff;
+    }
+
+    body.dark-mode .card {
+      background: #2d2d2d;
+      color: #ffffff;
+    }
+
+    body.dark-mode .top-bar,
+    body.dark-mode .bottom-nav,
+    body.dark-mode .filter-bar {
+      background: #2d2d2d;
+    }
+
+    /* Confetti Animation */
+    .confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 3000;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: var(--instagram-pink);
+      animation: confetti-fall 3s linear infinite;
+    }
+
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>EventBingo – Anneke word 35!!</h1>
+  <!-- Instagram-style Top Bar -->
+  <div class="top-bar">
+    <div class="player-scroll" id="playerScroll">
+      <!-- Player circles will be dynamically added here -->
+    </div>
+    <div class="share-icon" onclick="shareBingo()">🔗</div>
+  </div>
 
-  <div class="main-container">
-    <div class="progress-table" id="progressTable" style="display: none;">
-      <h3>🏆 Progress</h3>
-      <div id="progressList"></div>
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <label>
+        <input type="checkbox" id="showCompletedOnly" onchange="toggleCompleted()">
+        Show only completed squares
+      </label>
     </div>
 
-    <div class="controls">
-      <select id="playerSelect">
-        <option value="">-- Choose a player --</option>
-      </select>
-      <br>
-      <input type="text" id="newPlayerInput" placeholder="Type new name (press Enter or wait 1 second)" />
-      <div id="progressDisplay"></div>
-      <div class="leaderboard" id="leaderDisplay"></div>
-    </div>
-
+    <!-- Bingo Grid -->
     <div class="grid" id="bingoGrid"></div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-icon active" onclick="goHome()">🏠</div>
+    <div class="nav-icon" onclick="openSearch()">🔍</div>
+    <div class="nav-icon" onclick="openCarousel()">📸</div>
+    <div class="nav-icon" onclick="toggleDarkMode()">🌓</div>
+    <div class="nav-icon" onclick="toggleMusic()">🎵</div>
+  </div>
+
+  <!-- Carousel Modal -->
+  <div id="carouselModal" class="modal">
+    <div class="carousel-content">
+      <div class="carousel-close" onclick="closeCarousel()">×</div>
+      <img id="carouselImage" class="carousel-image" src="" alt="">
+      <div id="carouselCaption"></div>
+    </div>
   </div>
 
   <div class="loading-spinner" id="loadingSpinner">
@@ -492,15 +780,138 @@
 
     const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
     const grid = document.getElementById("bingoGrid");
-    const playerSelect = document.getElementById("playerSelect");
-    const newPlayerInput = document.getElementById("newPlayerInput");
-    const progressDisplay = document.getElementById("progressDisplay");
-    const leaderDisplay = document.getElementById("leaderDisplay");
+    const playerScroll = document.getElementById("playerScroll");
     const loadingSpinner = document.getElementById("loadingSpinner");
-    const progressTable = document.getElementById("progressTable");
-    const progressList = document.getElementById("progressList");
+    const carouselModal = document.getElementById("carouselModal");
+    const carouselImage = document.getElementById("carouselImage");
+    const carouselCaption = document.getElementById("carouselCaption");
 
     let currentPlayer = "";
+    let allPhotos = [];
+    let isDarkMode = false;
+    let isMusicPlaying = false;
+
+    // Instagram-style functions
+    function selectPlayer(playerName) {
+      currentPlayer = playerName;
+      updatePlayerCircles();
+      createGrid();
+      loadPhotos(currentPlayer);
+    }
+
+    function updatePlayerCircles() {
+      playerScroll.innerHTML = "";
+      // This will be populated when we load players
+    }
+
+    function toggleReaction(index, emoji) {
+      const reaction = document.querySelector(`#reactions${index} .reaction[onclick*="${emoji}"]`);
+      reaction.classList.toggle('active');
+    }
+
+    function checkForCompletion() {
+      const completedCards = document.querySelectorAll('.card.completed').length;
+      if (completedCards === squares.length) {
+        showConfetti();
+        alert('🎉 Congratulations! You completed all squares! 🎉');
+      }
+    }
+
+    function shareBingo() {
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({
+          title: 'EventBingo - Anneke word 35!!',
+          text: 'Check out my EventBingo progress!',
+          url: url
+        });
+      } else {
+        navigator.clipboard.writeText(url).then(() => {
+          alert('Link copied to clipboard!');
+        });
+      }
+    }
+
+    function goHome() {
+      setActiveNavIcon(0);
+      // Already on home view
+    }
+
+    function openSearch() {
+      setActiveNavIcon(1);
+      // Could implement search functionality here
+      alert('Search functionality coming soon!');
+    }
+
+    function openCarousel() {
+      setActiveNavIcon(2);
+      showCarousel();
+    }
+
+    function toggleDarkMode() {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle('dark-mode', isDarkMode);
+      setActiveNavIcon(isDarkMode ? 3 : -1);
+    }
+
+    function toggleMusic() {
+      isMusicPlaying = !isMusicPlaying;
+      setActiveNavIcon(isMusicPlaying ? 4 : -1);
+      // Could implement background music here
+      console.log('Music toggle:', isMusicPlaying);
+    }
+
+    function setActiveNavIcon(index) {
+      document.querySelectorAll('.nav-icon').forEach((icon, i) => {
+        icon.classList.toggle('active', i === index);
+      });
+    }
+
+    function showCarousel() {
+      carouselModal.classList.add('show');
+      // Load all photos for carousel
+      loadAllPhotosForCarousel();
+    }
+
+    function closeCarousel() {
+      carouselModal.classList.remove('show');
+    }
+
+    function loadAllPhotosForCarousel() {
+      // This will be implemented to show all uploaded photos
+      carouselCaption.textContent = 'All uploaded photos will appear here';
+    }
+
+    function toggleCompleted() {
+      const showCompletedOnly = document.getElementById('showCompletedOnly').checked;
+      const cards = document.querySelectorAll('.card');
+      
+      cards.forEach(card => {
+        const hasPhoto = card.querySelector('img');
+        if (showCompletedOnly) {
+          card.style.display = hasPhoto ? 'block' : 'none';
+        } else {
+          card.style.display = 'block';
+        }
+      });
+    }
+
+    function showConfetti() {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      
+      for (let i = 0; i < 50; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.animationDelay = Math.random() * 3 + 's';
+        piece.style.backgroundColor = ['#E4405F', '#833AB4', '#F77737', '#FCAF45'][Math.floor(Math.random() * 4)];
+        confetti.appendChild(piece);
+      }
+      
+      document.body.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 3000);
+    }
 
     function showLoading() {
       console.log("Showing loading spinner");
@@ -529,6 +940,12 @@
             </div>
           </div>
           <div class="card-photo" id="result${index}"></div>
+          <div class="reactions" id="reactions${index}">
+            <span class="reaction" onclick="toggleReaction(${index}, '❤️')">❤️</span>
+            <span class="reaction" onclick="toggleReaction(${index}, '😂')">😂</span>
+            <span class="reaction" onclick="toggleReaction(${index}, '🔥')">🔥</span>
+            <span class="reaction" onclick="toggleReaction(${index}, '🙌')">🙌</span>
+          </div>
         `;
         grid.appendChild(div);
 
@@ -569,8 +986,11 @@
               `;
               // Hide the upload section since photo is now loaded
               uploadSection.classList.add('hidden');
+              div.classList.add('completed');
               updateProgress();
               updateLeaderboard();
+              // Check if player completed all squares for confetti
+              checkForCompletion();
               // Refresh player list to include new players and update progress table
               loadPlayers();
             } else {
@@ -596,21 +1016,22 @@
         
         const players = await res.json();
         
-        // Clear existing options except the first one
-        playerSelect.innerHTML = '<option value="">-- Choose a player --</option>';
+        // Update player circles in top bar
+        playerScroll.innerHTML = "";
         players.forEach(player => {
-          const option = document.createElement("option");
-          option.value = player.name;
-          option.textContent = player.name;
-          playerSelect.appendChild(option);
+          const circle = document.createElement("div");
+          circle.className = "player-circle";
+          circle.textContent = player.name.charAt(0).toUpperCase();
+          circle.title = player.name;
+          circle.onclick = () => selectPlayer(player.name);
+          if (player.name === currentPlayer) {
+            circle.classList.add('active');
+          }
+          playerScroll.appendChild(circle);
         });
-        
-        // Update progress table
-        updateProgressTable(players);
         
       } catch (err) {
         console.error("Error loading players:", err);
-        playerSelect.innerHTML = '<option value="">-- Error loading players --</option>';
       } finally {
         hideLoading();
       }
@@ -647,6 +1068,7 @@
         squares.forEach((square, index) => {
           const resultDiv = document.getElementById(`result${index}`);
           const uploadSection = document.getElementById(`upload${index}`);
+          const card = resultDiv.closest('.card');
           const url = data[square];
           if (url) {
             resultDiv.innerHTML = `
@@ -656,11 +1078,19 @@
             if (uploadSection) {
               uploadSection.classList.add('hidden');
             }
+            // Mark card as completed
+            if (card) {
+              card.classList.add('completed');
+            }
           } else {
             resultDiv.innerHTML = "";
             // Show the upload section if no photo is loaded
             if (uploadSection) {
               uploadSection.classList.remove('hidden');
+            }
+            // Remove completed class
+            if (card) {
+              card.classList.remove('completed');
             }
           }
         });
@@ -692,62 +1122,16 @@
         : "";
     }
 
-    // Handle new player input with debounce
-    let inputTimeout;
-    newPlayerInput.addEventListener("input", () => {
-      clearTimeout(inputTimeout);
-      const newName = newPlayerInput.value.trim();
-      
-      if (newName && newName !== currentPlayer) {
-        // Show visual feedback that we're preparing to create a new player
-        newPlayerInput.style.borderColor = "var(--primary)";
-        newPlayerInput.style.backgroundColor = "rgba(74, 144, 226, 0.1)";
-        
-        // Debounce the actual player creation
-        inputTimeout = setTimeout(() => {
-          currentPlayer = newName;
-          playerSelect.value = "";
-          createGrid();
-          loadPhotos(currentPlayer);
-          
-          // Reset input styling
-          newPlayerInput.style.borderColor = "var(--primary)";
-          newPlayerInput.style.backgroundColor = "var(--bg-light)";
-        }, 1000); // 1 second delay
-      } else if (!newName) {
-        // Reset styling when input is empty
-        newPlayerInput.style.borderColor = "var(--primary)";
-        newPlayerInput.style.backgroundColor = "var(--bg-light)";
-        clearTimeout(inputTimeout);
-      }
-    });
-
-    // Handle Enter key to immediately create player
-    newPlayerInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        clearTimeout(inputTimeout);
-        const newName = newPlayerInput.value.trim();
-        if (newName && newName !== currentPlayer) {
-          currentPlayer = newName;
-          playerSelect.value = "";
-          createGrid();
-          loadPhotos(currentPlayer);
-          
-          // Reset input styling
-          newPlayerInput.style.borderColor = "var(--primary)";
-          newPlayerInput.style.backgroundColor = "var(--bg-light)";
-        }
-      }
-    });
-
-    playerSelect.addEventListener("change", () => {
-      if (playerSelect.value) {
-        currentPlayer = playerSelect.value;
-        newPlayerInput.value = "";
+    // Add new player functionality (simplified for Instagram-style)
+    function addNewPlayer() {
+      const playerName = prompt("Enter new player name:");
+      if (playerName && playerName.trim()) {
+        currentPlayer = playerName.trim();
+        updatePlayerCircles();
         createGrid();
         loadPhotos(currentPlayer);
       }
-    });
+    }
 
     // Test worker connection
     async function testWorkerConnection() {
@@ -810,6 +1194,13 @@
         updateLeaderboard();
       } else {
         console.error("Cannot connect to worker, skipping player load");
+      }
+    });
+
+    // Add click handler for adding new players
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('player-scroll') && e.target.children.length === 0) {
+        addNewPlayer();
       }
     });
   </script>
