@@ -1122,7 +1122,20 @@
         Show only outstanding squares
       </label>
     </div>
-
+    <div id="debugBanner" style="
+    background: #fffae6;
+    color: #333;
+    padding: 10px 20px;
+    margin: 10px auto;
+    max-width: 600px;
+    border-left: 5px solid #f5c518;
+    font-family: monospace;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  ">
+    Debug info will appear here...
+  </div>
+  
     <!-- Bingo Grid -->
     <div class="grid" id="bingoGrid"></div>
   </div>
@@ -1867,6 +1880,8 @@
 
     // Initialize app
     createGrid();
+    console.log("Init app in createGrid", squares);
+
     testWorkerConnection().then(connected => {
       if (connected) {
         loadPlayers();
@@ -1898,8 +1913,9 @@
         if (res.ok) {
           currentEvent = await res.json();
           squares = currentEvent.squares || [];
+          const debugBanner = document.getElementById("debugBanner");
+          debugBanner.textContent = `Event: ${currentEvent.title} (${currentEvent.code}) — Squares loaded: ${squares.length}`;
           console.log("Loaded squares:", squares);
-
           createGrid();
           updateEventDisplay();
         }
@@ -1911,8 +1927,14 @@
           code: "default"
         };
         squares = defaultSquaresList; // fallback
-        updateEventDisplay();
+        const debugBanner = document.getElementById("debugBanner");
+
+        debugBanner.textContent = `Using default event — Squares loaded: ${squares.length}`;
+
+        console.log("Loaded squares:", squares);
         createGrid();
+        updateEventDisplay();
+
       }
     }
 
