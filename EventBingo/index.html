@@ -1675,7 +1675,14 @@
         });
 
         fileInput.addEventListener("change", async (e) => {
-          if (!currentPlayer) return alert("Select or enter your name first.");
+          if (!currentPlayer) {
+            const selected = await promptForPlayerSelection();
+            if (!selected) {
+              e.target.value = ""; // Clear file input
+              return;
+            }
+            currentPlayer = selected;
+          }
           const file = e.target.files[0];
           if (!file) return;
 
@@ -1729,27 +1736,55 @@
         
         // Update player circles in top bar
         playerScroll.innerHTML = "";
-        players.forEach(player => {
-          const playerItem = document.createElement("div");
-          playerItem.className = "player-item";
+        
+        // If no players exist, show +Player button
+        if (players.length === 0) {
+          const addPlayerBtn = document.createElement("div");
+          addPlayerBtn.className = "player-item";
+          addPlayerBtn.style.cursor = "pointer";
+          addPlayerBtn.style.opacity = "0.7";
+          addPlayerBtn.style.transition = "opacity 0.2s ease";
+          addPlayerBtn.onmouseover = () => addPlayerBtn.style.opacity = "1";
+          addPlayerBtn.onmouseout = () => addPlayerBtn.style.opacity = "0.7";
           
           const circle = document.createElement("div");
           circle.className = "player-circle";
-          circle.textContent = player.name.charAt(0).toUpperCase();
-          circle.title = player.name;
-          circle.onclick = () => selectPlayer(player.name);
-          if (player.name === currentPlayer) {
-            circle.classList.add('active');
-          }
+          circle.textContent = "+";
+          circle.style.fontSize = "2rem";
+          circle.style.fontWeight = "bold";
+          circle.style.background = "rgba(74, 144, 226, 0.2)";
+          circle.onclick = () => promptForPlayerSelection();
           
           const name = document.createElement("div");
           name.className = "player-name";
-          name.textContent = player.name;
+          name.textContent = "Add Player";
           
-          playerItem.appendChild(circle);
-          playerItem.appendChild(name);
-          playerScroll.appendChild(playerItem);
-        });
+          addPlayerBtn.appendChild(circle);
+          addPlayerBtn.appendChild(name);
+          playerScroll.appendChild(addPlayerBtn);
+        } else {
+          players.forEach(player => {
+            const playerItem = document.createElement("div");
+            playerItem.className = "player-item";
+            
+            const circle = document.createElement("div");
+            circle.className = "player-circle";
+            circle.textContent = player.name.charAt(0).toUpperCase();
+            circle.title = player.name;
+            circle.onclick = () => selectPlayer(player.name);
+            if (player.name === currentPlayer) {
+              circle.classList.add('active');
+            }
+            
+            const name = document.createElement("div");
+            name.className = "player-name";
+            name.textContent = player.name;
+            
+            playerItem.appendChild(circle);
+            playerItem.appendChild(name);
+            playerScroll.appendChild(playerItem);
+          });
+        }
         
       } catch (err) {
         console.error("Error loading players:", err);
@@ -1849,15 +1884,192 @@
       }
     }
 
+    // Prompt for player selection or new player
+    async function promptForPlayerSelection() {
+      return new Promise(async (resolve) => {
+        try {
+          // Fetch current players
+          const res = await fetch(`${workerURL}players?event=${eventCode}`);
+          const players = await res.json();
+          
+          // Create modal for player selection
+          const modal = document.createElement("div");
+          modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          `;
+          
+          const content = document.createElement("div");
+          content.style.cssText = `
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+          `;
+          
+          let html = `
+            <h2 style="margin-top: 0; color: var(--text-dark);">Select a Player</h2>
+          `;
+          
+          if (players.length > 0) {
+            html += '<div style="margin-bottom: 20px;">';
+            players.forEach(player => {
+              html += `
+                <div class="player-option" style="
+                  padding: 15px;
+                  margin-bottom: 10px;
+                  border: 2px solid #e0e0e0;
+                  border-radius: 10px;
+                  cursor: pointer;
+                  transition: all 0.2s ease;
+                  display: flex;
+                  align-items: center;
+                  gap: 15px;
+                " onclick="selectPlayerOption('${escapeQuotes(player.name)}')">
+                  <div style="
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    background: var(--story-gradient);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    font-size: 1.3rem;
+                  ">${player.name.charAt(0).toUpperCase()}</div>
+                  <div>
+                    <div style="font-weight: bold; font-size: 1.1rem;">${player.name}</div>
+                    <div style="color: #666; font-size: 0.9rem;">${player.count} photos</div>
+                  </div>
+                </div>
+              `;
+            });
+            html += '</div>';
+          }
+          
+          html += `
+            <div style="
+              padding: 15px;
+              border: 2px dashed var(--primary);
+              border-radius: 10px;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              text-align: center;
+              font-weight: bold;
+              color: var(--primary);
+            " onclick="selectNewPlayer()">
+              <span style="font-size: 1.5rem;">+</span> Add New Player
+            </div>
+            <button onclick="closePlayerModal()" style="
+              margin-top: 20px;
+              width: 100%;
+              padding: 12px;
+              border: none;
+              background: #ccc;
+              border-radius: 10px;
+              cursor: pointer;
+              font-weight: bold;
+            ">Cancel</button>
+          `;
+          
+          content.innerHTML = html;
+          modal.appendChild(content);
+          document.body.appendChild(modal);
+          
+          // Store modal reference globally for inline onclick handlers
+          window.playerSelectionModal = modal;
+          window.playerSelectionResolve = resolve;
+          
+          // Close modal when clicking outside
+          modal.onclick = (e) => {
+            if (e.target === modal) {
+              closePlayerModal();
+            }
+          };
+          
+          // Add hover effects
+          const playerOptions = content.querySelectorAll('.player-option');
+          playerOptions.forEach(option => {
+            option.onmouseover = () => {
+              option.style.borderColor = 'var(--primary)';
+              option.style.transform = 'scale(1.02)';
+            };
+            option.onmouseout = () => {
+              option.style.borderColor = '#e0e0e0';
+              option.style.transform = 'scale(1)';
+            };
+          });
+          
+        } catch (err) {
+          console.error("Error loading players for selection:", err);
+          // Fallback to simple prompt
+          const playerName = prompt("Enter player name:");
+          if (playerName && playerName.trim()) {
+            resolve(playerName.trim());
+          } else {
+            resolve(null);
+          }
+        }
+      });
+    }
+    
+    // Helper functions for player selection modal
+    function selectPlayerOption(playerName) {
+      selectPlayer(playerName); // This will update current player and load photos
+      closePlayerModal();
+      if (window.playerSelectionResolve) {
+        window.playerSelectionResolve(playerName);
+        window.playerSelectionResolve = null;
+      }
+    }
+    
+    function selectNewPlayer() {
+      closePlayerModal();
+      addNewPlayer().then(name => {
+        if (window.playerSelectionResolve && name) {
+          window.playerSelectionResolve(name);
+          window.playerSelectionResolve = null;
+        }
+      });
+    }
+    
+    function closePlayerModal() {
+      if (window.playerSelectionModal && window.playerSelectionModal.parentNode) {
+        window.playerSelectionModal.parentNode.removeChild(window.playerSelectionModal);
+        window.playerSelectionModal = null;
+      }
+      if (window.playerSelectionResolve) {
+        window.playerSelectionResolve(null);
+        window.playerSelectionResolve = null;
+      }
+    }
+    
     // Add new player functionality (simplified for Instagram-style)
     function addNewPlayer() {
-      const playerName = prompt("Enter new player name:");
-      if (playerName && playerName.trim()) {
-        currentPlayer = playerName.trim();
-        updatePlayerCircles();
-        createGrid();
-        loadPhotos(currentPlayer);
-      }
+      return new Promise((resolve) => {
+        const playerName = prompt("Enter new player name:");
+        if (playerName && playerName.trim()) {
+          currentPlayer = playerName.trim();
+          createGrid();
+          loadPhotos(currentPlayer);
+          loadPlayers(); // Refresh player list
+          resolve(playerName.trim());
+        } else {
+          resolve(null);
+        }
+      });
     }
 
     // Test worker connection
