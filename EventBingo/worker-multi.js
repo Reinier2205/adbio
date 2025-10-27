@@ -64,19 +64,9 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    if (path.startsWith("/admin/")) {
-      return await handleAdminRequest(request, env, corsHeaders);
-    }
-
-    // Test endpoint to see all keys in bucket
-    if (request.method === "GET" && path === "/debug/keys") {
-      const list = await env.EventBingoProgress.list();
-      const keys = (list.keys || []).map(item => item.key || item.name);
-      
-      return new Response(JSON.stringify(keys), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Admin endpoints
+    if (path.startsWith('/admin/')) {
+      return handleAdminRequest(request, env, corsHeaders);
     }
 
     // Event-specific endpoints
@@ -249,8 +239,7 @@ export default {
         return new Response(JSON.stringify({
           title: event.title,
           description: event.description,
-          code: event.code,
-          squares: event.squares || defaultSquaresList
+          code: event.code
         }), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -327,23 +316,25 @@ async function handleAdminRequest(request, env, corsHeaders) {
 
   // Get all events
   if (request.method === "GET" && path === "/admin/events") {
-    const list = await env.EventBingoProgress.list({ prefix: "event_" });
+    const list = await env.EventBingoProgress.list();
     const events = [];
-  
+
     for (const item of list.keys || []) {
-      const keyName = item.name || item.key;
-      const eventData = await env.EventBingoProgress.get(keyName);
-      if (eventData) {
-        events.push(JSON.parse(eventData));
+      const keyName = item.key || item.name;
+      if (keyName.startsWith('event_')) {
+        const eventData = await env.EventBingoProgress.get(keyName);
+        if (eventData) {
+          events.push(JSON.parse(eventData));
+        }
       }
     }
-  
+
     return new Response(JSON.stringify(events), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  
+
   // Get specific event
   if (request.method === "GET" && path.startsWith("/admin/event/")) {
     const eventCode = path.split('/')[3];

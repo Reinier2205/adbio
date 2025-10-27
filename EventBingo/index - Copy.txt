@@ -14,15 +14,132 @@
       --text-light: #ffffff;
       --bg-light: rgba(255, 255, 255, 0.95);
       --bg-dark: rgba(44, 62, 80, 0.9);
+      --instagram-pink: #E4405F;
+      --instagram-purple: #833AB4;
+      --instagram-orange: #F77737;
+      --instagram-yellow: #FCAF45;
+      --story-gradient: linear-gradient(45deg, var(--instagram-pink), var(--instagram-purple), var(--instagram-orange), var(--instagram-yellow));
     }
 
-    body {
+    html, body {
       font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      background: #fafafa;
       color: var(--text-dark);
       margin: 0;
-      padding: 20px;
+      padding: 0;
       min-height: 100vh;
+      overflow-x: hidden;
+      height: 100%;
+    }
+
+    /* Reset any potential conflicts */
+    * {
+      box-sizing: border-box;
+    }
+
+    /* Instagram-style Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: var(--bg-light);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .player-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 5px 0;
+    }
+
+    .player-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .player-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--story-gradient);
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .player-circle:hover {
+      transform: scale(1.05);
+    }
+
+    .player-circle.active {
+      border: 3px solid var(--instagram-pink);
+    }
+
+    .player-circle::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: var(--story-gradient);
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .player-circle:hover::before {
+      opacity: 1;
+    }
+
+    .player-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .player-name {
+      font-size: 0.7rem;
+      color: var(--text-dark);
+      font-weight: 500;
+      text-align: center;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .share-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+    }
+
+    .share-icon:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-bottom: 100px; /* Extra space for bottom nav */
+      min-height: calc(100vh - 200px);
     }
 
     h1 {
@@ -60,6 +177,11 @@
       border-color: var(--secondary);
       box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
       transform: translateY(-1px);
+    }
+
+    /* Smooth transitions for input styling changes */
+    input[type="text"] {
+      transition: all 0.3s ease;
     }
 
     button {
@@ -227,28 +349,42 @@
     }
 
     .card {
-      background: var(--bg-light);
-      border-radius: 15px;
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+      position: relative;
       padding: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      border-left: 6px solid var(--primary);
-      backdrop-filter: blur(10px);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      min-height: fit-content;
-      height: auto;
+      border: 1px solid rgba(0,0,0,0.05);
     }
 
     .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      transform: scale(1.02);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .card::after {
+      content: "📸";
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 1.2rem;
+      opacity: 0.7;
+      z-index: 10;
+    }
+
+    .card.completed::after {
+      content: "✅";
+      opacity: 1;
     }
 
     .card-content {
       flex: 1;
       display: flex;
       flex-direction: column;
+      margin-bottom: 15px;
     }
 
     .card-photo {
@@ -259,9 +395,11 @@
     }
 
     .card p {
-      margin-bottom: 10px;
-      font-size: 0.95rem;
-      line-height: 1.4;
+      margin: 0 0 15px 0;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--text-dark);
+      font-weight: 500;
     }
 
     input[type="file"] {
@@ -420,28 +558,613 @@
     .upload-section.hidden {
       display: none;
     }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100vw !important;
+      background: var(--bg-light);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      z-index: 9999 !important;
+      margin: 0 !important;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      transform: translateZ(0);
+    }
+
+    /* Force bottom navigation to stay at bottom */
+    .bottom-nav {
+      position: fixed !important;
+      bottom: 0 !important;
+      top: auto !important;
+      left: 0 !important;
+      right: 0 !important;
+      transform: none !important;
+    }
+
+    .nav-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+    }
+
+    .nav-icon:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    .nav-icon.active {
+      background-color: var(--instagram-pink);
+      color: white;
+    }
+
+    /* Carousel Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .carousel-content {
+      max-width: 90%;
+      max-height: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .carousel-image {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .carousel-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+    }
+
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+
+    .carousel-prev,
+    .carousel-next {
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      font-size: 2rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      pointer-events: all;
+      transition: background-color 0.2s ease;
+    }
+
+    .carousel-prev:hover,
+    .carousel-next:hover {
+      background: rgba(0,0,0,0.7);
+    }
+
+    .carousel-counter {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    /* Leaderboard Modal - Dark Celebration Theme */
+    .leaderboard-content {
+      max-width: 90%;
+      max-height: 90%;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      border: 2px solid #ffd700;
+    }
+
+    .leaderboard-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 2rem;
+      color: #ffd700;
+      cursor: pointer;
+      z-index: 10;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    .leaderboard-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .leaderboard-header h2 {
+      font-size: 2.5rem;
+      color: #ffd700;
+      margin: 0 0 10px 0;
+      font-weight: bold;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .leaderboard-header p {
+      color: #e0e0e0;
+      margin: 0;
+      font-size: 1.1rem;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .leaderboard-list {
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 30px;
+    }
+
+    .leaderboard-entry {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+      color: #ffffff;
+    }
+
+    .leaderboard-entry::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .leaderboard-entry:hover::before {
+      left: 100%;
+    }
+
+    .leaderboard-entry:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .leaderboard-entry.first {
+      background: linear-gradient(135deg, #ffd700, #ffed4e);
+      color: #000000;
+      border-color: #ffd700;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    }
+
+    .leaderboard-entry.first .player-name,
+    .leaderboard-entry.first .player-title {
+      color: #000000;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    }
+
+    .leaderboard-entry.second {
+      background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+      color: #000000;
+      border-color: #c0c0c0;
+      box-shadow: 0 0 25px rgba(192, 192, 192, 0.4);
+    }
+
+    .leaderboard-entry.second .player-name,
+    .leaderboard-entry.second .player-title {
+      color: #000000;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    }
+
+    .leaderboard-entry.third {
+      background: linear-gradient(135deg, #cd7f32, #daa520);
+      color: #000000;
+      border-color: #cd7f32;
+      box-shadow: 0 0 20px rgba(205, 127, 50, 0.4);
+    }
+
+    .leaderboard-entry.third .player-name,
+    .leaderboard-entry.third .player-title {
+      color: #000000;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    }
+
+    .rank {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-right: 20px;
+      min-width: 50px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+    }
+
+    .player-info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .player-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--story-gradient);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.3rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .player-details {
+      flex: 1;
+    }
+
+    .player-name {
+      font-weight: bold;
+      font-size: 1.3rem;
+      margin-bottom: 5px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+
+    .player-title {
+      font-size: 1rem;
+      opacity: 0.9;
+      font-style: italic;
+      color: #e0e0e0;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+    }
+
+    .leaderboard-stats {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 15px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .stat-number {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ffd700;
+      margin-bottom: 5px;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #e0e0e0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .celebrate-button {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 25px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .celebrate-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+    }
+
+    .celebrate-button:active {
+      transform: translateY(-1px);
+    }
+
+    /* Fireworks animation */
+    .fireworks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .firework {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      animation: firework-explode 2s ease-out infinite;
+    }
+
+    @keyframes firework-explode {
+      0% {
+        transform: scale(0);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: white;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filter-bar label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .filter-bar input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--instagram-pink);
+    }
+
+    /* Reactions */
+    .reactions {
+      display: flex;
+      gap: 15px;
+      padding: 10px 20px;
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+    }
+
+    .reaction {
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .reaction:hover {
+      transform: scale(1.2);
+    }
+
+    .reaction.active {
+      transform: scale(1.3);
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      background: #1a1a1a;
+      color: #ffffff;
+    }
+
+    body.dark-mode .card {
+      background: #2d2d2d;
+      color: #ffffff;
+      border: 1px solid #404040;
+    }
+
+    body.dark-mode .card p {
+      color: #ffffff;
+    }
+
+    body.dark-mode .top-bar,
+    body.dark-mode .bottom-nav,
+    body.dark-mode .filter-bar {
+      background: #2d2d2d;
+      color: #ffffff;
+      border: 1px solid #404040;
+    }
+
+    body.dark-mode .filter-bar label {
+      color: #ffffff;
+    }
+
+    body.dark-mode .player-name {
+      color: #ffffff;
+    }
+
+    body.dark-mode .upload-section {
+      color: #ffffff;
+    }
+
+    body.dark-mode .add-photo-btn {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #ffffff;
+    }
+
+    body.dark-mode .photo-loading,
+    body.dark-mode .photo-error {
+      color: #ffffff;
+    }
+
+    body.dark-mode .reactions {
+      background: #404040;
+      border-top: 1px solid #555555;
+    }
+
+    body.dark-mode .reaction {
+      color: #ffffff;
+    }
+
+    /* Confetti Animation */
+    .confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 3000;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: var(--instagram-pink);
+      animation: confetti-fall 3s linear infinite;
+    }
+
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>EventBingo – Anneke word 35!!</h1>
-
-  <div class="main-container">
-    <div class="progress-table" id="progressTable" style="display: none;">
-      <h3>🏆 Progress</h3>
-      <div id="progressList"></div>
+  <!-- Instagram-style Top Bar -->
+  <div class="top-bar">
+    <div class="player-scroll" id="playerScroll">
+      <!-- Player circles will be dynamically added here -->
     </div>
-
-    <div class="controls">
-      <select id="playerSelect">
-        <option value="">-- Choose a player --</option>
-      </select>
-      <br>
-      <input type="text" id="newPlayerInput" placeholder="Or enter a new name" />
-      <div id="progressDisplay"></div>
-      <div class="leaderboard" id="leaderDisplay"></div>
+    <div style="display: flex; gap: 10px;">
+      <a href="info.html" style="font-size: 1.2rem; padding: 8px; border-radius: 50%; transition: background-color 0.2s ease; text-decoration: none; color: var(--text-dark);" onmouseover="this.style.backgroundColor='rgba(0,0,0,0.1)'" onmouseout="this.style.backgroundColor='transparent'">ℹ️</a>
+      <div class="share-icon" onclick="shareBingo()">🔗</div>
     </div>
+  </div>
 
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <label>
+        <input type="checkbox" id="showCompletedOnly" onchange="toggleCompleted()">
+        Show only completed squares
+      </label>
+      <label>
+        <input type="checkbox" id="showOutstandingOnly" onchange="toggleOutstanding()">
+        Show only outstanding squares
+      </label>
+    </div>
+    <div id="debugBanner" style="
+    background: #fffae6;
+    color: #333;
+    padding: 10px 20px;
+    margin: 10px auto;
+    max-width: 600px;
+    border-left: 5px solid #f5c518;
+    font-family: monospace;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  ">
+    Debug info will appear here...
+  </div>
+  
+    <!-- Bingo Grid -->
     <div class="grid" id="bingoGrid"></div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-icon active" onclick="goHome()">🏠</div>
+    <div class="nav-icon" onclick="openSearch()">🔍</div>
+    <div class="nav-icon" onclick="openCarousel()">📸</div>
+    <div class="nav-icon" onclick="openLeaderboard()">🥇</div>
+    <a href="info.html" class="nav-icon">ℹ️</a>
+    <div class="nav-icon" onclick="toggleDarkMode()">🌓</div>
+  </div>
+
+  <!-- Leaderboard Modal -->
+  <div id="leaderboardModal" class="modal">
+    <div class="leaderboard-content">
+      <div class="leaderboard-close" onclick="closeLeaderboard()">×</div>
+      <div class="leaderboard-header">
+        <h2>🎆 Bingo Boss Hall of Fame 🎆</h2>
+        <p>Celebrating our photo challenge champions!</p>
+      </div>
+      <div id="leaderboardList" class="leaderboard-list">
+        <!-- Leaderboard entries will be populated here -->
+      </div>
+      <button class="celebrate-button" onclick="celebrateLeaderboard()">
+        🎉 Celebrate! 🎉
+      </button>
+    </div>
   </div>
 
   <div class="loading-spinner" id="loadingSpinner">
@@ -452,46 +1175,424 @@
   </div>
 
   <script>
-    const squares = [
-  "'n Ou foto saam met Anneke",
-  "'n Foto van 'n vorige verjaarsdag of braai",
-  "Die oudste selfie wat julle saam het",
-  "Anneke wat kaalvoet loop (bonus: vuil voete)",
-  "Anneke wat 'n bier drink (bonus: cheers oomblik)",
-  "Iemand wat iets by Anneke leen",
-  "Oliver wat saam met iemand bal speel",
-  "Kesia saam met 'n 'tannie' of 'oom'",
-  "Almal bymekaar om die kampvuur",
-  "Anneke wat in vrede sit en lees",
-  "Oggendkoffie in 'n beker wat nie aan jou behoort nie",
-  "Oliver wat 'help' met iets",
-  "'n Foto van die sonsondergang",
-  "Iemand wat sukkel met kamp opslaan",
-  "Anneke se lag vasgevang in 'n spontane foto",
-  "'n Kamp speletjie of aktiwiteit",
-  "'n Kreatiewe foto van bier of koffie (bonus: albei)",
-  "Oliver op sy fiets",
-  "'n Groepsfoto van almal",
-  "Iemand wat iets soek wat verlore is (bv. foon, skoen, drankie)",
-  "'n Foto wat gewys iets is geleen vir kamp",
-  "Oliver wat iets in tee doop",
-  "Anneke wat ontspan met 'n boek",
-  "Kesia wat glimlag",
-  "Almal wat totsiens waai by die vuur"];
+    function escapeQuotes(str) {
+      return str.replace(/'/g, "\\'");
+    }
+
+    let squares = [];
 
 
 
     const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
     const grid = document.getElementById("bingoGrid");
-    const playerSelect = document.getElementById("playerSelect");
-    const newPlayerInput = document.getElementById("newPlayerInput");
-    const progressDisplay = document.getElementById("progressDisplay");
-    const leaderDisplay = document.getElementById("leaderDisplay");
+    const playerScroll = document.getElementById("playerScroll");
     const loadingSpinner = document.getElementById("loadingSpinner");
-    const progressTable = document.getElementById("progressTable");
-    const progressList = document.getElementById("progressList");
+    const carouselModal = document.getElementById("carouselModal");
+    const carouselImage = document.getElementById("carouselImage");
+    const carouselCaption = document.getElementById("carouselCaption");
 
     let currentPlayer = "";
+    let allPhotos = [];
+    let isDarkMode = false;
+    let isMusicPlaying = false;
+    let currentEvent = null;
+    const params = new URLSearchParams(window.location.search);
+    const eventCode = params.get("event") || "default";
+
+    // Instagram-style functions
+    function selectPlayer(playerName) {
+      currentPlayer = playerName;
+      updatePlayerCircles();
+      createGrid();
+      loadPhotos(currentPlayer);
+    }
+
+    function updatePlayerCircles() {
+      playerScroll.innerHTML = "";
+      // This will be populated when we load players
+    }
+
+    function toggleReaction(index, emoji) {
+      const reaction = document.querySelector(`#reactions${index} .reaction[onclick*="${emoji}"]`);
+      reaction.classList.toggle('active');
+    }
+
+    function checkForCompletion() {
+      const completedCards = document.querySelectorAll('.card.completed').length;
+      if (completedCards === squares.length) {
+        showConfetti();
+        alert('🎉 Congratulations! You completed all squares! 🎉');
+      }
+    }
+
+    function shareBingo() {
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({
+          title: 'EventBingo - Anneke word 35!!',
+          text: 'Check out my EventBingo progress!',
+          url: url
+        });
+      } else {
+        navigator.clipboard.writeText(url).then(() => {
+          alert('Link copied to clipboard!');
+        });
+      }
+    }
+
+    function goHome() {
+      setActiveNavIcon(0);
+      // Already on home view
+    }
+
+    function openSearch() {
+      setActiveNavIcon(1);
+      // Could implement search functionality here
+      alert('Search functionality coming soon!');
+    }
+
+    function openCarousel() {
+      setActiveNavIcon(2);
+      showCarousel();
+    }
+
+    function openLeaderboard() {
+      setActiveNavIcon(3);
+      showLeaderboard();
+    }
+
+    function showLeaderboard() {
+      const leaderboardModal = document.getElementById('leaderboardModal');
+      leaderboardModal.classList.add('show');
+      loadLeaderboardData();
+    }
+
+    function closeLeaderboard() {
+      const leaderboardModal = document.getElementById('leaderboardModal');
+      leaderboardModal.classList.remove('show');
+    }
+
+    async function loadLeaderboardData() {
+      try {
+        showLoading();
+        const res = await fetch(`${workerURL}players?event=${eventCode}`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const players = await res.json();
+        
+        // Sort players by count (descending)
+        players.sort((a, b) => b.count - a.count);
+        
+        // Populate leaderboard
+        const leaderboardList = document.getElementById('leaderboardList');
+        leaderboardList.innerHTML = '';
+        
+        if (players.length === 0) {
+          leaderboardList.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #e0e0e0;">
+              <div style="font-size: 4rem; margin-bottom: 20px;">🎲</div>
+              <h3 style="color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);">No Bingo Bosses Yet!</h3>
+              <p>Start snapping photos to join the Hall of Fame!</p>
+            </div>
+          `;
+          return;
+        }
+        
+        players.forEach((player, index) => {
+          const entry = document.createElement('div');
+          entry.className = 'leaderboard-entry';
+          
+          // Add special styling for top 3
+          if (index === 0) entry.classList.add('first');
+          else if (index === 1) entry.classList.add('second');
+          else if (index === 2) entry.classList.add('third');
+          
+          // Bingo gaming titles
+          let title = '';
+          if (index === 0) title = '🎯 Bingo Boss Supreme';
+          else if (index === 1) title = '⭐ Photo Master';
+          else if (index === 2) title = '🏅 Challenge Champion';
+          else if (player.count >= 20) title = '🔥 Hot Streak Player';
+          else if (player.count >= 15) title = '📸 Photo Pro';
+          else if (player.count >= 10) title = '🎪 Rising Star';
+          else if (player.count >= 5) title = '🌟 Getting Started';
+          else title = '🎲 New Player';
+          
+          entry.innerHTML = `
+            <div class="rank">${getRankEmoji(index + 1)}</div>
+            <div class="player-info">
+              <div class="player-avatar">${player.name.charAt(0).toUpperCase()}</div>
+              <div class="player-details">
+                <div class="player-name">${player.name}</div>
+                <div class="player-title">${title}</div>
+              </div>
+            </div>
+          `;
+          
+          leaderboardList.appendChild(entry);
+        });
+        
+      } catch (err) {
+        console.error("Error loading leaderboard:", err);
+        const leaderboardList = document.getElementById('leaderboardList');
+        leaderboardList.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #ff6b6b;">
+            <div style="font-size: 4rem; margin-bottom: 20px;">⚠️</div>
+            <h3 style="color: #ffd700;">Oops! Something went wrong</h3>
+            <p>Please try again later, Bingo Boss!</p>
+          </div>
+        `;
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function getRankEmoji(rank) {
+      if (rank === 1) return '👑';
+      if (rank === 2) return '🥈';
+      if (rank === 3) return '🥉';
+      if (rank <= 5) return '🏆';
+      if (rank <= 10) return '🎖️';
+      return '🎯';
+    }
+
+    function celebrateLeaderboard() {
+      // Trigger confetti
+      showConfetti();
+      
+      // Add fireworks effect
+      createFireworks();
+      
+      // Play celebration sound (if available)
+      playCelebrationSound();
+    }
+
+    function createFireworks() {
+      const leaderboardContent = document.querySelector('.leaderboard-content');
+      const fireworks = document.createElement('div');
+      fireworks.className = 'fireworks';
+      
+      // Create multiple fireworks
+      for (let i = 0; i < 20; i++) {
+        const firework = document.createElement('div');
+        firework.className = 'firework';
+        firework.style.left = Math.random() * 100 + '%';
+        firework.style.top = Math.random() * 100 + '%';
+        firework.style.backgroundColor = ['#ffd700', '#ff6b6b', '#4a90e2', '#51cf66', '#ff8e8e'][Math.floor(Math.random() * 5)];
+        firework.style.animationDelay = Math.random() * 2 + 's';
+        fireworks.appendChild(firework);
+      }
+      
+      leaderboardContent.appendChild(fireworks);
+      
+      // Remove fireworks after animation
+      setTimeout(() => {
+        if (fireworks.parentNode) {
+          fireworks.parentNode.removeChild(fireworks);
+        }
+      }, 3000);
+    }
+
+    function playCelebrationSound() {
+      // Create a simple celebration sound using Web Audio API
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      } catch (err) {
+        console.log('Audio not available');
+      }
+    }
+
+    function toggleDarkMode() {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle('dark-mode', isDarkMode);
+      setActiveNavIcon(isDarkMode ? 3 : -1);
+    }
+
+    function toggleMusic() {
+      isMusicPlaying = !isMusicPlaying;
+      setActiveNavIcon(isMusicPlaying ? 4 : -1);
+      // Could implement background music here
+      console.log('Music toggle:', isMusicPlaying);
+    }
+
+    function setActiveNavIcon(index) {
+      document.querySelectorAll('.nav-icon').forEach((icon, i) => {
+        icon.classList.toggle('active', i === index);
+      });
+    }
+
+    function showCarousel() {
+      carouselModal.classList.add('show');
+      // Load all photos for carousel
+      loadAllPhotosForCarousel();
+    }
+
+    function closeCarousel() {
+      carouselModal.classList.remove('show');
+    }
+
+    function loadAllPhotosForCarousel() {
+      // Collect all uploaded photos from the current view
+      const allImages = document.querySelectorAll('.card-photo img');
+      const photos = [];
+      
+      allImages.forEach((img, index) => {
+        if (img.src && img.src !== '') {
+          photos.push({
+            src: img.src,
+            alt: img.alt || `Photo ${index + 1}`,
+            caption: img.alt || `Photo ${index + 1}`
+          });
+        }
+      });
+      
+      if (photos.length === 0) {
+        carouselCaption.textContent = 'No photos uploaded yet. Start completing challenges to see them here!';
+        carouselImage.style.display = 'none';
+        return;
+      }
+      
+      // Show first photo
+      let currentPhotoIndex = 0;
+      showPhotoInCarousel(photos[currentPhotoIndex]);
+      
+      // Add navigation controls
+      carouselContent.innerHTML = `
+        <div class="carousel-close" onclick="closeCarousel()">×</div>
+        <div class="carousel-nav">
+          <button class="carousel-prev" onclick="previousPhoto()" ${photos.length <= 1 ? 'style="display:none"' : ''}>‹</button>
+          <button class="carousel-next" onclick="nextPhoto()" ${photos.length <= 1 ? 'style="display:none"' : ''}>›</button>
+        </div>
+        <img id="carouselImage" class="carousel-image" src="" alt="">
+        <div id="carouselCaption"></div>
+        <div class="carousel-counter">${currentPhotoIndex + 1} / ${photos.length}</div>
+      `;
+      
+      // Update references after recreating elements
+      carouselImage = document.getElementById('carouselImage');
+      carouselCaption = document.getElementById('carouselCaption');
+      
+      // Global variables for navigation
+      window.carouselPhotos = photos;
+      window.currentPhotoIndex = currentPhotoIndex;
+      
+      function showPhotoInCarousel(photo) {
+        carouselImage.src = photo.src;
+        carouselImage.alt = photo.alt;
+        carouselCaption.textContent = photo.caption;
+        carouselImage.style.display = 'block';
+      }
+      
+      // Navigation functions
+      window.nextPhoto = function() {
+        if (window.carouselPhotos && window.carouselPhotos.length > 1) {
+          window.currentPhotoIndex = (window.currentPhotoIndex + 1) % window.carouselPhotos.length;
+          showPhotoInCarousel(window.carouselPhotos[window.currentPhotoIndex]);
+          updateCounter();
+        }
+      };
+      
+      window.previousPhoto = function() {
+        if (window.carouselPhotos && window.carouselPhotos.length > 1) {
+          window.currentPhotoIndex = (window.currentPhotoIndex - 1 + window.carouselPhotos.length) % window.carouselPhotos.length;
+          showPhotoInCarousel(window.carouselPhotos[window.currentPhotoIndex]);
+          updateCounter();
+        }
+      };
+      
+      function updateCounter() {
+        const counter = document.querySelector('.carousel-counter');
+        if (counter) {
+          counter.textContent = `${window.currentPhotoIndex + 1} / ${window.carouselPhotos.length}`;
+        }
+      }
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (carouselModal.classList.contains('show')) {
+          if (e.key === 'ArrowLeft') previousPhoto();
+          if (e.key === 'ArrowRight') nextPhoto();
+          if (e.key === 'Escape') closeCarousel();
+        }
+      });
+    }
+
+    function toggleCompleted() {
+      const showCompletedOnly = document.getElementById('showCompletedOnly').checked;
+      const showOutstandingOnly = document.getElementById('showOutstandingOnly');
+      
+      // If completed is checked, uncheck outstanding
+      if (showCompletedOnly) {
+        showOutstandingOnly.checked = false;
+      }
+      
+      const cards = document.querySelectorAll('.card');
+      
+      cards.forEach(card => {
+        const hasPhoto = card.querySelector('img');
+        if (showCompletedOnly) {
+          card.style.display = hasPhoto ? 'block' : 'none';
+        } else {
+          card.style.display = 'block';
+        }
+      });
+    }
+
+    function toggleOutstanding() {
+      const showOutstandingOnly = document.getElementById('showOutstandingOnly').checked;
+      const showCompletedOnly = document.getElementById('showCompletedOnly');
+      
+      // If outstanding is checked, uncheck completed
+      if (showOutstandingOnly) {
+        showCompletedOnly.checked = false;
+      }
+      
+      const cards = document.querySelectorAll('.card');
+      
+      cards.forEach(card => {
+        const hasPhoto = card.querySelector('img');
+        if (showOutstandingOnly) {
+          card.style.display = hasPhoto ? 'none' : 'block';
+        } else {
+          card.style.display = 'block';
+        }
+      });
+    }
+
+    function showConfetti() {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      
+      for (let i = 0; i < 50; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.animationDelay = Math.random() * 3 + 's';
+        piece.style.backgroundColor = ['#E4405F', '#833AB4', '#F77737', '#FCAF45'][Math.floor(Math.random() * 4)];
+        confetti.appendChild(piece);
+      }
+      
+      document.body.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 3000);
+    }
 
     function showLoading() {
       console.log("Showing loading spinner");
@@ -520,6 +1621,12 @@
             </div>
           </div>
           <div class="card-photo" id="result${index}"></div>
+          <div class="reactions" id="reactions${index}">
+            <span class="reaction" onclick="toggleReaction(${index}, '❤️')">❤️</span>
+            <span class="reaction" onclick="toggleReaction(${index}, '😂')">😂</span>
+            <span class="reaction" onclick="toggleReaction(${index}, '🔥')">🔥</span>
+            <span class="reaction" onclick="toggleReaction(${index}, '🙌')">🙌</span>
+          </div>
         `;
         grid.appendChild(div);
 
@@ -543,10 +1650,11 @@
           const file = e.target.files[0];
           if (!file) return;
 
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("player", currentPlayer);
-          formData.append("square", square);
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("player", currentPlayer);
+            formData.append("square", square);
+            formData.append("event", eventCode);
 
           resultDiv.innerHTML = '<div class="photo-loading">Uploading photo...</div>';
           showLoading();
@@ -556,12 +1664,15 @@
             const data = await res.json();
             if (data.url) {
               resultDiv.innerHTML = `
-                <img src="${data.url}" alt="Uploaded photo" onclick="window.open('${data.url}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
+                <img src="${data.url}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(data.url)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
               `;
               // Hide the upload section since photo is now loaded
               uploadSection.classList.add('hidden');
+              div.classList.add('completed');
               updateProgress();
               updateLeaderboard();
+              // Check if player completed all squares for confetti
+              checkForCompletion();
               // Refresh player list to include new players and update progress table
               loadPlayers();
             } else {
@@ -579,7 +1690,7 @@
     async function loadPlayers() {
       try {
         showLoading();
-        const res = await fetch(`${workerURL}players`);
+        const res = await fetch(`${workerURL}players?event=${eventCode}`);
         
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -587,21 +1698,32 @@
         
         const players = await res.json();
         
-        // Clear existing options except the first one
-        playerSelect.innerHTML = '<option value="">-- Choose a player --</option>';
+        // Update player circles in top bar
+        playerScroll.innerHTML = "";
         players.forEach(player => {
-          const option = document.createElement("option");
-          option.value = player.name;
-          option.textContent = player.name;
-          playerSelect.appendChild(option);
+          const playerItem = document.createElement("div");
+          playerItem.className = "player-item";
+          
+          const circle = document.createElement("div");
+          circle.className = "player-circle";
+          circle.textContent = player.name.charAt(0).toUpperCase();
+          circle.title = player.name;
+          circle.onclick = () => selectPlayer(player.name);
+          if (player.name === currentPlayer) {
+            circle.classList.add('active');
+          }
+          
+          const name = document.createElement("div");
+          name.className = "player-name";
+          name.textContent = player.name;
+          
+          playerItem.appendChild(circle);
+          playerItem.appendChild(name);
+          playerScroll.appendChild(playerItem);
         });
-        
-        // Update progress table
-        updateProgressTable(players);
         
       } catch (err) {
         console.error("Error loading players:", err);
-        playerSelect.innerHTML = '<option value="">-- Error loading players --</option>';
       } finally {
         hideLoading();
       }
@@ -633,25 +1755,34 @@
     async function loadPhotos(player) {
       try {
         showLoading();
-        const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}`);
+        const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}&event=${eventCode}`);
         const data = await res.json();
         squares.forEach((square, index) => {
           const resultDiv = document.getElementById(`result${index}`);
           const uploadSection = document.getElementById(`upload${index}`);
+          const card = resultDiv.closest('.card');
           const url = data[square];
           if (url) {
             resultDiv.innerHTML = `
-              <img src="${url}" alt="${square}" onclick="window.open('${url}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
+              <img src="${url}" alt="${escapeQuotes(square)}" onclick="window.open('${escapeQuotes(url)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
             `;
             // Hide the upload section since photo is already loaded
             if (uploadSection) {
               uploadSection.classList.add('hidden');
+            }
+            // Mark card as completed
+            if (card) {
+              card.classList.add('completed');
             }
           } else {
             resultDiv.innerHTML = "";
             // Show the upload section if no photo is loaded
             if (uploadSection) {
               uploadSection.classList.remove('hidden');
+            }
+            // Remove completed class
+            if (card) {
+              card.classList.remove('completed');
             }
           }
         });
@@ -676,32 +1807,23 @@
     }
 
     async function updateLeaderboard() {
-      const res = await fetch(`${workerURL}leader`);
+      const res = await fetch(`${workerURL}leader?event=${eventCode}`);
       const data = await res.json();
       leaderDisplay.textContent = data.name
         ? `🏆 Leader: ${data.name} (${data.count}/${squares.length})`
         : "";
     }
 
-    // Handle new player input - automatically set as current player
-    newPlayerInput.addEventListener("input", () => {
-      const newName = newPlayerInput.value.trim();
-      if (newName && newName !== currentPlayer) {
-        currentPlayer = newName;
-        playerSelect.value = "";
+    // Add new player functionality (simplified for Instagram-style)
+    function addNewPlayer() {
+      const playerName = prompt("Enter new player name:");
+      if (playerName && playerName.trim()) {
+        currentPlayer = playerName.trim();
+        updatePlayerCircles();
         createGrid();
         loadPhotos(currentPlayer);
       }
-    });
-
-    playerSelect.addEventListener("change", () => {
-      if (playerSelect.value) {
-        currentPlayer = playerSelect.value;
-        newPlayerInput.value = "";
-        createGrid();
-        loadPhotos(currentPlayer);
-      }
-    });
+    }
 
     // Test worker connection
     async function testWorkerConnection() {
@@ -758,6 +1880,8 @@
 
     // Initialize app
     createGrid();
+    console.log("Init app in createGrid", squares);
+
     testWorkerConnection().then(connected => {
       if (connected) {
         loadPlayers();
@@ -766,6 +1890,87 @@
         console.error("Cannot connect to worker, skipping player load");
       }
     });
-  </script>
-</body>
-</html>
+
+    // Add click handler for adding new players
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('player-scroll') && e.target.children.length === 0) {
+        addNewPlayer();
+      }
+    });
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get event code from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      eventCode = urlParams.get('event') || 'default';
+      
+      // Load event information
+      loadEventInfo();
+    });
+
+    async function loadEventInfo() {
+      try {
+        const res = await fetch(`${workerURL}event-info?event=${eventCode}`);
+        if (res.ok) {
+          currentEvent = await res.json();
+          squares = currentEvent.squares || [];
+          const debugBanner = document.getElementById("debugBanner");
+          debugBanner.textContent = `Event: ${currentEvent.title} (${currentEvent.code}) — Squares loaded: ${squares.length}`;
+          console.log("Loaded squares:", squares);
+          createGrid();
+          updateEventDisplay();
+        }
+      } catch (err) {
+        console.log('Using default event');
+        currentEvent = {
+          title: "EventBingo",
+          description: "A fun photo challenge game!",
+          code: "default"
+        };
+        squares = defaultSquaresList; // fallback
+        const debugBanner = document.getElementById("debugBanner");
+
+        debugBanner.textContent = `Using default event — Squares loaded: ${squares.length}`;
+
+        console.log("Loaded squares:", squares);
+        createGrid();
+        updateEventDisplay();
+
+      }
+    }
+
+    function updateEventDisplay() {
+      if (currentEvent) {
+        // Update page title
+        document.title = `${currentEvent.title} - EventBingo`;
+        
+        // Add event description to the page
+        const eventInfo = document.createElement('div');
+        eventInfo.className = 'event-info';
+        eventInfo.style.cssText = `
+          background: rgba(255, 255, 255, 0.1);
+          padding: 15px 20px;
+          margin-bottom: 20px;
+          border-radius: 12px;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #e0e0e0;
+          text-align: center;
+        `;
+        eventInfo.innerHTML = `
+          <h3 style="margin: 0 0 10px 0; color: #ffd700;">${currentEvent.title}</h3>
+          <p style="margin: 0; opacity: 0.9;">${currentEve	nt.description}</p>
+        `;
+        
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent && !document.querySelector('.event-info')) {
+          mainContent.insertBefore(eventInfo, mainContent.firstChild);
+        }
+      }
+    }
+// ✅ Add this to trigger the event loading
+document.addEventListener('DOMContentLoaded', function() {
+  loadEventInfo();
+});
+
+// ✅ Finally, close the script tag
+</script>
