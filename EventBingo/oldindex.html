@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventBingo</title>
+  <style>
+    :root {
+      --primary: #4a90e2;
+      --secondary: #7b68ee;
+      --accent: #ff6b6b;
+      --success: #51cf66;
+      --text-dark: #2c3e50;
+      --text-light: #ffffff;
+      --bg-light: rgba(255, 255, 255, 0.95);
+      --bg-dark: rgba(44, 62, 80, 0.9);
+      --instagram-pink: #E4405F;
+      --instagram-purple: #833AB4;
+      --instagram-orange: #F77737;
+      --instagram-yellow: #FCAF45;
+      --story-gradient: linear-gradient(45deg, var(--instagram-pink), var(--instagram-purple), var(--instagram-orange), var(--instagram-yellow));
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fafafa;
+      color: var(--text-dark);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Instagram-style Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: var(--bg-light);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .player-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 5px 0;
+    }
+
+    .player-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .player-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--story-gradient);
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .player-circle:hover {
+      transform: scale(1.05);
+    }
+
+    .player-circle.active {
+      border: 3px solid var(--instagram-pink);
+    }
+
+    .player-circle::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: var(--story-gradient);
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .player-circle:hover::before {
+      opacity: 1;
+    }
+
+    .share-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+    }
+
+    .share-icon:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-bottom: 80px; /* Space for bottom nav */
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--text-light);
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      font-weight: bold;
+    }
+
+    .controls {
+      text-align: center;
+      margin-bottom: 20px;
+      background: var(--bg-light);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    select, input[type="text"], button {
+      padding: 12px 16px;
+      font-size: 1rem;
+      margin: 8px;
+      border-radius: 10px;
+      border: 2px solid var(--primary);
+      background: var(--bg-light);
+      backdrop-filter: blur(10px);
+      transition: all 0.2s ease;
+    }
+
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Smooth transitions for input styling changes */
+    input[type="text"] {
+      transition: all 0.3s ease;
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--text-light);
+      cursor: pointer;
+      border: none;
+      font-weight: 600;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    }
+
+    .leaderboard {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+
+    .loading-spinner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-spinner .spinner-container {
+      background: var(--bg-light);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(74, 144, 226, 0.3);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .progress-table {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--bg-light);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      z-index: 1000;
+      min-width: 200px;
+      max-height: 300px;
+      overflow-y: auto;
+      backdrop-filter: blur(10px);
+    }
+
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    @media (min-width: 769px) {
+      .main-container {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        grid-template-rows: auto auto;
+        gap: 20px;
+      }
+      
+      .progress-table {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        position: sticky;
+        top: 20px;
+        height: fit-content;
+      }
+      
+      .controls {
+        grid-column: 1;
+        grid-row: 1;
+      }
+      
+      .grid {
+        grid-column: 1;
+        grid-row: 2;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .progress-table {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin: 0 auto 20px auto;
+        max-width: 100%;
+      }
+    }
+
+    .progress-table h3 {
+      margin: 0 0 10px 0;
+      color: var(--primary);
+      font-size: 1rem;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--gray);
+    }
+
+    .progress-row:last-child {
+      border-bottom: none;
+    }
+
+    .progress-name {
+      font-weight: bold;
+      color: var(--text-dark);
+    }
+
+    .progress-count {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--text-light);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .card::after {
+      content: "📸";
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 1.2rem;
+      opacity: 0.7;
+      z-index: 10;
+    }
+
+    .card.completed::after {
+      content: "✅";
+      opacity: 1;
+    }
+
+    .card-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-photo {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card p {
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    input[type="file"] {
+      margin-top: 5px;
+      font-size: 0.9rem;
+    }
+
+    img {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
+      border-radius: 12px;
+      border: 3px solid var(--primary);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: block;
+    }
+
+    img:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+
+    /* Clickable photo styling */
+    img[onclick] {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    img[onclick]:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+    }
+
+    img[onclick]:active {
+      transform: scale(0.98);
+    }
+
+    /* Photo loading states */
+    .photo-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100px;
+      background: rgba(74, 144, 226, 0.1);
+      border-radius: 12px;
+      border: 2px dashed var(--primary);
+      color: var(--primary);
+      font-style: italic;
+    }
+
+    .photo-error {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100px;
+      background: rgba(255, 107, 107, 0.1);
+      border-radius: 12px;
+      border: 2px dashed var(--accent);
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    /* Ensure photos maintain aspect ratio */
+    .card-photo img {
+      max-height: 400px;
+      object-fit: contain;
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Add a subtle overlay to indicate clickability */
+    .card-photo img[onclick]::after {
+      content: "🔍 Click to view full size";
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .card-photo:hover img[onclick]::after {
+      opacity: 1;
+    }
+
+    /* Photo link styling */
+    .card-photo a {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 8px 12px;
+      background: rgba(74, 144, 226, 0.1);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .card-photo a:hover {
+      background: rgba(74, 144, 226, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Upload section styling */
+    .upload-section {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .add-photo-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--text-light);
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+    }
+
+    .add-photo-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+    }
+
+    .add-photo-btn:active {
+      transform: translateY(0);
+    }
+
+    .add-icon {
+      font-size: 1.2rem;
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    .add-text {
+      font-size: 0.95rem;
+    }
+
+    /* Hide upload section when photo is loaded */
+    .upload-section.hidden {
+      display: none;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      background: var(--bg-light);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      margin: 0;
+      border-top: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .nav-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+    }
+
+    .nav-icon:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    .nav-icon.active {
+      background-color: var(--instagram-pink);
+      color: white;
+    }
+
+    /* Carousel Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .carousel-content {
+      max-width: 90%;
+      max-height: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .carousel-image {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .carousel-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+    }
+
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+
+    .carousel-prev,
+    .carousel-next {
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      font-size: 2rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      pointer-events: all;
+      transition: background-color 0.2s ease;
+    }
+
+    .carousel-prev:hover,
+    .carousel-next:hover {
+      background: rgba(0,0,0,0.7);
+    }
+
+    .carousel-counter {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: white;
+@ -884,332 +926,413 @@
+    }
+
+    function loadAllPhotosForCarousel() {
+      // This will be implemented to show all uploaded photos
+      carouselCaption.textContent = 'All uploaded photos will appear here';
+      // Collect all uploaded photos from the current view
+      const allImages = document.querySelectorAll('.card-photo img');
+      const photos = [];
+      
+      allImages.forEach((img, index) => {
+        if (img.src && img.src !== '') {
+          photos.push({
+            src: img.src,
+            alt: img.alt || `Photo ${index + 1}`,
+            caption: img.alt || `Photo ${index + 1}`
+          });
+        }
+      });
+      
+      if (photos.length === 0) {
+        carouselCaption.textContent = 'No photos uploaded yet. Start completing challenges to see them here!';
+        carouselImage.style.display = 'none';
+        return;
+      }
+      
+      // Show first photo
+      let currentPhotoIndex = 0;
+      showPhotoInCarousel(photos[currentPhotoIndex]);
+      
+      // Add navigation controls
+      carouselContent.innerHTML = `
+        <div class="carousel-close" onclick="closeCarousel()">×</div>
+        <div class="carousel-nav">
+          <button class="carousel-prev" onclick="previousPhoto()" ${photos.length <= 1 ? 'style="display:none"' : ''}>‹</button>
+          <button class="carousel-next" onclick="nextPhoto()" ${photos.length <= 1 ? 'style="display:none"' : ''}>›</button>
+        </div>
+        <img id="carouselImage" class="carousel-image" src="" alt="">
+        <div id="carouselCaption"></div>
+        <div class="carousel-counter">${currentPhotoIndex + 1} / ${photos.length}</div>
+      `;
+      
+      // Update references after recreating elements
+      carouselImage = document.getElementById('carouselImage');
+      carouselCaption = document.getElementById('carouselCaption');
+      
+      // Global variables for navigation
+      window.carouselPhotos = photos;
+      window.currentPhotoIndex = currentPhotoIndex;
+      
+      function showPhotoInCarousel(photo) {
+        carouselImage.src = photo.src;
+        carouselImage.alt = photo.alt;
+        carouselCaption.textContent = photo.caption;
+        carouselImage.style.display = 'block';
+      }
+      
+      // Navigation functions
+      window.nextPhoto = function() {
+        if (window.carouselPhotos && window.carouselPhotos.length > 1) {
+          window.currentPhotoIndex = (window.currentPhotoIndex + 1) % window.carouselPhotos.length;
+          showPhotoInCarousel(window.carouselPhotos[window.currentPhotoIndex]);
+          updateCounter();
+        }
+      };
+      
+      window.previousPhoto = function() {
+        if (window.carouselPhotos && window.carouselPhotos.length > 1) {
+          window.currentPhotoIndex = (window.currentPhotoIndex - 1 + window.carouselPhotos.length) % window.carouselPhotos.length;
+          showPhotoInCarousel(window.carouselPhotos[window.currentPhotoIndex]);
+          updateCounter();
+        }
+      };
+      
+      function updateCounter() {
+        const counter = document.querySelector('.carousel-counter');
+        if (counter) {
+          counter.textContent = `${window.currentPhotoIndex + 1} / ${window.carouselPhotos.length}`;
+        }
+      }
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (carouselModal.classList.contains('show')) {
+          if (e.key === 'ArrowLeft') previousPhoto();
+          if (e.key === 'ArrowRight') nextPhoto();
+          if (e.key === 'Escape') closeCarousel();
+        }
+      });
+    }
+
+    function toggleCompleted() {
+      const showCompletedOnly = document.getElementById('showCompletedOnly').checked;
+      const cards = document.querySelectorAll('.card');
+      
+      cards.forEach(card => {
+        const hasPhoto = card.querySelector('img');
+        if (showCompletedOnly) {
+          card.style.display = hasPhoto ? 'block' : 'none';
+        } else {
+          card.style.display = 'block';
+        }
+      });
+    }
+
+    function showConfetti() {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      
+      for (let i = 0; i < 50; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.animationDelay = Math.random() * 3 + 's';
+        piece.style.backgroundColor = ['#E4405F', '#833AB4', '#F77737', '#FCAF45'][Math.floor(Math.random() * 4)];
+        confetti.appendChild(piece);
+      }
+      
+      document.body.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 3000);
+    }
+
+    function showLoading() {
+      console.log("Showing loading spinner");
+      loadingSpinner.style.display = "block";
+    }
+
+    function hideLoading() {
+      console.log("Hiding loading spinner");
+      loadingSpinner.style.display = "none";
+    }
+
+    function createGrid() {
+      grid.innerHTML = "";
+      squares.forEach((square, index) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <div class="card-content">
+            <p>${square}</p>
+            <div class="upload-section" id="upload${index}">
+              <button class="add-photo-btn" id="btn${index}">
+                <span class="add-icon">+</span>
+                <span class="add-text">Add Photo</span>
+              </button>
+              <input type="file" id="file${index}" accept="image/*" style="display: none;" />
+            </div>
+          </div>
+          <div class="card-photo" id="result${index}"></div>
+          <div class="reactions" id="reactions${index}">
+            <span class="reaction" onclick="toggleReaction(${index}, '❤️')">❤️</span>
+            <span class="reaction" onclick="toggleReaction(${index}, '😂')">😂</span>
+            <span class="reaction" onclick="toggleReaction(${index}, '🔥')">🔥</span>
+            <span class="reaction" onclick="toggleReaction(${index}, '🙌')">🙌</span>
+          </div>
+        `;
+        grid.appendChild(div);
+
+        const fileInput = div.querySelector(`#file${index}`);
+        const resultDiv = div.querySelector(`#result${index}`);
+        const uploadSection = div.querySelector(`#upload${index}`);
+        const addPhotoBtn = div.querySelector(`#btn${index}`);
+
+        // Initially hide upload section if there's already a photo
+        if (resultDiv.innerHTML.trim() !== "") {
+          uploadSection.classList.add('hidden');
+        }
+
+        // Handle button click to trigger file input
+        addPhotoBtn.addEventListener("click", () => {
+          fileInput.click();
+        });
+
+        fileInput.addEventListener("change", async (e) => {
+          if (!currentPlayer) return alert("Select or enter your name first.");
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("player", currentPlayer);
+          formData.append("square", square);
+
+          resultDiv.innerHTML = '<div class="photo-loading">Uploading photo...</div>';
+          showLoading();
+
+          try {
+            const res = await fetch(workerURL, { method: "POST", body: formData });
+            const data = await res.json();
+            if (data.url) {
+              resultDiv.innerHTML = `
+                <img src="${data.url}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(data.url)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
+              `;
+              // Hide the upload section since photo is now loaded
+              uploadSection.classList.add('hidden');
+              div.classList.add('completed');
+              updateProgress();
+              updateLeaderboard();
+              // Check if player completed all squares for confetti
+              checkForCompletion();
+              // Refresh player list to include new players and update progress table
+              loadPlayers();
+            } else {
+              resultDiv.innerHTML = '<div class="photo-error">Upload failed. Please try again.</div>';
+            }
+          } catch (err) {
+            resultDiv.innerHTML = '<div class="photo-error">Error uploading photo. Please try again.</div>';
+          } finally {
+            hideLoading();
+          }
+        });
+      });
+    }
+
+    async function loadPlayers() {
+      try {
+        showLoading();
+        const res = await fetch(`${workerURL}players`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const players = await res.json();
+        
+        // Update player circles in top bar
+        playerScroll.innerHTML = "";
+        players.forEach(player => {
+          const circle = document.createElement("div");
+          circle.className = "player-circle";
+          circle.textContent = player.name.charAt(0).toUpperCase();
+          circle.title = player.name;
+          circle.onclick = () => selectPlayer(player.name);
+          if (player.name === currentPlayer) {
+            circle.classList.add('active');
+          }
+          playerScroll.appendChild(circle);
+        });
+        
+      } catch (err) {
+        console.error("Error loading players:", err);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function updateProgressTable(players) {
+      if (players.length === 0) {
+        progressTable.style.display = "none";
+        return;
+      }
+      
+      progressTable.style.display = "block";
+      progressList.innerHTML = "";
+      
+      // Sort players by count (descending)
+      players.sort((a, b) => b.count - a.count);
+      
+      players.forEach(player => {
+        const row = document.createElement("div");
+        row.className = "progress-row";
+        row.innerHTML = `
+          <span class="progress-name">${player.name}</span>
+          <span class="progress-count">${player.count}/${squares.length}</span>
+        `;
+        progressList.appendChild(row);
+      });
+    }
+
+    async function loadPhotos(player) {
+      try {
+        showLoading();
+        const res = await fetch(`${workerURL}player?name=${encodeURIComponent(player)}`);
+        const data = await res.json();
+        squares.forEach((square, index) => {
+          const resultDiv = document.getElementById(`result${index}`);
+          const uploadSection = document.getElementById(`upload${index}`);
+          const card = resultDiv.closest('.card');
+          const url = data[square];
+          if (url) {
+            resultDiv.innerHTML = `
+              <img src="${url}" alt="${escapeQuotes(square)}" onclick="window.open('${escapeQuotes(url)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
+            `;
+            // Hide the upload section since photo is already loaded
+            if (uploadSection) {
+              uploadSection.classList.add('hidden');
+            }
+            // Mark card as completed
+            if (card) {
+              card.classList.add('completed');
+            }
+          } else {
+            resultDiv.innerHTML = "";
+            // Show the upload section if no photo is loaded
+            if (uploadSection) {
+              uploadSection.classList.remove('hidden');
+            }
+            // Remove completed class
+            if (card) {
+              card.classList.remove('completed');
+            }
+          }
+        });
+        updateProgress();
+        // Refresh progress table after loading photos
+        loadPlayers();
+      } catch (err) {
+        console.error("Error loading photos:", err);
+        // Clear all photo displays on error
+        squares.forEach((square, index) => {
+          const resultDiv = document.getElementById(`result${index}`);
+          resultDiv.innerHTML = "";
+        });
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function updateProgress() {
+      const filled = [...document.querySelectorAll("[id^='result'] img")].length;
+      progressDisplay.textContent = `${currentPlayer} has completed ${filled} of ${squares.length} squares.`;
+    }
+
+    async function updateLeaderboard() {
+      const res = await fetch(`${workerURL}leader`);
+      const data = await res.json();
+      leaderDisplay.textContent = data.name
+        ? `🏆 Leader: ${data.name} (${data.count}/${squares.length})`
+        : "";
+    }
+
+    // Add new player functionality (simplified for Instagram-style)
+    function addNewPlayer() {
+      const playerName = prompt("Enter new player name:");
+      if (playerName && playerName.trim()) {
+        currentPlayer = playerName.trim();
+        updatePlayerCircles();
+        createGrid();
+        loadPhotos(currentPlayer);
+      }
+    }
+
+    // Test worker connection
+    async function testWorkerConnection() {
+      try {
+        console.log("Testing worker connection...");
+        const res = await fetch(workerURL);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const text = await res.text();
+        console.log("Worker response:", text);
+        return true;
+      } catch (err) {
+        console.error("Worker connection failed:", err);
+        
+        // Show user-friendly error message with deployment instructions
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #ff6b6b;
+          color: white;
+          padding: 20px 25px;
+          border-radius: 10px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          z-index: 10000;
+          font-weight: 600;
+          text-align: center;
+          max-width: 90%;
+        `;
+        errorDiv.innerHTML = `
+          ⚠️ EventBingo Worker Not Deployed<br>
+          <small style="font-size: 0.9em; margin-top: 10px; display: block;">
+            The worker needs to be deployed to Cloudflare Workers.<br>
+            Check the EventBingo/worker.js file and deploy it to your Cloudflare account.
+          </small>
+        `;
+        document.body.appendChild(errorDiv);
+        
+        // Auto-hide after 8 seconds (longer for instructions)
+        setTimeout(() => {
+          if (errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+          }
+        }, 8000);
+        
+        return false;
+      }
+    }
+
+    // Initialize app
+    createGrid();
+    testWorkerConnection().then(connected => {
+      if (connected) {
+        loadPlayers();
+        updateLeaderboard();
+      } else {
+        console.error("Cannot connect to worker, skipping player load");
+      }
+    });
+
+    // Add click handler for adding new players
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('player-scroll') && e.target.children.length === 0) {
+        addNewPlayer();
+      }
+    });
+  </script>
+</body>
+</html>
