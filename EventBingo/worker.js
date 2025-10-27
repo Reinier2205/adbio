@@ -79,12 +79,17 @@ export default {
       });
     }
 
-    // Event-specific endpoints
-    const eventCode = getEventCode(request);
-    const squaresList = await getSquaresForEvent(env, eventCode);
-
+    // For POST requests, extract event code from form data if present
+    let eventCode = getEventCode(request);
+    let squaresList = await getSquaresForEvent(env, eventCode);
+    
     if (request.method === "POST") {
       const form = await request.formData();
+      const eventCodeFromForm = form.get("event");
+      if (eventCodeFromForm) {
+        eventCode = eventCodeFromForm;
+      }
+      
       const file = form.get("file");
       const player = form.get("player");
       const square = form.get("square");
@@ -93,21 +98,24 @@ export default {
         return new Response("Missing fields", { status: 400, headers: corsHeaders });
       }
 
+      // Get squares list for the correct event
+      squaresList = await getSquaresForEvent(env, eventCode);
+      
       const safePlayer = player.replace(/\s+/g, "_");
       const safeSquare = square.replace(/\s+/g, "_");
       const timestamp = Date.now();
       const filename = `${eventCode}_${safePlayer}_${safeSquare}_${timestamp}_${file.name}`;
 
-      await env.EventBingoProgress.put(filename, file.stream(), {
+      // Store photo in R2
+      await env.EventBingoPhotos.put(filename, file.stream(), {
         httpMetadata: { contentType: file.type },
       });
 
       const proxyUrl = `https://shy-recipe-5fb1.reinier-olivier.workers.dev/${filename}`;
       const urlKey = `${eventCode}_${safePlayer}_${safeSquare}`;
 
-      await env.EventBingoProgress.put(urlKey, proxyUrl, {
-        httpMetadata: { contentType: "text/plain" }
-      });
+      // Store URL reference in KV
+      await env.EventBingoProgress.put(urlKey, proxyUrl);
 
       return new Response(JSON.stringify({ url: proxyUrl }), {
         status: 200,
@@ -144,16 +152,9 @@ export default {
         const photoUrl = await env.EventBingoProgress.get(key);
 
         if (photoUrl) {
-          let url;
-          if (typeof photoUrl === 'string') {
-            url = photoUrl;
-          } else if (photoUrl && typeof photoUrl === 'object') {
-            url = await photoUrl.text();
-          } else {
-            url = photoUrl.toString();
-          }
-          console.log("Found photo URL for", square, ":", url);
-          results[square] = url;
+          // photoUrl from KV is a string, no need to parse
+          console.log("Found photo URL for", square, ":", photoUrl);
+          results[square] = photoUrl;
         } else {
           console.log("No photo found for", square);
         }
@@ -270,7 +271,7 @@ export default {
     if (request.method === "GET") {
       const key = path.slice(1);
       console.log("Trying to serve image with key:", key);
-      const object = await env.EventBingoProgress.get(key);
+      const object = await env.EventBingoPhotos.get(key);
 
       if (!object || !object.body) {
         console.log("Image not found for key:", key);
@@ -374,12 +375,21 @@ async function handleAdminRequest(request, env, corsHeaders) {
       return new Response("Unauthorized", { status: 403, headers: corsHeaders });
     }
 
-    // Delete event data
+    // Delete event data from KV
     await env.EventBingoProgress.delete(`event_${code}`);
 
-    // Delete all photos for this event
-    const list = await env.EventBingoProgress.list();
-    for (const item of list.keys || []) {
+    // Delete all photos for this event from R2
+    const photosList = await env.EventBingoPhotos.list();
+    for (const item of photosList.objects || []) {
+      const keyName = item.key;
+      if (keyName.startsWith(`${code}_`)) {
+        await env.EventBingoPhotos.delete(keyName);
+      }
+    }
+
+    // Delete all URL references from KV
+    const kvList = await env.EventBingoProgress.list();
+    for (const item of kvList.keys || []) {
       const keyName = item.key || item.name;
       if (keyName.startsWith(`${code}_`)) {
         await env.EventBingoProgress.delete(keyName);
@@ -395,12 +405,12 @@ async function handleAdminRequest(request, env, corsHeaders) {
   // Get photos for event
   if (request.method === "GET" && path.startsWith("/admin/photos/")) {
     const eventCode = path.split('/')[3];
-    const list = await env.EventBingoProgress.list();
+    const list = await env.EventBingoPhotos.list();
     const photos = [];
 
-    for (const item of list.keys || []) {
-      const keyName = item.key || item.name;
-      if (keyName.startsWith(`${eventCode}_`) && keyName.includes('_') && keyName.match(/\d{13}/)) {
+    for (const item of list.objects || []) {
+      const keyName = item.key;
+      if (keyName.startsWith(`${eventCode}_`) && keyName.match(/\d{13}/)) {
         // This is a photo file
         const parts = keyName.split('_');
         const player = parts[1];
@@ -431,10 +441,10 @@ async function handleAdminRequest(request, env, corsHeaders) {
       return new Response("Photo not found for this event", { status: 404, headers: corsHeaders });
     }
 
-    // Delete the photo file
-    await env.EventBingoProgress.delete(key);
+    // Delete the photo file from R2
+    await env.EventBingoPhotos.delete(key);
 
-    // Delete the URL reference
+    // Delete the URL reference from KV
     const urlKey = key.replace(/_\d{13}_[^_]+$/, '');
     await env.EventBingoProgress.delete(urlKey);
 
