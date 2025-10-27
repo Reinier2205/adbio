@@ -1832,15 +1832,21 @@
 
     async function updateProgress() {
       const filled = [...document.querySelectorAll("[id^='result'] img")].length;
-      progressDisplay.textContent = `${currentPlayer} has completed ${filled} of ${squares.length} squares.`;
+      // Note: progressDisplay element not in HTML - function kept for compatibility
+      if (typeof progressDisplay !== 'undefined') {
+        progressDisplay.textContent = `${currentPlayer} has completed ${filled} of ${squares.length} squares.`;
+      }
     }
 
     async function updateLeaderboard() {
-      const res = await fetch(`${workerURL}leader?event=${eventCode}`);
-      const data = await res.json();
-      leaderDisplay.textContent = data.name
-        ? `🏆 Leader: ${data.name} (${data.count}/${squares.length})`
-        : "";
+      // Note: leaderDisplay element not in HTML - function kept for compatibility
+      if (typeof leaderDisplay !== 'undefined') {
+        const res = await fetch(`${workerURL}leader?event=${eventCode}`);
+        const data = await res.json();
+        leaderDisplay.textContent = data.name
+          ? `🏆 Leader: ${data.name} (${data.count}/${squares.length})`
+          : "";
+      }
     }
 
     // Add new player functionality (simplified for Instagram-style)
