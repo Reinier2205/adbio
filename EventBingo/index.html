@@ -1710,7 +1710,8 @@
               // Check if player completed all squares for confetti
               checkForCompletion();
               // Refresh player list to include new players and update progress table
-              loadPlayers();
+              // Don't await to avoid blocking the UI
+              loadPlayers().catch(err => console.error("Error refreshing players:", err));
             } else {
               resultDiv.innerHTML = '<div class="photo-error">Upload failed. Please try again.</div>';
             }

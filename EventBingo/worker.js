@@ -149,14 +149,22 @@ export default {
         const safeSquare = square.replace(/\s+/g, "_");
         const key = `${eventCode}_${safePlayer}_${safeSquare}`;
         console.log("Looking for photo with key:", key);
-        const photoUrl = await env.EventBingoProgress.get(key);
+        
+        try {
+          const photoUrl = await env.EventBingoProgress.get(key);
+          console.log("KV get result type:", typeof photoUrl);
+          console.log("KV get result value:", photoUrl);
 
-        if (photoUrl) {
-          // photoUrl from KV is a string, no need to parse
-          console.log("Found photo URL for", square, ":", photoUrl);
-          results[square] = photoUrl;
-        } else {
-          console.log("No photo found for", square);
+          if (photoUrl) {
+            // photoUrl from KV is a string
+            const url = typeof photoUrl === 'string' ? photoUrl : String(photoUrl);
+            console.log("Found photo URL for", square, ":", url);
+            results[square] = url;
+          } else {
+            console.log("No photo found for", square);
+          }
+        } catch (err) {
+          console.error("Error getting photo URL:", err);
         }
       }
 
