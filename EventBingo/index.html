@@ -111,14 +111,15 @@
     }
 
     .player-name {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--text-dark);
-      font-weight: 500;
+      font-weight: 400;
       text-align: center;
-      max-width: 60px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      max-width: none; /* allow full name */
+      overflow: visible; /* do not truncate */
+      text-overflow: clip;
+      white-space: normal; /* allow wrapping */
+      line-height: 1.2;
     }
 
     .share-icon {
@@ -603,6 +604,20 @@
     .nav-icon.active {
       background-color: var(--instagram-pink);
       color: white;
+    }
+
+    /* Compact Add Player button on very small screens */
+    #addPlayerTopBtn {
+      transition: all 0.2s ease;
+    }
+    @media (max-width: 420px) {
+      #addPlayerTopBtn {
+        padding: 8px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+      }
+      #addPlayerTopBtn span { display: none; }
     }
 
     /* Carousel Modal */
@@ -1103,7 +1118,10 @@
     <div class="player-scroll" id="playerScroll">
       <!-- Player circles will be dynamically added here -->
     </div>
-    <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 10px; align-items:center;">
+      <button id="addPlayerTopBtn" title="Add new player" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; padding: 8px 10px; border-radius: 9999px; border: 2px solid var(--instagram-pink); color: var(--instagram-pink); background: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">+
+        <span style="font-size:0.85rem; font-weight:700;">Add Player</span>
+      </button>
       <a href="info.html" style="font-size: 1.2rem; padding: 8px; border-radius: 50%; transition: background-color 0.2s ease; text-decoration: none; color: var(--text-dark);" onmouseover="this.style.backgroundColor='rgba(0,0,0,0.1)'" onmouseout="this.style.backgroundColor='transparent'">ℹ️</a>
       <div class="share-icon" onclick="shareBingo()">🔗</div>
     </div>
@@ -1225,6 +1243,7 @@
     let isDarkMode = false;
     let isMusicPlaying = false;
     let currentEvent = null;
+    let hasPromptedForPlayer = false;
     const params = new URLSearchParams(window.location.search);
     let eventCode = params.get("event") || "default";
 
@@ -1737,55 +1756,29 @@
         
         // Update player circles in top bar
         playerScroll.innerHTML = "";
-        
-        // If no players exist, show +Player button
-        if (players.length === 0) {
-          const addPlayerBtn = document.createElement("div");
-          addPlayerBtn.className = "player-item";
-          addPlayerBtn.style.cursor = "pointer";
-          addPlayerBtn.style.opacity = "0.7";
-          addPlayerBtn.style.transition = "opacity 0.2s ease";
-          addPlayerBtn.onmouseover = () => addPlayerBtn.style.opacity = "1";
-          addPlayerBtn.onmouseout = () => addPlayerBtn.style.opacity = "0.7";
+        // Always render players (if any)
+        players.forEach(player => {
+          const playerItem = document.createElement("div");
+          playerItem.className = "player-item";
           
           const circle = document.createElement("div");
           circle.className = "player-circle";
-          circle.textContent = "+";
-          circle.style.fontSize = "2rem";
-          circle.style.fontWeight = "bold";
-          circle.style.background = "rgba(74, 144, 226, 0.2)";
-          circle.onclick = () => promptForPlayerSelection();
+          circle.textContent = player.name.charAt(0).toUpperCase();
+          circle.title = player.name;
+          circle.onclick = () => selectPlayer(player.name);
+          if (player.name === currentPlayer) {
+            circle.classList.add('active');
+          }
           
           const name = document.createElement("div");
           name.className = "player-name";
-          name.textContent = "Add Player";
+          name.textContent = player.name;
           
-          addPlayerBtn.appendChild(circle);
-          addPlayerBtn.appendChild(name);
-          playerScroll.appendChild(addPlayerBtn);
-        } else {
-          players.forEach(player => {
-            const playerItem = document.createElement("div");
-            playerItem.className = "player-item";
-            
-            const circle = document.createElement("div");
-            circle.className = "player-circle";
-            circle.textContent = player.name.charAt(0).toUpperCase();
-            circle.title = player.name;
-            circle.onclick = () => selectPlayer(player.name);
-            if (player.name === currentPlayer) {
-              circle.classList.add('active');
-            }
-            
-            const name = document.createElement("div");
-            name.className = "player-name";
-            name.textContent = player.name;
-            
-            playerItem.appendChild(circle);
-            playerItem.appendChild(name);
-            playerScroll.appendChild(playerItem);
-          });
-        }
+          playerItem.appendChild(circle);
+          playerItem.appendChild(name);
+          playerScroll.appendChild(playerItem);
+        });
+        // If no player selected yet and we haven't prompted on load, we rely on the on-load prompt
         
       } catch (err) {
         console.error("Error loading players:", err);
@@ -2141,12 +2134,49 @@
 
     // Initialize the app
     document.addEventListener('DOMContentLoaded', function() {
-      // Get event code from URL parameters
+      // If no event parameter, guide users to info page first
       const urlParams = new URLSearchParams(window.location.search);
+      const hasEvent = urlParams.has('event');
+      if (!hasEvent) {
+        // Preserve any potential referral info if present
+        window.location.replace('info.html');
+        return;
+      }
+
+      // Get event code from URL parameters
       eventCode = urlParams.get('event') || 'default';
       
       // Load event information
       loadEventInfo();
+
+      // Wire up always-visible Add Player button on the right
+      const addPlayerTopBtn = document.getElementById('addPlayerTopBtn');
+      if (addPlayerTopBtn) {
+        addPlayerTopBtn.addEventListener('click', async () => {
+          const selected = await promptForPlayerSelection();
+          if (selected) {
+            currentPlayer = selected;
+            createGrid();
+            loadPhotos(currentPlayer);
+            loadPlayers();
+            hasPromptedForPlayer = true;
+          }
+        });
+      }
+
+      // Prompt immediately on page load if no player is selected yet
+      setTimeout(async () => {
+        if (!currentPlayer && !hasPromptedForPlayer) {
+          hasPromptedForPlayer = true;
+          const name = await promptForPlayerSelection();
+          if (name) {
+            currentPlayer = name;
+            createGrid();
+            loadPhotos(currentPlayer);
+            loadPlayers();
+          }
+        }
+      }, 300);
     });
 
     async function loadEventInfo() {

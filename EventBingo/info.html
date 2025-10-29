@@ -525,11 +525,19 @@
           </div>
         </div>
         
-        <p style="text-align: center; margin-top: 20px;">
-          <a href="index.html" style="background: var(--story-gradient); color: white; padding: 15px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; display: inline-block;">
-            🎉 Start Playing EventBingo
-          </a>
-        </p>
+        <div style="text-align: center; margin-top: 20px;">
+          <div style="margin: 0 auto; max-width: 420px; text-align: left;">
+            <label for="eventCodeInput" style="display:block; font-weight: 600; margin-bottom: 8px; color: var(--text-dark);">Enter your event code</label>
+            <input id="eventCodeInput" type="text" placeholder="e.g. ANNEKE35" style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 2px solid #e0e0e0; font-size: 1rem; outline: none;" />
+            <div style="display:flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+              <button id="startPlayingBtn" style="flex:1; background: var(--story-gradient); color: white; padding: 12px 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer;">🎉 Let's start playing</button>
+              <button id="noCodeBtn" style="background: #f1f5f9; color: #111827; padding: 12px 16px; border-radius: 12px; border: 1px solid #e5e7eb; font-weight: 600; cursor: pointer;">I don't have a code</button>
+              <button id="continueLastBtn" style="display:none; background: #10b981; color: white; padding: 12px 16px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer;">↩️ Continue with last event</button>
+            </div>
+            <div id="eventHelp" style="display:none; margin-top: 10px; color: #dc2626; font-weight: 600;">We couldn't find that event. Double-check the code or ask your host.</div>
+            <div id="eventHint" style="margin-top: 10px; color: #6b7280; font-size: 0.9rem;">Tip: We'll remember your last event on this device.</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -544,6 +552,7 @@
   </div>
 
   <script>
+    const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
     // Instagram-style functions
     function shareInfo() {
       const url = window.location.href;
@@ -581,6 +590,82 @@
         });
       });
     });
+
+    // Landing flow: event code capture, validation, and redirection
+    (function initLandingFlow() {
+      const input = document.getElementById('eventCodeInput');
+      const startBtn = document.getElementById('startPlayingBtn');
+      const noCodeBtn = document.getElementById('noCodeBtn');
+      const help = document.getElementById('eventHelp');
+
+      if (!input || !startBtn) return;
+
+      // Prefill from last used event
+      let lastEvent = '';
+      try {
+        lastEvent = localStorage.getItem('eventbingo:lastEvent') || '';
+        if (lastEvent) input.value = lastEvent;
+      } catch (_) {}
+      // Show quick-continue if we have a remembered event
+      const continueBtn = document.getElementById('continueLastBtn');
+      if (continueBtn && lastEvent) {
+        continueBtn.style.display = 'inline-block';
+        continueBtn.onclick = () => {
+          window.location.href = `index.html?event=${encodeURIComponent(lastEvent)}`;
+        };
+      }
+
+      async function validateAndStart() {
+        const code = (input.value || '').trim();
+        help.style.display = 'none';
+        if (!code) {
+          help.textContent = 'Please enter your event code to continue.';
+          help.style.display = 'block';
+          input.focus();
+          return;
+        }
+        // Validate with worker
+        try {
+          const res = await fetch(`${workerURL}event-info?event=${encodeURIComponent(code)}`);
+          if (res.ok) {
+            try { localStorage.setItem('eventbingo:lastEvent', code); } catch (_) {}
+            window.location.href = `index.html?event=${encodeURIComponent(code)}`;
+            return;
+          }
+          // Not found → offer next steps
+          help.textContent = "We couldn't find that event. Start a new event or ask your host for the correct code.";
+          help.style.display = 'block';
+          showNoCodeOptions(code);
+        } catch (e) {
+          help.textContent = 'We could not validate the event right now. Please check your connection and try again.';
+          help.style.display = 'block';
+        }
+      }
+
+      function showNoCodeOptions(prefill) {
+        // Offer to start a new event (admin page) or copy a friendly message to ask host
+        const ask = `Hi! Please share the EventBingo code so I can join. Thanks!`;
+        const actions = document.createElement('div');
+        actions.style.cssText = 'margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;';
+        actions.innerHTML = `
+          <a href="admin.html" style="background:#111827; color:white; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:600;">Start a new event</a>
+          <button id="copyAskMsg" style="background:#f8fafc; color:#111827; padding:10px 14px; border:1px solid #e5e7eb; border-radius:10px; font-weight:600; cursor:pointer;">Ask event host</button>
+        `;
+        const container = document.getElementById('eventHint').parentElement;
+        const existing = document.getElementById('copyAskMsg');
+        if (!existing) container.appendChild(actions);
+        setTimeout(() => {
+          const btn = document.getElementById('copyAskMsg');
+          if (btn) btn.onclick = async () => {
+            try { await navigator.clipboard.writeText(ask); btn.textContent = 'Copied! Send to your host'; } catch (_) {}
+          };
+        }, 0);
+      }
+
+      startBtn.addEventListener('click', validateAndStart);
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') validateAndStart(); });
+      noCodeBtn?.addEventListener('click', () => showNoCodeOptions());
+    })();
   </script>
 </body>
 </html>
