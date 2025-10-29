@@ -1211,20 +1211,7 @@
         Show only outstanding squares
       </label>
     </div>
-    <div id="debugBanner" style="
-    background: #fffae6;
-    color: #333;
-    padding: 10px 20px;
-    margin: 10px auto;
-    max-width: 600px;
-    border-left: 5px solid #f5c518;
-    font-family: monospace;
-    font-size: 0.9rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  ">
-    Debug info will appear here...
-  </div>
-  
+    
     <!-- Bingo Grid -->
     <div class="grid" id="bingoGrid"></div>
   </div>
@@ -1449,7 +1436,7 @@
         });
         
       } catch (err) {
-        console.error("Error loading leaderboard:", err);
+        
         const leaderboardList = document.getElementById('leaderboardList');
         leaderboardList.innerHTML = `
           <div style="text-align: center; padding: 40px; color: #ff6b6b;">
@@ -1529,7 +1516,7 @@
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.5);
       } catch (err) {
-        console.log('Audio not available');
+        
       }
     }
 
@@ -1543,7 +1530,7 @@
       isMusicPlaying = !isMusicPlaying;
       setActiveNavIcon(isMusicPlaying ? 4 : -1);
       // Could implement background music here
-      console.log('Music toggle:', isMusicPlaying);
+      
     }
 
     function setActiveNavIcon(index) {
@@ -1723,12 +1710,12 @@
     }
 
     function showLoading() {
-      console.log("Showing loading spinner");
+      
       loadingSpinner.style.display = "block";
     }
 
     function hideLoading() {
-      console.log("Hiding loading spinner");
+      
       loadingSpinner.style.display = "none";
     }
 
@@ -1810,7 +1797,7 @@
               checkForCompletion();
               // Refresh player list to include new players and update progress table
               // Don't await to avoid blocking the UI
-              loadPlayers().catch(err => console.error("Error refreshing players:", err));
+              loadPlayers().catch(() => {});
             } else {
               resultDiv.innerHTML = '<div class="photo-error">Upload failed. Please try again.</div>';
             }
@@ -1861,7 +1848,7 @@
         // If no player selected yet and we haven't prompted on load, we rely on the on-load prompt
         
       } catch (err) {
-        console.error("Error loading players:", err);
+        
       } finally {
         hideLoading();
       }
@@ -1928,7 +1915,7 @@
         // Refresh progress table after loading photos
         loadPlayers();
       } catch (err) {
-        console.error("Error loading photos:", err);
+        
         // Clear all photo displays on error
         squares.forEach((square, index) => {
           const resultDiv = document.getElementById(`result${index}`);
@@ -2133,7 +2120,7 @@
           });
           
         } catch (err) {
-          console.error("Error loading players for selection:", err);
+          
           // Fallback to simple prompt
           const playerName = prompt("Enter player name:");
           if (playerName && playerName.trim()) {
@@ -2195,7 +2182,7 @@
     // Test worker connection
     async function testWorkerConnection() {
       try {
-        console.log("Testing worker connection...");
+        
         const res = await fetch(workerURL);
         
         if (!res.ok) {
@@ -2203,10 +2190,10 @@
         }
         
         const text = await res.text();
-        console.log("Worker response:", text);
+        
         return true;
       } catch (err) {
-        console.error("Worker connection failed:", err);
+        
         
         // Show user-friendly error message with deployment instructions
         const errorDiv = document.createElement('div');
@@ -2247,14 +2234,14 @@
 
     // Initialize app
     createGrid();
-    console.log("Init app in createGrid", squares);
+    
 
     testWorkerConnection().then(connected => {
       if (connected) {
         loadPlayers();
         updateLeaderboard();
       } else {
-        console.error("Cannot connect to worker, skipping player load");
+        
       }
     });
 
@@ -2311,25 +2298,19 @@
         if (res.ok) {
           currentEvent = await res.json();
           squares = currentEvent.squares || [];
-          const debugBanner = document.getElementById("debugBanner");
-          debugBanner.textContent = `Event: ${currentEvent.title} (${currentEvent.code}) — Squares loaded: ${squares.length}`;
-          console.log("Loaded squares:", squares);
+          
           createGrid();
           updateEventDisplay();
         }
       } catch (err) {
-        console.log('Using default event');
+        
         currentEvent = {
           title: "EventBingo",
           description: "A fun photo challenge game!",
           code: "default"
         };
         squares = defaultSquaresList; // fallback
-        const debugBanner = document.getElementById("debugBanner");
-
-        debugBanner.textContent = `Using default event — Squares loaded: ${squares.length}`;
-
-        console.log("Loaded squares:", squares);
+        
         createGrid();
         updateEventDisplay();
 
