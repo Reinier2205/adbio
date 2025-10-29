@@ -127,6 +127,9 @@
       color: #e0e0e0;
     }
 
+    /* Ensure light-mode player names are visible in the top bar */
+    .top-bar .player-name { color: #1f2937; }
+
     .share-icon {
       font-size: 1.5rem;
       cursor: pointer;
@@ -1204,7 +1207,7 @@
     <div class="filter-bar">
       <label>
         <input type="checkbox" id="showCompletedOnly" onchange="toggleCompleted()">
-        Show only completed squaress
+        Show only completed squares
       </label>
       <label>
         <input type="checkbox" id="showOutstandingOnly" onchange="toggleOutstanding()">
@@ -1307,9 +1310,13 @@
     // Instagram-style functions
     function selectPlayer(playerName) {
       currentPlayer = playerName;
+      // Save last player for this event
+      try { localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName); } catch(_) {}
       updatePlayerCircles();
       createGrid();
       loadPhotos(currentPlayer);
+      // Ensure the selected player is visible in the top bar immediately
+      loadPlayers();
     }
 
     function updatePlayerCircles() {
@@ -1823,14 +1830,43 @@
         
         // Update player circles in top bar
         playerScroll.innerHTML = "";
-        // Always render players (if any)
+
+        // Build a list including the current player (ensure appears even with 0 photos)
+        const names = [...players.map(p => p.name)];
+        if (currentPlayer && !names.includes(currentPlayer)) {
+          players.unshift({ name: currentPlayer, count: 0 });
+        }
+
+        // Helper to generate unique 1-2 letter labels for circles
+        const usedLabels = new Set();
+        function getCircleLabel(name) {
+          const parts = name.trim().split(/\s+/);
+          let label = parts.length >= 2 ? (parts[0][0] + parts[1][0]) : (name.slice(0, 2));
+          label = (label || '?').toUpperCase();
+          // Resolve collisions by using next character if available
+          let i = 2;
+          while (usedLabels.has(label) && i < name.length) {
+            label = (name[0] + name[i]).toUpperCase();
+            i++;
+          }
+          if (usedLabels.has(label)) {
+            // Fallback to appending a dot to differentiate
+            let n = 1;
+            while (usedLabels.has(label + n)) n++;
+            label = label + n;
+          }
+          usedLabels.add(label);
+          return label;
+        }
+
+        // Render players
         players.forEach(player => {
           const playerItem = document.createElement("div");
           playerItem.className = "player-item";
           
           const circle = document.createElement("div");
           circle.className = "player-circle";
-          circle.textContent = player.name.charAt(0).toUpperCase();
+          circle.textContent = getCircleLabel(player.name);
           circle.title = player.name;
           circle.onclick = () => selectPlayer(player.name);
           if (player.name === currentPlayer) {
@@ -2169,9 +2205,10 @@
         const playerName = prompt("Enter new player name:");
         if (playerName && playerName.trim()) {
           currentPlayer = playerName.trim();
+          try { localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, currentPlayer); } catch(_) {}
           createGrid();
           loadPhotos(currentPlayer);
-          loadPlayers(); // Refresh player list
+          loadPlayers(); // Refresh player list (ensures immediate circle render)
           resolve(playerName.trim());
         } else {
           resolve(null);
