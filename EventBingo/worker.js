@@ -286,14 +286,29 @@ export default {
         return new Response("Image not found", { status: 404, headers: corsHeaders });
       }
 
-      console.log("Serving image for key:", key);
-      return new Response(object.body, {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": object.httpMetadata?.contentType || "application/octet-stream",
-        },
-      });
+      // Derive a safe content type if missing
+      let contentType = object.httpMetadata?.contentType;
+      if (!contentType || contentType === "application/octet-stream") {
+        const lower = key.toLowerCase();
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) contentType = "image/jpeg";
+        else if (lower.endsWith(".png")) contentType = "image/png";
+        else if (lower.endsWith(".gif")) contentType = "image/gif";
+        else if (lower.endsWith(".webp")) contentType = "image/webp";
+        else if (lower.endsWith(".bmp")) contentType = "image/bmp";
+        else if (lower.endsWith(".svg")) contentType = "image/svg+xml";
+        else contentType = "application/octet-stream";
+      }
+
+      // Ensure inline display and basic caching
+      const headers = {
+        ...corsHeaders,
+        "Content-Type": contentType,
+        "Content-Disposition": `inline; filename="${encodeURIComponent(key.split('/').pop() || 'image')}` + `"`,
+        "Cache-Control": "public, max-age=3600",
+      };
+
+      console.log("Serving image for key:", key, "with type:", headers["Content-Type"]);
+      return new Response(object.body, { status: 200, headers });
     }
 
     return new Response("EventBingo Worker is running.", {
