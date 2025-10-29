@@ -360,6 +360,16 @@
         
         <div id="eventDetails" style="display: none;">
           <div class="form-group">
+            <label>Event Title</label>
+            <input type="text" id="currentEventTitle" readonly style="background: rgba(255,255,255,0.05);">
+          </div>
+          
+          <div class="form-group">
+            <label>Event Description</label>
+            <textarea id="currentEventDescription" readonly style="background: rgba(255,255,255,0.05); min-height: 80px;"></textarea>
+          </div>
+          
+          <div class="form-group">
             <label>Event Code</label>
             <input type="text" id="currentEventCode" readonly style="background: rgba(255,255,255,0.05);">
           </div>
@@ -503,6 +513,8 @@
         const event = await response.json();
         
         currentEvent = event;
+        document.getElementById('currentEventTitle').value = event.title || '';
+        document.getElementById('currentEventDescription').value = event.description || '';
         document.getElementById('currentEventCode').value = event.code;
         document.getElementById('currentAdminUser').value = event.adminUser;
         document.getElementById('eventDetails').style.display = 'block';

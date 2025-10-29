@@ -84,7 +84,8 @@
     }
 
     .player-circle.active {
-      border: 3px solid var(--instagram-pink);
+      border: 4px solid #ff0000;
+      box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3), 0 0 12px rgba(255, 0, 0, 0.5);
     }
 
     .player-circle::before {
@@ -111,7 +112,7 @@
     }
 
     .player-name {
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: var(--text-dark);
       font-weight: 400;
       text-align: center;
@@ -120,6 +121,10 @@
       text-overflow: clip;
       white-space: normal; /* allow wrapping */
       line-height: 1.2;
+    }
+
+    body.dark-mode .player-name {
+      color: #e0e0e0;
     }
 
     .share-icon {
@@ -560,6 +565,56 @@
       display: none;
     }
 
+    /* Event Banner */
+    .event-banner {
+      background: var(--story-gradient);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 60px;
+      z-index: 999;
+      color: white;
+    }
+
+    .event-banner-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .event-banner-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .event-banner-code {
+      font-size: 0.75rem;
+      opacity: 0.9;
+    }
+
+    .event-banner-link {
+      color: white;
+      text-decoration: none;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background 0.2s;
+      margin-left: 12px;
+    }
+
+    .event-banner-link:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
     /* Bottom Navigation Bar */
     .bottom-nav {
       position: fixed !important;
@@ -570,7 +625,7 @@
       background: var(--bg-light);
       display: flex;
       justify-content: space-around;
-      padding: 12px 0;
+      padding: 16px 0;
       box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
       backdrop-filter: blur(10px);
       z-index: 9999 !important;
@@ -590,20 +645,27 @@
     }
 
     .nav-icon {
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      transition: background-color 0.2s ease;
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      min-height: 48px;
     }
 
     .nav-icon:hover {
       background-color: rgba(0,0,0,0.1);
+      transform: translateY(-2px);
     }
 
     .nav-icon.active {
-      background-color: var(--instagram-pink);
+      background: var(--story-gradient);
       color: white;
+      box-shadow: 0 4px 12px rgba(228, 64, 95, 0.3);
     }
 
     /* Compact Add Player button on very small screens */
@@ -1127,6 +1189,15 @@
     </div>
   </div>
 
+  <!-- Event Banner -->
+  <div class="event-banner" id="eventBanner" style="display: none;">
+    <div class="event-banner-info">
+      <div class="event-banner-title" id="eventBannerTitle">Event Name</div>
+      <div class="event-banner-code" id="eventBannerCode">Code: EVENT123</div>
+    </div>
+    <a href="info.html" class="event-banner-link">Change Event</a>
+  </div>
+
   <!-- Main Content Area -->
   <div class="main-content">
     <!-- Filter Bar -->
@@ -1161,7 +1232,6 @@
   <!-- Bottom Navigation -->
   <div class="bottom-nav">
     <div class="nav-icon active" onclick="goHome()">🏠</div>
-    <div class="nav-icon" onclick="openSearch()">🔍</div>
     <div class="nav-icon" onclick="openCarousel()">📸</div>
     <div class="nav-icon" onclick="openLeaderboard()">🥇</div>
     <a href="info.html" class="nav-icon">ℹ️</a>
@@ -1293,11 +1363,6 @@
       // Already on home view
     }
 
-    function openSearch() {
-      setActiveNavIcon(1);
-      // Could implement search functionality here
-      alert('Search functionality coming soon!');
-    }
 
     function openCarousel() {
       setActiveNavIcon(2);
@@ -1485,6 +1550,21 @@
       document.querySelectorAll('.nav-icon').forEach((icon, i) => {
         icon.classList.toggle('active', i === index);
       });
+    }
+
+    // Remove search from nav icon indices
+    function goHome() {
+      setActiveNavIcon(0);
+    }
+
+    function openCarousel() {
+      setActiveNavIcon(1);
+      showCarousel();
+    }
+
+    function openLeaderboard() {
+      setActiveNavIcon(2);
+      showLeaderboard();
     }
 
     function showCarousel() {
@@ -1903,18 +1983,60 @@
           
           const content = document.createElement("div");
           content.style.cssText = `
-            background: white;
+            background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95));
             padding: 30px;
-            border-radius: 15px;
+            border-radius: 20px;
             max-width: 400px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            border: 2px solid rgba(228, 64, 95, 0.2);
           `;
           
+          // Check for last player in localStorage
+          let lastPlayer = '';
+          try {
+            lastPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || '';
+          } catch (_) {}
+          
           let html = `
-            <h2 style="margin-top: 0; color: var(--text-dark);">Select a Player</h2>
-          `;
+            <h2 style="margin-top: 0; color: var(--text-dark); background: var(--story-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.5rem; margin-bottom: 20px;">Select a Player</h2نجليزية`;
+          
+          // Show "Continue as last player" if available
+          if (lastPlayer) {
+            html += `
+              <div id="continueLastPlayer" style="
+                padding: 15px;
+                margin-bottom: 15px;
+                background: linear-gradient(135deg, #10b981, #34d399);
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+              " onclick="selectPlayerOption('${escapeQuotes(lastPlayer)}')">
+                <div style="
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  background: rgba(255,255,255,0.3);
+                  color: white;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-weight: bold;
+                  font-size: 1.2rem;
+                ">${lastPlayer.charAt(0).toUpperCase()}</div>
+                <div style="flex:1; color: white;">
+                  <div style="font-weight: 600; font-size: 1rem;">↩️ Continue as ${escapeQuotes(lastPlayer)}</div>
+                  <div style="font-size: 0.85rem; opacity: 0.9;">Your previous session</div>
+                </div>
+              </div>
+            `;
+          }
           
           if (players.length > 0) {
             html += '<div style="margin-bottom: 20px;">';
@@ -2215,27 +2337,14 @@
         // Update page title
         document.title = `${currentEvent.title} - EventBingo`;
         
-        // Add event description to the page
-        const eventInfo = document.createElement('div');
-        eventInfo.className = 'event-info';
-        eventInfo.style.cssText = `
-          background: rgba(255, 255, 255, 0.1);
-          padding: 15px 20px;
-          margin-bottom: 20px;
-          border-radius: 12px;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          color: #e0e0e0;
-          text-align: center;
-        `;
-        eventInfo.innerHTML = `
-          <h3 style="margin: 0 0 10px 0; color: #ffd700;">${currentEvent.title}</h3>
-          <p style="margin: 0; opacity: 0.9;">${currentEvent.description}</p>
-        `;
-        
-        const mainContent = document.querySelector('.main-content');
-        if (mainContent && !document.querySelector('.event-info')) {
-          mainContent.insertBefore(eventInfo, mainContent.firstChild);
+        // Update event banner
+        const banner = document.getElementById('eventBanner');
+        const bannerTitle = document.getElementById('eventBannerTitle');
+        const bannerCode = document.getElementById('eventBannerCode');
+        if (banner && bannerTitle && bannerCode) {
+          bannerTitle.textContent = currentEvent.title;
+          bannerCode.textContent = `Code: ${currentEvent.code}`;
+          banner.style.display = 'flex';
         }
       }
     }
