@@ -277,8 +277,15 @@ export default {
     }
 
     if (request.method === "GET") {
-      const key = path.slice(1);
-      console.log("Trying to serve image with key:", key);
+      const rawKey = path.slice(1);
+      // Decode URL-encoded characters (e.g., %20) so it matches the exact R2 object key
+      let key = rawKey;
+      try {
+        key = decodeURIComponent(rawKey);
+      } catch (_) {
+        // Keep rawKey if decode fails
+      }
+      console.log("Trying to serve image with key:", key, "(raw:", rawKey, ")");
       const object = await env.EventBingoPhotos.get(key);
 
       if (!object || !object.body) {
