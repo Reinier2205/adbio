@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pilates Full Body</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+      background: #333;
+      color: #fff;
+    }
+    ul {
+      list-style: none;
+      padding: 20px;
+      margin: 0;
+    }
+    li {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 90%;
+      margin: 0 auto 25px auto;
+      box-sizing: border-box;
+      display: flex; /* Added: use flexbox for horizontal layout */
+      align-items: flex-start; /* Added: align items to the start of the cross axis */
+      gap: 15px; /* Added: space between items */
+    }
+    li.active {
+      border: 3px solid #28a745;
+    }
+    li.completed {
+      opacity: 0.5;
+    }
+    h2 {
+      margin: 0 0 10px 0;
+    }
+    a img {
+      width: 100%;
+      max-height: 55vh;
+      object-fit: contain;
+      border-radius: 6px;
+      flex-shrink: 0; /* Added: prevent image from shrinking */
+    }
+    p {
+      margin: 10px 0;
+      font-size: 1em;
+      flex-grow: 1; /* Added: allow paragraph to take available space */
+    }
+    .button-row {
+      display: flex;
+      flex-direction: column; /* Modified: stack buttons vertically */
+      gap: 10px;
+      margin-top: 0; /* Modified: remove top margin */
+      flex-shrink: 0; /* Added: prevent button row from shrinking */
+    }
+    .btn {
+      flex: 1;
+      padding: 15px;
+      font-size: 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .start-btn {
+      background: #0073e6;
+      color: white;
+    }
+    .start-btn:hover {
+      background: #005bb5;
+    }
+    .done-btn {
+      background: #28a745;
+      color: white;
+    }
+    .done-btn:disabled {
+      background: #aaa;
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pilates Full Body</h1>
+  <ul>
+
+    <li id="warmup" class="active">
+      <a href="https://youtu.be/CSrBaHX3HxQ?start=29" target="_blank">
+        <img src="https://img.youtube.com/vi/CSrBaHX3HxQ/hqdefault.jpg" alt="Warm Up video">
+      </a>
+      <div class="button-row">
+        <a href="https://youtu.be/CSrBaHX3HxQ?start=29" target="_blank" class="btn start-btn">▶ Start</a>
+        <button onclick="markDone(this)" class="btn done-btn">✅ Done</button>
+      </div>
+      <h3>Gentle warm-up to prepare your body</h3>
+
+    </li>
+
+    <li id="workout1">
+            <a href="https://youtu.be/2Z9g-AZinUc?start=40" target="_blank">
+        <img src="https://img.youtube.com/vi/2Z9g-AZinUc/hqdefault.jpg" alt="Workout 1 video">
+      </a>
+      
+      <div class="button-row">
+        <a href="https://youtu.be/2Z9g-AZinUc?start=40" target="_blank" class="btn start-btn">▶ Start</a>
+        <button onclick="markDone(this)" class="btn done-btn">✅ Done</button>
+      </div>
+      <h3>Full body workout focusing on strength, balance, and flexibility</h3>
+
+    </li>
+
+    <li id="workout2">
+      <a href="https://youtu.be/jKTxe236-4U?start=32" target="_blank">
+        <img src="https://img.youtube.com/vi/jKTxe236-4U/hqdefault.jpg" alt="Workout 2 video">
+      </a>
+      <div class="button-row">
+        <a href="https://youtu.be/jKTxe236-4U?start=32" target="_blank" class="btn start-btn">▶ Start</a>
+        <button onclick="markDone(this)" class="btn done-btn">✅ Done</button>
+      </div>
+      <h3>Alternative workout, targeting core and balance.</h3>
+
+    </li>
+
+    <li id="workout2b">
+      <a href="https://youtu.be/DGjRXQ7FO4s?start=18" target="_blank">
+        <img src="https://img.youtube.com/vi/DGjRXQ7FO4s/hqdefault.jpg" alt="Workout 2 alternative video">
+      </a>
+      <div class="button-row">
+        <a href="https://youtu.be/DGjRXQ7FO4s?start=18" target="_blank" class="btn start-btn">▶ Start</a>
+        <button onclick="markDone(this)" class="btn done-btn">✅ Done</button>
+      </div>
+      <h3> Full body stretch. Calming music, no instructions</h3>
+
+    </li>
+
+    <li id="workout3">
+      <a href="https://youtu.be/SbURodJWeMM?start=27" target="_blank">
+        <img src="https://img.youtube.com/vi/SbURodJWeMM/hqdefault.jpg" alt="Workout 3 video">
+      </a>
+      <div class="button-row">
+        <a href="https://youtu.be/SbURodJWeMM?start=27" target="_blank" class="btn start-btn">▶ Start</a>
+        <button onclick="markDone(this)" class="btn done-btn">✅ Done</button>
+      </div>
+      <h3>Cool-down stretch to finish the session.</h3>
+
+    </li>
+  </ul>
+
+  <script>
+    function markDone(button) {
+      let li = button.closest("li");
+      li.classList.add("completed");
+      button.disabled = true;
+      button.innerText = "✔ Completed";
+
+      // highlight next workout
+      let next = li.nextElementSibling;
+      if(next) {
+        next.classList.add("active");
+        next.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  </script>
+</body>
+</html>
