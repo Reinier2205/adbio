@@ -68,25 +68,32 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: var(--story-gradient);
-      color: white;
+      background: white;
+      border: 3px solid transparent;
+      background-image: linear-gradient(white, white), var(--story-gradient);
+      background-origin: border-box;
+      background-clip: content-box, border-box;
+      color: #333;
       font-weight: bold;
+      font-size: 1.4rem;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      transition: transform 0.2s ease;
+      transition: all 0.2s ease;
       flex-shrink: 0;
       position: relative;
     }
 
     .player-circle:hover {
       transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .player-circle.active {
       border: 4px solid #ff0000;
+      background-image: linear-gradient(#fff3f3, #fff3f3), linear-gradient(45deg, #ff0000, #ff4444);
       box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3), 0 0 12px rgba(255, 0, 0, 0.5);
     }
 
@@ -127,6 +134,17 @@
 
     body.dark-mode .top-bar .player-name {
       color: #e0e0e0;
+    }
+
+    /* Dark mode player circles */
+    body.dark-mode .player-circle {
+      background-image: linear-gradient(#2d2d2d, #2d2d2d), var(--story-gradient);
+      color: #ffffff;
+    }
+
+    body.dark-mode .player-avatar {
+      background-image: linear-gradient(#2d2d2d, #2d2d2d), var(--story-gradient);
+      color: #ffffff;
     }
 
     /* Ensure light-mode player names are visible in the top bar */
@@ -1028,15 +1046,18 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: var(--story-gradient);
-      color: white;
+      background: white;
+      border: 3px solid transparent;
+      background-image: linear-gradient(white, white), var(--story-gradient);
+      background-origin: border-box;
+      background-clip: content-box, border-box;
+      color: #333;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      border: 3px solid rgba(255, 255, 255, 0.3);
     }
 
     .player-details {
@@ -1455,7 +1476,10 @@
     let eventCode = params.get("event") || "default";
 
     // Helper function to generate Bingo-related icons for players
-    function getPlayerIcon(name, index) {
+    // Global cache to track used icons and prevent duplicates
+    window.playerIconCache = window.playerIconCache || new Map();
+    
+    function getPlayerIcon(name) {
       const bingoIcons = [
         '🎯', '🎲', '🎪', '🎨', '🎭', '🎸', '🎺', '🎻', 
         '🎮', '🎳', '🎰', '🎊', '🎉', '🎈', '🎁', '🎀',
@@ -1463,15 +1487,49 @@
         '🔥', '💎', '👑', '🎖️', '🏵️', '🎗️', '🎫', '🎟️'
       ];
       
-      // Use a combination of name hash and index to ensure consistency
-      let hash = 0;
-      for (let i = 0; i < name.length; i++) {
-        hash = ((hash << 5) - hash + name.charCodeAt(i)) & 0xffffffff;
+      if (!name) return '❓';
+      
+      // Check if we already have an icon for this player
+      if (window.playerIconCache.has(name)) {
+        return window.playerIconCache.get(name);
       }
       
-      // Combine hash with index to avoid duplicates
-      const iconIndex = (Math.abs(hash) + index) % bingoIcons.length;
-      return bingoIcons[iconIndex];
+      // Create a hash based on the player's name
+      let hash = 0;
+      const cleanName = name.toLowerCase().trim();
+      
+      for (let i = 0; i < cleanName.length; i++) {
+        const char = cleanName.charCodeAt(i);
+        hash = ((hash << 5) - hash + char) & 0xffffffff;
+      }
+      
+      // Add some additional entropy based on name characteristics
+      const nameLength = cleanName.length;
+      const firstChar = cleanName.charCodeAt(0) || 0;
+      const lastChar = cleanName.charCodeAt(nameLength - 1) || 0;
+      
+      // Try to find an unused icon
+      let attempts = 0;
+      let selectedIcon;
+      const usedIcons = new Set(window.playerIconCache.values());
+      
+      do {
+        const combinedHash = Math.abs(hash + nameLength * 7 + firstChar * 13 + lastChar * 17 + attempts * 23);
+        const iconIndex = combinedHash % bingoIcons.length;
+        selectedIcon = bingoIcons[iconIndex];
+        attempts++;
+      } while (usedIcons.has(selectedIcon) && attempts < bingoIcons.length);
+      
+      // If all icons are used, just use the hash-based selection
+      if (attempts >= bingoIcons.length) {
+        const combinedHash = Math.abs(hash + nameLength * 7 + firstChar * 13 + lastChar * 17);
+        const iconIndex = combinedHash % bingoIcons.length;
+        selectedIcon = bingoIcons[iconIndex];
+      }
+      
+      // Cache the result
+      window.playerIconCache.set(name, selectedIcon);
+      return selectedIcon;
     }
 
     // Instagram-style functions
@@ -1622,7 +1680,7 @@
           entry.innerHTML = `
             <div class="rank">${getRankEmoji(index + 1)}</div>
             <div class="player-info">
-              <div class="player-avatar">${getPlayerIcon(player.name, index)}</div>
+              <div class="player-avatar">${getPlayerIcon(player.name)}</div>
               <div class="player-details">
                 <div class="player-name">${player.name}</div>
                 <div class="player-title">${title}</div>
@@ -2103,7 +2161,7 @@
           
           const circle = document.createElement("div");
           circle.className = "player-circle";
-          circle.textContent = getPlayerIcon(player.name, index);
+          circle.textContent = getPlayerIcon(player.name);
           circle.title = player.name;
           circle.onclick = () => selectPlayer(player.name);
           if (player.name === currentPlayer) {
@@ -2291,7 +2349,7 @@
                   justify-content: center;
                   font-weight: bold;
                   font-size: 1.2rem;
-                ">${getPlayerIcon(lastPlayer, 0)}</div>
+                ">${getPlayerIcon(lastPlayer)}</div>
                 <div style="flex:1; color: white;">
                   <div style="font-weight: 600; font-size: 1rem;">↩️ Continue as ${escapeQuotes(lastPlayer)}</div>
                   <div style="font-size: 0.85rem; opacity: 0.9;">Your previous session</div>
@@ -2321,14 +2379,18 @@
                     width: 50px;
                     height: 50px;
                     border-radius: 50%;
-                    background: var(--story-gradient);
-                    color: white;
+                    background: white;
+                    border: 3px solid transparent;
+                    background-image: linear-gradient(white, white), var(--story-gradient);
+                    background-origin: border-box;
+                    background-clip: content-box, border-box;
+                    color: #333;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     font-weight: bold;
-                    font-size: 1.3rem;
-                  ">${getPlayerIcon(player.name, index + 1)}</div>
+                    font-size: 1.4rem;
+                  ">${getPlayerIcon(player.name)}</div>
                   <div>
                     <div style="font-weight: 600; font-size: 1.05rem; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">${player.name}</div>
                     <div style="${isDark ? 'color: #e5e7eb;' : 'color:#6b7280;'} font-size: 0.9rem;">${player.count} photos</div>
