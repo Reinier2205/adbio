@@ -314,6 +314,12 @@
     body.dark-mode .section { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
     body.dark-mode .hero-section { box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
 
+    /* Loading Animation */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .hero-title {
@@ -339,7 +345,7 @@
   <div class="top-bar">
     <a href="index.html" class="back-button">←</a>
     <div class="page-title">How to Play EventBingo</div>
-    <div class="share-icon" onclick="shareInfo()">↗️</div>
+    <div class="share-icon" onclick="shareInfo()">📤</div>
   </div>
 
   <!-- Main Content -->
@@ -657,14 +663,22 @@
           input.focus();
           return;
         }
+        
+        // Show loading state
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<div style="display: flex; align-items: center; gap: 8px;"><div style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></div>Validating...</div>';
+        
         // Validate with worker
         try {
           const res = await fetch(`${workerURL}event-info?event=${encodeURIComponent(code)}`);
           if (res.ok) {
             try { localStorage.setItem('eventbingo:lastEvent', code); } catch (_) {}
+            startBtn.innerHTML = '✅ Event found! Redirecting...';
             // Show bottom navigation since event is valid
             document.getElementById('bottomNav').style.display = 'flex';
-            window.location.href = `index.html?event=${encodeURIComponent(code)}`;
+            setTimeout(() => {
+              window.location.href = `index.html?event=${encodeURIComponent(code)}`;
+            }, 500);
             return;
           }
           // Not found → offer next steps
@@ -674,6 +688,10 @@
         } catch (e) {
           help.textContent = 'We could not validate the event right now. Please check your connection and try again.';
           help.style.display = 'block';
+        } finally {
+          // Reset button
+          startBtn.disabled = false;
+          startBtn.innerHTML = '🎉 Let\'s start playing';
         }
       }
 

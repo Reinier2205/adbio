@@ -112,7 +112,7 @@
     }
 
     .player-name {
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       color: var(--text-dark);
       font-weight: 400;
       text-align: center;
@@ -250,6 +250,119 @@
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+
+    /* Modal Loading Spinner */
+    .modal-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 200px;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .modal-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Inline Loading Spinner */
+    .inline-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      color: var(--primary);
+      font-style: italic;
+    }
+
+    .inline-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(74, 144, 226, 0.3);
+      border-top: 2px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Button Loading State */
+    .button-loading {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .button-loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .button-loading .add-text,
+    .button-loading .add-icon {
+      opacity: 0;
+    }
+
+    /* Page Loading Overlay */
+    .page-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(250, 250, 250, 0.95);
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .page-loading.hidden {
+      display: none;
+    }
+
+    .page-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(74, 144, 226, 0.3);
+      border-top: 5px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1.2s linear infinite;
+    }
+
+    .page-loading-text {
+      font-size: 1.1rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Dark mode loading styles */
+    body.dark-mode .page-loading {
+      background: rgba(26, 26, 26, 0.95);
+    }
+
+    body.dark-mode .page-loading-text {
+      color: #ffffff;
+    }
+
+    body.dark-mode .inline-loading {
+      color: #ffffff;
     }
 
     .progress-table {
@@ -1213,7 +1326,7 @@
       <button id="addPlayerTopBtn" title="Add new player" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; padding: 8px 10px; border-radius: 9999px; border: 2px solid var(--instagram-pink); color: var(--instagram-pink); background: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">+
         <span style="font-size:0.85rem; font-weight:700;">Add Player</span>
       </button>
-      <div class="share-icon" onclick="shareBingo()">↗️</div>
+      <div class="share-icon" onclick="shareBingo()">📤</div>
     </div>
   </div>
 
@@ -1280,6 +1393,12 @@
       <div class="spinner"></div>
       <span>Loading...</span>
     </div>
+  </div>
+
+  <!-- Page Loading Overlay -->
+  <div class="page-loading hidden" id="pageLoading">
+    <div class="page-spinner"></div>
+    <div class="page-loading-text">Loading EventBingo...</div>
   </div>
 
   <script>
@@ -1431,8 +1550,12 @@
     }
 
     async function loadLeaderboardData() {
+      const leaderboardList = document.getElementById('leaderboardList');
+      
       try {
-        showLoading();
+        // Show modal loading in the leaderboard
+        showModalLoading(leaderboardList, "Loading Hall of Fame...");
+        
         const res = await fetch(`${workerURL}players?event=${eventCode}`);
         
         if (!res.ok) {
@@ -1444,8 +1567,7 @@
         // Sort players by count (descending)
         players.sort((a, b) => b.count - a.count);
         
-        // Populate leaderboard
-        const leaderboardList = document.getElementById('leaderboardList');
+        // Clear loading and populate leaderboard
         leaderboardList.innerHTML = '';
         
         if (players.length === 0) {
@@ -1613,9 +1735,17 @@
     }
 
     function showCarousel() {
+      const carouselModal = document.getElementById('carouselModal');
       carouselModal.classList.add('show');
-      // Load all photos for carousel
-      loadAllPhotosForCarousel();
+      
+      // Show loading in carousel
+      const carouselContent = carouselModal.querySelector('.carousel-content') || carouselModal;
+      showModalLoading(carouselContent, "Loading photo gallery...");
+      
+      // Load all photos for carousel with a slight delay for better UX
+      setTimeout(() => {
+        loadAllPhotosForCarousel();
+      }, 300);
     }
 
     function closeCarousel() {
@@ -1767,14 +1897,56 @@
       setTimeout(() => confetti.remove(), 3000);
     }
 
-    function showLoading() {
-      
-      loadingSpinner.style.display = "block";
+    function showLoading(message = "Loading...") {
+      const spinner = document.getElementById("loadingSpinner");
+      const text = spinner.querySelector("span");
+      if (text) text.textContent = message;
+      spinner.style.display = "flex";
     }
 
     function hideLoading() {
-      
-      loadingSpinner.style.display = "none";
+      const spinner = document.getElementById("loadingSpinner");
+      spinner.style.display = "none";
+    }
+
+    function showPageLoading(message = "Loading EventBingo...") {
+      const pageLoading = document.getElementById("pageLoading");
+      const text = pageLoading.querySelector(".page-loading-text");
+      if (text) text.textContent = message;
+      pageLoading.classList.remove("hidden");
+    }
+
+    function hidePageLoading() {
+      const pageLoading = document.getElementById("pageLoading");
+      pageLoading.classList.add("hidden");
+    }
+
+    function showModalLoading(container, message = "Loading...") {
+      container.innerHTML = `
+        <div class="modal-loading">
+          <div class="modal-spinner"></div>
+          <div style="color: #ffffff; font-weight: 600;">${message}</div>
+        </div>
+      `;
+    }
+
+    function showInlineLoading(container, message = "Loading...") {
+      container.innerHTML = `
+        <div class="inline-loading">
+          <div class="inline-spinner"></div>
+          <span>${message}</span>
+        </div>
+      `;
+    }
+
+    function setButtonLoading(button, isLoading) {
+      if (isLoading) {
+        button.classList.add("button-loading");
+        button.disabled = true;
+      } else {
+        button.classList.remove("button-loading");
+        button.disabled = false;
+      }
     }
 
     function createGrid() {
@@ -1836,8 +2008,10 @@
             formData.append("square", square);
             formData.append("event", eventCode);
 
-          resultDiv.innerHTML = '<div class="photo-loading">Uploading photo...</div>';
-          showLoading();
+          // Show loading states
+          setButtonLoading(addPhotoBtn, true);
+          resultDiv.innerHTML = '<div class="photo-loading">📤 Uploading photo...</div>';
+          showLoading("Uploading your photo...");
 
           try {
             const res = await fetch(workerURL, { method: "POST", body: formData });
@@ -1857,11 +2031,12 @@
               // Don't await to avoid blocking the UI
               loadPlayers().catch(() => {});
             } else {
-              resultDiv.innerHTML = '<div class="photo-error">Upload failed. Please try again.</div>';
+              resultDiv.innerHTML = '<div class="photo-error">❌ Upload failed. Please try again.</div>';
             }
           } catch (err) {
-            resultDiv.innerHTML = '<div class="photo-error">Error uploading photo. Please try again.</div>';
+            resultDiv.innerHTML = '<div class="photo-error">❌ Error uploading photo. Please try again.</div>';
           } finally {
+            setButtonLoading(addPhotoBtn, false);
             hideLoading();
           }
         });
@@ -1885,7 +2060,7 @@
 
     async function loadPlayers() {
       try {
-        showLoading();
+        showLoading("Loading players...");
         const res = await fetch(`${workerURL}players?event=${eventCode}`);
         
         if (!res.ok) {
@@ -2434,6 +2609,57 @@
           bannerCode.textContent = `Code: ${currentEvent.code}`;
           banner.style.display = 'flex';
         }
+      }
+    }
+
+    // Initialize app with page loading
+    document.addEventListener('DOMContentLoaded', async function() {
+      showPageLoading("Loading EventBingo...");
+      
+      try {
+        // Initialize the app
+        await initializeApp();
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+      } finally {
+        hidePageLoading();
+      }
+    });
+
+    async function initializeApp() {
+      // Load event data
+      if (eventCode && eventCode !== 'default') {
+        showPageLoading("Loading event data...");
+        await loadEventData();
+      }
+      
+      // Load squares
+      showPageLoading("Loading challenges...");
+      await loadSquares();
+      
+      // Create grid
+      showPageLoading("Setting up game board...");
+      createGrid();
+      
+      // Load players
+      showPageLoading("Loading players...");
+      await loadPlayers();
+      
+      // Load photos for current player
+      if (currentPlayer) {
+        showPageLoading("Loading your photos...");
+        await loadPhotos(currentPlayer);
+      }
+      
+      // Setup event handlers
+      setupEventHandlers();
+    }
+
+    function setupEventHandlers() {
+      // Add player button
+      const addPlayerBtn = document.getElementById('addPlayerTopBtn');
+      if (addPlayerBtn) {
+        addPlayerBtn.addEventListener('click', addNewPlayer);
       }
     }
 </script>
