@@ -111,8 +111,8 @@
       cursor: pointer;
     }
 
-    .player-name {
-      font-size: 0.55rem;
+    .top-bar .player-name {
+      font-size: 0.5rem !important;
       color: var(--text-dark);
       font-weight: 400;
       text-align: center;
@@ -123,7 +123,7 @@
       line-height: 1.2;
     }
 
-    body.dark-mode .player-name {
+    body.dark-mode .top-bar .player-name {
       color: #e0e0e0;
     }
 
@@ -1045,7 +1045,7 @@
       flex: 1;
     }
 
-    .player-name {
+    .leaderboard-entry .player-name {
       font-weight: bold;
       font-size: 1.3rem;
       margin-bottom: 5px;
@@ -1250,7 +1250,7 @@
       color: #ffffff;
     }
 
-    body.dark-mode .player-name {
+    body.dark-mode .leaderboard-entry .player-name {
       color: #ffffff;
     }
 
@@ -1464,8 +1464,30 @@
         // First letter of first name + first letter of last name
         return (parts[0][0] + parts[1][0]).toUpperCase();
       } else {
-        // First 2 letters of single name
-        return name.slice(0, 2).toUpperCase();
+        // For single names, use a smarter approach to create unique initials
+        const cleanName = name.trim().toUpperCase();
+        if (cleanName.length === 1) return cleanName;
+        
+        // Try different combinations to make initials more unique
+        if (cleanName.length >= 3) {
+          // Use first letter + a distinctive letter from the name
+          const firstLetter = cleanName[0];
+          
+          // Look for a consonant or distinctive letter
+          for (let i = 1; i < cleanName.length; i++) {
+            const letter = cleanName[i];
+            // Skip vowels that are too common, prefer consonants or unique vowels
+            if (letter !== 'A' && letter !== 'E' && letter !== 'I' && letter !== 'O' && letter !== 'U') {
+              return firstLetter + letter;
+            }
+          }
+          
+          // If no good consonant found, use first + last letter
+          return firstLetter + cleanName[cleanName.length - 1];
+        }
+        
+        // Fallback to first 2 letters
+        return cleanName.slice(0, 2);
       }
     }
 
@@ -1617,7 +1639,7 @@
           entry.innerHTML = `
             <div class="rank">${getRankEmoji(index + 1)}</div>
             <div class="player-info">
-              <div class="player-avatar">${player.name.charAt(0).toUpperCase()}</div>
+              <div class="player-avatar">${getPlayerInitials(player.name)}</div>
               <div class="player-details">
                 <div class="player-name">${player.name}</div>
                 <div class="player-title">${title}</div>
