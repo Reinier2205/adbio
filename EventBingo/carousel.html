@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Gallery - EventBingo</title>
+  <style>
+    :root {
+      --primary: #4a90e2;
+      --secondary: #7b68ee;
+      --accent: #ff6b6b;
+      --success: #51cf66;
+      --text-dark: #2c3e50;
+      --text-light: #ffffff;
+      --bg-light: rgba(255, 255, 255, 0.95);
+      --bg-dark: rgba(44, 62, 80, 0.9);
+      --instagram-pink: #E4405F;
+      --instagram-purple: #833AB4;
+      --instagram-orange: #F77737;
+      --instagram-yellow: #FCAF45;
+      --story-gradient: linear-gradient(45deg, var(--instagram-pink), var(--instagram-purple), var(--instagram-orange), var(--instagram-yellow));
+    }
+
+    html, body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fafafa;
+      color: var(--text-dark);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: var(--bg-light);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .back-button {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+      text-decoration: none;
+      color: var(--text-dark);
+    }
+
+    .back-button:hover {
+      background-color: rgba(0,0,0,0.1);
+    }
+
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--text-dark);
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 5px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .view-btn {
+      padding: 6px 10px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .view-btn.active {
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: white;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      flex: 1;
+      min-width: 120px;
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .filter-select:focus {
+      border-color: var(--primary);
+    }
+
+    .search-input {
+      flex: 2;
+      min-width: 150px;
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 15px;
+      padding-bottom: 100px;
+      min-height: calc(100vh - 200px);
+    }
+
+    /* Photo Grid */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .photo-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+    }
+
+    .photo-item {
+      aspect-ratio: 1;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      position: relative;
+    }
+
+    .photo-item:hover {
+      transform: scale(1.02);
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      color: white;
+      padding: 8px;
+      font-size: 0.7rem;
+      line-height: 1.2;
+    }
+
+    .photo-player {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .photo-challenge {
+      opacity: 0.9;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+      margin: 0 0 10px 0;
+      color: var(--text-dark);
+    }
+
+    /* Progress Info */
+    .progress-info {
+      text-align: center;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .progress-text {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--story-gradient);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .pagination-btn {
+      padding: 10px 20px;
+      border: 2px solid var(--primary);
+      background: white;
+      color: var(--primary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: var(--primary);
+      color: white;
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination-info {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    /* Full Screen Modal */
+    .fullscreen-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .fullscreen-modal.show {
+      display: flex;
+    }
+
+    .fullscreen-content {
+      max-width: 90%;
+      max-height: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .fullscreen-image {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .fullscreen-info {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .fullscreen-player {
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .fullscreen-challenge {
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .fullscreen-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+      background: rgba(0,0,0,0.5);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Loading States */
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(74, 144, 226, 0.3);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      background: #1a1a1a;
+      color: #ffffff;
+    }
+
+    body.dark-mode .top-bar,
+    body.dark-mode .filter-bar,
+    body.dark-mode .progress-info {
+      background: #2d2d2d;
+      color: #ffffff;
+    }
+
+    body.dark-mode .photo-item {
+      background: #2d2d2d;
+    }
+
+    body.dark-mode .filter-select,
+    body.dark-mode .search-input {
+      background: #2d2d2d;
+      color: #ffffff;
+      border-color: #555;
+    }
+
+    body.dark-mode .pagination-btn {
+      background: #2d2d2d;
+      color: #ffffff;
+      border-color: #555;
+    }
+
+    body.dark-mode .fullscreen-info {
+      background: #2d2d2d;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <a href="index.html" class="back-button">←</a>
+    <div class="page-title">📸 Photo Gallery</div>
+    <div class="view-toggle">
+      <button class="view-btn active" onclick="setViewMode('grid')">Grid</button>
+      <button class="view-btn" onclick="setViewMode('list')">List</button>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-row">
+      <select class="filter-select" id="playerFilter" onchange="applyFilters()">
+        <option value="">All Players</option>
+      </select>
+      <select class="filter-select" id="cardFilter" onchange="applyFilters()">
+        <option value="">All Cards</option>
+      </select>
+    </div>
+    <div class="filter-row">
+      <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search photos..." oninput="applyFilters()">
+      <select class="filter-select" id="sortFilter" onchange="applyFilters()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="player">By Player</option>
+        <option value="card">By Card</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Progress Info -->
+    <div class="progress-info" id="progressInfo">
+      <div class="progress-text" id="progressText">Loading photos...</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Photo Grid -->
+    <div class="photo-grid" id="photoGrid">
+      <!-- Photos will be loaded here -->
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <div class="empty-state-icon">📷</div>
+      <h3>No photos found</h3>
+      <p>Try adjusting your filters or search terms</p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" id="loadingState">
+      <div class="spinner"></div>
+      <div>Loading photos...</div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination" style="display: none;">
+      <button class="pagination-btn" id="prevBtn" onclick="previousPage()" disabled>← Previous</button>
+      <div class="pagination-info" id="paginationInfo">Page 1 of 1</div>
+      <button class="pagination-btn" id="nextBtn" onclick="nextPage()">Next →</button>
+    </div>
+  </div>
+
+  <!-- Full Screen Modal -->
+  <div class="fullscreen-modal" id="fullscreenModal">
+    <div class="fullscreen-close" onclick="closeFullscreen()">×</div>
+    <div class="fullscreen-content">
+      <img class="fullscreen-image" id="fullscreenImage" src="" alt="">
+      <div class="fullscreen-info">
+        <div class="fullscreen-player" id="fullscreenPlayer"></div>
+        <div class="fullscreen-challenge" id="fullscreenChallenge"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
+    const params = new URLSearchParams(window.location.search);
+    const eventCode = params.get("event") || "default";
+    
+    let allPhotos = [];
+    let filteredPhotos = [];
+    let currentPage = 1;
+    const photosPerPage = 12; // 3x4 grid on mobile, 4x3 on desktop
+    let viewMode = 'grid';
+
+    // Initialize the carousel
+    document.addEventListener('DOMContentLoaded', function() {
+      loadPhotos();
+      setupEventHandlers();
+    });
+
+    function setupEventHandlers() {
+      // Add keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (document.getElementById('fullscreenModal').classList.contains('show')) {
+          if (e.key === 'Escape') closeFullscreen();
+          if (e.key === 'ArrowLeft') navigateFullscreen(-1);
+          if (e.key === 'ArrowRight') navigateFullscreen(1);
+        }
+      });
+    }
+
+    async function loadPhotos() {
+      try {
+        showLoading(true);
+        
+        // Load players first
+        const playersResponse = await fetch(`${workerURL}players?event=${eventCode}`);
+        if (!playersResponse.ok) throw new Error('Failed to load players');
+        const players = await playersResponse.json();
+        
+        // Load photos for each player
+        allPhotos = [];
+        for (const player of players) {
+          try {
+            const photosResponse = await fetch(`${workerURL}photos?event=${eventCode}&player=${encodeURIComponent(player.name)}`);
+            if (photosResponse.ok) {
+              const playerPhotos = await photosResponse.json();
+              // Convert the photos object to array format
+              Object.entries(playerPhotos).forEach(([challenge, url]) => {
+                if (url) {
+                  allPhotos.push({
+                    url: url,
+                    player: player.name,
+                    challenge: challenge,
+                    timestamp: new Date().toISOString() // We don't have real timestamps
+                  });
+                }
+              });
+            }
+          } catch (error) {
+            console.warn(`Failed to load photos for ${player.name}:`, error);
+          }
+        }
+        
+        // Load players and cards for filters
+        await loadFilters();
+        
+        // Apply initial filters
+        applyFilters();
+        
+        // If no photos found, show helpful message
+        if (allPhotos.length === 0) {
+          showError('No photos have been uploaded yet. Start playing the game to see photos here!');
+        }
+        
+      } catch (error) {
+        console.error('Error loading photos:', error);
+        showError('Failed to load photos. Please try again.');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function loadFilters() {
+      try {
+        // Load players
+        const playersResponse = await fetch(`${workerURL}players?event=${eventCode}`);
+        const players = await playersResponse.json();
+        
+        const playerFilter = document.getElementById('playerFilter');
+        playerFilter.innerHTML = '<option value="">All Players</option>';
+        players.forEach(player => {
+          const option = document.createElement('option');
+          option.value = player.name;
+          option.textContent = player.name;
+          playerFilter.appendChild(option);
+        });
+
+        // Load unique cards from photos
+        const uniqueCards = [...new Set(allPhotos.map(photo => photo.challenge))].sort();
+        const cardFilter = document.getElementById('cardFilter');
+        cardFilter.innerHTML = '<option value="">All Cards</option>';
+        uniqueCards.forEach(card => {
+          const option = document.createElement('option');
+          option.value = card;
+          option.textContent = card.length > 40 ? card.substring(0, 40) + '...' : card;
+          option.title = card; // Show full text on hover
+          cardFilter.appendChild(option);
+        });
+
+      } catch (error) {
+        console.error('Error loading filters:', error);
+      }
+    }
+
+    function applyFilters() {
+      const playerFilter = document.getElementById('playerFilter').value;
+      const cardFilter = document.getElementById('cardFilter').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const sortBy = document.getElementById('sortFilter').value;
+
+      // Filter photos
+      filteredPhotos = allPhotos.filter(photo => {
+        const matchesPlayer = !playerFilter || photo.player === playerFilter;
+        const matchesCard = !cardFilter || photo.challenge === cardFilter;
+        const matchesSearch = !searchTerm || 
+          photo.player.toLowerCase().includes(searchTerm) ||
+          photo.challenge.toLowerCase().includes(searchTerm);
+        
+        return matchesPlayer && matchesCard && matchesSearch;
+      });
+
+      // Sort photos
+      filteredPhotos.sort((a, b) => {
+        switch (sortBy) {
+          case 'newest':
+            return new Date(b.timestamp) - new Date(a.timestamp);
+          case 'oldest':
+            return new Date(a.timestamp) - new Date(b.timestamp);
+          case 'player':
+            return a.player.localeCompare(b.player);
+          case 'card':
+            return a.challenge.localeCompare(b.challenge);
+          default:
+            return 0;
+        }
+      });
+
+      // Reset to first page
+      currentPage = 1;
+      renderPhotos();
+      updateProgress();
+    }
+
+    function renderPhotos() {
+      const grid = document.getElementById('photoGrid');
+      const emptyState = document.getElementById('emptyState');
+      const pagination = document.getElementById('pagination');
+
+      if (filteredPhotos.length === 0) {
+        grid.style.display = 'none';
+        emptyState.style.display = 'block';
+        pagination.style.display = 'none';
+        return;
+      }
+
+      grid.style.display = 'grid';
+      emptyState.style.display = 'none';
+      pagination.style.display = 'flex';
+
+      // Calculate pagination
+      const totalPages = Math.ceil(filteredPhotos.length / photosPerPage);
+      const startIndex = (currentPage - 1) * photosPerPage;
+      const endIndex = Math.min(startIndex + photosPerPage, filteredPhotos.length);
+      const currentPhotos = filteredPhotos.slice(startIndex, endIndex);
+
+      // Render photos
+      grid.innerHTML = '';
+      currentPhotos.forEach((photo, index) => {
+        const photoItem = document.createElement('div');
+        photoItem.className = 'photo-item';
+        photoItem.onclick = () => openFullscreen(startIndex + index);
+        
+        photoItem.innerHTML = `
+          <img src="${photo.url}" alt="${photo.challenge}" loading="lazy">
+          <div class="photo-overlay">
+            <div class="photo-player">${getPlayerIcon(photo.player)} ${photo.player}</div>
+            <div class="photo-challenge">${photo.challenge}</div>
+          </div>
+        `;
+        
+        grid.appendChild(photoItem);
+      });
+
+      // Update pagination
+      updatePagination(currentPage, totalPages);
+    }
+
+    function updatePagination(page, totalPages) {
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const paginationInfo = document.getElementById('paginationInfo');
+
+      prevBtn.disabled = page <= 1;
+      nextBtn.disabled = page >= totalPages;
+      paginationInfo.textContent = `Page ${page} of ${totalPages}`;
+    }
+
+    function updateProgress() {
+      const progressText = document.getElementById('progressText');
+      const progressFill = document.getElementById('progressFill');
+      
+      const totalPhotos = allPhotos.length;
+      const filteredCount = filteredPhotos.length;
+      
+      if (totalPhotos === 0) {
+        progressText.textContent = 'No photos uploaded yet';
+        progressFill.style.width = '0%';
+        return;
+      }
+
+      const percentage = (filteredCount / totalPhotos) * 100;
+      progressText.textContent = `Showing ${filteredCount} of ${totalPhotos} photos`;
+      progressFill.style.width = `${percentage}%`;
+    }
+
+    function previousPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPhotos();
+      }
+    }
+
+    function nextPage() {
+      const totalPages = Math.ceil(filteredPhotos.length / photosPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderPhotos();
+      }
+    }
+
+    function openFullscreen(photoIndex) {
+      const photo = filteredPhotos[photoIndex];
+      const modal = document.getElementById('fullscreenModal');
+      const image = document.getElementById('fullscreenImage');
+      const player = document.getElementById('fullscreenPlayer');
+      const challenge = document.getElementById('fullscreenChallenge');
+
+      image.src = photo.url;
+      player.textContent = `${getPlayerIcon(photo.player)} ${photo.player}`;
+      challenge.textContent = photo.challenge;
+      
+      modal.classList.add('show');
+      modal.dataset.currentIndex = photoIndex;
+    }
+
+    function closeFullscreen() {
+      document.getElementById('fullscreenModal').classList.remove('show');
+    }
+
+    function navigateFullscreen(direction) {
+      const modal = document.getElementById('fullscreenModal');
+      const currentIndex = parseInt(modal.dataset.currentIndex);
+      const newIndex = currentIndex + direction;
+      
+      if (newIndex >= 0 && newIndex < filteredPhotos.length) {
+        openFullscreen(newIndex);
+      }
+    }
+
+    function setViewMode(mode) {
+      viewMode = mode;
+      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`[onclick="setViewMode('${mode}')"]`).classList.add('active');
+      
+      // Could implement different view modes here
+      // For now, we'll keep the grid view
+    }
+
+    function showLoading(show) {
+      const loadingState = document.getElementById('loadingState');
+      const photoGrid = document.getElementById('photoGrid');
+      
+      if (show) {
+        loadingState.style.display = 'flex';
+        photoGrid.style.display = 'none';
+      } else {
+        loadingState.style.display = 'none';
+        photoGrid.style.display = 'grid';
+      }
+    }
+
+    function showError(message) {
+      const emptyState = document.getElementById('emptyState');
+      emptyState.innerHTML = `
+        <div class="empty-state-icon">⚠️</div>
+        <h3>Error</h3>
+        <p>${message}</p>
+      `;
+      emptyState.style.display = 'block';
+    }
+
+    // Helper function to get player icons (same as main app)
+    function getPlayerIcon(name) {
+      const bingoIcons = [
+        '🎯', '🎲', '🎪', '🎨', '🎭', '🎸', '🎺', '🎻', 
+        '🎮', '🎳', '🎰', '🎊', '🎉', '🎈', '🎁', '🎀',
+        '🏆', '🏅', '🥇', '🥈', '🥉', '⭐', '🌟', '✨',
+        '🔥', '💎', '👑', '🎖️', '🏵️', '🎗️', '🎫', '🎟️'
+      ];
+      
+      if (!name) return '❓';
+      
+      let hash = 0;
+      const cleanName = name.toLowerCase().trim();
+      
+      for (let i = 0; i < cleanName.length; i++) {
+        const char = cleanName.charCodeAt(i);
+        hash = ((hash << 5) - hash + char) & 0xffffffff;
+      }
+      
+      const nameLength = cleanName.length;
+      const firstChar = cleanName.charCodeAt(0) || 0;
+      const lastChar = cleanName.charCodeAt(nameLength - 1) || 0;
+      
+      const combinedHash = Math.abs(hash + nameLength * 7 + firstChar * 13 + lastChar * 17);
+      const iconIndex = combinedHash % bingoIcons.length;
+      
+      return bingoIcons[iconIndex];
+    }
+  </script>
+</body>
+</html>
