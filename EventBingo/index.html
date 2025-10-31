@@ -112,7 +112,7 @@
     }
 
     .player-name {
-      font-size: 0.65rem;
+      font-size: 0.55rem;
       color: var(--text-dark);
       font-weight: 400;
       text-align: center;
@@ -1456,6 +1456,19 @@
     const params = new URLSearchParams(window.location.search);
     let eventCode = params.get("event") || "default";
 
+    // Helper function to generate consistent player initials
+    function getPlayerInitials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        // First letter of first name + first letter of last name
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      } else {
+        // First 2 letters of single name
+        return name.slice(0, 2).toUpperCase();
+      }
+    }
+
     // Instagram-style functions
     function selectPlayer(playerName) {
       currentPlayer = playerName;
@@ -2078,28 +2091,6 @@
           players.unshift({ name: currentPlayer, count: 0 });
         }
 
-        // Helper to generate unique 1-2 letter labels for circles
-        const usedLabels = new Set();
-        function getCircleLabel(name) {
-          const parts = name.trim().split(/\s+/);
-          let label = parts.length >= 2 ? (parts[0][0] + parts[1][0]) : (name.slice(0, 2));
-          label = (label || '?').toUpperCase();
-          // Resolve collisions by using next character if available
-          let i = 2;
-          while (usedLabels.has(label) && i < name.length) {
-            label = (name[0] + name[i]).toUpperCase();
-            i++;
-          }
-          if (usedLabels.has(label)) {
-            // Fallback to appending a dot to differentiate
-            let n = 1;
-            while (usedLabels.has(label + n)) n++;
-            label = label + n;
-          }
-          usedLabels.add(label);
-          return label;
-        }
-
         // Render players
         players.forEach(player => {
           const playerItem = document.createElement("div");
@@ -2107,7 +2098,7 @@
           
           const circle = document.createElement("div");
           circle.className = "player-circle";
-          circle.textContent = getCircleLabel(player.name);
+          circle.textContent = getPlayerInitials(player.name);
           circle.title = player.name;
           circle.onclick = () => selectPlayer(player.name);
           if (player.name === currentPlayer) {
@@ -2295,7 +2286,7 @@
                   justify-content: center;
                   font-weight: bold;
                   font-size: 1.2rem;
-                ">${lastPlayer.charAt(0).toUpperCase()}</div>
+                ">${getPlayerInitials(lastPlayer)}</div>
                 <div style="flex:1; color: white;">
                   <div style="font-weight: 600; font-size: 1rem;">↩️ Continue as ${escapeQuotes(lastPlayer)}</div>
                   <div style="font-size: 0.85rem; opacity: 0.9;">Your previous session</div>
@@ -2332,7 +2323,7 @@
                     justify-content: center;
                     font-weight: bold;
                     font-size: 1.3rem;
-                  ">${player.name.charAt(0).toUpperCase()}</div>
+                  ">${getPlayerInitials(player.name)}</div>
                   <div>
                     <div style="font-weight: 600; font-size: 1.05rem; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">${player.name}</div>
                     <div style="${isDark ? 'color: #e5e7eb;' : 'color:#6b7280;'} font-size: 0.9rem;">${player.count} photos</div>
