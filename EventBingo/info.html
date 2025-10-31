@@ -568,7 +568,7 @@
   </div>
 
   <!-- Bottom Navigation -->
-  <div class="bottom-nav">
+  <div class="bottom-nav" id="bottomNav" style="display: none;">
     <a href="index.html" class="nav-icon">🏠</a>
     <a href="info.html" class="nav-icon active">ℹ️</a>
     <div class="nav-icon" onclick="openCarousel()">📸</div>
@@ -625,6 +625,12 @@
 
       if (!input || !startBtn) return;
 
+      // Check if there's an event in URL parameters and show bottom nav
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('event')) {
+        document.getElementById('bottomNav').style.display = 'flex';
+      }
+
       // Prefill from last used event
       let lastEvent = '';
       try {
@@ -636,6 +642,8 @@
       if (continueBtn && lastEvent) {
         continueBtn.style.display = 'inline-block';
         continueBtn.onclick = () => {
+          // Show bottom navigation since we're continuing with a valid event
+          document.getElementById('bottomNav').style.display = 'flex';
           window.location.href = `index.html?event=${encodeURIComponent(lastEvent)}`;
         };
       }
@@ -654,6 +662,8 @@
           const res = await fetch(`${workerURL}event-info?event=${encodeURIComponent(code)}`);
           if (res.ok) {
             try { localStorage.setItem('eventbingo:lastEvent', code); } catch (_) {}
+            // Show bottom navigation since event is valid
+            document.getElementById('bottomNav').style.display = 'flex';
             window.location.href = `index.html?event=${encodeURIComponent(code)}`;
             return;
           }
