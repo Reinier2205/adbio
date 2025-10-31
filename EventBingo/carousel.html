@@ -163,6 +163,51 @@
       }
     }
 
+    /* List View */
+    .photo-grid.list-view {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .photo-grid.list-view .photo-item {
+      aspect-ratio: unset;
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      height: 80px;
+    }
+
+    .photo-grid.list-view .photo-item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+
+    .photo-grid.list-view .photo-overlay {
+      position: static;
+      background: transparent;
+      color: var(--text-dark);
+      padding: 0;
+      flex: 1;
+    }
+
+    .photo-grid.list-view .photo-player {
+      color: var(--primary);
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    .photo-grid.list-view .photo-challenge {
+      color: #666;
+      font-size: 0.8rem;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      line-height: 1.3;
+    }
+
     .photo-item {
       aspect-ratio: 1;
       background: white;
@@ -315,6 +360,46 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: relative;
+    }
+
+    /* Swipe indicators */
+    .swipe-indicator {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1.2rem;
+      z-index: 10;
+    }
+
+    .swipe-indicator:hover {
+      background: rgba(0,0,0,0.7);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .swipe-indicator.left {
+      left: -50px;
+    }
+
+    .swipe-indicator.right {
+      right: -50px;
+    }
+
+    @media (max-width: 768px) {
+      .swipe-indicator {
+        display: none; /* Hide on mobile, use swipe gestures */
+      }
     }
 
     .fullscreen-image {
@@ -345,18 +430,23 @@
 
     .fullscreen-close {
       position: absolute;
-      top: 20px;
+      bottom: 20px;
       right: 20px;
-      font-size: 2rem;
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.7);
       color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
       cursor: pointer;
-      background: rgba(0,0,0,0.5);
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .fullscreen-close:hover {
+      background: rgba(0,0,0,0.8);
+      transform: translateY(-2px);
     }
 
     /* Loading States */
@@ -489,14 +579,16 @@
 
   <!-- Full Screen Modal -->
   <div class="fullscreen-modal" id="fullscreenModal">
-    <div class="fullscreen-close" onclick="closeFullscreen()">×</div>
     <div class="fullscreen-content">
+      <button class="swipe-indicator left" id="prevPhotoBtn" onclick="navigateFullscreen(-1)">‹</button>
+      <button class="swipe-indicator right" id="nextPhotoBtn" onclick="navigateFullscreen(1)">›</button>
       <img class="fullscreen-image" id="fullscreenImage" src="" alt="">
       <div class="fullscreen-info">
         <div class="fullscreen-player" id="fullscreenPlayer"></div>
         <div class="fullscreen-challenge" id="fullscreenChallenge"></div>
       </div>
     </div>
+    <button class="fullscreen-close" onclick="closeFullscreen()">Close</button>
   </div>
 
   <script>
@@ -525,6 +617,40 @@
           if (e.key === 'ArrowRight') navigateFullscreen(1);
         }
       });
+
+      // Add touch/swipe navigation for fullscreen
+      let touchStartX = 0;
+      let touchEndX = 0;
+      
+      const fullscreenModal = document.getElementById('fullscreenModal');
+      
+      fullscreenModal.addEventListener('touchstart', function(e) {
+        if (fullscreenModal.classList.contains('show')) {
+          touchStartX = e.changedTouches[0].screenX;
+        }
+      });
+      
+      fullscreenModal.addEventListener('touchend', function(e) {
+        if (fullscreenModal.classList.contains('show')) {
+          touchEndX = e.changedTouches[0].screenX;
+          handleSwipe();
+        }
+      });
+      
+      function handleSwipe() {
+        const swipeThreshold = 50; // Minimum distance for a swipe
+        const swipeDistance = touchEndX - touchStartX;
+        
+        if (Math.abs(swipeDistance) > swipeThreshold) {
+          if (swipeDistance > 0) {
+            // Swipe right - go to previous photo
+            navigateFullscreen(-1);
+          } else {
+            // Swipe left - go to next photo
+            navigateFullscreen(1);
+          }
+        }
+      }
     }
 
     async function loadPhotos() {
@@ -756,10 +882,16 @@
       const image = document.getElementById('fullscreenImage');
       const player = document.getElementById('fullscreenPlayer');
       const challenge = document.getElementById('fullscreenChallenge');
+      const prevBtn = document.getElementById('prevPhotoBtn');
+      const nextBtn = document.getElementById('nextPhotoBtn');
 
       image.src = photo.url;
       player.textContent = `${getPlayerIcon(photo.player)} ${photo.player}`;
       challenge.textContent = photo.challenge;
+      
+      // Show/hide navigation buttons based on position
+      prevBtn.style.display = photoIndex > 0 ? 'flex' : 'none';
+      nextBtn.style.display = photoIndex < filteredPhotos.length - 1 ? 'flex' : 'none';
       
       modal.classList.add('show');
       modal.dataset.currentIndex = photoIndex;
@@ -784,8 +916,12 @@
       document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelector(`[onclick="setViewMode('${mode}')"]`).classList.add('active');
       
-      // Could implement different view modes here
-      // For now, we'll keep the grid view
+      const photoGrid = document.getElementById('photoGrid');
+      if (mode === 'list') {
+        photoGrid.classList.add('list-view');
+      } else {
+        photoGrid.classList.remove('list-view');
+      }
     }
 
     function showLoading(show) {
