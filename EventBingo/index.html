@@ -56,6 +56,8 @@
       gap: 12px;
       overflow-x: auto;
       padding: 5px 0;
+      width: 100%;
+      flex: 1;
     }
 
     .player-scroll::-webkit-scrollbar {
@@ -784,18 +786,14 @@
       box-shadow: 0 4px 12px rgba(228, 64, 95, 0.3);
     }
 
-    /* Compact Add Player button on very small screens */
+    /* Add Player button styling in event banner */
     #addPlayerTopBtn {
       transition: all 0.2s ease;
     }
-    @media (max-width: 420px) {
-      #addPlayerTopBtn {
-        padding: 8px;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-      }
-      #addPlayerTopBtn span { display: none; }
+    
+    #addPlayerTopBtn:hover {
+      background: rgba(255,255,255,0.2) !important;
+      transform: translateY(-1px);
     }
 
     /* Carousel Modal */
@@ -1317,16 +1315,10 @@
   </style>
 </head>
 <body>
-  <!-- Instagram-style Top Bar -->
+  <!-- Clean Top Bar - Players Only -->
   <div class="top-bar">
     <div class="player-scroll" id="playerScroll">
       <!-- Player circles will be dynamically added here -->
-    </div>
-    <div style="display: flex; gap: 10px; align-items:center;">
-      <button id="addPlayerTopBtn" title="Add new player" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; padding: 8px 10px; border-radius: 9999px; border: 2px solid var(--instagram-pink); color: var(--instagram-pink); background: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">+
-        <span style="font-size:0.85rem; font-weight:700;">Add Player</span>
-      </button>
-      <div class="share-icon" onclick="shareBingo()">📤</div>
     </div>
   </div>
 
@@ -1336,7 +1328,12 @@
       <div class="event-banner-title" id="eventBannerTitle">Event Name</div>
       <div class="event-banner-code" id="eventBannerCode">Code: EVENT123</div>
     </div>
-    <a href="info.html" class="event-banner-link">Change Event</a>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <button id="addPlayerTopBtn" title="Add new player" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); color: white; background: rgba(255,255,255,0.1); font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: all 0.2s ease;">
+        + Add Player
+      </button>
+      <a href="info.html" class="event-banner-link">Change Event</a>
+    </div>
   </div>
 
   <!-- Main Content Area -->
@@ -1362,6 +1359,7 @@
     <div class="nav-icon active" onclick="goHome()">🏠</div>
     <div class="nav-icon" onclick="openCarousel()">📸</div>
     <div class="nav-icon" onclick="openLeaderboard()">🥇</div>
+    <div class="nav-icon" onclick="shareBingo()">📤</div>
     <a href="info.html" class="nav-icon">ℹ️</a>
     <div class="nav-icon" onclick="toggleDarkMode()">🌓</div>
   </div>
@@ -1456,39 +1454,24 @@
     const params = new URLSearchParams(window.location.search);
     let eventCode = params.get("event") || "default";
 
-    // Helper function to generate consistent player initials
-    function getPlayerInitials(name) {
-      if (!name) return '?';
-      const parts = name.trim().split(/\s+/);
-      if (parts.length >= 2) {
-        // First letter of first name + first letter of last name
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-      } else {
-        // For single names, use a smarter approach to create unique initials
-        const cleanName = name.trim().toUpperCase();
-        if (cleanName.length === 1) return cleanName;
-        
-        // Try different combinations to make initials more unique
-        if (cleanName.length >= 3) {
-          // Use first letter + a distinctive letter from the name
-          const firstLetter = cleanName[0];
-          
-          // Look for a consonant or distinctive letter
-          for (let i = 1; i < cleanName.length; i++) {
-            const letter = cleanName[i];
-            // Skip vowels that are too common, prefer consonants or unique vowels
-            if (letter !== 'A' && letter !== 'E' && letter !== 'I' && letter !== 'O' && letter !== 'U') {
-              return firstLetter + letter;
-            }
-          }
-          
-          // If no good consonant found, use first + last letter
-          return firstLetter + cleanName[cleanName.length - 1];
-        }
-        
-        // Fallback to first 2 letters
-        return cleanName.slice(0, 2);
+    // Helper function to generate Bingo-related icons for players
+    function getPlayerIcon(name, index) {
+      const bingoIcons = [
+        '🎯', '🎲', '🎪', '🎨', '🎭', '🎸', '🎺', '🎻', 
+        '🎮', '🎳', '🎰', '🎊', '🎉', '🎈', '🎁', '🎀',
+        '🏆', '🏅', '🥇', '🥈', '🥉', '⭐', '🌟', '✨',
+        '🔥', '💎', '👑', '🎖️', '🏵️', '🎗️', '🎫', '🎟️'
+      ];
+      
+      // Use a combination of name hash and index to ensure consistency
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = ((hash << 5) - hash + name.charCodeAt(i)) & 0xffffffff;
       }
+      
+      // Combine hash with index to avoid duplicates
+      const iconIndex = (Math.abs(hash) + index) % bingoIcons.length;
+      return bingoIcons[iconIndex];
     }
 
     // Instagram-style functions
@@ -1639,7 +1622,7 @@
           entry.innerHTML = `
             <div class="rank">${getRankEmoji(index + 1)}</div>
             <div class="player-info">
-              <div class="player-avatar">${getPlayerInitials(player.name)}</div>
+              <div class="player-avatar">${getPlayerIcon(player.name, index)}</div>
               <div class="player-details">
                 <div class="player-name">${player.name}</div>
                 <div class="player-title">${title}</div>
@@ -2114,13 +2097,13 @@
         }
 
         // Render players
-        players.forEach(player => {
+        players.forEach((player, index) => {
           const playerItem = document.createElement("div");
           playerItem.className = "player-item";
           
           const circle = document.createElement("div");
           circle.className = "player-circle";
-          circle.textContent = getPlayerInitials(player.name);
+          circle.textContent = getPlayerIcon(player.name, index);
           circle.title = player.name;
           circle.onclick = () => selectPlayer(player.name);
           if (player.name === currentPlayer) {
@@ -2308,7 +2291,7 @@
                   justify-content: center;
                   font-weight: bold;
                   font-size: 1.2rem;
-                ">${getPlayerInitials(lastPlayer)}</div>
+                ">${getPlayerIcon(lastPlayer, 0)}</div>
                 <div style="flex:1; color: white;">
                   <div style="font-weight: 600; font-size: 1rem;">↩️ Continue as ${escapeQuotes(lastPlayer)}</div>
                   <div style="font-size: 0.85rem; opacity: 0.9;">Your previous session</div>
@@ -2319,7 +2302,7 @@
           
           if (players.length > 0) {
             html += '<div style="margin-bottom: 20px;">';
-            players.forEach(player => {
+            players.forEach((player, index) => {
               html += `
                 <div class="player-option" style="
                   padding: 15px;
@@ -2345,7 +2328,7 @@
                     justify-content: center;
                     font-weight: bold;
                     font-size: 1.3rem;
-                  ">${getPlayerInitials(player.name)}</div>
+                  ">${getPlayerIcon(player.name, index + 1)}</div>
                   <div>
                     <div style="font-weight: 600; font-size: 1.05rem; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">${player.name}</div>
                     <div style="${isDark ? 'color: #e5e7eb;' : 'color:#6b7280;'} font-size: 0.9rem;">${player.count} photos</div>
