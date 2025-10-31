@@ -393,43 +393,48 @@
       position: relative;
     }
 
-    /* Swipe indicators */
-    .swipe-indicator {
+    /* Navigation arrows */
+    .nav-arrow {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       color: white;
       border: none;
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
+      width: 50px;
+      height: 50px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       transition: all 0.2s ease;
-      font-size: 1.2rem;
+      font-size: 1.5rem;
       z-index: 10;
+      font-weight: bold;
     }
 
-    .swipe-indicator:hover {
-      background: rgba(0,0,0,0.7);
+    .nav-arrow:hover {
+      background: rgba(0,0,0,0.8);
       transform: translateY(-50%) scale(1.1);
     }
 
-    .swipe-indicator.left {
-      left: -50px;
+    .nav-arrow.left {
+      left: 20px;
     }
 
-    .swipe-indicator.right {
-      right: -50px;
+    .nav-arrow.right {
+      right: 20px;
     }
 
-    @media (max-width: 768px) {
-      .swipe-indicator {
-        display: none; /* Hide on mobile, use swipe gestures */
-      }
+    .nav-arrow:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .nav-arrow:disabled:hover {
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.6);
     }
 
     .fullscreen-image {
@@ -437,33 +442,11 @@
       max-height: 70vh;
       border-radius: 8px;
       margin-bottom: 20px;
-      transition: all 0.3s ease;
+      transition: opacity 0.2s ease;
     }
 
-    /* Slide animations */
-    .fullscreen-image.slide-left {
-      transform: translateX(-100%);
+    .fullscreen-image.fade-out {
       opacity: 0;
-    }
-
-    .fullscreen-image.slide-right {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-
-    .fullscreen-image.slide-in-left {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-
-    .fullscreen-image.slide-in-right {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-
-    .fullscreen-image.slide-center {
-      transform: translateX(0);
-      opacity: 1;
     }
 
     .fullscreen-info {
@@ -680,9 +663,9 @@
 
   <!-- Full Screen Modal -->
   <div class="fullscreen-modal" id="fullscreenModal">
+    <button class="nav-arrow left" id="prevPhotoBtn" onclick="navigateFullscreen(-1)">‹</button>
+    <button class="nav-arrow right" id="nextPhotoBtn" onclick="navigateFullscreen(1)">›</button>
     <div class="fullscreen-content">
-      <button class="swipe-indicator left" id="prevPhotoBtn" onclick="navigateFullscreen(-1)">‹</button>
-      <button class="swipe-indicator right" id="nextPhotoBtn" onclick="navigateFullscreen(1)">›</button>
       <img class="fullscreen-image" id="fullscreenImage" src="" alt="">
       <div class="fullscreen-info">
         <div class="fullscreen-player" id="fullscreenPlayer"></div>
@@ -750,39 +733,26 @@
         }
       });
 
-      // Add touch/swipe navigation for fullscreen
-      let touchStartX = 0;
-      let touchEndX = 0;
-      
+      // Simple touch navigation - just tap on left/right sides
       const fullscreenModal = document.getElementById('fullscreenModal');
       
-      fullscreenModal.addEventListener('touchstart', function(e) {
-        if (fullscreenModal.classList.contains('show')) {
-          touchStartX = e.changedTouches[0].screenX;
-        }
-      });
-      
-      fullscreenModal.addEventListener('touchend', function(e) {
-        if (fullscreenModal.classList.contains('show')) {
-          touchEndX = e.changedTouches[0].screenX;
-          handleSwipe();
-        }
-      });
-      
-      function handleSwipe() {
-        const swipeThreshold = 50; // Minimum distance for a swipe
-        const swipeDistance = touchEndX - touchStartX;
+      fullscreenModal.addEventListener('click', function(e) {
+        if (!fullscreenModal.classList.contains('show')) return;
         
-        if (Math.abs(swipeDistance) > swipeThreshold) {
-          if (swipeDistance > 0) {
-            // Swipe right - go to previous photo
-            navigateFullscreen(-1);
-          } else {
-            // Swipe left - go to next photo  
-            navigateFullscreen(1);
-          }
+        const rect = fullscreenModal.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const modalWidth = rect.width;
+        
+        // If clicked on left third, go to previous photo
+        if (clickX < modalWidth / 3) {
+          navigateFullscreen(-1);
         }
-      }
+        // If clicked on right third, go to next photo
+        else if (clickX > (modalWidth * 2) / 3) {
+          navigateFullscreen(1);
+        }
+        // Middle third does nothing (allows clicking on photo info without navigation)
+      });
     }
 
     async function loadPhotos() {
@@ -1018,15 +988,15 @@
       const nextBtn = document.getElementById('nextPhotoBtn');
 
       // Clear any existing animation classes
-      image.classList.remove('slide-left', 'slide-right', 'slide-in-left', 'slide-in-right', 'slide-center');
+      image.classList.remove('fade-out');
       
       image.src = photo.url;
       player.textContent = `${getPlayerIcon(photo.player)} ${photo.player}`;
       challenge.textContent = photo.challenge;
       
-      // Show/hide navigation buttons based on position
-      prevBtn.style.display = photoIndex > 0 ? 'flex' : 'none';
-      nextBtn.style.display = photoIndex < filteredPhotos.length - 1 ? 'flex' : 'none';
+      // Update navigation buttons
+      prevBtn.disabled = photoIndex <= 0;
+      nextBtn.disabled = photoIndex >= filteredPhotos.length - 1;
       
       modal.classList.add('show');
       modal.dataset.currentIndex = photoIndex;
@@ -1042,11 +1012,11 @@
       const newIndex = currentIndex + direction;
       
       if (newIndex >= 0 && newIndex < filteredPhotos.length) {
-        animatePhotoTransition(direction, newIndex);
+        updateFullscreenPhoto(newIndex);
       }
     }
 
-    function animatePhotoTransition(direction, newIndex) {
+    function updateFullscreenPhoto(newIndex) {
       const image = document.getElementById('fullscreenImage');
       const player = document.getElementById('fullscreenPlayer');
       const challenge = document.getElementById('fullscreenChallenge');
@@ -1054,13 +1024,10 @@
       const prevBtn = document.getElementById('prevPhotoBtn');
       const nextBtn = document.getElementById('nextPhotoBtn');
       
-      // Start slide out animation
-      // direction > 0 means going to next photo (swipe left), so current photo should slide right (out to the right)
-      // direction < 0 means going to previous photo (swipe right), so current photo should slide left (out to the left)
-      const slideOutClass = direction > 0 ? 'slide-right' : 'slide-left';
-      image.classList.add(slideOutClass);
+      // Fade out current image
+      image.classList.add('fade-out');
       
-      // After slide out completes, update content and slide in
+      // After fade out, update content and fade in
       setTimeout(() => {
         const photo = filteredPhotos[newIndex];
         
@@ -1070,30 +1037,15 @@
         challenge.textContent = photo.challenge;
         
         // Update navigation buttons
-        prevBtn.style.display = newIndex > 0 ? 'flex' : 'none';
-        nextBtn.style.display = newIndex < filteredPhotos.length - 1 ? 'flex' : 'none';
+        prevBtn.disabled = newIndex <= 0;
+        nextBtn.disabled = newIndex >= filteredPhotos.length - 1;
         
         // Update modal index
         modal.dataset.currentIndex = newIndex;
         
-        // Start slide in animation from opposite side
-        // If current photo slid right, new photo should slide in from left
-        // If current photo slid left, new photo should slide in from right
-        image.classList.remove(slideOutClass);
-        const slideInClass = direction > 0 ? 'slide-in-left' : 'slide-in-right';
-        image.classList.add(slideInClass);
-        
-        // Complete slide in animation
-        setTimeout(() => {
-          image.classList.remove(slideInClass);
-          image.classList.add('slide-center');
-          
-          // Clean up classes
-          setTimeout(() => {
-            image.classList.remove('slide-center');
-          }, 300);
-        }, 50);
-      }, 150);
+        // Fade in new image
+        image.classList.remove('fade-out');
+      }, 200);
     }
 
     function setViewMode(mode) {
