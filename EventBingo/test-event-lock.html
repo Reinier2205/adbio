@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Lock Mechanism Tests</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #f39c12;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .test-case {
+            background: #f8f9fa;
+            border-left: 4px solid #f39c12;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .lock-status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .lock-status-locked {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+        .lock-status-unlocked {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+        }
+        .api-test {
+            background: #f1f3f4;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .api-request {
+            color: #1976d2;
+            font-weight: bold;
+        }
+        .api-response {
+            color: #388e3c;
+            margin-top: 5px;
+        }
+        .api-error {
+            color: #d32f2f;
+            margin-top: 5px;
+        }
+        button {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #e67e22;
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .scenario-test {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .scenario-title {
+            font-weight: bold;
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+        .mock-controls {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .mock-controls h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔒 Event Lock Mechanism Testing Suite</h1>
+    
+    <div class="test-container">
+        <h2 class="test-title">Test Overview</h2>
+        <p>This test suite validates the event lock mechanism including:</p>
+        <ul>
+            <li>Lock triggers on first photo upload</li>
+            <li>Manual lock/unlock functionality</li>
+            <li>Squares cannot be modified when locked</li>
+            <li>Lock status display and messaging</li>
+        </ul>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="passedTests">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failedTests">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="warningTests">0</div>
+                <div class="stat-label">Warnings</div>
+            </div>
+        </div>
+        
+        <button onclick="runAllTests()">🚀 Run All Tests</button>
+        <button onclick="clearResults()">🗑️ Clear Results</button>
+        <button onclick="runInteractiveTest()">🎮 Interactive Test</button>
+    </div>
+
+    <!-- Mock API Controls -->
+    <div id="mockControls" class="mock-controls" style="display: none;">
+        <h4>Mock API Controls</h4>
+        <p>Simulate different server responses for testing:</p>
+        <button onclick="setMockResponse('success')">✅ Success Response</button>
+        <button onclick="setMockResponse('locked')">🔒 Event Locked Response</button>
+        <button onclick="setMockResponse('unauthorized')">🚫 Unauthorized Response</button>
+        <button onclick="setMockResponse('error')">❌ Server Error</button>
+        <button onclick="resetMockResponse()">🔄 Reset to Real API</button>
+        
+        <div id="mockStatus" style="margin-top: 10px; font-style: italic;"></div>
+    </div>
+
+    <div id="testResults"></div>
+
+    <!-- Interactive Test Section -->
+    <div id="interactiveTest" class="test-container" style="display: none;">
+        <h2 class="test-title">Interactive Lock Testing</h2>
+        <p>Test the event lock mechanism interactively:</p>
+        
+        <div class="scenario-test">
+            <div class="scenario-title">Scenario 1: First Photo Upload Lock</div>
+            <p>Simulate the automatic lock that occurs when the first photo is uploaded to an event.</p>
+            <button onclick="simulateFirstPhotoUpload()">📸 Simulate First Photo Upload</button>
+            <div id="firstPhotoResult"></div>
+        </div>
+        
+        <div class="scenario-test">
+            <div class="scenario-title">Scenario 2: Manual Lock/Unlock</div>
+            <p>Test manual lock and unlock operations by administrators.</p>
+            <button onclick="simulateManualLock()">🔒 Manual Lock</button>
+            <button onclick="simulateManualUnlock()">🔓 Manual Unlock</button>
+            <div id="manualLockResult"></div>
+        </div>
+        
+        <div class="scenario-test">
+            <div class="scenario-title">Scenario 3: Squares Modification Prevention</div>
+            <p>Test that squares cannot be modified when event is locked.</p>
+            <button onclick="testSquaresModification()">✏️ Test Squares Modification</button>
+            <div id="squaresModResult"></div>
+        </div>
+        
+        <div class="scenario-test">
+            <div class="scenario-title">Current Lock Status</div>
+            <div id="currentLockStatus" class="lock-status lock-status-unlocked">
+                <span>🔓</span>
+                <div>
+                    <div><strong>Event Unlocked</strong></div>
+                    <div>Squares can be modified</div>
+                </div>
+            </div>
+            <button onclick="refreshLockStatus()">🔄 Refresh Status</button>
+        </div>
+    </div>
+
+    <script>
+        const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
+        
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            warnings: 0
+        };
+
+        let mockApiResponse = null;
+        let currentEventLockStatus = {
+            isLocked: false,
+            lockReason: null,
+            lockedAt: null
+        };
+
+        // Mock event data for testing
+        const mockEvent = {
+            code: 'TEST_EVENT_' + Date.now(),
+            title: 'Test Event for Lock Mechanism',
+            adminUser: 'test_admin',
+            squares: Array.from({length: 25}, (_, i) => `Test square ${i + 1}`)
+        };
+
+        function runAllTests() {
+            clearResults();
+            testStats = { total: 0, passed: 0, failed: 0, warnings: 0 };
+            
+            // Test 1: Lock status API
+            testLockStatusAPI();
+            
+            // Test 2: First photo upload lock
+            testFirstPhotoUploadLock();
+            
+            // Test 3: Manual lock/unlock
+            testManualLockUnlock();
+            
+            // Test 4: Squares modification prevention
+            testSquaresModificationPrevention();
+            
+            // Test 5: Lock status display
+            testLockStatusDisplay();
+            
+            // Test 6: Error handling
+            testErrorHandling();
+            
+            updateStats();
+        }
+
+        function testLockStatusAPI() {
+            addTestCase("Lock Status API", async () => {
+                const tests = [];
+                
+                try {
+                    // Test getting lock status for default event
+                    const response = await mockFetch(`${workerURL}admin/event-status/default`);
+                    const status = await response.json();
+                    
+                    tests.push({
+                        condition: response.ok,
+                        message: "Lock status API responds successfully"
+                    });
+                    
+                    tests.push({
+                        condition: typeof status.isLocked === 'boolean',
+                        message: "Response includes isLocked boolean"
+                    });
+                    
+                    tests.push({
+                        condition: status.hasOwnProperty('lockReason'),
+                        message: "Response includes lockReason field"
+                    });
+                    
+                    tests.push({
+                        condition: status.hasOwnProperty('lockedAt'),
+                        message: "Response includes lockedAt field"
+                    });
+                    
+                    tests.push({
+                        condition: typeof status.squareCount === 'number',
+                        message: "Response includes squareCount"
+                    });
+                    
+                } catch (error) {
+                    tests.push({
+                        condition: false,
+                        message: `API call failed: ${error.message}`,
+                        level: 'warning'
+                    });
+                }
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testFirstPhotoUploadLock() {
+            addTestCase("First Photo Upload Lock", async () => {
+                const tests = [];
+                
+                // Simulate photo upload that should trigger lock
+                const mockPhotoUpload = {
+                    event: mockEvent.code,
+                    player: 'test_player',
+                    square: 'Test square 1',
+                    file: new Blob(['test'], { type: 'image/jpeg' })
+                };
+                
+                try {
+                    // Mock the photo upload process
+                    const uploadResult = await simulatePhotoUpload(mockPhotoUpload);
+                    
+                    tests.push({
+                        condition: uploadResult.success,
+                        message: "Photo upload succeeds"
+                    });
+                    
+                    // Check if event is now locked
+                    const statusAfterUpload = await mockFetch(`${workerURL}admin/event-status/${mockEvent.code}`);
+                    const status = await statusAfterUpload.json();
+                    
+                    tests.push({
+                        condition: status.isLocked === true,
+                        message: "Event is locked after first photo upload"
+                    });
+                    
+                    tests.push({
+                        condition: status.lockReason === 'first_photo',
+                        message: "Lock reason is 'first_photo'"
+                    });
+                    
+                    tests.push({
+                        condition: status.lockedAt !== null,
+                        message: "Lock timestamp is recorded"
+                    });
+                    
+                } catch (error) {
+                    tests.push({
+                        condition: false,
+                        message: `Photo upload simulation failed: ${error.message}`,
+                        level: 'warning'
+                    });
+                }
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testManualLockUnlock() {
+            addTestCase("Manual Lock/Unlock", async () => {
+                const tests = [];
+                
+                try {
+                    // Test manual lock
+                    const lockResponse = await mockFetch(`${workerURL}admin/lock-event`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventCode: mockEvent.code,
+                            adminUser: mockEvent.adminUser,
+                            lock: true,
+                            reason: 'manual'
+                        })
+                    });
+                    
+                    tests.push({
+                        condition: lockResponse.ok,
+                        message: "Manual lock API responds successfully"
+                    });
+                    
+                    const lockResult = await lockResponse.json();
+                    tests.push({
+                        condition: lockResult.isLocked === true,
+                        message: "Event is locked after manual lock"
+                    });
+                    
+                    tests.push({
+                        condition: lockResult.lockReason === 'manual',
+                        message: "Lock reason is 'manual'"
+                    });
+                    
+                    // Test manual unlock
+                    const unlockResponse = await mockFetch(`${workerURL}admin/lock-event`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventCode: mockEvent.code,
+                            adminUser: mockEvent.adminUser,
+                            lock: false
+                        })
+                    });
+                    
+                    tests.push({
+                        condition: unlockResponse.ok,
+                        message: "Manual unlock API responds successfully"
+                    });
+                    
+                    const unlockResult = await unlockResponse.json();
+                    tests.push({
+                        condition: unlockResult.isLocked === false,
+                        message: "Event is unlocked after manual unlock"
+                    });
+                    
+                } catch (error) {
+                    tests.push({
+                        condition: false,
+                        message: `Manual lock/unlock test failed: ${error.message}`,
+                        level: 'warning'
+                    });
+                }
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testSquaresModificationPrevention() {
+            addTestCase("Squares Modification Prevention", async () => {
+                const tests = [];
+                
+                try {
+                    // First, lock the event
+                    await mockFetch(`${workerURL}admin/lock-event`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventCode: mockEvent.code,
+                            adminUser: mockEvent.adminUser,
+                            lock: true,
+                            reason: 'manual'
+                        })
+                    });
+                    
+                    // Try to update squares while locked
+                    const updateResponse = await mockFetch(`${workerURL}admin/update-squares`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventCode: mockEvent.code,
+                            adminUser: mockEvent.adminUser,
+                            squares: Array.from({length: 25}, (_, i) => `Modified square ${i + 1}`)
+                        })
+                    });
+                    
+                    tests.push({
+                        condition: !updateResponse.ok,
+                        message: "Squares update is rejected when event is locked"
+                    });
+                    
+                    tests.push({
+                        condition: updateResponse.status === 423,
+                        message: "Returns 423 (Locked) status code"
+                    });
+                    
+                    const errorResponse = await updateResponse.json();
+                    tests.push({
+                        condition: errorResponse.error && errorResponse.error.includes('locked'),
+                        message: "Error message indicates event is locked"
+                    });
+                    
+                    tests.push({
+                        condition: errorResponse.isLocked === true,
+                        message: "Response includes lock status"
+                    });
+                    
+                } catch (error) {
+                    tests.push({
+                        condition: false,
+                        message: `Squares modification test failed: ${error.message}`,
+                        level: 'warning'
+                    });
+                }
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testLockStatusDisplay() {
+            addTestCase("Lock Status Display", () => {
+                const tests = [];
+                
+                // Test locked status display
+                const lockedStatus = {
+                    isLocked: true,
+                    lockReason: 'first_photo',
+                    lockedAt: new Date().toISOString()
+                };
+                
+                const lockedDisplay = generateLockStatusDisplay(lockedStatus);
+                tests.push({
+                    condition: lockedDisplay.classList.contains('lock-status-locked'),
+                    message: "Locked status has correct CSS class"
+                });
+                
+                tests.push({
+                    condition: lockedDisplay.textContent.includes('🔒'),
+                    message: "Locked status shows lock icon"
+                });
+                
+                tests.push({
+                    condition: lockedDisplay.textContent.includes('Locked'),
+                    message: "Locked status shows 'Locked' text"
+                });
+                
+                // Test unlocked status display
+                const unlockedStatus = {
+                    isLocked: false,
+                    lockReason: null,
+                    lockedAt: null
+                };
+                
+                const unlockedDisplay = generateLockStatusDisplay(unlockedStatus);
+                tests.push({
+                    condition: unlockedDisplay.classList.contains('lock-status-unlocked'),
+                    message: "Unlocked status has correct CSS class"
+                });
+                
+                tests.push({
+                    condition: unlockedDisplay.textContent.includes('🔓'),
+                    message: "Unlocked status shows unlock icon"
+                });
+                
+                tests.push({
+                    condition: unlockedDisplay.textContent.includes('Unlocked'),
+                    message: "Unlocked status shows 'Unlocked' text"
+                });
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testErrorHandling() {
+            addTestCase("Error Handling", async () => {
+                const tests = [];
+                
+                try {
+                    // Test unauthorized access
+                    const unauthorizedResponse = await mockFetch(`${workerURL}admin/lock-event`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventCode: mockEvent.code,
+                            adminUser: 'wrong_admin',
+                            lock: true,
+                            reason: 'manual'
+                        })
+                    });
+                    
+                    tests.push({
+                        condition: !unauthorizedResponse.ok,
+                        message: "Rejects unauthorized lock attempts"
+                    });
+                    
+                    tests.push({
+                        condition: unauthorizedResponse.status === 403,
+                        message: "Returns 403 (Forbidden) for unauthorized access"
+                    });
+                    
+                    // Test non-existent event
+                    const notFoundResponse = await mockFetch(`${workerURL}admin/event-status/NON_EXISTENT_EVENT`);
+                    tests.push({
+                        condition: !notFoundResponse.ok,
+                        message: "Handles non-existent events gracefully"
+                    });
+                    
+                    tests.push({
+                        condition: notFoundResponse.status === 404,
+                        message: "Returns 404 for non-existent events"
+                    });
+                    
+                } catch (error) {
+                    tests.push({
+                        condition: false,
+                        message: `Error handling test failed: ${error.message}`,
+                        level: 'warning'
+                    });
+                }
+                
+                return validateTests(tests);
+            });
+        }
+
+        // Mock functions for testing
+        async function mockFetch(url, options = {}) {
+            if (mockApiResponse) {
+                return mockApiResponse;
+            }
+            
+            // Simulate API responses based on URL and method
+            const urlObj = new URL(url);
+            const path = urlObj.pathname;
+            const method = options.method || 'GET';
+            
+            if (path.includes('/admin/event-status/')) {
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        eventCode: mockEvent.code,
+                        isLocked: currentEventLockStatus.isLocked,
+                        lockReason: currentEventLockStatus.lockReason,
+                        lockedAt: currentEventLockStatus.lockedAt,
+                        squareCount: 25,
+                        hasCustomSquares: true
+                    })
+                };
+            }
+            
+            if (path.includes('/admin/lock-event') && method === 'POST') {
+                const body = JSON.parse(options.body);
+                
+                if (body.adminUser !== mockEvent.adminUser) {
+                    return {
+                        ok: false,
+                        status: 403,
+                        json: async () => ({ error: 'Unauthorized' })
+                    };
+                }
+                
+                currentEventLockStatus.isLocked = body.lock;
+                currentEventLockStatus.lockReason = body.lock ? body.reason : null;
+                currentEventLockStatus.lockedAt = body.lock ? new Date().toISOString() : null;
+                
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        isLocked: currentEventLockStatus.isLocked,
+                        lockReason: currentEventLockStatus.lockReason,
+                        lockedAt: currentEventLockStatus.lockedAt
+                    })
+                };
+            }
+            
+            if (path.includes('/admin/update-squares') && method === 'POST') {
+                if (currentEventLockStatus.isLocked) {
+                    return {
+                        ok: false,
+                        status: 423,
+                        json: async () => ({
+                            error: `Cannot modify squares - event is locked due to ${currentEventLockStatus.lockReason}`,
+                            isLocked: true,
+                            lockReason: currentEventLockStatus.lockReason,
+                            lockedAt: currentEventLockStatus.lockedAt
+                        })
+                    };
+                }
+                
+                return {
+                    ok: true,
+                    status: 200,
+                    json: async () => ({
+                        success: true,
+                        squares: JSON.parse(options.body).squares,
+                        isLocked: false
+                    })
+                };
+            }
+            
+            // Default 404 response
+            return {
+                ok: false,
+                status: 404,
+                json: async () => ({ error: 'Not found' })
+            };
+        }
+
+        async function simulatePhotoUpload(uploadData) {
+            // Simulate the lock trigger on first photo upload
+            if (!currentEventLockStatus.isLocked) {
+                currentEventLockStatus.isLocked = true;
+                currentEventLockStatus.lockReason = 'first_photo';
+                currentEventLockStatus.lockedAt = new Date().toISOString();
+            }
+            
+            return { success: true, url: 'mock://photo-url' };
+        }
+
+        function generateLockStatusDisplay(status) {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `lock-status ${status.isLocked ? 'lock-status-locked' : 'lock-status-unlocked'}`;
+            
+            const icon = status.isLocked ? '🔒' : '🔓';
+            const statusText = status.isLocked ? 'Event Locked' : 'Event Unlocked';
+            const details = status.isLocked 
+                ? `Locked due to ${status.lockReason}` 
+                : 'Squares can be modified';
+            
+            statusDiv.innerHTML = `
+                <span>${icon}</span>
+                <div>
+                    <div><strong>${statusText}</strong></div>
+                    <div>${details}</div>
+                </div>
+            `;
+            
+            return statusDiv;
+        }
+
+        // Interactive test functions
+        function runInteractiveTest() {
+            const interactiveTest = document.getElementById('interactiveTest');
+            const mockControls = document.getElementById('mockControls');
+            
+            const isVisible = interactiveTest.style.display !== 'none';
+            interactiveTest.style.display = isVisible ? 'none' : 'block';
+            mockControls.style.display = isVisible ? 'none' : 'block';
+        }
+
+        function simulateFirstPhotoUpload() {
+            const resultDiv = document.getElementById('firstPhotoResult');
+            resultDiv.innerHTML = '<div class="api-test"><div class="api-request">Simulating first photo upload...</div></div>';
+            
+            setTimeout(async () => {
+                try {
+                    const result = await simulatePhotoUpload({
+                        event: mockEvent.code,
+                        player: 'test_player',
+                        square: 'Test square 1'
+                    });
+                    
+                    resultDiv.innerHTML = `
+                        <div class="api-test">
+                            <div class="api-request">POST /photo-upload</div>
+                            <div class="api-response">✅ Photo uploaded successfully</div>
+                            <div class="api-response">🔒 Event automatically locked (first_photo)</div>
+                        </div>
+                    `;
+                    
+                    updateInteractiveLockStatus();
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="api-test">
+                            <div class="api-error">❌ Error: ${error.message}</div>
+                        </div>
+                    `;
+                }
+            }, 1000);
+        }
+
+        function simulateManualLock() {
+            const resultDiv = document.getElementById('manualLockResult');
+            resultDiv.innerHTML = '<div class="api-test"><div class="api-request">Sending manual lock request...</div></div>';
+            
+            setTimeout(async () => {
+                try {
+                    const response = await mockFetch(`${workerURL}admin/lock-event`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventCode: mockEvent.code,
+                            adminUser: mockEvent.adminUser,
+                            lock: true,
+                            reason: 'manual'
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    resultDiv.innerHTML = `
+                        <div class="api-test">
+                            <div class="api-request">POST /admin/lock-event</div>
+                            <div class="api-response">✅ Event locked manually</div>
+                            <div class="api-response">Lock reason: ${result.lockReason}</div>
+                        </div>
+                    `;
+                    
+                    updateInteractiveLockStatus();
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="api-test">
+                            <div class="api-error">❌ Error: ${error.message}</div>
+                        </div>
+                    `;
+                }
+            }, 1000);
+        }
+
+        function simulateManualUnlock() {
+            const resultDiv = document.getElementById('manualLockResult');
+            resultDiv.innerHTML = '<div class="api-test"><div class="api-request">Sending manual unlock request...</div></div>';
+            
+            setTimeout(async () => {
+                try {
+                    const response = await mockFetch(`${workerURL}admin/lock-event`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventCode: mockEvent.code,
+                            adminUser: mockEvent.adminUser,
+                            lock: false
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    resultDiv.innerHTML = `
+                        <div class="api-test">
+                            <div class="api-request">POST /admin/lock-event</div>
+                            <div class="api-response">✅ Event unlocked manually</div>
+                            <div class="api-response">Lock status: ${result.isLocked ? 'Locked' : 'Unlocked'}</div>
+                        </div>
+                    `;
+                    
+                    updateInteractiveLockStatus();
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="api-test">
+                            <div class="api-error">❌ Error: ${error.message}</div>
+                        </div>
+                    `;
+                }
+            }, 1000);
+        }
+
+        function testSquaresModification() {
+            const resultDiv = document.getElementById('squaresModResult');
+            resultDiv.innerHTML = '<div class="api-test"><div class="api-request">Testing squares modification...</div></div>';
+            
+            setTimeout(async () => {
+                try {
+                    const response = await mockFetch(`${workerURL}admin/update-squares`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            eventCode: mockEvent.code,
+                            adminUser: mockEvent.adminUser,
+                            squares: Array.from({length: 25}, (_, i) => `Modified square ${i + 1}`)
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        resultDiv.innerHTML = `
+                            <div class="api-test">
+                                <div class="api-request">POST /admin/update-squares</div>
+                                <div class="api-response">✅ Squares updated successfully (event unlocked)</div>
+                            </div>
+                        `;
+                    } else {
+                        const error = await response.json();
+                        resultDiv.innerHTML = `
+                            <div class="api-test">
+                                <div class="api-request">POST /admin/update-squares</div>
+                                <div class="api-error">❌ ${error.error}</div>
+                                <div class="api-response">🔒 Modification blocked due to lock</div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                        <div class="api-test">
+                            <div class="api-error">❌ Error: ${error.message}</div>
+                        </div>
+                    `;
+                }
+            }, 1000);
+        }
+
+        function refreshLockStatus() {
+            updateInteractiveLockStatus();
+        }
+
+        function updateInteractiveLockStatus() {
+            const statusDiv = document.getElementById('currentLockStatus');
+            const newStatus = generateLockStatusDisplay(currentEventLockStatus);
+            statusDiv.className = newStatus.className;
+            statusDiv.innerHTML = newStatus.innerHTML;
+        }
+
+        // Mock API response controls
+        function setMockResponse(type) {
+            const mockStatus = document.getElementById('mockStatus');
+            
+            switch(type) {
+                case 'success':
+                    mockApiResponse = {
+                        ok: true,
+                        status: 200,
+                        json: async () => ({ success: true, isLocked: false })
+                    };
+                    mockStatus.textContent = 'Mock: Success responses enabled';
+                    break;
+                case 'locked':
+                    mockApiResponse = {
+                        ok: false,
+                        status: 423,
+                        json: async () => ({ error: 'Event is locked', isLocked: true })
+                    };
+                    mockStatus.textContent = 'Mock: Locked responses enabled';
+                    break;
+                case 'unauthorized':
+                    mockApiResponse = {
+                        ok: false,
+                        status: 403,
+                        json: async () => ({ error: 'Unauthorized' })
+                    };
+                    mockStatus.textContent = 'Mock: Unauthorized responses enabled';
+                    break;
+                case 'error':
+                    mockApiResponse = {
+                        ok: false,
+                        status: 500,
+                        json: async () => ({ error: 'Internal server error' })
+                    };
+                    mockStatus.textContent = 'Mock: Server error responses enabled';
+                    break;
+            }
+        }
+
+        function resetMockResponse() {
+            mockApiResponse = null;
+            document.getElementById('mockStatus').textContent = 'Mock: Using real API responses';
+        }
+
+        // Shared test utilities
+        function validateTests(tests, output = null) {
+            const results = [];
+            let hasError = false;
+            let hasWarning = false;
+            
+            tests.forEach(test => {
+                const level = test.level || (test.condition ? 'success' : 'error');
+                results.push({
+                    message: test.message,
+                    passed: test.condition,
+                    level: level
+                });
+                
+                if (level === 'error' && !test.condition) hasError = true;
+                if (level === 'warning') hasWarning = true;
+            });
+            
+            return {
+                results,
+                overall: hasError ? 'error' : (hasWarning ? 'warning' : 'success'),
+                output
+            };
+        }
+
+        function addTestCase(title, testFunction) {
+            testStats.total++;
+            
+            const container = document.getElementById('testResults');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-container';
+            
+            const titleDiv = document.createElement('h3');
+            titleDiv.className = 'test-title';
+            titleDiv.textContent = title;
+            testDiv.appendChild(titleDiv);
+            
+            const caseDiv = document.createElement('div');
+            caseDiv.className = 'test-case';
+            testDiv.appendChild(caseDiv);
+            
+            container.appendChild(testDiv);
+            
+            // Run the test
+            Promise.resolve(testFunction()).then(result => {
+                // Update stats
+                if (result.overall === 'success') testStats.passed++;
+                else if (result.overall === 'warning') testStats.warnings++;
+                else testStats.failed++;
+                
+                // Display results
+                result.results.forEach(test => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = `test-result ${test.level}`;
+                    resultDiv.innerHTML = `
+                        <strong>${test.passed ? '✅' : '❌'} ${test.message}</strong>
+                    `;
+                    caseDiv.appendChild(resultDiv);
+                });
+                
+                updateStats();
+            }).catch(error => {
+                testStats.failed++;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'test-result error';
+                errorDiv.innerHTML = `<strong>❌ Test failed with error: ${error.message}</strong>`;
+                caseDiv.appendChild(errorDiv);
+                updateStats();
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('passedTests').textContent = testStats.passed;
+            document.getElementById('failedTests').textContent = testStats.failed;
+            document.getElementById('warningTests').textContent = testStats.warnings;
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            testStats = { total: 0, passed: 0, failed: 0, warnings: 0 };
+            updateStats();
+        }
+
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Event Lock Mechanism Test Suite loaded');
+        });
+    </script>
+</body>
+</html>

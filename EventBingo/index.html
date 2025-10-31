@@ -1580,7 +1580,11 @@
 
     function checkForCompletion() {
       const completedCards = document.querySelectorAll('.card.completed').length;
-      if (completedCards === squares.length) {
+      
+      // Ensure squares array is valid for completion check
+      const totalSquares = (squares && squares.length > 0) ? squares.length : 25;
+      
+      if (completedCards === totalSquares) {
         showConfetti();
         alert('🎉 Congratulations! You completed all squares! 🎉');
       }
@@ -2035,6 +2039,19 @@
     }
 
     function createGrid() {
+      // Ensure we have valid squares before creating grid
+      if (!squares || squares.length === 0) {
+        console.warn('No squares available for grid creation, using default squares');
+        squares = defaultSquaresList;
+      }
+      
+      // Validate squares one more time before grid creation
+      const validation = validateSquares(squares);
+      if (!validation.valid) {
+        console.warn('Invalid squares detected during grid creation:', validation.reason, 'Using default squares');
+        squares = defaultSquaresList;
+      }
+      
       grid.innerHTML = "";
       squares.forEach((square, index) => {
         const div = document.createElement("div");
@@ -2268,9 +2285,13 @@
 
     async function updateProgress() {
       const filled = [...document.querySelectorAll("[id^='result'] img")].length;
+      
+      // Ensure squares array is valid for progress calculation
+      const totalSquares = (squares && squares.length > 0) ? squares.length : 25;
+      
       // Note: progressDisplay element not in HTML - function kept for compatibility
       if (typeof progressDisplay !== 'undefined') {
-        progressDisplay.textContent = `${currentPlayer} has completed ${filled} of ${squares.length} squares.`;
+        progressDisplay.textContent = `${currentPlayer} has completed ${filled} of ${totalSquares} squares.`;
       }
     }
 
@@ -2590,23 +2611,8 @@
       }
     });
 
-    // Initialize the app
-    document.addEventListener('DOMContentLoaded', function() {
-      // If no event parameter, guide users to info page first
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasEvent = urlParams.has('event');
-      if (!hasEvent) {
-        // Preserve any potential referral info if present
-        window.location.replace('info.html');
-        return;
-      }
-
-      // Get event code from URL parameters
-      eventCode = urlParams.get('event') || 'default';
-      
-      // Load event information
-      loadEventInfo();
-
+    // Legacy initialization - kept for compatibility but integrated into main init
+    function legacyInitialization() {
       // Wire up always-visible Add Player button on the right
       const addPlayerTopBtn = document.getElementById('addPlayerTopBtn');
       if (addPlayerTopBtn) {
@@ -2635,30 +2641,75 @@
           }
         }
       }, 300);
-    });
+    }
 
     async function loadEventInfo() {
       try {
         const res = await fetch(`${workerURL}event-info?event=${eventCode}`);
         if (res.ok) {
           currentEvent = await res.json();
-          squares = currentEvent.squares || [];
+          
+          // Ensure backward compatibility - handle both old and new event formats
+          if (currentEvent) {
+            // Load custom squares from event data with proper validation
+            if (currentEvent.squares && Array.isArray(currentEvent.squares)) {
+              if (currentEvent.squares.length === 25) {
+                // Validate that all squares are non-empty strings
+                const validSquares = currentEvent.squares.filter(square => 
+                  typeof square === 'string' && square.trim().length > 0
+                );
+                
+                if (validSquares.length === 25) {
+                  squares = currentEvent.squares.map(square => square.trim());
+                  console.log('Loaded custom squares for event:', eventCode);
+                } else {
+                  console.warn(`Event has ${validSquares.length}/25 valid squares, falling back to default squares`);
+                  squares = defaultSquaresList;
+                }
+              } else {
+                console.warn(`Event has ${currentEvent.squares.length} squares (expected 25), falling back to default squares`);
+                squares = defaultSquaresList;
+              }
+            } else {
+              // No custom squares or invalid format, use default (backward compatibility)
+              console.log('No custom squares found for event, using default squares (backward compatibility)');
+              squares = defaultSquaresList;
+            }
+            
+            // Ensure event has required fields for backward compatibility
+            if (!currentEvent.title) {
+              currentEvent.title = "EventBingo";
+            }
+            if (!currentEvent.description) {
+              currentEvent.description = "A fun photo challenge game!";
+            }
+            if (!currentEvent.code) {
+              currentEvent.code = eventCode || "default";
+            }
+          } else {
+            throw new Error('Invalid event data received');
+          }
           
           createGrid();
           updateEventDisplay();
+        } else {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
       } catch (err) {
+        console.error('Failed to load event info:', err);
         
+        // Fallback for backward compatibility - create default event
         currentEvent = {
           title: "EventBingo",
           description: "A fun photo challenge game!",
-          code: "default"
+          code: eventCode || "default"
         };
-        squares = defaultSquaresList; // fallback
+        squares = defaultSquaresList; // Always fallback to default squares
+        
+        console.log('Using fallback event configuration with default squares');
         
         createGrid();
         updateEventDisplay();
-
       }
     }
 
@@ -2681,17 +2732,83 @@
 
     // Initialize app with page loading
     document.addEventListener('DOMContentLoaded', async function() {
+      // If no event parameter, guide users to info page first
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasEvent = urlParams.has('event');
+      if (!hasEvent) {
+        // Preserve any potential referral info if present
+        window.location.replace('info.html');
+        return;
+      }
+
+      // Get event code from URL parameters
+      eventCode = urlParams.get('event') || 'default';
+      
       showPageLoading("Loading EventBingo...");
       
       try {
         // Initialize the app
         await initializeApp();
+        
+        // Setup legacy functionality
+        legacyInitialization();
       } catch (error) {
         console.error('Failed to initialize app:', error);
+        
+        // Fallback initialization if main init fails
+        console.log('Attempting fallback initialization...');
+        try {
+          await loadEventInfo();
+          legacyInitialization();
+        } catch (fallbackError) {
+          console.error('Fallback initialization also failed:', fallbackError);
+        }
       } finally {
         hidePageLoading();
       }
     });
+
+    async function loadEventData() {
+      // Load event information and squares
+      await loadEventInfo();
+    }
+
+    // Helper function to validate squares data
+    function validateSquares(squaresData) {
+      if (!Array.isArray(squaresData)) {
+        return { valid: false, reason: 'Not an array' };
+      }
+      
+      if (squaresData.length !== 25) {
+        return { valid: false, reason: `Expected 25 squares, got ${squaresData.length}` };
+      }
+      
+      const validSquares = squaresData.filter(square => 
+        typeof square === 'string' && square.trim().length > 0
+      );
+      
+      if (validSquares.length !== 25) {
+        return { valid: false, reason: `${validSquares.length}/25 squares are valid non-empty strings` };
+      }
+      
+      return { valid: true, reason: 'All squares are valid' };
+    }
+
+    async function loadSquares() {
+      // Squares are loaded as part of loadEventInfo()
+      // This function exists for compatibility with the initialization flow
+      if (!squares || squares.length === 0) {
+        console.log('No squares loaded, using default squares');
+        squares = defaultSquaresList;
+      }
+      
+      // Final validation to ensure we always have valid squares
+      const validation = validateSquares(squares);
+      if (!validation.valid) {
+        console.warn('Squares validation failed:', validation.reason, 'Using default squares');
+        squares = defaultSquaresList;
+      }
+    }
 
     async function initializeApp() {
       // Check for player in URL params
@@ -2705,15 +2822,15 @@
         } catch(_) {}
       }
       
-      // Load event data
+      // Load event data and squares
       if (eventCode && eventCode !== 'default') {
         showPageLoading("Loading event data...");
         await loadEventData();
+      } else {
+        // For default events, just load default squares
+        showPageLoading("Loading challenges...");
+        await loadSquares();
       }
-      
-      // Load squares
-      showPageLoading("Loading challenges...");
-      await loadSquares();
       
       // Create grid
       showPageLoading("Setting up game board...");

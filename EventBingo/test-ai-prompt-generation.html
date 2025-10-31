@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Generation Tests</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .test-case {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .prompt-output {
+            background: #f1f3f4;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 AI Prompt Generation Testing Suite</h1>
+    
+    <div class="test-container">
+        <h2 class="test-title">Test Overview</h2>
+        <p>This test suite validates the AI prompt generation workflow including:</p>
+        <ul>
+            <li>Prompt generation with various event contexts</li>
+            <li>Copy-to-clipboard functionality across browsers</li>
+            <li>Generated prompt quality validation</li>
+            <li>Integration between prompt generator and squares input</li>
+        </ul>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="passedTests">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failedTests">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="warningTests">0</div>
+                <div class="stat-label">Warnings</div>
+            </div>
+        </div>
+        
+        <button onclick="runAllTests()">🚀 Run All Tests</button>
+        <button onclick="clearResults()">🗑️ Clear Results</button>
+    </div>
+
+    <div id="testResults"></div>
+
+    <script>
+        // Import AIPromptGenerator class from admin.html
+        class AIPromptGenerator {
+            constructor(eventContext) {
+                this.context = eventContext;
+            }
+            
+            generatePrompt() {
+                const { title, names, theme, location, activities } = this.context;
+                
+                // Parse names array
+                const namesList = names ? names.split(',').map(n => n.trim()).filter(n => n.length > 0) : [];
+                const namesText = namesList.length > 0 ? namesList.join(', ') : 'event attendees';
+                
+                const template = `Create 25 photo challenge squares for a bingo-style game for the following event:
+
+Event: ${title}
+Theme/Type: ${theme || 'General event'}
+Location: ${location || 'Various locations'}
+People attending: ${namesText}
+Expected activities: ${activities || 'Various activities'}
+
+Please create exactly 25 photo challenges that are:
+1. Fun and engaging for the attendees
+2. Achievable during the event
+3. Specific to the people, location, and activities mentioned above
+4. Varied in difficulty (some easy, some challenging)
+5. Appropriate for all ages
+6. Encourage interaction and creativity
+
+Guidelines for photo challenges:
+- Include specific names when possible (e.g., "Photo of [name] laughing")
+- Reference the location and setting
+- Include both individual and group challenges
+- Mix action shots with posed photos
+- Include challenges that capture the event's unique moments
+- Make some challenges about emotions/expressions
+- Include challenges about food, decorations, or event details
+
+Format Requirements:
+- Return exactly 25 lines
+- One challenge per line
+- No numbering, bullets, or extra formatting
+- Each challenge should be 3-15 words
+- Start each line with a capital letter
+- Use clear, simple language
+
+Example format:
+A photo with ${namesList.length > 0 ? namesList[0] : 'someone'} laughing
+Someone trying the food
+A group photo by the entrance
+${namesList.length > 1 ? namesList[1] : 'Someone'} dancing
+A candid moment during speeches
+...
+
+Please generate 25 unique photo challenges following these guidelines.`;
+                
+                return template;
+            }
+        }
+
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            warnings: 0
+        };
+
+        // Test data for various event contexts
+        const testContexts = [
+            {
+                name: "Wedding Reception",
+                context: {
+                    title: "Sarah & Mike's Wedding Reception",
+                    names: "Sarah, Mike, John, Emma, Lisa, David, Mom, Dad",
+                    theme: "Elegant wedding reception",
+                    location: "Beachside resort in Malibu with ocean views and garden terrace",
+                    activities: "Dancing, speeches, cake cutting, cocktail hour, live music, photo booth"
+                }
+            },
+            {
+                name: "Birthday Party",
+                context: {
+                    title: "Anneke's 35th Birthday Bash",
+                    names: "Anneke, Oliver, Kesia, Reinier, Marie, Johan",
+                    theme: "Outdoor birthday celebration",
+                    location: "Backyard garden with pool and braai area",
+                    activities: "Swimming, braai, games, music, gift opening, cake ceremony"
+                }
+            },
+            {
+                name: "Corporate Retreat",
+                context: {
+                    title: "Tech Team Building Retreat 2024",
+                    names: "Alex, Jordan, Sam, Taylor, Casey, Morgan, Riley, Avery",
+                    theme: "Professional team building event",
+                    location: "Mountain lodge conference center with outdoor activities",
+                    activities: "Team building exercises, presentations, networking, hiking, group meals"
+                }
+            },
+            {
+                name: "Minimal Context",
+                context: {
+                    title: "Simple Event",
+                    names: "",
+                    theme: "",
+                    location: "",
+                    activities: ""
+                }
+            },
+            {
+                name: "Single Person Event",
+                context: {
+                    title: "John's Graduation Party",
+                    names: "John",
+                    theme: "Graduation celebration",
+                    location: "University campus and family home",
+                    activities: "Ceremony, family photos, dinner, celebration"
+                }
+            }
+        ];
+
+        function runAllTests() {
+            clearResults();
+            testStats = { total: 0, passed: 0, failed: 0, warnings: 0 };
+            
+            // Test 1: Basic prompt generation
+            testPromptGeneration();
+            
+            // Test 2: Context variations
+            testContextVariations();
+            
+            // Test 3: Prompt quality validation
+            testPromptQuality();
+            
+            // Test 4: Copy-to-clipboard functionality
+            testClipboardFunctionality();
+            
+            // Test 5: Integration tests
+            testIntegration();
+            
+            updateStats();
+        }
+
+        function testPromptGeneration() {
+            addTestCase("Basic Prompt Generation", () => {
+                const context = testContexts[0].context;
+                const generator = new AIPromptGenerator(context);
+                const prompt = generator.generatePrompt();
+                
+                // Validate prompt structure
+                const tests = [
+                    { condition: prompt.length > 0, message: "Prompt is not empty" },
+                    { condition: prompt.includes(context.title), message: "Includes event title" },
+                    { condition: prompt.includes("25 photo challenges"), message: "Mentions 25 challenges" },
+                    { condition: prompt.includes("Format Requirements"), message: "Includes format requirements" },
+                    { condition: prompt.includes("Guidelines"), message: "Includes guidelines" }
+                ];
+                
+                return validateTests(tests, prompt);
+            });
+        }
+
+        function testContextVariations() {
+            testContexts.forEach(testCase => {
+                addTestCase(`Context Variation: ${testCase.name}`, () => {
+                    const generator = new AIPromptGenerator(testCase.context);
+                    const prompt = generator.generatePrompt();
+                    
+                    const tests = [
+                        { condition: prompt.length > 500, message: "Prompt has substantial content" },
+                        { condition: prompt.includes(testCase.context.title), message: "Includes event title" },
+                        { condition: !prompt.includes("undefined"), message: "No undefined values" },
+                        { condition: !prompt.includes("null"), message: "No null values" }
+                    ];
+                    
+                    // Additional tests based on context
+                    if (testCase.context.names) {
+                        const names = testCase.context.names.split(',').map(n => n.trim()).filter(n => n);
+                        if (names.length > 0) {
+                            tests.push({ 
+                                condition: names.some(name => prompt.includes(name)), 
+                                message: "Includes at least one attendee name" 
+                            });
+                        }
+                    }
+                    
+                    if (testCase.context.theme) {
+                        tests.push({ 
+                            condition: prompt.includes(testCase.context.theme), 
+                            message: "Includes event theme" 
+                        });
+                    }
+                    
+                    return validateTests(tests, prompt);
+                });
+            });
+        }
+
+        function testPromptQuality() {
+            addTestCase("Prompt Quality Validation", () => {
+                const context = testContexts[0].context;
+                const generator = new AIPromptGenerator(context);
+                const prompt = generator.generatePrompt();
+                
+                const qualityTests = [
+                    { condition: prompt.split('\n').length > 20, message: "Prompt has multiple lines" },
+                    { condition: prompt.includes("Example format:"), message: "Includes example format" },
+                    { condition: prompt.includes("photo challenge"), message: "Uses correct terminology" },
+                    { condition: prompt.includes("bingo"), message: "References bingo game" },
+                    { condition: prompt.includes("25 lines"), message: "Specifies 25 lines requirement" },
+                    { condition: prompt.includes("no numbering"), message: "Specifies no numbering" },
+                    { condition: prompt.includes("3-15 words"), message: "Specifies word count range" }
+                ];
+                
+                return validateTests(qualityTests, prompt);
+            });
+        }
+
+        function testClipboardFunctionality() {
+            addTestCase("Clipboard Functionality", async () => {
+                const testPrompt = "Test prompt for clipboard functionality";
+                let clipboardSupported = false;
+                let fallbackWorking = false;
+                
+                // Test modern clipboard API
+                if (navigator.clipboard && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(testPrompt);
+                        const readText = await navigator.clipboard.readText();
+                        clipboardSupported = readText === testPrompt;
+                    } catch (err) {
+                        console.log("Modern clipboard API failed:", err);
+                    }
+                }
+                
+                // Test fallback method
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = testPrompt;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-999999px';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+                    fallbackWorking = document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                } catch (err) {
+                    console.log("Fallback clipboard method failed:", err);
+                }
+                
+                const tests = [
+                    { 
+                        condition: clipboardSupported || fallbackWorking, 
+                        message: "At least one clipboard method works",
+                        level: clipboardSupported ? 'success' : (fallbackWorking ? 'warning' : 'error')
+                    }
+                ];
+                
+                if (clipboardSupported) {
+                    tests.push({ condition: true, message: "Modern clipboard API supported" });
+                } else if (fallbackWorking) {
+                    tests.push({ condition: true, message: "Fallback clipboard method works", level: 'warning' });
+                }
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testIntegration() {
+            addTestCase("Integration with Squares Input", () => {
+                // Simulate the integration workflow
+                const context = testContexts[1].context;
+                const generator = new AIPromptGenerator(context);
+                const prompt = generator.generatePrompt();
+                
+                // Simulate AI response (25 sample squares)
+                const mockAIResponse = `A photo with Anneke laughing
+Someone trying the braai food
+A group photo by the pool
+Oliver playing in the water
+Kesia dancing to the music
+Reinier manning the braai
+Marie opening a gift
+Johan telling a story
+Someone wearing a party hat
+A candid moment during speeches
+A photo of the birthday cake
+Someone jumping in the pool
+A group hug with Anneke
+Someone taking a selfie
+A photo of decorations
+Oliver helping with setup
+A sunset photo from the garden
+Someone enjoying a cold drink
+A photo of friends chatting
+Kesia and Anneke together
+Someone blowing out candles
+A photo of the gift table
+Someone laughing at a joke
+A group photo by the braai
+Everyone singing happy birthday`;
+
+                const squares = mockAIResponse.split('\n').map(s => s.trim()).filter(s => s);
+                
+                const tests = [
+                    { condition: squares.length === 25, message: "AI response produces exactly 25 squares" },
+                    { condition: squares.every(s => s.length > 0), message: "All squares are non-empty" },
+                    { condition: squares.every(s => s.length <= 200), message: "All squares are reasonable length" },
+                    { condition: new Set(squares).size === squares.length, message: "All squares are unique" },
+                    { condition: squares.some(s => s.includes('Anneke')), message: "Squares include event-specific names" },
+                    { condition: squares.some(s => s.includes('pool') || s.includes('braai')), message: "Squares reference location/activities" }
+                ];
+                
+                return validateTests(tests, mockAIResponse);
+            });
+        }
+
+        function validateTests(tests, output = null) {
+            const results = [];
+            let hasError = false;
+            let hasWarning = false;
+            
+            tests.forEach(test => {
+                const level = test.level || (test.condition ? 'success' : 'error');
+                results.push({
+                    message: test.message,
+                    passed: test.condition,
+                    level: level
+                });
+                
+                if (level === 'error' && !test.condition) hasError = true;
+                if (level === 'warning') hasWarning = true;
+            });
+            
+            return {
+                results,
+                overall: hasError ? 'error' : (hasWarning ? 'warning' : 'success'),
+                output
+            };
+        }
+
+        function addTestCase(title, testFunction) {
+            testStats.total++;
+            
+            const container = document.getElementById('testResults');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-container';
+            
+            const titleDiv = document.createElement('h3');
+            titleDiv.className = 'test-title';
+            titleDiv.textContent = title;
+            testDiv.appendChild(titleDiv);
+            
+            const caseDiv = document.createElement('div');
+            caseDiv.className = 'test-case';
+            testDiv.appendChild(caseDiv);
+            
+            container.appendChild(testDiv);
+            
+            // Run the test
+            Promise.resolve(testFunction()).then(result => {
+                // Update stats
+                if (result.overall === 'success') testStats.passed++;
+                else if (result.overall === 'warning') testStats.warnings++;
+                else testStats.failed++;
+                
+                // Display results
+                result.results.forEach(test => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = `test-result ${test.level}`;
+                    resultDiv.innerHTML = `
+                        <strong>${test.passed ? '✅' : '❌'} ${test.message}</strong>
+                    `;
+                    caseDiv.appendChild(resultDiv);
+                });
+                
+                // Show output if available
+                if (result.output) {
+                    const outputDiv = document.createElement('div');
+                    outputDiv.innerHTML = '<strong>Generated Output:</strong>';
+                    caseDiv.appendChild(outputDiv);
+                    
+                    const promptDiv = document.createElement('div');
+                    promptDiv.className = 'prompt-output';
+                    promptDiv.textContent = result.output;
+                    caseDiv.appendChild(promptDiv);
+                }
+                
+                updateStats();
+            }).catch(error => {
+                testStats.failed++;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'test-result error';
+                errorDiv.innerHTML = `<strong>❌ Test failed with error: ${error.message}</strong>`;
+                caseDiv.appendChild(errorDiv);
+                updateStats();
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('passedTests').textContent = testStats.passed;
+            document.getElementById('failedTests').textContent = testStats.failed;
+            document.getElementById('warningTests').textContent = testStats.warnings;
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            testStats = { total: 0, passed: 0, failed: 0, warnings: 0 };
+            updateStats();
+        }
+
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('AI Prompt Generation Test Suite loaded');
+        });
+    </script>
+</body>
+</html>

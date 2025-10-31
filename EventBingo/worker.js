@@ -34,6 +34,57 @@ function getEventCode(request) {
   return eventCode;
 }
 
+// Square validation function
+function validateSquares(squares) {
+  const errors = [];
+  
+  // Check if squares is an array
+  if (!Array.isArray(squares)) {
+    errors.push("Squares must be provided as an array");
+    return { isValid: false, errors };
+  }
+  
+  // Check count
+  if (squares.length !== 25) {
+    errors.push(`Must provide exactly 25 squares (found ${squares.length})`);
+  }
+  
+  // Check for empty squares and collect duplicates
+  const seenSquares = new Set();
+  const duplicates = new Set();
+  
+  squares.forEach((square, index) => {
+    // Check if square is empty or not a string
+    if (typeof square !== 'string' || square.trim().length === 0) {
+      errors.push(`Square ${index + 1} cannot be empty`);
+      return;
+    }
+    
+    // Check length
+    if (square.trim().length > 200) {
+      errors.push(`Square ${index + 1} is too long (maximum 200 characters)`);
+    }
+    
+    // Check for duplicates
+    const trimmedSquare = square.trim().toLowerCase();
+    if (seenSquares.has(trimmedSquare)) {
+      duplicates.add(square.trim());
+    } else {
+      seenSquares.add(trimmedSquare);
+    }
+  });
+  
+  // Add duplicate errors
+  if (duplicates.size > 0) {
+    errors.push(`Duplicate squares found: ${Array.from(duplicates).join(', ')}`);
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
 // Helper function to get squares for an event
 async function getSquaresForEvent(env, eventCode) {
   if (eventCode === 'default') {
@@ -100,6 +151,21 @@ export default {
 
       // Get squares list for the correct event
       squaresList = await getSquaresForEvent(env, eventCode);
+      
+      // Check if this is the first photo for the event and lock it
+      if (eventCode !== 'default') {
+        const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
+        if (eventData) {
+          const event = JSON.parse(eventData);
+          if (!event.isLocked) {
+            // Lock the event on first photo upload
+            event.isLocked = true;
+            event.lockedAt = new Date().toISOString();
+            event.lockReason = 'first_photo';
+            await env.EventBingoProgress.put(`event_${eventCode}`, JSON.stringify(event));
+          }
+        }
+      }
       
       const safePlayer = player.replace(/\s+/g, "_");
       const safeSquare = square.replace(/\s+/g, "_");
@@ -345,7 +411,16 @@ async function handleAdminRequest(request, env, corsHeaders) {
       code,
       adminUser,
       squares: defaultSquaresList,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isLocked: false,
+      lockedAt: null,
+      lockReason: null,
+      eventContext: {
+        names: [],
+        theme: '',
+        activities: '',
+        location: ''
+      }
     };
 
     await env.EventBingoProgress.put(`event_${code}`, JSON.stringify(eventData));
@@ -479,6 +554,157 @@ async function handleAdminRequest(request, env, corsHeaders) {
     await env.EventBingoProgress.delete(urlKey);
 
     return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Update squares for an event
+  if (request.method === "POST" && path === "/admin/update-squares") {
+    const data = await request.json();
+    const { eventCode, squares, adminUser } = data;
+
+    if (!eventCode || !squares || !adminUser) {
+      return new Response("Missing required fields", { status: 400, headers: corsHeaders });
+    }
+
+    // Get existing event
+    const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
+    if (!eventData) {
+      return new Response("Event not found", { status: 404, headers: corsHeaders });
+    }
+
+    const event = JSON.parse(eventData);
+    
+    // Check admin authorization
+    if (event.adminUser !== adminUser) {
+      return new Response("Unauthorized", { status: 403, headers: corsHeaders });
+    }
+
+    // Check if event is locked
+    if (event.isLocked) {
+      return new Response(JSON.stringify({
+        error: `Cannot modify squares - event is locked due to ${event.lockReason}`,
+        isLocked: true,
+        lockReason: event.lockReason,
+        lockedAt: event.lockedAt
+      }), { 
+        status: 423, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Validate squares
+    const validation = validateSquares(squares);
+    if (!validation.isValid) {
+      return new Response(JSON.stringify({
+        error: "Square validation failed",
+        errors: validation.errors
+      }), { 
+        status: 400, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Update event with new squares
+    event.squares = squares;
+    await env.EventBingoProgress.put(`event_${eventCode}`, JSON.stringify(event));
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      squares: event.squares,
+      isLocked: event.isLocked 
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Get event status
+  if (request.method === "GET" && path.startsWith("/admin/event-status/")) {
+    const eventCode = path.split('/')[3];
+    
+    if (!eventCode) {
+      return new Response("Event code required", { status: 400, headers: corsHeaders });
+    }
+
+    if (eventCode === 'default') {
+      return new Response(JSON.stringify({
+        eventCode: 'default',
+        isLocked: false,
+        lockReason: null,
+        lockedAt: null,
+        squareCount: defaultSquaresList.length,
+        hasCustomSquares: false
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
+    if (!eventData) {
+      return new Response("Event not found", { status: 404, headers: corsHeaders });
+    }
+
+    const event = JSON.parse(eventData);
+    return new Response(JSON.stringify({
+      eventCode: event.code,
+      isLocked: event.isLocked || false,
+      lockReason: event.lockReason || null,
+      lockedAt: event.lockedAt || null,
+      squareCount: event.squares ? event.squares.length : 0,
+      hasCustomSquares: event.squares && event.squares !== defaultSquaresList
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Lock/unlock event manually
+  if (request.method === "POST" && path === "/admin/lock-event") {
+    const data = await request.json();
+    const { eventCode, adminUser, lock, reason } = data;
+
+    if (!eventCode || !adminUser || typeof lock !== 'boolean') {
+      return new Response("Missing required fields", { status: 400, headers: corsHeaders });
+    }
+
+    if (eventCode === 'default') {
+      return new Response("Cannot lock default event", { status: 400, headers: corsHeaders });
+    }
+
+    // Get existing event
+    const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
+    if (!eventData) {
+      return new Response("Event not found", { status: 404, headers: corsHeaders });
+    }
+
+    const event = JSON.parse(eventData);
+    
+    // Check admin authorization
+    if (event.adminUser !== adminUser) {
+      return new Response("Unauthorized", { status: 403, headers: corsHeaders });
+    }
+
+    // Update lock status
+    event.isLocked = lock;
+    if (lock) {
+      event.lockedAt = new Date().toISOString();
+      event.lockReason = reason || 'manual';
+    } else {
+      event.lockedAt = null;
+      event.lockReason = null;
+    }
+
+    await env.EventBingoProgress.put(`event_${eventCode}`, JSON.stringify(event));
+
+    return new Response(JSON.stringify({ 
+      success: true,
+      isLocked: event.isLocked,
+      lockReason: event.lockReason,
+      lockedAt: event.lockedAt
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

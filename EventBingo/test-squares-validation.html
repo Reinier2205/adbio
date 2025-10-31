@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squares Configuration & Validation Tests</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .test-case {
+            background: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            max-width: 600px;
+            margin: 15px 0;
+        }
+        .preview-square {
+            background: #f1f3f4;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+            line-height: 1.2;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-square.center {
+            background: linear-gradient(45deg, #E4405F, #833AB4, #F77737, #FCAF45);
+            color: white;
+            font-weight: bold;
+        }
+        .preview-square.empty {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #d32f2f;
+        }
+        .preview-square.duplicate {
+            background: #fff3e0;
+            border-color: #ff9800;
+            color: #f57c00;
+        }
+        .validation-messages {
+            margin: 15px 0;
+        }
+        .validation-error {
+            background: #ffebee;
+            color: #d32f2f;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #f44336;
+        }
+        .validation-warning {
+            background: #fff3e0;
+            color: #f57c00;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ff9800;
+        }
+        .validation-success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #4caf50;
+        }
+        button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #c0392b;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Squares Configuration & Validation Testing Suite</h1>
+    
+    <div class="test-container">
+        <h2 class="test-title">Test Overview</h2>
+        <p>This test suite validates the squares configuration and validation system including:</p>
+        <ul>
+            <li>All validation scenarios (count, empty, duplicates)</li>
+            <li>Real-time preview updates</li>
+            <li>Save/load functionality for custom squares</li>
+            <li>Error handling and user feedback</li>
+        </ul>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="passedTests">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failedTests">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="warningTests">0</div>
+                <div class="stat-label">Warnings</div>
+            </div>
+        </div>
+        
+        <button onclick="runAllTests()">🚀 Run All Tests</button>
+        <button onclick="clearResults()">🗑️ Clear Results</button>
+        <button onclick="runInteractiveTest()">🎮 Interactive Test</button>
+    </div>
+
+    <div id="testResults"></div>
+
+    <!-- Interactive Test Section -->
+    <div id="interactiveTest" class="test-container" style="display: none;">
+        <h2 class="test-title">Interactive Squares Testing</h2>
+        <p>Test the squares validation system interactively:</p>
+        
+        <textarea id="testSquaresInput" placeholder="Enter squares here, one per line..."></textarea>
+        
+        <div style="margin: 15px 0;">
+            <button onclick="validateInteractiveSquares()">Validate Squares</button>
+            <button onclick="loadTestData('valid')">Load Valid 25 Squares</button>
+            <button onclick="loadTestData('invalid')">Load Invalid Data</button>
+            <button onclick="loadTestData('duplicates')">Load Duplicates</button>
+        </div>
+        
+        <div id="interactiveValidation" class="validation-messages"></div>
+        <div id="interactivePreview"></div>
+    </div>
+
+    <script>
+        // Import SquareConfiguration class from admin.html
+        class SquareConfiguration {
+            constructor(squares) {
+                this.squares = squares || [];
+                this.errors = [];
+                this.warnings = [];
+                this.isValid = this.validate();
+            }
+            
+            validate() {
+                this.errors = [];
+                this.warnings = [];
+                
+                // Check count with specific guidance
+                if (this.squares.length < 25) {
+                    const missing = 25 - this.squares.length;
+                    this.errors.push({
+                        message: `Need ${missing} more squares (found ${this.squares.length}/25)`,
+                        guidance: missing === 1 ? 'Add 1 more line to complete your bingo grid' : `Add ${missing} more lines - each line should be a photo challenge`,
+                        type: 'count_low'
+                    });
+                } else if (this.squares.length > 25) {
+                    const extra = this.squares.length - 25;
+                    this.errors.push({
+                        message: `Too many squares (found ${this.squares.length}/25)`,
+                        guidance: extra === 1 ? 'Remove 1 line to have exactly 25 squares' : `Remove ${extra} lines - you need exactly 25 photo challenges`,
+                        type: 'count_high'
+                    });
+                }
+                
+                // Check for empty squares with specific positions
+                const emptySquares = [];
+                this.squares.forEach((square, index) => {
+                    if (!square || square.trim().length === 0) {
+                        emptySquares.push(index + 1);
+                    }
+                });
+                
+                if (emptySquares.length > 0) {
+                    const positions = emptySquares.slice(0, 5).join(', ') + (emptySquares.length > 5 ? ` and ${emptySquares.length - 5} more` : '');
+                    this.errors.push({
+                        message: `Empty squares found at line${emptySquares.length > 1 ? 's' : ''}: ${positions}`,
+                        guidance: 'Each line must contain a photo challenge description. Remove empty lines or add content.',
+                        type: 'empty_squares',
+                        positions: emptySquares
+                    });
+                }
+                
+                // Check for duplicates with better messaging
+                const duplicates = this.findDuplicates();
+                if (duplicates.length > 0) {
+                    duplicates.forEach(duplicate => {
+                        this.warnings.push({
+                            message: `Duplicate: "${duplicate.text}" appears at lines ${duplicate.positions.join(', ')}`,
+                            guidance: 'Consider making each photo challenge unique for better gameplay variety',
+                            type: 'duplicate',
+                            text: duplicate.text,
+                            positions: duplicate.positions
+                        });
+                    });
+                }
+                
+                // Check square length with guidance
+                const tooLong = [];
+                const tooShort = [];
+                this.squares.forEach((square, index) => {
+                    if (square && square.trim().length > 200) {
+                        tooLong.push(index + 1);
+                    } else if (square && square.trim().length > 0 && square.trim().length < 3) {
+                        tooShort.push(index + 1);
+                    }
+                });
+                
+                if (tooLong.length > 0) {
+                    this.warnings.push({
+                        message: `Very long descriptions at lines: ${tooLong.join(', ')}`,
+                        guidance: 'Keep photo challenges concise (under 200 characters) for better mobile display',
+                        type: 'too_long',
+                        positions: tooLong
+                    });
+                }
+                
+                if (tooShort.length > 0) {
+                    this.warnings.push({
+                        message: `Very short descriptions at lines: ${tooShort.join(', ')}`,
+                        guidance: 'Consider adding more detail to make photo challenges clearer',
+                        type: 'too_short',
+                        positions: tooShort
+                    });
+                }
+                
+                return this.errors.length === 0;
+            }
+            
+            findDuplicates() {
+                const seen = new Map();
+                const duplicates = [];
+                
+                this.squares.forEach((square, index) => {
+                    if (!square) return;
+                    
+                    const normalized = square.trim().toLowerCase();
+                    if (normalized.length === 0) return;
+                    
+                    if (seen.has(normalized)) {
+                        const existing = duplicates.find(d => d.text.toLowerCase() === normalized);
+                        if (existing) {
+                            existing.positions.push(index + 1);
+                        } else {
+                            duplicates.push({
+                                text: square.trim(),
+                                positions: [seen.get(normalized), index + 1]
+                            });
+                        }
+                    } else {
+                        seen.set(normalized, index + 1);
+                    }
+                });
+                
+                return duplicates;
+            }
+            
+            getValidationMessages() {
+                const messages = [];
+                
+                if (this.errors.length > 0) {
+                    messages.push({
+                        type: 'error',
+                        items: this.errors
+                    });
+                }
+                
+                if (this.warnings.length > 0) {
+                    messages.push({
+                        type: 'warning', 
+                        items: this.warnings
+                    });
+                }
+                
+                if (this.errors.length === 0 && this.warnings.length === 0 && this.squares.length === 25) {
+                    messages.push({
+                        type: 'success',
+                        items: [{
+                            message: 'All 25 squares are valid! ✅',
+                            guidance: 'Ready to save your custom bingo squares'
+                        }]
+                    });
+                }
+                
+                return messages;
+            }
+        }
+
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            warnings: 0
+        };
+
+        // Test data sets
+        const testDataSets = {
+            valid25: [
+                "A photo with someone laughing",
+                "Someone trying the food",
+                "A group photo by the entrance",
+                "Someone dancing",
+                "A candid moment during speeches",
+                "A photo of decorations or setup",
+                "Someone taking a selfie",
+                "A photo with the host",
+                "Someone in formal attire",
+                "A photo of people mingling",
+                "Someone giving a toast",
+                "A photo of the venue",
+                "FREE SPACE",
+                "A photo of someone eating",
+                "A group hug or embrace",
+                "Someone checking their phone",
+                "A photo with multiple generations",
+                "Someone wearing something unique",
+                "A candid conversation moment",
+                "Someone looking surprised",
+                "A photo of hands gesturing",
+                "Someone in the background",
+                "A photo showing emotion",
+                "Someone interacting with decor",
+                "A spontaneous silly moment"
+            ],
+            tooFew: [
+                "Square 1",
+                "Square 2",
+                "Square 3"
+            ],
+            tooMany: Array.from({length: 30}, (_, i) => `Square ${i + 1}`),
+            withEmpty: [
+                "Valid square 1",
+                "",
+                "Valid square 3",
+                "   ",
+                "Valid square 5"
+            ],
+            withDuplicates: [
+                "Unique square 1",
+                "Duplicate square",
+                "Unique square 3",
+                "Duplicate square",
+                "Unique square 5"
+            ],
+            tooLong: [
+                "This is an extremely long photo challenge description that exceeds the reasonable character limit and should trigger a warning about being too verbose for mobile display and user experience which could cause issues with the game interface and readability on smaller screens making it difficult for players to understand what they need to photograph"
+            ],
+            tooShort: [
+                "A",
+                "Hi"
+            ]
+        };
+
+        function runAllTests() {
+            clearResults();
+            testStats = { total: 0, passed: 0, failed: 0, warnings: 0 };
+            
+            // Test 1: Count validation
+            testCountValidation();
+            
+            // Test 2: Empty squares validation
+            testEmptySquaresValidation();
+            
+            // Test 3: Duplicate detection
+            testDuplicateDetection();
+            
+            // Test 4: Length validation
+            testLengthValidation();
+            
+            // Test 5: Preview generation
+            testPreviewGeneration();
+            
+            // Test 6: Validation messages
+            testValidationMessages();
+            
+            // Test 7: Edge cases
+            testEdgeCases();
+            
+            updateStats();
+        }
+
+        function testCountValidation() {
+            addTestCase("Count Validation", () => {
+                const tests = [];
+                
+                // Test too few squares
+                const configTooFew = new SquareConfiguration(testDataSets.tooFew);
+                tests.push({
+                    condition: !configTooFew.isValid,
+                    message: "Detects too few squares (3/25)"
+                });
+                tests.push({
+                    condition: configTooFew.errors.some(e => e.type === 'count_low'),
+                    message: "Generates count_low error type"
+                });
+                
+                // Test too many squares
+                const configTooMany = new SquareConfiguration(testDataSets.tooMany);
+                tests.push({
+                    condition: !configTooMany.isValid,
+                    message: "Detects too many squares (30/25)"
+                });
+                tests.push({
+                    condition: configTooMany.errors.some(e => e.type === 'count_high'),
+                    message: "Generates count_high error type"
+                });
+                
+                // Test exactly 25 squares
+                const configValid = new SquareConfiguration(testDataSets.valid25);
+                tests.push({
+                    condition: configValid.squares.length === 25,
+                    message: "Accepts exactly 25 squares"
+                });
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testEmptySquaresValidation() {
+            addTestCase("Empty Squares Validation", () => {
+                const configWithEmpty = new SquareConfiguration(testDataSets.withEmpty);
+                
+                const tests = [
+                    {
+                        condition: !configWithEmpty.isValid,
+                        message: "Detects empty squares"
+                    },
+                    {
+                        condition: configWithEmpty.errors.some(e => e.type === 'empty_squares'),
+                        message: "Generates empty_squares error type"
+                    },
+                    {
+                        condition: configWithEmpty.errors.some(e => e.positions && e.positions.includes(2)),
+                        message: "Identifies correct position of empty square"
+                    },
+                    {
+                        condition: configWithEmpty.errors.some(e => e.positions && e.positions.includes(4)),
+                        message: "Identifies whitespace-only square as empty"
+                    }
+                ];
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testDuplicateDetection() {
+            addTestCase("Duplicate Detection", () => {
+                const configWithDuplicates = new SquareConfiguration(testDataSets.withDuplicates);
+                
+                const tests = [
+                    {
+                        condition: configWithDuplicates.warnings.length > 0,
+                        message: "Detects duplicate squares"
+                    },
+                    {
+                        condition: configWithDuplicates.warnings.some(w => w.type === 'duplicate'),
+                        message: "Generates duplicate warning type"
+                    },
+                    {
+                        condition: configWithDuplicates.warnings.some(w => w.text === 'Duplicate square'),
+                        message: "Identifies correct duplicate text"
+                    },
+                    {
+                        condition: configWithDuplicates.warnings.some(w => w.positions && w.positions.length === 2),
+                        message: "Tracks all positions of duplicates"
+                    }
+                ];
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testLengthValidation() {
+            addTestCase("Length Validation", () => {
+                const configTooLong = new SquareConfiguration(testDataSets.tooLong);
+                const configTooShort = new SquareConfiguration(testDataSets.tooShort);
+                
+                const tests = [
+                    {
+                        condition: configTooLong.warnings.some(w => w.type === 'too_long'),
+                        message: "Detects overly long squares"
+                    },
+                    {
+                        condition: configTooShort.warnings.some(w => w.type === 'too_short'),
+                        message: "Detects overly short squares"
+                    },
+                    {
+                        condition: configTooLong.warnings.some(w => w.positions && w.positions.includes(1)),
+                        message: "Identifies position of long square"
+                    },
+                    {
+                        condition: configTooShort.warnings.some(w => w.positions && w.positions.length === 2),
+                        message: "Identifies all short squares"
+                    }
+                ];
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testPreviewGeneration() {
+            addTestCase("Preview Generation", () => {
+                const squares = testDataSets.valid25;
+                const preview = generatePreview(squares);
+                
+                const tests = [
+                    {
+                        condition: preview.children.length === 25,
+                        message: "Generates 25 preview squares"
+                    },
+                    {
+                        condition: preview.children[12].classList.contains('center'),
+                        message: "Center square (index 12) has center class"
+                    },
+                    {
+                        condition: preview.children[12].textContent === 'FREE SPACE',
+                        message: "Center square shows FREE SPACE"
+                    },
+                    {
+                        condition: Array.from(preview.children).every(child => child.classList.contains('preview-square')),
+                        message: "All squares have preview-square class"
+                    }
+                ];
+                
+                // Test with empty squares
+                const squaresWithEmpty = ["Valid", "", "Also valid"];
+                const previewWithEmpty = generatePreview(squaresWithEmpty);
+                tests.push({
+                    condition: previewWithEmpty.children[1].classList.contains('empty'),
+                    message: "Empty squares get empty class"
+                });
+                
+                // Test with duplicates
+                const squaresWithDuplicates = ["Duplicate", "Unique", "Duplicate"];
+                const previewWithDuplicates = generatePreview(squaresWithDuplicates);
+                tests.push({
+                    condition: previewWithDuplicates.children[0].classList.contains('duplicate'),
+                    message: "Duplicate squares get duplicate class"
+                });
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testValidationMessages() {
+            addTestCase("Validation Messages", () => {
+                const configValid = new SquareConfiguration(testDataSets.valid25);
+                const configInvalid = new SquareConfiguration(testDataSets.tooFew);
+                const configWithWarnings = new SquareConfiguration(testDataSets.withDuplicates);
+                
+                const tests = [
+                    {
+                        condition: configValid.getValidationMessages().some(m => m.type === 'success'),
+                        message: "Valid config generates success message"
+                    },
+                    {
+                        condition: configInvalid.getValidationMessages().some(m => m.type === 'error'),
+                        message: "Invalid config generates error messages"
+                    },
+                    {
+                        condition: configWithWarnings.getValidationMessages().some(m => m.type === 'warning'),
+                        message: "Config with warnings generates warning messages"
+                    },
+                    {
+                        condition: configValid.getValidationMessages().every(m => m.items && Array.isArray(m.items)),
+                        message: "All message groups have items array"
+                    }
+                ];
+                
+                return validateTests(tests);
+            });
+        }
+
+        function testEdgeCases() {
+            addTestCase("Edge Cases", () => {
+                const tests = [];
+                
+                // Test null/undefined input
+                const configNull = new SquareConfiguration(null);
+                tests.push({
+                    condition: Array.isArray(configNull.squares),
+                    message: "Handles null input gracefully"
+                });
+                
+                // Test empty array
+                const configEmpty = new SquareConfiguration([]);
+                tests.push({
+                    condition: !configEmpty.isValid,
+                    message: "Empty array is invalid"
+                });
+                
+                // Test array with null/undefined elements
+                const configWithNulls = new SquareConfiguration([null, undefined, "valid", ""]);
+                tests.push({
+                    condition: configWithNulls.errors.some(e => e.type === 'empty_squares'),
+                    message: "Handles null/undefined elements as empty"
+                });
+                
+                // Test case sensitivity in duplicates
+                const configCaseSensitive = new SquareConfiguration(["Test Square", "test square", "TEST SQUARE"]);
+                tests.push({
+                    condition: configCaseSensitive.warnings.some(w => w.type === 'duplicate'),
+                    message: "Duplicate detection is case-insensitive"
+                });
+                
+                // Test whitespace handling
+                const configWhitespace = new SquareConfiguration(["  Test  ", "Test", "   Test   "]);
+                tests.push({
+                    condition: configWhitespace.warnings.some(w => w.type === 'duplicate'),
+                    message: "Handles whitespace in duplicate detection"
+                });
+                
+                return validateTests(tests);
+            });
+        }
+
+        function generatePreview(squares) {
+            const previewGrid = document.createElement('div');
+            previewGrid.className = 'preview-grid';
+            
+            // Create 25 squares for the grid
+            const gridSquares = [];
+            for (let i = 0; i < 25; i++) {
+                const square = squares[i] || '';
+                gridSquares.push(square.trim());
+            }
+            
+            // Find duplicates for highlighting
+            const config = new SquareConfiguration(gridSquares);
+            const duplicates = config.findDuplicates();
+            const duplicateTexts = new Set(duplicates.map(d => d.text.toLowerCase()));
+            
+            // Generate grid HTML
+            gridSquares.forEach((square, index) => {
+                const squareDiv = document.createElement('div');
+                let className = 'preview-square';
+                
+                // Center square (index 12)
+                if (index === 12) {
+                    className += ' center';
+                }
+                // Empty square
+                else if (!square || square.length === 0) {
+                    className += ' empty';
+                }
+                // Duplicate square
+                else if (duplicateTexts.has(square.toLowerCase())) {
+                    className += ' duplicate';
+                }
+                
+                squareDiv.className = className;
+                const displayText = index === 12 ? 'FREE SPACE' : (square || `Square ${index + 1}`);
+                squareDiv.textContent = displayText;
+                squareDiv.title = `Position ${index + 1}: ${displayText}`;
+                
+                previewGrid.appendChild(squareDiv);
+            });
+            
+            return previewGrid;
+        }
+
+        function validateTests(tests, output = null) {
+            const results = [];
+            let hasError = false;
+            let hasWarning = false;
+            
+            tests.forEach(test => {
+                const level = test.level || (test.condition ? 'success' : 'error');
+                results.push({
+                    message: test.message,
+                    passed: test.condition,
+                    level: level
+                });
+                
+                if (level === 'error' && !test.condition) hasError = true;
+                if (level === 'warning') hasWarning = true;
+            });
+            
+            return {
+                results,
+                overall: hasError ? 'error' : (hasWarning ? 'warning' : 'success'),
+                output
+            };
+        }
+
+        function addTestCase(title, testFunction) {
+            testStats.total++;
+            
+            const container = document.getElementById('testResults');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-container';
+            
+            const titleDiv = document.createElement('h3');
+            titleDiv.className = 'test-title';
+            titleDiv.textContent = title;
+            testDiv.appendChild(titleDiv);
+            
+            const caseDiv = document.createElement('div');
+            caseDiv.className = 'test-case';
+            testDiv.appendChild(caseDiv);
+            
+            container.appendChild(testDiv);
+            
+            // Run the test
+            Promise.resolve(testFunction()).then(result => {
+                // Update stats
+                if (result.overall === 'success') testStats.passed++;
+                else if (result.overall === 'warning') testStats.warnings++;
+                else testStats.failed++;
+                
+                // Display results
+                result.results.forEach(test => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = `test-result ${test.level}`;
+                    resultDiv.innerHTML = `
+                        <strong>${test.passed ? '✅' : '❌'} ${test.message}</strong>
+                    `;
+                    caseDiv.appendChild(resultDiv);
+                });
+                
+                // Show preview if available
+                if (result.output && result.output.nodeType) {
+                    const outputDiv = document.createElement('div');
+                    outputDiv.innerHTML = '<strong>Generated Preview:</strong>';
+                    caseDiv.appendChild(outputDiv);
+                    caseDiv.appendChild(result.output);
+                }
+                
+                updateStats();
+            }).catch(error => {
+                testStats.failed++;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'test-result error';
+                errorDiv.innerHTML = `<strong>❌ Test failed with error: ${error.message}</strong>`;
+                caseDiv.appendChild(errorDiv);
+                updateStats();
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('passedTests').textContent = testStats.passed;
+            document.getElementById('failedTests').textContent = testStats.failed;
+            document.getElementById('warningTests').textContent = testStats.warnings;
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            testStats = { total: 0, passed: 0, failed: 0, warnings: 0 };
+            updateStats();
+        }
+
+        function runInteractiveTest() {
+            const interactiveTest = document.getElementById('interactiveTest');
+            interactiveTest.style.display = interactiveTest.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function loadTestData(type) {
+            const textarea = document.getElementById('testSquaresInput');
+            
+            switch(type) {
+                case 'valid':
+                    textarea.value = testDataSets.valid25.join('\n');
+                    break;
+                case 'invalid':
+                    textarea.value = testDataSets.tooFew.join('\n');
+                    break;
+                case 'duplicates':
+                    textarea.value = testDataSets.withDuplicates.join('\n');
+                    break;
+            }
+            
+            validateInteractiveSquares();
+        }
+
+        function validateInteractiveSquares() {
+            const textarea = document.getElementById('testSquaresInput');
+            const validationDiv = document.getElementById('interactiveValidation');
+            const previewDiv = document.getElementById('interactivePreview');
+            
+            const squares = textarea.value.split('\n').map(s => s.trim());
+            const config = new SquareConfiguration(squares);
+            
+            // Display validation messages
+            const messages = config.getValidationMessages();
+            validationDiv.innerHTML = '';
+            
+            messages.forEach(group => {
+                group.items.forEach(item => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `validation-${group.type}`;
+                    messageDiv.innerHTML = `
+                        <div><strong>${item.message}</strong></div>
+                        ${item.guidance ? `<div style="font-size: 0.9em; margin-top: 5px;">💡 ${item.guidance}</div>` : ''}
+                    `;
+                    validationDiv.appendChild(messageDiv);
+                });
+            });
+            
+            // Generate preview
+            const preview = generatePreview(squares);
+            previewDiv.innerHTML = '<strong>Preview:</strong>';
+            previewDiv.appendChild(preview);
+        }
+
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Squares Configuration & Validation Test Suite loaded');
+        });
+    </script>
+</body>
+</html>
