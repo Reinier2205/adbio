@@ -1536,7 +1536,10 @@
     function selectPlayer(playerName) {
       currentPlayer = playerName;
       // Save last player for this event
-      try { localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName); } catch(_) {}
+      try { 
+        localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName);
+        localStorage.setItem('eventbingo:currentPlayer', playerName); // Global current player
+      } catch(_) {}
       updatePlayerCircles();
       createGrid();
       loadPhotos(currentPlayer);
@@ -2691,6 +2694,17 @@
     });
 
     async function initializeApp() {
+      // Check for player in URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlPlayer = urlParams.get('player');
+      if (urlPlayer) {
+        currentPlayer = urlPlayer;
+        try {
+          localStorage.setItem('eventbingo:currentPlayer', urlPlayer);
+          localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, urlPlayer);
+        } catch(_) {}
+      }
+      
       // Load event data
       if (eventCode && eventCode !== 'default') {
         showPageLoading("Loading event data...");

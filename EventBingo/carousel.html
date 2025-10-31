@@ -125,10 +125,15 @@
       border-color: var(--primary);
     }
 
-    .search-input {
+    .search-container {
       flex: 2;
       min-width: 150px;
-      padding: 8px 12px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 35px 8px 12px;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
       background: white;
@@ -139,6 +144,31 @@
 
     .search-input:focus {
       border-color: var(--primary);
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: #999;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      display: none;
+    }
+
+    .search-clear:hover {
+      background: rgba(0,0,0,0.1);
+      color: #666;
+    }
+
+    .search-clear.show {
+      display: block;
     }
 
     /* Main Content */
@@ -173,15 +203,15 @@
       aspect-ratio: unset;
       display: flex;
       align-items: center;
-      padding: 12px;
-      height: 80px;
+      padding: 18px;
+      height: 120px;
     }
 
     .photo-grid.list-view .photo-item img {
-      width: 60px;
-      height: 60px;
+      width: 90px;
+      height: 90px;
       border-radius: 8px;
-      margin-right: 15px;
+      margin-right: 20px;
       flex-shrink: 0;
     }
 
@@ -511,10 +541,12 @@
     body.dark-mode .progress-info {
       background: #2d2d2d;
       color: #ffffff;
+      border-color: #404040;
     }
 
     body.dark-mode .photo-item {
       background: #2d2d2d;
+      border-color: #404040;
     }
 
     body.dark-mode .filter-select,
@@ -524,15 +556,54 @@
       border-color: #555;
     }
 
+    body.dark-mode .search-clear {
+      color: #ccc;
+    }
+
+    body.dark-mode .search-clear:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
     body.dark-mode .pagination-btn {
       background: #2d2d2d;
       color: #ffffff;
       border-color: #555;
     }
 
+    body.dark-mode .pagination-btn:hover:not(:disabled) {
+      background: #404040;
+      color: #ffffff;
+    }
+
     body.dark-mode .fullscreen-info {
       background: #2d2d2d;
       color: #ffffff;
+    }
+
+    body.dark-mode .view-btn {
+      color: #ffffff;
+    }
+
+    body.dark-mode .view-btn.active {
+      background: #404040;
+      color: #ffffff;
+    }
+
+    body.dark-mode .empty-state {
+      color: #ccc;
+    }
+
+    body.dark-mode .empty-state h3 {
+      color: #ffffff;
+    }
+
+    body.dark-mode .photo-grid.list-view .photo-overlay {
+      color: #ffffff;
+    }
+
+    body.dark-mode .photo-grid.list-view .photo-challenge {
+      color: #ccc;
     }
   </style>
 </head>
@@ -558,7 +629,10 @@
       </select>
     </div>
     <div class="filter-row">
-      <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search photos..." oninput="applyFilters()">
+      <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search photos..." oninput="handleSearchInput()">
+        <button class="search-clear" id="searchClear" onclick="clearSearch()">×</button>
+      </div>
       <select class="filter-select" id="sortFilter" onchange="applyFilters()">
         <option value="newest">Newest First</option>
         <option value="oldest">Oldest First</option>
@@ -632,17 +706,39 @@
 
     // Function to go back with preserved context
     function goBack() {
-      const backUrl = currentPlayer 
-        ? `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(currentPlayer)}`
+      // Try to get current player from URL params or localStorage
+      let playerToRestore = currentPlayer;
+      if (!playerToRestore) {
+        try {
+          playerToRestore = localStorage.getItem('eventbingo:currentPlayer') || 
+                           localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || '';
+        } catch(_) {}
+      }
+      
+      const backUrl = playerToRestore 
+        ? `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerToRestore)}`
         : `index.html?event=${encodeURIComponent(eventCode)}`;
       window.location.href = backUrl;
     }
 
     // Initialize the carousel
     document.addEventListener('DOMContentLoaded', function() {
+      detectDarkMode();
       loadPhotos();
       setupEventHandlers();
     });
+
+    // Detect and apply dark mode from localStorage
+    function detectDarkMode() {
+      try {
+        const isDarkMode = localStorage.getItem('eventbingo:darkMode') === 'true';
+        if (isDarkMode) {
+          document.body.classList.add('dark-mode');
+        }
+      } catch (error) {
+        console.log('Could not detect dark mode preference');
+      }
+    }
 
     function setupEventHandlers() {
       // Add keyboard navigation
@@ -682,7 +778,7 @@
             // Swipe right - go to previous photo
             navigateFullscreen(-1);
           } else {
-            // Swipe left - go to next photo
+            // Swipe left - go to next photo  
             navigateFullscreen(1);
           }
         }
@@ -959,7 +1055,9 @@
       const nextBtn = document.getElementById('nextPhotoBtn');
       
       // Start slide out animation
-      const slideOutClass = direction > 0 ? 'slide-left' : 'slide-right';
+      // direction > 0 means going to next photo (swipe left), so current photo should slide right (out to the right)
+      // direction < 0 means going to previous photo (swipe right), so current photo should slide left (out to the left)
+      const slideOutClass = direction > 0 ? 'slide-right' : 'slide-left';
       image.classList.add(slideOutClass);
       
       // After slide out completes, update content and slide in
@@ -979,8 +1077,10 @@
         modal.dataset.currentIndex = newIndex;
         
         // Start slide in animation from opposite side
+        // If current photo slid right, new photo should slide in from left
+        // If current photo slid left, new photo should slide in from right
         image.classList.remove(slideOutClass);
-        const slideInClass = direction > 0 ? 'slide-in-right' : 'slide-in-left';
+        const slideInClass = direction > 0 ? 'slide-in-left' : 'slide-in-right';
         image.classList.add(slideInClass);
         
         // Complete slide in animation
@@ -1007,6 +1107,28 @@
       } else {
         photoGrid.classList.remove('list-view');
       }
+    }
+
+    function handleSearchInput() {
+      const searchInput = document.getElementById('searchInput');
+      const searchClear = document.getElementById('searchClear');
+      
+      if (searchInput.value.trim()) {
+        searchClear.classList.add('show');
+      } else {
+        searchClear.classList.remove('show');
+      }
+      
+      applyFilters();
+    }
+
+    function clearSearch() {
+      const searchInput = document.getElementById('searchInput');
+      const searchClear = document.getElementById('searchClear');
+      
+      searchInput.value = '';
+      searchClear.classList.remove('show');
+      applyFilters();
     }
 
     function showLoading(show) {
