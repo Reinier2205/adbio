@@ -407,6 +407,33 @@
       max-height: 70vh;
       border-radius: 8px;
       margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    /* Slide animations */
+    .fullscreen-image.slide-left {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+
+    .fullscreen-image.slide-right {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
+    .fullscreen-image.slide-in-left {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+
+    .fullscreen-image.slide-in-right {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
+    .fullscreen-image.slide-center {
+      transform: translateX(0);
+      opacity: 1;
     }
 
     .fullscreen-info {
@@ -512,7 +539,7 @@
 <body>
   <!-- Top Bar -->
   <div class="top-bar">
-    <a href="index.html" class="back-button">←</a>
+    <a href="#" class="back-button" onclick="goBack()">←</a>
     <div class="page-title">📸 Photo Gallery</div>
     <div class="view-toggle">
       <button class="view-btn active" onclick="setViewMode('grid')">Grid</button>
@@ -595,12 +622,21 @@
     const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
     const params = new URLSearchParams(window.location.search);
     const eventCode = params.get("event") || "default";
+    const currentPlayer = params.get("player") || "";
     
     let allPhotos = [];
     let filteredPhotos = [];
     let currentPage = 1;
     const photosPerPage = 12; // 3x4 grid on mobile, 4x3 on desktop
     let viewMode = 'grid';
+
+    // Function to go back with preserved context
+    function goBack() {
+      const backUrl = currentPlayer 
+        ? `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(currentPlayer)}`
+        : `index.html?event=${encodeURIComponent(eventCode)}`;
+      window.location.href = backUrl;
+    }
 
     // Initialize the carousel
     document.addEventListener('DOMContentLoaded', function() {
@@ -885,6 +921,9 @@
       const prevBtn = document.getElementById('prevPhotoBtn');
       const nextBtn = document.getElementById('nextPhotoBtn');
 
+      // Clear any existing animation classes
+      image.classList.remove('slide-left', 'slide-right', 'slide-in-left', 'slide-in-right', 'slide-center');
+      
       image.src = photo.url;
       player.textContent = `${getPlayerIcon(photo.player)} ${photo.player}`;
       challenge.textContent = photo.challenge;
@@ -907,8 +946,54 @@
       const newIndex = currentIndex + direction;
       
       if (newIndex >= 0 && newIndex < filteredPhotos.length) {
-        openFullscreen(newIndex);
+        animatePhotoTransition(direction, newIndex);
       }
+    }
+
+    function animatePhotoTransition(direction, newIndex) {
+      const image = document.getElementById('fullscreenImage');
+      const player = document.getElementById('fullscreenPlayer');
+      const challenge = document.getElementById('fullscreenChallenge');
+      const modal = document.getElementById('fullscreenModal');
+      const prevBtn = document.getElementById('prevPhotoBtn');
+      const nextBtn = document.getElementById('nextPhotoBtn');
+      
+      // Start slide out animation
+      const slideOutClass = direction > 0 ? 'slide-left' : 'slide-right';
+      image.classList.add(slideOutClass);
+      
+      // After slide out completes, update content and slide in
+      setTimeout(() => {
+        const photo = filteredPhotos[newIndex];
+        
+        // Update content
+        image.src = photo.url;
+        player.textContent = `${getPlayerIcon(photo.player)} ${photo.player}`;
+        challenge.textContent = photo.challenge;
+        
+        // Update navigation buttons
+        prevBtn.style.display = newIndex > 0 ? 'flex' : 'none';
+        nextBtn.style.display = newIndex < filteredPhotos.length - 1 ? 'flex' : 'none';
+        
+        // Update modal index
+        modal.dataset.currentIndex = newIndex;
+        
+        // Start slide in animation from opposite side
+        image.classList.remove(slideOutClass);
+        const slideInClass = direction > 0 ? 'slide-in-right' : 'slide-in-left';
+        image.classList.add(slideInClass);
+        
+        // Complete slide in animation
+        setTimeout(() => {
+          image.classList.remove(slideInClass);
+          image.classList.add('slide-center');
+          
+          // Clean up classes
+          setTimeout(() => {
+            image.classList.remove('slide-center');
+          }, 300);
+        }, 50);
+      }, 150);
     }
 
     function setViewMode(mode) {

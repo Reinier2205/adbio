@@ -603,7 +603,12 @@
     function openCarousel() {
       const urlParams = new URLSearchParams(window.location.search);
       const eventCode = urlParams.get('event') || 'default';
-      window.location.href = `carousel.html?event=${encodeURIComponent(eventCode)}`;
+      const player = urlParams.get('player') || '';
+      
+      const carouselUrl = player 
+        ? `carousel.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(player)}`
+        : `carousel.html?event=${encodeURIComponent(eventCode)}`;
+      window.location.href = carouselUrl;
     }
 
     function toggleDarkMode() {
