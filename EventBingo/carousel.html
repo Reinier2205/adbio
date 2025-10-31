@@ -535,17 +535,18 @@
         const playersResponse = await fetch(`${workerURL}players?event=${eventCode}`);
         if (!playersResponse.ok) throw new Error('Failed to load players');
         const players = await playersResponse.json();
+        console.log('Loaded players:', players.length, players); // Debug log
         
         // Load photos for each player
         allPhotos = [];
         for (const player of players) {
           try {
-            const photosResponse = await fetch(`${workerURL}photos?event=${eventCode}&player=${encodeURIComponent(player.name)}`);
+            const photosResponse = await fetch(`${workerURL}player?name=${encodeURIComponent(player.name)}&event=${eventCode}`);
             if (photosResponse.ok) {
               const playerPhotos = await photosResponse.json();
               // Convert the photos object to array format
               Object.entries(playerPhotos).forEach(([challenge, url]) => {
-                if (url) {
+                if (url && url.trim() !== '') {
                   allPhotos.push({
                     url: url,
                     player: player.name,
@@ -560,6 +561,8 @@
           }
         }
         
+        console.log('Loaded photos:', allPhotos.length, allPhotos); // Debug log
+        
         // Load players and cards for filters
         await loadFilters();
         
@@ -568,7 +571,10 @@
         
         // If no photos found, show helpful message
         if (allPhotos.length === 0) {
+          console.log('No photos found after loading all players');
           showError('No photos have been uploaded yet. Start playing the game to see photos here!');
+        } else {
+          console.log(`Successfully loaded ${allPhotos.length} photos`);
         }
         
       } catch (error) {
@@ -617,6 +623,8 @@
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
       const sortBy = document.getElementById('sortFilter').value;
 
+      console.log('Applying filters:', { playerFilter, cardFilter, searchTerm, sortBy, totalPhotos: allPhotos.length }); // Debug
+
       // Filter photos
       filteredPhotos = allPhotos.filter(photo => {
         const matchesPlayer = !playerFilter || photo.player === playerFilter;
@@ -627,6 +635,8 @@
         
         return matchesPlayer && matchesCard && matchesSearch;
       });
+
+      console.log('Filtered photos:', filteredPhotos.length, filteredPhotos); // Debug
 
       // Sort photos
       filteredPhotos.sort((a, b) => {
@@ -655,10 +665,13 @@
       const emptyState = document.getElementById('emptyState');
       const pagination = document.getElementById('pagination');
 
+      console.log('Rendering photos:', filteredPhotos.length); // Debug
+
       if (filteredPhotos.length === 0) {
         grid.style.display = 'none';
         emptyState.style.display = 'block';
         pagination.style.display = 'none';
+        console.log('No filtered photos to display'); // Debug
         return;
       }
 
