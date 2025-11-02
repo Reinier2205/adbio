@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { LinkCard } from './LinkCard';
 import { EmptyState } from './EmptyState';
-import TouchTest from './TouchTest';
 
 export function LinkList() {
   const {
@@ -72,21 +71,21 @@ export function LinkList() {
 
   if (syncStatus === 'syncing') {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 lg:gap-12 w-full">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex flex-col animate-pulse min-h-[120px]">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 rounded-md bg-gray-200 dark:bg-gray-700" />
+          <div key={i} className="card animate-pulse min-h-[120px] flex flex-col">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-8 h-8 rounded-md bg-chip" />
               <div className="flex-1">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
-                <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
+                <div className="h-4 bg-chip rounded w-3/4 mb-4" />
+                <div className="h-3 bg-chip rounded w-1/2" />
               </div>
             </div>
-            <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-full mb-2" />
-            <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-2/3 mb-2" />
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">
-              <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/4" />
-              <div className="h-6 bg-gray-100 dark:bg-gray-800 rounded w-12" />
+            <div className="h-3 bg-chip rounded w-full mb-4" />
+            <div className="h-3 bg-chip rounded w-2/3 mb-4" />
+            <div className="flex items-center justify-between pt-4 border-t border-[#232946] mt-auto">
+              <div className="h-3 bg-chip rounded w-1/4" />
+              <div className="h-6 bg-chip rounded w-12" />
             </div>
           </div>
         ))}
@@ -97,11 +96,11 @@ export function LinkList() {
   if (syncStatus === 'error') {
     return (
       <div className="w-full flex flex-col items-center justify-center py-8">
-        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4 text-center">
-          <p className="text-base font-medium font-sans text-red-700 dark:text-red-300 mb-2">Failed to sync links. Please check your connection and try again.</p>
+        <div className="bg-danger-bg border border-danger-border rounded-lg p-4 mb-8 text-center">
+          <p className="body text-danger-text mb-4">Failed to sync links. Please check your connection and try again.</p>
           <button
             onClick={retrySync}
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium font-sans transition-colors duration-200"
+            className="px-4 py-2 rounded-lg bg-blue-400 hover:bg-blue-500 text-main font-medium font-sans transition-colors duration-200"
           >
             Retry
           </button>
@@ -116,127 +115,18 @@ export function LinkList() {
   }
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-8 w-full">
       <div className="flex items-center justify-between">
-        <p className="text-base font-medium font-sans text-gray-600 dark:text-gray-400">
+        <p className="body-sm text-muted">
           {filteredAndSortedLinks.length} link{filteredAndSortedLinks.length !== 1 ? 's' : ''} found
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-12 w-full items-stretch">
         {filteredAndSortedLinks.map((link) => (
-          <LinkCard key={link.id} link={link} />
+          <div key={link.id} className="h-full">
+            <LinkCard link={link} />
+          </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-function DraggableTouchTest() {
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  const start = React.useRef({ x: 0, y: 0 });
-  const last = React.useRef({ x: 0, y: 0 });
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    start.current = { x: touch.clientX, y: touch.clientY };
-    last.current = { ...offset };
-    setDragging(true);
-  };
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!dragging) return;
-    const touch = e.touches[0];
-    const dx = touch.clientX - start.current.x;
-    const dy = touch.clientY - start.current.y;
-    setOffset({ x: last.current.x + dx, y: last.current.y + dy });
-  };
-  const handleTouchEnd = () => {
-    setDragging(false);
-  };
-  return (
-    <div
-      style={{
-        position: 'relative',
-        width: 320,
-        minHeight: 120,
-        margin: '0 auto',
-      }}
-    >
-      {/* Swipe Actions Background */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          height: '100%',
-          width: 128,
-          display: 'flex',
-          flexDirection: 'row',
-          gap: 8,
-          zIndex: 0,
-          padding: 16,
-        }}
-      >
-        <button style={{ flex: 1, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18 }}>Edit</button>
-        <button style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, fontSize: 18 }}>Delete</button>
-      </div>
-      {/* Main Card Content (only this moves) */}
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-          background: '#fff',
-          borderRadius: 18,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
-          border: '1px solid #e5e7eb',
-          padding: 24,
-          touchAction: 'none',
-          WebkitUserSelect: 'none',
-          userSelect: 'none',
-          transform: `translate(${offset.x}px, ${offset.y}px)`,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          fontSize: 18,
-          zIndex: 1,
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-          <div style={{ width: 40, height: 40, borderRadius: 8, background: '#e0e7ef', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16, fontSize: 22 }}>
-            🌐
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 8, color: '#1e293b' }}>Example Link Title</div>
-            <div style={{ fontWeight: 400, fontSize: 15, color: '#64748b' }}>example.com</div>
-          </div>
-          <button
-            style={{
-              marginLeft: 8,
-              background: 'none',
-              border: 'none',
-              padding: 8,
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: 22,
-              color: '#fbbf24',
-            }}
-            aria-label="Favorite"
-            onClick={e => e.stopPropagation()}
-          >
-            ★
-          </button>
-        </div>
-        <div style={{ marginTop: 12, marginBottom: 8 }}>
-          <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 500, marginRight: 8 }}>tag1</span>
-          <span style={{ display: 'inline-block', background: '#e0f2fe', color: '#0369a1', borderRadius: 999, padding: '2px 12px', fontSize: 13, fontWeight: 500 }}>tag2</span>
-        </div>
-        <div style={{ color: '#64748b', fontSize: 15, marginBottom: 8 }}>
-          This is a note about the link.
-        </div>
       </div>
     </div>
   );

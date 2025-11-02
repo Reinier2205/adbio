@@ -64,12 +64,16 @@ export const parseImportedText = (text: string): any[] => {
   
   for (const section of sections) {
     const lines = section.trim().split('\n');
-    if (lines.length < 2) continue;
+    if (lines.length < 2) {
+      continue;
+    }
     
     const title = lines[0].trim();
     const url = lines[1].trim();
     
-    if (!validateUrl(url)) continue;
+    if (!validateUrl(url)) {
+      continue;
+    }
     
     let notes = '';
     let tags: string[] = [];

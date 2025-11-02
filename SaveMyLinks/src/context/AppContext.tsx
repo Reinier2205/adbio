@@ -1,10 +1,14 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useState } from 'react';
 import { SavedLink, AppState } from '../types';
-import { storage, generateId } from '../utils/storage';
+import { storage } from '../utils/storage'; // Keep import for settings, shared collections, reports
+import { generateId } from '../utils/idGenerator'; // Import generateId from new utility
 import { useAuth } from '../hooks/useAuth';
 import { CloudSync } from '../utils/cloudSync';
+import { AddLinkForm } from '../components/AddLinkForm';
+import { AuthModal } from '../components/AuthModal'; // Added import for AuthModal
+import { User } from '@supabase/supabase-js'; // Added import for User type
 
-interface AppContextType extends AppState {
+export interface AppContextType extends AppState {
   addLink: (link: Omit<SavedLink, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateLink: (id: string, updates: Partial<SavedLink>) => void;
   deleteLink: (id: string) => void;
@@ -14,12 +18,17 @@ interface AppContextType extends AppState {
   setSelectedTags: (tags: string[]) => void;
   setSortBy: (sort: 'newest' | 'oldest' | 'starred') => void;
   setShowStarredOnly: (show: boolean) => void;
-  toggleDarkMode: () => void;
   clearAllFilters: () => void;
-  importLinks: (links: Partial<SavedLink>[]) => void;
+  importLinks: (links: Partial<SavedLink>[]) => Promise<SavedLink[]>;
   syncStatus: 'idle' | 'syncing' | 'error';
   setShowRecentsOnly: (show: boolean) => void;
   retrySync: () => void;
+  openAddLinkModal: () => void;
+  addGlobalTag: (tag: string) => void;
+  openAuthModal: () => void; // New: function to open auth modal
+  closeAuthModal: () => void; // New: function to close auth modal
+  showAuthModal: boolean; // Expose AuthModal visibility state
+  user: User | null; // New: Expose user object for conditional rendering
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -35,57 +44,56 @@ type Action =
   | { type: 'SET_SELECTED_TAGS'; payload: string[] }
   | { type: 'SET_SORT_BY'; payload: 'newest' | 'oldest' | 'starred' }
   | { type: 'SET_SHOW_STARRED_ONLY'; payload: boolean }
-  | { type: 'TOGGLE_DARK_MODE' }
   | { type: 'CLEAR_FILTERS' }
   | { type: 'IMPORT_LINKS'; payload: SavedLink[] }
   | { type: 'SET_SYNC_STATUS'; payload: 'idle' | 'syncing' | 'error' }
   | { type: 'SET_SHOW_RECENTS_ONLY'; payload: boolean };
 
 const initialState: AppState = {
-  links: [],
+  links: [], // Links will always be loaded from cloud or be empty
   tags: [],
   searchQuery: '',
   selectedTags: [],
   sortBy: 'newest',
   showStarredOnly: false,
-  darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
+  darkMode: true, // Always dark mode
   showRecentsOnly: false
 };
 
 function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'SET_LINKS': {
-      const allTags = [...new Set(action.payload.flatMap(link => link.tags))].sort();
+      const allTags = [...new Set(action.payload.flatMap((link: SavedLink) => link.tags))].sort();
       return { ...state, links: action.payload, tags: allTags };
     }
     
     case 'ADD_LINK': {
       const newLinks = [action.payload, ...state.links];
-      const allTags = [...new Set(newLinks.flatMap(link => link.tags))].sort();
+      const allTags = [...new Set(newLinks.flatMap((link: SavedLink) => link.tags))].sort();
       return { ...state, links: newLinks, tags: allTags };
     }
     
     case 'UPDATE_LINK': {
-      const updatedLinks = state.links.map(link =>
+      const updatedLinks = state.links.map((link: SavedLink) =>
         link.id === action.payload.id
           ? { ...link, ...action.payload.updates, updatedAt: new Date() }
           : link
       );
-      const allTags = [...new Set(updatedLinks.flatMap(link => link.tags))].sort();
+      const allTags = [...new Set(updatedLinks.flatMap((link: SavedLink) => link.tags))].sort();
       return { ...state, links: updatedLinks, tags: allTags };
     }
     
     case 'DELETE_LINK': {
-      const filteredLinks = state.links.filter(link => link.id !== action.payload);
-      const allTags = [...new Set(filteredLinks.flatMap(link => link.tags))].sort();
+      const filteredLinks = state.links.filter((link: SavedLink) => link.id !== action.payload);
+      const allTags = [...new Set(filteredLinks.flatMap((link: SavedLink) => link.tags))].sort();
       return { ...state, links: filteredLinks, tags: allTags };
     }
     
     case 'TOGGLE_STAR': {
-      const updatedLinks = state.links.map(link =>
-        link.id === action.payload
-          ? { ...link, starred: !link.starred, updatedAt: new Date() }
-          : link
+      const updatedLinks = state.links.map((l: SavedLink) =>
+        l.id === action.payload
+          ? { ...l, starred: !l.starred, updatedAt: new Date() }
+          : l
       );
       return { ...state, links: updatedLinks };
     }
@@ -105,15 +113,13 @@ function appReducer(state: AppState, action: Action): AppState {
     case 'SET_SHOW_STARRED_ONLY':
       return { ...state, showStarredOnly: action.payload };
     
-    case 'TOGGLE_DARK_MODE':
-      return { ...state, darkMode: !state.darkMode };
-    
     case 'CLEAR_FILTERS':
       return {
         ...state,
         searchQuery: '',
         selectedTags: [],
         showStarredOnly: false,
+        showRecentsOnly: false,
         sortBy: 'newest'
       };
     
@@ -138,7 +144,9 @@ function appReducer(state: AppState, action: Action): AppState {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, { ...initialState, syncStatus: 'idle' });
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // Get user from useAuth
+  const [showAddLinkModal, setShowAddLinkModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false); // New state for AuthModal
 
   // Load data on mount and when user changes
   useEffect(() => {
@@ -152,67 +160,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const cloudLinks = await CloudSync.syncLinks(user.id);
           dispatch({ type: 'SET_LINKS', payload: cloudLinks });
           
-          // Migrate local links to cloud if any exist
-          const localLinks = storage.getLinks();
-          if (localLinks.length > 0) {
-            await CloudSync.migrateLocalToCloud(user.id);
-            // Reload after migration
-            const updatedCloudLinks = await CloudSync.syncLinks(user.id);
-            dispatch({ type: 'SET_LINKS', payload: updatedCloudLinks });
-          }
+          // No more local migration, as local links are removed.
           
           dispatch({ type: 'SET_SYNC_STATUS', payload: 'idle' });
         } catch (error) {
           console.error('Error loading cloud data:', error);
           dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
-          // Fallback to local storage
-          const savedLinks = storage.getLinks();
-          dispatch({ type: 'SET_LINKS', payload: savedLinks });
+          // If cloud sync fails, set links to empty, not local storage fallback
+          dispatch({ type: 'SET_LINKS', payload: [] });
         }
       } else {
-        // User not signed in - use local storage
-        const savedLinks = storage.getLinks();
-        dispatch({ type: 'SET_LINKS', payload: savedLinks });
+        // User not signed in - links will be empty
+        dispatch({ type: 'SET_LINKS', payload: [] });
       }
 
-      // Load settings
+      // No longer loading settings for dark mode from local storage as it's always dark.
+      // Any other settings will still be loaded.
       const savedSettings = storage.getSettings();
       if (savedSettings.darkMode !== undefined) {
-        if (savedSettings.darkMode !== state.darkMode) {
-          dispatch({ type: 'TOGGLE_DARK_MODE' });
-        }
+        // Keep this check if there are other settings, but not for darkMode here.
       }
     };
 
     loadData();
   }, [user, authLoading]);
 
-  // Save links when they change
+  // No longer saving links to local storage. Individual operations (add, update, delete, import) handle cloud sync.
   useEffect(() => {
-    if (state.links.length > 0 || storage.getLinks().length > 0) {
-      if (user) {
-        // Save to cloud for authenticated users
-        // Note: Individual operations handle cloud sync
-      } else {
-        // Save to local storage for anonymous users
-        storage.saveLinks(state.links);
-      }
+    // This useEffect previously saved to local storage. Now it's effectively a no-op for links.
+    // Settings are saved via storage.saveSettings directly.
+    if (!user && state.links.length > 0) {
+      // If user is not authenticated, and there are links in state, they are temporary. No saving.
+      // Removed storage.getLinks() call here as it no longer exists.
+      console.warn('Links exist in state for unauthenticated user - these will not be saved.');
     }
   }, [state.links, user]);
 
-  // Save settings when they change
+  // Save settings when they change - now explicitly handled for dark mode if it changes
   useEffect(() => {
     storage.saveSettings({ darkMode: state.darkMode });
   }, [state.darkMode]);
 
-  // Apply dark mode
+  // Apply dark mode - always add 'dark' class
   useEffect(() => {
-    if (state.darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [state.darkMode]);
+    document.documentElement.classList.add('dark');
+    // Removed conditional dark mode class removal
+  }, []); // Empty dependency array means this runs once on mount
 
   const addLink = async (linkData: Omit<SavedLink, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newLink: SavedLink = {
@@ -303,15 +296,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_SHOW_STARRED_ONLY', payload: show });
   };
 
-  const toggleDarkMode = () => {
-    dispatch({ type: 'TOGGLE_DARK_MODE' });
-  };
-
   const clearAllFilters = () => {
     dispatch({ type: 'CLEAR_FILTERS' });
+    dispatch({ type: 'SET_SHOW_RECENTS_ONLY', payload: false });
   };
 
-  const importLinks = (linksData: Partial<SavedLink>[]) => {
+  const importLinks = async (linksData: Partial<SavedLink>[]): Promise<SavedLink[]> => {
     const validLinks: SavedLink[] = linksData.map(linkData => ({
       id: generateId(),
       url: linkData.url || '',
@@ -323,8 +313,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       createdAt: new Date(),
       updatedAt: new Date()
     }));
-    
+
     dispatch({ type: 'IMPORT_LINKS', payload: validLinks });
+
+    let successfullyImported: SavedLink[] = [];
+
+    // Sync to cloud if user is authenticated
+    if (user) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      try {
+        for (const link of validLinks) {
+          // Check for existing link before saving to avoid duplicate Supabase calls if it was already in state
+          // The appReducer already filters by URL, so we primarily save what's new to the database.
+          // However, we need to ensure unique IDs for Supabase to prevent overwrites or errors.
+          // For now, assuming dispatch handles local uniqueness, and Supabase will handle its own.
+          await CloudSync.saveLink(user.id, link);
+          successfullyImported.push(link);
+        }
+        dispatch({ type: 'SET_SYNC_STATUS', payload: 'idle' });
+      } catch (error) {
+        console.error('Error syncing imported links to cloud:', error);
+        dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      }
+    }
+    return successfullyImported;
   };
 
   const setShowRecentsOnly = (show: boolean) => {
@@ -345,6 +357,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Add openAddLinkModal to open the add link modal
+  const openAddLinkModal = () => setShowAddLinkModal(true);
+
+  const openAuthModal = () => setShowAuthModal(true); // New: function to open auth modal
+
+  const closeAuthModal = () => setShowAuthModal(false); // New: function to close auth modal
+
+  // Add a tag to the global tag list if not present
+  const addGlobalTag = (tag: string) => {
+    if (!state.tags.includes(tag)) {
+      // This will update the tags in state by dispatching a dummy link update
+      // (since tags are derived from all links, we need to add the tag to at least one link)
+      // Instead, we can update the tags array directly in state for this session
+      // But to persist, we need to add it to a link, so we leave it to be added to the link on save
+      // Here, we update the tags array in state for immediate suggestions
+      dispatch({ type: 'SET_LINKS', payload: state.links.map(l => ({ ...l })) });
+      state.tags.push(tag);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -358,15 +390,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setSelectedTags,
         setSortBy,
         setShowStarredOnly,
-        toggleDarkMode,
         clearAllFilters,
         importLinks,
         syncStatus: state.syncStatus || "idle",
         setShowRecentsOnly,
-        retrySync
+        retrySync,
+        openAddLinkModal, // added here
+        addGlobalTag,
+        openAuthModal, // New: add to context provider
+        closeAuthModal, // New: add to context provider
+        showAuthModal, // Expose AuthModal visibility state
+        user, // New: Pass user to context provider
       }}
     >
       {children}
+      {showAddLinkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-lg mx-auto">
+            <AddLinkForm onClose={() => setShowAddLinkModal(false)} />
+          </div>
+        </div>
+      )}
+      {/* AuthModal controlled by AppContext */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={closeAuthModal} // Use new closeAuthModal
+      />
     </AppContext.Provider>
   );
 }

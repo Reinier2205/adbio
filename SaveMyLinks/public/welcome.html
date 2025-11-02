@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaveMyLinks - Your Personal Bookmark Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        dark: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                            600: '#475569',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
+        }
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 116, 139, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: rgba(14, 165, 233, 0.1);
+            color: #0ea5e9;
+            font-size: 1.5rem;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .accordion.active .accordion-content {
+            max-height: 1000px;
+        }
+        .app-preview {
+            border-radius: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid rgba(100, 116, 139, 0.2);
+        }
+        .nav-link {
+            position: relative;
+            padding-bottom: 5px;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #0ea5e9;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .mobile-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .mobile-menu.open {
+            max-height: 1000px;
+        }
+    </style>
+    <style>
+      /* Offset anchor scroll for fixed header */
+      .section-anchor {
+        scroll-margin-top: 80px;
+      }
+      @media (max-width: 768px) {
+        .section-anchor {
+          scroll-margin-top: 64px;
+        }
+      }
+    </style>
+</head>
+<body class="dark:bg-dark-900">
+    <!-- Simple Header -->
+    <header class="sticky top-0 z-50 gradient-bg border-b border-gray-800 shadow">
+      <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center">
+            <i class="fas fa-bookmark text-white text-xl"></i>
+          </div>
+          <h1 class="heading-3">SaveMyLinks</h1>
+        </div>
+        <a href="/" class="btn btn-secondary">Back to App</a>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg py-20">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <h1 class="text-2xl md:text-3xl font-bold text-white mb-4">Your Personal Space to Save & Organize Links</h1>
+                    <p class="text-base text-gray-300 mb-6">SaveMyLinks helps you collect, organize, and quickly find your favorite websites, videos, articles, and more.</p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="/" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition">
+                            Get Started Now
+                        </a>
+                        <a href="#features" class="px-6 py-3 bg-dark-800 hover:bg-dark-700 text-white rounded-lg font-medium transition">
+                            Learn More
+                        </a>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="app-preview relative">
+                        <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80" alt="SaveMyLinks App Preview" class="w-full max-w-md rounded-3xl">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark-900 to-transparent rounded-3xl"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-dark-800 scroll-mt-32">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 id="features" class="section-anchor text-xl md:text-2xl font-bold text-white mb-3">What Can You Do Here?</h2>
+                <p class="text-sm text-gray-400 max-w-3xl mx-auto">SaveMyLinks offers everything you need to manage your online discoveries efficiently.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="card p-6 rounded-2xl">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-white">Save Links</h3>
+                    </div>
+                    <p class="text-sm text-gray-400">Found something cool online? Add it to your collection with just a click.</p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="card p-6 rounded-2xl">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-white">Organize with Tags</h3>
+                    </div>
+                    <p class="text-gray-400">Group your links by topic, mood, or anything you like using tags.</p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="card p-6 rounded-2xl">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-white">Star Your Favorites</h3>
+                    </div>
+                    <p class="text-gray-400">Mark your best finds so you can get to them fast.</p>
+                </div>
+                <!-- Feature 4 -->
+                <div class="card p-6 rounded-2xl">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-white">Search Instantly</h3>
+                    </div>
+                    <p class="text-gray-400">Can't remember where you saved that meme or recipe? Just search!</p>
+                </div>
+                <!-- Feature 5 -->
+                <div class="card p-6 rounded-2xl">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-white">Access Anywhere</h3>
+                    </div>
+                    <p class="text-gray-400">Use SaveMyLinks on your phone, tablet, or computer—your links are always with you.</p>
+                </div>
+                <!-- Feature 6 -->
+                <div class="card p-6 rounded-2xl">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-share-alt"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-white">Share Collections</h3>
+                    </div>
+                    <p class="text-gray-400">Want to show off your favorite links? Share a collection with friends.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-20 bg-dark-900 scroll-mt-32">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 id="how-it-works" class="section-anchor text-3xl md:text-4xl font-bold text-white mb-4">How to Get Started</h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">Getting started with SaveMyLinks is quick and easy.</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <div class="space-y-10">
+                        <!-- Step 1 -->
+                        <div class="flex">
+                            <div class="flex-shrink-0 mr-6">
+                                <div class="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center">
+                                    <span class="text-white font-bold text-xl">1</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-semibold text-white mb-1">Add New Link</h3>
+                                <p class="text-sm text-gray-400">Click "Add New Link" at the top to save your first link. Paste the website address and give it a name.</p>
+                            </div>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="flex">
+                            <div class="flex-shrink-0 mr-6">
+                                <div class="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center">
+                                    <span class="text-white font-bold text-xl">2</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Organize with Tags</h3>
+                                <p class="text-gray-400">Use tags to keep things organized. For example: #recipes, #memes, #work.</p>
+                            </div>
+                        </div>
+                        <!-- Step 3 -->
+                        <div class="flex">
+                            <div class="flex-shrink-0 mr-6">
+                                <div class="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center">
+                                    <span class="text-white font-bold text-xl">3</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Star Favorites</h3>
+                                <p class="text-gray-400">Click the star to mark your favorite links for quick access.</p>
+                            </div>
+                        </div>
+                        <!-- Step 4 -->
+                        <div class="flex">
+                            <div class="flex-shrink-0 mr-6">
+                                <div class="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center">
+                                    <span class="text-white font-bold text-xl">4</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-white mb-2">Search & Share</h3>
+                                <p class="text-gray-400">Use the search bar to find any link in seconds. Share collections with friends.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="relative">
+                        <div class="absolute -top-10 -left-10 w-32 h-32 bg-primary-600 rounded-full opacity-20 blur-3xl"></div>
+                        <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary-600 rounded-full opacity-10 blur-3xl"></div>
+                        <div class="card p-8 rounded-2xl max-w-md">
+                            <h3 class="text-2xl font-bold text-white mb-6">Sign Up for Full Benefits</h3>
+                            <p class="text-gray-400 mb-6">Sign up with your email or social account to keep your links safe and access them from any device.</p>
+                            <div class="space-y-4">
+                                <a href="https://mflcvdcdqnqwnitwemih.supabase.co/auth/v1/authorize?provider=google&redirect_to=/" class="w-full block py-3 bg-dark-800 hover:bg-dark-700 text-white rounded-lg flex items-center justify-center mb-2" style="text-decoration: none;"><i class="fab fa-google mr-3"></i> Continue with Google</a>
+                                <a href="https://mflcvdcdqnqwnitwemih.supabase.co/auth/v1/authorize?provider=github&redirect_to=/" class="w-full block py-3 bg-dark-800 hover:bg-dark-700 text-white rounded-lg flex items-center justify-center mb-2" style="text-decoration: none;"><i class="fab fa-github mr-3"></i> Continue with GitHub</a>
+                                <a href="/" class="w-full block py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-center mb-2" style="text-decoration: none;">Sign Up with Email</a>
+                                <p class="text-gray-500 text-sm mt-6 text-center">Already have an account? <a href="/" class="text-primary-500 hover:underline">Log in</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-20 bg-dark-800 scroll-mt-32">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 id="faq" class="section-anchor text-3xl md:text-4xl font-bold text-white mb-4">Frequently Asked Questions</h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">Find answers to common questions about SaveMyLinks.</p>
+            </div>
+            
+            <div class="max-w-3xl mx-auto">
+                <!-- FAQ 1 -->
+                <div class="card accordion mb-4 rounded-2xl">
+                    <button class="accordion-button w-full text-left p-6 flex justify-between items-center">
+                        <span class="text-base font-medium text-white">Do I need an account?</span>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="px-6 pb-6 text-gray-400">
+                            <p>Nope! You can start saving links right away. But if you want to keep them safe and use them on other devices, sign up for free.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- FAQ 2 -->
+                <div class="card accordion mb-4 rounded-2xl">
+                    <button class="accordion-button w-full text-left p-6 flex justify-between items-center">
+                        <span class="text-lg font-medium text-white">Are my links private?</span>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="px-6 pb-6 text-gray-400">
+                            <p>Yes! Only you can see your links unless you choose to share a collection.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- FAQ 3 -->
+                <div class="card accordion mb-4 rounded-2xl">
+                    <button class="accordion-button w-full text-left p-6 flex justify-between items-center">
+                        <span class="text-lg font-medium text-white">Can I use this on my phone?</span>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="px-6 pb-6 text-gray-400">
+                            <p>Absolutely! SaveMyLinks works great on any device. We have a responsive web app that works perfectly on mobile browsers.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- FAQ 4 -->
+                <div class="card accordion mb-4 rounded-2xl">
+                    <button class="accordion-button w-full text-left p-6 flex justify-between items-center">
+                        <span class="text-lg font-medium text-white">How do I get help?</span>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="px-6 pb-6 text-gray-400">
+                            <p>Use the "Contact Admin" option in the menu if you need support or have feedback. You can also email us directly at reinier.olivier@gmail.com.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- FAQ 5 -->
+                <div class="card accordion mb-4 rounded-2xl">
+                    <button class="accordion-button w-full text-left p-6 flex justify-between items-center">
+                        <span class="text-lg font-medium text-white">Is there a limit to how many links I can save?</span>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="px-6 pb-6 text-gray-400">
+                            <p>The free version allows you to save up to 500 links. For unlimited storage and additional features, we offer premium plans.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Section -->
+    <section class="py-20 bg-dark-900">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Technical & Investor Guide</h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">Learn about the technology behind SaveMyLinks.</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="card p-8 rounded-2xl">
+                    <h3 class="text-2xl font-bold text-white mb-6">Modern Architecture</h3>
+                    <p class="text-gray-400 mb-6">SaveMyLinks is a modern, cloud-enabled bookmark manager built with React, Vite, TailwindCSS, and Supabase. It offers secure, real-time link management, user authentication, and cloud sync features.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-dark-800 p-5 rounded-xl">
+                            <h4 class="text-lg font-semibold text-white mb-3">Key Technical Features</h4>
+                            <ul class="text-gray-400 space-y-2">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-primary-500 mt-1 mr-2"></i>
+                                    <span>Modern, Responsive UI</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-primary-500 mt-1 mr-2"></i>
+                                    <span>Sidebar Menu & Navigation</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-primary-500 mt-1 mr-2"></i>
+                                    <span>Comprehensive Link Management</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-primary-500 mt-1 mr-2"></i>
+                                    <span>Advanced Search & Filtering</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-primary-500 mt-1 mr-2"></i>
+                                    <span>Cloud Sync & Local Use</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-dark-800 p-5 rounded-xl">
+                            <h4 class="text-lg font-semibold text-white mb-3">Supabase Integration</h4>
+                            <ul class="text-gray-400 space-y-2">
+                                <li class="flex items-start">
+                                    <i class="fas fa-database text-primary-500 mt-1 mr-2"></i>
+                                    <span>Uses @supabase/supabase-js for all operations</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-cloud text-primary-500 mt-1 mr-2"></i>
+                                    <span>Cloud sync for links, profiles, and settings</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-shield-alt text-primary-500 mt-1 mr-2"></i>
+                                    <span>Row Level Security (RLS) for data isolation</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-users text-primary-500 mt-1 mr-2"></i>
+                                    <span>Email/password and social logins</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark-800 p-5 rounded-xl mb-8">
+                        <h4 class="text-lg font-semibold text-white mb-3">Business & Investor Information</h4>
+                        <p class="text-gray-400 mb-4">SaveMyLinks targets users who want a secure, cloud-synced, and user-friendly bookmark manager. The architecture is scalable and can support premium features, team plans, and integrations with other platforms.</p>
+                        <p class="text-gray-400">The app is designed for easy deployment on platforms like Vercel, Netlify, or Cloudflare Pages.</p>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <a href="https://savemylinks.pages.dev/technical-guide" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition">
+                            View Full Technical Documentation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="py-20 gradient-bg scroll-mt-32">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 id="contact" class="section-anchor text-3xl md:text-4xl font-bold text-white mb-4">Get In Touch</h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">Have questions or feedback? We'd love to hear from you.</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="md:w-1/2">
+                        <div class="card p-8 rounded-2xl h-full">
+                            <h3 class="text-xl font-bold text-white mb-4">Contact Information</h3>
+                            
+                            <div class="space-y-6">
+                                <div class="flex items-start">
+                                    <div class="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center mr-4">
+                                        <i class="fas fa-envelope text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-medium text-white mb-1">Email</h4>
+                                        <a href="mailto:reinier.olivier@gmail.com" class="text-primary-400 hover:underline">reinier.olivier@gmail.com</a>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start">
+                                    <div class="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center mr-4">
+                                        <i class="fas fa-globe text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-medium text-white mb-1">Website</h4>
+                                        <a href="https://savemylinks.pages.dev" target="_blank" class="text-primary-400 hover:underline">SaveMyLinks.pages.dev</a>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start">
+                                    <div class="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center mr-4">
+                                        <i class="fas fa-file-alt text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-medium text-white mb-1">Documentation</h4>
+                                        <a href="/feature-guide" class="text-primary-400 hover:underline">Technical Guide</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="md:w-1/2">
+                        <div class="card p-8 rounded-2xl h-full">
+                            <h3 class="text-2xl font-bold text-white mb-6">Send Us a Message</h3>
+                            <form id="contact-admin-form">
+                                <div class="mb-5">
+                                    <label class="block text-sm text-gray-300 mb-1" for="subject">Subject</label>
+                                    <input type="text" id="subject" name="subject" required class="w-full px-4 py-3 bg-dark-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-white">
+                                </div>
+                                <div class="mb-5">
+                                    <label class="block text-gray-300 mb-2" for="message">Message</label>
+                                    <textarea id="message" name="message" rows="4" required class="w-full px-4 py-3 bg-dark-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-white"></textarea>
+                                </div>
+                                <button type="submit" id="contact-admin-submit" class="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition">Send Message</button>
+                                <div id="contact-admin-status" class="mt-4 text-center text-base"></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Back to App Button at Bottom -->
+    <div class="w-full flex justify-center py-8 gradient-bg border-t border-gray-800">
+      <a href="/" class="btn btn-secondary">Back to App</a>
+    </div>
+    <!-- Footer -->
+    <footer class="py-10 bg-dark-900 border-t border-gray-800">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-6 md:mb-0">
+                    <div class="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center mr-3">
+                        <i class="fas fa-bookmark text-white"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white">SaveMyLinks</h2>
+                </div>
+                
+                <div class="flex space-x-6 mb-6 md:mb-0">
+                    <a href="#" class="text-gray-400 hover:text-white">
+                        <i class="fab fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white">
+                        <i class="fab fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white">
+                        <i class="fab fa-linkedin text-xl"></i>
+                    </a>
+                </div>
+                
+                <p class="text-gray-500 text-xs">© 2023 SaveMyLinks. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Accordion functionality
+        const accordions = document.querySelectorAll('.accordion');
+        accordions.forEach(accordion => {
+            const button = accordion.querySelector('.accordion-button');
+            button.addEventListener('click', () => {
+                accordion.classList.toggle('active');
+                const icon = button.querySelector('i');
+                if (accordion.classList.contains('active')) {
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+    </script>
+    <script>
+// Contact Admin form handler
+const contactForm = document.getElementById('contact-admin-form');
+if (contactForm) {
+    contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const subject = document.getElementById('subject').value.trim();
+        const message = document.getElementById('message').value.trim();
+        const statusDiv = document.getElementById('contact-admin-status');
+        statusDiv.textContent = '';
+        if (!subject || !message) {
+            statusDiv.textContent = 'Subject and message are required.';
+            statusDiv.className = 'mt-4 text-center text-base text-red-400';
+            return;
+        }
+        document.getElementById('contact-admin-submit').disabled = true;
+        statusDiv.textContent = 'Sending...';
+        statusDiv.className = 'mt-4 text-center text-base text-gray-300';
+        try {
+            const res = await fetch('https://mflcvdcdqnqwnitwemih.supabase.co/functions/v1/resend-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: 'reinier.olivier@gmail.com',
+                    subject,
+                    html: `<p>${message.replace(/\n/g, '<br/>')}</p>`
+                })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                throw new Error(data.error || 'Failed to send message.');
+            }
+            statusDiv.textContent = 'Message sent to admin!';
+            statusDiv.className = 'mt-4 text-center text-base text-green-400';
+            contactForm.reset();
+        } catch (err) {
+            statusDiv.textContent = err.message || 'Failed to send message.';
+            statusDiv.className = 'mt-4 text-center text-base text-red-400';
+        } finally {
+            document.getElementById('contact-admin-submit').disabled = false;
+        }
+    });
+}
+    </script>
+</body>
+</html> 

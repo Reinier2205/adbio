@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { X, Share2, Copy, Check, AlertTriangle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { storage, generateShareId } from '../utils/storage';
+import { storage } from '../utils/storage';
 import { SharedCollection } from '../types';
+import { resetIOSZoom } from '../utils/iosZoomReset';
+import { generateShareId } from '../utils/idGenerator';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -76,52 +78,48 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
   };
 
   const handleClose = () => {
-    setSelectedLinks([]);
-    setTitle('My Link Collection');
-    setDescription('');
-    setShareUrl('');
-    setCopied(false);
     onClose();
+    resetIOSZoom();
   };
 
   if (shareUrl) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white">
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="bg-[rgba(30,41,59,0.85)] rounded-xl shadow-xl max-w-md w-full">
+          <div className="flex items-center justify-between p-8 border-b border-input-border">
+            <h2 className="text-lg font-bold font-sans text-main">
               Collection Shared!
             </h2>
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-card-hover rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-muted" />
             </button>
           </div>
 
-          <div className="p-6 space-y-4">
+          <div className="p-8 space-y-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Share2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+              <div className="w-16 h-16 bg-chip rounded-full flex items-center justify-center mx-auto mb-8">
+                <Share2 className="w-8 h-8 text-green-400" />
               </div>
-              <p className="text-base text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-base text-muted mb-8">
                 Your collection is now available at the link below. Anyone with this link can view your selected links.
               </p>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Share URL:</p>
-              <div className="flex items-center gap-2">
+            <div className="bg-input p-4 rounded-lg">
+              <p className="text-sm text-muted mb-4">Share URL:</p>
+              <div className="flex items-center gap-4">
                 <input
                   type="text"
                   value={shareUrl}
                   readOnly
-                  className="flex-1 px-3 py-2 text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md text-gray-900 dark:text-white"
+                  className="flex-1 px-3 py-2 bg-input border border-input-border rounded-md text-main text-base shadow-sm"
                 />
                 <button
                   onClick={copyShareUrl}
-                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-1"
+                  className="btn btn-primary flex items-center gap-2 px-4 py-2 text-sm"
                 >
                   {copied ? (
                     <>
@@ -138,14 +136,14 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
               </div>
             </div>
 
-            <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div className="bg-card-hover border border-yellow-800 rounded-lg p-4">
+              <div className="flex items-start gap-4">
+                <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                 <div className="text-sm">
-                  <p className="text-yellow-800 dark:text-yellow-200 font-medium mb-1">
+                  <p className="text-yellow-200 font-medium mb-4">
                     Privacy Notice
                   </p>
-                  <p className="text-yellow-700 dark:text-yellow-300">
+                  <p className="text-yellow-300">
                     This collection is publicly accessible. Anyone with the link can view the shared links.
                   </p>
                 </div>
@@ -154,7 +152,7 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
 
             <button
               onClick={handleClose}
-              className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+              className="w-full btn btn-primary mt-6"
             >
               Done
             </button>
@@ -165,44 +163,44 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-bold font-sans text-gray-900 dark:text-white">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-[rgba(30,41,59,0.85)] rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-input-border">
+          <h1 className="heading-3 text-main">
             Share Link Collection
-          </h2>
+          </h1>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-card-hover rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-muted" />
           </button>
         </div>
 
         <div className="p-6 space-y-6 max-h-[calc(90vh-120px)] overflow-y-auto">
           <div className="space-y-4">
             <div>
-              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-bold font-sans text-main mb-2">
                 Collection Title
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-4 py-3 border border-input-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-main placeholder-muted text-base shadow-sm"
                 placeholder="Enter a title for your collection"
               />
             </div>
 
             <div>
-              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-base font-bold font-sans text-main mb-2">
                 Description (Optional)
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                className="w-full px-4 py-3 border border-input-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-main placeholder-muted text-base shadow-sm"
                 placeholder="Add a description for your collection"
               />
             </div>
@@ -210,43 +208,43 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
 
           <div>
             <div className="flex items-center justify-between mb-4">
-              <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300">
+              <label className="block text-base font-bold font-sans text-main mb-2">
                 Select Links to Share ({selectedLinks.length}/{links.length})
               </label>
               <div className="flex gap-2">
                 <button
                   onClick={selectAll}
-                  className="text-base font-medium font-sans text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                  className="text-base font-medium font-sans text-blue-400 hover:text-blue-300"
                 >
                   Select All
                 </button>
-                <span className="text-gray-400">|</span>
+                <span className="text-muted">|</span>
                 <button
                   onClick={deselectAll}
-                  className="text-base font-medium font-sans text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                  className="text-base font-medium font-sans text-blue-400 hover:text-blue-300"
                 >
                   Deselect All
                 </button>
               </div>
             </div>
 
-            <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div className="space-y-2 max-h-60 overflow-y-auto border border-input-border rounded-lg">
               {links.map((link) => (
                 <label
                   key={link.id}
-                  className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                  className="flex items-center gap-3 p-3 hover:bg-card-hover cursor-pointer font-bold text-main"
                 >
                   <input
                     type="checkbox"
                     checked={selectedLinks.includes(link.id)}
                     onChange={() => toggleLinkSelection(link.id)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-input-border text-blue-400 focus:ring-primary"
                   />
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     {link.favicon && (
                       <img
                         src={link.favicon}
-                        alt=""
+                        alt={`Favicon for ${link.title}`}
                         className="w-4 h-4 flex-shrink-0"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
@@ -254,10 +252,10 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
                       />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900 dark:text-white truncate">
+                      <p className="font-medium text-muted truncate">
                         {link.title}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                      <p className="text-sm text-muted truncate">
                         {link.url}
                       </p>
                     </div>
@@ -267,18 +265,18 @@ export function ShareModal({ isOpen, onClose }: ShareModalProps) {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex gap-3 pt-4 border-t border-input-border">
             <button
               onClick={createShareableCollection}
               disabled={selectedLinks.length === 0 || isCreating}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="flex-1 btn btn-primary flex items-center justify-center gap-2"
             >
               <Share2 className="w-4 h-4" />
               {isCreating ? 'Creating...' : 'Create Shareable Link'}
             </button>
             <button
               onClick={handleClose}
-              className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+              className="flex-1 btn btn-secondary"
             >
               Cancel
             </button>

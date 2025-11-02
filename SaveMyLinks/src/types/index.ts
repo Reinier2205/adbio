@@ -30,6 +30,18 @@ export interface AppState {
   showRecentsOnly: boolean;
 }
 
+export interface AppSettings {
+  darkMode?: boolean;
+}
+
+export interface SavedSharedCollection extends SharedCollection {}
+
+export interface UserReport {
+  id: string;
+  type: string;
+  timestamp: string;
+}
+
 export interface LinkFormData {
   url: string;
   title: string;

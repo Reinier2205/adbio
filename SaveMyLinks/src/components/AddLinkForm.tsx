@@ -1,10 +1,17 @@
-import React, { useState, useRef } from 'react';
-import { Plus, X, Tag, Loader2, Link as LinkIcon } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
+import { Plus, X as LucideX, Tag, Loader2, Link as LinkIcon } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { fetchLinkMetadata, validateUrl, normalizeUrl } from '../utils/linkUtils';
+import { validateUrl, normalizeUrl } from '../utils/linkUtils';
+import { fetchLinkMetadata } from '../utils/metadataFetcher';
+import type { LinkMetadata } from '../utils/metadataFetcher';
+import { Button } from './Button';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-export function AddLinkForm() {
-  const { addLink, tags } = useApp();
+// Context to provide main content ref
+export const MainContentScrollContext = React.createContext<React.RefObject<HTMLElement> | null>(null);
+
+export function AddLinkForm({ onClose }: { onClose?: () => void }) {
+  const { addLink, tags, addGlobalTag } = useApp();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -16,22 +23,77 @@ export function AddLinkForm() {
   const [tagInput, setTagInput] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const urlInputRef = useRef<HTMLInputElement>(null);
+  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
+  const [metadataError, setMetadataError] = useState<string | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  // Debounce timer ref
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
+  const mainContentRef = useContext(MainContentScrollContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const resizeTextarea = (ref: React.RefObject<HTMLTextAreaElement>) => {
+    if (ref.current) {
+      ref.current.style.height = 'auto';
+      ref.current.style.height = ref.current.scrollHeight + 'px';
+    }
+  };
+
+  useEffect(() => { resizeTextarea(titleRef); }, [formData.title]);
+  useEffect(() => { resizeTextarea(notesRef); }, [formData.notes]);
+
+  // Helper to handle metadata fetch result
+  const handleMetadataResult = (metadata: LinkMetadata | null) => {
+    if (!metadata) {
+      setMetadataError('No metadata found for this link.');
+      setPreviewImageUrl(null);
+      return;
+    }
+    setFormData(prev => ({
+      ...prev,
+      title: prev.title || metadata.title || '',
+      notes: prev.notes || metadata.description || '',
+      url: prev.url // don't overwrite url
+    }));
+    setPreviewImageUrl(metadata.imageUrl || null);
+    setMetadataError(null);
+  };
 
   const handleUrlBlur = async () => {
     if (formData.url && !formData.title) {
       setIsLoading(true);
       try {
         const metadata = await fetchLinkMetadata(formData.url);
-        setFormData(prev => ({
-          ...prev,
-          title: metadata.title
-        }));
-      } catch (error) {
-        console.error('Failed to fetch metadata:', error);
+        handleMetadataResult(metadata);
+      } catch (error: any) {
+        setMetadataError(error.message || 'Failed to fetch metadata.');
+        setPreviewImageUrl(null);
       } finally {
         setIsLoading(false);
       }
     }
+  };
+
+  // Handle paste event for URL input
+  const handleUrlPaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = e.clipboardData.getData('Text');
+    if (!validateUrl(pastedText)) return;
+    setMetadataError(null);
+    setIsFetchingMetadata(true);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const metadata = await fetchLinkMetadata(pastedText);
+        handleMetadataResult(metadata);
+      } catch (err: any) {
+        setMetadataError(err.message || 'Could not fetch link metadata.');
+        setPreviewImageUrl(null);
+      } finally {
+        setIsFetchingMetadata(false);
+      }
+    }, 300);
   };
 
   const handleTagInputChange = (value: string) => {
@@ -53,6 +115,9 @@ export function AddLinkForm() {
         ...prev,
         tags: [...prev.tags, tag]
       }));
+      if (!tags.includes(tag)) {
+        addGlobalTag(tag);
+      }
     }
     setTagInput('');
     setSuggestions([]);
@@ -72,30 +137,48 @@ export function AddLinkForm() {
       return;
     }
 
+    // Add the tagInput value if present and not already in tags
+    let tagsToSave = formData.tags;
+    if (tagInput && !formData.tags.includes(tagInput)) {
+      tagsToSave = [...formData.tags, tagInput];
+      if (!tags.includes(tagInput)) {
+        addGlobalTag(tagInput);
+      }
+    }
+
     setIsLoading(true);
     
     try {
       let title = formData.title;
-      let favicon: string | undefined;
       
       if (!title) {
         const metadata = await fetchLinkMetadata(formData.url);
+        if (metadata) {
         title = metadata.title;
-        favicon = metadata.favicon;
+        setPreviewImageUrl(metadata.imageUrl || null);
+        }
       }
 
       addLink({
         url: normalizeUrl(formData.url),
         title: title || 'Untitled Link',
-        favicon,
         notes: formData.notes,
-        tags: formData.tags,
-        starred: false
+        tags: tagsToSave,
+        starred: false,
+        favicon: previewImageUrl || undefined,
       });
+
+      // Scroll main content into view after adding a link
+      if (mainContentRef && mainContentRef.current) {
+        mainContentRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
 
       // Reset form
       setFormData({ url: '', title: '', notes: '', tags: [] });
       setIsExpanded(false);
+      if (onClose) onClose();
+      // Soft navigation to current route
+      navigate(location.pathname, { replace: true });
     } catch (error) {
       console.error('Failed to add link:', error);
     } finally {
@@ -111,88 +194,138 @@ export function AddLinkForm() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="card overflow-hidden">
       {!isExpanded ? (
-        <button
+        <Button
+          className="w-full text-left flex items-center gap-4 min-h-[48px] bg-input border border-input-border text-main placeholder-muted"
           onClick={() => {
             setIsExpanded(true);
             setTimeout(() => urlInputRef.current?.focus(), 100);
           }}
-          className="w-full p-4 text-left flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 ease-in-out active:bg-gray-100 dark:active:bg-gray-800 min-h-[44px]"
         >
-          <div className="flex items-center justify-center w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="flex items-center justify-center w-12 h-12 bg-input border border-input-border rounded-lg">
+            <Plus className="w-5 h-5 text-blue-400" />
           </div>
           <div>
-            <p className="font-medium font-sans text-gray-900 dark:text-white">Add New Link</p>
-            <p className="text-sm font-sans text-gray-500 dark:text-gray-400">Save a link to your collection</p>
+            <p className="heading-4 text-main">Add New Link</p>
+            <p className="body-sm text-main">Save a link to your collection</p>
           </div>
-        </button>
+        </Button>
       ) : (
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 transition-colors duration-200 ease-in-out">
+        <form onSubmit={handleSubmit} className="p-8 space-y-4 transition-colors duration-200 ease-in-out">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold font-sans text-gray-900 dark:text-white">Add New Link</h3>
-            <button
+            <h3 className="heading-4 text-main">Add New Link</h3>
+            <Button
+              variant="secondary"
+              className="p-1"
               type="button"
-              onClick={() => setIsExpanded(false)}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+              onClick={() => {
+                setIsExpanded(false);
+                if (onClose) onClose();
+              }}
             >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
+              <LucideX className="w-5 h-5 text-muted" />
+            </Button>
           </div>
 
           <div>
-            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-base font-bold font-sans text-white mb-2">
               URL *
             </label>
             <div className="relative">
-              <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted" />
               <input
                 ref={urlInputRef}
                 type="url"
                 value={formData.url}
                 onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
                 onBlur={handleUrlBlur}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                onPaste={handleUrlPaste}
+                className="w-full pl-10 pr-4 py-3 border border-input-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-main placeholder-muted text-base"
                 placeholder="https://example.com"
                 required
               />
-              {isLoading && (
+              {(isLoading || isFetchingMetadata) && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                  <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
                 </div>
+              )}
+            </div>
+            {previewImageUrl && (
+              <div className="mt-2 flex items-center gap-2">
+                <img src={previewImageUrl} alt={`Preview of ${formData.title || formData.url}`} className="w-10 h-10 rounded object-cover border" />
+                <span className="text-xs text-muted">Preview</span>
+              </div>
+            )}
+            {metadataError && (
+              <div className="text-sm text-blue-400 bg-blue-900/20 rounded px-3 py-2 mt-2">
+                No metadata found for this link. You can add your own title and notes.
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-base font-bold font-sans text-white mb-2">
+              Title
+            </label>
+            <div className="relative">
+              <textarea
+                ref={titleRef}
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                rows={1}
+                className="w-full px-4 py-3 pr-10 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-main placeholder-muted text-base"
+              placeholder="Link title (auto-generated if empty)"
+                style={{overflow: 'hidden'}}
+              />
+              {formData.title && (
+                <button
+                  type="button"
+                  aria-label="Clear Title"
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, title: '' }));
+                    setTimeout(() => titleRef.current?.focus(), 0);
+                  }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none"
+                >
+                  <LucideX className="w-4 h-4 text-gray-500" />
+                </button>
               )}
             </div>
           </div>
 
           <div>
-            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
-              Title
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-              placeholder="Link title (auto-generated if empty)"
-            />
-          </div>
-
-          <div>
-            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-base font-bold font-sans text-white mb-2">
               Notes
             </label>
+            <div className="relative">
             <textarea
+                ref={notesRef}
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none"
+                className="w-full px-4 py-3 pr-10 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white/80 dark:bg-[rgba(30,41,59,0.85)] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none text-base shadow-sm"
               placeholder="Add your notes or description..."
-            />
+                style={{overflow: 'hidden'}}
+              />
+              {formData.notes && (
+                <button
+                  type="button"
+                  aria-label="Clear Notes"
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, notes: '' }));
+                    setTimeout(() => notesRef.current?.focus(), 0);
+                  }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none"
+                >
+                  <LucideX className="w-4 h-4 text-gray-500" />
+                </button>
+              )}
+            </div>
           </div>
 
           <div>
-            <label className="block text-base font-medium font-sans text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-base font-bold font-sans text-white mb-2">
               Tags
             </label>
             
@@ -210,7 +343,7 @@ export function AddLinkForm() {
                       onClick={() => removeTag(tag)}
                       className="ml-1 hover:text-blue-600 dark:hover:text-blue-300"
                     >
-                      <X className="w-3 h-3" />
+                      <LucideX className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
@@ -223,7 +356,7 @@ export function AddLinkForm() {
                 value={tagInput}
                 onChange={(e) => handleTagInputChange(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white/80 dark:bg-[rgba(30,41,59,0.85)] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-base shadow-sm"
                 placeholder="Add tags (press Enter to add)"
               />
               
@@ -245,25 +378,26 @@ export function AddLinkForm() {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button
+            <Button
+              variant="primary"
+              className="w-full flex items-center justify-center gap-2"
               type="submit"
-              disabled={!formData.url || isLoading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              disabled={isLoading}
             >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )}
-              Add Link
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsExpanded(false)}
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              Save Link
+            </Button>
+            <Button
+              variant="secondary"
               className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+              type="button"
+              onClick={() => {
+                setIsExpanded(false);
+                if (onClose) onClose();
+              }}
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
       )}

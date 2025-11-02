@@ -11,9 +11,9 @@ export function CloudSyncStatus({ onSignInClick }: CloudSyncStatusProps) {
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-        <CloudOff className="w-4 h-4 text-gray-500" />
-        <span className="text-base font-medium font-sans text-gray-600 dark:text-gray-400">Local only</span>
+      <div className="flex items-center gap-2 px-4 py-2 bg-chip rounded-lg">
+        <CloudOff className="w-4 h-4 text-muted" />
+        <span className="body-sm text-main">Local only</span>
       </div>
     );
   }
@@ -21,9 +21,9 @@ export function CloudSyncStatus({ onSignInClick }: CloudSyncStatusProps) {
   if (user) {
     return (
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 px-3 py-2 bg-green-100 dark:bg-blue-700 rounded-lg">
-          <Cloud className="w-4 h-4 text-green-600 dark:text-white" />
-          <span className="text-base font-semibold font-sans text-green-700 dark:text-white">Synced</span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-chip rounded-lg">
+          <Cloud className="w-4 h-4 text-blue-400" />
+          <span className="body-sm text-main">Synced</span>
         </div>
       </div>
     );
@@ -32,10 +32,10 @@ export function CloudSyncStatus({ onSignInClick }: CloudSyncStatusProps) {
   return (
     <button
       onClick={onSignInClick}
-      className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-700 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-lg transition-colors"
+      className="flex items-center gap-2 px-4 py-2 bg-chip hover:bg-[#334155] rounded-lg transition-colors"
     >
-      <User className="w-4 h-4 text-blue-600 dark:text-white" />
-      <span className="text-base font-semibold font-sans text-blue-700 dark:text-white">Sign in to sync</span>
+      <User className="w-4 h-4 text-blue-400" />
+      <span className="body-sm text-main">Sign in to sync</span>
     </button>
   );
 }

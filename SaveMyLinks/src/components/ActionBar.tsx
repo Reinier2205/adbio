@@ -6,7 +6,7 @@ export function ActionBar() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-4">
         {/* Remove the Share Collection and Export/Import buttons from the JSX */}
       </div>
     </div>
