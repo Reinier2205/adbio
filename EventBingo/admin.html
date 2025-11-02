@@ -81,6 +81,103 @@
       display: none;
     }
 
+    /* Sticky Workflow Steps */
+    .workflow-steps-sticky {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(26, 26, 46, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      margin: -30px -30px 30px -30px;
+      border-radius: 20px 20px 0 0;
+      border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+    }
+
+    /* Workflow Step Sections */
+    .workflow-step-section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .workflow-step-section.active {
+      border-color: rgba(255, 215, 0, 0.5);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .workflow-step-section.completed {
+      border-color: rgba(81, 207, 102, 0.5);
+      background: rgba(81, 207, 102, 0.05);
+    }
+
+    .workflow-step-section.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .step-section-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+
+    .step-section-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      flex-shrink: 0;
+    }
+
+    .workflow-step-section.active .step-section-number {
+      background: var(--story-gradient);
+      border-color: #ffd700;
+    }
+
+    .workflow-step-section.completed .step-section-number {
+      background: #51cf66;
+      border-color: #51cf66;
+    }
+
+    .step-section-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    .step-section-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .workflow-step-section.active .step-section-content {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-actions {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
     .section-title {
       font-size: 1.8rem;
       font-weight: bold;
@@ -624,241 +721,251 @@
 
     <!-- Create Event Workflow -->
     <div id="createEventWorkflow" class="section hidden">
-      <!-- Workflow Steps Indicator -->
-      <div class="workflow-steps">
-        <div class="workflow-step active" id="step1">
-          <div class="step-number">1</div>
-          <div class="step-label">Event Details</div>
-        </div>
-        <div class="workflow-step" id="step2">
-          <div class="step-number">2</div>
-          <div class="step-label">AI Prompt</div>
-        </div>
-        <div class="workflow-step" id="step3">
-          <div class="step-number">3</div>
-          <div class="step-label">Photo Squares</div>
-        </div>
-        <div class="workflow-step" id="step4">
-          <div class="step-number">4</div>
-          <div class="step-label">Preview & Save</div>
+      <!-- Sticky Workflow Steps Indicator -->
+      <div class="workflow-steps-sticky">
+        <div class="workflow-steps">
+          <div class="workflow-step active" id="step1">
+            <div class="step-number">1</div>
+            <div class="step-label">Event Details</div>
+          </div>
+          <div class="workflow-step" id="step2">
+            <div class="step-number">2</div>
+            <div class="step-label">AI Prompt</div>
+          </div>
+          <div class="workflow-step" id="step3">
+            <div class="step-number">3</div>
+            <div class="step-label">Photo Squares</div>
+          </div>
+          <div class="workflow-step" id="step4">
+            <div class="step-number">4</div>
+            <div class="step-label">Preview & Save</div>
+          </div>
         </div>
       </div>
 
       <!-- Step 1: Event Details -->
-      <div id="eventDetailsStep" class="workflow-content">
-        <div class="section-title">
-          <span>📝</span>
-          Event Details
+      <div id="eventDetailsSection" class="workflow-step-section active">
+        <div class="step-section-header">
+          <div class="step-section-number">1</div>
+          <div class="step-section-title">Event Details</div>
         </div>
-        <div class="section-subtitle">
-          Let's start by setting up the basic information for your event
-        </div>
-
-        <form id="eventDetailsForm">
-          <div class="form-group">
-            <label for="eventTitle">Event Title *</label>
-            <input type="text" id="eventTitle" placeholder="e.g., Sarah's 30th Birthday Party" required>
-            <div class="form-help">Give your event a memorable name</div>
-          </div>
-          
-          <div class="form-group">
-            <label for="eventDescription">Event Description *</label>
-            <textarea id="eventDescription" placeholder="Describe your event - what's the occasion, who's attending, what makes it special..." required></textarea>
-            <div class="form-help">This helps create better photo challenges</div>
-          </div>
-          
-          <div class="form-group">
-            <label for="eventCode">Event Code (optional)</label>
-            <input type="text" id="eventCode" placeholder="Leave empty for auto-generation" maxlength="20">
-            <div class="form-help">Players will use this code to join. Use letters, numbers, and hyphens only</div>
-          </div>
-          
-          <div class="form-group">
-            <label for="adminUser">Admin Username *</label>
-            <input type="text" id="adminUser" placeholder="Your name or username" required>
-            <div class="form-help">This identifies you as the event organizer</div>
+        <div class="step-section-content">
+          <div class="section-subtitle">
+            Let's start by setting up the basic information for your event
           </div>
 
-          <div style="display: flex; gap: 15px; margin-top: 30px;">
-            <button type="button" class="btn btn-secondary" onclick="cancelCreateEvent()">
-              <span>❌</span>
-              Cancel
-            </button>
-            <button type="submit" class="btn btn-primary" style="flex: 1;">
-              <span>➡️</span>
-              Continue to AI Prompt
-            </button>
-          </div>
-        </form>
+          <form id="eventDetailsForm">
+            <div class="form-group">
+              <label for="eventTitle">Event Title *</label>
+              <input type="text" id="eventTitle" placeholder="e.g., Sarah's 30th Birthday Party" required>
+              <div class="form-help">Give your event a memorable name</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="eventDescription">Event Description *</label>
+              <textarea id="eventDescription" placeholder="Describe your event - what's the occasion, who's attending, what makes it special..." required></textarea>
+              <div class="form-help">This helps create better photo challenges</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="eventCode">Event Code (optional)</label>
+              <input type="text" id="eventCode" placeholder="Leave empty for auto-generation" maxlength="20">
+              <div class="form-help">Players will use this code to join. Use letters, numbers, and hyphens only</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="adminUser">Admin Username *</label>
+              <input type="text" id="adminUser" placeholder="Your name or username" required>
+              <div class="form-help">This identifies you as the event organizer</div>
+            </div>
+
+            <div class="step-actions">
+              <button type="button" class="btn btn-secondary" onclick="cancelCreateEvent()">
+                <span>❌</span>
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" style="flex: 1;" id="eventDetailsBtn">
+                <span>➡️</span>
+                Continue to AI Prompt
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <!-- Step 2: AI Prompt Generator -->
-      <div id="aiPromptStep" class="workflow-content hidden">
-        <div class="section-title">
-          <span>🤖</span>
-          AI Prompt Generator
+      <div id="aiPromptSection" class="workflow-step-section disabled">
+        <div class="step-section-header">
+          <div class="step-section-number">2</div>
+          <div class="step-section-title">AI Prompt Generator</div>
         </div>
-        <div class="section-subtitle">
-          Generate a custom prompt to create personalized photo challenges with AI
-        </div>
-
-        <form id="aiPromptForm">
-          <div class="form-group">
-            <label for="aiEventNames">People Who Will Be Photographed</label>
-            <input type="text" id="aiEventNames" placeholder="e.g., Sarah, Mike, Emma, David, Lisa">
-            <div class="form-help">Names of key people at the event (comma-separated). This personalizes the challenges</div>
-          </div>
-          
-          <div class="form-group">
-            <label for="aiEventTheme">Event Theme/Type</label>
-            <input type="text" id="aiEventTheme" placeholder="e.g., Birthday party, Wedding reception, Corporate retreat">
-            <div class="form-help">What type of event is this?</div>
-          </div>
-          
-          <div class="form-group">
-            <label for="aiEventLocation">Location (optional)</label>
-            <textarea id="aiEventLocation" placeholder="e.g., Beachside resort, Backyard garden, Downtown hotel ballroom" rows="2"></textarea>
-            <div class="form-help">Where is the event taking place? This helps create location-specific challenges</div>
-          </div>
-          
-          <div class="form-group">
-            <label for="aiEventActivities">Expected Activities to Photograph</label>
-            <textarea id="aiEventActivities" placeholder="e.g., Dancing, cake cutting, speeches, games, live music, cocktail hour" rows="3"></textarea>
-            <div class="form-help">What activities or moments do you want to capture?</div>
-          </div>
-          
-          <div class="form-group">
-            <label for="aiOtherInstructions">Other Instructions (optional)</label>
-            <textarea id="aiOtherInstructions" placeholder="Any special requirements, themes, or specific types of photos you want..." rows="2"></textarea>
-            <div class="form-help">Additional guidance for the AI to create better challenges</div>
+        <div class="step-section-content">
+          <div class="section-subtitle">
+            Generate a custom prompt to create personalized photo challenges with AI
           </div>
 
-          <button type="button" class="btn btn-primary btn-large" onclick="generateAIPrompt()">
-            <span>🎯</span>
-            Generate AI Prompt
-          </button>
-        </form>
+          <form id="aiPromptForm">
+            <div class="form-group">
+              <label for="aiEventNames">People Who Will Be Photographed</label>
+              <input type="text" id="aiEventNames" placeholder="e.g., Sarah, Mike, Emma, David, Lisa">
+              <div class="form-help">Names of key people at the event (comma-separated). This personalizes the challenges</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="aiEventTheme">Event Theme/Type</label>
+              <input type="text" id="aiEventTheme" placeholder="e.g., Birthday party, Wedding reception, Corporate retreat">
+              <div class="form-help">What type of event is this?</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="aiEventLocation">Location (optional)</label>
+              <textarea id="aiEventLocation" placeholder="e.g., Beachside resort, Backyard garden, Downtown hotel ballroom" rows="2"></textarea>
+              <div class="form-help">Where is the event taking place? This helps create location-specific challenges</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="aiEventActivities">Expected Activities to Photograph</label>
+              <textarea id="aiEventActivities" placeholder="e.g., Dancing, cake cutting, speeches, games, live music, cocktail hour" rows="3"></textarea>
+              <div class="form-help">What activities or moments do you want to capture?</div>
+            </div>
+            
+            <div class="form-group">
+              <label for="aiOtherInstructions">Other Instructions (optional)</label>
+              <textarea id="aiOtherInstructions" placeholder="Any special requirements, themes, or specific types of photos you want..." rows="2"></textarea>
+              <div class="form-help">Additional guidance for the AI to create better challenges</div>
+            </div>
 
-        <div id="aiPromptResult" class="ai-prompt-result hidden">
-          <div class="form-group">
-            <label for="generatedPrompt">Generated AI Prompt</label>
-            <textarea id="generatedPrompt" readonly rows="15" style="background: rgba(255,255,255,0.05); font-family: 'Courier New', monospace; font-size: 0.9rem;"></textarea>
-          </div>
-          
-          <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <button type="button" class="btn btn-success" onclick="copyPromptToClipboard()">
-              <span>📋</span>
-              Copy to Clipboard
+            <button type="button" class="btn btn-primary btn-large" onclick="generateAIPrompt()">
+              <span>🎯</span>
+              Generate AI Prompt
             </button>
-            <button type="button" class="btn btn-secondary" onclick="regeneratePrompt()">
-              <span>🔄</span>
-              Regenerate
+          </form>
+
+          <div id="aiPromptResult" class="ai-prompt-result hidden">
+            <div class="form-group">
+              <label for="generatedPrompt">Generated AI Prompt</label>
+              <textarea id="generatedPrompt" readonly rows="15" style="background: rgba(255,255,255,0.05); font-family: 'Courier New', monospace; font-size: 0.9rem;"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+              <button type="button" class="btn btn-success" onclick="copyPromptToClipboard()">
+                <span>📋</span>
+                Copy to Clipboard
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="regeneratePrompt()">
+                <span>🔄</span>
+                Regenerate
+              </button>
+            </div>
+            
+            <div class="ai-instructions">
+              <h4>📝 How to Use This Prompt:</h4>
+              <ol>
+                <li><strong>Copy the prompt above</strong> using the "Copy to Clipboard" button</li>
+                <li><strong>Open your favorite AI tool</strong> (ChatGPT, Claude, Gemini, etc.)</li>
+                <li><strong>Paste and send the prompt</strong> to the AI</li>
+                <li><strong>Copy the AI's response</strong> (it should be 25 photo challenges)</li>
+                <li><strong>Return here and paste the response</strong> in the next step</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn btn-secondary" onclick="goToPreviousStep(2)">
+              <span>⬅️</span>
+              Back to Details
+            </button>
+            <button type="button" class="btn btn-primary" onclick="goToNextStep(2)" style="flex: 1;" id="aiPromptBtn">
+              <span>➡️</span>
+              Continue to Photo Squares
             </button>
           </div>
-          
-          <div class="ai-instructions">
-            <h4>📝 How to Use This Prompt:</h4>
-            <ol>
-              <li><strong>Copy the prompt above</strong> using the "Copy to Clipboard" button</li>
-              <li><strong>Open your favorite AI tool</strong> (ChatGPT, Claude, Gemini, etc.)</li>
-              <li><strong>Paste and send the prompt</strong> to the AI</li>
-              <li><strong>Copy the AI's response</strong> (it should be 25 photo challenges)</li>
-              <li><strong>Return here and paste the response</strong> in the next step</li>
-            </ol>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 15px; margin-top: 30px;">
-          <button type="button" class="btn btn-secondary" onclick="goToStep(1)">
-            <span>⬅️</span>
-            Back to Details
-          </button>
-          <button type="button" class="btn btn-primary" onclick="goToStep(3)" style="flex: 1;">
-            <span>➡️</span>
-            Continue to Photo Squares
-          </button>
         </div>
       </div>
 
       <!-- Step 3: Photo Squares Configuration -->
-      <div id="photoSquaresStep" class="workflow-content hidden">
-        <div class="section-title">
-          <span>🎯</span>
-          Photo Squares Configuration
+      <div id="photoSquaresSection" class="workflow-step-section disabled">
+        <div class="step-section-header">
+          <div class="step-section-number">3</div>
+          <div class="step-section-title">Photo Squares Configuration</div>
         </div>
-        <div class="section-subtitle">
-          Paste the AI response here and edit the 25 photo challenges as needed
-        </div>
-
-        <div class="form-group">
-          <label for="squaresInput">25 Photo Challenges (one per line)</label>
-          <textarea 
-            id="squaresInput" 
-            placeholder="Paste the AI response here, or enter your own 25 photo challenges (one per line):&#10;&#10;A photo with someone laughing&#10;Someone trying the food&#10;A group photo by the entrance&#10;Someone dancing&#10;A candid moment during speeches&#10;..." 
-            rows="20" 
-            style="font-family: 'Segoe UI', sans-serif; line-height: 1.4;"
-          ></textarea>
-          <div id="squareCount" style="font-size: 0.9rem; color: #999; margin-top: 8px;">
-            0 / 25 squares
+        <div class="step-section-content">
+          <div class="section-subtitle">
+            Paste the AI response here and edit the 25 photo challenges as needed
           </div>
-        </div>
-        
-        <div id="validationMessages" class="validation-messages"></div>
-        
-        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-          <button type="button" class="btn btn-secondary btn-small" onclick="loadDefaultSquares()">
-            <span>🔄</span>
-            Load Default Squares
-          </button>
-          <button type="button" class="btn btn-secondary btn-small" onclick="clearSquares()">
-            <span>🗑️</span>
-            Clear All
-          </button>
-        </div>
 
-        <div style="display: flex; gap: 15px; margin-top: 30px;">
-          <button type="button" class="btn btn-secondary" onclick="goToStep(2)">
-            <span>⬅️</span>
-            Back to AI Prompt
-          </button>
-          <button type="button" class="btn btn-primary" onclick="goToStep(4)" style="flex: 1;">
-            <span>➡️</span>
-            Continue to Preview
-          </button>
+          <div class="form-group">
+            <label for="squaresInput">25 Photo Challenges (one per line)</label>
+            <textarea 
+              id="squaresInput" 
+              placeholder="Paste the AI response here, or enter your own 25 photo challenges (one per line):&#10;&#10;A photo with someone laughing&#10;Someone trying the food&#10;A group photo by the entrance&#10;Someone dancing&#10;A candid moment during speeches&#10;..." 
+              rows="20" 
+              style="font-family: 'Segoe UI', sans-serif; line-height: 1.4;"
+            ></textarea>
+            <div id="squareCount" style="font-size: 0.9rem; color: #999; margin-top: 8px;">
+              0 / 25 squares
+            </div>
+          </div>
+          
+          <div id="validationMessages" class="validation-messages"></div>
+          
+          <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <button type="button" class="btn btn-secondary btn-small" onclick="loadDefaultSquares()">
+              <span>🔄</span>
+              Load Default Squares
+            </button>
+            <button type="button" class="btn btn-secondary btn-small" onclick="clearSquares()">
+              <span>🗑️</span>
+              Clear All
+            </button>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn btn-secondary" onclick="goToPreviousStep(3)">
+              <span>⬅️</span>
+              Back to AI Prompt
+            </button>
+            <button type="button" class="btn btn-primary" onclick="goToNextStep(3)" style="flex: 1;" id="photoSquaresBtn">
+              <span>➡️</span>
+              Continue to Preview
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Step 4: Preview & Save -->
-      <div id="previewSaveStep" class="workflow-content hidden">
-        <div class="section-title">
-          <span>👁️</span>
-          Preview & Save Event
+      <div id="previewSaveSection" class="workflow-step-section disabled">
+        <div class="step-section-header">
+          <div class="step-section-number">4</div>
+          <div class="step-section-title">Preview & Save Event</div>
         </div>
-        <div class="section-subtitle">
-          Review your event and photo challenges before saving
-        </div>
+        <div class="step-section-content">
+          <div class="section-subtitle">
+            Review your event and photo challenges before saving
+          </div>
 
-        <!-- Event Summary -->
-        <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
-          <h3 style="color: #ffd700; margin: 0 0 15px 0;">Event Summary</h3>
-          <div id="eventSummary"></div>
-        </div>
+          <!-- Event Summary -->
+          <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <h3 style="color: #ffd700; margin: 0 0 15px 0;">Event Summary</h3>
+            <div id="eventSummary"></div>
+          </div>
 
-        <!-- Live Preview Grid -->
-        <div style="margin-bottom: 30px;">
-          <h3 style="color: #ffd700; text-align: center; margin-bottom: 20px;">5×5 Bingo Grid Preview</h3>
-          <div id="previewGrid" class="preview-grid"></div>
-        </div>
+          <!-- Live Preview Grid -->
+          <div style="margin-bottom: 30px;">
+            <h3 style="color: #ffd700; text-align: center; margin-bottom: 20px;">5×5 Bingo Grid Preview</h3>
+            <div id="previewGrid" class="preview-grid"></div>
+          </div>
 
-        <div style="display: flex; gap: 15px; margin-top: 30px;">
-          <button type="button" class="btn btn-secondary" onclick="goToStep(3)">
-            <span>⬅️</span>
-            Back to Edit Squares
-          </button>
-          <button type="button" class="btn btn-success" onclick="saveEvent()" style="flex: 1;" id="saveEventBtn">
-            <span>💾</span>
-            Save Event & Lock
-          </button>
+          <div class="step-actions">
+            <button type="button" class="btn btn-secondary" onclick="goToPreviousStep(4)">
+              <span>⬅️</span>
+              Back to Edit Squares
+            </button>
+            <button type="button" class="btn btn-success" onclick="saveEvent()" style="flex: 1;" id="saveEventBtn">
+              <span>💾</span>
+              Save Event & Lock
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1016,7 +1123,8 @@ Please generate 25 unique photo challenges following these guidelines.`;
       
       // Reset workflow
       currentWorkflowData = {};
-      goToStep(1);
+      resetWorkflowSteps();
+      activateStep(1);
     }
 
     function cancelCreateEvent() {
@@ -1034,13 +1142,28 @@ Please generate 25 unique photo challenges following these guidelines.`;
       loadAllEvents();
     }
 
-    function goToStep(stepNumber) {
-      // Hide all workflow content
-      document.querySelectorAll('.workflow-content').forEach(content => {
-        content.classList.add('hidden');
+    function resetWorkflowSteps() {
+      // Reset all step sections
+      document.querySelectorAll('.workflow-step-section').forEach((section, index) => {
+        section.classList.remove('active', 'completed');
+        if (index === 0) {
+          section.classList.add('active');
+        } else {
+          section.classList.add('disabled');
+        }
       });
       
-      // Update step indicators
+      // Reset step indicators
+      document.querySelectorAll('.workflow-step').forEach((step, index) => {
+        step.classList.remove('active', 'completed');
+        if (index === 0) {
+          step.classList.add('active');
+        }
+      });
+    }
+
+    function activateStep(stepNumber) {
+      // Update step indicators in sticky header
       document.querySelectorAll('.workflow-step').forEach((step, index) => {
         step.classList.remove('active', 'completed');
         if (index + 1 < stepNumber) {
@@ -1050,15 +1173,19 @@ Please generate 25 unique photo challenges following these guidelines.`;
         }
       });
       
-      // Show current step content
-      const stepContents = {
-        1: 'eventDetailsStep',
-        2: 'aiPromptStep',
-        3: 'photoSquaresStep',
-        4: 'previewSaveStep'
-      };
-      
-      document.getElementById(stepContents[stepNumber]).classList.remove('hidden');
+      // Update step sections
+      document.querySelectorAll('.workflow-step-section').forEach((section, index) => {
+        section.classList.remove('active');
+        if (index + 1 < stepNumber) {
+          section.classList.add('completed');
+          section.classList.remove('disabled');
+        } else if (index + 1 === stepNumber) {
+          section.classList.add('active');
+          section.classList.remove('disabled');
+        } else {
+          section.classList.add('disabled');
+        }
+      });
       
       // Pre-populate fields if returning to a step
       if (stepNumber === 2 && currentWorkflowData.eventDetails) {
@@ -1066,6 +1193,65 @@ Please generate 25 unique photo challenges following these guidelines.`;
       } else if (stepNumber === 4) {
         updateEventSummary();
         updatePreview();
+      }
+    }
+
+    function goToNextStep(currentStep) {
+      // Validate current step before proceeding
+      if (currentStep === 3) {
+        // Validate squares before going to preview
+        if (!validateSquares()) {
+          showMessage('Please fix the validation errors before continuing', 'error');
+          return;
+        }
+        
+        const squares = document.getElementById('squaresInput').value
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0);
+        
+        if (squares.length !== 25) {
+          showMessage('You must have exactly 25 squares to continue', 'error');
+          return;
+        }
+        
+        // Store squares in workflow data
+        currentWorkflowData.squares = squares;
+      }
+      
+      const nextStep = currentStep + 1;
+      if (nextStep <= 4) {
+        const btn = document.querySelector(`#${getCurrentStepButtonId(currentStep)}`);
+        if (btn) {
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<span class="loading-spinner"></span>Loading...';
+          btn.disabled = true;
+          
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            activateStep(nextStep);
+          }, 500);
+        } else {
+          activateStep(nextStep);
+        }
+      }
+    }
+
+    function getCurrentStepButtonId(step) {
+      const buttonIds = {
+        1: 'eventDetailsBtn',
+        2: 'aiPromptBtn', 
+        3: 'photoSquaresBtn',
+        4: 'saveEventBtn'
+      };
+      return buttonIds[step];
+    }
+
+    function goToPreviousStep(currentStep) {
+      const prevStep = currentStep - 1;
+      if (prevStep >= 1) {
+        activateStep(prevStep);
       }
     }
 
@@ -1081,16 +1267,30 @@ Please generate 25 unique photo challenges following these guidelines.`;
         return;
       }
       
-      // Store event details
-      currentWorkflowData.eventDetails = {
-        title,
-        description,
-        code: code || generateEventCode(),
-        adminUser
-      };
+      const submitBtn = document.getElementById('eventDetailsBtn');
+      const originalText = submitBtn.innerHTML;
       
-      // Move to next step
-      goToStep(2);
+      // Show loading state
+      submitBtn.innerHTML = '<span class="loading-spinner"></span>Processing...';
+      submitBtn.disabled = true;
+      
+      // Simulate processing time for better UX
+      setTimeout(() => {
+        // Store event details
+        currentWorkflowData.eventDetails = {
+          title,
+          description,
+          code: code || generateEventCode(),
+          adminUser
+        };
+        
+        // Reset button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        
+        // Move to next step
+        activateStep(2);
+      }, 800);
     }
 
     function populateAIPromptFields() {
@@ -1355,6 +1555,8 @@ Please generate 25 unique photo challenges following these guidelines.`;
           lockReason: 'created'
         };
         
+        console.log('Saving event with squares:', squares); // Debug log
+        
         const response = await fetch(`${workerURL}admin/create-event`, {
           method: 'POST',
           headers: {
@@ -1366,18 +1568,21 @@ Please generate 25 unique photo challenges following these guidelines.`;
         if (response.ok) {
           const newEvent = await response.json();
           
+          console.log('Event saved successfully:', newEvent); // Debug log
+          
           showSuccessNotification(
             'Event Created Successfully!',
-            `"${eventData.title}" is ready for players`
+            `"${eventData.title}" is ready for players. Event code: ${eventData.code}`
           );
           
           // Reset workflow and go back to events list
           setTimeout(() => {
             backToAllEvents();
-          }, 2000);
+          }, 3000);
           
         } else {
           const error = await response.text();
+          console.error('Server error:', error); // Debug log
           showMessage(`Error creating event: ${error}`, 'error');
         }
         

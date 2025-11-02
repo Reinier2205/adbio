@@ -399,10 +399,24 @@ async function handleAdminRequest(request, env, corsHeaders) {
   // Create new event
   if (request.method === "POST" && path === "/admin/create-event") {
     const data = await request.json();
-    const { title, description, code, adminUser } = data;
+    const { title, description, code, adminUser, squares, aiContext, isLocked, lockedAt, lockReason } = data;
 
     if (!title || !description || !adminUser) {
       return new Response("Missing required fields", { status: 400, headers: corsHeaders });
+    }
+
+    // Validate squares if provided
+    let finalSquares = defaultSquaresList;
+    if (squares && Array.isArray(squares)) {
+      const validation = validateSquares(squares);
+      if (validation.isValid) {
+        finalSquares = squares;
+      } else {
+        return new Response(`Invalid squares: ${validation.errors.join(', ')}`, { 
+          status: 400, 
+          headers: corsHeaders 
+        });
+      }
     }
 
     const eventData = {
@@ -410,12 +424,12 @@ async function handleAdminRequest(request, env, corsHeaders) {
       description,
       code,
       adminUser,
-      squares: defaultSquaresList,
+      squares: finalSquares,
       createdAt: new Date().toISOString(),
-      isLocked: false,
-      lockedAt: null,
-      lockReason: null,
-      eventContext: {
+      isLocked: isLocked || false,
+      lockedAt: lockedAt || null,
+      lockReason: lockReason || null,
+      eventContext: aiContext || {
         names: [],
         theme: '',
         activities: '',
