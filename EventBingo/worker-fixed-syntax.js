@@ -1,6 +1,5 @@
 // EventBingo Cloudflare Worker
 
-// Default squares for events without custom squares
 const defaultSquaresList = [
   "'n Ou foto saam met Anneke",
   "'n Foto van 'n vorige verjaarsdag of braai",
@@ -29,45 +28,37 @@ const defaultSquaresList = [
   "Almal wat totsiens waai by die vuir"
 ];
 
-// Helper function to get event code from request
 function getEventCode(request) {
   const url = new URL(request.url);
   const eventCode = url.searchParams.get('event') || 'default';
   return eventCode;
 }
 
-// Square validation function
 function validateSquares(squares) {
   const errors = [];
   
-  // Check if squares is an array
   if (!Array.isArray(squares)) {
     errors.push("Squares must be provided as an array");
     return { isValid: false, errors };
   }
   
-  // Check count
   if (squares.length !== 25) {
     errors.push(`Must provide exactly 25 squares (found ${squares.length})`);
   }
   
-  // Check for empty squares and collect duplicates
   const seenSquares = new Set();
   const duplicates = new Set();
   
   squares.forEach((square, index) => {
-    // Check if square is empty or not a string
     if (typeof square !== 'string' || square.trim().length === 0) {
       errors.push(`Square ${index + 1} cannot be empty`);
       return;
     }
     
-    // Check length
     if (square.trim().length > 200) {
       errors.push(`Square ${index + 1} is too long (maximum 200 characters)`);
     }
     
-    // Check for duplicates
     const trimmedSquare = square.trim().toLowerCase();
     if (seenSquares.has(trimmedSquare)) {
       duplicates.add(square.trim());
@@ -76,7 +67,6 @@ function validateSquares(squares) {
     }
   });
   
-  // Add duplicate errors
   if (duplicates.size > 0) {
     errors.push(`Duplicate squares found: ${Array.from(duplicates).join(', ')}`);
   }
@@ -87,27 +77,10 @@ function validateSquares(squares) {
   };
 }
 
-// Helper function to get squares for an event
-async function getSquaresForEvent(env, eventCode) {
-  if (eventCode === 'default') {
-    return defaultSquaresList;
-  }
-  
-  const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
-  if (eventData) {
-    const event = JSON.parse(eventData);
-    return event.squares || defaultSquaresList;
-  }
-  
-  return defaultSquaresList;
-}
-
-// Admin request handler
 async function handleAdminRequest(request, env, corsHeaders) {
   const url = new URL(request.url);
   const path = url.pathname;
 
-  // Create new event
   if (request.method === "POST" && path === "/admin/create-event") {
     const data = await request.json();
     const { title, description, code, adminUser, squares, aiContext, isLocked, lockedAt, lockReason } = data;
@@ -116,7 +89,6 @@ async function handleAdminRequest(request, env, corsHeaders) {
       return new Response("Missing required fields", { status: 400, headers: corsHeaders });
     }
 
-    // Validate squares if provided
     let finalSquares = defaultSquaresList;
     if (squares && Array.isArray(squares)) {
       const validation = validateSquares(squares);
@@ -156,7 +128,6 @@ async function handleAdminRequest(request, env, corsHeaders) {
     });
   }
 
-  // Get all events
   if (request.method === "GET" && path === "/admin/events") {
     const list = await env.EventBingoProgress.list({ prefix: "event_" });
     const events = [];
@@ -174,23 +145,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  
-  // Get specific event
-  if (request.method === "GET" && path.startsWith("/admin/event/")) {
-    const eventCode = path.split('/')[3];
-    const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
-    
-    if (!eventData) {
-      return new Response("Event not found", { status: 404, headers: corsHeaders });
-    }
 
-    return new Response(eventData, {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  // Delete event
   if (request.method === "POST" && path === "/admin/delete-event") {
     try {
       const data = await request.json();
@@ -205,10 +160,8 @@ async function handleAdminRequest(request, env, corsHeaders) {
         return new Response("Event not found", { status: 404, headers: corsHeaders });
       }
 
-      // Delete event data from KV
       await env.EventBingoProgress.delete(`event_${code}`);
 
-      // Delete all photos for this event from R2
       try {
         const photosList = await env.EventBingoPhotos.list();
         for (const item of photosList.objects || []) {
@@ -221,7 +174,6 @@ async function handleAdminRequest(request, env, corsHeaders) {
         // Photo deletion is non-critical
       }
 
-      // Delete all URL references from KV
       try {
         const kvList = await env.EventBingoProgress.list();
         for (const item of kvList.keys || []) {
@@ -246,187 +198,9 @@ async function handleAdminRequest(request, env, corsHeaders) {
     }
   }
 
-  // Get photos for event
-  if (request.method === "GET" && path.startsWith("/admin/photos/")) {
-    const eventCode = path.split('/')[3];
-    const list = await env.EventBingoPhotos.list();
-    const photos = [];
-
-    for (const item of list.objects || []) {
-      const keyName = item.key;
-      if (keyName.startsWith(`${eventCode}_`) && keyName.match(/\d{13}/)) {
-        const parts = keyName.split('_');
-        const player = parts[1];
-        const square = parts.slice(2, -2).join('_');
-        
-        photos.push({
-          key: keyName,
-          player: player.replace(/_/g, ' '),
-          square: square,
-          uploaded: new Date(parseInt(parts[parts.length - 1])).toISOString()
-        });
-      }
-    }
-
-    return new Response(JSON.stringify(photos), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  // Delete photo
-  if (request.method === "POST" && path === "/admin/delete-photo") {
-    const data = await request.json();
-    const { key, eventCode } = data;
-
-    try {
-      await env.EventBingoPhotos.delete(key);
-      
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    } catch (error) {
-      return new Response("Failed to delete photo", { status: 500, headers: corsHeaders });
-    }
-  }
-
-  // Update squares for an event
-  if (request.method === "POST" && path === "/admin/update-squares") {
-    const data = await request.json();
-    const { eventCode, squares, adminUser } = data;
-
-    if (!eventCode || !squares || !adminUser) {
-      return new Response("Missing required fields", { status: 400, headers: corsHeaders });
-    }
-
-    // Validate squares
-    const validation = validateSquares(squares);
-    if (!validation.isValid) {
-      return new Response(`Invalid squares: ${validation.errors.join(', ')}`, { 
-        status: 400, 
-        headers: corsHeaders 
-      });
-    }
-
-    const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
-    if (!eventData) {
-      return new Response("Event not found", { status: 404, headers: corsHeaders });
-    }
-
-    const event = JSON.parse(eventData);
-    
-    // Check if event is locked
-    if (event.isLocked) {
-      return new Response("Cannot modify squares: event is locked", { status: 403, headers: corsHeaders });
-    }
-
-    // Check admin authorization
-    if (event.adminUser !== adminUser) {
-      return new Response("Unauthorized", { status: 403, headers: corsHeaders });
-    }
-
-    // Update squares
-    event.squares = squares;
-    event.updatedAt = new Date().toISOString();
-
-    await env.EventBingoProgress.put(`event_${eventCode}`, JSON.stringify(event));
-
-    return new Response(JSON.stringify({ 
-      success: true,
-      squares: event.squares,
-      updatedAt: event.updatedAt
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  // Get event status
-  if (request.method === "GET" && path.startsWith("/admin/event-status/")) {
-    const eventCode = path.split('/')[3];
-    
-    const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
-    if (!eventData) {
-      return new Response("Event not found", { status: 404, headers: corsHeaders });
-    }
-
-    const event = JSON.parse(eventData);
-    
-    // Get player count
-    const list = await env.EventBingoProgress.list({ prefix: `${eventCode}_` });
-    let playerCount = 0;
-    
-    for (const item of list.keys || []) {
-      const keyName = item.name || item.key;
-      if (!keyName.startsWith('event_')) {
-        playerCount++;
-      }
-    }
-
-    return new Response(JSON.stringify({
-      eventCode: event.code,
-      title: event.title,
-      isLocked: event.isLocked,
-      lockReason: event.lockReason,
-      lockedAt: event.lockedAt,
-      playerCount: playerCount,
-      hasCustomSquares: event.squares && event.squares.length === 25,
-      createdAt: event.createdAt
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  // Lock/unlock event manually
-  if (request.method === "POST" && path === "/admin/lock-event") {
-    const data = await request.json();
-    const { eventCode, adminUser, lock, reason } = data;
-
-    if (!eventCode || !adminUser || typeof lock !== 'boolean') {
-      return new Response("Missing required fields", { status: 400, headers: corsHeaders });
-    }
-
-    const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
-    if (!eventData) {
-      return new Response("Event not found", { status: 404, headers: corsHeaders });
-    }
-
-    const event = JSON.parse(eventData);
-    
-    // Check admin authorization
-    if (event.adminUser !== adminUser) {
-      return new Response("Unauthorized", { status: 403, headers: corsHeaders });
-    }
-
-    // Update lock status
-    event.isLocked = lock;
-    if (lock) {
-      event.lockedAt = new Date().toISOString();
-      event.lockReason = reason || 'manual';
-    } else {
-      event.lockedAt = null;
-      event.lockReason = null;
-    }
-
-    await env.EventBingoProgress.put(`event_${eventCode}`, JSON.stringify(event));
-
-    return new Response(JSON.stringify({ 
-      success: true,
-      isLocked: event.isLocked,
-      lockReason: event.lockReason,
-      lockedAt: event.lockedAt
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
   return new Response("Admin endpoint not found", { status: 404, headers: corsHeaders });
 }
 
-// Main worker handler
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -442,33 +216,10 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Root endpoint - return available endpoints
-    if (request.method === "GET" && path === "/") {
-      return new Response(JSON.stringify({
-        service: "EventBingo Worker",
-        version: "1.0",
-        endpoints: {
-          "GET /event-info?event=<code>": "Get event information",
-          "POST /upload": "Upload a photo",
-          "GET /progress?event=<code>&player=<name>": "Get player progress",
-          "GET /players?event=<code>": "Get all players",
-          "GET /photos?event=<code>": "Get all photos",
-          "GET /photo/<key>": "Get specific photo",
-          "POST /admin/create-event": "Create event",
-          "GET /admin/events": "List events",
-          "GET /admin/event/<code>": "Get event details"
-        }
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     if (path.startsWith("/admin/")) {
       return await handleAdminRequest(request, env, corsHeaders);
     }
 
-    // Event info endpoint
     if (request.method === "GET" && path === "/event-info") {
       const eventCode = getEventCode(request);
       
@@ -482,7 +233,6 @@ export default {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else {
-          // Return default event structure for backward compatibility
           const defaultEvent = {
             title: "EventBingo",
             description: "A fun photo challenge game!",
@@ -507,7 +257,6 @@ export default {
       }
     }
 
-    // Photo upload endpoint
     if (request.method === "POST" && path === "/upload") {
       const formData = await request.formData();
       const file = formData.get("photo");
@@ -520,14 +269,12 @@ export default {
       }
 
       try {
-        // Check if event is locked
         const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
         let event = null;
         
         if (eventData) {
           event = JSON.parse(eventData);
           
-          // If this is the first photo and event is not locked, lock it
           if (!event.isLocked) {
             event.isLocked = true;
             event.lockedAt = new Date().toISOString();
@@ -567,7 +314,6 @@ export default {
       }
     }
 
-    // Get player progress
     if (request.method === "GET" && path === "/progress") {
       const eventCode = getEventCode(request);
       const player = url.searchParams.get('player');
@@ -592,7 +338,6 @@ export default {
       }
     }
 
-    // Get all players for an event
     if (request.method === "GET" && path === "/players") {
       const eventCode = getEventCode(request);
       const list = await env.EventBingoProgress.list({ prefix: `${eventCode}_` });
@@ -614,7 +359,6 @@ export default {
       });
     }
 
-    // Get photo
     if (request.method === "GET" && path.startsWith("/photo/")) {
       const key = path.substring(7);
       const photo = await env.EventBingoPhotos.get(key);
@@ -631,7 +375,6 @@ export default {
       }
     }
 
-    // Get all photos for carousel
     if (request.method === "GET" && path === "/photos") {
       const eventCode = getEventCode(request);
       const list = await env.EventBingoPhotos.list();
@@ -643,22 +386,17 @@ export default {
           const parts = keyName.split('_');
           const player = parts[1];
           const square = parts.slice(2, -1).join('_');
-          const timestamp = parseInt(parts[parts.length - 1]);
           
           photos.push({
             key: keyName,
             player: player.replace(/_/g, ' '),
             square: square,
-            uploaded: new Date(timestamp).toISOString()
+            uploaded: new Date(parseInt(parts[parts.length - 1])).toISOString()
           });
         }
       }
 
-      photos.sort((a, b) => {
-        const timeA = new Date(a.uploaded).getTime();
-        const timeB = new Date(b.uploaded).getTime();
-        return timeB - timeA;
-      });
+      photos.sort((a, b) => new Date(b.uploaded) - new Date(a.uploaded));
 
       return new Response(JSON.stringify(photos), {
         status: 200,
@@ -667,5 +405,6 @@ export default {
     }
 
     return new Response("Not found", { status: 404, headers: corsHeaders });
-  },
+  }
 };
+
