@@ -705,10 +705,16 @@
           <span>📋</span>
           All Events
         </div>
-        <button class="btn btn-primary" onclick="startCreateEventWorkflow()">
-          <span>➕</span>
-          Create New Event
-        </button>
+        <div style="display: flex; gap: 15px;">
+          <button class="btn btn-primary" onclick="startCreateEventWorkflow()">
+            <span>➕</span>
+            Create New Event
+          </button>
+          <button class="btn btn-secondary btn-small" onclick="testWorkerConnection()">
+            <span>🧪</span>
+            Test Connection
+          </button>
+        </div>
       </div>
       
       <div id="eventsList">
@@ -1857,6 +1863,35 @@ Please generate 25 unique photo challenges following these guidelines.`;
       setTimeout(() => {
         notification.classList.remove('show');
       }, 4000);
+    }
+
+    // Test function to check if worker endpoints are accessible
+    async function testWorkerConnection() {
+      try {
+        console.log('Testing worker connection...');
+        const response = await fetch(`${workerURL}admin/test`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ test: 'data' })
+        });
+        
+        console.log('Test response status:', response.status);
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Test successful:', result);
+          alert('Worker connection test PASSED: ' + JSON.stringify(result));
+        } else {
+          const error = await response.text();
+          console.error('Test failed:', error);
+          alert('Worker connection test FAILED: ' + response.status + ' - ' + error);
+        }
+      } catch (err) {
+        console.error('Test error:', err);
+        alert('Worker connection test ERROR: ' + err.message);
+      }
     }
 
     // Test function to debug squares saving

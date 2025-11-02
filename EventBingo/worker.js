@@ -490,72 +490,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
     });
   }
 
-  // Delete event
-  if (request.method === "POST" && path === "/admin/delete-event") {
-    try {
-      console.log('Delete event request received');
-      const data = await request.json();
-      console.log('Delete request data:', data);
-      const { code } = data;
 
-      if (!code) {
-        return new Response("Event code is required", { status: 400, headers: corsHeaders });
-      }
-
-      console.log('Looking for event:', `event_${code}`);
-      const eventData = await env.EventBingoProgress.get(`event_${code}`);
-      if (!eventData) {
-        console.log('Event not found:', code);
-        return new Response("Event not found", { status: 404, headers: corsHeaders });
-      }
-
-      // Delete event data from KV
-      console.log('Deleting event from KV:', `event_${code}`);
-      await env.EventBingoProgress.delete(`event_${code}`);
-
-      // Delete all photos for this event from R2 (simplified)
-      try {
-        console.log('Attempting to delete photos for event:', code);
-        const photosList = await env.EventBingoPhotos.list();
-        for (const item of photosList.objects || []) {
-          const keyName = item.key;
-          if (keyName.startsWith(`${code}_`)) {
-            console.log('Deleting photo:', keyName);
-            await env.EventBingoPhotos.delete(keyName);
-          }
-        }
-      } catch (photoError) {
-        console.log('Photo deletion error (non-critical):', photoError);
-      }
-
-      // Delete all URL references from KV (simplified)
-      try {
-        console.log('Attempting to delete KV references for event:', code);
-        const kvList = await env.EventBingoProgress.list();
-        for (const item of kvList.keys || []) {
-          const keyName = item.key || item.name;
-          if (keyName.startsWith(`${code}_`)) {
-            console.log('Deleting KV reference:', keyName);
-            await env.EventBingoProgress.delete(keyName);
-          }
-        }
-      } catch (kvError) {
-        console.log('KV cleanup error (non-critical):', kvError);
-      }
-
-      console.log('Event deletion completed successfully');
-      return new Response(JSON.stringify({ success: true, message: `Event ${code} deleted` }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    } catch (error) {
-      console.error('Error in delete event:', error);
-      return new Response(JSON.stringify({ error: "Internal server error", details: error.message }), { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-  }
 
   // Get photos for event
   if (request.method === "GET" && path.startsWith("/admin/photos/")) {
@@ -754,6 +689,86 @@ async function handleAdminRequest(request, env, corsHeaders) {
       isLocked: event.isLocked,
       lockReason: event.lockReason,
       lockedAt: event.lockedAt
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Delete event
+  if (request.method === "POST" && path === "/admin/delete-event") {
+    try {
+      console.log('Delete event request received');
+      const data = await request.json();
+      console.log('Delete request data:', data);
+      const { code } = data;
+
+      if (!code) {
+        return new Response("Event code is required", { status: 400, headers: corsHeaders });
+      }
+
+      console.log('Looking for event:', `event_${code}`);
+      const eventData = await env.EventBingoProgress.get(`event_${code}`);
+      if (!eventData) {
+        console.log('Event not found:', code);
+        return new Response("Event not found", { status: 404, headers: corsHeaders });
+      }
+
+      // Delete event data from KV
+      console.log('Deleting event from KV:', `event_${code}`);
+      await env.EventBingoProgress.delete(`event_${code}`);
+
+      // Delete all photos for this event from R2 (simplified)
+      try {
+        console.log('Attempting to delete photos for event:', code);
+        const photosList = await env.EventBingoPhotos.list();
+        for (const item of photosList.objects || []) {
+          const keyName = item.key;
+          if (keyName.startsWith(`${code}_`)) {
+            console.log('Deleting photo:', keyName);
+            await env.EventBingoPhotos.delete(keyName);
+          }
+        }
+      } catch (photoError) {
+        console.log('Photo deletion error (non-critical):', photoError);
+      }
+
+      // Delete all URL references from KV (simplified)
+      try {
+        console.log('Attempting to delete KV references for event:', code);
+        const kvList = await env.EventBingoProgress.list();
+        for (const item of kvList.keys || []) {
+          const keyName = item.key || item.name;
+          if (keyName.startsWith(`${code}_`)) {
+            console.log('Deleting KV reference:', keyName);
+            await env.EventBingoProgress.delete(keyName);
+          }
+        }
+      } catch (kvError) {
+        console.log('KV cleanup error (non-critical):', kvError);
+      }
+
+      console.log('Event deletion completed successfully');
+      return new Response(JSON.stringify({ success: true, message: `Event ${code} deleted` }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error('Error in delete event:', error);
+      return new Response(JSON.stringify({ error: "Internal server error", details: error.message }), { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+  }
+
+  // Test endpoint for debugging
+  if (request.method === "POST" && path === "/admin/test") {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      message: "Test endpoint working",
+      method: request.method,
+      path: path 
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
