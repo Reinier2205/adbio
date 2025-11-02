@@ -115,6 +115,8 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
+    console.log('Request method:', request.method, 'Path:', path);
+
     if (path.startsWith("/admin/")) {
       return await handleAdminRequest(request, env, corsHeaders);
     }
@@ -490,45 +492,69 @@ async function handleAdminRequest(request, env, corsHeaders) {
 
   // Delete event
   if (request.method === "POST" && path === "/admin/delete-event") {
-    const data = await request.json();
-    const { code, adminUser } = data;
+    try {
+      console.log('Delete event request received');
+      const data = await request.json();
+      console.log('Delete request data:', data);
+      const { code } = data;
 
-    const eventData = await env.EventBingoProgress.get(`event_${code}`);
-    if (!eventData) {
-      return new Response("Event not found", { status: 404, headers: corsHeaders });
-    }
-
-    const event = JSON.parse(eventData);
-    // For now, allow deletion without strict admin user check for testing
-    // if (event.adminUser !== adminUser) {
-    //   return new Response("Unauthorized", { status: 403, headers: corsHeaders });
-    // }
-
-    // Delete event data from KV
-    await env.EventBingoProgress.delete(`event_${code}`);
-
-    // Delete all photos for this event from R2
-    const photosList = await env.EventBingoPhotos.list();
-    for (const item of photosList.objects || []) {
-      const keyName = item.key;
-      if (keyName.startsWith(`${code}_`)) {
-        await env.EventBingoPhotos.delete(keyName);
+      if (!code) {
+        return new Response("Event code is required", { status: 400, headers: corsHeaders });
       }
-    }
 
-    // Delete all URL references from KV
-    const kvList = await env.EventBingoProgress.list();
-    for (const item of kvList.keys || []) {
-      const keyName = item.key || item.name;
-      if (keyName.startsWith(`${code}_`)) {
-        await env.EventBingoProgress.delete(keyName);
+      console.log('Looking for event:', `event_${code}`);
+      const eventData = await env.EventBingoProgress.get(`event_${code}`);
+      if (!eventData) {
+        console.log('Event not found:', code);
+        return new Response("Event not found", { status: 404, headers: corsHeaders });
       }
-    }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      // Delete event data from KV
+      console.log('Deleting event from KV:', `event_${code}`);
+      await env.EventBingoProgress.delete(`event_${code}`);
+
+      // Delete all photos for this event from R2 (simplified)
+      try {
+        console.log('Attempting to delete photos for event:', code);
+        const photosList = await env.EventBingoPhotos.list();
+        for (const item of photosList.objects || []) {
+          const keyName = item.key;
+          if (keyName.startsWith(`${code}_`)) {
+            console.log('Deleting photo:', keyName);
+            await env.EventBingoPhotos.delete(keyName);
+          }
+        }
+      } catch (photoError) {
+        console.log('Photo deletion error (non-critical):', photoError);
+      }
+
+      // Delete all URL references from KV (simplified)
+      try {
+        console.log('Attempting to delete KV references for event:', code);
+        const kvList = await env.EventBingoProgress.list();
+        for (const item of kvList.keys || []) {
+          const keyName = item.key || item.name;
+          if (keyName.startsWith(`${code}_`)) {
+            console.log('Deleting KV reference:', keyName);
+            await env.EventBingoProgress.delete(keyName);
+          }
+        }
+      } catch (kvError) {
+        console.log('KV cleanup error (non-critical):', kvError);
+      }
+
+      console.log('Event deletion completed successfully');
+      return new Response(JSON.stringify({ success: true, message: `Event ${code} deleted` }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error('Error in delete event:', error);
+      return new Response(JSON.stringify({ error: "Internal server error", details: error.message }), { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
   }
 
   // Get photos for event
