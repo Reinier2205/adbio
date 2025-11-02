@@ -451,6 +451,8 @@ export default {
           "GET /event-info?event=<code>": "Get event information",
           "POST /upload": "Upload a photo",
           "GET /progress?event=<code>&player=<name>": "Get player progress",
+          "GET /player?name=<name>&event=<code>": "Get player photos (legacy)",
+          "GET /leader?event=<code>": "Get leaderboard (legacy)",
           "GET /players?event=<code>": "Get all players",
           "GET /photos?event=<code>": "Get all photos",
           "GET /photo/<key>": "Get specific photo",
@@ -592,6 +594,87 @@ export default {
       }
     }
 
+    // Get player photos (legacy endpoint for compatibility)
+    if (request.method === "GET" && path === "/player") {
+      const eventCode = getEventCode(request);
+      const player = url.searchParams.get('name');
+      
+      if (!player) {
+        return new Response("Player name parameter required", { status: 400, headers: corsHeaders });
+      }
+
+      try {
+        const progressKey = `${eventCode}_${player}`;
+        const progress = await env.EventBingoProgress.get(progressKey);
+        
+        if (progress) {
+          const playerData = JSON.parse(progress);
+          const photos = playerData.photos || {};
+          
+          // Get squares for this event
+          const squares = await getSquaresForEvent(env, eventCode);
+          
+          // Convert photo keys to URLs and map by square text
+          const photosBySquare = {};
+          for (const [squareIndex, photoKey] of Object.entries(photos)) {
+            const squareText = squares[parseInt(squareIndex)];
+            if (squareText && photoKey) {
+              photosBySquare[squareText] = `${url.origin}/photo/${photoKey}`;
+            }
+          }
+          
+          return new Response(JSON.stringify(photosBySquare), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else {
+          return new Response(JSON.stringify({}), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch (error) {
+        return new Response("Internal server error", { status: 500, headers: corsHeaders });
+      }
+    }
+
+    // Get leaderboard (legacy endpoint for compatibility)
+    if (request.method === "GET" && path === "/leader") {
+      const eventCode = getEventCode(request);
+      
+      try {
+        const list = await env.EventBingoProgress.list({ prefix: `${eventCode}_` });
+        let leader = { name: "", count: 0 };
+
+        for (const item of list.keys || []) {
+          const keyName = item.name || item.key;
+          if (!keyName.startsWith('event_')) {
+            const playerName = keyName.replace(`${eventCode}_`, '');
+            const progressData = await env.EventBingoProgress.get(keyName);
+            
+            if (progressData) {
+              const progress = JSON.parse(progressData);
+              const count = progress.completedSquares ? progress.completedSquares.length : 0;
+              
+              if (count > leader.count) {
+                leader = { name: playerName, count: count };
+              }
+            }
+          }
+        }
+
+        return new Response(JSON.stringify(leader), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ name: "", count: 0 }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Get all players for an event
     if (request.method === "GET" && path === "/players") {
       const eventCode = getEventCode(request);
@@ -602,8 +685,21 @@ export default {
         const keyName = item.name || item.key;
         if (!keyName.startsWith('event_')) {
           const playerName = keyName.replace(`${eventCode}_`, '');
-          if (playerName && !players.includes(playerName)) {
-            players.push(playerName);
+          if (playerName) {
+            // Get player progress to count completed squares
+            const progressData = await env.EventBingoProgress.get(keyName);
+            let count = 0;
+            
+            if (progressData) {
+              const progress = JSON.parse(progressData);
+              count = progress.completedSquares ? progress.completedSquares.length : 0;
+            }
+            
+            // Check if player already exists in array
+            const existingPlayer = players.find(p => p.name === playerName);
+            if (!existingPlayer) {
+              players.push({ name: playerName, count: count });
+            }
           }
         }
       }

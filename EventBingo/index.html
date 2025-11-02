@@ -2105,10 +2105,10 @@
           if (!file) return;
 
             const formData = new FormData();
-            formData.append("file", file);
+            formData.append("photo", file);
             formData.append("player", currentPlayer);
             formData.append("square", square);
-            formData.append("event", eventCode);
+            formData.append("eventCode", eventCode);
 
           // Show loading states
           setButtonLoading(addPhotoBtn, true);
@@ -2116,11 +2116,12 @@
           showLoading("Uploading your photo...");
 
           try {
-            const res = await fetch(workerURL, { method: "POST", body: formData });
+            const res = await fetch(`${workerURL}upload`, { method: "POST", body: formData });
             const data = await res.json();
-            if (data.url) {
+            if (data.success && data.key) {
+              const photoUrl = `${workerURL}photo/${data.key}`;
               resultDiv.innerHTML = `
-                <img src="${data.url}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(data.url)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
+                <img src="${photoUrl}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(photoUrl)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
               `;
               // Hide the upload section since photo is now loaded
               uploadSection.classList.add('hidden');
