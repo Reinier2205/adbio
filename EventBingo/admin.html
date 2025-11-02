@@ -10,6 +10,7 @@
       --secondary: #7b68ee;
       --accent: #ff6b6b;
       --success: #51cf66;
+      --warning: #ffa500;
       --text-dark: #2c3e50;
       --text-light: #ffffff;
       --bg-light: rgba(255, 255, 255, 0.95);
@@ -65,78 +66,42 @@
       margin: 0;
     }
 
-    .admin-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-      margin-bottom: 40px;
-    }
-
-    .admin-card {
+    /* Section Styles */
+    .section {
       background: rgba(255, 255, 255, 0.1);
       border-radius: 20px;
       padding: 30px;
+      margin-bottom: 30px;
       backdrop-filter: blur(10px);
       border: 2px solid rgba(255, 255, 255, 0.2);
       transition: all 0.3s ease;
     }
 
-    .admin-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      border-color: rgba(255, 215, 0, 0.5);
+    .section.hidden {
+      display: none;
     }
 
-    .card-title {
-      font-size: 1.5rem;
+    .section-title {
+      font-size: 1.8rem;
       font-weight: bold;
       margin-bottom: 20px;
       color: #ffd700;
       text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
 
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
+    .section-subtitle {
+      text-align: center;
       color: #e0e0e0;
-    }
-
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #ffffff;
+      margin-bottom: 25px;
       font-size: 1rem;
-      transition: all 0.3s ease;
+      opacity: 0.9;
     }
 
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: #ffd700;
-      box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
-    }
-
-    .form-group input::placeholder,
-    .form-group textarea::placeholder {
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .form-group textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-
+    /* Button Styles */
     .btn {
       background: var(--story-gradient);
       color: white;
@@ -149,7 +114,11 @@
       transition: all 0.3s ease;
       text-transform: uppercase;
       letter-spacing: 1px;
-      width: 100%;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .btn:hover {
@@ -161,256 +130,264 @@
       transform: translateY(0);
     }
 
-    .btn-danger {
-      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+    .btn-primary {
+      background: var(--story-gradient);
     }
 
     .btn-success {
       background: linear-gradient(135deg, #51cf66, #69db7c);
     }
 
-    .events-list {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      padding: 30px;
-      backdrop-filter: blur(10px);
+    .btn-danger {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-small {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+    }
+
+    .btn-large {
+      padding: 20px 40px;
+      font-size: 1.3rem;
+      width: 100%;
+      margin: 20px 0;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #e0e0e0;
+      font-size: 1rem;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 15px 20px;
       border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #ffd700;
+      box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.5;
+    }
+
+    .form-help {
+      font-size: 0.9rem;
+      color: #999;
+      margin-top: 5px;
+      font-style: italic;
+    }
+
+    /* Events List Styles */
+    .events-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
     }
 
     .event-item {
       background: rgba(255, 255, 255, 0.1);
       border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 15px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 25px;
+      margin-bottom: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
       transition: all 0.3s ease;
+      cursor: pointer;
     }
 
     .event-item:hover {
       background: rgba(255, 255, 255, 0.15);
-      transform: translateX(5px);
+      transform: translateY(-2px);
+      border-color: rgba(255, 215, 0, 0.5);
     }
 
     .event-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
+      align-items: flex-start;
+      margin-bottom: 15px;
     }
 
     .event-title {
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       font-weight: bold;
       color: #ffd700;
+      margin-bottom: 5px;
     }
 
     .event-code {
       background: rgba(255, 215, 0, 0.2);
       color: #ffd700;
-      padding: 5px 12px;
-      border-radius: 15px;
+      padding: 8px 16px;
+      border-radius: 20px;
       font-weight: bold;
       font-size: 0.9rem;
+      border: 1px solid rgba(255, 215, 0, 0.3);
     }
 
     .event-description {
       color: #e0e0e0;
       margin-bottom: 15px;
-      line-height: 1.5;
+      line-height: 1.6;
+    }
+
+    .event-meta {
+      display: flex;
+      gap: 20px;
+      font-size: 0.9rem;
+      color: #999;
+      margin-bottom: 15px;
     }
 
     .event-actions {
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .btn-small {
-      padding: 8px 16px;
-      font-size: 0.9rem;
-      width: auto;
+    /* Workflow Steps */
+    .workflow-steps {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+      gap: 20px;
     }
 
-    .loading {
-      text-align: center;
-      padding: 20px;
-      color: #e0e0e0;
-    }
-
-    .error {
-      background: rgba(255, 107, 107, 0.2);
-      color: #ff6b6b;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 107, 107, 0.3);
-    }
-
-    .success {
-      background: rgba(81, 207, 102, 0.2);
-      color: #51cf66;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(81, 207, 102, 0.3);
-    }
-
-    .message-text {
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-
-    .message-guidance {
-      font-size: 0.9rem;
-      opacity: 0.9;
-      font-style: italic;
-      padding-left: 16px;
-      border-left: 2px solid currentColor;
-      margin-left: 4px;
-      margin-top: 8px;
-    }
-
-    /* Loading States */
-    .loading-spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: currentColor;
-      animation: spin 1s ease-in-out infinite;
-      margin-right: 8px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .btn-loading {
-      opacity: 0.7;
-      cursor: not-allowed !important;
-      pointer-events: none;
-    }
-
-    .btn-loading:hover {
-      transform: none !important;
-    }
-
-    /* Success notification styles */
-    .success-notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(81, 207, 102, 0.95);
-      color: white;
-      padding: 15px 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      z-index: 1000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      max-width: 300px;
-      backdrop-filter: blur(10px);
-    }
-
-    .success-notification.show {
-      transform: translateX(0);
-    }
-
-    .success-notification .notification-title {
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .success-notification .notification-message {
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-
-    /* Retry mechanism styles */
-    .retry-container {
-      margin-top: 10px;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .retry-button {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      cursor: pointer;
+    .workflow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      opacity: 0.5;
       transition: all 0.3s ease;
     }
 
-    .retry-button:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-1px);
+    .workflow-step.active {
+      opacity: 1;
     }
 
-    .photo-management {
+    .workflow-step.completed {
+      opacity: 1;
+      color: #51cf66;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-bottom: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .workflow-step.active .step-number {
+      background: var(--story-gradient);
+      border-color: #ffd700;
+    }
+
+    .workflow-step.completed .step-number {
+      background: #51cf66;
+      border-color: #51cf66;
+    }
+
+    .step-label {
+      font-size: 0.9rem;
+      text-align: center;
+      max-width: 100px;
+    }
+
+    /* AI Prompt Styles */
+    .ai-prompt-result {
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 20px;
       margin-top: 20px;
     }
 
-    .photo-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 10px;
+    .ai-instructions {
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
     }
 
-    .photo-info {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .photo-thumbnail {
-      width: 50px;
-      height: 50px;
-      border-radius: 8px;
-      object-fit: cover;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .photo-details {
-      color: #e0e0e0;
-    }
-
-    .photo-player {
-      font-weight: bold;
+    .ai-instructions h4 {
       color: #ffd700;
+      margin: 0 0 15px 0;
+      font-size: 1.1rem;
     }
 
-    .photo-square {
-      font-size: 0.9rem;
-      opacity: 0.8;
+    .ai-instructions ol {
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      margin: 0;
+      padding-left: 20px;
     }
 
-    /* Squares Configuration Styles */
+    .ai-instructions li {
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    /* Preview Grid */
     .preview-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      max-width: 600px;
+      gap: 10px;
+      max-width: 700px;
       margin: 0 auto;
     }
 
     .preview-square {
       background: rgba(255, 255, 255, 0.1);
       border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: 10px;
+      padding: 12px;
       text-align: center;
-      font-size: 0.8rem;
-      line-height: 1.2;
-      min-height: 60px;
+      font-size: 0.85rem;
+      line-height: 1.3;
+      min-height: 80px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -437,369 +414,520 @@
       color: #ffa500;
     }
 
-    /* Lock Status Styles */
-    .lock-status-locked {
-      background: rgba(255, 107, 107, 0.2) !important;
-      border: 1px solid rgba(255, 107, 107, 0.3) !important;
-      color: #ff6b6b !important;
+    /* Messages */
+    .message {
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-weight: 500;
     }
 
-    .lock-status-unlocked {
-      background: rgba(81, 207, 102, 0.2) !important;
-      border: 1px solid rgba(81, 207, 102, 0.3) !important;
-      color: #51cf66 !important;
-    }
-
-    /* Validation Message Styles */
-    .validation-error {
-      background: rgba(255, 107, 107, 0.2);
-      color: #ff6b6b;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      border: 1px solid rgba(255, 107, 107, 0.3);
-      font-size: 0.9rem;
-    }
-
-    .validation-warning {
-      background: rgba(255, 165, 0, 0.2);
-      color: #ffa500;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      border: 1px solid rgba(255, 165, 0, 0.3);
-      font-size: 0.9rem;
-    }
-
-    .validation-success {
+    .message.success {
       background: rgba(81, 207, 102, 0.2);
       color: #51cf66;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 10px;
       border: 1px solid rgba(81, 207, 102, 0.3);
-      font-size: 0.9rem;
     }
 
-    .validation-message {
-      margin-bottom: 8px;
+    .message.error {
+      background: rgba(255, 107, 107, 0.2);
+      color: #ff6b6b;
+      border: 1px solid rgba(255, 107, 107, 0.3);
     }
 
-    .validation-message:last-child {
-      margin-bottom: 0;
+    .message.warning {
+      background: rgba(255, 165, 0, 0.2);
+      color: #ffa500;
+      border: 1px solid rgba(255, 165, 0, 0.3);
     }
 
-    .validation-message-text {
-      font-weight: 500;
-      margin-bottom: 4px;
+    /* Loading States */
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: currentColor;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
     }
 
-    .validation-guidance {
-      font-size: 0.85rem;
-      opacity: 0.9;
-      font-style: italic;
-      padding-left: 16px;
-      border-left: 2px solid currentColor;
-      margin-left: 4px;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
-    /* Disabled state for locked events */
-    .squares-disabled {
-      opacity: 0.6;
+    .btn-loading {
+      opacity: 0.7;
+      cursor: not-allowed !important;
       pointer-events: none;
     }
 
-    .squares-disabled textarea,
-    .squares-disabled button {
-      background: rgba(255, 255, 255, 0.05) !important;
-      cursor: not-allowed !important;
+    /* Lock Status */
+    .lock-status {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-weight: 500;
     }
 
+    .lock-status.locked {
+      background: rgba(255, 107, 107, 0.2);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+      color: #ff6b6b;
+    }
+
+    .lock-status.unlocked {
+      background: rgba(81, 207, 102, 0.2);
+      border: 1px solid rgba(81, 207, 102, 0.3);
+      color: #51cf66;
+    }
+
+    /* Responsive Design */
     @media (max-width: 768px) {
-      .admin-grid {
-        grid-template-columns: 1fr;
+      .container {
+        padding: 10px;
       }
       
       .header h1 {
         font-size: 2rem;
       }
       
-      .container {
-        padding: 10px;
+      .workflow-steps {
+        flex-direction: column;
+        gap: 10px;
       }
-
+      
+      .workflow-step {
+        flex-direction: row;
+        gap: 15px;
+      }
+      
+      .step-label {
+        max-width: none;
+        text-align: left;
+      }
+      
       .preview-grid {
-        gap: 4px;
+        gap: 6px;
       }
-
+      
       .preview-square {
-        font-size: 0.7rem;
-        min-height: 50px;
-        padding: 4px;
+        font-size: 0.75rem;
+        min-height: 60px;
+        padding: 8px;
       }
+      
+      .event-header {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .event-actions {
+        justify-content: center;
+      }
+    }
+
+    /* Validation Styles */
+    .validation-messages {
+      margin-bottom: 20px;
+    }
+
+    .validation-message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .validation-message.error {
+      background: rgba(255, 107, 107, 0.2);
+      color: #ff6b6b;
+      border: 1px solid rgba(255, 107, 107, 0.3);
+    }
+
+    .validation-message.warning {
+      background: rgba(255, 165, 0, 0.2);
+      color: #ffa500;
+      border: 1px solid rgba(255, 165, 0, 0.3);
+    }
+
+    .validation-message.success {
+      background: rgba(81, 207, 102, 0.2);
+      color: #51cf66;
+      border: 1px solid rgba(81, 207, 102, 0.3);
+    }
+
+    /* Success Notification */
+    .success-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(81, 207, 102, 0.95);
+      color: white;
+      padding: 20px 25px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      max-width: 350px;
+      backdrop-filter: blur(10px);
+    }
+
+    .success-notification.show {
+      transform: translateX(0);
+    }
+
+    .notification-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 1.1rem;
+    }
+
+    .notification-message {
+      font-size: 0.95rem;
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- Header -->
     <div class="header">
       <h1>🎯 EventBingo Admin</h1>
-      <p>Manage your photo challenge events</p>
+      <p>Create and manage your photo challenge events</p>
     </div>
 
-    <div class="admin-grid">
-      <!-- Create New Event -->
-      <div class="admin-card">
-        <h2 class="card-title">Create New Event</h2>
-        <form id="createEventForm">
+    <!-- All Events Section (Default View) -->
+    <div id="allEventsSection" class="section">
+      <div class="events-header">
+        <div class="section-title">
+          <span>📋</span>
+          All Events
+        </div>
+        <button class="btn btn-primary" onclick="startCreateEventWorkflow()">
+          <span>➕</span>
+          Create New Event
+        </button>
+      </div>
+      
+      <div id="eventsList">
+        <div class="loading">
+          <span class="loading-spinner"></span>
+          Loading events...
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Event Workflow -->
+    <div id="createEventWorkflow" class="section hidden">
+      <!-- Workflow Steps Indicator -->
+      <div class="workflow-steps">
+        <div class="workflow-step active" id="step1">
+          <div class="step-number">1</div>
+          <div class="step-label">Event Details</div>
+        </div>
+        <div class="workflow-step" id="step2">
+          <div class="step-number">2</div>
+          <div class="step-label">AI Prompt</div>
+        </div>
+        <div class="workflow-step" id="step3">
+          <div class="step-number">3</div>
+          <div class="step-label">Photo Squares</div>
+        </div>
+        <div class="workflow-step" id="step4">
+          <div class="step-number">4</div>
+          <div class="step-label">Preview & Save</div>
+        </div>
+      </div>
+
+      <!-- Step 1: Event Details -->
+      <div id="eventDetailsStep" class="workflow-content">
+        <div class="section-title">
+          <span>📝</span>
+          Event Details
+        </div>
+        <div class="section-subtitle">
+          Let's start by setting up the basic information for your event
+        </div>
+
+        <form id="eventDetailsForm">
           <div class="form-group">
-            <label for="eventTitle">Event Title</label>
-            <input type="text" id="eventTitle" placeholder="e.g., Anneke's 35th Birthday" required>
+            <label for="eventTitle">Event Title *</label>
+            <input type="text" id="eventTitle" placeholder="e.g., Sarah's 30th Birthday Party" required>
+            <div class="form-help">Give your event a memorable name</div>
           </div>
           
           <div class="form-group">
-            <label for="eventDescription">Description</label>
-            <textarea id="eventDescription" placeholder="Describe your event and photo challenges..." required></textarea>
+            <label for="eventDescription">Event Description *</label>
+            <textarea id="eventDescription" placeholder="Describe your event - what's the occasion, who's attending, what makes it special..." required></textarea>
+            <div class="form-help">This helps create better photo challenges</div>
           </div>
           
           <div class="form-group">
             <label for="eventCode">Event Code (optional)</label>
             <input type="text" id="eventCode" placeholder="Leave empty for auto-generation" maxlength="20">
-            <small style="color: #999; font-size: 0.9rem;">Use letters, numbers, and hyphens only</small>
+            <div class="form-help">Players will use this code to join. Use letters, numbers, and hyphens only</div>
           </div>
           
           <div class="form-group">
-            <label for="adminUser">Admin Username</label>
-            <input type="text" id="adminUser" placeholder="Your admin username" required>
+            <label for="adminUser">Admin Username *</label>
+            <input type="text" id="adminUser" placeholder="Your name or username" required>
+            <div class="form-help">This identifies you as the event organizer</div>
           </div>
-          
-          <button type="submit" class="btn btn-success">🎉 Create Event</button>
+
+          <div style="display: flex; gap: 15px; margin-top: 30px;">
+            <button type="button" class="btn btn-secondary" onclick="cancelCreateEvent()">
+              <span>❌</span>
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+              <span>➡️</span>
+              Continue to AI Prompt
+            </button>
+          </div>
         </form>
       </div>
 
-      <!-- Manage Existing Events -->
-      <div class="admin-card">
-        <h2 class="card-title">Manage Events</h2>
-        <div class="form-group">
-          <label for="selectEvent">Select Event</label>
-          <select id="selectEvent">
-            <option value="">Choose an event...</option>
-          </select>
+      <!-- Step 2: AI Prompt Generator -->
+      <div id="aiPromptStep" class="workflow-content hidden">
+        <div class="section-title">
+          <span>🤖</span>
+          AI Prompt Generator
         </div>
-        
-        <div id="eventDetails" style="display: none;">
-          <div class="form-group">
-            <label>Event Title</label>
-            <input type="text" id="currentEventTitle" readonly style="background: rgba(255,255,255,0.05);">
-          </div>
-          
-          <div class="form-group">
-            <label>Event Description</label>
-            <textarea id="currentEventDescription" readonly style="background: rgba(255,255,255,0.05); min-height: 80px;"></textarea>
-          </div>
-          
-          <div class="form-group">
-            <label>Event Code</label>
-            <input type="text" id="currentEventCode" readonly style="background: rgba(255,255,255,0.05);">
-          </div>
-          
-          <div class="form-group">
-            <label>Admin User</label>
-            <input type="text" id="currentAdminUser" readonly style="background: rgba(255,255,255,0.05);">
-          </div>
-          
-          <div class="event-actions">
-            <button class="btn btn-danger btn-small" onclick="deleteEvent()">🗑️ Delete Event</button>
-            <button class="btn btn-small" onclick="viewEvent()">👁️ View Event</button>
-          </div>
+        <div class="section-subtitle">
+          Generate a custom prompt to create personalized photo challenges with AI
         </div>
-      </div>
-    </div>
 
-    <!-- AI Prompt Generator -->
-    <div class="admin-card" style="margin-bottom: 30px;">
-      <h2 class="card-title">🤖 AI Prompt Generator</h2>
-      <p style="text-align: center; color: #e0e0e0; margin-bottom: 25px; font-size: 0.95rem;">
-        Generate custom bingo squares using AI tools like ChatGPT or Claude
-      </p>
-      
-      <form id="aiContextForm">
-        <div class="form-group">
-          <label for="aiEventTitle">Event Title</label>
-          <input type="text" id="aiEventTitle" placeholder="e.g., Sarah's Wedding Reception" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="aiEventNames">People Attending (comma-separated)</label>
-          <input type="text" id="aiEventNames" placeholder="e.g., Sarah, Mike, John, Emma, Lisa, David">
-          <small style="color: #999; font-size: 0.9rem;">Names help personalize the photo challenges</small>
-        </div>
-        
-        <div class="form-group">
-          <label for="aiEventTheme">Event Theme/Type</label>
-          <input type="text" id="aiEventTheme" placeholder="e.g., Wedding reception, Birthday party, Corporate retreat">
-        </div>
-        
-        <div class="form-group">
-          <label for="aiEventLocation">Location</label>
-          <textarea id="aiEventLocation" placeholder="e.g., Beachside resort in Malibu, Downtown hotel ballroom, Backyard garden party" rows="2"></textarea>
-        </div>
-        
-        <div class="form-group">
-          <label for="aiEventActivities">Expected Activities</label>
-          <textarea id="aiEventActivities" placeholder="e.g., Dancing, speeches, cake cutting, outdoor games, live music, cocktail hour" rows="3"></textarea>
-        </div>
-        
-        <button type="button" class="btn" onclick="generateAIPrompt()">🎯 Generate AI Prompt</button>
-      </form>
-      
-      <div id="aiPromptResult" style="display: none; margin-top: 25px;">
-        <div class="form-group">
-          <label for="generatedPrompt">Generated AI Prompt</label>
-          <textarea id="generatedPrompt" readonly rows="12" style="background: rgba(255,255,255,0.05); font-family: monospace; font-size: 0.9rem;"></textarea>
-        </div>
-        
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-          <button type="button" class="btn btn-success" onclick="copyPromptToClipboard()">📋 Copy to Clipboard</button>
-          <button type="button" class="btn" onclick="clearAIPrompt()">🔄 Clear</button>
-        </div>
-        
-        <div style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 10px; padding: 15px; margin-top: 15px;">
-          <h4 style="color: #ffd700; margin: 0 0 10px 0; font-size: 1rem;">📝 How to Use:</h4>
-          <ol style="color: #e0e0e0; font-size: 0.9rem; margin: 0; padding-left: 20px;">
-            <li>Copy the generated prompt above</li>
-            <li>Open ChatGPT, Claude, or your preferred AI tool</li>
-            <li>Paste the prompt and send it</li>
-            <li>Copy the AI's response (25 photo challenges)</li>
-            <li>Use the squares configuration section below to input them</li>
-          </ol>
-        </div>
-      </div>
-      
-      <div id="copyFeedback" style="display: none; background: rgba(81, 207, 102, 0.2); color: #51cf66; padding: 10px; border-radius: 8px; margin-top: 10px; text-align: center;">
-        ✅ Prompt copied to clipboard!
-      </div>
-    </div>
-
-    <!-- Squares Configuration -->
-    <div class="admin-card" style="margin-bottom: 30px;">
-      <h2 class="card-title">🎯 Squares Configuration</h2>
-      <p style="text-align: center; color: #e0e0e0; margin-bottom: 25px; font-size: 0.95rem;">
-        Configure the 25 bingo squares for your selected event
-      </p>
-      
-      <div id="squaresConfigSection">
-        <div id="noEventSelected" style="text-align: center; color: #999; padding: 20px;">
-          Please select an event from the "Manage Events" section above to configure squares.
-        </div>
-        
-        <div id="squaresConfigForm" style="display: none;">
-          <!-- Event Lock Status -->
-          <div id="lockStatusDisplay" style="margin-bottom: 20px;">
-            <div id="lockStatus" class="form-group">
-              <div id="lockIndicator" style="display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-                <span id="lockIcon">🔓</span>
-                <div>
-                  <div id="lockStatusText" style="font-weight: bold;">Event Unlocked</div>
-                  <div id="lockStatusDetails" style="font-size: 0.9rem; opacity: 0.8;">Squares can be modified</div>
-                </div>
-              </div>
-              <div id="lockControls" style="display: flex; gap: 10px;">
-                <button type="button" id="lockEventBtn" class="btn btn-danger btn-small" onclick="toggleEventLock()" style="display: none;">
-                  🔒 Lock Event
-                </button>
-                <button type="button" id="unlockEventBtn" class="btn btn-success btn-small" onclick="toggleEventLock()" style="display: none;">
-                  🔓 Unlock Event
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Squares Input -->
+        <form id="aiPromptForm">
           <div class="form-group">
-            <label for="squaresInput">Bingo Squares (25 required, one per line)</label>
-            <textarea 
-              id="squaresInput" 
-              placeholder="Enter exactly 25 photo challenges, one per line:&#10;&#10;A photo with someone laughing&#10;Someone trying the food&#10;A group photo by the entrance&#10;Someone dancing&#10;A candid moment during speeches&#10;..." 
-              rows="15" 
-              style="font-family: 'Segoe UI', sans-serif; line-height: 1.4;"
-            ></textarea>
-            <div id="squareCount" style="font-size: 0.9rem; color: #999; margin-top: 5px;">
-              0 / 25 squares
-            </div>
+            <label for="aiEventNames">People Who Will Be Photographed</label>
+            <input type="text" id="aiEventNames" placeholder="e.g., Sarah, Mike, Emma, David, Lisa">
+            <div class="form-help">Names of key people at the event (comma-separated). This personalizes the challenges</div>
           </div>
           
-          <!-- Validation Messages -->
-          <div id="validationMessages" style="margin-bottom: 15px;"></div>
+          <div class="form-group">
+            <label for="aiEventTheme">Event Theme/Type</label>
+            <input type="text" id="aiEventTheme" placeholder="e.g., Birthday party, Wedding reception, Corporate retreat">
+            <div class="form-help">What type of event is this?</div>
+          </div>
           
-          <!-- Action Buttons -->
-          <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button type="button" class="btn btn-success" onclick="saveSquares()" id="saveSquaresBtn">
-              💾 Save Squares
+          <div class="form-group">
+            <label for="aiEventLocation">Location (optional)</label>
+            <textarea id="aiEventLocation" placeholder="e.g., Beachside resort, Backyard garden, Downtown hotel ballroom" rows="2"></textarea>
+            <div class="form-help">Where is the event taking place? This helps create location-specific challenges</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="aiEventActivities">Expected Activities to Photograph</label>
+            <textarea id="aiEventActivities" placeholder="e.g., Dancing, cake cutting, speeches, games, live music, cocktail hour" rows="3"></textarea>
+            <div class="form-help">What activities or moments do you want to capture?</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="aiOtherInstructions">Other Instructions (optional)</label>
+            <textarea id="aiOtherInstructions" placeholder="Any special requirements, themes, or specific types of photos you want..." rows="2"></textarea>
+            <div class="form-help">Additional guidance for the AI to create better challenges</div>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-large" onclick="generateAIPrompt()">
+            <span>🎯</span>
+            Generate AI Prompt
+          </button>
+        </form>
+
+        <div id="aiPromptResult" class="ai-prompt-result hidden">
+          <div class="form-group">
+            <label for="generatedPrompt">Generated AI Prompt</label>
+            <textarea id="generatedPrompt" readonly rows="15" style="background: rgba(255,255,255,0.05); font-family: 'Courier New', monospace; font-size: 0.9rem;"></textarea>
+          </div>
+          
+          <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <button type="button" class="btn btn-success" onclick="copyPromptToClipboard()">
+              <span>📋</span>
+              Copy to Clipboard
             </button>
-            <button type="button" class="btn" onclick="loadDefaultSquares()">
-              🔄 Load Default Squares
-            </button>
-            <button type="button" class="btn" onclick="clearSquares()">
-              🗑️ Clear All
-            </button>
-            <button type="button" class="btn btn-small" onclick="undoClearSquares()" id="undoClearBtn" style="display: none;">
-              ↩️ Undo Clear
+            <button type="button" class="btn btn-secondary" onclick="regeneratePrompt()">
+              <span>🔄</span>
+              Regenerate
             </button>
           </div>
           
-          <!-- Import from AI -->
-          <div style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-            <h4 style="color: #ffd700; margin: 0 0 10px 0; font-size: 1rem;">🤖 Import from AI:</h4>
-            <p style="color: #e0e0e0; font-size: 0.9rem; margin: 0 0 10px 0;">
-              Use the AI Prompt Generator above to create custom squares, then paste the AI response here.
-            </p>
-            <button type="button" class="btn btn-small" onclick="focusSquaresInput()">
-              📝 Paste AI Response Here
-            </button>
+          <div class="ai-instructions">
+            <h4>📝 How to Use This Prompt:</h4>
+            <ol>
+              <li><strong>Copy the prompt above</strong> using the "Copy to Clipboard" button</li>
+              <li><strong>Open your favorite AI tool</strong> (ChatGPT, Claude, Gemini, etc.)</li>
+              <li><strong>Paste and send the prompt</strong> to the AI</li>
+              <li><strong>Copy the AI's response</strong> (it should be 25 photo challenges)</li>
+              <li><strong>Return here and paste the response</strong> in the next step</li>
+            </ol>
           </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 30px;">
+          <button type="button" class="btn btn-secondary" onclick="goToStep(1)">
+            <span>⬅️</span>
+            Back to Details
+          </button>
+          <button type="button" class="btn btn-primary" onclick="goToStep(3)" style="flex: 1;">
+            <span>➡️</span>
+            Continue to Photo Squares
+          </button>
         </div>
       </div>
-    </div>
 
-    <!-- Live Preview -->
-    <div class="admin-card" style="margin-bottom: 30px;">
-      <h2 class="card-title">👁️ Live Preview</h2>
-      <p style="text-align: center; color: #e0e0e0; margin-bottom: 25px; font-size: 0.95rem;">
-        See how your squares will appear in the 5x5 bingo grid
-      </p>
-      
-      <div id="previewSection">
-        <div id="noPreview" style="text-align: center; color: #999; padding: 20px;">
-          Enter squares above to see the preview
+      <!-- Step 3: Photo Squares Configuration -->
+      <div id="photoSquaresStep" class="workflow-content hidden">
+        <div class="section-title">
+          <span>🎯</span>
+          Photo Squares Configuration
+        </div>
+        <div class="section-subtitle">
+          Paste the AI response here and edit the 25 photo challenges as needed
+        </div>
+
+        <div class="form-group">
+          <label for="squaresInput">25 Photo Challenges (one per line)</label>
+          <textarea 
+            id="squaresInput" 
+            placeholder="Paste the AI response here, or enter your own 25 photo challenges (one per line):&#10;&#10;A photo with someone laughing&#10;Someone trying the food&#10;A group photo by the entrance&#10;Someone dancing&#10;A candid moment during speeches&#10;..." 
+            rows="20" 
+            style="font-family: 'Segoe UI', sans-serif; line-height: 1.4;"
+          ></textarea>
+          <div id="squareCount" style="font-size: 0.9rem; color: #999; margin-top: 8px;">
+            0 / 25 squares
+          </div>
         </div>
         
-        <div id="bingoPreview" style="display: none;">
+        <div id="validationMessages" class="validation-messages"></div>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+          <button type="button" class="btn btn-secondary btn-small" onclick="loadDefaultSquares()">
+            <span>🔄</span>
+            Load Default Squares
+          </button>
+          <button type="button" class="btn btn-secondary btn-small" onclick="clearSquares()">
+            <span>🗑️</span>
+            Clear All
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 30px;">
+          <button type="button" class="btn btn-secondary" onclick="goToStep(2)">
+            <span>⬅️</span>
+            Back to AI Prompt
+          </button>
+          <button type="button" class="btn btn-primary" onclick="goToStep(4)" style="flex: 1;">
+            <span>➡️</span>
+            Continue to Preview
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Preview & Save -->
+      <div id="previewSaveStep" class="workflow-content hidden">
+        <div class="section-title">
+          <span>👁️</span>
+          Preview & Save Event
+        </div>
+        <div class="section-subtitle">
+          Review your event and photo challenges before saving
+        </div>
+
+        <!-- Event Summary -->
+        <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+          <h3 style="color: #ffd700; margin: 0 0 15px 0;">Event Summary</h3>
+          <div id="eventSummary"></div>
+        </div>
+
+        <!-- Live Preview Grid -->
+        <div style="margin-bottom: 30px;">
+          <h3 style="color: #ffd700; text-align: center; margin-bottom: 20px;">5×5 Bingo Grid Preview</h3>
           <div id="previewGrid" class="preview-grid"></div>
         </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 30px;">
+          <button type="button" class="btn btn-secondary" onclick="goToStep(3)">
+            <span>⬅️</span>
+            Back to Edit Squares
+          </button>
+          <button type="button" class="btn btn-success" onclick="saveEvent()" style="flex: 1;" id="saveEventBtn">
+            <span>💾</span>
+            Save Event & Lock
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Events List -->
-    <div class="events-list">
-      <h2 class="card-title">All Events</h2>
-      <div id="eventsList">
-        <div class="loading">Loading events...</div>
+    <!-- Event Management Section -->
+    <div id="eventManagementSection" class="section hidden">
+      <div class="section-title">
+        <span>⚙️</span>
+        Manage Event
       </div>
-    </div>
-
-    <!-- Photo Management -->
-    <div id="photoManagement" class="admin-card" style="display: none;">
-      <h2 class="card-title">Photo Management</h2>
-      <div id="photosList">
-        <div class="loading">Loading photos...</div>
+      
+      <div id="selectedEventDetails"></div>
+      
+      <div style="display: flex; gap: 15px; margin-top: 30px;">
+        <button type="button" class="btn btn-secondary" onclick="backToAllEvents()">
+          <span>⬅️</span>
+          Back to All Events
+        </button>
+        <button type="button" class="btn btn-danger" onclick="deleteSelectedEvent()">
+          <span>🗑️</span>
+          Delete Event
+        </button>
+        <button type="button" class="btn btn-primary" onclick="viewSelectedEvent()">
+          <span>👁️</span>
+          View Event
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Success Notification -->
+  <div id="successNotification" class="success-notification">
+    <div class="notification-title" id="notificationTitle"></div>
+    <div class="notification-message" id="notificationMessage"></div>
+  </div>
+
   <script>
     const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
-    let currentEvent = null;
+    let currentWorkflowData = {};
+    let currentSelectedEvent = null;
+
+    // Default squares for fallback
+    const defaultSquaresList = [
+      "'n Ou foto saam met Anneke",
+      "'n Foto van 'n vorige verjaarsdag of braai",
+      "Die oudste selfie wat julle saam het",
+      "Anneke wat kaalvoet loop (bonus: vuil voete)",
+      "Anneke wat 'n bier drink (bonus: cheers oomblik)",
+      "Iemand wat iets by Anneke leen",
+      "Oliver wat saam met iemand bal speel",
+      "Kesia saam met 'n 'tannie' of 'oom'",
+      "Almal bymekaar om die kampvuur",
+      "Anneke wat in vrede sit en lees",
+      "Oggendkoffie in 'n beker wat nie aan jou behoort nie",
+      "Oliver wat 'help' met iets",
+      "'n Foto van die sonsondergang",
+      "Iemand wat sukkel met kamp opslaan",
+      "Anneke se lag vasgevang in 'n spontane foto",
+      "'n Kamp speletjie of aktiwiteit",
+      "'n Kreatiewe foto van bier of koffie (bonus: albei)",
+      "Oliver op sy fiets",
+      "'n Groepsfoto van almal",
+      "Iemand wat iets soek wat verlore is (bv. foon, skoen, drankie)",
+      "'n Foto wat gewys iets is geleen vir kamp",
+      "Oliver wat iets in tee doop",
+      "Anneke wat ontspan met 'n boek",
+      "Kesia wat glimlag",
+      "Almal wat totsiens waai by die vuir"
+    ];
 
     // AI Prompt Generator Class
     class AIPromptGenerator {
@@ -808,19 +936,19 @@
       }
       
       generatePrompt() {
-        const { title, names, theme, location, activities } = this.context;
+        const { title, names, theme, location, activities, otherInstructions } = this.context;
         
-        // Parse names array
         const namesList = names ? names.split(',').map(n => n.trim()).filter(n => n.length > 0) : [];
         const namesText = namesList.length > 0 ? namesList.join(', ') : 'event attendees';
         
-        const template = `Create 25 photo challenge squares for a bingo-style game for the following event:
+        return `Create 25 photo challenge squares for a bingo-style game for the following event:
 
 Event: ${title}
 Theme/Type: ${theme || 'General event'}
 Location: ${location || 'Various locations'}
 People attending: ${namesText}
 Expected activities: ${activities || 'Various activities'}
+${otherInstructions ? `Additional instructions: ${otherInstructions}` : ''}
 
 Please create exactly 25 photo challenges that are:
 1. Fun and engaging for the attendees
@@ -831,13 +959,13 @@ Please create exactly 25 photo challenges that are:
 6. Encourage interaction and creativity
 
 Guidelines for photo challenges:
-- Include specific names when possible (e.g., "Photo of [name] laughing")
+- Include specific names when possible (e.g., "Photo of ${namesList.length > 0 ? namesList[0] : '[name]'} laughing")
 - Reference the location and setting
 - Include both individual and group challenges
 - Mix action shots with posed photos
-- Include challenges that capture the event's unique moments
-- Make some challenges about emotions/expressions
+- Include challenges about emotions/expressions
 - Include challenges about food, decorations, or event details
+- Make some challenges about interactions between people
 
 Format Requirements:
 - Return exactly 25 lines
@@ -856,137 +984,416 @@ A candid moment during speeches
 ...
 
 Please generate 25 unique photo challenges following these guidelines.`;
-        
-        return template;
       }
     }
 
-    // Initialize admin page
+    // Initialize the admin page
     document.addEventListener('DOMContentLoaded', function() {
-      loadEvents();
-      setupEventForm();
+      loadAllEvents();
+      setupEventListeners();
     });
 
-    function setupEventForm() {
-      document.getElementById('createEventForm').addEventListener('submit', async function(e) {
+    function setupEventListeners() {
+      // Event details form
+      document.getElementById('eventDetailsForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
-        const title = document.getElementById('eventTitle').value.trim();
-        const description = document.getElementById('eventDescription').value.trim();
-        const code = document.getElementById('eventCode').value.trim() || generateEventCode();
-        const adminUser = document.getElementById('adminUser').value.trim();
-        
-        // Client-side validation
-        if (!title) {
-          showEnhancedMessage('Event title is required', 'error', 'Please enter a descriptive title for your event');
-          document.getElementById('eventTitle').focus();
-          return;
-        }
-        
-        if (!description) {
-          showEnhancedMessage('Event description is required', 'error', 'Please describe what your event is about');
-          document.getElementById('eventDescription').focus();
-          return;
-        }
-        
-        if (!adminUser) {
-          showEnhancedMessage('Admin username is required', 'error', 'Please enter your admin username');
-          document.getElementById('adminUser').focus();
-          return;
-        }
-        
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        
-        try {
-          // Set loading state
-          submitBtn.innerHTML = '<span class="loading-spinner"></span>Creating Event...';
-          submitBtn.disabled = true;
-          submitBtn.classList.add('btn-loading');
-          
-          const response = await fetch(`${workerURL}admin/create-event`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              title,
-              description,
-              code,
-              adminUser
-            })
-          });
-          
-          if (response.ok) {
-            const newEvent = await response.json();
-            
-            showSuccessNotification(
-              'Event Created!',
-              `"${title}" is ready for configuration`
-            );
-            
-            showEnhancedMessage(
-              'Event created successfully!', 
-              'success',
-              `Event code: ${newEvent.code || code}. You can now configure squares for this event.`
-            );
-            
-            document.getElementById('createEventForm').reset();
-            
-            // Reload events and auto-select the new event
-            await loadEvents();
-            
-            // Auto-select the newly created event
-            setTimeout(() => {
-              const selectEvent = document.getElementById('selectEvent');
-              if (selectEvent) {
-                selectEvent.value = newEvent.code || code;
-                selectEvent.dispatchEvent(new Event('change'));
-              }
-            }, 500);
-            
-          } else {
-            const error = await response.text();
-            let guidance = 'Please check your input and try again';
-            
-            if (error.includes('code already exists')) {
-              guidance = 'Try a different event code or leave it empty for auto-generation';
-            } else if (error.includes('validation')) {
-              guidance = 'Make sure all fields are filled correctly';
-            }
-            
-            showEnhancedMessage(`Error: ${error}`, 'error', guidance);
-          }
-        } catch (err) {
-          console.error('Error creating event:', err);
-          showEnhancedMessage(
-            'Failed to create event', 
-            'error',
-            'Check your internet connection and try again'
-          );
-        } finally {
-          // Reset button state
-          submitBtn.textContent = originalText;
-          submitBtn.disabled = false;
-          submitBtn.classList.remove('btn-loading');
-        }
+        handleEventDetailsSubmit();
+      });
+
+      // Squares input real-time validation
+      document.getElementById('squaresInput').addEventListener('input', function() {
+        updateSquareCount();
+        validateSquares();
+        updatePreview();
       });
     }
 
-    function generateEventCode() {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let result = '';
-      for (let i = 0; i < 8; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return result;
+    // Navigation Functions
+    function startCreateEventWorkflow() {
+      document.getElementById('allEventsSection').classList.add('hidden');
+      document.getElementById('createEventWorkflow').classList.remove('hidden');
+      document.getElementById('eventManagementSection').classList.add('hidden');
+      
+      // Reset workflow
+      currentWorkflowData = {};
+      goToStep(1);
     }
 
-    async function loadEvents() {
-      const eventsList = document.getElementById('eventsList');
-      const selectEvent = document.getElementById('selectEvent');
+    function cancelCreateEvent() {
+      if (confirm('Are you sure you want to cancel? All entered data will be lost.')) {
+        backToAllEvents();
+      }
+    }
+
+    function backToAllEvents() {
+      document.getElementById('allEventsSection').classList.remove('hidden');
+      document.getElementById('createEventWorkflow').classList.add('hidden');
+      document.getElementById('eventManagementSection').classList.add('hidden');
       
-      // Show loading state
+      // Reload events to show any new ones
+      loadAllEvents();
+    }
+
+    function goToStep(stepNumber) {
+      // Hide all workflow content
+      document.querySelectorAll('.workflow-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+      
+      // Update step indicators
+      document.querySelectorAll('.workflow-step').forEach((step, index) => {
+        step.classList.remove('active', 'completed');
+        if (index + 1 < stepNumber) {
+          step.classList.add('completed');
+        } else if (index + 1 === stepNumber) {
+          step.classList.add('active');
+        }
+      });
+      
+      // Show current step content
+      const stepContents = {
+        1: 'eventDetailsStep',
+        2: 'aiPromptStep',
+        3: 'photoSquaresStep',
+        4: 'previewSaveStep'
+      };
+      
+      document.getElementById(stepContents[stepNumber]).classList.remove('hidden');
+      
+      // Pre-populate fields if returning to a step
+      if (stepNumber === 2 && currentWorkflowData.eventDetails) {
+        populateAIPromptFields();
+      } else if (stepNumber === 4) {
+        updateEventSummary();
+        updatePreview();
+      }
+    }
+
+    // Step 1: Event Details
+    function handleEventDetailsSubmit() {
+      const title = document.getElementById('eventTitle').value.trim();
+      const description = document.getElementById('eventDescription').value.trim();
+      const code = document.getElementById('eventCode').value.trim();
+      const adminUser = document.getElementById('adminUser').value.trim();
+      
+      if (!title || !description || !adminUser) {
+        showMessage('Please fill in all required fields', 'error');
+        return;
+      }
+      
+      // Store event details
+      currentWorkflowData.eventDetails = {
+        title,
+        description,
+        code: code || generateEventCode(),
+        adminUser
+      };
+      
+      // Move to next step
+      goToStep(2);
+    }
+
+    function populateAIPromptFields() {
+      if (currentWorkflowData.eventDetails) {
+        // Pre-populate theme field with event title context
+        const themeField = document.getElementById('aiEventTheme');
+        if (!themeField.value) {
+          const title = currentWorkflowData.eventDetails.title.toLowerCase();
+          if (title.includes('birthday')) {
+            themeField.value = 'Birthday party';
+          } else if (title.includes('wedding')) {
+            themeField.value = 'Wedding celebration';
+          } else if (title.includes('corporate') || title.includes('work')) {
+            themeField.value = 'Corporate event';
+          }
+        }
+      }
+    }
+
+    // Step 2: AI Prompt Generation
+    function generateAIPrompt() {
+      const names = document.getElementById('aiEventNames').value.trim();
+      const theme = document.getElementById('aiEventTheme').value.trim();
+      const location = document.getElementById('aiEventLocation').value.trim();
+      const activities = document.getElementById('aiEventActivities').value.trim();
+      const otherInstructions = document.getElementById('aiOtherInstructions').value.trim();
+      
+      const eventContext = {
+        title: currentWorkflowData.eventDetails.title,
+        names,
+        theme,
+        location,
+        activities,
+        otherInstructions
+      };
+      
+      const generator = new AIPromptGenerator(eventContext);
+      const prompt = generator.generatePrompt();
+      
+      document.getElementById('generatedPrompt').value = prompt;
+      document.getElementById('aiPromptResult').classList.remove('hidden');
+      
+      // Store AI context
+      currentWorkflowData.aiContext = eventContext;
+      currentWorkflowData.generatedPrompt = prompt;
+      
+      // Scroll to result
+      document.getElementById('aiPromptResult').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function regeneratePrompt() {
+      generateAIPrompt();
+    }
+
+    async function copyPromptToClipboard() {
+      const prompt = document.getElementById('generatedPrompt').value;
+      
+      try {
+        await navigator.clipboard.writeText(prompt);
+        showSuccessNotification('Prompt Copied!', 'Paste it into your favorite AI tool');
+      } catch (err) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = prompt;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showSuccessNotification('Prompt Copied!', 'Paste it into your favorite AI tool');
+      }
+    }
+
+    // Step 3: Squares Configuration
+    function updateSquareCount() {
+      const input = document.getElementById('squaresInput');
+      const squares = input.value.split('\n').filter(line => line.trim().length > 0);
+      document.getElementById('squareCount').textContent = `${squares.length} / 25 squares`;
+    }
+
+    function validateSquares() {
+      const input = document.getElementById('squaresInput');
+      const squares = input.value.split('\n').filter(line => line.trim().length > 0);
+      const messagesContainer = document.getElementById('validationMessages');
+      
+      messagesContainer.innerHTML = '';
+      
+      const messages = [];
+      
+      // Check count
+      if (squares.length < 25) {
+        messages.push({
+          type: 'error',
+          text: `Need ${25 - squares.length} more squares (currently ${squares.length}/25)`
+        });
+      } else if (squares.length > 25) {
+        messages.push({
+          type: 'error',
+          text: `Too many squares! Remove ${squares.length - 25} squares (currently ${squares.length}/25)`
+        });
+      } else {
+        messages.push({
+          type: 'success',
+          text: 'Perfect! You have exactly 25 squares'
+        });
+      }
+      
+      // Check for empty squares
+      const emptySquares = [];
+      squares.forEach((square, index) => {
+        if (square.trim().length === 0) {
+          emptySquares.push(index + 1);
+        }
+      });
+      
+      if (emptySquares.length > 0) {
+        messages.push({
+          type: 'warning',
+          text: `Empty squares at lines: ${emptySquares.join(', ')}`
+        });
+      }
+      
+      // Check for duplicates
+      const duplicates = findDuplicates(squares);
+      if (duplicates.length > 0) {
+        messages.push({
+          type: 'warning',
+          text: `${duplicates.length} duplicate square(s) found`
+        });
+      }
+      
+      // Display messages
+      messages.forEach(message => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `validation-message ${message.type}`;
+        messageDiv.textContent = message.text;
+        messagesContainer.appendChild(messageDiv);
+      });
+      
+      return messages.filter(m => m.type === 'error').length === 0;
+    }
+
+    function findDuplicates(squares) {
+      const seen = new Map();
+      const duplicates = [];
+      
+      squares.forEach((square, index) => {
+        const normalized = square.trim().toLowerCase();
+        if (normalized.length === 0) return;
+        
+        if (seen.has(normalized)) {
+          duplicates.push({ text: square.trim(), positions: [seen.get(normalized), index + 1] });
+        } else {
+          seen.set(normalized, index + 1);
+        }
+      });
+      
+      return duplicates;
+    }
+
+    function loadDefaultSquares() {
+      if (confirm('This will replace all current squares with default ones. Continue?')) {
+        document.getElementById('squaresInput').value = defaultSquaresList.join('\n');
+        updateSquareCount();
+        validateSquares();
+        updatePreview();
+      }
+    }
+
+    function clearSquares() {
+      if (confirm('This will clear all squares. Continue?')) {
+        document.getElementById('squaresInput').value = '';
+        updateSquareCount();
+        validateSquares();
+        updatePreview();
+      }
+    }
+
+    // Step 4: Preview & Save
+    function updateEventSummary() {
+      const summaryContainer = document.getElementById('eventSummary');
+      const details = currentWorkflowData.eventDetails;
+      
+      summaryContainer.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+          <div><strong>Title:</strong> ${details.title}</div>
+          <div><strong>Code:</strong> ${details.code}</div>
+          <div><strong>Admin:</strong> ${details.adminUser}</div>
+        </div>
+        <div style="margin-top: 15px;"><strong>Description:</strong> ${details.description}</div>
+      `;
+    }
+
+    function updatePreview() {
+      const input = document.getElementById('squaresInput');
+      const squares = input.value.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      const previewGrid = document.getElementById('previewGrid');
+      
+      previewGrid.innerHTML = '';
+      
+      // Create 25 squares (5x5 grid)
+      for (let i = 0; i < 25; i++) {
+        const square = document.createElement('div');
+        square.className = 'preview-square';
+        
+        if (i === 12) { // Center square (FREE SPACE)
+          square.textContent = 'FREE SPACE';
+          square.classList.add('center');
+        } else {
+          const squareIndex = i < 12 ? i : i - 1; // Adjust for FREE SPACE
+          if (squares[squareIndex]) {
+            square.textContent = squares[squareIndex];
+            
+            // Check for duplicates
+            const duplicates = findDuplicates(squares);
+            const isDuplicate = duplicates.some(dup => 
+              dup.text.toLowerCase() === squares[squareIndex].toLowerCase()
+            );
+            
+            if (isDuplicate) {
+              square.classList.add('duplicate');
+            }
+          } else {
+            square.textContent = 'Empty';
+            square.classList.add('empty');
+          }
+        }
+        
+        previewGrid.appendChild(square);
+      }
+    }
+
+    async function saveEvent() {
+      const saveBtn = document.getElementById('saveEventBtn');
+      const originalText = saveBtn.innerHTML;
+      
+      // Validate squares one more time
+      if (!validateSquares()) {
+        showMessage('Please fix the validation errors before saving', 'error');
+        return;
+      }
+      
+      const squares = document.getElementById('squaresInput').value
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      if (squares.length !== 25) {
+        showMessage('You must have exactly 25 squares to save the event', 'error');
+        return;
+      }
+      
+      try {
+        saveBtn.innerHTML = '<span class="loading-spinner"></span>Saving Event...';
+        saveBtn.disabled = true;
+        
+        const eventData = {
+          ...currentWorkflowData.eventDetails,
+          squares: squares,
+          aiContext: currentWorkflowData.aiContext,
+          isLocked: true, // Lock the event after creation
+          lockedAt: new Date().toISOString(),
+          lockReason: 'created'
+        };
+        
+        const response = await fetch(`${workerURL}admin/create-event`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(eventData)
+        });
+        
+        if (response.ok) {
+          const newEvent = await response.json();
+          
+          showSuccessNotification(
+            'Event Created Successfully!',
+            `"${eventData.title}" is ready for players`
+          );
+          
+          // Reset workflow and go back to events list
+          setTimeout(() => {
+            backToAllEvents();
+          }, 2000);
+          
+        } else {
+          const error = await response.text();
+          showMessage(`Error creating event: ${error}`, 'error');
+        }
+        
+      } catch (err) {
+        console.error('Error saving event:', err);
+        showMessage('Failed to save event. Please check your connection and try again.', 'error');
+      } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+      }
+    }
+
+    // Events Management
+    async function loadAllEvents() {
+      const eventsList = document.getElementById('eventsList');
+      
       eventsList.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading events...</div>';
       
       try {
@@ -999,236 +1406,129 @@ Please generate 25 unique photo challenges following these guidelines.`;
         const events = await response.json();
         
         if (events.length === 0) {
-          eventsList.innerHTML = '<div class="loading">No events found. Create your first event!</div>';
+          eventsList.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #999;">
+              <div style="font-size: 3rem; margin-bottom: 20px;">📋</div>
+              <h3>No Events Yet</h3>
+              <p>Create your first EventBingo event to get started!</p>
+            </div>
+          `;
           return;
         }
         
-        // Populate events list
         eventsList.innerHTML = events.map(event => `
-          <div class="event-item">
+          <div class="event-item" onclick="selectEventForManagement('${event.code}')">
             <div class="event-header">
-              <div class="event-title">${event.title}</div>
+              <div>
+                <div class="event-title">${event.title}</div>
+                <div class="event-meta">
+                  <span>👤 ${event.adminUser || 'Unknown'}</span>
+                  <span>📅 ${event.createdAt ? new Date(event.createdAt).toLocaleDateString() : 'Unknown'}</span>
+                  <span>${event.isLocked ? '🔒 Locked' : '🔓 Unlocked'}</span>
+                </div>
+              </div>
               <div class="event-code">${event.code}</div>
             </div>
             <div class="event-description">${event.description}</div>
-            <div class="event-actions">
-              <button class="btn btn-small" onclick="selectEvent('${event.code}')">Manage</button>
-              <button class="btn btn-small" onclick="viewEventPhotos('${event.code}')">Photos</button>
-              <a href="index.html?event=${event.code}" class="btn btn-small" target="_blank">View Event</a>
+            <div class="event-actions" onclick="event.stopPropagation()">
+              <button class="btn btn-small btn-secondary" onclick="viewEvent('${event.code}')">
+                <span>👁️</span> View
+              </button>
+              <button class="btn btn-small btn-danger" onclick="deleteEvent('${event.code}')">
+                <span>🗑️</span> Delete
+              </button>
             </div>
           </div>
         `).join('');
         
-        // Populate select dropdown
-        selectEvent.innerHTML = '<option value="">Choose an event...</option>' +
-          events.map(event => `<option value="${event.code}">${event.title} (${event.code})</option>`).join('');
-        
-        // Add change listener with unsaved changes warning
-        selectEvent.addEventListener('change', function() {
-          if (this.value) {
-            // Check for unsaved changes before switching
-            if (!warnUnsavedChanges()) {
-              // User cancelled, revert selection
-              this.value = selectedEventForSquares ? selectedEventForSquares.code : '';
-              return;
-            }
-            selectEvent(this.value);
-          } else {
-            // Check for unsaved changes before clearing
-            if (!warnUnsavedChanges()) {
-              // User cancelled, revert selection
-              this.value = selectedEventForSquares ? selectedEventForSquares.code : '';
-              return;
-            }
-            // No event selected - hide both event details and squares config
-            document.getElementById('eventDetails').style.display = 'none';
-            document.getElementById('squaresConfigForm').style.display = 'none';
-            document.getElementById('noEventSelected').style.display = 'block';
-            selectedEventForSquares = null;
-            currentEvent = null;
-            hasUnsavedChanges = false;
-            originalSquaresContent = '';
-          }
-        });
-        
       } catch (err) {
         console.error('Error loading events:', err);
-        eventsList.innerHTML = '<div class="error">Failed to load events</div>';
-        
-        // Add retry mechanism
-        window.retryOperations['loadEvents'] = loadEvents;
-        createRetryButton('loadEvents', 'Load Events', eventsList);
+        eventsList.innerHTML = `
+          <div class="message error">
+            Failed to load events. Please check your connection and try again.
+          </div>
+        `;
       }
     }
 
-    async function selectEvent(eventCode) {
-      // Show loading state in squares config section
-      const squaresConfigForm = document.getElementById('squaresConfigForm');
-      const noEventSelected = document.getElementById('noEventSelected');
+    function selectEventForManagement(eventCode) {
+      // This could be expanded to show detailed event management
+      // For now, we'll just show a basic management interface
+      currentSelectedEvent = eventCode;
       
-      noEventSelected.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading event details...</div>';
-      noEventSelected.style.display = 'block';
-      squaresConfigForm.style.display = 'none';
+      document.getElementById('allEventsSection').classList.add('hidden');
+      document.getElementById('eventManagementSection').classList.remove('hidden');
       
-      try {
-        const response = await fetch(`${workerURL}admin/event/${eventCode}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const event = await response.json();
-        
-        currentEvent = event;
-        selectedEventForSquares = event;
-        
-        // Update event details panel
-        document.getElementById('currentEventTitle').value = event.title || '';
-        document.getElementById('currentEventDescription').value = event.description || '';
-        document.getElementById('currentEventCode').value = event.code;
-        document.getElementById('currentAdminUser').value = event.adminUser;
-        document.getElementById('eventDetails').style.display = 'block';
-        document.getElementById('selectEvent').value = eventCode;
-        
-        // Show squares configuration section
-        noEventSelected.style.display = 'none';
-        squaresConfigForm.style.display = 'block';
-        
-        // Load event squares and lock status with loading feedback
-        await Promise.all([
-          loadEventSquares(event),
-          loadEventLockStatus(event.code)
-        ]);
-        
-        showSuccessNotification('Event Loaded', `Successfully loaded "${event.title}"`);
-        
-      } catch (err) {
-        console.error('Error loading event details:', err);
-        
-        // Reset UI state
-        noEventSelected.innerHTML = 'Failed to load event details. Please try selecting again.';
-        noEventSelected.style.display = 'block';
-        squaresConfigForm.style.display = 'none';
-        document.getElementById('eventDetails').style.display = 'none';
-        
-        showEnhancedMessage(
-          'Failed to load event details', 
-          'error',
-          'Check your internet connection and try selecting the event again'
-        );
-        
-        // Add retry mechanism
-        window.retryOperations[`selectEvent_${eventCode}`] = () => selectEvent(eventCode);
-        createRetryButton(`selectEvent_${eventCode}`, 'Load Event', noEventSelected);
-      }
+      loadEventDetails(eventCode);
     }
 
-    async function loadEventSquares(event) {
-      const squaresInput = document.getElementById('squaresInput');
-      if (!squaresInput) return;
+    async function loadEventDetails(eventCode) {
+      const detailsContainer = document.getElementById('selectedEventDetails');
       
       try {
-        // Load squares from event data or use defaults
-        let squares = [];
+        const response = await fetch(`${workerURL}event-info?event=${eventCode}`);
         
-        if (event.squares && Array.isArray(event.squares) && event.squares.length === 25) {
-          // Event has custom squares
-          squares = event.squares;
+        if (response.ok) {
+          const event = await response.json();
+          
+          detailsContainer.innerHTML = `
+            <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 25px; margin-bottom: 25px;">
+              <h3 style="color: #ffd700; margin: 0 0 20px 0;">${event.title}</h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div><strong>Event Code:</strong> ${event.code}</div>
+                <div><strong>Admin:</strong> ${event.adminUser || 'Unknown'}</div>
+                <div><strong>Status:</strong> ${event.isLocked ? '🔒 Locked' : '🔓 Unlocked'}</div>
+                <div><strong>Squares:</strong> ${event.squares ? event.squares.length : 'Default'}</div>
+              </div>
+              <div><strong>Description:</strong> ${event.description}</div>
+              ${event.isLocked ? `
+                <div class="lock-status locked" style="margin-top: 20px;">
+                  <span>🔒</span>
+                  <div>
+                    <div><strong>Event is Locked</strong></div>
+                    <div>Locked ${event.lockReason === 'first_photo' ? 'after first photo upload' : 'by admin'} ${event.lockedAt ? 'on ' + new Date(event.lockedAt).toLocaleString() : ''}</div>
+                  </div>
+                </div>
+              ` : `
+                <div class="lock-status unlocked" style="margin-top: 20px;">
+                  <span>🔓</span>
+                  <div>
+                    <div><strong>Event is Unlocked</strong></div>
+                    <div>Squares can still be modified</div>
+                  </div>
+                </div>
+              `}
+            </div>
+          `;
         } else {
-          // Use default squares or empty if no defaults
-          squares = [];
+          detailsContainer.innerHTML = `
+            <div class="message error">
+              Failed to load event details.
+            </div>
+          `;
         }
-        
-        // Update the textarea
-        squaresInput.value = squares.join('\n');
-        
-        // Set original content for change tracking
-        originalSquaresContent = squaresInput.value;
-        hasUnsavedChanges = false;
-        
-        // Trigger validation and preview update
-        handleSquaresInput();
-        
-        if (squares.length === 25) {
-          showMessage('Event squares loaded successfully', 'success');
-        } else if (squares.length === 0) {
-          showMessage('No custom squares found. You can configure them below or load defaults.', 'warning');
-        }
-        
       } catch (err) {
-        console.error('Error loading event squares:', err);
-        showMessage('Failed to load event squares', 'error');
+        detailsContainer.innerHTML = `
+          <div class="message error">
+            Error loading event details: ${err.message}
+          </div>
+        `;
       }
     }
 
-    // Backward compatibility helper
-    function hasCustomSquares(event) {
-      return event.squares && 
-             Array.isArray(event.squares) && 
-             event.squares.length === 25 &&
-             event.squares.every(square => square && square.trim().length > 0);
+    function viewEvent(eventCode) {
+      window.open(`index.html?event=${eventCode}`, '_blank');
     }
 
-    // Initialize squares section on page load
-    document.addEventListener('DOMContentLoaded', function() {
-      // Hide squares config initially
-      const squaresConfigForm = document.getElementById('squaresConfigForm');
-      const noEventSelected = document.getElementById('noEventSelected');
-      
-      if (squaresConfigForm) {
-        squaresConfigForm.style.display = 'none';
+    function viewSelectedEvent() {
+      if (currentSelectedEvent) {
+        viewEvent(currentSelectedEvent);
       }
-      if (noEventSelected) {
-        noEventSelected.style.display = 'block';
-      }
-    });
+    }
 
-    async function deleteEvent() {
-      if (!currentEvent) return;
-      
-      // Get photo count for enhanced confirmation
-      const photoCount = await getPhotoCount(currentEvent.code);
-      
-      // Enhanced confirmation dialog for event deletion with multiple steps
-      const confirmMessage = `⚠️ DELETE EVENT: "${currentEvent.title}"
-
-This action will permanently:
-• Delete all event data and configuration
-• Remove all uploaded photos (${photoCount} photos)
-• Remove all player progress and scores
-• Cannot be undone
-
-${photoCount > 0 ? '⚠️ WARNING: Players have uploaded photos to this event!' : ''}
-
-Type "DELETE" to confirm:`;
-      
-      const userInput = prompt(confirmMessage);
-      if (userInput !== 'DELETE') {
-        if (userInput !== null) {
-          showEnhancedMessage('Event deletion cancelled', 'warning', 'Type "DELETE" exactly to confirm deletion');
-        }
+    async function deleteEvent(eventCode) {
+      if (!confirm(`Are you sure you want to delete the event "${eventCode}"? This action cannot be undone.`)) {
         return;
-      }
-      
-      // Second confirmation for events with player activity
-      if (photoCount > 0) {
-        const secondConfirmMessage = `🚨 FINAL CONFIRMATION
-
-You are about to delete an active event with ${photoCount} uploaded photo${photoCount !== 1 ? 's' : ''}.
-
-This will:
-• Disappoint active players
-• Lose all their progress permanently
-• Cannot be recovered
-
-Are you absolutely certain you want to proceed?
-
-Click OK only if you are 100% sure.`;
-        
-        if (!confirm(secondConfirmMessage)) {
-          showEnhancedMessage('Event deletion cancelled', 'warning', 'Event preserved due to player activity');
-          return;
-        }
       }
       
       try {
@@ -1237,1524 +1537,73 @@ Click OK only if you are 100% sure.`;
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            code: currentEvent.code,
-            adminUser: currentEvent.adminUser
-          })
+          body: JSON.stringify({ eventCode })
         });
         
         if (response.ok) {
-          showMessage('Event deleted successfully', 'success');
-          currentEvent = null;
-          selectedEventForSquares = null;
-          document.getElementById('eventDetails').style.display = 'none';
-          document.getElementById('squaresConfigForm').style.display = 'none';
-          document.getElementById('noEventSelected').style.display = 'block';
-          loadEvents();
+          showSuccessNotification('Event Deleted', `Event "${eventCode}" has been deleted`);
+          loadAllEvents();
         } else {
           const error = await response.text();
-          showMessage(`Error: ${error}`, 'error');
+          showMessage(`Error deleting event: ${error}`, 'error');
         }
       } catch (err) {
-        showMessage('Failed to delete event', 'error');
+        showMessage('Failed to delete event. Please try again.', 'error');
       }
     }
 
-    async function viewEventPhotos(eventCode) {
-      const photoManagement = document.getElementById('photoManagement');
-      const photosList = document.getElementById('photosList');
-      
-      // Show loading state
-      photosList.innerHTML = '<div class="loading"><span class="loading-spinner"></span>Loading photos...</div>';
-      photoManagement.style.display = 'block';
-      photoManagement.scrollIntoView({ behavior: 'smooth' });
-      
-      try {
-        const response = await fetch(`${workerURL}admin/photos/${eventCode}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const photos = await response.json();
-        
-        if (photos.length === 0) {
-          photosList.innerHTML = '<div class="loading">No photos uploaded yet for this event</div>';
-        } else {
-          photosList.innerHTML = photos.map(photo => `
-            <div class="photo-item">
-              <div class="photo-info">
-                <img src="${photo.url}" alt="Photo" class="photo-thumbnail" onerror="this.style.display='none'">
-                <div class="photo-details">
-                  <div class="photo-player">${photo.player}</div>
-                  <div class="photo-square">${photo.square}</div>
-                </div>
-              </div>
-              <button class="btn btn-danger btn-small" onclick="deletePhoto('${photo.key}', '${eventCode}')">Delete</button>
-            </div>
-          `).join('');
-          
-          showSuccessNotification('Photos Loaded', `Found ${photos.length} photo${photos.length !== 1 ? 's' : ''}`);
-        }
-        
-      } catch (err) {
-        console.error('Error loading photos:', err);
-        photosList.innerHTML = '<div class="error">Failed to load photos</div>';
-        
-        showEnhancedMessage(
-          'Failed to load photos', 
-          'error',
-          'Check your internet connection and try again'
-        );
-        
-        // Add retry mechanism
-        window.retryOperations[`viewPhotos_${eventCode}`] = () => viewEventPhotos(eventCode);
-        createRetryButton(`viewPhotos_${eventCode}`, 'Load Photos', photosList);
-      }
-    }
-
-    async function deletePhoto(photoKey, eventCode) {
-      // Get additional context for better confirmation
-      const totalPhotos = await getPhotoCount(eventCode);
-      
-      const confirmMessage = `🗑️ DELETE PHOTO
-
-This will permanently remove this photo from the event.
-
-⚠️ This action cannot be undone.
-
-Impact on player:
-• Will lose progress for this square
-• Must upload a new photo for this challenge
-• May be confused about the deletion
-
-Event context: ${totalPhotos} total photo${totalPhotos !== 1 ? 's' : ''} uploaded
-
-Are you sure you want to delete this photo?
-
-Type "DELETE" to confirm:`;
-
-      const userInput = prompt(confirmMessage);
-      if (userInput !== 'DELETE') {
-        if (userInput !== null) {
-          showEnhancedMessage('Photo deletion cancelled', 'warning', 'Type "DELETE" exactly to confirm deletion');
-        }
-        return;
-      }
-      
-      // Find the delete button and set loading state
-      const deleteButtons = document.querySelectorAll('.btn-danger');
-      let deleteBtn = null;
-      
-      deleteButtons.forEach(btn => {
-        if (btn.onclick && btn.onclick.toString().includes(photoKey)) {
-          deleteBtn = btn;
-        }
-      });
-      
-      if (deleteBtn) {
-        deleteBtn.innerHTML = '<span class="loading-spinner"></span>Deleting...';
-        deleteBtn.disabled = true;
-        deleteBtn.classList.add('btn-loading');
-      }
-      
-      try {
-        const response = await fetch(`${workerURL}admin/delete-photo`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            key: photoKey,
-            eventCode: eventCode
-          })
-        });
-        
-        if (response.ok) {
-          showSuccessNotification('Photo Deleted', 'Photo removed successfully');
-          
-          showEnhancedMessage(
-            'Photo deleted successfully', 
-            'success',
-            'The photo has been permanently removed from the event'
-          );
-          
-          // Refresh photos list
-          viewEventPhotos(eventCode);
-        } else {
-          const error = await response.text();
-          let guidance = 'Please try again or contact support if the problem persists';
-          
-          if (error.includes('not found')) {
-            guidance = 'The photo may have already been deleted. Refreshing the list...';
-            viewEventPhotos(eventCode); // Refresh to show current state
-          } else if (error.includes('permission')) {
-            guidance = 'Make sure you have admin access to this event';
-          }
-          
-          showEnhancedMessage(`Error: ${error}`, 'error', guidance);
-        }
-      } catch (err) {
-        console.error('Error deleting photo:', err);
-        showEnhancedMessage(
-          'Failed to delete photo', 
-          'error',
-          'Check your internet connection and try again'
-        );
-      } finally {
-        // Reset button state if it still exists
-        if (deleteBtn && deleteBtn.parentNode) {
-          deleteBtn.textContent = 'Delete';
-          deleteBtn.disabled = false;
-          deleteBtn.classList.remove('btn-loading');
-        }
-      }
-    }
-
-    function viewEvent() {
-      if (currentEvent) {
-        window.open(`index.html?event=${currentEvent.code}`, '_blank');
-      }
-    }
-
-    function generateAIPrompt() {
-      // Get form values
-      const title = document.getElementById('aiEventTitle').value.trim();
-      const names = document.getElementById('aiEventNames').value.trim();
-      const theme = document.getElementById('aiEventTheme').value.trim();
-      const location = document.getElementById('aiEventLocation').value.trim();
-      const activities = document.getElementById('aiEventActivities').value.trim();
-      
-      // Validate required fields
-      if (!title) {
-        showMessage('Please enter an event title', 'error');
-        document.getElementById('aiEventTitle').focus();
-        return;
-      }
-      
-      // Create event context
-      const eventContext = {
-        title,
-        names,
-        theme,
-        location,
-        activities
-      };
-      
-      // Generate prompt using AIPromptGenerator
-      const generator = new AIPromptGenerator(eventContext);
-      const prompt = generator.generatePrompt();
-      
-      // Display the generated prompt
-      document.getElementById('generatedPrompt').value = prompt;
-      document.getElementById('aiPromptResult').style.display = 'block';
-      
-      // Scroll to result
-      document.getElementById('aiPromptResult').scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'nearest' 
-      });
-      
-      showMessage('AI prompt generated successfully! Copy it to use with your AI tool.', 'success');
-    }
-
-    function clearAIPrompt() {
-      document.getElementById('aiPromptResult').style.display = 'none';
-      document.getElementById('generatedPrompt').value = '';
-      document.getElementById('copyFeedback').style.display = 'none';
-    }
-
-    async function copyPromptToClipboard() {
-      const promptText = document.getElementById('generatedPrompt').value;
-      
-      if (!promptText) {
-        showMessage('No prompt to copy. Please generate a prompt first.', 'error');
-        return;
-      }
-      
-      try {
-        // Try modern clipboard API first
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(promptText);
-          showCopyFeedback();
-        } else {
-          // Fallback for older browsers or non-HTTPS
-          copyToClipboardFallback(promptText);
-        }
-      } catch (err) {
-        console.error('Clipboard copy failed:', err);
-        // Try fallback method
-        copyToClipboardFallback(promptText);
-      }
-    }
-
-    function copyToClipboardFallback(text) {
-      try {
-        // Create a temporary textarea element
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-999999px';
-        textarea.style.top = '-999999px';
-        document.body.appendChild(textarea);
-        
-        // Select and copy the text
-        textarea.focus();
-        textarea.select();
-        
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textarea);
-        
-        if (successful) {
-          showCopyFeedback();
-        } else {
-          throw new Error('execCommand failed');
-        }
-      } catch (err) {
-        console.error('Fallback copy failed:', err);
-        showMessage('Copy failed. Please manually select and copy the text.', 'error');
-        
-        // Select the text in the textarea for manual copying
-        const promptTextarea = document.getElementById('generatedPrompt');
-        promptTextarea.focus();
-        promptTextarea.select();
-      }
-    }
-
-    function showCopyFeedback() {
-      const feedback = document.getElementById('copyFeedback');
-      feedback.style.display = 'block';
-      
-      // Hide feedback after 3 seconds
-      setTimeout(() => {
-        feedback.style.display = 'none';
-      }, 3000);
-    }
-
-    function showMessage(message, type) {
-      showEnhancedMessage(message, type);
-    }
-    
-    function showEnhancedMessage(message, type, guidance = null) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = type;
-      
-      const messageContent = document.createElement('div');
-      messageContent.className = 'message-text';
-      messageContent.textContent = message;
-      messageDiv.appendChild(messageContent);
-      
-      if (guidance) {
-        const guidanceContent = document.createElement('div');
-        guidanceContent.className = 'message-guidance';
-        guidanceContent.textContent = `💡 ${guidance}`;
-        messageDiv.appendChild(guidanceContent);
-      }
-      
-      const container = document.querySelector('.container');
-      container.insertBefore(messageDiv, container.firstChild);
-      
-      // Auto-remove after delay (longer for errors with guidance)
-      const delay = guidance ? 8000 : 5000;
-      setTimeout(() => {
-        if (messageDiv.parentNode) {
-          messageDiv.remove();
-        }
-      }, delay);
-      
-      // Scroll to top to ensure message is visible
-      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    // Squares Configuration and Validation
-    class SquareConfiguration {
-      constructor(squares) {
-        this.squares = squares || [];
-        this.errors = [];
-        this.warnings = [];
-        this.isValid = this.validate();
-      }
-      
-      validate() {
-        this.errors = [];
-        this.warnings = [];
-        
-        // Check count with specific guidance
-        if (this.squares.length < 25) {
-          const missing = 25 - this.squares.length;
-          this.errors.push({
-            message: `Need ${missing} more squares (found ${this.squares.length}/25)`,
-            guidance: missing === 1 ? 'Add 1 more line to complete your bingo grid' : `Add ${missing} more lines - each line should be a photo challenge`,
-            type: 'count_low'
-          });
-        } else if (this.squares.length > 25) {
-          const extra = this.squares.length - 25;
-          this.errors.push({
-            message: `Too many squares (found ${this.squares.length}/25)`,
-            guidance: extra === 1 ? 'Remove 1 line to have exactly 25 squares' : `Remove ${extra} lines - you need exactly 25 photo challenges`,
-            type: 'count_high'
-          });
-        }
-        
-        // Check for empty squares with specific positions
-        const emptySquares = [];
-        this.squares.forEach((square, index) => {
-          if (!square || square.trim().length === 0) {
-            emptySquares.push(index + 1);
-          }
-        });
-        
-        if (emptySquares.length > 0) {
-          const positions = emptySquares.slice(0, 5).join(', ') + (emptySquares.length > 5 ? ` and ${emptySquares.length - 5} more` : '');
-          this.errors.push({
-            message: `Empty squares found at line${emptySquares.length > 1 ? 's' : ''}: ${positions}`,
-            guidance: 'Each line must contain a photo challenge description. Remove empty lines or add content.',
-            type: 'empty_squares',
-            positions: emptySquares
-          });
-        }
-        
-        // Check for duplicates with better messaging
-        const duplicates = this.findDuplicates();
-        if (duplicates.length > 0) {
-          duplicates.forEach(duplicate => {
-            this.warnings.push({
-              message: `Duplicate: "${duplicate.text}" appears at lines ${duplicate.positions.join(', ')}`,
-              guidance: 'Consider making each photo challenge unique for better gameplay variety',
-              type: 'duplicate',
-              text: duplicate.text,
-              positions: duplicate.positions
-            });
-          });
-        }
-        
-        // Check square length with guidance
-        const tooLong = [];
-        const tooShort = [];
-        this.squares.forEach((square, index) => {
-          if (square && square.trim().length > 200) {
-            tooLong.push(index + 1);
-          } else if (square && square.trim().length > 0 && square.trim().length < 3) {
-            tooShort.push(index + 1);
-          }
-        });
-        
-        if (tooLong.length > 0) {
-          this.warnings.push({
-            message: `Very long descriptions at lines: ${tooLong.join(', ')}`,
-            guidance: 'Keep photo challenges concise (under 200 characters) for better mobile display',
-            type: 'too_long',
-            positions: tooLong
-          });
-        }
-        
-        if (tooShort.length > 0) {
-          this.warnings.push({
-            message: `Very short descriptions at lines: ${tooShort.join(', ')}`,
-            guidance: 'Consider adding more detail to make photo challenges clearer',
-            type: 'too_short',
-            positions: tooShort
-          });
-        }
-        
-        return this.errors.length === 0;
-      }
-      
-      findDuplicates() {
-        const seen = new Map();
-        const duplicates = [];
-        
-        this.squares.forEach((square, index) => {
-          if (!square) return;
-          
-          const normalized = square.trim().toLowerCase();
-          if (normalized.length === 0) return;
-          
-          if (seen.has(normalized)) {
-            const existing = duplicates.find(d => d.text.toLowerCase() === normalized);
-            if (existing) {
-              existing.positions.push(index + 1);
-            } else {
-              duplicates.push({
-                text: square.trim(),
-                positions: [seen.get(normalized), index + 1]
-              });
-            }
-          } else {
-            seen.set(normalized, index + 1);
-          }
-        });
-        
-        return duplicates;
-      }
-      
-      getValidationMessages() {
-        const messages = [];
-        
-        if (this.errors.length > 0) {
-          messages.push({
-            type: 'error',
-            items: this.errors
-          });
-        }
-        
-        if (this.warnings.length > 0) {
-          messages.push({
-            type: 'warning', 
-            items: this.warnings
-          });
-        }
-        
-        if (this.errors.length === 0 && this.warnings.length === 0 && this.squares.length === 25) {
-          messages.push({
-            type: 'success',
-            items: [{
-              message: 'All 25 squares are valid! ✅',
-              guidance: 'Ready to save your custom bingo squares'
-            }]
-          });
-        }
-        
-        return messages;
-      }
-      
-      // Helper method to get lock-specific error messages
-      static getLockErrorMessage(lockStatus) {
-        if (!lockStatus || !lockStatus.isLocked) return null;
-        
-        let message = 'Cannot modify squares - event is locked';
-        let guidance = 'Unlock the event to make changes to squares';
-        
-        if (lockStatus.lockReason === 'first_photo') {
-          message = 'Event locked - players have started uploading photos';
-          guidance = 'Squares cannot be changed once gameplay begins to maintain fairness';
-        } else if (lockStatus.lockReason === 'manual') {
-          message = 'Event manually locked by administrator';
-          guidance = 'Use the unlock button above to allow square modifications';
-        }
-        
-        if (lockStatus.lockedAt) {
-          const lockDate = new Date(lockStatus.lockedAt);
-          message += ` (${lockDate.toLocaleDateString()} at ${lockDate.toLocaleTimeString()})`;
-        }
-        
-        return {
-          message,
-          guidance,
-          type: 'event_locked'
-        };
-      }
-    }
-
-    // Initialize squares functionality
-    let currentSquaresConfig = null;
-    let selectedEventForSquares = null;
-    let hasUnsavedChanges = false;
-    let originalSquaresContent = '';
-
-    // Setup squares input listener
-    document.addEventListener('DOMContentLoaded', function() {
-      const squaresInput = document.getElementById('squaresInput');
-      if (squaresInput) {
-        squaresInput.addEventListener('input', handleSquaresInput);
-        squaresInput.addEventListener('paste', function(e) {
-          // Check if pasting over existing content
-          const currentContent = squaresInput.value.trim();
-          const currentSquareCount = currentContent ? currentContent.split('\n').filter(s => s.trim()).length : 0;
-          
-          if (currentContent.length > 0) {
-            let confirmMessage = `📋 PASTE CONTENT
-
-You're about to paste content that will replace your current squares.
-
-Current squares: ${currentSquareCount} lines`;
-
-            if (hasUnsavedChanges) {
-              confirmMessage += '\n\n⚠️ You have UNSAVED CHANGES that will be lost.';
-            }
-
-            if (currentSquareCount >= 20) {
-              confirmMessage += '\n\n💡 You have significant content that will be lost. Consider saving first.';
-            }
-
-            confirmMessage += '\n\nContinue with paste?';
-            
-            if (!confirm(confirmMessage)) {
-              e.preventDefault();
-              showEnhancedMessage('Paste cancelled', 'warning', 'Your current squares were preserved');
-              return;
-            }
-          }
-          
-          // Delay to allow paste to complete
-          setTimeout(handleSquaresInput, 10);
+    function deleteSelectedEvent() {
+      if (currentSelectedEvent) {
+        deleteEvent(currentSelectedEvent).then(() => {
+          backToAllEvents();
         });
       }
-    });
-
-    function handleSquaresInput() {
-      const squaresInput = document.getElementById('squaresInput');
-      const text = squaresInput.value;
-      
-      // Track unsaved changes
-      hasUnsavedChanges = (text !== originalSquaresContent);
-      updateSaveButtonState();
-      
-      // Parse squares (split by lines, trim each)
-      const squares = text.split('\n').map(line => line.trim());
-      
-      // Update square count
-      updateSquareCount(squares.length);
-      
-      // Validate squares
-      currentSquaresConfig = new SquareConfiguration(squares);
-      
-      // Get current lock status for validation
-      const lockStatus = getCurrentLockStatus();
-      
-      // Update validation messages
-      updateValidationMessages(currentSquaresConfig, lockStatus);
-      
-      // Update preview
-      updatePreview(squares);
-    }
-    
-    // Helper function to get current lock status
-    function getCurrentLockStatus() {
-      if (!selectedEventForSquares) return null;
-      
-      // Try to get lock status from the UI elements
-      const lockIndicator = document.getElementById('lockIndicator');
-      if (!lockIndicator) return null;
-      
-      const isLocked = lockIndicator.classList.contains('lock-status-locked');
-      const lockStatusText = document.getElementById('lockStatusDetails');
-      const lockReason = lockStatusText && lockStatusText.textContent.includes('first photo') ? 'first_photo' : 'manual';
-      
-      return {
-        isLocked,
-        lockReason: isLocked ? lockReason : null,
-        lockedAt: null // We don't have this readily available in the UI
-      };
     }
 
-    // Helper function to get photo count for an event
-    async function getPhotoCount(eventCode) {
-      try {
-        const response = await fetch(`${workerURL}admin/photos/${eventCode}`);
-        if (response.ok) {
-          const photos = await response.json();
-          return photos.length;
-        }
-      } catch (err) {
-        console.error('Error getting photo count:', err);
+    // Utility Functions
+    function generateEventCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-      return 0;
-    }
-
-    // Helper function to check if event has existing custom squares
-    function hasExistingSquares() {
-      if (!selectedEventForSquares) return false;
-      
-      const squaresInput = document.getElementById('squaresInput');
-      if (!squaresInput) return false;
-      
-      const currentSquares = squaresInput.value.trim();
-      return currentSquares.length > 0 && currentSquares.split('\n').filter(s => s.trim()).length > 0;
-    }
-
-    // Loading state management
-    function setButtonLoading(buttonId, loadingText, isLoading = true) {
-      const button = document.getElementById(buttonId);
-      if (!button) return;
-      
-      if (isLoading) {
-        button.dataset.originalText = button.textContent;
-        button.innerHTML = `<span class="loading-spinner"></span>${loadingText}`;
-        button.classList.add('btn-loading');
-        button.disabled = true;
-      } else {
-        button.textContent = button.dataset.originalText || button.textContent;
-        button.classList.remove('btn-loading');
-        button.disabled = false;
-      }
-    }
-
-    // Success notification system
-    function showSuccessNotification(title, message) {
-      // Remove any existing notifications
-      const existing = document.querySelector('.success-notification');
-      if (existing) {
-        existing.remove();
-      }
-      
-      const notification = document.createElement('div');
-      notification.className = 'success-notification';
-      notification.innerHTML = `
-        <div class="notification-title">${title}</div>
-        <div class="notification-message">${message}</div>
-      `;
-      
-      document.body.appendChild(notification);
-      
-      // Trigger animation
-      setTimeout(() => {
-        notification.classList.add('show');
-      }, 100);
-      
-      // Auto-remove after 4 seconds
-      setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-          if (notification.parentNode) {
-            notification.remove();
-          }
-        }, 300);
-      }, 4000);
-    }
-
-    // Retry mechanism for failed requests
-    function createRetryButton(operation, operationName, container) {
-      const retryContainer = document.createElement('div');
-      retryContainer.className = 'retry-container';
-      retryContainer.innerHTML = `
-        <div style="margin-bottom: 8px; font-size: 0.9rem;">
-          Failed to ${operationName.toLowerCase()}. This might be due to a network issue.
-        </div>
-        <button class="retry-button" onclick="retryOperation('${operation}')">
-          🔄 Retry ${operationName}
-        </button>
-      `;
-      
-      container.appendChild(retryContainer);
-      
-      // Auto-remove retry button after 30 seconds
-      setTimeout(() => {
-        if (retryContainer.parentNode) {
-          retryContainer.remove();
-        }
-      }, 30000);
-    }
-
-    // Global retry operations handler
-    window.retryOperations = {};
-    
-    function retryOperation(operationId) {
-      const operation = window.retryOperations[operationId];
-      if (operation) {
-        // Remove retry button
-        const retryContainer = document.querySelector('.retry-container');
-        if (retryContainer) {
-          retryContainer.remove();
-        }
-        
-        // Execute the retry operation
-        operation();
-      }
-    }
-
-    function updateSquareCount(count) {
-      const countElement = document.getElementById('squareCount');
-      if (countElement) {
-        countElement.textContent = `${count} / 25 squares`;
-        countElement.style.color = count === 25 ? '#51cf66' : count > 25 ? '#ff6b6b' : '#999';
-      }
-    }
-
-    function updateValidationMessages(config, lockStatus = null) {
-      const messagesContainer = document.getElementById('validationMessages');
-      if (!messagesContainer) return;
-      
-      let messages = config.getValidationMessages();
-      
-      // Add lock error message if event is locked
-      if (lockStatus && lockStatus.isLocked) {
-        const lockError = SquareConfiguration.getLockErrorMessage(lockStatus);
-        if (lockError) {
-          messages.unshift({
-            type: 'error',
-            items: [lockError]
-          });
-        }
-      }
-      
-      if (messages.length === 0) {
-        messagesContainer.innerHTML = '';
-        return;
-      }
-      
-      messagesContainer.innerHTML = messages.map(group => {
-        const className = `validation-${group.type}`;
-        return `<div class="${className}">
-          ${group.items.map(item => {
-            if (typeof item === 'string') {
-              // Handle legacy string messages
-              return `<div>${item}</div>`;
-            } else {
-              // Handle new structured messages
-              return `
-                <div class="validation-message">
-                  <div class="validation-message-text">${item.message}</div>
-                  ${item.guidance ? `<div class="validation-guidance">💡 ${item.guidance}</div>` : ''}
-                </div>
-              `;
-            }
-          }).join('')}
-        </div>`;
-      }).join('');
-    }
-
-    function updatePreview(squares) {
-      const previewGrid = document.getElementById('previewGrid');
-      const noPreview = document.getElementById('noPreview');
-      const bingoPreview = document.getElementById('bingoPreview');
-      
-      if (!previewGrid) return;
-      
-      if (squares.length === 0 || squares.every(s => !s || s.trim().length === 0)) {
-        noPreview.style.display = 'block';
-        bingoPreview.style.display = 'none';
-        return;
-      }
-      
-      noPreview.style.display = 'none';
-      bingoPreview.style.display = 'block';
-      
-      // Create 25 squares for the grid
-      const gridSquares = [];
-      for (let i = 0; i < 25; i++) {
-        const square = squares[i] || '';
-        gridSquares.push(square.trim());
-      }
-      
-      // Find duplicates for highlighting
-      const config = new SquareConfiguration(gridSquares);
-      const duplicates = config.findDuplicates();
-      const duplicateTexts = new Set(duplicates.map(d => d.text.toLowerCase()));
-      
-      // Generate grid HTML
-      previewGrid.innerHTML = gridSquares.map((square, index) => {
-        let className = 'preview-square';
-        
-        // Center square (index 12)
-        if (index === 12) {
-          className += ' center';
-        }
-        // Empty square
-        else if (!square || square.length === 0) {
-          className += ' empty';
-        }
-        // Duplicate square
-        else if (duplicateTexts.has(square.toLowerCase())) {
-          className += ' duplicate';
-        }
-        
-        const displayText = index === 12 ? 'FREE SPACE' : (square || `Square ${index + 1}`);
-        
-        return `<div class="${className}" title="Position ${index + 1}: ${displayText}">
-          ${displayText}
-        </div>`;
-      }).join('');
-    }
-
-    // Squares management functions
-    function focusSquaresInput() {
-      const squaresInput = document.getElementById('squaresInput');
-      if (squaresInput) {
-        squaresInput.focus();
-        squaresInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-
-    function clearSquares() {
-      const squaresInput = document.getElementById('squaresInput');
-      if (!squaresInput || !squaresInput.value.trim()) {
-        showEnhancedMessage('No squares to clear', 'warning', 'The squares input is already empty');
-        return;
-      }
-      
-      // Store current squares for undo functionality
-      const currentSquares = squaresInput.value;
-      const squareCount = squaresInput.value.split('\n').filter(s => s.trim()).length;
-      
-      let confirmMessage = `🗑️ CLEAR ALL SQUARES
-
-This will remove all ${squareCount} squares you've entered.`;
-
-      if (hasUnsavedChanges) {
-        confirmMessage += `\n\n⚠️ You have UNSAVED CHANGES that will be lost.`;
-      }
-
-      confirmMessage += `\n\nYou can use "Undo Clear" to restore them within 2 minutes.
-
-Are you sure you want to clear all squares?`;
-      
-      if (!confirm(confirmMessage)) {
-        return;
-      }
-      
-      // Store for undo
-      window.lastClearedSquares = currentSquares;
-      window.lastClearedTimestamp = Date.now();
-      
-      squaresInput.value = '';
-      handleSquaresInput();
-      
-      // Show undo option
-      showUndoClearOption();
-      showEnhancedMessage('Squares cleared', 'success', 'Use "Undo Clear" button if you need to restore them');
-    }
-
-    function loadDefaultSquares() {
-      const squaresInput = document.getElementById('squaresInput');
-      if (!squaresInput) return;
-      
-      // Check if overwriting existing content or unsaved changes
-      const hasContent = squaresInput.value.trim().length > 0;
-      const currentSquareCount = hasContent ? squaresInput.value.split('\n').filter(s => s.trim()).length : 0;
-      
-      if (hasContent || hasUnsavedChanges) {
-        let confirmMessage = `📋 LOAD DEFAULT SQUARES
-
-This will replace your current ${currentSquareCount} squares with 25 default photo challenges.`;
-
-        if (hasUnsavedChanges) {
-          confirmMessage += `\n\n⚠️ You have UNSAVED CHANGES that will be lost.`;
-        }
-        
-        if (currentSquareCount === 25) {
-          confirmMessage += `\n\n💡 TIP: Your current squares appear complete. Consider saving them first if they're custom.`;
-        }
-        
-        confirmMessage += `\n\nYour current squares will be lost unless you save them first.
-
-Continue with loading defaults?`;
-        
-        if (!confirm(confirmMessage)) {
-          showEnhancedMessage('Load cancelled', 'warning', 'Your current squares were preserved');
-          return;
-        }
-      }
-      
-      // Default squares from the original game
-      const defaultSquares = [
-        "A photo with someone laughing",
-        "Someone trying the food", 
-        "A group photo by the entrance",
-        "Someone dancing",
-        "A candid moment during speeches",
-        "A photo of decorations or setup",
-        "Someone taking a selfie",
-        "A photo with the host/organizer",
-        "Someone in formal attire",
-        "A photo of people mingling",
-        "Someone giving a toast or speech",
-        "A photo of the venue/location",
-        // Center square is FREE SPACE (index 12)
-        "A photo of someone eating",
-        "A group hug or embrace",
-        "Someone checking their phone",
-        "A photo with multiple generations",
-        "Someone wearing something unique",
-        "A candid conversation moment",
-        "Someone looking surprised",
-        "A photo of hands (holding, gesturing, etc.)",
-        "Someone in the background of another photo",
-        "A photo showing emotion (joy, excitement, etc.)",
-        "Someone interacting with decor/environment",
-        "A photo that tells a story",
-        "Someone being spontaneous or silly"
-      ];
-      
-      squaresInput.value = defaultSquares.join('\n');
-      handleSquaresInput();
-      showEnhancedMessage('Default squares loaded successfully!', 'success', '25 standard photo challenges are now ready for your event');
-    }
-
-    // Undo functionality for cleared squares
-    function showUndoClearOption() {
-      const undoBtn = document.getElementById('undoClearBtn');
-      if (undoBtn && window.lastClearedSquares) {
-        undoBtn.style.display = 'inline-block';
-        
-        // Auto-hide undo option after 2 minutes
-        setTimeout(() => {
-          hideUndoClearOption();
-        }, 120000);
-      }
-    }
-
-    // Recovery functionality for overwritten squares
-    function showSquaresRecoveryOption() {
-      if (!window.previousSquares) return;
-      
-      const recoveryMessage = `💾 SQUARES RECOVERY AVAILABLE
-
-Your previous squares for "${window.previousSquares.eventTitle}" have been temporarily stored.
-
-If you need to recover them, you have 5 minutes to do so.
-
-Would you like to see the recovery option?`;
-
-      if (confirm(recoveryMessage)) {
-        showEnhancedMessage(
-          'Previous squares stored for recovery', 
-          'success',
-          'Use browser console: recoverPreviousSquares() within 5 minutes if needed'
-        );
-        
-        // Make recovery function globally available
-        window.recoverPreviousSquares = function() {
-          if (!window.previousSquares) {
-            console.log('No previous squares available for recovery');
-            return;
-          }
-          
-          const timeSinceOverwrite = Date.now() - window.previousSquares.timestamp;
-          if (timeSinceOverwrite > 300000) { // 5 minutes
-            console.log('Recovery period expired (5 minutes)');
-            window.previousSquares = null;
-            return;
-          }
-          
-          const squaresInput = document.getElementById('squaresInput');
-          if (squaresInput && selectedEventForSquares && 
-              selectedEventForSquares.code === window.previousSquares.eventCode) {
-            
-            const confirmRecover = confirm(`Recover previous squares for "${window.previousSquares.eventTitle}"?\n\nThis will replace your current input.`);
-            if (confirmRecover) {
-              squaresInput.value = window.previousSquares.squares;
-              handleSquaresInput();
-              console.log('Previous squares recovered successfully');
-              showEnhancedMessage('Previous squares recovered', 'success', 'Your previous squares have been restored');
-            }
-          } else {
-            console.log('Cannot recover: different event selected or squares input not available');
-          }
-        };
-        
-        // Auto-cleanup after 5 minutes
-        setTimeout(() => {
-          window.previousSquares = null;
-          window.recoverPreviousSquares = null;
-        }, 300000);
-      }
-    }
-
-    function hideUndoClearOption() {
-      const undoBtn = document.getElementById('undoClearBtn');
-      if (undoBtn) {
-        undoBtn.style.display = 'none';
-      }
-      window.lastClearedSquares = null;
-      window.lastClearedTimestamp = null;
-    }
-
-    function undoClearSquares() {
-      if (!window.lastClearedSquares) {
-        showEnhancedMessage('Nothing to undo', 'warning', 'No recently cleared squares found');
-        return;
-      }
-      
-      // Check if undo is still valid (within 2 minutes)
-      const timeSinceCleared = Date.now() - (window.lastClearedTimestamp || 0);
-      if (timeSinceCleared > 120000) { // 2 minutes
-        showEnhancedMessage('Undo expired', 'warning', 'Undo is only available for 2 minutes after clearing');
-        hideUndoClearOption();
-        return;
-      }
-      
-      const squaresInput = document.getElementById('squaresInput');
-      if (squaresInput) {
-        // Check if user has entered new content
-        const currentContent = squaresInput.value.trim();
-        const currentCount = currentContent ? currentContent.split('\n').filter(s => s.trim()).length : 0;
-        const restoredCount = window.lastClearedSquares.split('\n').filter(s => s.trim()).length;
-        
-        if (currentContent.length > 0) {
-          const confirmMessage = `↩️ UNDO CLEAR SQUARES
-
-This will restore your previously cleared squares (${restoredCount} squares).
-
-Your current input (${currentCount} squares) will be replaced.
-
-Continue with undo?`;
-          
-          if (!confirm(confirmMessage)) {
-            showEnhancedMessage('Undo cancelled', 'warning', 'Your current input was preserved');
-            return;
-          }
-        }
-        
-        squaresInput.value = window.lastClearedSquares;
-        handleSquaresInput();
-        hideUndoClearOption();
-        
-        showEnhancedMessage('Squares restored', 'success', `${restoredCount} squares have been restored from your last clear operation`);
-      }
-    }
-
-    // Update save button state based on changes
-    function updateSaveButtonState() {
-      const saveBtn = document.getElementById('saveSquaresBtn');
-      if (!saveBtn) return;
-      
-      if (hasUnsavedChanges) {
-        saveBtn.textContent = '💾 Save Changes';
-        saveBtn.style.background = 'linear-gradient(135deg, #ff6b6b, #ff8e8e)'; // Red gradient for unsaved
-      } else {
-        saveBtn.textContent = '💾 Save Squares';
-        saveBtn.style.background = ''; // Reset to default
-      }
-    }
-
-    // Warn about unsaved changes when switching events
-    function warnUnsavedChanges() {
-      if (!hasUnsavedChanges) return true;
-      
-      const squaresInput = document.getElementById('squaresInput');
-      const changeCount = squaresInput ? squaresInput.value.split('\n').filter(s => s.trim()).length : 0;
-      
-      const confirmMessage = `⚠️ UNSAVED CHANGES
-
-You have unsaved changes to the squares configuration.
-Current input: ${changeCount} squares
-
-If you continue, your changes will be lost.
-
-Options:
-• Click "Cancel" to stay and save your changes
-• Click "OK" to continue and lose changes
-
-⚠️ Lost changes cannot be recovered.
-
-Continue and lose changes?`;
-
-      const result = confirm(confirmMessage);
-      
-      if (!result) {
-        showEnhancedMessage('Event switch cancelled', 'warning', 'Save your squares changes before switching events');
-      }
-      
       return result;
     }
 
-    // Add beforeunload warning for unsaved changes
-    window.addEventListener('beforeunload', function(e) {
-      if (hasUnsavedChanges) {
-        const message = 'You have unsaved changes to squares configuration. Are you sure you want to leave?';
-        e.returnValue = message;
-        return message;
-      }
-    });
-
-    // Event Lock Management
-    async function loadEventLockStatus(eventCode) {
-      if (!eventCode) return;
-      
-      const lockStatusText = document.getElementById('lockStatusText');
-      const lockStatusDetails = document.getElementById('lockStatusDetails');
-      
-      // Show loading state
-      if (lockStatusText) lockStatusText.textContent = 'Loading...';
-      if (lockStatusDetails) lockStatusDetails.innerHTML = '<span class="loading-spinner"></span>Checking lock status...';
-      
-      try {
-        const response = await fetch(`${workerURL}admin/event-status/${eventCode}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    function showMessage(message, type) {
+      // Remove existing messages
+      document.querySelectorAll('.message').forEach(msg => {
+        if (!msg.closest('.validation-messages')) {
+          msg.remove();
         }
-        
-        const status = await response.json();
-        updateLockStatusDisplay(status);
-        return status;
-        
-      } catch (err) {
-        console.error('Error loading event lock status:', err);
-        
-        // Show error state
-        if (lockStatusText) lockStatusText.textContent = 'Status Unknown';
-        if (lockStatusDetails) {
-          lockStatusDetails.textContent = 'Failed to load lock status';
-          
-          // Add retry for lock status
-          window.retryOperations[`lockStatus_${eventCode}`] = () => loadEventLockStatus(eventCode);
-          createRetryButton(`lockStatus_${eventCode}`, 'Load Lock Status', lockStatusDetails.parentElement);
-        }
-        
-        return null;
+      });
+      
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${type}`;
+      messageDiv.textContent = message;
+      
+      // Insert at the top of the current section
+      const activeSection = document.querySelector('.section:not(.hidden)');
+      if (activeSection) {
+        activeSection.insertBefore(messageDiv, activeSection.firstChild.nextSibling);
       }
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        messageDiv.remove();
+      }, 5000);
     }
 
-    function updateLockStatusDisplay(status) {
-      const lockIndicator = document.getElementById('lockIndicator');
-      const lockIcon = document.getElementById('lockIcon');
-      const lockStatusText = document.getElementById('lockStatusText');
-      const lockStatusDetails = document.getElementById('lockStatusDetails');
-      const lockEventBtn = document.getElementById('lockEventBtn');
-      const unlockEventBtn = document.getElementById('unlockEventBtn');
-      const squaresConfigForm = document.getElementById('squaresConfigForm');
+    function showSuccessNotification(title, message) {
+      const notification = document.getElementById('successNotification');
+      document.getElementById('notificationTitle').textContent = title;
+      document.getElementById('notificationMessage').textContent = message;
       
-      if (!lockIndicator) return;
+      notification.classList.add('show');
       
-      if (status.isLocked) {
-        // Event is locked
-        lockIndicator.className = 'lock-status-locked';
-        lockIcon.textContent = '🔒';
-        lockStatusText.textContent = 'Event Locked';
-        
-        let details = 'Squares cannot be modified';
-        if (status.lockReason === 'first_photo') {
-          details = 'Locked automatically when first photo was uploaded';
-        } else if (status.lockReason === 'manual') {
-          details = 'Manually locked by admin';
-        }
-        
-        if (status.lockedAt) {
-          const lockDate = new Date(status.lockedAt);
-          details += ` (${lockDate.toLocaleDateString()} ${lockDate.toLocaleTimeString()})`;
-        }
-        
-        lockStatusDetails.textContent = details;
-        lockEventBtn.style.display = 'none';
-        unlockEventBtn.style.display = 'inline-block';
-        
-        // Disable squares editing
-        if (squaresConfigForm) {
-          squaresConfigForm.classList.add('squares-disabled');
-        }
-        
-      } else {
-        // Event is unlocked
-        lockIndicator.className = 'lock-status-unlocked';
-        lockIcon.textContent = '🔓';
-        lockStatusText.textContent = 'Event Unlocked';
-        lockStatusDetails.textContent = 'Squares can be modified. Event will lock automatically when first photo is uploaded.';
-        lockEventBtn.style.display = 'inline-block';
-        unlockEventBtn.style.display = 'none';
-        
-        // Enable squares editing
-        if (squaresConfigForm) {
-          squaresConfigForm.classList.remove('squares-disabled');
-        }
-      }
-    }
-
-    async function toggleEventLock() {
-      if (!selectedEventForSquares) {
-        showEnhancedMessage('No event selected', 'error', 'Please select an event before changing lock status');
-        return;
-      }
-      
-      const lockEventBtn = document.getElementById('lockEventBtn');
-      const unlockEventBtn = document.getElementById('unlockEventBtn');
-      
-      try {
-        const currentStatus = await loadEventLockStatus(selectedEventForSquares.code);
-        if (!currentStatus) {
-          showEnhancedMessage(
-            'Failed to get current lock status', 
-            'error',
-            'Unable to determine if event is locked. Please refresh and try again.'
-          );
-          return;
-        }
-        
-        const newLockState = !currentStatus.isLocked;
-        const action = newLockState ? 'lock' : 'unlock';
-        const actionCapitalized = action.charAt(0).toUpperCase() + action.slice(1);
-        
-        // Enhanced confirmation dialogs with player activity awareness
-        const photoCount = await getPhotoCount(selectedEventForSquares.code);
-        
-        if (newLockState) {
-          // Enhanced confirmation for manual lock
-          let confirmMessage = `🔒 LOCK EVENT: "${selectedEventForSquares.title}"
-
-This will immediately:
-• Prevent any further modifications to squares
-• Maintain game integrity for active players
-• Require manual unlock to make changes
-
-Current activity: ${photoCount} photo${photoCount !== 1 ? 's' : ''} uploaded`;
-
-          if (photoCount === 0) {
-            confirmMessage += `
-
-⚠️ NOTE: Event will lock automatically when first photo is uploaded.
-Manual lock is only needed for special circumstances.`;
-          }
-
-          confirmMessage += `
-
-Are you sure you want to lock this event manually?`;
-
-          if (!confirm(confirmMessage)) {
-            return;
-          }
-        } else {
-          let warningLevel = 'CAUTION';
-          let riskMessage = 'Low risk - no player activity detected';
-          
-          if (photoCount > 0) {
-            warningLevel = 'HIGH RISK';
-            riskMessage = `${photoCount} photo${photoCount !== 1 ? 's have' : ' has'} been uploaded - players are active!`;
-          }
-          
-          const confirmMessage = `🔓 UNLOCK EVENT: "${selectedEventForSquares.title}"
-
-⚠️ ${warningLevel} OPERATION
-
-This will:
-• Allow squares to be modified again
-• Potentially confuse active players
-• May invalidate uploaded photos
-• Could affect game fairness
-
-${riskMessage}
-
-Only unlock if you need to make critical corrections.
-
-Type "UNLOCK" to confirm:`;
-
-          const userInput = prompt(confirmMessage);
-          if (userInput !== 'UNLOCK') {
-            if (userInput !== null) {
-              showEnhancedMessage('Unlock cancelled', 'warning', 'Type "UNLOCK" exactly to confirm unlocking');
-            }
-            return;
-          }
-        }
-        
-        // Set loading state on appropriate button
-        const activeBtn = newLockState ? lockEventBtn : unlockEventBtn;
-        setButtonLoading(activeBtn.id, `${actionCapitalized}ing...`, true);
-        
-        const response = await fetch(`${workerURL}admin/lock-event`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            eventCode: selectedEventForSquares.code,
-            adminUser: selectedEventForSquares.adminUser,
-            lock: newLockState,
-            reason: 'manual'
-          })
-        });
-        
-        if (response.ok) {
-          const updatedStatus = await response.json();
-          updateLockStatusDisplay(updatedStatus);
-          
-          showSuccessNotification(
-            `Event ${actionCapitalized}ed`,
-            `"${selectedEventForSquares.title}" is now ${newLockState ? 'locked' : 'unlocked'}`
-          );
-          
-          showEnhancedMessage(
-            `Event ${action}ed successfully`, 
-            'success',
-            newLockState ? 'Squares are now protected from changes' : 'Squares can now be modified'
-          );
-        } else {
-          const error = await response.text();
-          let guidance = 'Please try again or contact support if the problem persists';
-          
-          if (error.includes('permission')) {
-            guidance = 'Make sure you have admin access to this event';
-          } else if (error.includes('not found')) {
-            guidance = 'The event may have been deleted. Please refresh the page.';
-          }
-          
-          showEnhancedMessage(`Failed to ${action} event: ${error}`, 'error', guidance);
-        }
-        
-      } catch (err) {
-        console.error('Error toggling event lock:', err);
-        showEnhancedMessage(
-          'Network error while updating lock status', 
-          'error',
-          'Check your internet connection and try again'
-        );
-      } finally {
-        // Remove loading state from both buttons
-        setButtonLoading('lockEventBtn', '', false);
-        setButtonLoading('unlockEventBtn', '', false);
-      }
-    }
-
-    // Save squares function
-    async function saveSquares() {
-      if (!selectedEventForSquares) {
-        showEnhancedMessage('No event selected', 'error', 'Please select an event from the dropdown above before saving squares');
-        return;
-      }
-      
-      // Check if event is locked
-      const lockStatus = getCurrentLockStatus();
-      if (lockStatus && lockStatus.isLocked) {
-        const lockError = SquareConfiguration.getLockErrorMessage(lockStatus);
-        showEnhancedMessage(lockError.message, 'error', lockError.guidance);
-        return;
-      }
-      
-      if (!currentSquaresConfig || !currentSquaresConfig.isValid) {
-        const errorCount = currentSquaresConfig ? currentSquaresConfig.errors.length : 0;
-        showEnhancedMessage(
-          `Cannot save - ${errorCount} validation error${errorCount !== 1 ? 's' : ''} found`, 
-          'error',
-          'Please fix the validation errors shown above before saving'
-        );
-        return;
-      }
-
-      // Enhanced confirmation dialogs for critical scenarios
-      const photoCount = await getPhotoCount(selectedEventForSquares.code);
-      const hasExisting = hasExistingSquares();
-      
-      // Check if players have already joined (photos uploaded)
-      if (photoCount > 0) {
-        const confirmMessage = `⚠️ PLAYERS HAVE JOINED THIS EVENT
-
-${photoCount} photo${photoCount !== 1 ? 's have' : ' has'} already been uploaded by players.
-
-Changing squares now may:
-• Confuse active players
-• Make uploaded photos invalid
-• Affect game fairness
-• Cause players to lose progress
-
-This should only be done for critical corrections.
-
-Type "MODIFY" to confirm you want to change squares:`;
-
-        const userInput = prompt(confirmMessage);
-        if (userInput !== 'MODIFY') {
-          if (userInput !== null) {
-            showEnhancedMessage('Save cancelled', 'warning', 'Type "MODIFY" exactly to confirm changes to active event');
-          } else {
-            showEnhancedMessage('Save cancelled', 'warning', 'Squares were not modified to protect active players');
-          }
-          return;
-        }
-        
-        // Additional confirmation for high activity events
-        if (photoCount >= 10) {
-          const highActivityConfirm = `🚨 HIGH ACTIVITY EVENT
-
-This event has ${photoCount} photos uploaded - this indicates very active gameplay!
-
-Modifying squares now will likely:
-• Frustrate many active players
-• Invalidate significant player progress
-• Potentially ruin the event experience
-
-Are you absolutely certain this change is necessary?
-
-Click OK only if this is a critical fix.`;
-
-          if (!confirm(highActivityConfirm)) {
-            showEnhancedMessage('Save cancelled', 'warning', 'Squares preserved due to high player activity');
-            return;
-          }
-        }
-      }
-      
-      // Check if overwriting existing squares
-      if (hasExisting && selectedEventForSquares.squares && selectedEventForSquares.squares.length === 25) {
-        // Store current squares for potential undo
-        const currentSquares = selectedEventForSquares.squares.join('\n');
-        
-        const confirmMessage = `📝 OVERWRITE EXISTING SQUARES
-
-This event already has 25 custom squares configured.
-
-Current squares will be replaced with your new configuration.
-
-⚠️ This action cannot be undone through the system.
-However, your previous squares will be temporarily stored for recovery.
-
-Are you sure you want to replace the existing squares?`;
-
-        if (!confirm(confirmMessage)) {
-          showEnhancedMessage('Save cancelled', 'warning', 'Existing squares were preserved');
-          return;
-        }
-        
-        // Store previous squares for potential recovery
-        window.previousSquares = {
-          eventCode: selectedEventForSquares.code,
-          squares: currentSquares,
-          timestamp: Date.now(),
-          eventTitle: selectedEventForSquares.title
-        };
-        
-        // Show recovery option after save
-        setTimeout(() => {
-          showSquaresRecoveryOption();
-        }, 2000);
-      }
-      
-      const saveBtn = document.getElementById('saveSquaresBtn');
-      const originalText = saveBtn.textContent;
-      
-      try {
-        saveBtn.textContent = '💾 Saving...';
-        saveBtn.disabled = true;
-        
-        const response = await fetch(`${workerURL}admin/update-squares`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            eventCode: selectedEventForSquares.code,
-            adminUser: selectedEventForSquares.adminUser,
-            squares: currentSquaresConfig.squares
-          })
-        });
-        
-        if (response.ok) {
-          // Reset unsaved changes state
-          originalSquaresContent = document.getElementById('squaresInput').value;
-          hasUnsavedChanges = false;
-          updateSaveButtonState();
-          
-          showEnhancedMessage(
-            'Squares saved successfully!', 
-            'success',
-            'Your custom bingo squares are now active for this event'
-          );
-          // Reload lock status in case it changed
-          await loadEventLockStatus(selectedEventForSquares.code);
-        } else {
-          const error = await response.text();
-          let guidance = 'Please try again or contact support if the problem persists';
-          
-          if (error.includes('locked')) {
-            guidance = 'The event may have been locked by another admin or due to player activity';
-          } else if (error.includes('validation')) {
-            guidance = 'Check that all squares are valid and try again';
-          } else if (error.includes('permission')) {
-            guidance = 'Make sure you have admin access to this event';
-          }
-          
-          showEnhancedMessage(`Failed to save squares: ${error}`, 'error', guidance);
-        }
-        
-      } catch (err) {
-        console.error('Error saving squares:', err);
-        showEnhancedMessage(
-          'Network error while saving squares', 
-          'error',
-          'Check your internet connection and try again'
-        );
-      } finally {
-        saveBtn.textContent = originalText;
-        saveBtn.disabled = false;
-      }
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 4000);
     }
   </script>
 </body>
