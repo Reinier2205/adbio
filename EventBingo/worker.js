@@ -423,6 +423,76 @@ async function handleAdminRequest(request, env, corsHeaders) {
     });
   }
 
+  // Clean up corrupted progress data
+  if (request.method === "POST" && path === "/admin/cleanup-progress") {
+    const data = await request.json();
+    const { eventCode } = data;
+
+    if (!eventCode) {
+      return new Response("Event code is required", { status: 400, headers: corsHeaders });
+    }
+
+    try {
+      const list = await env.EventBingoProgress.list({ prefix: `${eventCode}_` });
+      let cleanedCount = 0;
+
+      for (const item of list.keys || []) {
+        const keyName = item.name || item.key;
+        if (!keyName.startsWith('event_')) {
+          const progressData = await env.EventBingoProgress.get(keyName);
+          
+          if (progressData) {
+            const progress = JSON.parse(progressData);
+            let needsUpdate = false;
+            
+            // Clean up NaN keys in photos
+            if (progress.photos && typeof progress.photos === 'object') {
+              const cleanPhotos = {};
+              for (const [key, value] of Object.entries(progress.photos)) {
+                const index = parseInt(key);
+                if (!isNaN(index) && index >= 0) {
+                  cleanPhotos[index] = value;
+                } else {
+                  needsUpdate = true;
+                }
+              }
+              progress.photos = cleanPhotos;
+            }
+            
+            // Clean up null values in completedSquares
+            if (progress.completedSquares && Array.isArray(progress.completedSquares)) {
+              progress.completedSquares = progress.completedSquares.filter(
+                item => item !== null && !isNaN(parseInt(item))
+              );
+              needsUpdate = true;
+            }
+            
+            if (needsUpdate) {
+              await env.EventBingoProgress.put(keyName, JSON.stringify(progress));
+              cleanedCount++;
+            }
+          }
+        }
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: `Cleaned up ${cleanedCount} progress entries` 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ 
+        error: "Cleanup failed", 
+        details: error.message 
+      }), { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+  }
+
   return new Response("Admin endpoint not found", { status: 404, headers: corsHeaders });
 }
 
@@ -539,7 +609,7 @@ export default {
         }
 
         const timestamp = Date.now();
-        const key = `${eventCode}_${player.replace(/\s+/g, '_')}_${square}_${timestamp}`;
+        const key = `${eventCode}_${player.replace(/\s+/g, '_')}_square${square}_${timestamp}`;
 
         await env.EventBingoPhotos.put(key, file);
 
@@ -553,10 +623,12 @@ export default {
         }
 
         const squareIndex = parseInt(square);
-        if (!progress.completedSquares.includes(squareIndex)) {
-          progress.completedSquares.push(squareIndex);
+        if (!isNaN(squareIndex)) {
+          if (!progress.completedSquares.includes(squareIndex)) {
+            progress.completedSquares.push(squareIndex);
+          }
+          progress.photos[squareIndex] = key;
         }
-        progress.photos[squareIndex] = key;
 
         await env.EventBingoProgress.put(progressKey, JSON.stringify(progress));
 
@@ -617,9 +689,12 @@ export default {
           // Convert photo keys to URLs and map by square text
           const photosBySquare = {};
           for (const [squareIndex, photoKey] of Object.entries(photos)) {
-            const squareText = squares[parseInt(squareIndex)];
-            if (squareText && photoKey) {
-              photosBySquare[squareText] = `${url.origin}/photo/${photoKey}`;
+            const index = parseInt(squareIndex);
+            if (!isNaN(index) && index >= 0 && index < squares.length) {
+              const squareText = squares[index];
+              if (squareText && photoKey) {
+                photosBySquare[squareText] = `${url.origin}/photo/${photoKey}`;
+              }
             }
           }
           
