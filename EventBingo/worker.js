@@ -397,6 +397,8 @@ export default {
 async function handleAdminRequest(request, env, corsHeaders) {
   const url = new URL(request.url);
   const path = url.pathname;
+  
+  console.log('handleAdminRequest - Method:', request.method, 'Path:', path);
 
   // Create new event
   if (request.method === "POST" && path === "/admin/create-event") {
@@ -764,6 +766,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
 
   // Test endpoint for debugging
   if (request.method === "POST" && path === "/admin/test") {
+    console.log('Test endpoint reached!');
     return new Response(JSON.stringify({ 
       success: true, 
       message: "Test endpoint working",
@@ -775,5 +778,6 @@ async function handleAdminRequest(request, env, corsHeaders) {
     });
   }
 
+  console.log('No matching admin endpoint found for:', request.method, path);
   return new Response("Admin endpoint not found", { status: 404, headers: corsHeaders });
 }
