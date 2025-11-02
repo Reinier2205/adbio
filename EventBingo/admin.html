@@ -961,6 +961,10 @@
               <span>⬅️</span>
               Back to Edit Squares
             </button>
+            <button type="button" class="btn btn-secondary btn-small" onclick="testSquaresSaving()">
+              <span>🧪</span>
+              Test Squares
+            </button>
             <button type="button" class="btn btn-success" onclick="saveEvent()" style="flex: 1;" id="saveEventBtn">
               <span>💾</span>
               Save Event & Lock
@@ -1197,8 +1201,24 @@ Please generate 25 unique photo challenges following these guidelines.`;
     }
 
     function goToNextStep(currentStep) {
-      // Validate current step before proceeding
-      if (currentStep === 3) {
+      // Validate and store data for current step before proceeding
+      if (currentStep === 2) {
+        // Store AI context even if prompt wasn't generated
+        const names = document.getElementById('aiEventNames').value.trim();
+        const theme = document.getElementById('aiEventTheme').value.trim();
+        const location = document.getElementById('aiEventLocation').value.trim();
+        const activities = document.getElementById('aiEventActivities').value.trim();
+        const otherInstructions = document.getElementById('aiOtherInstructions').value.trim();
+        
+        currentWorkflowData.aiContext = {
+          title: currentWorkflowData.eventDetails.title,
+          names,
+          theme,
+          location,
+          activities,
+          otherInstructions
+        };
+      } else if (currentStep === 3) {
         // Validate squares before going to preview
         if (!validateSquares()) {
           showMessage('Please fix the validation errors before continuing', 'error');
@@ -1546,16 +1566,29 @@ Please generate 25 unique photo challenges following these guidelines.`;
         saveBtn.innerHTML = '<span class="loading-spinner"></span>Saving Event...';
         saveBtn.disabled = true;
         
+        // Ensure we have a valid aiContext
+        const aiContext = currentWorkflowData.aiContext || {
+          title: currentWorkflowData.eventDetails.title,
+          names: '',
+          theme: '',
+          location: '',
+          activities: '',
+          otherInstructions: ''
+        };
+
         const eventData = {
           ...currentWorkflowData.eventDetails,
           squares: squares,
-          aiContext: currentWorkflowData.aiContext,
+          aiContext: aiContext,
           isLocked: true, // Lock the event after creation
           lockedAt: new Date().toISOString(),
           lockReason: 'created'
         };
         
-        console.log('Saving event with squares:', squares); // Debug log
+        console.log('Event details:', currentWorkflowData.eventDetails); // Debug log
+        console.log('Squares being sent:', squares); // Debug log
+        console.log('AI Context:', currentWorkflowData.aiContext); // Debug log
+        console.log('Full event data being sent:', eventData); // Debug log
         
         const response = await fetch(`${workerURL}admin/create-event`, {
           method: 'POST',
@@ -1742,7 +1775,10 @@ Please generate 25 unique photo challenges following these guidelines.`;
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ eventCode })
+          body: JSON.stringify({ 
+            code: eventCode,
+            adminUser: 'admin' // For now, we'll use a default admin user
+          })
         });
         
         if (response.ok) {
@@ -1753,6 +1789,7 @@ Please generate 25 unique photo challenges following these guidelines.`;
           showMessage(`Error deleting event: ${error}`, 'error');
         }
       } catch (err) {
+        console.error('Delete error:', err);
         showMessage('Failed to delete event. Please try again.', 'error');
       }
     }
@@ -1809,6 +1846,20 @@ Please generate 25 unique photo challenges following these guidelines.`;
       setTimeout(() => {
         notification.classList.remove('show');
       }, 4000);
+    }
+
+    // Test function to debug squares saving
+    function testSquaresSaving() {
+      const squares = document.getElementById('squaresInput').value
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      console.log('Current squares in textarea:', squares);
+      console.log('Squares count:', squares.length);
+      console.log('Current workflow data:', currentWorkflowData);
+      
+      alert(`Squares count: ${squares.length}\nFirst square: "${squares[0] || 'None'}"\nLast square: "${squares[24] || 'None'}"`);
     }
   </script>
 </body>
