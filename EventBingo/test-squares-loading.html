@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Squares Loading Test - EventBingo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fafafa;
+      margin: 0;
+      padding: 20px;
+      color: #2c3e50;
+    }
+    
+    .test-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .test-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #4a90e2;
+    }
+    
+    .test-button {
+      background: linear-gradient(135deg, #4a90e2, #7b68ee);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin: 10px 5px;
+    }
+    
+    .test-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    }
+    
+    .results {
+      background: #e8f5e8;
+      border: 1px solid #51cf66;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    
+    .error {
+      background: #ffe8e8;
+      border: 1px solid #ff6b6b;
+    }
+    
+    .squares-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin: 20px 0;
+    }
+    
+    .square-item {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.7rem;
+      text-align: center;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .square-number {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 0.6rem;
+      color: #666;
+      font-weight: bold;
+    }
+    
+    .api-test {
+      background: #f0f8ff;
+      border: 1px solid #4a90e2;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+    
+    .api-request {
+      font-family: monospace;
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+    
+    .api-response {
+      font-family: monospace;
+      background: #1a202c;
+      color: #68d391;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      overflow-x: auto;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <div class="test-header">
+      <h1>🎯 Squares Loading Test</h1>
+      <p>Testing that the board loads proper event squares from the API instead of hardcoded defaults</p>
+    </div>
+
+    <div class="test-section">
+      <h3>🔧 API Endpoint Test</h3>
+      <p>First, let's test the event-info API endpoint directly:</p>
+      
+      <button class="test-button" onclick="testEventInfoAPI('default')">Test Default Event</button>
+      <button class="test-button" onclick="testEventInfoAPI('test')">Test Custom Event</button>
+      <button class="test-button" onclick="testEventInfoAPI('nonexistent')">Test Non-existent Event</button>
+      
+      <div id="apiResults"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>🎮 BoardController Integration Test</h3>
+      <p>Test that BoardController loads squares correctly:</p>
+      
+      <button class="test-button" onclick="testBoardControllerSquares('default')">Load Default Event Squares</button>
+      <button class="test-button" onclick="testBoardControllerSquares('test')">Load Test Event Squares</button>
+      
+      <div id="boardResults"></div>
+      <div id="squaresDisplay"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>📋 Visual Comparison</h3>
+      <p>Compare loaded squares with expected results:</p>
+      
+      <div id="comparisonResults"></div>
+    </div>
+  </div>
+
+  <!-- Include required scripts -->
+  <script src="js/progress-calc.js"></script>
+  <script src="js/board-controller.js"></script>
+
+  <script>
+    const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
+    
+    async function testEventInfoAPI(eventCode) {
+      const resultsDiv = document.getElementById('apiResults');
+      
+      try {
+        resultsDiv.innerHTML = `
+          <div class="api-test">
+            <h4>Testing event-info API for: ${eventCode}</h4>
+            <div class="api-request">GET ${workerURL}event-info?event=${eventCode}</div>
+            <div>Loading...</div>
+          </div>
+        `;
+        
+        const response = await fetch(`${workerURL}event-info?event=${eventCode}`);
+        const data = await response.json();
+        
+        resultsDiv.innerHTML = `
+          <div class="api-test">
+            <h4>✅ API Response for: ${eventCode}</h4>
+            <div class="api-request">GET ${workerURL}event-info?event=${eventCode}</div>
+            <div class="api-response">${JSON.stringify(data, null, 2)}</div>
+            <p><strong>Squares found:</strong> ${data.squares ? data.squares.length : 0}</p>
+            <p><strong>Event title:</strong> ${data.title || 'N/A'}</p>
+            <p><strong>Is locked:</strong> ${data.isLocked ? 'Yes' : 'No'}</p>
+          </div>
+        `;
+        
+      } catch (error) {
+        resultsDiv.innerHTML = `
+          <div class="api-test error">
+            <h4>❌ API Error for: ${eventCode}</h4>
+            <div class="api-request">GET ${workerURL}event-info?event=${eventCode}</div>
+            <p><strong>Error:</strong> ${error.message}</p>
+          </div>
+        `;
+      }
+    }
+    
+    async function testBoardControllerSquares(eventCode) {
+      const resultsDiv = document.getElementById('boardResults');
+      const squaresDiv = document.getElementById('squaresDisplay');
+      
+      try {
+        resultsDiv.innerHTML = `
+          <div class="results">
+            <h4>Testing BoardController for: ${eventCode}</h4>
+            <p>Initializing BoardController...</p>
+          </div>
+        `;
+        
+        // Create a new BoardController instance
+        const boardController = new BoardController();
+        
+        // Initialize with the test event
+        await boardController.initialize(eventCode);
+        
+        // Get the loaded squares
+        const state = boardController.getState();
+        const squares = state.squares;
+        
+        resultsDiv.innerHTML = `
+          <div class="results">
+            <h4>✅ BoardController Test Results for: ${eventCode}</h4>
+            <p><strong>Squares loaded:</strong> ${squares ? squares.length : 0}</p>
+            <p><strong>Event info:</strong> ${state.eventInfo ? state.eventInfo.title : 'N/A'}</p>
+            <p><strong>Players found:</strong> ${state.players ? state.players.length : 0}</p>
+            <p><strong>Error state:</strong> ${state.error ? state.error.message : 'None'}</p>
+          </div>
+        `;
+        
+        // Display the squares in a grid
+        if (squares && squares.length > 0) {
+          squaresDiv.innerHTML = `
+            <h4>Loaded Squares (${squares.length}):</h4>
+            <div class="squares-grid">
+              ${squares.map((square, index) => `
+                <div class="square-item" style="position: relative;">
+                  <div class="square-number">${index + 1}</div>
+                  ${square.challengeText}
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          squaresDiv.innerHTML = '<p>No squares loaded</p>';
+        }
+        
+        // Show comparison
+        showComparison(eventCode, squares);
+        
+      } catch (error) {
+        resultsDiv.innerHTML = `
+          <div class="results error">
+            <h4>❌ BoardController Error for: ${eventCode}</h4>
+            <p><strong>Error:</strong> ${error.message}</p>
+          </div>
+        `;
+        
+        squaresDiv.innerHTML = '';
+      }
+    }
+    
+    function showComparison(eventCode, loadedSquares) {
+      const comparisonDiv = document.getElementById('comparisonResults');
+      
+      // Expected behavior
+      const expectedBehavior = {
+        'default': 'Should load default squares from API or fallback to hardcoded defaults',
+        'test': 'Should load custom squares if event exists, or default squares if not',
+        'nonexistent': 'Should load default squares as fallback'
+      };
+      
+      const isUsingDefaults = loadedSquares && loadedSquares.length > 0 && 
+        loadedSquares[0].challengeText.includes('Anneke');
+      
+      comparisonDiv.innerHTML = `
+        <div class="results">
+          <h4>📊 Analysis for: ${eventCode}</h4>
+          <p><strong>Expected:</strong> ${expectedBehavior[eventCode] || 'Unknown behavior'}</p>
+          <p><strong>Actual:</strong> Loaded ${loadedSquares ? loadedSquares.length : 0} squares</p>
+          <p><strong>Using defaults:</strong> ${isUsingDefaults ? 'Yes' : 'No'}</p>
+          <p><strong>Status:</strong> ${loadedSquares && loadedSquares.length === 25 ? '✅ Success' : '❌ Failed'}</p>
+        </div>
+      `;
+    }
+    
+    // Auto-run basic test on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(() => {
+        testEventInfoAPI('default');
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

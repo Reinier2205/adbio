@@ -503,38 +503,117 @@ class BoardController {
   }
 
   /**
-   * Load squares/challenges for the event
+   * Load squares/challenges for the event from API
    */
   async loadSquares() {
-    // For now, use the hardcoded squares from the main game
-    // In the future, this could be loaded from the API
-    this.state.squares = [
-      "An old photo with Anneke",
-      "A photo from a past birthday or braai",
-      "The oldest selfie you have together",
-      "A photo that shows where your friendship began",
-      "A photo from a time you both looked too young to drink beer",
-      "Anneke walking barefoot (bonus: dirty feet)",
-      "Anneke drinking beer (bonus: a cheers moment)",
-      "Someone borrowing something from Anneke",
-      "Oliver riding his bike",
-      "Oliver dunking something in tea",
-      "Oliver playing ball with someone",
-      "The baby with a new \"aunt\" or \"uncle\"",
-      "Everyone gathered around the fire",
-      "A sunrise or sunset over camp",
-      "Someone cooking or braaing",
-      "Anneke reading a book in peace",
-      "Morning coffee in a mug that's clearly been used too many times",
-      "Oliver \"helping\" with something",
-      "A creative photo of everyone together",
-      "Someone caught mid-laugh",
-      "A barefoot photo competition (yours vs Anneke's)",
-      "Someone \"borrowing\" Anneke's beer",
-      "A photo that proves you're having more fun than planned",
-      "A photo that shows the \"spirit of the weekend\"",
-      "Your favorite memory moment — real or recreated"
-    ].map((text, index) => ({ index, challengeText: text, position: { row: Math.floor(index / 5), col: index % 5 } }));
+    try {
+      const response = await fetch(`${this.workerURL}event-info?event=${this.state.eventCode}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Event "${this.state.eventCode}" not found. Please check the event code.`);
+        } else if (response.status >= 500) {
+          throw new Error('Server error while loading event squares. Please try again later.');
+        } else {
+          throw new Error(`Failed to load event squares (${response.status})`);
+        }
+      }
+      
+      const eventData = await response.json();
+      
+      // Validate that we have squares data
+      if (!eventData.squares || !Array.isArray(eventData.squares)) {
+        console.warn('No squares found in event data, using fallback squares');
+        // Fallback to default squares if none found
+        eventData.squares = [
+          "An old photo with Anneke",
+          "A photo from a past birthday or braai",
+          "The oldest selfie you have together",
+          "A photo that shows where your friendship began",
+          "A photo from a time you both looked too young to drink beer",
+          "Anneke walking barefoot (bonus: dirty feet)",
+          "Anneke drinking beer (bonus: a cheers moment)",
+          "Someone borrowing something from Anneke",
+          "Oliver riding his bike",
+          "Oliver dunking something in tea",
+          "Oliver playing ball with someone",
+          "The baby with a new \"aunt\" or \"uncle\"",
+          "Everyone gathered around the fire",
+          "A sunrise or sunset over camp",
+          "Someone cooking or braaing",
+          "Anneke reading a book in peace",
+          "Morning coffee in a mug that's clearly been used too many times",
+          "Oliver \"helping\" with something",
+          "A creative photo of everyone together",
+          "Someone caught mid-laugh",
+          "A barefoot photo competition (yours vs Anneke's)",
+          "Someone \"borrowing\" Anneke's beer",
+          "A photo that proves you're having more fun than planned",
+          "A photo that shows the \"spirit of the weekend\"",
+          "Your favorite memory moment — real or recreated"
+        ];
+      }
+      
+      // Convert squares array to the expected format with index and position
+      this.state.squares = eventData.squares.map((text, index) => ({
+        index,
+        challengeText: text,
+        position: { row: Math.floor(index / 5), col: index % 5 }
+      }));
+      
+      // Store event info for potential future use
+      this.state.eventInfo = {
+        title: eventData.title || 'EventBingo',
+        description: eventData.description || 'A fun photo challenge game!',
+        isLocked: eventData.isLocked || false
+      };
+      
+    } catch (error) {
+      console.error('Error loading squares from API:', error);
+      
+      // Fallback to default squares on error
+      console.warn('Using fallback squares due to API error');
+      this.state.squares = [
+        "An old photo with Anneke",
+        "A photo from a past birthday or braai", 
+        "The oldest selfie you have together",
+        "A photo that shows where your friendship began",
+        "A photo from a time you both looked too young to drink beer",
+        "Anneke walking barefoot (bonus: dirty feet)",
+        "Anneke drinking beer (bonus: a cheers moment)",
+        "Someone borrowing something from Anneke",
+        "Oliver riding his bike",
+        "Oliver dunking something in tea",
+        "Oliver playing ball with someone",
+        "The baby with a new \"aunt\" or \"uncle\"",
+        "Everyone gathered around the fire",
+        "A sunrise or sunset over camp",
+        "Someone cooking or braaing",
+        "Anneke reading a book in peace",
+        "Morning coffee in a mug that's clearly been used too many times",
+        "Oliver \"helping\" with something",
+        "A creative photo of everyone together",
+        "Someone caught mid-laugh",
+        "A barefoot photo competition (yours vs Anneke's)",
+        "Someone \"borrowing\" Anneke's beer",
+        "A photo that proves you're having more fun than planned",
+        "A photo that shows the \"spirit of the weekend\"",
+        "Your favorite memory moment — real or recreated"
+      ].map((text, index) => ({
+        index,
+        challengeText: text,
+        position: { row: Math.floor(index / 5), col: index % 5 }
+      }));
+      
+      // Don't throw the error - continue with fallback squares
+      // but set an error state to inform the user
+      this.state.error = {
+        type: 'squares_load',
+        message: 'Could not load custom event squares. Using default squares.',
+        canRetry: true,
+        timestamp: Date.now()
+      };
+    }
   }
 
   /**
