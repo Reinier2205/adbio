@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎯 Bingo Board - EventBingo</title>
+  <style>
+    :root {
+      --primary: #4a90e2;
+      --secondary: #7b68ee;
+      --accent: #ff6b6b;
+      --success: #51cf66;
+      --text-dark: #2c3e50;
+      --text-light: #ffffff;
+      --bg-light: rgba(255, 255, 255, 0.95);
+      --bg-dark: rgba(44, 62, 80, 0.9);
+      --instagram-pink: #E4405F;
+      --instagram-purple: #833AB4;
+      --instagram-orange: #F77737;
+      --instagram-yellow: #FCAF45;
+      --story-gradient: linear-gradient(45deg, var(--instagram-pink), var(--instagram-purple), var(--instagram-orange), var(--instagram-yellow));
+    }
+
+    html, body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fafafa;
+      color: var(--text-dark);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: var(--bg-light);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .back-button {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+      text-decoration: none;
+      color: var(--text-dark);
+    }
+
+    .back-button:hover {
+      background-color: rgba(0,0,0,0.1);
+      transform: translateX(-2px);
+    }
+
+    .back-button:active {
+      transform: translateX(0);
+      background-color: rgba(0,0,0,0.15);
+    }
+
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--text-dark);
+      animation: titleSlideIn 0.6s ease;
+    }
+
+    @keyframes titleSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Player Selection */
+    .player-selection {
+      background: white;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .player-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 5px 0;
+      width: 100%;
+    }
+
+    .player-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .player-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid transparent;
+      background-image: linear-gradient(white, white), var(--story-gradient);
+      background-origin: border-box;
+      background-clip: content-box, border-box;
+      color: #333;
+      font-weight: bold;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .player-circle:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .player-circle.active {
+      border: 4px solid #ff0000;
+      background-image: linear-gradient(#fff3f3, #fff3f3), linear-gradient(45deg, #ff0000, #ff4444);
+      box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3), 0 0 12px rgba(255, 0, 0, 0.5);
+    }
+
+    .player-circle.all-players {
+      background-image: linear-gradient(white, white), linear-gradient(45deg, var(--primary), var(--secondary));
+      font-size: 1.2rem;
+    }
+
+    .player-circle.all-players.active {
+      border: 4px solid var(--primary);
+      background-image: linear-gradient(#f0f8ff, #f0f8ff), linear-gradient(45deg, var(--primary), var(--secondary));
+      box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3), 0 0 12px rgba(74, 144, 226, 0.5);
+    }
+
+    .player-circle::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: var(--story-gradient);
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .player-circle:hover::before {
+      opacity: 1;
+    }
+
+    .player-circle:active {
+      transform: scale(0.95);
+    }
+
+    /* Enhanced active state with pulsing animation */
+    .player-circle.active::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      background: inherit;
+      opacity: 0.3;
+      animation: pulse-ring 2s infinite;
+      z-index: -2;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(1);
+        opacity: 0.3;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.1;
+      }
+      100% {
+        transform: scale(1.2);
+        opacity: 0;
+      }
+    }
+
+    .player-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .player-name {
+      font-size: 0.8rem;
+      color: var(--text-dark);
+      font-weight: 400;
+      text-align: center;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: white;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      flex: 1;
+      min-width: 120px;
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .filter-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+      outline: none;
+    }
+
+    .toggle-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+    }
+
+    .player-circle:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+    }
+
+    .back-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+    }
+
+    .bingo-square:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 15px;
+      padding-bottom: 100px;
+      min-height: calc(100vh - 200px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .main-content.loading {
+      opacity: 0.7;
+      transform: translateY(10px);
+    }
+
+    .main-content.loaded {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Photo Grid */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .photo-grid.fade-in {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (min-width: 768px) {
+      .photo-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+    }
+
+    /* Bingo Grid (5x5 layout) */
+    .bingo-grid {
+      display: grid !important;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (max-width: 480px) {
+      .bingo-grid {
+        gap: 4px;
+      }
+      
+      .main-content {
+        padding: 10px;
+      }
+      
+      .player-selection {
+        padding: 10px;
+      }
+      
+      .completion-toggles {
+        padding: 10px;
+        gap: 8px;
+      }
+      
+      .toggle-button {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+      
+      .square-challenge {
+        font-size: 0.6rem;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+      }
+      
+      .completion-count {
+        font-size: 1rem;
+      }
+      
+      .completion-rate {
+        font-size: 0.7rem;
+      }
+    }
+
+    @media (min-width: 481px) and (max-width: 768px) {
+      .bingo-grid {
+        gap: 6px;
+        max-width: 500px;
+      }
+      
+      .main-content {
+        padding: 12px;
+      }
+      
+      .square-challenge {
+        font-size: 0.65rem;
+      }
+      
+      .completion-toggles {
+        gap: 8px;
+      }
+      
+      .toggle-button {
+        padding: 7px 14px;
+        font-size: 0.85rem;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .bingo-grid {
+        gap: 10px;
+        max-width: 650px;
+      }
+      
+      .main-content {
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      
+      .player-selection {
+        padding: 20px;
+      }
+      
+      .completion-toggles {
+        padding: 20px;
+        gap: 12px;
+      }
+      
+      .toggle-button {
+        padding: 10px 20px;
+        font-size: 1rem;
+      }
+      
+      .square-challenge {
+        font-size: 0.75rem;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+      }
+      
+      .completion-count {
+        font-size: 1.2rem;
+      }
+      
+      .completion-rate {
+        font-size: 0.85rem;
+      }
+      
+      .progress-info {
+        margin-bottom: 20px;
+      }
+      
+      .photo-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .main-content {
+        max-width: 900px;
+      }
+      
+      .bingo-grid {
+        max-width: 700px;
+        gap: 12px;
+      }
+      
+      .photo-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+      }
+    }
+
+    /* Bingo Square Styles */
+    .bingo-square {
+      aspect-ratio: 1;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .bingo-square:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .bingo-square:active {
+      transform: scale(0.98);
+      transition: transform 0.1s ease;
+    }
+
+    /* Card View Square Styles */
+    .bingo-square.card-view {
+      background: linear-gradient(135deg, 
+        rgba(255,255,255,1) 0%, 
+        rgba(255,255,255,1) calc(var(--completion-rate, 0%) - 10%), 
+        rgba(74, 144, 226, 0.1) var(--completion-rate, 0%), 
+        rgba(74, 144, 226, 0.3) 100%);
+      border: 2px solid rgba(74, 144, 226, 0.2);
+    }
+
+    .bingo-square.card-view:hover {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, 
+        rgba(255,255,255,1) 0%, 
+        rgba(255,255,255,1) calc(var(--completion-rate, 0%) - 10%), 
+        rgba(74, 144, 226, 0.15) var(--completion-rate, 0%), 
+        rgba(74, 144, 226, 0.35) 100%);
+    }
+
+    .bingo-square.card-view:active {
+      transform: scale(0.98);
+      border-color: var(--secondary);
+    }
+
+    .square-challenge {
+      font-size: 0.7rem;
+      line-height: 1.2;
+      color: var(--text-dark);
+      font-weight: 500;
+      margin-bottom: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .square-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .completion-count {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    .completion-rate {
+      font-size: 0.8rem;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .square-players {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: center;
+      align-items: center;
+      max-height: 60px;
+      overflow: hidden;
+    }
+
+    .player-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      border: 1px solid transparent;
+    }
+
+    .player-indicator.completed {
+      background: var(--success);
+      color: white;
+      border-color: rgba(81, 207, 102, 0.3);
+    }
+
+    .player-indicator.outstanding {
+      background: rgba(255, 107, 107, 0.1);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .no-players {
+      font-size: 0.7rem;
+      color: #999;
+      font-style: italic;
+    }
+
+    /* Photo thumbnails in card view */
+    .player-photo-indicator {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      overflow: hidden;
+      border: 2px solid var(--success);
+    }
+
+    .player-photo-indicator:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+
+    .player-photo-indicator:active {
+      transform: scale(1.05);
+    }
+
+    .player-photo-indicator img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .player-photo-overlay {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      background: var(--success);
+      color: white;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      border: 1px solid white;
+    }
+
+    /* Player View Square Styles */
+    .bingo-square.player-view {
+      padding: 0;
+    }
+
+    .bingo-square.player-view.completed {
+      border: 3px solid var(--success);
+      background: rgba(81, 207, 102, 0.1);
+    }
+
+    .bingo-square.player-view.incomplete {
+      border: 2px solid #e0e0e0;
+      background: rgba(0,0,0,0.02);
+      padding: 8px;
+    }
+
+    .bingo-square.player-view img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .square-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(transparent 60%, rgba(0,0,0,0.7));
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 8px;
+    }
+
+    .completion-indicator {
+      background: var(--success);
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      animation: completion-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes completion-pop {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .incomplete-indicator {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.9);
+      color: #999;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      border: 2px solid #e0e0e0;
+    }
+
+    /* Completion Toggles */
+    .completion-toggles {
+      background: white;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      max-height: 200px;
+    }
+
+    .completion-toggles.hidden {
+      max-height: 0;
+      padding: 0 15px;
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    .toggle-button {
+      padding: 8px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 20px;
+      background: white;
+      color: var(--text-dark);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .toggle-button:hover {
+      border-color: var(--primary);
+      background: rgba(74, 144, 226, 0.05);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+    }
+
+    .toggle-button:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 4px rgba(74, 144, 226, 0.3);
+    }
+
+    .toggle-button.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 12px rgba(74, 144, 226, 0.4);
+    }
+
+    .toggle-button.active:hover {
+      background: var(--secondary);
+      border-color: var(--secondary);
+      box-shadow: 0 4px 16px rgba(123, 104, 238, 0.4);
+    }
+
+    .toggle-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .photo-item {
+      aspect-ratio: 1;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      position: relative;
+    }
+
+    .photo-item:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .photo-item:active {
+      transform: scale(0.98);
+    }
+
+    /* Add loading animation for photo items */
+    .photo-item.loading {
+      opacity: 0.7;
+      animation: photo-loading 1.5s infinite;
+    }
+
+    @keyframes photo-loading {
+      0%, 100% {
+        opacity: 0.7;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      color: white;
+      padding: 8px;
+      font-size: 0.7rem;
+      line-height: 1.2;
+    }
+
+    .photo-player {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .photo-challenge {
+      opacity: 0.9;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-10px);
+      }
+      60% {
+        transform: translateY(-5px);
+      }
+    }
+
+    .empty-state h3 {
+      margin: 0 0 10px 0;
+      color: var(--text-dark);
+      font-size: 1.5rem;
+    }
+
+    .empty-state p {
+      font-size: 1rem;
+      line-height: 1.5;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    /* Progress Info */
+    .progress-info {
+      text-align: center;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .progress-text {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--story-gradient);
+      border-radius: 3px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: progress-shine 2s infinite;
+    }
+
+    @keyframes progress-shine {
+      0% {
+        left: -100%;
+      }
+      100% {
+        left: 100%;
+      }
+    }
+
+    /* Full Screen Modal */
+    .fullscreen-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .fullscreen-modal.show {
+      display: flex;
+    }
+
+    .fullscreen-content {
+      max-width: 90%;
+      max-height: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Navigation arrows */
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1.5rem;
+      z-index: 10;
+      font-weight: bold;
+    }
+
+    .nav-arrow:hover {
+      background: rgba(0,0,0,0.8);
+      transform: translateY(-50%) scale(1.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .nav-arrow:active {
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .nav-arrow.left {
+      left: 20px;
+    }
+
+    .nav-arrow.right {
+      right: 20px;
+    }
+
+    .nav-arrow:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .nav-arrow:disabled:hover {
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.6);
+    }
+
+    .fullscreen-image {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      transition: opacity 0.2s ease;
+    }
+
+    .fullscreen-image.fade-out {
+      opacity: 0;
+    }
+
+    .fullscreen-info {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .fullscreen-player {
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .fullscreen-challenge {
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .fullscreen-close {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .fullscreen-close:hover {
+      background: rgba(0,0,0,0.8);
+      transform: translateY(-2px);
+    }
+
+    /* Loading States */
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(74, 144, 226, 0.3);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Enhanced loading spinner with gradient */
+    .spinner-enhanced {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent, var(--primary));
+      animation: spin 1s linear infinite;
+      position: relative;
+    }
+
+    .spinner-enhanced::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      background: #1a1a1a;
+      color: #ffffff;
+    }
+
+    body.dark-mode .top-bar,
+    body.dark-mode .filter-bar,
+    body.dark-mode .progress-info {
+      background: #2d2d2d;
+      color: #ffffff;
+      border-color: #404040;
+    }
+
+    body.dark-mode .photo-item {
+      background: #2d2d2d;
+      border-color: #404040;
+    }
+
+    body.dark-mode .filter-select {
+      background: #2d2d2d;
+      color: #ffffff;
+      border-color: #555;
+    }
+
+    body.dark-mode .fullscreen-info {
+      background: #2d2d2d;
+      color: #ffffff;
+    }
+
+    body.dark-mode .empty-state {
+      color: #ccc;
+    }
+
+    body.dark-mode .empty-state h3 {
+      color: #ffffff;
+    }
+
+    /* Dark mode player selection */
+    body.dark-mode .player-selection {
+      background: #2d2d2d;
+      color: #ffffff;
+    }
+
+    body.dark-mode .player-circle {
+      background-image: linear-gradient(#2d2d2d, #2d2d2d), var(--story-gradient);
+      color: #ffffff;
+    }
+
+    body.dark-mode .player-circle.all-players {
+      background-image: linear-gradient(#2d2d2d, #2d2d2d), linear-gradient(45deg, var(--primary), var(--secondary));
+    }
+
+    body.dark-mode .player-circle.all-players.active {
+      background-image: linear-gradient(#1a2332, #1a2332), linear-gradient(45deg, var(--primary), var(--secondary));
+    }
+
+    body.dark-mode .player-name {
+      color: #e0e0e0;
+    }
+
+    /* Dark mode bingo grid styles */
+    body.dark-mode .bingo-square {
+      background: #2d2d2d;
+      border-color: #555;
+    }
+
+    body.dark-mode .bingo-square.card-view {
+      background: linear-gradient(135deg, 
+        rgba(45,45,45,1) 0%, 
+        rgba(45,45,45,1) calc(var(--completion-rate, 0%) - 10%), 
+        rgba(74, 144, 226, 0.2) var(--completion-rate, 0%), 
+        rgba(74, 144, 226, 0.4) 100%);
+      border-color: rgba(74, 144, 226, 0.3);
+    }
+
+    body.dark-mode .square-challenge {
+      color: #e0e0e0;
+    }
+
+    body.dark-mode .completion-rate {
+      color: #ccc;
+    }
+
+    body.dark-mode .bingo-square.player-view.incomplete {
+      background: rgba(255,255,255,0.05);
+      border-color: #555;
+    }
+
+    body.dark-mode .incomplete-indicator {
+      background: rgba(45,45,45,0.9);
+      color: #ccc;
+      border-color: #555;
+    }
+
+    body.dark-mode .completion-toggles {
+      background: #2d2d2d;
+    }
+
+    body.dark-mode .toggle-button {
+      background: #2d2d2d;
+      color: #e0e0e0;
+      border-color: #555;
+    }
+
+    body.dark-mode .toggle-button:hover {
+      background: rgba(74, 144, 226, 0.1);
+      border-color: var(--primary);
+    }
+
+    body.dark-mode .toggle-button.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Dark mode photo thumbnails */
+    body.dark-mode .player-photo-indicator {
+      border-color: var(--success);
+    }
+
+    body.dark-mode .player-photo-overlay {
+      background: var(--success);
+      border-color: #2d2d2d;
+    }
+
+    /* Lazy loading states */
+    img.lazy-loading {
+      background: #f0f0f0;
+      background-image: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading-shimmer 1.5s infinite;
+    }
+
+    img.loading {
+      opacity: 0.7;
+      filter: blur(1px);
+    }
+
+    img.loaded {
+      opacity: 1;
+      filter: none;
+      transition: opacity 0.3s ease, filter 0.3s ease;
+    }
+
+    img.error {
+      background: #f8d7da;
+      opacity: 0.5;
+    }
+
+    @keyframes loading-shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    /* Performance optimizations */
+    .bingo-square {
+      will-change: transform;
+      backface-visibility: hidden;
+    }
+
+    .photo-grid {
+      contain: layout style paint;
+    }
+
+    .bingo-grid {
+      contain: layout style paint;
+    }
+
+    /* Advanced Progress Controls */
+    .advanced-progress-controls {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .advanced-toggle {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      font-size: 0.85rem;
+      padding: 8px 12px;
+      margin-left: 8px;
+    }
+
+    .advanced-toggle:hover {
+      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .advanced-toggle.active {
+      background: linear-gradient(135deg, #4c63d2 0%, #5e3a7e 100%);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Dark mode for advanced controls */
+    body.dark-mode .advanced-progress-controls {
+      background: rgba(45, 45, 45, 0.95);
+    }
+
+    body.dark-mode .advanced-toggle {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    body.dark-mode .advanced-toggle:hover {
+      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <a href="#" class="back-button" onclick="goBack()">←</a>
+    <div class="page-title">🎯 Bingo Board</div>
+    <div style="width: 50px;"></div> <!-- Spacer for centering -->
+  </div>
+
+  <!-- Player Selection -->
+  <div class="player-selection">
+    <div class="player-scroll" id="playerScroll">
+      <!-- Player circles will be dynamically added here -->
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-row">
+      <select class="filter-select" id="cardFilter" onchange="applyFilters()">
+        <option value="">All Cards</option>
+      </select>
+      <select class="filter-select" id="sortFilter" onchange="applyFilters()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="player">By Player</option>
+        <option value="card">By Card</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Completion Toggles (shown only in card view) -->
+  <div class="completion-toggles" id="completionToggles" style="display: none;">
+    <button class="toggle-button active" id="toggleCount" onclick="setToggleState('count')">
+      Show Counts
+    </button>
+    <button class="toggle-button" id="toggleCompleted" onclick="setToggleState('completed')">
+      Show Who Completed
+    </button>
+    <button class="toggle-button" id="toggleOutstanding" onclick="setToggleState('outstanding')">
+      Show Who's Outstanding
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Progress Info -->
+    <div class="progress-info" id="progressInfo">
+      <div class="progress-text" id="progressText">Loading board...</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Photo Grid -->
+    <div class="photo-grid" id="photoGrid">
+      <!-- Board content will be loaded here -->
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <div class="empty-state-icon">🎯</div>
+      <h3>No progress found</h3>
+      <p>Start playing the game to see progress here!</p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" id="loadingState">
+      <div class="spinner"></div>
+      <div>Loading board...</div>
+    </div>
+  </div>
+
+  <!-- Full Screen Modal -->
+  <div class="fullscreen-modal" id="fullscreenModal">
+    <button class="nav-arrow left" id="prevPhotoBtn" onclick="navigateFullscreen(-1)">‹</button>
+    <button class="nav-arrow right" id="nextPhotoBtn" onclick="navigateFullscreen(1)">›</button>
+    <div class="fullscreen-content">
+      <img class="fullscreen-image" id="fullscreenImage" src="" alt="">
+      <div class="fullscreen-info">
+        <div class="fullscreen-player" id="fullscreenPlayer"></div>
+        <div class="fullscreen-challenge" id="fullscreenChallenge"></div>
+      </div>
+    </div>
+    <button class="fullscreen-close" onclick="closeFullscreen()">Close</button>
+  </div>
+
+  <!-- Include CSS for advanced progress visualization -->
+  <link rel="stylesheet" href="css/advanced-progress-styles.css">
+
+  <!-- Include ProgressCalculator, PerformanceMonitor, BoardController and GridRenderer -->
+  <script src="js/progress-calc.js"></script>
+  <script src="js/performance-monitor.js"></script>
+  <script src="js/board-controller.js"></script>
+  <script src="js/grid-renderer.js"></script>
+  <script src="js/advanced-progress-visualizer.js"></script>
+  <script src="js/advanced-progress-ui.js"></script>
+  
+  <script>
+    // Global variables
+    const params = new URLSearchParams(window.location.search);
+    const eventCode = params.get("event") || "default";
+    const currentPlayer = params.get("player") || "";
+    
+    // Initialize BoardController and GridRenderer
+    const boardController = new BoardController();
+    const gridRenderer = new GridRenderer();
+    
+    // Initialize Advanced Progress Visualization
+    const advancedProgressVisualizer = new AdvancedProgressVisualizer();
+    const advancedProgressUI = new AdvancedProgressUI();
+    
+    // Legacy variables for compatibility with existing code
+    let allPhotos = [];
+    let filteredPhotos = [];
+    let allPlayers = [];
+    let selectedPlayer = null; // null means "All Players" is selected
+    let currentToggleState = 'count';
+
+    // Function to go back with preserved context
+    function goBack() {
+      // Try to get current player from URL params or localStorage
+      let playerToRestore = currentPlayer;
+      if (!playerToRestore) {
+        try {
+          playerToRestore = localStorage.getItem('eventbingo:currentPlayer') || 
+                           localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || '';
+        } catch(_) {}
+      }
+      
+      const backUrl = playerToRestore 
+        ? `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerToRestore)}`
+        : `index.html?event=${encodeURIComponent(eventCode)}`;
+      window.location.href = backUrl;
+    }
+
+    // Initialize the board
+    document.addEventListener('DOMContentLoaded', async function() {
+      detectDarkMode();
+      setupEventHandlers();
+      initializeUIEnhancements();
+      await initializeBoardController();
+    });
+
+    // Detect and apply dark mode from localStorage
+    function detectDarkMode() {
+      try {
+        const isDarkMode = localStorage.getItem('eventbingo:darkMode') === 'true';
+        if (isDarkMode) {
+          document.body.classList.add('dark-mode');
+        }
+      } catch (error) {
+        console.log('Could not detect dark mode preference');
+      }
+    }
+
+    function setupEventHandlers() {
+      // Add keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (document.getElementById('fullscreenModal').classList.contains('show')) {
+          if (e.key === 'Escape') closeFullscreen();
+          if (e.key === 'ArrowLeft') navigateFullscreen(-1);
+          if (e.key === 'ArrowRight') navigateFullscreen(1);
+        }
+      });
+
+      // Simple touch navigation - just tap on left/right sides
+      const fullscreenModal = document.getElementById('fullscreenModal');
+      
+      fullscreenModal.addEventListener('click', function(e) {
+        if (!fullscreenModal.classList.contains('show')) return;
+        
+        const rect = fullscreenModal.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const modalWidth = rect.width;
+        
+        // If clicked on left third, go to previous photo
+        if (clickX < modalWidth / 3) {
+          navigateFullscreen(-1);
+        }
+        // If clicked on right third, go to next photo
+        else if (clickX > (modalWidth * 2) / 3) {
+          navigateFullscreen(1);
+        }
+        // Middle third does nothing (allows clicking on photo info without navigation)
+      });
+    }
+
+    function initializeUIEnhancements() {
+      // Add initial loaded state to main content
+      const mainContent = document.querySelector('.main-content');
+      mainContent.classList.add('loaded');
+      
+      // Add intersection observer for animations
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('fade-in');
+          }
+        });
+      }, observerOptions);
+      
+      // Observe elements that should animate on scroll
+      document.querySelectorAll('.bingo-square, .photo-item').forEach(el => {
+        observer.observe(el);
+      });
+      
+      // Add smooth scrolling for better UX
+      document.documentElement.style.scrollBehavior = 'smooth';
+    }
+
+    // Legacy function - now handled by BoardController
+    // Kept for compatibility, but functionality moved to BoardController
+    async function loadPhotos() {
+      console.warn('loadPhotos() is deprecated - using BoardController instead');
+    }
+
+    function renderPlayerCircles() {
+      const playerScroll = document.getElementById('playerScroll');
+      playerScroll.innerHTML = '';
+
+      const currentState = boardController.getState();
+
+      // Add "All Players" circle first
+      const allPlayersItem = document.createElement('div');
+      allPlayersItem.className = 'player-item';
+      
+      const allPlayersCircle = document.createElement('div');
+      allPlayersCircle.className = 'player-circle all-players';
+      if (currentState.selectedPlayer === null) {
+        allPlayersCircle.classList.add('active');
+      }
+      allPlayersCircle.textContent = '👥';
+      allPlayersCircle.title = 'All Players';
+      allPlayersCircle.onclick = () => selectPlayer(null);
+      
+      const allPlayersName = document.createElement('div');
+      allPlayersName.className = 'player-name';
+      allPlayersName.textContent = 'All Players';
+      
+      allPlayersItem.appendChild(allPlayersCircle);
+      allPlayersItem.appendChild(allPlayersName);
+      playerScroll.appendChild(allPlayersItem);
+
+      // Add individual player circles
+      currentState.players.forEach(player => {
+        const playerItem = document.createElement('div');
+        playerItem.className = 'player-item';
+        
+        const circle = document.createElement('div');
+        circle.className = 'player-circle';
+        circle.textContent = getPlayerIcon(player.name);
+        circle.title = player.name;
+        circle.onclick = () => selectPlayer(player.name);
+        if (player.name === currentState.selectedPlayer) {
+          circle.classList.add('active');
+        }
+        
+        const name = document.createElement('div');
+        name.className = 'player-name';
+        name.textContent = player.name;
+        
+        playerItem.appendChild(circle);
+        playerItem.appendChild(name);
+        playerScroll.appendChild(playerItem);
+      });
+    }
+
+    // Initialize BoardController and set up event listeners
+    async function initializeBoardController() {
+      try {
+        showLoading(true);
+        
+        // Set up event listeners for state changes
+        boardController.addEventListener('stateChange', onBoardStateChange);
+        boardController.addEventListener('viewChange', onViewChange);
+        boardController.addEventListener('playerChange', onPlayerChange);
+        
+        // Initialize with current context
+        await boardController.initialize(eventCode, currentPlayer);
+        
+        // Initialize advanced progress visualization
+        advancedProgressVisualizer.initialize(
+          boardController.progressCalculator,
+          boardController,
+          gridRenderer
+        );
+        
+        // Initialize advanced progress UI
+        advancedProgressUI.initialize(advancedProgressVisualizer);
+        
+        showLoading(false);
+      } catch (error) {
+        console.error('Failed to initialize board controller:', error);
+        showError('Failed to load board. Please try again.');
+        showLoading(false);
+      }
+    }
+
+    // Event handlers for BoardController state changes
+    function onBoardStateChange(state) {
+      // Update legacy variables for compatibility
+      allPlayers = state.players;
+      selectedPlayer = state.selectedPlayer;
+      
+      // Update UI based on new state
+      renderPlayerCircles();
+      updateDisplayFromState(state);
+    }
+
+    function onViewChange(previousView, newView) {
+      console.log(`View changed from ${previousView} to ${newView}`);
+      // Handle view-specific UI updates if needed
+      
+      // Update advanced progress UI for current view
+      if (advancedProgressUI) {
+        advancedProgressUI.updateForView(newView);
+      }
+    }
+
+    function onPlayerChange(previousPlayer, newPlayer) {
+      console.log(`Player changed from ${previousPlayer} to ${newPlayer}`);
+      // Update player circle active states
+      updatePlayerCircleStates();
+    }
+
+    // Update display based on BoardController state
+    function updateDisplayFromState(state) {
+      // Update filter bar visibility based on view
+      const filterBar = document.querySelector('.filter-bar');
+      if (state.currentView === 'card') {
+        filterBar.style.display = 'none'; // Hide legacy filters in card view
+        renderCardView(state);
+      } else if (state.currentView === 'player') {
+        filterBar.style.display = 'none'; // Hide legacy filters in player view too
+        renderPlayerView(state);
+      }
+      updateProgressFromState(state);
+    }
+
+    // Render card view (all players overview)
+    function renderCardView(state) {
+      // Add smooth transition for view switching
+      const mainContent = document.querySelector('.main-content');
+      const photoGrid = document.getElementById('photoGrid');
+      const completionToggles = document.getElementById('completionToggles');
+      
+      // Start transition
+      mainContent.classList.add('loading');
+      
+      setTimeout(() => {
+        // Show completion toggles for card view with animation
+        completionToggles.classList.remove('hidden');
+        completionToggles.style.display = 'flex';
+        
+        // Use GridRenderer for card view
+        gridRenderer.renderCardView(state.completionStats, currentToggleState);
+        
+        // Add fade-in animation to grid
+        photoGrid.classList.add('fade-in');
+        
+        // Complete transition
+        mainContent.classList.remove('loading');
+        mainContent.classList.add('loaded');
+        
+        // Update legacy variables for compatibility with existing photo modal
+        allPhotos = [];
+        Object.entries(state.photos).forEach(([playerName, playerPhotos]) => {
+          Object.entries(playerPhotos).forEach(([challenge, url]) => {
+            if (url && url.trim() !== '') {
+              allPhotos.push({
+                url: url,
+                player: playerName,
+                challenge: challenge,
+                timestamp: new Date().toISOString()
+              });
+            }
+          });
+        });
+        filteredPhotos = allPhotos;
+      }, 150);
+    }
+
+    // Render player view (individual player board)
+    function renderPlayerView(state) {
+      if (!state.selectedPlayer) return;
+      
+      // Add smooth transition for view switching
+      const mainContent = document.querySelector('.main-content');
+      const photoGrid = document.getElementById('photoGrid');
+      const completionToggles = document.getElementById('completionToggles');
+      
+      // Start transition
+      mainContent.classList.add('loading');
+      
+      setTimeout(() => {
+        // Hide completion toggles for player view with animation
+        completionToggles.classList.add('hidden');
+        setTimeout(() => {
+          completionToggles.style.display = 'none';
+        }, 300);
+        
+        // Use GridRenderer for player view
+        const playerPhotos = state.photos[state.selectedPlayer] || {};
+        gridRenderer.renderPlayerView(state.selectedPlayer, playerPhotos, state.squares);
+        
+        // Add fade-in animation to grid
+        photoGrid.classList.add('fade-in');
+        
+        // Complete transition
+        mainContent.classList.remove('loading');
+        mainContent.classList.add('loaded');
+        
+        // Update legacy variables for compatibility with existing photo modal
+        allPhotos = [];
+        Object.entries(playerPhotos).forEach(([challenge, url]) => {
+          if (url && url.trim() !== '') {
+            allPhotos.push({
+              url: url,
+              player: state.selectedPlayer,
+              challenge: challenge,
+              timestamp: new Date().toISOString()
+            });
+          }
+        });
+        filteredPhotos = allPhotos;
+      }, 150);
+    }
+
+    // Update progress display from state
+    function updateProgressFromState(state) {
+      const progressText = document.getElementById('progressText');
+      const progressFill = document.getElementById('progressFill');
+      
+      const stats = state.completionStats;
+      const percentage = stats.overallCompletion || 0;
+      
+      if (state.currentView === 'card') {
+        progressText.textContent = `Overall completion: ${percentage.toFixed(1)}% (${stats.totalPlayers} players)`;
+      } else if (state.currentView === 'player' && state.selectedPlayer) {
+        progressText.textContent = `${state.selectedPlayer}: ${percentage.toFixed(1)}% complete`;
+      }
+      
+      progressFill.style.width = `${percentage}%`;
+    }
+
+    // Update player circle active states
+    function updatePlayerCircleStates() {
+      const currentState = boardController.getState();
+      
+      document.querySelectorAll('.player-circle').forEach(circle => {
+        circle.classList.remove('active');
+      });
+      
+      if (currentState.selectedPlayer === null) {
+        const allPlayersCircle = document.querySelector('.player-circle.all-players');
+        if (allPlayersCircle) {
+          allPlayersCircle.classList.add('active');
+        }
+      } else {
+        const circles = document.querySelectorAll('.player-circle');
+        circles.forEach(circle => {
+          if (circle.title === currentState.selectedPlayer) {
+            circle.classList.add('active');
+          }
+        });
+      }
+    }
+
+    // Updated selectPlayer function to use BoardController
+    async function selectPlayer(playerName) {
+      try {
+        if (playerName === null) {
+          await boardController.switchToCardView();
+        } else {
+          await boardController.switchToPlayerView(playerName);
+        }
+      } catch (error) {
+        console.error('Failed to select player:', error);
+        showError('Failed to switch view. Please try again.');
+      }
+    }
+
+    async function loadFilters() {
+      try {
+        // Load unique cards from photos
+        const uniqueCards = [...new Set(allPhotos.map(photo => photo.challenge))].sort();
+        const cardFilter = document.getElementById('cardFilter');
+        cardFilter.innerHTML = '<option value="">All Cards</option>';
+        uniqueCards.forEach(card => {
+          const option = document.createElement('option');
+          option.value = card;
+          option.textContent = card.length > 40 ? card.substring(0, 40) + '...' : card;
+          option.title = card; // Show full text on hover
+          cardFilter.appendChild(option);
+        });
+
+      } catch (error) {
+        console.error('Error loading filters:', error);
+      }
+    }
+
+    function applyFilters() {
+      const cardFilter = document.getElementById('cardFilter').value;
+      const sortBy = document.getElementById('sortFilter').value;
+
+      console.log('Applying filters:', { selectedPlayer, cardFilter, sortBy, totalPhotos: allPhotos.length }); // Debug
+
+      // Filter photos
+      filteredPhotos = allPhotos.filter(photo => {
+        const matchesPlayer = selectedPlayer === null || photo.player === selectedPlayer;
+        const matchesCard = !cardFilter || photo.challenge === cardFilter;
+        
+        return matchesPlayer && matchesCard;
+      });
+
+      console.log('Filtered photos:', filteredPhotos.length, filteredPhotos); // Debug
+
+      // Sort photos
+      filteredPhotos.sort((a, b) => {
+        switch (sortBy) {
+          case 'newest':
+            return new Date(b.timestamp) - new Date(a.timestamp);
+          case 'oldest':
+            return new Date(a.timestamp) - new Date(b.timestamp);
+          case 'player':
+            return a.player.localeCompare(b.player);
+          case 'card':
+            return a.challenge.localeCompare(b.challenge);
+          default:
+            return 0;
+        }
+      });
+
+      renderPhotos();
+      updateProgressFromFilters();
+    }
+
+    // Update progress display from filtered results (for compatibility)
+    function updateProgressFromFilters() {
+      const progressText = document.getElementById('progressText');
+      const progressFill = document.getElementById('progressFill');
+      
+      const totalPhotos = allPhotos.length;
+      const filteredCount = filteredPhotos.length;
+      
+      if (totalPhotos === 0) {
+        progressText.textContent = 'No photos uploaded yet';
+        progressFill.style.width = '0%';
+        return;
+      }
+
+      const percentage = (filteredCount / totalPhotos) * 100;
+      progressText.textContent = `Showing ${filteredCount} of ${totalPhotos} photos`;
+      progressFill.style.width = `${percentage}%`;
+    }
+
+    function renderPhotos() {
+      const grid = document.getElementById('photoGrid');
+      const emptyState = document.getElementById('emptyState');
+
+      console.log('Rendering photos:', filteredPhotos.length); // Debug
+
+      if (filteredPhotos.length === 0) {
+        grid.style.display = 'none';
+        emptyState.style.display = 'block';
+        console.log('No filtered photos to display'); // Debug
+        return;
+      }
+
+      grid.style.display = 'grid';
+      emptyState.style.display = 'none';
+
+      // Render photos
+      grid.innerHTML = '';
+      filteredPhotos.forEach((photo, index) => {
+        const photoItem = document.createElement('div');
+        photoItem.className = 'photo-item';
+        photoItem.onclick = () => openFullscreen(index);
+        
+        photoItem.innerHTML = `
+          <img src="${photo.url}" alt="${photo.challenge}" loading="lazy">
+          <div class="photo-overlay">
+            <div class="photo-player">${getPlayerIcon(photo.player)} ${photo.player}</div>
+            <div class="photo-challenge">${photo.challenge}</div>
+          </div>
+        `;
+        
+        grid.appendChild(photoItem);
+      });
+    }
+
+
+
+    function openFullscreen(photoIndex) {
+      const photo = filteredPhotos[photoIndex];
+      const modal = document.getElementById('fullscreenModal');
+      const image = document.getElementById('fullscreenImage');
+      const player = document.getElementById('fullscreenPlayer');
+      const challenge = document.getElementById('fullscreenChallenge');
+      const prevBtn = document.getElementById('prevPhotoBtn');
+      const nextBtn = document.getElementById('nextPhotoBtn');
+
+      // Clear any existing animation classes
+      image.classList.remove('fade-out');
+      
+      image.src = photo.url;
+      
+      // Enhanced player and challenge display with context
+      const currentState = boardController.getState();
+      let contextInfo = '';
+      if (currentState.currentView === 'player') {
+        contextInfo = ` • Player View`;
+      } else if (currentState.currentView === 'card') {
+        contextInfo = ` • Board Overview`;
+      }
+      
+      player.textContent = `${getPlayerIcon(photo.player)} ${photo.player}${contextInfo}`;
+      challenge.textContent = photo.challenge;
+      
+      // Update navigation buttons with context-aware labels
+      const totalPhotos = filteredPhotos.length;
+      prevBtn.disabled = photoIndex <= 0;
+      nextBtn.disabled = photoIndex >= totalPhotos - 1;
+      
+      // Add tooltips for navigation context
+      if (currentState.currentView === 'player') {
+        prevBtn.title = `Previous photo from ${currentState.selectedPlayer}`;
+        nextBtn.title = `Next photo from ${currentState.selectedPlayer}`;
+      } else {
+        prevBtn.title = 'Previous photo from board';
+        nextBtn.title = 'Next photo from board';
+      }
+      
+      modal.classList.add('show');
+      modal.dataset.currentIndex = photoIndex;
+      
+      // Add keyboard focus for accessibility
+      modal.focus();
+    }
+
+    function closeFullscreen() {
+      document.getElementById('fullscreenModal').classList.remove('show');
+    }
+
+    function navigateFullscreen(direction) {
+      const modal = document.getElementById('fullscreenModal');
+      const currentIndex = parseInt(modal.dataset.currentIndex);
+      const newIndex = currentIndex + direction;
+      
+      if (newIndex >= 0 && newIndex < filteredPhotos.length) {
+        updateFullscreenPhoto(newIndex);
+      }
+    }
+
+    function updateFullscreenPhoto(newIndex) {
+      const image = document.getElementById('fullscreenImage');
+      const player = document.getElementById('fullscreenPlayer');
+      const challenge = document.getElementById('fullscreenChallenge');
+      const modal = document.getElementById('fullscreenModal');
+      const prevBtn = document.getElementById('prevPhotoBtn');
+      const nextBtn = document.getElementById('nextPhotoBtn');
+      
+      // Fade out current image
+      image.classList.add('fade-out');
+      
+      // After fade out, update content and fade in
+      setTimeout(() => {
+        const photo = filteredPhotos[newIndex];
+        
+        // Update content with context information
+        const currentState = boardController.getState();
+        let contextInfo = '';
+        if (currentState.currentView === 'player') {
+          contextInfo = ` • Player View`;
+        } else if (currentState.currentView === 'card') {
+          contextInfo = ` • Board Overview`;
+        }
+        
+        image.src = photo.url;
+        player.textContent = `${getPlayerIcon(photo.player)} ${photo.player}${contextInfo}`;
+        challenge.textContent = photo.challenge;
+        
+        // Update navigation buttons
+        prevBtn.disabled = newIndex <= 0;
+        nextBtn.disabled = newIndex >= filteredPhotos.length - 1;
+        
+        // Update tooltips
+        if (currentState.currentView === 'player') {
+          prevBtn.title = `Previous photo from ${currentState.selectedPlayer}`;
+          nextBtn.title = `Next photo from ${currentState.selectedPlayer}`;
+        } else {
+          prevBtn.title = 'Previous photo from board';
+          nextBtn.title = 'Next photo from board';
+        }
+        
+        // Update modal index
+        modal.dataset.currentIndex = newIndex;
+        
+        // Fade in new image
+        image.classList.remove('fade-out');
+      }, 200);
+    }
+
+    function showLoading(show) {
+      const loadingState = document.getElementById('loadingState');
+      const photoGrid = document.getElementById('photoGrid');
+      const mainContent = document.querySelector('.main-content');
+      
+      if (show) {
+        loadingState.style.display = 'flex';
+        photoGrid.style.display = 'none';
+        mainContent.classList.add('loading');
+        mainContent.classList.remove('loaded');
+      } else {
+        loadingState.style.display = 'none';
+        photoGrid.style.display = 'grid';
+        mainContent.classList.remove('loading');
+        mainContent.classList.add('loaded');
+        
+        // Add fade-in animation to grid
+        setTimeout(() => {
+          photoGrid.classList.add('fade-in');
+        }, 100);
+      }
+    }
+
+    function showError(message) {
+      const emptyState = document.getElementById('emptyState');
+      emptyState.innerHTML = `
+        <div class="empty-state-icon">⚠️</div>
+        <h3>Error</h3>
+        <p>${message}</p>
+      `;
+      emptyState.style.display = 'block';
+    }
+
+    // Toggle state management for card view
+    function setToggleState(newState) {
+      if (currentToggleState === newState) return;
+      
+      currentToggleState = newState;
+      
+      // Add visual feedback for state change
+      const photoGrid = document.getElementById('photoGrid');
+      photoGrid.style.opacity = '0.7';
+      photoGrid.style.transform = 'translateY(5px)';
+      
+      // Update toggle button states with animation
+      document.querySelectorAll('.toggle-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      const activeButton = document.getElementById(`toggle${newState.charAt(0).toUpperCase() + newState.slice(1)}`);
+      activeButton.classList.add('active');
+      
+      // Add a subtle pulse effect to the active button
+      activeButton.style.animation = 'none';
+      setTimeout(() => {
+        activeButton.style.animation = 'pulse 0.3s ease';
+      }, 10);
+      
+      // Re-render card view with new toggle state if in card view
+      const currentState = boardController.getState();
+      if (currentState.currentView === 'card') {
+        setTimeout(() => {
+          gridRenderer.updateToggleState(newState, currentState.completionStats);
+          
+          // Restore grid appearance
+          photoGrid.style.opacity = '1';
+          photoGrid.style.transform = 'translateY(0)';
+        }, 150);
+      }
+    }
+
+    // Add pulse animation for button feedback
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Function to handle fullscreen from grid (for both card view and player view photos)
+    function openFullscreenFromGrid(photoUrl, challengeText, position, playerName = null) {
+      const currentState = boardController.getState();
+      
+      // Determine the player name based on context
+      let actualPlayerName = playerName;
+      if (!actualPlayerName) {
+        if (currentState.currentView === 'player' && currentState.selectedPlayer) {
+          actualPlayerName = currentState.selectedPlayer;
+        } else {
+          // For card view, try to find the player from the photo URL in the state
+          actualPlayerName = findPlayerForPhoto(photoUrl, challengeText, currentState);
+        }
+      }
+      
+      // Build the context-appropriate photo array for navigation
+      const contextPhotos = buildContextPhotos(currentState, challengeText, actualPlayerName);
+      
+      // Find the current photo in the context array
+      const photoIndex = contextPhotos.findIndex(photo => 
+        photo.url === photoUrl && photo.challenge === challengeText
+      );
+      
+      if (photoIndex >= 0) {
+        // Update filteredPhotos to match current context for navigation
+        filteredPhotos = contextPhotos;
+        openFullscreen(photoIndex);
+      } else {
+        // Create a standalone photo object if not found in context
+        const standalonePhoto = {
+          url: photoUrl,
+          player: actualPlayerName || 'Unknown',
+          challenge: challengeText,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Set as single photo context
+        filteredPhotos = [standalonePhoto];
+        openFullscreen(0);
+      }
+    }
+
+    // Helper function to find which player owns a specific photo
+    function findPlayerForPhoto(photoUrl, challengeText, state) {
+      for (const [playerName, playerPhotos] of Object.entries(state.photos)) {
+        if (playerPhotos[challengeText] === photoUrl) {
+          return playerName;
+        }
+      }
+      return 'Unknown';
+    }
+
+    // Helper function to build context-appropriate photo array for modal navigation
+    function buildContextPhotos(state, currentChallenge = null, currentPlayer = null) {
+      const photos = [];
+      
+      if (state.currentView === 'player' && state.selectedPlayer) {
+        // Player view: show only photos from the selected player
+        const playerPhotos = state.photos[state.selectedPlayer] || {};
+        Object.entries(playerPhotos).forEach(([challenge, url]) => {
+          if (url && url.trim() !== '') {
+            photos.push({
+              url: url,
+              player: state.selectedPlayer,
+              challenge: challenge,
+              timestamp: new Date().toISOString()
+            });
+          }
+        });
+      } else if (state.currentView === 'card') {
+        // Card view: show all photos, but prioritize current challenge if specified
+        const allPhotos = [];
+        const currentChallengePhotos = [];
+        
+        Object.entries(state.photos).forEach(([playerName, playerPhotos]) => {
+          Object.entries(playerPhotos).forEach(([challenge, url]) => {
+            if (url && url.trim() !== '') {
+              const photo = {
+                url: url,
+                player: playerName,
+                challenge: challenge,
+                timestamp: new Date().toISOString()
+              };
+              
+              if (currentChallenge && challenge === currentChallenge) {
+                currentChallengePhotos.push(photo);
+              } else {
+                allPhotos.push(photo);
+              }
+            }
+          });
+        });
+        
+        // Put current challenge photos first for better navigation context
+        photos.push(...currentChallengePhotos, ...allPhotos);
+      }
+      
+      return photos;
+    }
+
+    // Helper function to get player icons (same as main app)
+    function getPlayerIcon(name) {
+      const bingoIcons = [
+        '🎯', '🎲', '🎪', '🎨', '🎭', '🎸', '🎺', '🎻', 
+        '🎮', '🎳', '🎰', '🎊', '🎉', '🎈', '🎁', '🎀',
+        '🏆', '🏅', '🥇', '🥈', '🥉', '⭐', '🌟', '✨',
+        '🔥', '💎', '👑', '🎖️', '🏵️', '🎗️', '🎫', '🎟️'
+      ];
+      
+      if (!name) return '❓';
+      
+      let hash = 0;
+      const cleanName = name.toLowerCase().trim();
+      
+      for (let i = 0; i < cleanName.length; i++) {
+        const char = cleanName.charCodeAt(i);
+        hash = ((hash << 5) - hash + char) & 0xffffffff;
+      }
+      
+      const nameLength = cleanName.length;
+      const firstChar = cleanName.charCodeAt(0) || 0;
+      const lastChar = cleanName.charCodeAt(nameLength - 1) || 0;
+      
+      const combinedHash = Math.abs(hash + nameLength * 7 + firstChar * 13 + lastChar * 17);
+      const iconIndex = combinedHash % bingoIcons.length;
+      
+      return bingoIcons[iconIndex];
+    }
+  </script>
+</body>
+</html>

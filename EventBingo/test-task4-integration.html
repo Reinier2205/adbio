@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 4 Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Task 4 Integration Test</h1>
+    <div id="results"></div>
+
+    <script src="js/grid-renderer.js"></script>
+    <script src="js/board-controller.js"></script>
+    <script>
+        const results = [];
+        
+        function addResult(name, passed, message) {
+            results.push({ name, passed, message });
+        }
+        
+        function displayResults() {
+            const div = document.getElementById('results');
+            div.innerHTML = results.map(r => 
+                `<div class="test-result ${r.passed ? 'pass' : 'fail'}">
+                    <strong>${r.name}:</strong> ${r.passed ? 'PASS' : 'FAIL'} - ${r.message}
+                </div>`
+            ).join('');
+        }
+        
+        // Test 1: GridRenderer class exists and can be instantiated
+        try {
+            const renderer = new GridRenderer();
+            addResult('GridRenderer instantiation', true, 'GridRenderer class exists and can be instantiated');
+        } catch (error) {
+            addResult('GridRenderer instantiation', false, `Error: ${error.message}`);
+        }
+        
+        // Test 2: GridRenderer has required methods
+        try {
+            const renderer = new GridRenderer();
+            const hasRenderCardView = typeof renderer.renderCardView === 'function';
+            const hasUpdateToggleState = typeof renderer.updateToggleState === 'function';
+            const hasCreateCardViewSquare = typeof renderer.createCardViewSquare === 'function';
+            
+            addResult('GridRenderer methods', 
+                hasRenderCardView && hasUpdateToggleState && hasCreateCardViewSquare,
+                `renderCardView: ${hasRenderCardView}, updateToggleState: ${hasUpdateToggleState}, createCardViewSquare: ${hasCreateCardViewSquare}`);
+        } catch (error) {
+            addResult('GridRenderer methods', false, `Error: ${error.message}`);
+        }
+        
+        // Test 3: BoardController class exists and can be instantiated
+        try {
+            const controller = new BoardController();
+            addResult('BoardController instantiation', true, 'BoardController class exists and can be instantiated');
+        } catch (error) {
+            addResult('BoardController instantiation', false, `Error: ${error.message}`);
+        }
+        
+        // Test 4: BoardController has required methods
+        try {
+            const controller = new BoardController();
+            const hasInitialize = typeof controller.initialize === 'function';
+            const hasSwitchToCardView = typeof controller.switchToCardView === 'function';
+            const hasGetState = typeof controller.getState === 'function';
+            
+            addResult('BoardController methods', 
+                hasInitialize && hasSwitchToCardView && hasGetState,
+                `initialize: ${hasInitialize}, switchToCardView: ${hasSwitchToCardView}, getState: ${hasGetState}`);
+        } catch (error) {
+            addResult('BoardController methods', false, `Error: ${error.message}`);
+        }
+        
+        // Test 5: Mock data structure validation
+        const mockStats = {
+            totalPlayers: 3,
+            totalSquares: 25,
+            overallCompletion: 60,
+            squareStats: [
+                {
+                    squareIndex: 0,
+                    challengeText: "Test Challenge",
+                    completedBy: ["Alice", "Bob"],
+                    outstandingPlayers: ["Charlie"],
+                    completionRate: 66.7
+                }
+            ]
+        };
+        
+        try {
+            const renderer = new GridRenderer();
+            // Create a mock DOM element
+            const mockGrid = document.createElement('div');
+            mockGrid.id = 'photoGrid';
+            document.body.appendChild(mockGrid);
+            
+            const mockEmpty = document.createElement('div');
+            mockEmpty.id = 'emptyState';
+            document.body.appendChild(mockEmpty);
+            
+            // Test rendering with mock data
+            renderer.renderCardView(mockStats, 'count');
+            
+            const hasGridClass = mockGrid.classList.contains('bingo-grid');
+            const hasSquares = mockGrid.children.length > 0;
+            
+            addResult('Mock rendering test', hasGridClass && hasSquares,
+                `Grid class: ${hasGridClass}, Has squares: ${hasSquares}`);
+                
+        } catch (error) {
+            addResult('Mock rendering test', false, `Error: ${error.message}`);
+        }
+        
+        displayResults();
+    </script>
+</body>
+</html>

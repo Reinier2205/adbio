@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card View Test - EventBingo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .test-pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+            max-width: 500px;
+        }
+        .bingo-square {
+            aspect-ratio: 1;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Card View Implementation Test</h1>
+        <p>Testing the card completion overview functionality</p>
+        
+        <div id="testResults"></div>
+        
+        <h3>Test Grid:</h3>
+        <div class="bingo-grid" id="testGrid"></div>
+        
+        <div id="toggleTest">
+            <h3>Toggle Test:</h3>
+            <button onclick="testToggle('count')">Show Counts</button>
+            <button onclick="testToggle('completed')">Show Completed</button>
+            <button onclick="testToggle('outstanding')">Show Outstanding</button>
+        </div>
+    </div>
+
+    <script src="js/grid-renderer.js"></script>
+    <script>
+        // Test data
+        const mockCompletionStats = {
+            totalPlayers: 3,
+            totalSquares: 25,
+            overallCompletion: 60,
+            squareStats: [
+                {
+                    squareIndex: 0,
+                    challengeText: "Test Challenge 1",
+                    completedBy: ["Alice", "Bob"],
+                    outstandingPlayers: ["Charlie"],
+                    completionRate: 66.7
+                },
+                {
+                    squareIndex: 1,
+                    challengeText: "Test Challenge 2",
+                    completedBy: ["Alice"],
+                    outstandingPlayers: ["Bob", "Charlie"],
+                    completionRate: 33.3
+                },
+                {
+                    squareIndex: 2,
+                    challengeText: "Test Challenge 3",
+                    completedBy: ["Alice", "Bob", "Charlie"],
+                    outstandingPlayers: [],
+                    completionRate: 100
+                }
+            ]
+        };
+
+        // Add more squares to make it 25 total
+        for (let i = 3; i < 25; i++) {
+            mockCompletionStats.squareStats.push({
+                squareIndex: i,
+                challengeText: `Test Challenge ${i + 1}`,
+                completedBy: i % 2 === 0 ? ["Alice"] : ["Bob", "Charlie"],
+                outstandingPlayers: i % 2 === 0 ? ["Bob", "Charlie"] : ["Alice"],
+                completionRate: i % 2 === 0 ? 33.3 : 66.7
+            });
+        }
+
+        let testResults = [];
+        let gridRenderer;
+
+        function runTests() {
+            const resultsDiv = document.getElementById('testResults');
+            testResults = [];
+
+            // Test 1: GridRenderer instantiation
+            try {
+                gridRenderer = new GridRenderer();
+                addTestResult('GridRenderer instantiation', true, 'GridRenderer created successfully');
+            } catch (error) {
+                addTestResult('GridRenderer instantiation', false, `Error: ${error.message}`);
+                return;
+            }
+
+            // Test 2: Card view rendering
+            try {
+                // Override the photoGrid element for testing
+                const testGrid = document.getElementById('testGrid');
+                const originalGetElementById = document.getElementById;
+                document.getElementById = function(id) {
+                    if (id === 'photoGrid') return testGrid;
+                    if (id === 'emptyState') return { style: { display: 'none' } };
+                    return originalGetElementById.call(document, id);
+                };
+
+                gridRenderer.renderCardView(mockCompletionStats, 'count');
+                
+                // Restore original function
+                document.getElementById = originalGetElementById;
+
+                const squares = testGrid.querySelectorAll('.bingo-square');
+                addTestResult('Card view rendering', squares.length === 25, 
+                    `Rendered ${squares.length} squares (expected 25)`);
+            } catch (error) {
+                addTestResult('Card view rendering', false, `Error: ${error.message}`);
+            }
+
+            // Test 3: Square content validation
+            try {
+                const firstSquare = document.querySelector('.bingo-square[data-square-index="0"]');
+                const hasChallenge = firstSquare && firstSquare.querySelector('.square-challenge');
+                const hasStats = firstSquare && firstSquare.querySelector('.square-stats');
+                
+                addTestResult('Square content validation', hasChallenge && hasStats,
+                    `First square has challenge text: ${!!hasChallenge}, has stats: ${!!hasStats}`);
+            } catch (error) {
+                addTestResult('Square content validation', false, `Error: ${error.message}`);
+            }
+
+            // Display results
+            resultsDiv.innerHTML = testResults.map(result => 
+                `<div class="test-result ${result.passed ? 'test-pass' : 'test-fail'}">
+                    <strong>${result.name}:</strong> ${result.passed ? 'PASS' : 'FAIL'} - ${result.message}
+                </div>`
+            ).join('');
+        }
+
+        function addTestResult(name, passed, message) {
+            testResults.push({ name, passed, message });
+        }
+
+        function testToggle(toggleState) {
+            if (!gridRenderer) {
+                alert('GridRenderer not initialized');
+                return;
+            }
+
+            try {
+                gridRenderer.updateToggleState(toggleState, mockCompletionStats);
+                alert(`Toggle state changed to: ${toggleState}`);
+            } catch (error) {
+                alert(`Error changing toggle state: ${error.message}`);
+            }
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

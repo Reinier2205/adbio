@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance Optimization Tests - EventBingo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #4a90e2;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+    }
+
+    h2 {
+      color: #2c3e50;
+      border-bottom: 2px solid #4a90e2;
+      padding-bottom: 10px;
+      margin-top: 40px;
+    }
+
+    h3 {
+      color: #34495e;
+      margin-top: 30px;
+    }
+
+    .test-section {
+      margin: 30px 0;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .test-result {
+      padding: 10px 15px;
+      margin: 10px 0;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    .test-pass {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .test-fail {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .test-warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    .test-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    .metrics-table th,
+    .metrics-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .metrics-table th {
+      background: #4a90e2;
+      color: white;
+      font-weight: 600;
+    }
+
+    .metrics-table tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .performance-chart {
+      width: 100%;
+      height: 200px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6c757d;
+    }
+
+    .test-controls {
+      margin: 20px 0;
+      padding: 15px;
+      background: #e9ecef;
+      border-radius: 6px;
+    }
+
+    .test-button {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .test-button:hover {
+      background: #357abd;
+    }
+
+    .test-button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #e9ecef;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4a90e2, #7b68ee);
+      transition: width 0.3s ease;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin: 20px 0;
+      max-width: 400px;
+    }
+
+    .test-square {
+      aspect-ratio: 1;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      text-align: center;
+      padding: 4px;
+    }
+
+    .test-square.completed {
+      border-color: #51cf66;
+      background: rgba(81, 207, 102, 0.1);
+    }
+
+    .test-square img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .loading-indicator {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #4a90e2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Performance Optimization Tests</h1>
+    
+    <div class="test-controls">
+      <button class="test-button" onclick="runAllTests()">Run All Tests</button>
+      <button class="test-button" onclick="runPhotoLoadingTests()">Photo Loading Tests</button>
+      <button class="test-button" onclick="runGridRenderingTests()">Grid Rendering Tests</button>
+      <button class="test-button" onclick="runMemoryTests()">Memory Tests</button>
+      <button class="test-button" onclick="runScaleTests()">Scale Tests</button>
+      <button class="test-button" onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="testProgress" class="hidden">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <div id="progressText">Running tests...</div>
+    </div>
+
+    <div class="test-section">
+      <h3>1. Photo Loading Optimization Tests</h3>
+      <div id="photo-loading-tests">
+        <div class="test-result test-info">Click "Photo Loading Tests" to run photo loading optimization tests</div>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>2. Grid Rendering Performance Tests</h3>
+      <div id="grid-rendering-tests">
+        <div class="test-result test-info">Click "Grid Rendering Tests" to run grid rendering performance tests</div>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>3. Memory Usage Tests</h3>
+      <div id="memory-tests">
+        <div class="test-result test-info">Click "Memory Tests" to run memory usage tests</div>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>4. Cache Performance Tests</h3>
+      <div id="cache-tests">
+        <div class="test-result test-info">Cache tests will run automatically with other tests</div>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>5. Scale Testing (Various Event Sizes)</h3>
+      <div id="scale-tests">
+        <div class="test-result test-info">Click "Scale Tests" to run tests with various event sizes</div>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>6. Performance Metrics Summary</h3>
+      <div id="performance-summary">
+        <div class="test-result test-info">Performance metrics will appear here after running tests</div>
+      </div>
+    </div>
+
+    <!-- Test Grid for Visual Testing -->
+    <div class="test-section">
+      <h3>7. Visual Performance Test Grid</h3>
+      <div class="test-grid" id="testGrid">
+        <!-- Grid squares will be added dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Include required scripts -->
+  <script src="js/performance-monitor.js"></script>
+  <script src="js/progress-calc.js"></script>
+  <script src="js/board-controller.js"></script>
+  <script src="js/grid-renderer.js"></script>
+
+  <script>
+    // Test configuration
+    const TEST_CONFIG = {
+      smallEvent: { players: 5, photosPerPlayer: 10 },
+      mediumEvent: { players: 15, photosPerPlayer: 15 },
+      largeEvent: { players: 30, photosPerPlayer: 20 },
+      extraLargeEvent: { players: 50, photosPerPlayer: 25 }
+    };
+
+    // Global test state
+    let performanceMonitor;
+    let boardController;
+    let gridRenderer;
+    let testResults = {};
+
+    // Initialize test environment
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeTestEnvironment();
+      setupTestGrid();
+    });
+
+    function initializeTestEnvironment() {
+      try {
+        performanceMonitor = new PerformanceMonitor();
+        boardController = new BoardController();
+        gridRenderer = new GridRenderer();
+        
+        addTestResult('initialization', 'Test environment initialized successfully', 'pass');
+      } catch (error) {
+        addTestResult('initialization', `Failed to initialize test environment: ${error.message}`, 'fail');
+      }
+    }
+
+    function setupTestGrid() {
+      const testGrid = document.getElementById('testGrid');
+      testGrid.innerHTML = '';
+      
+      // Create 25 test squares
+      for (let i = 1; i <= 25; i++) {
+        const square = document.createElement('div');
+        square.className = 'test-square';
+        square.textContent = `${i}`;
+        square.dataset.squareIndex = i;
+        testGrid.appendChild(square);
+      }
+    }
+
+    async function runAllTests() {
+      showProgress(true);
+      updateProgress(0, 'Starting comprehensive performance tests...');
+      
+      try {
+        await runPhotoLoadingTests();
+        updateProgress(25, 'Photo loading tests completed');
+        
+        await runGridRenderingTests();
+        updateProgress(50, 'Grid rendering tests completed');
+        
+        await runMemoryTests();
+        updateProgress(75, 'Memory tests completed');
+        
+        await runScaleTests();
+        updateProgress(90, 'Scale tests completed');
+        
+        generatePerformanceSummary();
+        updateProgress(100, 'All tests completed successfully!');
+        
+        setTimeout(() => showProgress(false), 2000);
+      } catch (error) {
+        addTestResult('all-tests', `Test suite failed: ${error.message}`, 'fail');
+        showProgress(false);
+      }
+    }
+
+    async function runPhotoLoadingTests() {
+      const testSection = document.getElementById('photo-loading-tests');
+      testSection.innerHTML = '<div class="loading-indicator"></div> Running photo loading tests...';
+      
+      try {
+        // Test 1: Basic photo loading optimization
+        const testUrls = generateTestPhotoUrls(20);
+        const startTime = performance.now();
+        
+        await performanceMonitor.optimizePhotoLoading(testUrls, { priority: 'high' });
+        
+        const loadTime = performance.now() - startTime;
+        
+        testSection.innerHTML = '';
+        addTestResult('photo-loading-tests', `✅ Photo loading optimization: ${loadTime.toFixed(2)}ms for 20 photos`, 'pass');
+        
+        // Test 2: Batch loading performance
+        const batchStartTime = performance.now();
+        const largeBatch = generateTestPhotoUrls(50);
+        
+        await performanceMonitor.optimizePhotoLoading(largeBatch, { 
+          priority: 'normal',
+          batchSize: 8
+        });
+        
+        const batchTime = performance.now() - batchStartTime;
+        addTestResult('photo-loading-tests', `✅ Batch loading (50 photos): ${batchTime.toFixed(2)}ms`, 'pass');
+        
+        // Test 3: Cache hit rate
+        const cacheStartTime = performance.now();
+        await performanceMonitor.optimizePhotoLoading(testUrls.slice(0, 10), { priority: 'high' });
+        const cacheTime = performance.now() - cacheStartTime;
+        
+        const cacheEfficiency = cacheTime < loadTime / 2;
+        addTestResult('photo-loading-tests', 
+          `${cacheEfficiency ? '✅' : '⚠️'} Cache efficiency: ${cacheTime.toFixed(2)}ms (${cacheEfficiency ? 'Good' : 'Needs improvement'})`, 
+          cacheEfficiency ? 'pass' : 'warning'
+        );
+        
+        // Test 4: Concurrent loading limits
+        const concurrentUrls = generateTestPhotoUrls(100);
+        const concurrentStartTime = performance.now();
+        
+        await performanceMonitor.optimizePhotoLoading(concurrentUrls, { 
+          priority: 'normal',
+          batchSize: 6
+        });
+        
+        const concurrentTime = performance.now() - concurrentStartTime;
+        const avgTimePerPhoto = concurrentTime / concurrentUrls.length;
+        
+        addTestResult('photo-loading-tests', 
+          `✅ Concurrent loading (100 photos): ${concurrentTime.toFixed(2)}ms (${avgTimePerPhoto.toFixed(2)}ms avg per photo)`, 
+          'pass'
+        );
+        
+        testResults.photoLoading = {
+          basicLoadTime: loadTime,
+          batchLoadTime: batchTime,
+          cacheTime: cacheTime,
+          concurrentTime: concurrentTime,
+          avgTimePerPhoto: avgTimePerPhoto
+        };
+        
+      } catch (error) {
+        testSection.innerHTML = '';
+        addTestResult('photo-loading-tests', `❌ Photo loading tests failed: ${error.message}`, 'fail');
+      }
+    }
+
+    async function runGridRenderingTests() {
+      const testSection = document.getElementById('grid-rendering-tests');
+      testSection.innerHTML = '<div class="loading-indicator"></div> Running grid rendering tests...';
+      
+      try {
+        testSection.innerHTML = '';
+        
+        // Test 1: Card view rendering performance
+        const cardViewData = generateTestCompletionStats(TEST_CONFIG.mediumEvent);
+        
+        const cardRenderStart = performance.now();
+        await gridRenderer.renderCardView(cardViewData, 'count');
+        const cardRenderTime = performance.now() - cardRenderStart;
+        
+        addTestResult('grid-rendering-tests', 
+          `✅ Card view rendering: ${cardRenderTime.toFixed(2)}ms`, 
+          cardRenderTime < 100 ? 'pass' : 'warning'
+        );
+        
+        // Test 2: Player view rendering performance
+        const playerPhotos = generateTestPlayerPhotos(20);
+        const squares = generateTestSquares();
+        
+        const playerRenderStart = performance.now();
+        await gridRenderer.renderPlayerView('TestPlayer', playerPhotos, squares);
+        const playerRenderTime = performance.now() - playerRenderStart;
+        
+        addTestResult('grid-rendering-tests', 
+          `✅ Player view rendering: ${playerRenderTime.toFixed(2)}ms`, 
+          playerRenderTime < 100 ? 'pass' : 'warning'
+        );
+        
+        // Test 3: Toggle state switching performance
+        const toggleStart = performance.now();
+        gridRenderer.updateToggleState('completed', cardViewData);
+        await new Promise(resolve => setTimeout(resolve, 50)); // Allow for async rendering
+        gridRenderer.updateToggleState('outstanding', cardViewData);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        gridRenderer.updateToggleState('count', cardViewData);
+        const toggleTime = performance.now() - toggleStart;
+        
+        addTestResult('grid-rendering-tests', 
+          `✅ Toggle state switching: ${toggleTime.toFixed(2)}ms`, 
+          toggleTime < 200 ? 'pass' : 'warning'
+        );
+        
+        // Test 4: Large dataset rendering
+        const largeData = generateTestCompletionStats(TEST_CONFIG.largeEvent);
+        const largeRenderStart = performance.now();
+        await gridRenderer.renderCardView(largeData, 'count');
+        const largeRenderTime = performance.now() - largeRenderStart;
+        
+        addTestResult('grid-rendering-tests', 
+          `✅ Large dataset rendering (${TEST_CONFIG.largeEvent.players} players): ${largeRenderTime.toFixed(2)}ms`, 
+          largeRenderTime < 200 ? 'pass' : 'warning'
+        );
+        
+        testResults.gridRendering = {
+          cardViewTime: cardRenderTime,
+          playerViewTime: playerRenderTime,
+          toggleTime: toggleTime,
+          largeDatasetTime: largeRenderTime
+        };
+        
+      } catch (error) {
+        testSection.innerHTML = '';
+        addTestResult('grid-rendering-tests', `❌ Grid rendering tests failed: ${error.message}`, 'fail');
+      }
+    }
+
+    async function runMemoryTests() {
+      const testSection = document.getElementById('memory-tests');
+      testSection.innerHTML = '<div class="loading-indicator"></div> Running memory tests...';
+      
+      try {
+        testSection.innerHTML = '';
+        
+        // Test 1: Memory usage monitoring
+        if ('memory' in performance) {
+          const initialMemory = performance.memory.usedJSHeapSize;
+          
+          // Load a large dataset
+          const largeUrls = generateTestPhotoUrls(200);
+          await performanceMonitor.optimizePhotoLoading(largeUrls);
+          
+          const afterLoadMemory = performance.memory.usedJSHeapSize;
+          const memoryIncrease = afterLoadMemory - initialMemory;
+          
+          addTestResult('memory-tests', 
+            `✅ Memory usage increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`, 
+            memoryIncrease < 50 * 1024 * 1024 ? 'pass' : 'warning' // 50MB threshold
+          );
+          
+          // Test cache cleanup
+          performanceMonitor.cleanupCache();
+          
+          // Allow garbage collection
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const afterCleanupMemory = performance.memory.usedJSHeapSize;
+          const memoryReduced = afterLoadMemory - afterCleanupMemory;
+          
+          addTestResult('memory-tests', 
+            `✅ Memory cleanup: ${(memoryReduced / 1024 / 1024).toFixed(2)}MB freed`, 
+            memoryReduced > 0 ? 'pass' : 'warning'
+          );
+          
+          testResults.memory = {
+            initialMemory: initialMemory,
+            afterLoadMemory: afterLoadMemory,
+            afterCleanupMemory: afterCleanupMemory,
+            memoryIncrease: memoryIncrease,
+            memoryReduced: memoryReduced
+          };
+          
+        } else {
+          addTestResult('memory-tests', '⚠️ Memory API not available in this browser', 'warning');
+        }
+        
+        // Test 2: Cache size limits
+        const cacheMetrics = performanceMonitor.getPerformanceMetrics();
+        if (cacheMetrics) {
+          addTestResult('memory-tests', 
+            `✅ Photo cache: ${cacheMetrics.photoCache.size} items, ${cacheMetrics.photoCache.memoryUsage}`, 
+            'info'
+          );
+          
+          addTestResult('memory-tests', 
+            `✅ Cache hit rate: ${cacheMetrics.photoCache.hitRate}%`, 
+            parseFloat(cacheMetrics.photoCache.hitRate) > 50 ? 'pass' : 'warning'
+          );
+        }
+        
+      } catch (error) {
+        testSection.innerHTML = '';
+        addTestResult('memory-tests', `❌ Memory tests failed: ${error.message}`, 'fail');
+      }
+    }
+
+    async function runScaleTests() {
+      const testSection = document.getElementById('scale-tests');
+      testSection.innerHTML = '<div class="loading-indicator"></div> Running scale tests...';
+      
+      try {
+        testSection.innerHTML = '';
+        
+        const scaleResults = {};
+        
+        // Test different event sizes
+        for (const [sizeName, config] of Object.entries(TEST_CONFIG)) {
+          const startTime = performance.now();
+          
+          // Generate test data
+          const completionStats = generateTestCompletionStats(config);
+          
+          // Test rendering performance
+          const renderStart = performance.now();
+          await gridRenderer.renderCardView(completionStats, 'count');
+          const renderTime = performance.now() - renderStart;
+          
+          // Test photo loading
+          const photoUrls = generateTestPhotoUrls(config.players * config.photosPerPlayer);
+          const loadStart = performance.now();
+          await performanceMonitor.optimizePhotoLoading(photoUrls, { batchSize: 8 });
+          const loadTime = performance.now() - loadStart;
+          
+          const totalTime = performance.now() - startTime;
+          
+          scaleResults[sizeName] = {
+            players: config.players,
+            photos: config.players * config.photosPerPlayer,
+            renderTime: renderTime,
+            loadTime: loadTime,
+            totalTime: totalTime
+          };
+          
+          const status = totalTime < 2000 ? 'pass' : totalTime < 5000 ? 'warning' : 'fail';
+          addTestResult('scale-tests', 
+            `${status === 'pass' ? '✅' : status === 'warning' ? '⚠️' : '❌'} ${sizeName}: ${config.players} players, ${config.players * config.photosPerPlayer} photos - ${totalTime.toFixed(2)}ms total`, 
+            status
+          );
+        }
+        
+        testResults.scale = scaleResults;
+        
+        // Performance recommendations
+        const largestTest = scaleResults.extraLargeEvent;
+        if (largestTest.totalTime > 5000) {
+          addTestResult('scale-tests', 
+            '⚠️ Large events may need additional optimization (virtualization, progressive loading)', 
+            'warning'
+          );
+        }
+        
+      } catch (error) {
+        testSection.innerHTML = '';
+        addTestResult('scale-tests', `❌ Scale tests failed: ${error.message}`, 'fail');
+      }
+    }
+
+    function generatePerformanceSummary() {
+      const summarySection = document.getElementById('performance-summary');
+      
+      let summaryHTML = '<table class="metrics-table">';
+      summaryHTML += '<tr><th>Metric</th><th>Value</th><th>Status</th></tr>';
+      
+      if (testResults.photoLoading) {
+        const avgLoad = testResults.photoLoading.avgTimePerPhoto;
+        summaryHTML += `<tr><td>Average Photo Load Time</td><td>${avgLoad.toFixed(2)}ms</td><td>${avgLoad < 50 ? '✅ Good' : avgLoad < 100 ? '⚠️ Fair' : '❌ Slow'}</td></tr>`;
+      }
+      
+      if (testResults.gridRendering) {
+        const cardRender = testResults.gridRendering.cardViewTime;
+        summaryHTML += `<tr><td>Card View Render Time</td><td>${cardRender.toFixed(2)}ms</td><td>${cardRender < 100 ? '✅ Good' : cardRender < 200 ? '⚠️ Fair' : '❌ Slow'}</td></tr>`;
+      }
+      
+      if (testResults.memory && testResults.memory.memoryIncrease) {
+        const memIncrease = testResults.memory.memoryIncrease / 1024 / 1024;
+        summaryHTML += `<tr><td>Memory Usage Increase</td><td>${memIncrease.toFixed(2)}MB</td><td>${memIncrease < 50 ? '✅ Good' : memIncrease < 100 ? '⚠️ Fair' : '❌ High'}</td></tr>`;
+      }
+      
+      if (testResults.scale) {
+        const largeEventTime = testResults.scale.largeEvent?.totalTime || 0;
+        summaryHTML += `<tr><td>Large Event Performance</td><td>${largeEventTime.toFixed(2)}ms</td><td>${largeEventTime < 2000 ? '✅ Good' : largeEventTime < 5000 ? '⚠️ Fair' : '❌ Slow'}</td></tr>`;
+      }
+      
+      summaryHTML += '</table>';
+      
+      // Add performance recommendations
+      const metrics = performanceMonitor.getPerformanceMetrics();
+      if (metrics && metrics.recommendations) {
+        summaryHTML += '<h4>Recommendations:</h4><ul>';
+        metrics.recommendations.forEach(rec => {
+          summaryHTML += `<li>${rec}</li>`;
+        });
+        summaryHTML += '</ul>';
+      }
+      
+      summarySection.innerHTML = summaryHTML;
+    }
+
+    // Helper functions
+    function generateTestPhotoUrls(count) {
+      const urls = [];
+      for (let i = 1; i <= count; i++) {
+        urls.push(`https://picsum.photos/400/400?random=${i}`);
+      }
+      return urls;
+    }
+
+    function generateTestCompletionStats(config) {
+      const players = [];
+      const squareStats = [];
+      
+      // Generate players
+      for (let i = 1; i <= config.players; i++) {
+        players.push({
+          name: `TestPlayer${i}`,
+          completionCount: Math.floor(Math.random() * 25)
+        });
+      }
+      
+      // Generate square stats
+      for (let i = 0; i < 25; i++) {
+        const completedBy = [];
+        const outstandingPlayers = [];
+        
+        players.forEach(player => {
+          if (Math.random() < 0.6) { // 60% completion rate
+            completedBy.push(player.name);
+          } else {
+            outstandingPlayers.push(player.name);
+          }
+        });
+        
+        squareStats.push({
+          squareIndex: i,
+          challengeText: `Test Challenge ${i + 1}`,
+          completedBy,
+          outstandingPlayers,
+          completionRate: (completedBy.length / players.length) * 100
+        });
+      }
+      
+      return {
+        totalPlayers: players.length,
+        totalSquares: 25,
+        overallCompletion: Math.random() * 100,
+        squareStats,
+        playerStats: players
+      };
+    }
+
+    function generateTestPlayerPhotos(count) {
+      const photos = {};
+      for (let i = 1; i <= count; i++) {
+        photos[`Test Challenge ${i}`] = `https://picsum.photos/400/400?random=${i}`;
+      }
+      return photos;
+    }
+
+    function generateTestSquares() {
+      const squares = [];
+      for (let i = 0; i < 25; i++) {
+        squares.push({
+          index: i,
+          challengeText: `Test Challenge ${i + 1}`,
+          position: { row: Math.floor(i / 5), col: i % 5 }
+        });
+      }
+      return squares;
+    }
+
+    function addTestResult(section, message, type) {
+      const sectionElement = document.getElementById(section);
+      if (sectionElement) {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = `test-result test-${type}`;
+        resultDiv.textContent = message;
+        sectionElement.appendChild(resultDiv);
+      }
+    }
+
+    function showProgress(show) {
+      const progressDiv = document.getElementById('testProgress');
+      if (show) {
+        progressDiv.classList.remove('hidden');
+      } else {
+        progressDiv.classList.add('hidden');
+      }
+    }
+
+    function updateProgress(percentage, text) {
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      
+      progressFill.style.width = `${percentage}%`;
+      progressText.textContent = text;
+    }
+
+    function clearResults() {
+      const sections = ['photo-loading-tests', 'grid-rendering-tests', 'memory-tests', 'cache-tests', 'scale-tests', 'performance-summary'];
+      sections.forEach(section => {
+        const element = document.getElementById(section);
+        if (element) {
+          element.innerHTML = '<div class="test-result test-info">Click the corresponding test button to run tests</div>';
+        }
+      });
+      testResults = {};
+      showProgress(false);
+    }
+  </script>
+</body>
+</html>

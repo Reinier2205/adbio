@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 4 Final Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        .summary { background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Task 4 Final Verification</h1>
+    <p>Verifying that card completion overview is fully implemented</p>
+    
+    <div id="results"></div>
+    <div id="summary"></div>
+
+    <script src="js/grid-renderer.js"></script>
+    <script src="js/board-controller.js"></script>
+    <script>
+        const results = [];
+        
+        function addResult(name, passed, message) {
+            results.push({ name, passed, message });
+        }
+        
+        function displayResults() {
+            const div = document.getElementById('results');
+            const summaryDiv = document.getElementById('summary');
+            
+            const passedTests = results.filter(r => r.passed).length;
+            const totalTests = results.length;
+            
+            div.innerHTML = results.map(r => 
+                `<div class="test-result ${r.passed ? 'pass' : 'fail'}">
+                    <strong>${r.name}:</strong> ${r.passed ? 'PASS' : 'FAIL'} - ${r.message}
+                </div>`
+            ).join('');
+            
+            const allPassed = passedTests === totalTests;
+            summaryDiv.innerHTML = `
+                <div class="summary">
+                    <h3>Task 4 Implementation Status: ${allPassed ? '✅ COMPLETE' : '❌ INCOMPLETE'}</h3>
+                    <p><strong>Tests Passed:</strong> ${passedTests}/${totalTests}</p>
+                    <p><strong>Status:</strong> ${allPassed ? 'All requirements implemented successfully' : 'Some requirements need attention'}</p>
+                </div>
+            `;
+        }
+        
+        // Test all task 4 requirements
+        function runVerification() {
+            // Requirement: Create grid renderer for card view showing completion statistics
+            try {
+                const renderer = new GridRenderer();
+                const hasRenderCardView = typeof renderer.renderCardView === 'function';
+                addResult('Grid renderer with card view', hasRenderCardView, 
+                    hasRenderCardView ? 'GridRenderer.renderCardView() method exists' : 'Missing renderCardView method');
+            } catch (error) {
+                addResult('Grid renderer with card view', false, `Error: ${error.message}`);
+            }
+            
+            // Requirement: Organize squares by position (1-25) instead of chronological order
+            try {
+                const mockStats = {
+                    squareStats: [
+                        { squareIndex: 2, challengeText: "Third", completedBy: [], outstandingPlayers: [], completionRate: 0 },
+                        { squareIndex: 0, challengeText: "First", completedBy: [], outstandingPlayers: [], completionRate: 0 },
+                        { squareIndex: 1, challengeText: "Second", completedBy: [], outstandingPlayers: [], completionRate: 0 }
+                    ]
+                };
+                
+                // Create mock DOM elements
+                const mockGrid = document.createElement('div');
+                mockGrid.id = 'photoGrid';
+                document.body.appendChild(mockGrid);
+                
+                const mockEmpty = document.createElement('div');
+                mockEmpty.id = 'emptyState';
+                document.body.appendChild(mockEmpty);
+                
+                const renderer = new GridRenderer();
+                renderer.renderCardView(mockStats, 'count');
+                
+                const squares = mockGrid.querySelectorAll('.bingo-square');
+                let correctOrder = true;
+                squares.forEach((square, index) => {
+                    const squareIndex = parseInt(square.dataset.squareIndex);
+                    if (squareIndex !== index) correctOrder = false;
+                });
+                
+                addResult('Square positioning (1-25 order)', correctOrder,
+                    correctOrder ? 'Squares are sorted by position correctly' : 'Squares are not in correct order');
+                    
+                // Clean up
+                document.body.removeChild(mockGrid);
+                document.body.removeChild(mockEmpty);
+            } catch (error) {
+                addResult('Square positioning (1-25 order)', false, `Error: ${error.message}`);
+            }
+            
+            // Requirement: Display completion count for each bingo square by default
+            try {
+                const mockStats = {
+                    squareStats: [{
+                        squareIndex: 0,
+                        challengeText: "Test Challenge",
+                        completedBy: ["Alice", "Bob"],
+                        outstandingPlayers: ["Charlie"],
+                        completionRate: 66.7
+                    }]
+                };
+                
+                const mockGrid = document.createElement('div');
+                mockGrid.id = 'photoGrid';
+                document.body.appendChild(mockGrid);
+                
+                const mockEmpty = document.createElement('div');
+                mockEmpty.id = 'emptyState';
+                document.body.appendChild(mockEmpty);
+                
+                const renderer = new GridRenderer();
+                renderer.renderCardView(mockStats, 'count');
+                
+                const hasCompletionCount = mockGrid.querySelector('.completion-count') !== null;
+                const hasCompletionRate = mockGrid.querySelector('.completion-rate') !== null;
+                
+                addResult('Completion count display', hasCompletionCount && hasCompletionRate,
+                    `Completion count: ${hasCompletionCount}, Completion rate: ${hasCompletionRate}`);
+                    
+                // Clean up
+                document.body.removeChild(mockGrid);
+                document.body.removeChild(mockEmpty);
+            } catch (error) {
+                addResult('Completion count display', false, `Error: ${error.message}`);
+            }
+            
+            // Requirement: Implement completion toggles
+            try {
+                const renderer = new GridRenderer();
+                const hasUpdateToggleState = typeof renderer.updateToggleState === 'function';
+                const hasGetPlayerIcon = typeof renderer.getPlayerIcon === 'function';
+                
+                addResult('Completion toggles implementation', hasUpdateToggleState && hasGetPlayerIcon,
+                    `updateToggleState: ${hasUpdateToggleState}, getPlayerIcon: ${hasGetPlayerIcon}`);
+            } catch (error) {
+                addResult('Completion toggles implementation', false, `Error: ${error.message}`);
+            }
+            
+            // Requirement: Visual styling for completion statistics
+            try {
+                const mockStats = {
+                    squareStats: [{
+                        squareIndex: 0,
+                        challengeText: "Test Challenge",
+                        completedBy: ["Alice"],
+                        outstandingPlayers: ["Bob"],
+                        completionRate: 50
+                    }]
+                };
+                
+                const mockGrid = document.createElement('div');
+                mockGrid.id = 'photoGrid';
+                document.body.appendChild(mockGrid);
+                
+                const mockEmpty = document.createElement('div');
+                mockEmpty.id = 'emptyState';
+                document.body.appendChild(mockEmpty);
+                
+                const renderer = new GridRenderer();
+                renderer.renderCardView(mockStats, 'count');
+                
+                const square = mockGrid.querySelector('.bingo-square');
+                const hasCardViewClass = square && square.classList.contains('card-view');
+                const hasCompletionRateStyle = square && square.style.getPropertyValue('--completion-rate');
+                
+                addResult('Visual styling', hasCardViewClass && hasCompletionRateStyle,
+                    `Card view class: ${hasCardViewClass}, Completion rate CSS var: ${!!hasCompletionRateStyle}`);
+                    
+                // Clean up
+                document.body.removeChild(mockGrid);
+                document.body.removeChild(mockEmpty);
+            } catch (error) {
+                addResult('Visual styling', false, `Error: ${error.message}`);
+            }
+            
+            displayResults();
+        }
+        
+        // Run verification when page loads
+        window.addEventListener('load', runVerification);
+    </script>
+</body>
+</html>

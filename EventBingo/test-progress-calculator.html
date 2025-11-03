@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Calculator Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .test-error {
+            background: #ffeaea;
+            border: 1px solid #f44336;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #357abd;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Progress Calculator Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Data Setup</h2>
+        <p>Testing with sample players, photos, and squares data.</p>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="testResults"></div>
+
+    <script src="js/progress-calc.js"></script>
+    <script>
+        // Test data
+        const testPlayers = [
+            { name: 'Alice', icon: '🎯' },
+            { name: 'Bob', icon: '🎲' },
+            { name: 'Charlie', icon: '🎪' }
+        ];
+
+        const testSquares = [
+            { index: 0, challengeText: 'Take a selfie', position: { row: 0, col: 0 } },
+            { index: 1, challengeText: 'Photo with friends', position: { row: 0, col: 1 } },
+            { index: 2, challengeText: 'Sunset photo', position: { row: 0, col: 2 } },
+            { index: 3, challengeText: 'Food photo', position: { row: 0, col: 3 } },
+            { index: 4, challengeText: 'Action shot', position: { row: 0, col: 4 } }
+        ];
+
+        const testPhotos = {
+            'Alice': {
+                'Take a selfie': 'https://example.com/alice-selfie.jpg',
+                'Photo with friends': 'https://example.com/alice-friends.jpg',
+                'Sunset photo': 'https://example.com/alice-sunset.jpg'
+            },
+            'Bob': {
+                'Take a selfie': 'https://example.com/bob-selfie.jpg',
+                'Food photo': 'https://example.com/bob-food.jpg'
+            },
+            'Charlie': {
+                'Take a selfie': 'https://example.com/charlie-selfie.jpg',
+                'Photo with friends': 'https://example.com/charlie-friends.jpg',
+                'Sunset photo': 'https://example.com/charlie-sunset.jpg',
+                'Food photo': 'https://example.com/charlie-food.jpg',
+                'Action shot': 'https://example.com/charlie-action.jpg'
+            }
+        };
+
+        let progressCalculator;
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        function addResult(title, content, isError = false) {
+            const resultsDiv = document.getElementById('testResults');
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            
+            const titleEl = document.createElement('h3');
+            titleEl.textContent = title;
+            section.appendChild(titleEl);
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = isError ? 'test-error' : 'test-result';
+            
+            if (typeof content === 'object') {
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(content, null, 2);
+                resultDiv.appendChild(pre);
+            } else {
+                resultDiv.textContent = content;
+            }
+            
+            section.appendChild(resultDiv);
+            resultsDiv.appendChild(section);
+        }
+
+        function runAllTests() {
+            clearResults();
+            
+            try {
+                // Initialize ProgressCalculator
+                progressCalculator = new ProgressCalculator();
+                addResult('✅ Initialization', 'ProgressCalculator created successfully');
+                
+                // Test 1: Calculate completion statistics
+                testCompletionStats();
+                
+                // Test 2: Get individual player progress
+                testPlayerProgress();
+                
+                // Test 3: Calculate square completion rates
+                testSquareCompletionRates();
+                
+                // Test 4: Test progress updates
+                testProgressUpdates();
+                
+                // Test 5: Test progress summary
+                testProgressSummary();
+                
+                // Test 6: Test caching
+                testCaching();
+                
+            } catch (error) {
+                addResult('❌ Test Error', error.message, true);
+                console.error('Test error:', error);
+            }
+        }
+
+        function testCompletionStats() {
+            try {
+                const stats = progressCalculator.calculateCompletionStats(testPlayers, testPhotos, testSquares);
+                
+                // Verify basic structure
+                if (!stats.totalPlayers || !stats.totalSquares || !stats.squareStats) {
+                    throw new Error('Missing required properties in completion stats');
+                }
+                
+                // Verify calculations
+                const expectedTotalPlayers = 3;
+                const expectedTotalSquares = 5;
+                const expectedTotalCompletions = 10; // Count from test data
+                
+                if (stats.totalPlayers !== expectedTotalPlayers) {
+                    throw new Error(`Expected ${expectedTotalPlayers} players, got ${stats.totalPlayers}`);
+                }
+                
+                if (stats.totalSquares !== expectedTotalSquares) {
+                    throw new Error(`Expected ${expectedTotalSquares} squares, got ${stats.totalSquares}`);
+                }
+                
+                addResult('✅ Completion Statistics Test', {
+                    totalPlayers: stats.totalPlayers,
+                    totalSquares: stats.totalSquares,
+                    overallCompletion: `${stats.overallCompletion.toFixed(1)}%`,
+                    totalCompletions: stats.totalCompletions,
+                    squareStatsCount: stats.squareStats.length,
+                    playerStatsCount: stats.playerStats.length
+                });
+                
+            } catch (error) {
+                addResult('❌ Completion Statistics Test Failed', error.message, true);
+            }
+        }
+
+        function testPlayerProgress() {
+            try {
+                // Test Alice's progress
+                const aliceProgress = progressCalculator.getPlayerProgress('Alice', testPhotos, testSquares);
+                
+                if (!aliceProgress.playerName || !aliceProgress.completedSquares || !aliceProgress.outstandingSquares) {
+                    throw new Error('Missing required properties in player progress');
+                }
+                
+                const expectedCompletions = 3; // Alice has 3 photos
+                if (aliceProgress.completionCount !== expectedCompletions) {
+                    throw new Error(`Expected ${expectedCompletions} completions for Alice, got ${aliceProgress.completionCount}`);
+                }
+                
+                addResult('✅ Player Progress Test (Alice)', {
+                    playerName: aliceProgress.playerName,
+                    completionCount: aliceProgress.completionCount,
+                    completionRate: `${aliceProgress.completionRate.toFixed(1)}%`,
+                    progressLevel: aliceProgress.progressLevel,
+                    completedSquares: aliceProgress.completedSquares.length,
+                    outstandingSquares: aliceProgress.outstandingSquares.length
+                });
+                
+                // Test Charlie's progress (should be 100%)
+                const charlieProgress = progressCalculator.getPlayerProgress('Charlie', testPhotos, testSquares);
+                addResult('✅ Player Progress Test (Charlie)', {
+                    playerName: charlieProgress.playerName,
+                    completionCount: charlieProgress.completionCount,
+                    completionRate: `${charlieProgress.completionRate.toFixed(1)}%`,
+                    progressLevel: charlieProgress.progressLevel
+                });
+                
+            } catch (error) {
+                addResult('❌ Player Progress Test Failed', error.message, true);
+            }
+        }
+
+        function testSquareCompletionRates() {
+            try {
+                const squareRates = progressCalculator.calculateSquareCompletionRates(testPlayers, testPhotos, testSquares);
+                
+                if (!squareRates.squareRates || !squareRates.mostPopular || !squareRates.leastPopular) {
+                    throw new Error('Missing required properties in square completion rates');
+                }
+                
+                // Find "Take a selfie" which should be completed by all players (100%)
+                const selfieSquare = squareRates.squareRates.find(sq => sq.challengeText === 'Take a selfie');
+                if (!selfieSquare || selfieSquare.completionRate !== 100) {
+                    throw new Error('Expected "Take a selfie" to have 100% completion rate');
+                }
+                
+                addResult('✅ Square Completion Rates Test', {
+                    totalSquares: squareRates.squareRates.length,
+                    averageCompletionRate: `${squareRates.averageCompletionRate.toFixed(1)}%`,
+                    mostPopular: squareRates.mostPopular[0]?.challengeText,
+                    leastPopular: squareRates.leastPopular[0]?.challengeText,
+                    selfieCompletionRate: `${selfieSquare.completionRate}%`
+                });
+                
+            } catch (error) {
+                addResult('❌ Square Completion Rates Test Failed', error.message, true);
+            }
+        }
+
+        function testProgressUpdates() {
+            try {
+                const oldData = {
+                    players: testPlayers,
+                    photos: {
+                        'Alice': {
+                            'Take a selfie': 'https://example.com/alice-selfie.jpg'
+                        }
+                    },
+                    squares: testSquares
+                };
+                
+                const newData = {
+                    players: testPlayers,
+                    photos: testPhotos, // Full test photos (more completions)
+                    squares: testSquares
+                };
+                
+                const updates = progressCalculator.calculateProgressUpdates(oldData, newData);
+                
+                if (!updates.hasOwnProperty('hasChanges')) {
+                    throw new Error('Missing hasChanges property in progress updates');
+                }
+                
+                addResult('✅ Progress Updates Test', {
+                    hasChanges: updates.hasChanges,
+                    newCompletions: updates.newCompletions.length,
+                    changedPlayers: updates.changedPlayers.length,
+                    affectedSquares: updates.affectedSquares.length,
+                    progressDelta: `${updates.progressDelta.toFixed(1)}%`
+                });
+                
+            } catch (error) {
+                addResult('❌ Progress Updates Test Failed', error.message, true);
+            }
+        }
+
+        function testProgressSummary() {
+            try {
+                const summary = progressCalculator.getProgressSummary(testPlayers, testPhotos, testSquares);
+                
+                if (!summary.overview || !summary.topPerformers || !summary.challengingSquares) {
+                    throw new Error('Missing required properties in progress summary');
+                }
+                
+                addResult('✅ Progress Summary Test', {
+                    overallCompletion: `${summary.overview.overallCompletion.toFixed(1)}%`,
+                    totalCompletions: summary.overview.totalCompletions,
+                    topPerformer: summary.topPerformers[0]?.playerName,
+                    topPerformerRate: `${summary.topPerformers[0]?.completionRate.toFixed(1)}%`,
+                    challengingSquaresCount: summary.challengingSquares.length,
+                    popularSquaresCount: summary.popularSquares.length
+                });
+                
+            } catch (error) {
+                addResult('❌ Progress Summary Test Failed', error.message, true);
+            }
+        }
+
+        function testCaching() {
+            try {
+                // Clear cache first
+                progressCalculator.clearCache();
+                
+                // First call should calculate and cache
+                const start1 = performance.now();
+                const stats1 = progressCalculator.calculateCompletionStats(testPlayers, testPhotos, testSquares);
+                const time1 = performance.now() - start1;
+                
+                // Second call should use cache (should be faster)
+                const start2 = performance.now();
+                const stats2 = progressCalculator.calculateCompletionStats(testPlayers, testPhotos, testSquares);
+                const time2 = performance.now() - start2;
+                
+                // Verify results are identical
+                if (JSON.stringify(stats1) !== JSON.stringify(stats2)) {
+                    throw new Error('Cached results differ from original calculation');
+                }
+                
+                addResult('✅ Caching Test', {
+                    firstCallTime: `${time1.toFixed(2)}ms`,
+                    secondCallTime: `${time2.toFixed(2)}ms`,
+                    cacheWorking: time2 < time1 ? 'Yes' : 'Possibly (times too close)',
+                    resultsIdentical: 'Yes'
+                });
+                
+            } catch (error) {
+                addResult('❌ Caching Test Failed', error.message, true);
+            }
+        }
+
+        // Auto-run tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 4 Validation - Card Completion Overview</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .test-pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .test-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Include necessary styles from board.html */
+        .bingo-grid {
+            display: grid !important;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .bingo-square {
+            aspect-ratio: 1;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .bingo-square.card-view {
+            background: linear-gradient(135deg, 
+                rgba(255,255,255,1) 0%, 
+                rgba(255,255,255,1) calc(var(--completion-rate, 0%) - 10%), 
+                rgba(74, 144, 226, 0.1) var(--completion-rate, 0%), 
+                rgba(74, 144, 226, 0.3) 100%);
+            border: 2px solid rgba(74, 144, 226, 0.2);
+        }
+        
+        .square-challenge {
+            font-size: 0.7rem;
+            line-height: 1.2;
+            color: #2c3e50;
+            font-weight: 500;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        
+        .square-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .completion-count {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #4a90e2;
+        }
+        
+        .completion-rate {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .square-players {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            align-items: center;
+            max-height: 60px;
+            overflow: hidden;
+        }
+        
+        .player-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            border: 1px solid transparent;
+        }
+        
+        .player-indicator.completed {
+            background: #51cf66;
+            color: white;
+            border-color: rgba(81, 207, 102, 0.3);
+        }
+        
+        .player-indicator.outstanding {
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+        
+        .no-players {
+            font-size: 0.7rem;
+            color: #999;
+            font-style: italic;
+        }
+        
+        .toggle-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .toggle-button {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            background: white;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        
+        .toggle-button:hover {
+            border-color: #4a90e2;
+            background: rgba(74, 144, 226, 0.05);
+        }
+        
+        .toggle-button.active {
+            border-color: #4a90e2;
+            background: #4a90e2;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Task 4 Validation: Card Completion Overview</h1>
+        <p>Testing the implementation of card completion overview functionality</p>
+        
+        <div id="testResults"></div>
+        
+        <h3>Toggle Controls:</h3>
+        <div class="toggle-buttons">
+            <button class="toggle-button active" id="toggleCount" onclick="testToggle('count')">
+                Show Counts
+            </button>
+            <button class="toggle-button" id="toggleCompleted" onclick="testToggle('completed')">
+                Show Who Completed
+            </button>
+            <button class="toggle-button" id="toggleOutstanding" onclick="testToggle('outstanding')">
+                Show Who's Outstanding
+            </button>
+        </div>
+        
+        <h3>Test Grid (5x5 Bingo Layout):</h3>
+        <div class="bingo-grid" id="testGrid"></div>
+        
+        <div id="emptyState" style="display: none;">Empty state</div>
+    </div>
+
+    <script src="js/grid-renderer.js"></script>
+    <script>
+        // Mock completion statistics for testing
+        const mockCompletionStats = {
+            totalPlayers: 4,
+            totalSquares: 25,
+            overallCompletion: 65.5,
+            squareStats: []
+        };
+
+        // Generate 25 squares with varied completion data
+        const challenges = [
+            "An old photo with Anneke",
+            "A photo from a past birthday or braai",
+            "The oldest selfie you have together",
+            "A photo that shows where your friendship began",
+            "A photo from a time you both looked too young to drink beer",
+            "Anneke walking barefoot (bonus: dirty feet)",
+            "Anneke drinking beer (bonus: a cheers moment)",
+            "Someone borrowing something from Anneke",
+            "Oliver riding his bike",
+            "Oliver dunking something in tea",
+            "Oliver playing ball with someone",
+            "The baby with a new \"aunt\" or \"uncle\"",
+            "Everyone gathered around the fire",
+            "A sunrise or sunset over camp",
+            "Someone cooking or braaing",
+            "Anneke reading a book in peace",
+            "Morning coffee in a mug that's clearly been used too many times",
+            "Oliver \"helping\" with something",
+            "A creative photo of everyone together",
+            "Someone caught mid-laugh",
+            "A barefoot photo competition (yours vs Anneke's)",
+            "Someone \"borrowing\" Anneke's beer",
+            "A photo that proves you're having more fun than planned",
+            "A photo that shows the \"spirit of the weekend\"",
+            "Your favorite memory moment — real or recreated"
+        ];
+
+        const players = ["Alice", "Bob", "Charlie", "Diana"];
+
+        for (let i = 0; i < 25; i++) {
+            const completedBy = [];
+            const outstandingPlayers = [];
+            
+            // Randomly assign completions
+            players.forEach(player => {
+                if (Math.random() > 0.4) { // 60% chance of completion
+                    completedBy.push(player);
+                } else {
+                    outstandingPlayers.push(player);
+                }
+            });
+
+            mockCompletionStats.squareStats.push({
+                squareIndex: i,
+                challengeText: challenges[i],
+                completedBy: completedBy,
+                outstandingPlayers: outstandingPlayers,
+                completionRate: (completedBy.length / players.length) * 100
+            });
+        }
+
+        let testResults = [];
+        let gridRenderer;
+        let currentToggleState = 'count';
+
+        function runTests() {
+            const resultsDiv = document.getElementById('testResults');
+            testResults = [];
+
+            // Test 1: GridRenderer instantiation
+            try {
+                gridRenderer = new GridRenderer();
+                addTestResult('GridRenderer instantiation', true, 'GridRenderer created successfully');
+            } catch (error) {
+                addTestResult('GridRenderer instantiation', false, `Error: ${error.message}`);
+                displayResults();
+                return;
+            }
+
+            // Test 2: Card view rendering with count toggle
+            try {
+                gridRenderer.renderCardView(mockCompletionStats, 'count');
+                
+                const squares = document.querySelectorAll('.bingo-square');
+                const hasCorrectCount = squares.length === 25;
+                const hasCorrectLayout = document.getElementById('testGrid').classList.contains('bingo-grid');
+                
+                addTestResult('Card view rendering (count mode)', 
+                    hasCorrectCount && hasCorrectLayout, 
+                    `Rendered ${squares.length} squares in bingo grid layout`);
+            } catch (error) {
+                addTestResult('Card view rendering (count mode)', false, `Error: ${error.message}`);
+            }
+
+            // Test 3: Square positioning (1-25 order)
+            try {
+                const squares = document.querySelectorAll('.bingo-square[data-square-index]');
+                let correctOrder = true;
+                
+                squares.forEach((square, index) => {
+                    const squareIndex = parseInt(square.dataset.squareIndex);
+                    if (squareIndex !== index) {
+                        correctOrder = false;
+                    }
+                });
+                
+                addTestResult('Square positioning (1-25 order)', correctOrder, 
+                    correctOrder ? 'Squares are in correct order (0-24)' : 'Squares are not in correct order');
+            } catch (error) {
+                addTestResult('Square positioning (1-25 order)', false, `Error: ${error.message}`);
+            }
+
+            // Test 4: Completion count display
+            try {
+                const firstSquare = document.querySelector('.bingo-square[data-square-index="0"]');
+                const hasChallenge = firstSquare && firstSquare.querySelector('.square-challenge');
+                const hasStats = firstSquare && firstSquare.querySelector('.square-stats');
+                const hasCompletionCount = firstSquare && firstSquare.querySelector('.completion-count');
+                const hasCompletionRate = firstSquare && firstSquare.querySelector('.completion-rate');
+                
+                addTestResult('Completion count display', 
+                    hasChallenge && hasStats && hasCompletionCount && hasCompletionRate,
+                    `Challenge: ${!!hasChallenge}, Stats: ${!!hasStats}, Count: ${!!hasCompletionCount}, Rate: ${!!hasCompletionRate}`);
+            } catch (error) {
+                addTestResult('Completion count display', false, `Error: ${error.message}`);
+            }
+
+            // Test 5: Visual styling
+            try {
+                const cardViewSquares = document.querySelectorAll('.bingo-square.card-view');
+                const hasCardViewClass = cardViewSquares.length === 25;
+                const hasCompletionRateStyle = cardViewSquares[0] && 
+                    cardViewSquares[0].style.getPropertyValue('--completion-rate');
+                
+                addTestResult('Visual styling', 
+                    hasCardViewClass && hasCompletionRateStyle,
+                    `Card view class: ${hasCardViewClass}, Completion rate style: ${!!hasCompletionRateStyle}`);
+            } catch (error) {
+                addTestResult('Visual styling', false, `Error: ${error.message}`);
+            }
+
+            displayResults();
+        }
+
+        function testToggle(toggleState) {
+            if (!gridRenderer) {
+                alert('GridRenderer not initialized');
+                return;
+            }
+
+            try {
+                // Update button states
+                document.querySelectorAll('.toggle-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(`toggle${toggleState.charAt(0).toUpperCase() + toggleState.slice(1)}`).classList.add('active');
+                
+                // Update grid renderer
+                gridRenderer.updateToggleState(toggleState, mockCompletionStats);
+                currentToggleState = toggleState;
+                
+                // Test the toggle functionality
+                testToggleState(toggleState);
+                
+            } catch (error) {
+                addTestResult(`Toggle to ${toggleState}`, false, `Error: ${error.message}`);
+                displayResults();
+            }
+        }
+
+        function testToggleState(toggleState) {
+            try {
+                const squares = document.querySelectorAll('.bingo-square');
+                let hasCorrectContent = true;
+                let contentDescription = '';
+                
+                if (toggleState === 'count') {
+                    const hasStats = document.querySelectorAll('.square-stats').length > 0;
+                    const hasCompletionCount = document.querySelectorAll('.completion-count').length > 0;
+                    hasCorrectContent = hasStats && hasCompletionCount;
+                    contentDescription = `Stats sections: ${hasStats}, Completion counts: ${hasCompletionCount}`;
+                } else if (toggleState === 'completed') {
+                    const hasCompletedPlayers = document.querySelectorAll('.player-indicator.completed').length > 0;
+                    hasCorrectContent = hasCompletedPlayers;
+                    contentDescription = `Completed player indicators: ${hasCompletedPlayers}`;
+                } else if (toggleState === 'outstanding') {
+                    const hasOutstandingPlayers = document.querySelectorAll('.player-indicator.outstanding').length > 0;
+                    hasCorrectContent = hasOutstandingPlayers;
+                    contentDescription = `Outstanding player indicators: ${hasOutstandingPlayers}`;
+                }
+                
+                addTestResult(`Toggle to ${toggleState}`, hasCorrectContent, contentDescription);
+                displayResults();
+                
+            } catch (error) {
+                addTestResult(`Toggle to ${toggleState}`, false, `Error: ${error.message}`);
+                displayResults();
+            }
+        }
+
+        function addTestResult(name, passed, message) {
+            testResults.push({ name, passed, message });
+        }
+
+        function displayResults() {
+            const resultsDiv = document.getElementById('testResults');
+            const passedTests = testResults.filter(r => r.passed).length;
+            const totalTests = testResults.length;
+            
+            let html = `<div class="test-info">
+                <strong>Test Results: ${passedTests}/${totalTests} passed</strong>
+            </div>`;
+            
+            html += testResults.map(result => 
+                `<div class="test-result ${result.passed ? 'test-pass' : 'test-fail'}">
+                    <strong>${result.name}:</strong> ${result.passed ? 'PASS' : 'FAIL'} - ${result.message}
+                </div>`
+            ).join('');
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

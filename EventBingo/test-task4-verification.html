@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 4 Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        .bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-width: 500px; }
+        .bingo-square { aspect-ratio: 1; background: white; border: 2px solid #e0e0e0; border-radius: 8px; padding: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Task 4 Implementation Verification</h1>
+    <div id="results"></div>
+    <div id="testGrid" class="bingo-grid"></div>
+
+    <script src="js/grid-renderer.js"></script>
+    <script>
+        const results = [];
+        
+        function addResult(name, passed, message) {
+            results.push({ name, passed, message });
+        }
+        
+        function displayResults() {
+            const div = document.getElementById('results');
+            div.innerHTML = results.map(r => 
+                `<div class="test-result ${r.passed ? 'pass' : 'fail'}">
+                    <strong>${r.name}:</strong> ${r.passed ? 'PASS' : 'FAIL'} - ${r.message}
+                </div>`
+            ).join('');
+        }
+        
+        // Mock completion stats with 25 squares
+        const mockStats = {
+            totalPlayers: 3,
+            totalSquares: 25,
+            overallCompletion: 60,
+            squareStats: []
+        };
+        
+        // Generate 25 squares with varying completion rates
+        for (let i = 0; i < 25; i++) {
+            mockStats.squareStats.push({
+                squareIndex: i,
+                challengeText: `Challenge ${i + 1}`,
+                completedBy: i % 3 === 0 ? ["Alice", "Bob"] : i % 3 === 1 ? ["Alice"] : ["Bob", "Charlie"],
+                outstandingPlayers: i % 3 === 0 ? ["Charlie"] : i % 3 === 1 ? ["Bob", "Charlie"] : ["Alice"],
+                completionRate: i % 3 === 0 ? 66.7 : i % 3 === 1 ? 33.3 : 66.7
+            });
+        }
+        
+        function runTests() {
+            // Test 1: GridRenderer instantiation
+            try {
+                const renderer = new GridRenderer();
+                addResult('GridRenderer instantiation', true, 'GridRenderer created successfully');
+                
+                // Test 2: Card view rendering
+                const testGrid = document.getElementById('testGrid');
+                
+                // Mock DOM elements
+                const originalGetElementById = document.getElementById;
+                document.getElementById = function(id) {
+                    if (id === 'photoGrid') return testGrid;
+                    if (id === 'emptyState') return { style: { display: 'none' } };
+                    return originalGetElementById.call(document, id);
+                };
+                
+                renderer.renderCardView(mockStats, 'count');
+                
+                // Restore original function
+                document.getElementById = originalGetElementById;
+                
+                const squares = testGrid.querySelectorAll('.bingo-square');
+                addResult('Grid rendering', squares.length === 25, `Rendered ${squares.length} squares (expected 25)`);
+                
+                // Test 3: Square positioning
+                let correctOrder = true;
+                squares.forEach((square, index) => {
+                    const squareIndex = parseInt(square.dataset.squareIndex);
+                    if (squareIndex !== index) correctOrder = false;
+                });
+                addResult('Square positioning', correctOrder, 'Squares are in correct order (1-25)');
+                
+                // Test 4: Completion count display
+                const hasCompletionCount = testGrid.querySelector('.completion-count') !== null;
+                const hasCompletionRate = testGrid.querySelector('.completion-rate') !== null;
+                addResult('Completion statistics', hasCompletionCount && hasCompletionRate, 
+                    `Count display: ${hasCompletionCount}, Rate display: ${hasCompletionRate}`);
+                
+                // Test 5: Toggle functionality
+                renderer.updateToggleState('completed', mockStats);
+                const hasPlayerIndicators = testGrid.querySelector('.player-indicator') !== null;
+                addResult('Toggle functionality', hasPlayerIndicators, 
+                    `Player indicators shown: ${hasPlayerIndicators}`);
+                
+                // Test 6: Visual styling
+                const firstSquare = testGrid.querySelector('.bingo-square');
+                const hasCardViewClass = firstSquare && firstSquare.classList.contains('card-view');
+                const hasCompletionRateStyle = firstSquare && firstSquare.style.getPropertyValue('--completion-rate');
+                addResult('Visual styling', hasCardViewClass && hasCompletionRateStyle,
+                    `Card view class: ${hasCardViewClass}, CSS completion rate: ${!!hasCompletionRateStyle}`);
+                
+            } catch (error) {
+                addResult('Test execution', false, `Error: ${error.message}`);
+            }
+            
+            displayResults();
+        }
+        
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

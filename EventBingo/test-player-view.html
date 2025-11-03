@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Player View - EventBingo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fafafa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .test-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .test-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .test-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .test-button {
+      padding: 10px 20px;
+      border: 2px solid #4a90e2;
+      border-radius: 8px;
+      background: white;
+      color: #4a90e2;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .test-button:hover {
+      background: #4a90e2;
+      color: white;
+    }
+
+    .test-button.active {
+      background: #4a90e2;
+      color: white;
+    }
+
+    /* Import bingo grid styles from board.html */
+    .bingo-grid {
+      display: grid !important;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .bingo-square {
+      aspect-ratio: 1;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .bingo-square:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .bingo-square.player-view {
+      padding: 0;
+    }
+
+    .bingo-square.player-view.completed {
+      border: 3px solid #51cf66;
+      background: rgba(81, 207, 102, 0.1);
+    }
+
+    .bingo-square.player-view.incomplete {
+      border: 2px solid #e0e0e0;
+      background: rgba(0,0,0,0.02);
+      padding: 8px;
+    }
+
+    .bingo-square.player-view img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .square-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(transparent 60%, rgba(0,0,0,0.7));
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 8px;
+    }
+
+    .completion-indicator {
+      background: #51cf66;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .incomplete-indicator {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.9);
+      color: #999;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      border: 2px solid #e0e0e0;
+    }
+
+    .square-challenge {
+      font-size: 0.7rem;
+      line-height: 1.2;
+      color: #2c3e50;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .test-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .test-results {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .result-item {
+      margin-bottom: 10px;
+      padding: 8px;
+      background: white;
+      border-radius: 4px;
+      border-left: 4px solid #4a90e2;
+    }
+
+    .result-item.success {
+      border-left-color: #51cf66;
+    }
+
+    .result-item.error {
+      border-left-color: #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <div class="test-header">
+      <h1>🎯 Individual Player Board View Test</h1>
+      <p>Testing the 5x5 grid renderer for individual player progress</p>
+    </div>
+
+    <div class="test-info">
+      <strong>Test Requirements:</strong>
+      <ul>
+        <li>Create 5x5 grid renderer for individual player progress</li>
+        <li>Display player photos in completed squares at correct positions</li>
+        <li>Show challenge text in incomplete squares instead of photos</li>
+        <li>Maintain exact square positioning from main game (1-25 layout)</li>
+        <li>Add visual completion indicators and styling for completed vs incomplete squares</li>
+      </ul>
+    </div>
+
+    <div class="test-controls">
+      <button class="test-button active" onclick="testPlayerView('TestPlayer1')">Test Player 1 (Mixed Progress)</button>
+      <button class="test-button" onclick="testPlayerView('TestPlayer2')">Test Player 2 (High Progress)</button>
+      <button class="test-button" onclick="testPlayerView('TestPlayer3')">Test Player 3 (Low Progress)</button>
+      <button class="test-button" onclick="testEmptyPlayer()">Test Empty Player</button>
+    </div>
+
+    <!-- Grid Container -->
+    <div id="photoGrid" class="bingo-grid">
+      <!-- Grid will be rendered here -->
+    </div>
+
+    <div class="test-results" id="testResults">
+      <h3>Test Results:</h3>
+      <div id="resultsList">
+        <p>Click a test button to run tests...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include the GridRenderer -->
+  <script src="js/grid-renderer.js"></script>
+  
+  <script>
+    // Test data
+    const testSquares = [
+      "An old photo with Anneke",
+      "A photo from a past birthday or braai",
+      "The oldest selfie you have together",
+      "A photo that shows where your friendship began",
+      "A photo from a time you both looked too young to drink beer",
+      "Anneke walking barefoot (bonus: dirty feet)",
+      "Anneke drinking beer (bonus: a cheers moment)",
+      "Someone borrowing something from Anneke",
+      "Oliver riding his bike",
+      "Oliver dunking something in tea",
+      "Oliver playing ball with someone",
+      "The baby with a new \"aunt\" or \"uncle\"",
+      "Everyone gathered around the fire",
+      "A sunrise or sunset over camp",
+      "Someone cooking or braaing",
+      "Anneke reading a book in peace",
+      "Morning coffee in a mug that's clearly been used too many times",
+      "Oliver \"helping\" with something",
+      "A creative photo of everyone together",
+      "Someone caught mid-laugh",
+      "A barefoot photo competition (yours vs Anneke's)",
+      "Someone \"borrowing\" Anneke's beer",
+      "A photo that proves you're having more fun than planned",
+      "A photo that shows the \"spirit of the weekend\"",
+      "Your favorite memory moment — real or recreated"
+    ].map((text, index) => ({ 
+      index, 
+      challengeText: text, 
+      position: { row: Math.floor(index / 5), col: index % 5 } 
+    }));
+
+    // Test player data
+    const testPlayerData = {
+      'TestPlayer1': {
+        // Mixed progress - some completed, some not
+        "An old photo with Anneke": "https://picsum.photos/300/300?random=1",
+        "A photo from a past birthday or braai": "",
+        "The oldest selfie you have together": "https://picsum.photos/300/300?random=2",
+        "A photo that shows where your friendship began": "",
+        "A photo from a time you both looked too young to drink beer": "https://picsum.photos/300/300?random=3",
+        "Anneke walking barefoot (bonus: dirty feet)": "https://picsum.photos/300/300?random=4",
+        "Anneke drinking beer (bonus: a cheers moment)": "",
+        "Someone borrowing something from Anneke": "https://picsum.photos/300/300?random=5",
+        "Oliver riding his bike": "",
+        "Oliver dunking something in tea": "https://picsum.photos/300/300?random=6",
+        "Oliver playing ball with someone": "https://picsum.photos/300/300?random=7",
+        "The baby with a new \"aunt\" or \"uncle\"": "",
+        "Everyone gathered around the fire": "https://picsum.photos/300/300?random=8",
+        "A sunrise or sunset over camp": "",
+        "Someone cooking or braaing": "https://picsum.photos/300/300?random=9"
+      },
+      'TestPlayer2': {
+        // High progress - most completed
+        "An old photo with Anneke": "https://picsum.photos/300/300?random=10",
+        "A photo from a past birthday or braai": "https://picsum.photos/300/300?random=11",
+        "The oldest selfie you have together": "https://picsum.photos/300/300?random=12",
+        "A photo that shows where your friendship began": "https://picsum.photos/300/300?random=13",
+        "A photo from a time you both looked too young to drink beer": "https://picsum.photos/300/300?random=14",
+        "Anneke walking barefoot (bonus: dirty feet)": "https://picsum.photos/300/300?random=15",
+        "Anneke drinking beer (bonus: a cheers moment)": "https://picsum.photos/300/300?random=16",
+        "Someone borrowing something from Anneke": "https://picsum.photos/300/300?random=17",
+        "Oliver riding his bike": "https://picsum.photos/300/300?random=18",
+        "Oliver dunking something in tea": "https://picsum.photos/300/300?random=19",
+        "Oliver playing ball with someone": "https://picsum.photos/300/300?random=20",
+        "The baby with a new \"aunt\" or \"uncle\"": "https://picsum.photos/300/300?random=21",
+        "Everyone gathered around the fire": "https://picsum.photos/300/300?random=22",
+        "A sunrise or sunset over camp": "https://picsum.photos/300/300?random=23",
+        "Someone cooking or braaing": "https://picsum.photos/300/300?random=24",
+        "Anneke reading a book in peace": "https://picsum.photos/300/300?random=25",
+        "Morning coffee in a mug that's clearly been used too many times": "https://picsum.photos/300/300?random=26",
+        "Oliver \"helping\" with something": "https://picsum.photos/300/300?random=27",
+        "A creative photo of everyone together": "https://picsum.photos/300/300?random=28",
+        "Someone caught mid-laugh": "",
+        "A barefoot photo competition (yours vs Anneke's)": "",
+        "Someone \"borrowing\" Anneke's beer": "",
+        "A photo that proves you're having more fun than planned": "",
+        "A photo that shows the \"spirit of the weekend\"": "",
+        "Your favorite memory moment — real or recreated": ""
+      },
+      'TestPlayer3': {
+        // Low progress - few completed
+        "An old photo with Anneke": "https://picsum.photos/300/300?random=30",
+        "A photo from a past birthday or braai": "",
+        "The oldest selfie you have together": "",
+        "A photo that shows where your friendship began": "https://picsum.photos/300/300?random=31",
+        "A photo from a time you both looked too young to drink beer": ""
+      }
+    };
+
+    const gridRenderer = new GridRenderer();
+    let currentTestResults = [];
+
+    function addTestResult(message, success = true) {
+      currentTestResults.push({ message, success });
+      updateTestResults();
+    }
+
+    function updateTestResults() {
+      const resultsList = document.getElementById('resultsList');
+      resultsList.innerHTML = '';
+      
+      if (currentTestResults.length === 0) {
+        resultsList.innerHTML = '<p>Click a test button to run tests...</p>';
+        return;
+      }
+
+      currentTestResults.forEach(result => {
+        const div = document.createElement('div');
+        div.className = `result-item ${result.success ? 'success' : 'error'}`;
+        div.textContent = result.message;
+        resultsList.appendChild(div);
+      });
+    }
+
+    function testPlayerView(playerName) {
+      currentTestResults = [];
+      
+      // Update active button
+      document.querySelectorAll('.test-button').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      addTestResult(`Testing player view for: ${playerName}`);
+      
+      try {
+        const playerPhotos = testPlayerData[playerName] || {};
+        
+        // Test 1: Render player view
+        gridRenderer.renderPlayerView(playerName, playerPhotos, testSquares);
+        addTestResult('✓ Successfully rendered player view grid');
+        
+        // Test 2: Check grid structure
+        const grid = document.getElementById('photoGrid');
+        if (grid.className.includes('bingo-grid')) {
+          addTestResult('✓ Grid has correct bingo-grid class');
+        } else {
+          addTestResult('✗ Grid missing bingo-grid class', false);
+        }
+        
+        // Test 3: Check square count
+        const squares = grid.querySelectorAll('.bingo-square');
+        if (squares.length === 25) {
+          addTestResult('✓ Grid contains exactly 25 squares');
+        } else {
+          addTestResult(`✗ Grid contains ${squares.length} squares instead of 25`, false);
+        }
+        
+        // Test 4: Check completed vs incomplete squares
+        const completedSquares = grid.querySelectorAll('.bingo-square.completed');
+        const incompleteSquares = grid.querySelectorAll('.bingo-square.incomplete');
+        const completedCount = Object.values(playerPhotos).filter(url => url && url.trim() !== '').length;
+        const expectedIncomplete = 25 - completedCount;
+        
+        if (completedSquares.length === completedCount) {
+          addTestResult(`✓ Correct number of completed squares: ${completedCount}`);
+        } else {
+          addTestResult(`✗ Expected ${completedCount} completed squares, found ${completedSquares.length}`, false);
+        }
+        
+        if (incompleteSquares.length === expectedIncomplete) {
+          addTestResult(`✓ Correct number of incomplete squares: ${expectedIncomplete}`);
+        } else {
+          addTestResult(`✗ Expected ${expectedIncomplete} incomplete squares, found ${incompleteSquares.length}`, false);
+        }
+        
+        // Test 5: Check completed squares have images
+        let imagesFound = 0;
+        completedSquares.forEach(square => {
+          const img = square.querySelector('img');
+          if (img) imagesFound++;
+        });
+        
+        if (imagesFound === completedSquares.length) {
+          addTestResult('✓ All completed squares contain images');
+        } else {
+          addTestResult(`✗ Only ${imagesFound} of ${completedSquares.length} completed squares have images`, false);
+        }
+        
+        // Test 6: Check incomplete squares have challenge text
+        let challengeTextsFound = 0;
+        incompleteSquares.forEach(square => {
+          const challengeDiv = square.querySelector('.square-challenge');
+          if (challengeDiv && challengeDiv.textContent.trim() !== '') {
+            challengeTextsFound++;
+          }
+        });
+        
+        if (challengeTextsFound === incompleteSquares.length) {
+          addTestResult('✓ All incomplete squares contain challenge text');
+        } else {
+          addTestResult(`✗ Only ${challengeTextsFound} of ${incompleteSquares.length} incomplete squares have challenge text`, false);
+        }
+        
+        // Test 7: Check completion indicators
+        const completionIndicators = grid.querySelectorAll('.completion-indicator');
+        if (completionIndicators.length === completedSquares.length) {
+          addTestResult('✓ All completed squares have completion indicators');
+        } else {
+          addTestResult(`✗ Expected ${completedSquares.length} completion indicators, found ${completionIndicators.length}`, false);
+        }
+        
+        // Test 8: Check incomplete indicators
+        const incompleteIndicators = grid.querySelectorAll('.incomplete-indicator');
+        if (incompleteIndicators.length === incompleteSquares.length) {
+          addTestResult('✓ All incomplete squares have incomplete indicators');
+        } else {
+          addTestResult(`✗ Expected ${incompleteSquares.length} incomplete indicators, found ${incompleteIndicators.length}`, false);
+        }
+        
+        // Test 9: Check square positioning (data attributes)
+        let positioningCorrect = true;
+        squares.forEach((square, index) => {
+          const expectedPosition = index + 1;
+          const actualPosition = parseInt(square.dataset.position);
+          if (actualPosition !== expectedPosition) {
+            positioningCorrect = false;
+          }
+        });
+        
+        if (positioningCorrect) {
+          addTestResult('✓ All squares have correct position data attributes');
+        } else {
+          addTestResult('✗ Some squares have incorrect position data attributes', false);
+        }
+        
+        addTestResult(`Test completed for ${playerName}!`);
+        
+      } catch (error) {
+        addTestResult(`✗ Error during testing: ${error.message}`, false);
+      }
+    }
+
+    function testEmptyPlayer() {
+      currentTestResults = [];
+      
+      // Update active button
+      document.querySelectorAll('.test-button').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      addTestResult('Testing empty player (no photos)');
+      
+      try {
+        // Test with empty player data
+        gridRenderer.renderPlayerView('EmptyPlayer', {}, testSquares);
+        
+        const grid = document.getElementById('photoGrid');
+        const squares = grid.querySelectorAll('.bingo-square');
+        const completedSquares = grid.querySelectorAll('.bingo-square.completed');
+        const incompleteSquares = grid.querySelectorAll('.bingo-square.incomplete');
+        
+        if (squares.length === 25) {
+          addTestResult('✓ Grid contains exactly 25 squares');
+        } else {
+          addTestResult(`✗ Grid contains ${squares.length} squares instead of 25`, false);
+        }
+        
+        if (completedSquares.length === 0) {
+          addTestResult('✓ No completed squares for empty player');
+        } else {
+          addTestResult(`✗ Found ${completedSquares.length} completed squares for empty player`, false);
+        }
+        
+        if (incompleteSquares.length === 25) {
+          addTestResult('✓ All 25 squares are incomplete for empty player');
+        } else {
+          addTestResult(`✗ Expected 25 incomplete squares, found ${incompleteSquares.length}`, false);
+        }
+        
+        addTestResult('Empty player test completed!');
+        
+      } catch (error) {
+        addTestResult(`✗ Error during empty player testing: ${error.message}`, false);
+      }
+    }
+
+    // Initialize with first test
+    window.addEventListener('load', () => {
+      testPlayerView('TestPlayer1');
+    });
+  </script>
+</body>
+</html>
