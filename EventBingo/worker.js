@@ -608,10 +608,14 @@ async function handleAdminRequest(request, env, corsHeaders) {
         };
       });
 
-      const photoCards = enhancedPhotos.map(p => 
+      const photoCards = enhancedPhotos.map((p, index) => 
         `<div class="photo-card">
+          <div class="photo-header">
+            <input type="checkbox" class="photo-checkbox" id="photo-${index}" data-filename="${p.betterFilename}" data-url="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.filename)}">
+            <label for="photo-${index}" class="checkbox-label">Select</label>
+          </div>
           <div class="photo-thumbnail">
-            <img src="${p.thumbnailUrl}" alt="Thumbnail" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0zNSA0MEw2NSA0MFY2MEgzNVY0MFoiIGZpbGw9IiM5Y2EzYWYiLz4KPGNpcmNsZSBjeD0iNDUiIGN5PSI1MCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4K'" />
+            <img src="${url.origin}/photo/${p.filename.replace('original_', 'thumb_').replace('.jpg', '')}" alt="Thumbnail" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0zNSA0MEw2NSA0MFY2MEgzNVY0MFoiIGZpbGw9IiM5Y2EzYWYiLz4KPGNpcmNsZSBjeD0iNDUiIGN5PSI1MCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4K'" />
           </div>
           <div class="photo-info">
             <div class="photo-title">${p.player}</div>
@@ -622,7 +626,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
             <a href="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.filename)}" 
                download="${p.betterFilename}" 
                class="download-btn">
-              📥 Download
+              Download
             </a>
           </div>
         </div>`
@@ -670,7 +674,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
               flex-wrap: wrap;
               justify-content: center;
             }
-            .download-all, .select-folder { 
+            .download-all, .download-selected, .select-folder { 
               background: linear-gradient(135deg, #10b981, #059669);
               color: white; 
               padding: 12px 24px; 
@@ -682,12 +686,64 @@ async function handleAdminRequest(request, env, corsHeaders) {
               transition: all 0.2s ease;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
-            .download-all:hover, .select-folder:hover { 
+            .download-all:hover, .download-selected:hover, .select-folder:hover { 
               transform: translateY(-1px);
               box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
             }
             .select-folder {
               background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            }
+            .download-selected {
+              background: linear-gradient(135deg, #f59e0b, #d97706);
+            }
+            .photo-header {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 15px;
+              padding: 10px;
+              background: #f8fafc;
+              border-radius: 8px;
+            }
+            .photo-checkbox {
+              width: 18px;
+              height: 18px;
+              accent-color: #3b82f6;
+            }
+            .checkbox-label {
+              font-weight: 600;
+              color: #374151;
+              cursor: pointer;
+            }
+            .selection-controls {
+              display: flex;
+              gap: 15px;
+              align-items: center;
+              justify-content: center;
+              margin-bottom: 20px;
+              padding: 15px;
+              background: white;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .select-all-btn, .select-none-btn {
+              background: #6b7280;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 600;
+              font-size: 0.9rem;
+              transition: all 0.2s ease;
+            }
+            .select-all-btn:hover, .select-none-btn:hover {
+              background: #4b5563;
+              transform: translateY(-1px);
+            }
+            .selection-count {
+              font-weight: 600;
+              color: #374151;
             }
             .photo-grid {
               display: grid;
@@ -784,7 +840,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
         </head>
         <body>
           <div class="container">
-            <h1>📥 Original Photos for Event: ${eventCode}</h1>
+            <h1>Original Photos for Event: ${eventCode}</h1>
             
             <div class="summary">
               <div><strong>Total Photos:</strong> ${originalPhotos.length}</div>
@@ -792,8 +848,15 @@ async function handleAdminRequest(request, env, corsHeaders) {
             </div>
             
             <div class="controls">
-              <button class="select-folder" onclick="selectDownloadFolder()">📁 Choose Download Folder</button>
-              <button class="download-all" onclick="downloadAll()">📦 Download All Photos</button>
+              <button class="select-folder" onclick="selectDownloadFolder()">Choose Download Folder</button>
+              <button class="download-selected" onclick="downloadSelected()">Download Selected Photos</button>
+              <button class="download-all" onclick="downloadAll()">Download All Photos</button>
+            </div>
+            
+            <div class="selection-controls">
+              <button class="select-all-btn" onclick="selectAll()">Select All</button>
+              <button class="select-none-btn" onclick="selectNone()">Select None</button>
+              <span class="selection-count">0 photos selected</span>
             </div>
             
             <div class="photo-grid">
@@ -863,6 +926,38 @@ async function handleAdminRequest(request, env, corsHeaders) {
               }
             }
             
+            async function downloadSelected() {
+              const checkboxes = document.querySelectorAll('.photo-checkbox:checked');
+              
+              if (checkboxes.length === 0) {
+                showStatus('Please select photos to download');
+                return;
+              }
+              
+              showStatus('Starting download of ' + checkboxes.length + ' selected photos...', 5000);
+              
+              for (let i = 0; i < checkboxes.length; i++) {
+                const checkbox = checkboxes[i];
+                const url = checkbox.dataset.url;
+                const filename = checkbox.dataset.filename;
+                
+                if (directoryHandle) {
+                  await downloadToFolder(url, filename);
+                } else {
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = filename;
+                  a.click();
+                }
+                
+                if (i < checkboxes.length - 1) {
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                }
+              }
+              
+              showStatus('Selected downloads completed!');
+            }
+
             async function downloadAll() {
               const links = document.querySelectorAll('.download-btn');
               showStatus('Starting download of ' + links.length + ' photos...', 5000);
@@ -886,6 +981,24 @@ async function handleAdminRequest(request, env, corsHeaders) {
               showStatus('All downloads completed!');
             }
             
+            function selectAll() {
+              const checkboxes = document.querySelectorAll('.photo-checkbox');
+              checkboxes.forEach(cb => cb.checked = true);
+              updateSelectionCount();
+            }
+            
+            function selectNone() {
+              const checkboxes = document.querySelectorAll('.photo-checkbox');
+              checkboxes.forEach(cb => cb.checked = false);
+              updateSelectionCount();
+            }
+            
+            function updateSelectionCount() {
+              const checkedCount = document.querySelectorAll('.photo-checkbox:checked').length;
+              const totalCount = document.querySelectorAll('.photo-checkbox').length;
+              document.querySelector('.selection-count').textContent = checkedCount + ' of ' + totalCount + ' photos selected';
+            }
+
             document.querySelectorAll('.download-btn').forEach(btn => {
               btn.addEventListener('click', async (e) => {
                 if (directoryHandle) {
@@ -894,6 +1007,12 @@ async function handleAdminRequest(request, env, corsHeaders) {
                 }
               });
             });
+            
+            document.querySelectorAll('.photo-checkbox').forEach(cb => {
+              cb.addEventListener('change', updateSelectionCount);
+            });
+            
+            updateSelectionCount();
           </script>
         </body>
         </html>
