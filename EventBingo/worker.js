@@ -571,49 +571,329 @@ async function handleAdminRequest(request, env, corsHeaders) {
         });
       }
 
-      // Create a simple HTML page with download links for each photo
-      const photoLinks = originalPhotos.map(p => 
-        `<li><a href="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.filename)}" download="${p.filename}">${p.filename}</a> (${Math.round(p.data.byteLength / 1024)}KB)</li>`
+      // Get squares for this event to create better filenames
+      const squares = await getSquaresForEvent(env, eventCode);
+      
+      // Create enhanced photo data with better filenames and thumbnails
+      const enhancedPhotos = originalPhotos.map(p => {
+        // Parse the original filename to get square index
+        const parts = p.filename.replace(`${eventCode}_`, '').split('_');
+        const player = parts[0];
+        const squareInfo = parts.slice(1, -1).join('_');
+        const timestamp = parts[parts.length - 1].replace('.jpg', '');
+        
+        // Try to find the square index from the square info
+        let squareIndex = -1;
+        let squareText = squareInfo;
+        
+        // Check if squareInfo starts with "square" followed by a number
+        const squareMatch = squareInfo.match(/^square(\d+)/);
+        if (squareMatch) {
+          squareIndex = parseInt(squareMatch[1]);
+          if (squareIndex >= 0 && squareIndex < squares.length) {
+            squareText = squares[squareIndex];
+          }
+        }
+        
+        // Create a better filename
+        const cleanSquareText = squareText.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').substring(0, 50);
+        const betterFilename = `${eventCode}_${player}_${cleanSquareText}.jpg`;
+        
+        return {
+          ...p,
+          betterFilename,
+          player: player.replace(/_/g, ' '),
+          squareText,
+          thumbnailUrl: `${url.origin}/photo/thumb_${eventCode}_${player}_square${squareIndex}_${timestamp}`
+        };
+      });
+
+      const photoCards = enhancedPhotos.map(p => 
+        `<div class="photo-card">
+          <div class="photo-thumbnail">
+            <img src="${p.thumbnailUrl}" alt="Thumbnail" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0zNSA0MEw2NSA0MFY2MEgzNVY0MFoiIGZpbGw9IiM5Y2EzYWYiLz4KPGNpcmNsZSBjeD0iNDUiIGN5PSI1MCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4K'" />
+          </div>
+          <div class="photo-info">
+            <div class="photo-title">${p.player}</div>
+            <div class="photo-square">${p.squareText}</div>
+            <div class="photo-size">${Math.round(p.data.byteLength / 1024)}KB</div>
+          </div>
+          <div class="photo-actions">
+            <a href="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.filename)}" 
+               download="${p.betterFilename}" 
+               class="download-btn">
+              📥 Download
+            </a>
+          </div>
+        </div>`
       ).join('');
 
+      const totalSize = Math.round(originalPhotos.reduce((sum, p) => sum + p.data.byteLength, 0) / 1024 / 1024 * 100) / 100;
+      
       const htmlResponse = `
         <!DOCTYPE html>
         <html>
         <head>
           <title>Download Original Photos - ${eventCode}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
-            h1 { color: #333; }
-            ul { list-style-type: none; padding: 0; }
-            li { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; }
-            a { text-decoration: none; color: #007bff; font-weight: bold; }
-            a:hover { text-decoration: underline; }
-            .summary { background: #e7f3ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-            .download-all { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+            * { box-sizing: border-box; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              background: #f8fafc;
+              color: #1f2937;
+            }
+            .container { max-width: 1200px; margin: 0 auto; }
+            h1 { 
+              color: #1f2937; 
+              text-align: center; 
+              margin-bottom: 30px;
+              font-size: 2rem;
+              font-weight: 700;
+            }
+            .summary { 
+              background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+              color: white;
+              padding: 20px; 
+              border-radius: 12px; 
+              margin-bottom: 30px;
+              text-align: center;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .summary strong { font-weight: 600; }
+            .controls {
+              display: flex;
+              gap: 15px;
+              margin-bottom: 30px;
+              flex-wrap: wrap;
+              justify-content: center;
+            }
+            .download-all, .select-folder { 
+              background: linear-gradient(135deg, #10b981, #059669);
+              color: white; 
+              padding: 12px 24px; 
+              border: none; 
+              border-radius: 8px; 
+              cursor: pointer;
+              font-weight: 600;
+              font-size: 1rem;
+              transition: all 0.2s ease;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .download-all:hover, .select-folder:hover { 
+              transform: translateY(-1px);
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+            .select-folder {
+              background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            }
+            .photo-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+              gap: 20px;
+              margin-top: 20px;
+            }
+            .photo-card {
+              background: white;
+              border-radius: 12px;
+              padding: 20px;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+              transition: all 0.2s ease;
+              border: 1px solid #e5e7eb;
+            }
+            .photo-card:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            }
+            .photo-thumbnail {
+              width: 100%;
+              height: 200px;
+              border-radius: 8px;
+              overflow: hidden;
+              margin-bottom: 15px;
+              background: #f3f4f6;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .photo-thumbnail img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              transition: transform 0.2s ease;
+            }
+            .photo-card:hover .photo-thumbnail img {
+              transform: scale(1.05);
+            }
+            .photo-info {
+              margin-bottom: 15px;
+            }
+            .photo-title {
+              font-weight: 600;
+              font-size: 1.1rem;
+              color: #1f2937;
+              margin-bottom: 5px;
+            }
+            .photo-square {
+              color: #6b7280;
+              font-size: 0.9rem;
+              line-height: 1.4;
+              margin-bottom: 5px;
+            }
+            .photo-size {
+              color: #9ca3af;
+              font-size: 0.8rem;
+              font-weight: 500;
+            }
+            .download-btn {
+              display: inline-block;
+              background: linear-gradient(135deg, #3b82f6, #2563eb);
+              color: white;
+              text-decoration: none;
+              padding: 10px 20px;
+              border-radius: 6px;
+              font-weight: 600;
+              font-size: 0.9rem;
+              transition: all 0.2s ease;
+              text-align: center;
+              width: 100%;
+            }
+            .download-btn:hover {
+              background: linear-gradient(135deg, #2563eb, #1d4ed8);
+              transform: translateY(-1px);
+            }
+            .status {
+              position: fixed;
+              top: 20px;
+              right: 20px;
+              background: #10b981;
+              color: white;
+              padding: 10px 20px;
+              border-radius: 8px;
+              font-weight: 600;
+              display: none;
+              z-index: 1000;
+            }
+            @media (max-width: 768px) {
+              .photo-grid { grid-template-columns: 1fr; }
+              .controls { flex-direction: column; align-items: center; }
+            }
           </style>
         </head>
         <body>
-          <h1>📥 Original Photos for Event: ${eventCode}</h1>
-          <div class="summary">
-            <strong>Total Photos:</strong> ${originalPhotos.length}<br>
-            <strong>Total Size:</strong> ${Math.round(originalPhotos.reduce((sum, p) => sum + p.data.byteLength, 0) / 1024 / 1024 * 100) / 100}MB
+          <div class="container">
+            <h1>📥 Original Photos for Event: ${eventCode}</h1>
+            
+            <div class="summary">
+              <div><strong>Total Photos:</strong> ${originalPhotos.length}</div>
+              <div><strong>Total Size:</strong> ${totalSize}MB</div>
+            </div>
+            
+            <div class="controls">
+              <button class="select-folder" onclick="selectDownloadFolder()">📁 Choose Download Folder</button>
+              <button class="download-all" onclick="downloadAll()">📦 Download All Photos</button>
+            </div>
+            
+            <div class="photo-grid">
+              ${photoCards}
+            </div>
           </div>
-          <button class="download-all" onclick="downloadAll()">📦 Download All Photos</button>
-          <h2>Individual Downloads:</h2>
-          <ul>
-            ${photoLinks}
-          </ul>
+          
+          <div class="status" id="status"></div>
+          
           <script>
-            function downloadAll() {
-              const links = document.querySelectorAll('a[download]');
-              let delay = 0;
-              links.forEach(link => {
-                setTimeout(() => {
-                  link.click();
-                }, delay);
-                delay += 500; // 500ms delay between downloads
-              });
+            let directoryHandle = null;
+            
+            const supportsFileSystemAccess = 'showDirectoryPicker' in window;
+            
+            if (!supportsFileSystemAccess) {
+              document.querySelector('.select-folder').style.display = 'none';
             }
+            
+            function showStatus(message, duration = 3000) {
+              const status = document.getElementById('status');
+              status.textContent = message;
+              status.style.display = 'block';
+              setTimeout(() => {
+                status.style.display = 'none';
+              }, duration);
+            }
+            
+            async function selectDownloadFolder() {
+              if (!supportsFileSystemAccess) {
+                showStatus('Folder selection not supported in this browser');
+                return;
+              }
+              
+              try {
+                directoryHandle = await window.showDirectoryPicker();
+                showStatus('Selected folder: ' + directoryHandle.name);
+                document.querySelector('.select-folder').textContent = '📁 ' + directoryHandle.name;
+              } catch (err) {
+                if (err.name !== 'AbortError') {
+                  showStatus('Failed to select folder');
+                }
+              }
+            }
+            
+            async function downloadToFolder(url, filename) {
+              if (!directoryHandle) {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                return;
+              }
+              
+              try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                
+                const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                
+                showStatus('Downloaded: ' + filename);
+              } catch (err) {
+                console.error('Download failed:', err);
+                showStatus('Failed to download: ' + filename);
+              }
+            }
+            
+            async function downloadAll() {
+              const links = document.querySelectorAll('.download-btn');
+              showStatus('Starting download of ' + links.length + ' photos...', 5000);
+              
+              for (let i = 0; i < links.length; i++) {
+                const link = links[i];
+                const url = link.href;
+                const filename = link.download;
+                
+                if (directoryHandle) {
+                  await downloadToFolder(url, filename);
+                } else {
+                  link.click();
+                }
+                
+                if (i < links.length - 1) {
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                }
+              }
+              
+              showStatus('All downloads completed!');
+            }
+            
+            document.querySelectorAll('.download-btn').forEach(btn => {
+              btn.addEventListener('click', async (e) => {
+                if (directoryHandle) {
+                  e.preventDefault();
+                  await downloadToFolder(btn.href, btn.download);
+                }
+              });
+            });
           </script>
         </body>
         </html>
