@@ -134,7 +134,10 @@ function getRandomQuestion() {
 // Helper function to normalize answer for comparison
 function normalizeAnswer(answer) {
   if (typeof answer !== 'string') return '';
-  return answer.toLowerCase().trim();
+  return answer
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' '); // Replace multiple spaces with single space
 }
 
 // Helper function to validate answer length
@@ -650,6 +653,8 @@ async function handleAuthRequest(request, env, corsHeaders) {
       const question = getRandomQuestion();
       const normalizedAnswer = normalizeAnswer(answer);
       
+      console.log(`Registering player ${playerName}: answer "${answer}" -> normalized "${normalizedAnswer}"`);
+      
       const authData = {
         question: question,
         answer: normalizedAnswer,
@@ -701,6 +706,8 @@ async function handleAuthRequest(request, env, corsHeaders) {
       const auth = JSON.parse(authData);
       const normalizedAnswer = normalizeAnswer(answer);
       const isCorrect = auth.answer === normalizedAnswer;
+      
+      console.log(`Verifying player ${playerName}: stored "${auth.answer}" vs provided "${answer}" -> normalized "${normalizedAnswer}" -> match: ${isCorrect}`);
 
       // Update last verified timestamp if correct
       if (isCorrect) {

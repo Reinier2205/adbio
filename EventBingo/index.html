@@ -1663,7 +1663,7 @@
           const verifiedKey = this.getVerifiedKey(eventCode, playerName);
           const timestampKey = this.getTimestampKey(eventCode, playerName);
           
-          localStorage.setItem(answerKey, answer.toLowerCase().trim());
+          localStorage.setItem(answerKey, answer.toLowerCase().trim().replace(/\s+/g, ' '));
           localStorage.setItem(verifiedKey, 'true');
           localStorage.setItem(timestampKey, Date.now().toString());
           
@@ -1741,13 +1741,18 @@
     // Authentication functions
     async function registerNewPlayer(playerName, answer) {
       try {
+        // Normalize answer before sending (for consistency)
+        const normalizedAnswer = answer.toLowerCase().trim().replace(/\s+/g, ' ');
+        
+        console.log('Registering player:', playerName, 'with answer:', normalizedAnswer);
+        
         const response = await fetch(`${workerURL}auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             eventCode: eventCode,
             playerName: playerName,
-            answer: answer
+            answer: normalizedAnswer
           })
         });
 
@@ -1755,8 +1760,8 @@
         
         if (data.success) {
           // Store authentication locally
-          authManager.storeAuth(eventCode, playerName, answer);
-          currentPlayerSecret = answer.toLowerCase().trim();
+          authManager.storeAuth(eventCode, playerName, normalizedAnswer);
+          currentPlayerSecret = normalizedAnswer;
           isAuthenticated = true;
           isViewOnlyMode = false;
           
@@ -1772,13 +1777,18 @@
 
     async function verifyPlayerAuthentication(playerName, answer) {
       try {
+        // Normalize answer before sending (for consistency)
+        const normalizedAnswer = answer.toLowerCase().trim().replace(/\s+/g, ' ');
+        
+        console.log('Verifying player:', playerName, 'with answer:', normalizedAnswer);
+        
         const response = await fetch(`${workerURL}auth/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             eventCode: eventCode,
             playerName: playerName,
-            answer: answer
+            answer: normalizedAnswer
           })
         });
 
@@ -1786,8 +1796,8 @@
         
         if (data.success && data.authenticated) {
           // Store authentication locally
-          authManager.storeAuth(eventCode, playerName, answer);
-          currentPlayerSecret = answer.toLowerCase().trim();
+          authManager.storeAuth(eventCode, playerName, normalizedAnswer);
+          currentPlayerSecret = normalizedAnswer;
           isAuthenticated = true;
           isViewOnlyMode = false;
           
@@ -1876,7 +1886,7 @@
           `;
           message.innerHTML = `
             👀 View-Only Mode<br>
-            <small style="font-size: 0.8rem; opacity: 0.9;">You can view photos but cannot upload because your answer did not match</small>
+            <small style="font-size: 0.8rem; opacity: 0.9;">You can view ${currentPlayer}'s photos but cannot upload for ${currentPlayer}</small>
           `;
           document.body.appendChild(message);
           
@@ -2558,7 +2568,7 @@
           
           // Check if user is in view-only mode
           if (isViewOnlyMode) {
-            alert('You can only view photos. To upload photos, please authenticate with your secret answer.');
+            alert(`You can view ${currentPlayer}'s photos but cannot upload for ${currentPlayer}. To upload photos, select your own name and authenticate.`);
             e.target.value = ""; // Clear file input
             return;
           }
