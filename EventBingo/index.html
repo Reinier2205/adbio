@@ -1512,6 +1512,11 @@
         compressedFormData.append("eventCode", eventCode);
         compressedFormData.append("type", "compressed");
         
+        // Add authentication if available
+        if (currentPlayerSecret) {
+          compressedFormData.append("secretAnswer", currentPlayerSecret);
+        }
+        
         const compressedResponse = await fetch(`${workerURL}upload`, { 
           method: "POST", 
           body: compressedFormData 
@@ -1585,6 +1590,316 @@
       quality: 0.85, // 85% quality - adjust between 0.7-0.95 for testing
       format: 'image/jpeg'
     };
+
+    // Authentication Manager - handles player authentication and localStorage operations
+    class AuthManager {
+      constructor() {
+        this.isLocalStorageAvailable = this.checkLocalStorageAvailability();
+      }
+
+      // Check if localStorage is available
+      checkLocalStorageAvailability() {
+        try {
+          const test = '__localStorage_test__';
+          localStorage.setItem(test, test);
+          localStorage.removeItem(test);
+          return true;
+        } catch (e) {
+          console.warn('localStorage not available, authentication will be session-only');
+          return false;
+        }
+      }
+
+      // Generate localStorage keys
+      getAnswerKey(eventCode, playerName) {
+        return `secret_answer_${eventCode}_${playerName}`;
+      }
+
+      getVerifiedKey(eventCode, playerName) {
+        return `secret_verified_${eventCode}_${playerName}`;
+      }
+
+      getTimestampKey(eventCode, playerName) {
+        return `secret_timestamp_${eventCode}_${playerName}`;
+      }
+
+      // Check if player has local authentication
+      hasLocalAuth(eventCode, playerName) {
+        if (!this.isLocalStorageAvailable) return false;
+        
+        try {
+          const answerKey = this.getAnswerKey(eventCode, playerName);
+          const verifiedKey = this.getVerifiedKey(eventCode, playerName);
+          
+          return localStorage.getItem(answerKey) && localStorage.getItem(verifiedKey) === 'true';
+        } catch (e) {
+          console.warn('Error checking local auth:', e);
+          return false;
+        }
+      }
+
+      // Get stored answer for auto-verification
+      getStoredAnswer(eventCode, playerName) {
+        if (!this.isLocalStorageAvailable) return null;
+        
+        try {
+          const answerKey = this.getAnswerKey(eventCode, playerName);
+          return localStorage.getItem(answerKey);
+        } catch (e) {
+          console.warn('Error getting stored answer:', e);
+          return null;
+        }
+      }
+
+      // Store authentication data locally
+      storeAuth(eventCode, playerName, answer) {
+        if (!this.isLocalStorageAvailable) {
+          console.warn('Cannot store auth data - localStorage unavailable');
+          return false;
+        }
+        
+        try {
+          const answerKey = this.getAnswerKey(eventCode, playerName);
+          const verifiedKey = this.getVerifiedKey(eventCode, playerName);
+          const timestampKey = this.getTimestampKey(eventCode, playerName);
+          
+          localStorage.setItem(answerKey, answer.toLowerCase().trim());
+          localStorage.setItem(verifiedKey, 'true');
+          localStorage.setItem(timestampKey, Date.now().toString());
+          
+          return true;
+        } catch (e) {
+          console.warn('Error storing auth data:', e);
+          return false;
+        }
+      }
+
+      // Clear local authentication
+      clearAuth(eventCode, playerName) {
+        if (!this.isLocalStorageAvailable) return;
+        
+        try {
+          const answerKey = this.getAnswerKey(eventCode, playerName);
+          const verifiedKey = this.getVerifiedKey(eventCode, playerName);
+          const timestampKey = this.getTimestampKey(eventCode, playerName);
+          
+          localStorage.removeItem(answerKey);
+          localStorage.removeItem(verifiedKey);
+          localStorage.removeItem(timestampKey);
+        } catch (e) {
+          console.warn('Error clearing auth data:', e);
+        }
+      }
+
+      // Verify current authentication state
+      isAuthenticated(eventCode, playerName) {
+        return this.hasLocalAuth(eventCode, playerName);
+      }
+
+      // Clean up old authentication data (optional maintenance)
+      cleanupOldAuth(maxAge = 30 * 24 * 60 * 60 * 1000) { // 30 days default
+        if (!this.isLocalStorageAvailable) return;
+        
+        try {
+          const now = Date.now();
+          const keysToRemove = [];
+          
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('secret_timestamp_')) {
+              const timestamp = parseInt(localStorage.getItem(key));
+              if (now - timestamp > maxAge) {
+                // Mark related keys for removal
+                const parts = key.replace('secret_timestamp_', '').split('_');
+                const eventCode = parts[0];
+                const playerName = parts.slice(1).join('_');
+                
+                keysToRemove.push(this.getAnswerKey(eventCode, playerName));
+                keysToRemove.push(this.getVerifiedKey(eventCode, playerName));
+                keysToRemove.push(key);
+              }
+            }
+          }
+          
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+          
+          if (keysToRemove.length > 0) {
+            console.log(`Cleaned up ${keysToRemove.length / 3} old authentication entries`);
+          }
+        } catch (e) {
+          console.warn('Error during auth cleanup:', e);
+        }
+      }
+    }
+
+    // Initialize authentication manager
+    const authManager = new AuthManager();
+    
+    // Clean up old authentication data on startup
+    authManager.cleanupOldAuth();
+
+    // Authentication functions
+    async function registerNewPlayer(playerName, answer) {
+      try {
+        const response = await fetch(`${workerURL}auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventCode: eventCode,
+            playerName: playerName,
+            answer: answer
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          // Store authentication locally
+          authManager.storeAuth(eventCode, playerName, answer);
+          currentPlayerSecret = answer.toLowerCase().trim();
+          isAuthenticated = true;
+          isViewOnlyMode = false;
+          
+          return { success: true, question: data.question };
+        } else {
+          return { success: false, message: data.message || 'Registration failed' };
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+        return { success: false, message: 'Network error during registration' };
+      }
+    }
+
+    async function verifyPlayerAuthentication(playerName, answer) {
+      try {
+        const response = await fetch(`${workerURL}auth/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventCode: eventCode,
+            playerName: playerName,
+            answer: answer
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success && data.authenticated) {
+          // Store authentication locally
+          authManager.storeAuth(eventCode, playerName, answer);
+          currentPlayerSecret = answer.toLowerCase().trim();
+          isAuthenticated = true;
+          isViewOnlyMode = false;
+          
+          return { success: true, authenticated: true };
+        } else {
+          // Authentication failed - enter view-only mode
+          currentPlayerSecret = null;
+          isAuthenticated = false;
+          isViewOnlyMode = true;
+          
+          return { success: true, authenticated: false, message: data.message };
+        }
+      } catch (error) {
+        console.error('Verification error:', error);
+        // On network error, allow view-only mode
+        currentPlayerSecret = null;
+        isAuthenticated = false;
+        isViewOnlyMode = true;
+        
+        return { success: false, message: 'Network error during verification' };
+      }
+    }
+
+    async function getPlayerQuestion(playerName) {
+      try {
+        const response = await fetch(`${workerURL}auth/question/${eventCode}/${encodeURIComponent(playerName)}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          return { success: true, question: data.question };
+        } else {
+          return { success: false, message: 'Player not found' };
+        }
+      } catch (error) {
+        console.error('Error getting question:', error);
+        return { success: false, message: 'Network error' };
+      }
+    }
+
+    // Set authentication state for a player
+    function setPlayerAuthentication(playerName) {
+      // Check if we have local authentication
+      if (authManager.hasLocalAuth(eventCode, playerName)) {
+        currentPlayerSecret = authManager.getStoredAnswer(eventCode, playerName);
+        isAuthenticated = true;
+        isViewOnlyMode = false;
+        return 'authenticated';
+      } else {
+        currentPlayerSecret = null;
+        isAuthenticated = false;
+        isViewOnlyMode = true;
+        return 'needs_auth';
+      }
+    }
+
+    // Update UI based on authentication state
+    function updateUIForAuthState() {
+      const uploadSections = document.querySelectorAll('.upload-section');
+      const addPhotoButtons = document.querySelectorAll('.add-photo-btn');
+      
+      if (isViewOnlyMode) {
+        // Hide upload UI elements
+        uploadSections.forEach(section => {
+          section.style.display = 'none';
+        });
+        
+        // Show view-only message if not already shown
+        if (!document.getElementById('viewOnlyMessage')) {
+          const message = document.createElement('div');
+          message.id = 'viewOnlyMessage';
+          message.style.cssText = `
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            z-index: 1000;
+            font-weight: 600;
+            text-align: center;
+            max-width: 90%;
+            font-size: 0.9rem;
+          `;
+          message.innerHTML = `
+            👀 View-Only Mode<br>
+            <small style="font-size: 0.8rem; opacity: 0.9;">You can view photos but cannot upload because your answer did not match</small>
+          `;
+          document.body.appendChild(message);
+          
+          // Auto-hide after 5 seconds
+          setTimeout(() => {
+            if (message.parentNode) {
+              message.parentNode.removeChild(message);
+            }
+          }, 5000);
+        }
+      } else {
+        // Show upload UI elements
+        uploadSections.forEach(section => {
+          section.style.display = 'block';
+        });
+        
+        // Remove view-only message if present
+        const existingMessage = document.getElementById('viewOnlyMessage');
+        if (existingMessage && existingMessage.parentNode) {
+          existingMessage.parentNode.removeChild(existingMessage);
+        }
+      }
+    }
     
     const grid = document.getElementById("bingoGrid");
     const playerScroll = document.getElementById("playerScroll");
@@ -1599,6 +1914,11 @@
     let isMusicPlaying = false;
     let currentEvent = null;
     let hasPromptedForPlayer = false;
+    
+    // Authentication state
+    let isAuthenticated = false;
+    let isViewOnlyMode = false;
+    let currentPlayerSecret = null;
     const params = new URLSearchParams(window.location.search);
     let eventCode = params.get("event") || "default";
 
@@ -1662,14 +1982,21 @@
     // Instagram-style functions
     function selectPlayer(playerName) {
       currentPlayer = playerName;
+      
+      // Set authentication state
+      const authState = setPlayerAuthentication(playerName);
+      
       // Save last player for this event
       try { 
         localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName);
         localStorage.setItem('eventbingo:currentPlayer', playerName); // Global current player
       } catch(_) {}
+      
       updatePlayerCircles();
       createGrid();
       loadPhotos(currentPlayer);
+      updateUIForAuthState();
+      
       // Ensure the selected player is visible in the top bar immediately
       loadPlayers();
     }
@@ -2228,6 +2555,14 @@
             }
             currentPlayer = selected;
           }
+          
+          // Check if user is in view-only mode
+          if (isViewOnlyMode) {
+            alert('You can only view photos. To upload photos, please authenticate with your secret answer.');
+            e.target.value = ""; // Clear file input
+            return;
+          }
+          
           const file = e.target.files[0];
           if (!file) return;
 
@@ -2636,12 +2971,243 @@
     }
     
     // Helper functions for player selection modal
-    function selectPlayerOption(playerName) {
-      selectPlayer(playerName); // This will update current player and load photos
-      closePlayerModal();
-      if (window.playerSelectionResolve) {
-        window.playerSelectionResolve(playerName);
-        window.playerSelectionResolve = null;
+    async function selectPlayerOption(playerName) {
+      // Check authentication state
+      if (authManager.hasLocalAuth(eventCode, playerName)) {
+        // Player has local authentication - show continue/re-enter options
+        showAuthenticationOptions(playerName);
+      } else {
+        // Player needs authentication - show question
+        await showAuthenticationQuestion(playerName);
+      }
+    }
+
+    // Show authentication options for players with local auth
+    function showAuthenticationOptions(playerName) {
+      const modal = window.playerSelectionModal;
+      const content = modal.querySelector('div');
+      const isDark = document.body.classList.contains('dark-mode');
+      
+      content.innerHTML = `
+        <h2 style="margin-top: 0; ${isDark ? 'color:#fff;' : 'color:#1f2937;'} background: var(--story-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.5rem; margin-bottom: 20px;">Welcome Back!</h2>
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid transparent;
+            background-image: linear-gradient(white, white), var(--story-gradient);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 2rem;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          ">${getPlayerIcon(playerName)}</div>
+          <h3 style="margin: 0; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">${playerName}</h3>
+        </div>
+
+        <button onclick="continueAsPlayer('${escapeQuotes(playerName)}')" style="
+          width: 100%;
+          padding: 15px;
+          margin-bottom: 15px;
+          background: linear-gradient(135deg, #10b981, #34d399);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 1.1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        ">
+          ✅ Continue as ${playerName}
+        </button>
+
+        <button onclick="reenterSecret('${escapeQuotes(playerName)}')" style="
+          width: 100%;
+          padding: 15px;
+          margin-bottom: 20px;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        ">
+          🔑 Re-enter Secret Answer
+        </button>
+
+        <button onclick="backToPlayerSelection()" style="
+          width: 100%;
+          padding: 12px;
+          border: 2px solid #ccc;
+          background: transparent;
+          color: ${isDark ? '#fff' : '#666'};
+          border-radius: 10px;
+          cursor: pointer;
+          font-weight: bold;
+        ">← Back to Player List</button>
+      `;
+    }
+
+    // Show authentication question for a player
+    async function showAuthenticationQuestion(playerName) {
+      const modal = window.playerSelectionModal;
+      const content = modal.querySelector('div');
+      const isDark = document.body.classList.contains('dark-mode');
+      
+      // Show loading while getting question
+      content.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <div class="inline-spinner" style="margin: 0 auto 20px auto;"></div>
+          <p style="${isDark ? 'color:#fff;' : 'color:#1f2937;'}">Getting your secret question...</p>
+        </div>
+      `;
+      
+      // Get the player's question
+      const questionResult = await getPlayerQuestion(playerName);
+      
+      if (questionResult.success) {
+        content.innerHTML = `
+          <h2 style="margin-top: 0; ${isDark ? 'color:#fff;' : 'color:#1f2937;'} background: var(--story-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.5rem; margin-bottom: 20px;">Secret Question</h2>
+          
+          <div style="text-align: center; margin-bottom: 30px;">
+            <div style="
+              width: 60px;
+              height: 60px;
+              border-radius: 50%;
+              background: white;
+              border: 3px solid transparent;
+              background-image: linear-gradient(white, white), var(--story-gradient);
+              background-origin: border-box;
+              background-clip: content-box, border-box;
+              color: #333;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-weight: bold;
+              font-size: 1.5rem;
+              margin: 0 auto 15px auto;
+            ">${getPlayerIcon(playerName)}</div>
+            <h3 style="margin: 0; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">${playerName}</h3>
+          </div>
+
+          <div style="
+            background: ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(74, 144, 226, 0.1)'};
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary);
+          ">
+            <p style="margin: 0; font-size: 1.1rem; font-weight: 600; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">${questionResult.question}</p>
+          </div>
+
+          <input type="text" id="secretAnswer" placeholder="Your answer..." style="
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: ${isDark ? '#374151' : '#ffffff'};
+            color: ${isDark ? '#ffffff' : '#1f2937'};
+          " />
+
+          <button onclick="submitAuthentication('${escapeQuotes(playerName)}')" style="
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          ">
+            🔓 Verify & Continue
+          </button>
+
+          <button onclick="enterViewOnlyMode('${escapeQuotes(playerName)}')" style="
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 2px solid #fbbf24;
+            background: transparent;
+            color: #f59e0b;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+          ">👀 Just View Photos</button>
+
+          <button onclick="backToPlayerSelection()" style="
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ccc;
+            background: transparent;
+            color: ${isDark ? '#fff' : '#666'};
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+          ">← Back to Player List</button>
+        `;
+        
+        // Focus on input and handle Enter key
+        setTimeout(() => {
+          const input = document.getElementById('secretAnswer');
+          if (input) {
+            input.focus();
+            input.addEventListener('keypress', (e) => {
+              if (e.key === 'Enter') {
+                submitAuthentication(playerName);
+              }
+            });
+          }
+        }, 100);
+      } else {
+        // Player not found or error
+        content.innerHTML = `
+          <h2 style="margin-top: 0; ${isDark ? 'color:#fff;' : 'color:#1f2937;'} background: var(--story-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.5rem; margin-bottom: 20px;">Player Not Found</h2>
+          
+          <div style="text-align: center; padding: 20px;">
+            <p style="${isDark ? 'color:#fff;' : 'color:#1f2937;'}">This player hasn't been registered yet.</p>
+          </div>
+
+          <button onclick="enterViewOnlyMode('${escapeQuotes(playerName)}')" style="
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+          ">👀 View Photos Only</button>
+
+          <button onclick="backToPlayerSelection()" style="
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ccc;
+            background: transparent;
+            color: ${isDark ? '#fff' : '#666'};
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+          ">← Back to Player List</button>
+        `;
       }
     }
     
@@ -2653,6 +3219,112 @@
           window.playerSelectionResolve = null;
         }
       });
+    }
+
+    // Authentication flow helper functions
+    function continueAsPlayer(playerName) {
+      // Use stored authentication
+      const storedAnswer = authManager.getStoredAnswer(eventCode, playerName);
+      if (storedAnswer) {
+        currentPlayerSecret = storedAnswer;
+        isAuthenticated = true;
+        isViewOnlyMode = false;
+        
+        selectPlayer(playerName);
+        closePlayerModal();
+        
+        if (window.playerSelectionResolve) {
+          window.playerSelectionResolve(playerName);
+          window.playerSelectionResolve = null;
+        }
+      } else {
+        // Fallback to re-enter secret
+        reenterSecret(playerName);
+      }
+    }
+
+    async function reenterSecret(playerName) {
+      await showAuthenticationQuestion(playerName);
+    }
+
+    async function submitAuthentication(playerName) {
+      const input = document.getElementById('secretAnswer');
+      const answer = input ? input.value.trim() : '';
+      
+      if (!answer) {
+        input.style.borderColor = '#ef4444';
+        input.placeholder = 'Please enter your answer';
+        return;
+      }
+      
+      // Show loading
+      const button = event.target;
+      const originalText = button.innerHTML;
+      button.innerHTML = '<div class="inline-spinner" style="margin: 0 auto;"></div>';
+      button.disabled = true;
+      
+      try {
+        const result = await verifyPlayerAuthentication(playerName, answer);
+        
+        if (result.authenticated) {
+          // Success - close modal and continue
+          selectPlayer(playerName);
+          closePlayerModal();
+          
+          if (window.playerSelectionResolve) {
+            window.playerSelectionResolve(playerName);
+            window.playerSelectionResolve = null;
+          }
+        } else {
+          // Failed authentication - show error and offer view-only
+          input.style.borderColor = '#ef4444';
+          input.value = '';
+          input.placeholder = 'Incorrect answer - try again';
+          
+          // Show view-only option more prominently
+          const viewOnlyBtn = document.querySelector('button[onclick*="enterViewOnlyMode"]');
+          if (viewOnlyBtn) {
+            viewOnlyBtn.style.background = 'linear-gradient(135deg, #ef4444, #f87171)';
+            viewOnlyBtn.style.color = 'white';
+            viewOnlyBtn.innerHTML = '👀 Continue in View-Only Mode';
+          }
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
+        input.style.borderColor = '#ef4444';
+        input.placeholder = 'Network error - try again';
+      } finally {
+        button.innerHTML = originalText;
+        button.disabled = false;
+      }
+    }
+
+    function enterViewOnlyMode(playerName) {
+      // Set view-only mode
+      currentPlayerSecret = null;
+      isAuthenticated = false;
+      isViewOnlyMode = true;
+      
+      selectPlayer(playerName);
+      closePlayerModal();
+      
+      if (window.playerSelectionResolve) {
+        window.playerSelectionResolve(playerName);
+        window.playerSelectionResolve = null;
+      }
+    }
+
+    function backToPlayerSelection() {
+      // Reload the original player selection modal
+      closePlayerModal();
+      setTimeout(() => {
+        promptForPlayerSelection().then(name => {
+          if (window.playerSelectionResolve && name) {
+            window.playerSelectionResolve(name);
+            window.playerSelectionResolve = null;
+          }
+        });
+      }, 100);
     }
     
     function closePlayerModal() {
@@ -2666,21 +3338,307 @@
       }
     }
     
-    // Add new player functionality (simplified for Instagram-style)
+    // Add new player functionality with authentication
     function addNewPlayer() {
       return new Promise((resolve) => {
-        const playerName = prompt("Enter new player name:");
-        if (playerName && playerName.trim()) {
-          currentPlayer = playerName.trim();
-          try { localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, currentPlayer); } catch(_) {}
-          createGrid();
-          loadPhotos(currentPlayer);
-          loadPlayers(); // Refresh player list (ensures immediate circle render)
-          resolve(playerName.trim());
-        } else {
-          resolve(null);
-        }
+        showPlayerRegistration(resolve);
       });
+    }
+
+    // Show player registration modal
+    function showPlayerRegistration(resolve) {
+      // Create modal for player registration
+      const modal = document.createElement("div");
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      `;
+      
+      const content = document.createElement("div");
+      const isDark = document.body.classList.contains('dark-mode');
+      content.style.cssText = `
+        background: ${isDark ? '#1f2937' : 'linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95))'};
+        color: ${isDark ? '#ffffff' : '#1f2937'};
+        padding: 30px;
+        border-radius: 20px;
+        max-width: 400px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        border: 2px solid rgba(228, 64, 95, 0.2);
+      `;
+      
+      content.innerHTML = `
+        <h2 style="margin-top: 0; ${isDark ? 'color:#fff;' : 'color:#1f2937;'} background: var(--story-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.5rem; margin-bottom: 20px;">Join the Fun!</h2>
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+          <p style="margin: 0; ${isDark ? 'color:#e5e7eb;' : 'color:#6b7280;'}">Create your player profile with a fun secret question</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">Your Name</label>
+          <input type="text" id="newPlayerName" placeholder="Enter your name..." style="
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: ${isDark ? '#374151' : '#ffffff'};
+            color: ${isDark ? '#ffffff' : '#1f2937'};
+          " />
+        </div>
+
+        <div id="questionSection" style="display: none;">
+          <div style="
+            background: ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(74, 144, 226, 0.1)'};
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary);
+          ">
+            <p style="margin: 0 0 10px 0; font-weight: 600; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">Your Secret Question:</p>
+            <p id="assignedQuestion" style="margin: 0; font-size: 1.1rem; font-style: italic; ${isDark ? 'color:#e5e7eb;' : 'color:#4b5563;'}"></p>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">Your Answer</label>
+            <input type="text" id="secretAnswer" placeholder="Type your answer..." style="
+              width: 100%;
+              padding: 15px;
+              border: 2px solid #e0e0e0;
+              border-radius: 10px;
+              font-size: 1rem;
+              background: ${isDark ? '#374151' : '#ffffff'};
+              color: ${isDark ? '#ffffff' : '#1f2937'};
+            " />
+            <small style="display: block; margin-top: 5px; ${isDark ? 'color:#9ca3af;' : 'color:#6b7280;'}">
+              Remember this answer - you'll need it to upload photos on any device!
+            </small>
+          </div>
+        </div>
+
+        <button id="nextStepBtn" onclick="handleRegistrationStep()" style="
+          width: 100%;
+          padding: 15px;
+          margin-bottom: 15px;
+          background: linear-gradient(135deg, var(--primary), var(--secondary));
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 1.1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        ">
+          Next Step →
+        </button>
+
+        <button onclick="closeRegistrationModal()" style="
+          width: 100%;
+          padding: 12px;
+          border: 2px solid #ccc;
+          background: transparent;
+          color: ${isDark ? '#fff' : '#666'};
+          border-radius: 10px;
+          cursor: pointer;
+          font-weight: bold;
+        ">Cancel</button>
+      `;
+      
+      modal.appendChild(content);
+      document.body.appendChild(modal);
+      
+      // Store references globally
+      window.registrationModal = modal;
+      window.registrationResolve = resolve;
+      window.registrationStep = 1;
+      window.assignedQuestion = null;
+      
+      // Focus on name input
+      setTimeout(() => {
+        const nameInput = document.getElementById('newPlayerName');
+        if (nameInput) {
+          nameInput.focus();
+          nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              handleRegistrationStep();
+            }
+          });
+        }
+      }, 100);
+      
+      // Close modal when clicking outside
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          closeRegistrationModal();
+        }
+      };
+    }
+
+    // Handle registration steps
+    async function handleRegistrationStep() {
+      if (window.registrationStep === 1) {
+        // Step 1: Validate name and show question
+        const nameInput = document.getElementById('newPlayerName');
+        const playerName = nameInput.value.trim();
+        
+        if (!playerName) {
+          nameInput.style.borderColor = '#ef4444';
+          nameInput.placeholder = 'Please enter your name';
+          return;
+        }
+        
+        if (playerName.length < 2) {
+          nameInput.style.borderColor = '#ef4444';
+          nameInput.placeholder = 'Name must be at least 2 characters';
+          nameInput.value = '';
+          return;
+        }
+        
+        // Check if name already exists
+        try {
+          const res = await fetch(`${workerURL}players?event=${eventCode}`);
+          const players = await res.json();
+          const existingPlayer = players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+          
+          if (existingPlayer) {
+            nameInput.style.borderColor = '#ef4444';
+            nameInput.placeholder = 'Name already taken - try another';
+            nameInput.value = '';
+            return;
+          }
+        } catch (error) {
+          console.warn('Could not check existing players:', error);
+        }
+        
+        // Generate random question
+        const questions = [
+          "What is your go-to snack?",
+          "Favourite song right now?",
+          "Favourite colour?",
+          "What time of day do you like most?",
+          "Your comfort food?",
+          "Your favourite drink?",
+          "Your favourite cartoon growing up?",
+          "Your happy place?",
+          "What is your lucky number?",
+          "Coffee or tea?",
+          "Your favourite weekend activity?",
+          "What animal do you like most?",
+          "Your favourite season?",
+          "Your favourite movie or series?",
+          "Cats, dogs, or both?",
+          "Sweet or savoury?",
+          "Your favourite treat as a child?",
+          "Your favourite pizza topping?",
+          "A word that describes you today?"
+        ];
+        
+        window.assignedQuestion = questions[Math.floor(Math.random() * questions.length)];
+        
+        // Show question section
+        document.getElementById('assignedQuestion').textContent = window.assignedQuestion;
+        document.getElementById('questionSection').style.display = 'block';
+        document.getElementById('nextStepBtn').innerHTML = '🎉 Create Player';
+        
+        // Disable name input
+        nameInput.disabled = true;
+        nameInput.style.opacity = '0.7';
+        
+        // Focus on answer input
+        setTimeout(() => {
+          const answerInput = document.getElementById('secretAnswer');
+          if (answerInput) {
+            answerInput.focus();
+            answerInput.addEventListener('keypress', (e) => {
+              if (e.key === 'Enter') {
+                handleRegistrationStep();
+              }
+            });
+          }
+        }, 100);
+        
+        window.registrationStep = 2;
+        
+      } else if (window.registrationStep === 2) {
+        // Step 2: Register player
+        const nameInput = document.getElementById('newPlayerName');
+        const answerInput = document.getElementById('secretAnswer');
+        const playerName = nameInput.value.trim();
+        const answer = answerInput.value.trim();
+        
+        if (!answer) {
+          answerInput.style.borderColor = '#ef4444';
+          answerInput.placeholder = 'Please enter your answer';
+          return;
+        }
+        
+        if (answer.length < 1 || answer.length > 100) {
+          answerInput.style.borderColor = '#ef4444';
+          answerInput.placeholder = 'Answer must be 1-100 characters';
+          answerInput.value = '';
+          return;
+        }
+        
+        // Show loading
+        const button = document.getElementById('nextStepBtn');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<div class="inline-spinner" style="margin: 0 auto;"></div>';
+        button.disabled = true;
+        
+        try {
+          const result = await registerNewPlayer(playerName, answer);
+          
+          if (result.success) {
+            // Success - set player and close modal
+            currentPlayer = playerName;
+            try { 
+              localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, currentPlayer); 
+            } catch(_) {}
+            
+            selectPlayer(playerName);
+            closeRegistrationModal();
+            
+            if (window.registrationResolve) {
+              window.registrationResolve(playerName);
+              window.registrationResolve = null;
+            }
+          } else {
+            // Registration failed
+            answerInput.style.borderColor = '#ef4444';
+            answerInput.placeholder = result.message || 'Registration failed';
+            answerInput.value = '';
+          }
+        } catch (error) {
+          console.error('Registration error:', error);
+          answerInput.style.borderColor = '#ef4444';
+          answerInput.placeholder = 'Network error - try again';
+        } finally {
+          button.innerHTML = originalText;
+          button.disabled = false;
+        }
+      }
+    }
+
+    function closeRegistrationModal() {
+      if (window.registrationModal && window.registrationModal.parentNode) {
+        window.registrationModal.parentNode.removeChild(window.registrationModal);
+        window.registrationModal = null;
+      }
+      if (window.registrationResolve) {
+        window.registrationResolve(null);
+        window.registrationResolve = null;
+      }
     }
 
     // Test worker connection

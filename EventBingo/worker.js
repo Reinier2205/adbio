@@ -1,5 +1,28 @@
 // EventBingo Cloudflare Worker
 
+// Authentication questions list
+const AUTHENTICATION_QUESTIONS = [
+  "What is your go-to snack?",
+  "Favourite song right now?",
+  "Favourite colour?",
+  "What time of day do you like most?",
+  "Your comfort food?",
+  "Your favourite drink?",
+  "Your favourite cartoon growing up?",
+  "Your happy place?",
+  "What is your lucky number?",
+  "Coffee or tea?",
+  "Your favourite weekend activity?",
+  "What animal do you like most?",
+  "Your favourite season?",
+  "Your favourite movie or series?",
+  "Cats, dogs, or both?",
+  "Sweet or savoury?",
+  "Your favourite treat as a child?",
+  "Your favourite pizza topping?",
+  "A word that describes you today?"
+];
+
 // Default squares for events without custom squares
 const defaultSquaresList = [
   "'n Ou foto saam met Anneke",
@@ -100,6 +123,30 @@ async function getSquaresForEvent(env, eventCode) {
   }
   
   return defaultSquaresList;
+}
+
+// Helper function to get random question
+function getRandomQuestion() {
+  const randomIndex = Math.floor(Math.random() * AUTHENTICATION_QUESTIONS.length);
+  return AUTHENTICATION_QUESTIONS[randomIndex];
+}
+
+// Helper function to normalize answer for comparison
+function normalizeAnswer(answer) {
+  if (typeof answer !== 'string') return '';
+  return answer.toLowerCase().trim();
+}
+
+// Helper function to validate answer length
+function isValidAnswer(answer) {
+  if (typeof answer !== 'string') return false;
+  const trimmed = answer.trim();
+  return trimmed.length >= 1 && trimmed.length <= 100;
+}
+
+// Helper function to get authentication key
+function getAuthKey(eventCode, playerName) {
+  return `auth_${eventCode}_${playerName}`;
 }
 
 // Admin request handler
@@ -568,6 +615,149 @@ async function handleAdminRequest(request, env, corsHeaders) {
   return new Response("Admin endpoint not found", { status: 404, headers: corsHeaders });
 }
 
+// Authentication request handler
+async function handleAuthRequest(request, env, corsHeaders) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  // Register new player with authentication
+  if (request.method === "POST" && path === "/auth/register") {
+    try {
+      const data = await request.json();
+      const { eventCode, playerName, answer } = data;
+
+      if (!eventCode || !playerName || !answer) {
+        return new Response("Missing required fields", { status: 400, headers: corsHeaders });
+      }
+
+      // Validate answer
+      if (!isValidAnswer(answer)) {
+        return new Response("Answer must be between 1 and 100 characters", { 
+          status: 400, 
+          headers: corsHeaders 
+        });
+      }
+
+      // Check if player already exists
+      const authKey = getAuthKey(eventCode, playerName);
+      const existingAuth = await env.EventBingoProgress.get(authKey);
+      
+      if (existingAuth) {
+        return new Response("Player already exists", { status: 409, headers: corsHeaders });
+      }
+
+      // Assign random question and store authentication data
+      const question = getRandomQuestion();
+      const normalizedAnswer = normalizeAnswer(answer);
+      
+      const authData = {
+        question: question,
+        answer: normalizedAnswer,
+        createdAt: new Date().toISOString(),
+        lastVerified: new Date().toISOString()
+      };
+
+      await env.EventBingoProgress.put(authKey, JSON.stringify(authData));
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        message: "Player registered successfully",
+        question: question
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    } catch (error) {
+      return new Response("Registration failed", { status: 500, headers: corsHeaders });
+    }
+  }
+
+  // Verify player authentication
+  if (request.method === "POST" && path === "/auth/verify") {
+    try {
+      const data = await request.json();
+      const { eventCode, playerName, answer } = data;
+
+      if (!eventCode || !playerName || !answer) {
+        return new Response("Missing required fields", { status: 400, headers: corsHeaders });
+      }
+
+      // Get stored authentication data
+      const authKey = getAuthKey(eventCode, playerName);
+      const authData = await env.EventBingoProgress.get(authKey);
+      
+      if (!authData) {
+        return new Response(JSON.stringify({ 
+          success: false, 
+          authenticated: false,
+          message: "Player not found"
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const auth = JSON.parse(authData);
+      const normalizedAnswer = normalizeAnswer(answer);
+      const isCorrect = auth.answer === normalizedAnswer;
+
+      // Update last verified timestamp if correct
+      if (isCorrect) {
+        auth.lastVerified = new Date().toISOString();
+        await env.EventBingoProgress.put(authKey, JSON.stringify(auth));
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        authenticated: isCorrect,
+        message: isCorrect ? "Authentication successful" : "Incorrect answer"
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    } catch (error) {
+      return new Response("Verification failed", { status: 500, headers: corsHeaders });
+    }
+  }
+
+  // Get player's question
+  if (request.method === "GET" && path.startsWith("/auth/question/")) {
+    try {
+      const pathParts = path.split('/');
+      const eventCode = pathParts[3];
+      const playerName = decodeURIComponent(pathParts[4]);
+
+      if (!eventCode || !playerName) {
+        return new Response("Missing event code or player name", { status: 400, headers: corsHeaders });
+      }
+
+      // Get stored authentication data
+      const authKey = getAuthKey(eventCode, playerName);
+      const authData = await env.EventBingoProgress.get(authKey);
+      
+      if (!authData) {
+        return new Response("Player not found", { status: 404, headers: corsHeaders });
+      }
+
+      const auth = JSON.parse(authData);
+
+      return new Response(JSON.stringify({ 
+        question: auth.question
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    } catch (error) {
+      return new Response("Failed to get question", { status: 500, headers: corsHeaders });
+    }
+  }
+
+  return new Response("Authentication endpoint not found", { status: 404, headers: corsHeaders });
+}
+
 // Main worker handler
 export default {
   async fetch(request, env, ctx) {
@@ -598,6 +788,9 @@ export default {
           "GET /players?event=<code>": "Get all players",
           "GET /photos?event=<code>": "Get all photos",
           "GET /photo/<key>": "Get specific photo",
+          "POST /auth/register": "Register new player with authentication",
+          "POST /auth/verify": "Verify player authentication",
+          "GET /auth/question/<event>/<player>": "Get player's secret question",
           "POST /admin/create-event": "Create event",
           "GET /admin/events": "List events",
           "GET /admin/event/<code>": "Get event details",
@@ -612,6 +805,10 @@ export default {
 
     if (path.startsWith("/admin/")) {
       return await handleAdminRequest(request, env, corsHeaders);
+    }
+
+    if (path.startsWith("/auth/")) {
+      return await handleAuthRequest(request, env, corsHeaders);
     }
 
     // Event info endpoint
@@ -661,9 +858,38 @@ export default {
       const square = formData.get("square");
       const eventCode = formData.get("eventCode") || 'default';
       const type = formData.get("type") || 'compressed'; // 'compressed' or 'original'
+      const secretAnswer = formData.get("secretAnswer");
 
       if (!file || !player || !square) {
         return new Response("Missing required fields", { status: 400, headers: corsHeaders });
+      }
+
+      // Verify authentication for compressed uploads (main uploads)
+      if (type === 'compressed' && secretAnswer) {
+        const authKey = getAuthKey(eventCode, player);
+        const authData = await env.EventBingoProgress.get(authKey);
+        
+        if (authData) {
+          const auth = JSON.parse(authData);
+          const normalizedAnswer = normalizeAnswer(secretAnswer);
+          
+          if (auth.answer !== normalizedAnswer) {
+            return new Response(JSON.stringify({ 
+              success: false, 
+              error: "Authentication failed",
+              message: "You can only upload photos for yourself"
+            }), { 
+              status: 403, 
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+          
+          // Update last verified timestamp
+          auth.lastVerified = new Date().toISOString();
+          await env.EventBingoProgress.put(authKey, JSON.stringify(auth));
+        }
+        // If no auth data exists, allow upload for backward compatibility
+        // This will be tightened in future versions
       }
 
       try {
