@@ -576,22 +576,29 @@ async function handleAdminRequest(request, env, corsHeaders) {
       
       // Create enhanced photo data with better filenames and thumbnails
       const enhancedPhotos = originalPhotos.map(p => {
-        // Parse the original filename to get square index
-        const parts = p.filename.replace(`${eventCode}_`, '').split('_');
-        const player = parts[0];
-        const squareInfo = parts.slice(1, -1).join('_');
-        const timestamp = parts[parts.length - 1].replace('.jpg', '');
+        // Parse the original key to get the components
+        // Original key format: original_eventCode_player_squareX_timestamp
+        const originalKey = p.filename.replace('.jpg', ''); // Remove .jpg from filename for key parsing
+        const keyParts = originalKey.split('_');
         
-        // Try to find the square index from the square info
+        let player = 'Unknown';
         let squareIndex = -1;
-        let squareText = squareInfo;
+        let timestamp = '';
+        let squareText = 'Unknown Square';
         
-        // Check if squareInfo starts with "square" followed by a number
-        const squareMatch = squareInfo.match(/^square(\d+)/);
-        if (squareMatch) {
-          squareIndex = parseInt(squareMatch[1]);
-          if (squareIndex >= 0 && squareIndex < squares.length) {
-            squareText = squares[squareIndex];
+        if (keyParts.length >= 4) {
+          // Skip 'original' and eventCode, get player and square info
+          player = keyParts[2];
+          const squareInfo = keyParts[3];
+          timestamp = keyParts[4] || '';
+          
+          // Extract square index from squareX format
+          const squareMatch = squareInfo.match(/^square(\d+)$/);
+          if (squareMatch) {
+            squareIndex = parseInt(squareMatch[1]);
+            if (squareIndex >= 0 && squareIndex < squares.length) {
+              squareText = squares[squareIndex];
+            }
           }
         }
         
@@ -599,12 +606,15 @@ async function handleAdminRequest(request, env, corsHeaders) {
         const cleanSquareText = squareText.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').substring(0, 50);
         const betterFilename = `${eventCode}_${player}_${cleanSquareText}.jpg`;
         
+        // Construct thumbnail URL - use the compressed version key
+        const thumbnailKey = `thumb_${eventCode}_${player}_square${squareIndex}_${timestamp}`;
+        
         return {
           ...p,
           betterFilename,
           player: player.replace(/_/g, ' '),
           squareText,
-          thumbnailUrl: `${url.origin}/photo/thumb_${eventCode}_${player}_square${squareIndex}_${timestamp}`
+          thumbnailUrl: `${url.origin}/photo/${thumbnailKey}`
         };
       });
 
@@ -615,7 +625,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
             <label for="photo-${index}" class="checkbox-label">Select</label>
           </div>
           <div class="photo-thumbnail">
-            <img src="${url.origin}/photo/${p.filename.replace('original_', 'thumb_').replace('.jpg', '')}" alt="Thumbnail" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0zNSA0MEw2NSA0MFY2MEgzNVY0MFoiIGZpbGw9IiM5Y2EzYWYiLz4KPGNpcmNsZSBjeD0iNDUiIGN5PSI1MCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4K'" />
+            <img src="${p.thumbnailUrl}" alt="Thumbnail" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0zNSA0MEw2NSA0MFY2MEgzNVY0MFoiIGZpbGw9IiM5Y2EzYWYiLz4KPGNpcmNsZSBjeD0iNDUiIGN5PSI1MCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4K'" />
           </div>
           <div class="photo-info">
             <div class="photo-title">${p.player}</div>
@@ -893,7 +903,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
               try {
                 directoryHandle = await window.showDirectoryPicker();
                 showStatus('Selected folder: ' + directoryHandle.name);
-                document.querySelector('.select-folder').textContent = '📁 ' + directoryHandle.name;
+                document.querySelector('.select-folder').textContent = 'Folder: ' + directoryHandle.name;
               } catch (err) {
                 if (err.name !== 'AbortError') {
                   showStatus('Failed to select folder');
