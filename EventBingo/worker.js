@@ -558,6 +558,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
             
             originalPhotos.push({
               filename: filename,
+              originalKey: keyName,
               data: await photo.arrayBuffer()
             });
           }
@@ -576,21 +577,20 @@ async function handleAdminRequest(request, env, corsHeaders) {
       
       // Create enhanced photo data with better filenames and thumbnails
       const enhancedPhotos = originalPhotos.map(p => {
-        // Parse the original key to get the components
+        // Parse the original R2 key to get the components
         // Original key format: original_eventCode_player_squareX_timestamp
-        const originalKey = p.filename.replace('.jpg', ''); // Remove .jpg from filename for key parsing
-        const keyParts = originalKey.split('_');
+        const keyParts = p.originalKey.split('_');
         
         let player = 'Unknown';
         let squareIndex = -1;
         let timestamp = '';
         let squareText = 'Unknown Square';
         
-        if (keyParts.length >= 4) {
-          // Skip 'original' and eventCode, get player and square info
+        if (keyParts.length >= 5) {
+          // keyParts: ['original', eventCode, player, squareInfo, timestamp]
           player = keyParts[2];
           const squareInfo = keyParts[3];
-          timestamp = keyParts[4] || '';
+          timestamp = keyParts[4];
           
           // Extract square index from squareX format
           const squareMatch = squareInfo.match(/^square(\d+)$/);
@@ -604,24 +604,30 @@ async function handleAdminRequest(request, env, corsHeaders) {
         
         // Create a better filename
         const cleanSquareText = squareText.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').substring(0, 50);
-        const betterFilename = `${eventCode}_${player}_${cleanSquareText}.jpg`;
+        const betterFilename = `${eventCode}_${player.replace(/_/g, ' ')}_${cleanSquareText}.jpg`;
         
         // Construct thumbnail URL - use the compressed version key
         const thumbnailKey = `thumb_${eventCode}_${player}_square${squareIndex}_${timestamp}`;
+        
+        // Debug logging
+        console.log(`Original key: ${p.originalKey}`);
+        console.log(`Thumbnail key: ${thumbnailKey}`);
+        console.log(`Better filename: ${betterFilename}`);
         
         return {
           ...p,
           betterFilename,
           player: player.replace(/_/g, ' '),
           squareText,
-          thumbnailUrl: `${url.origin}/photo/${thumbnailKey}`
+          thumbnailUrl: `${url.origin}/photo/${thumbnailKey}`,
+          originalKey: p.originalKey
         };
       });
 
       const photoCards = enhancedPhotos.map((p, index) => 
         `<div class="photo-card">
           <div class="photo-header">
-            <input type="checkbox" class="photo-checkbox" id="photo-${index}" data-filename="${p.betterFilename}" data-url="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.filename)}">
+            <input type="checkbox" class="photo-checkbox" id="photo-${index}" data-filename="${p.betterFilename}" data-url="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.originalKey.replace('original_', ''))}">
             <label for="photo-${index}" class="checkbox-label">Select</label>
           </div>
           <div class="photo-thumbnail">
@@ -633,7 +639,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
             <div class="photo-size">${Math.round(p.data.byteLength / 1024)}KB</div>
           </div>
           <div class="photo-actions">
-            <a href="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.filename)}" 
+            <a href="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.originalKey.replace('original_', ''))}" 
                download="${p.betterFilename}" 
                class="download-btn">
               Download
