@@ -3133,7 +3133,7 @@
             color: ${isDark ? '#ffffff' : '#1f2937'};
           " />
 
-          <button onclick="submitAuthentication('${escapeQuotes(playerName)}')" style="
+          <button onclick="submitAuthentication('${escapeQuotes(playerName)}', this)" style="
             width: 100%;
             padding: 15px;
             margin-bottom: 15px;
@@ -3180,7 +3180,10 @@
             input.focus();
             input.addEventListener('keypress', (e) => {
               if (e.key === 'Enter') {
-                submitAuthentication(playerName);
+                const submitBtn = document.querySelector('button[onclick*="submitAuthentication"]');
+                if (submitBtn) {
+                  submitAuthentication(playerName, submitBtn);
+                }
               }
             });
           }
@@ -3257,7 +3260,7 @@
       await showAuthenticationQuestion(playerName);
     }
 
-    async function submitAuthentication(playerName) {
+    async function submitAuthentication(playerName, buttonElement) {
       const input = document.getElementById('secretAnswer');
       const answer = input ? input.value.trim() : '';
       
@@ -3268,7 +3271,7 @@
       }
       
       // Show loading
-      const button = event.target;
+      const button = buttonElement;
       const originalText = button.innerHTML;
       button.innerHTML = '<div class="inline-spinner" style="margin: 0 auto;"></div>';
       button.disabled = true;
@@ -3303,9 +3306,19 @@
         console.error('Authentication error:', error);
         input.style.borderColor = '#ef4444';
         input.placeholder = 'Network error - try again';
+        
+        // Show view-only option on network error
+        const viewOnlyBtn = document.querySelector('button[onclick*="enterViewOnlyMode"]');
+        if (viewOnlyBtn) {
+          viewOnlyBtn.style.background = 'linear-gradient(135deg, #f59e0b, #fbbf24)';
+          viewOnlyBtn.style.color = 'white';
+          viewOnlyBtn.innerHTML = '👀 Continue in View-Only Mode (Network Issue)';
+        }
       } finally {
-        button.innerHTML = originalText;
-        button.disabled = false;
+        if (button) {
+          button.innerHTML = originalText;
+          button.disabled = false;
+        }
       }
     }
 
