@@ -473,6 +473,61 @@ async function handleAdminRequest(request, env, corsHeaders) {
     });
   }
 
+  // Download individual original photo
+  if (request.method === "GET" && path.startsWith("/admin/download-photo/")) {
+    const pathParts = path.split('/');
+    const eventCode = pathParts[3];
+    const filename = decodeURIComponent(pathParts[4]);
+    
+    if (!eventCode || !filename) {
+      return new Response("Event code and filename required", { status: 400, headers: corsHeaders });
+    }
+
+    try {
+      // Find the photo by reconstructing the key from filename
+      const list = await env.EventBingoPhotos.list();
+      let photoKey = null;
+      
+      for (const item of list.objects || []) {
+        const keyName = item.key;
+        if (keyName.startsWith(`original_${eventCode}_`)) {
+          // Parse key to create filename and match
+          const parts = keyName.replace('original_', '').split('_');
+          const event = parts[0];
+          const player = parts[1];
+          const squareInfo = parts.slice(2, -1).join('_');
+          const timestamp = parts[parts.length - 1];
+          const reconstructedFilename = `${eventCode}_${player.replace(/_/g, ' ')}_${squareInfo}_${timestamp}.jpg`;
+          
+          if (reconstructedFilename === filename) {
+            photoKey = keyName;
+            break;
+          }
+        }
+      }
+
+      if (!photoKey) {
+        return new Response("Photo not found", { status: 404, headers: corsHeaders });
+      }
+
+      const photo = await env.EventBingoPhotos.get(photoKey);
+      if (!photo) {
+        return new Response("Photo not found", { status: 404, headers: corsHeaders });
+      }
+
+      return new Response(photo.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": photo.httpMetadata?.contentType || "image/jpeg",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+
+    } catch (error) {
+      return new Response("Failed to download photo", { status: 500, headers: corsHeaders });
+    }
+  }
+
   // Download all original photos as zip
   if (request.method === "GET" && path.startsWith("/admin/download-originals/")) {
     const eventCode = path.split('/')[3];
@@ -516,22 +571,57 @@ async function handleAdminRequest(request, env, corsHeaders) {
         });
       }
 
-      // For now, return a JSON list of available photos
-      // TODO: Implement actual zip generation when needed
-      const photoList = originalPhotos.map(p => ({
-        filename: p.filename,
-        size: p.data.byteLength
-      }));
+      // Create a simple HTML page with download links for each photo
+      const photoLinks = originalPhotos.map(p => 
+        `<li><a href="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.filename)}" download="${p.filename}">${p.filename}</a> (${Math.round(p.data.byteLength / 1024)}KB)</li>`
+      ).join('');
 
-      return new Response(JSON.stringify({
-        success: true,
-        eventCode: eventCode,
-        totalPhotos: originalPhotos.length,
-        photos: photoList,
-        message: "Zip generation will be implemented when needed. For now, photos can be downloaded individually."
-      }), {
+      const htmlResponse = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Download Original Photos - ${eventCode}</title>
+          <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+            h1 { color: #333; }
+            ul { list-style-type: none; padding: 0; }
+            li { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; }
+            a { text-decoration: none; color: #007bff; font-weight: bold; }
+            a:hover { text-decoration: underline; }
+            .summary { background: #e7f3ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+            .download-all { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>📥 Original Photos for Event: ${eventCode}</h1>
+          <div class="summary">
+            <strong>Total Photos:</strong> ${originalPhotos.length}<br>
+            <strong>Total Size:</strong> ${Math.round(originalPhotos.reduce((sum, p) => sum + p.data.byteLength, 0) / 1024 / 1024 * 100) / 100}MB
+          </div>
+          <button class="download-all" onclick="downloadAll()">📦 Download All Photos</button>
+          <h2>Individual Downloads:</h2>
+          <ul>
+            ${photoLinks}
+          </ul>
+          <script>
+            function downloadAll() {
+              const links = document.querySelectorAll('a[download]');
+              let delay = 0;
+              links.forEach(link => {
+                setTimeout(() => {
+                  link.click();
+                }, delay);
+                delay += 500; // 500ms delay between downloads
+              });
+            }
+          </script>
+        </body>
+        </html>
+      `;
+
+      return new Response(htmlResponse, {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "text/html" },
       });
 
     } catch (error) {
@@ -801,7 +891,8 @@ export default {
           "POST /admin/create-event": "Create event",
           "GET /admin/events": "List events",
           "GET /admin/event/<code>": "Get event details",
-          "GET /admin/download-originals/<code>": "Download original photos",
+          "GET /admin/download-originals/<code>": "Download original photos page",
+          "GET /admin/download-photo/<code>/<filename>": "Download individual photo",
           "POST /admin/cleanup-progress": "Clean corrupted progress data"
         }
       }), {

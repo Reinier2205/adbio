@@ -1832,24 +1832,24 @@ Please generate 25 unique photo challenges following these guidelines.`;
       try {
         showMessage('Preparing download...', 'info');
         
-        const response = await fetch(`${workerURL}admin/download-originals/${currentSelectedEvent}`);
+        // Open the download page in a new window/tab
+        const downloadUrl = `${workerURL}admin/download-originals/${currentSelectedEvent}`;
+        const downloadWindow = window.open(downloadUrl, '_blank');
         
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          showMessage(`Found ${data.totalPhotos} original photos for ${data.eventCode}. Individual photo download will be implemented soon.`, 'success');
-          console.log('Available photos:', data.photos);
+        if (downloadWindow) {
+          showMessage('Download page opened in new tab. You can download individual photos or use "Download All" button.', 'success');
         } else {
-          showMessage('No original photos found for this event.', 'warning');
+          // Fallback if popup blocked
+          showMessage('Please allow popups or manually visit the download page.', 'warning');
+          // Try to navigate in current window as fallback
+          setTimeout(() => {
+            window.location.href = downloadUrl;
+          }, 2000);
         }
         
       } catch (err) {
         console.error('Download error:', err);
-        showMessage('Failed to download photos. Please try again.', 'error');
+        showMessage('Failed to open download page. Please try again.', 'error');
       }
     }
 
