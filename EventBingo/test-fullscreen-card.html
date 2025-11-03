@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fullscreen Card Test - EventBingo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fafafa;
+      margin: 0;
+      padding: 20px;
+      color: #2c3e50;
+    }
+    
+    .test-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .test-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin: 20px 0;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .demo-square {
+      aspect-ratio: 1;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .demo-square:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      border-color: #4a90e2;
+    }
+    
+    .demo-square:active {
+      transform: scale(0.98);
+    }
+    
+    .square-challenge {
+      font-size: 0.7rem;
+      line-height: 1.2;
+      color: #2c3e50;
+      font-weight: 500;
+      margin-bottom: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+    
+    .square-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .completion-count {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #4a90e2;
+    }
+    
+    .completion-rate {
+      font-size: 0.7rem;
+      color: #666;
+      font-weight: 500;
+    }
+    
+    .test-button {
+      background: linear-gradient(135deg, #4a90e2, #7b68ee);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin: 10px 5px;
+    }
+    
+    .test-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    }
+    
+    .instructions {
+      background: #e8f4fd;
+      border: 1px solid #4a90e2;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    
+    .instructions h4 {
+      margin-top: 0;
+      color: #4a90e2;
+    }
+    
+    .feature-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .feature-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .feature-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .status-icon {
+      font-size: 1.2rem;
+    }
+    
+    .implemented {
+      color: #51cf66;
+    }
+  </style>
+  
+  <!-- Include the advanced progress styles -->
+  <link rel="stylesheet" href="css/advanced-progress-styles.css">
+</head>
+<body>
+  <div class="test-container">
+    <div class="test-header">
+      <h1>🎯 Fullscreen Card Modal Test</h1>
+      <p>Testing the enhanced card view with fullscreen modal for detailed square information</p>
+    </div>
+
+    <div class="instructions">
+      <h4>📋 How to Test</h4>
+      <p><strong>Click on any square below</strong> to open the fullscreen card modal. The modal includes:</p>
+      <ul class="feature-list">
+        <li>
+          <span class="status-icon implemented">✅</span>
+          <strong>Detailed Challenge Information</strong> - Full challenge text and difficulty level
+        </li>
+        <li>
+          <span class="status-icon implemented">✅</span>
+          <strong>Completion Statistics</strong> - Progress bars, percentages, and player counts
+        </li>
+        <li>
+          <span class="status-icon implemented">✅</span>
+          <strong>Player Lists</strong> - Who completed and who still needs to complete
+        </li>
+        <li>
+          <span class="status-icon implemented">✅</span>
+          <strong>Navigation Controls</strong> - Previous/Next arrows and keyboard navigation
+        </li>
+        <li>
+          <span class="status-icon implemented">✅</span>
+          <strong>Touch Support</strong> - Swipe gestures for mobile navigation
+        </li>
+        <li>
+          <span class="status-icon implemented">✅</span>
+          <strong>Responsive Design</strong> - Optimized for mobile and desktop
+        </li>
+      </ul>
+    </div>
+
+    <div class="demo-grid" id="demoGrid">
+      <!-- Squares will be generated by JavaScript -->
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+      <button class="test-button" onclick="generateNewData()">🔄 Generate New Test Data</button>
+      <button class="test-button" onclick="window.open('board.html?event=test', '_blank')">📋 Open Live Board</button>
+    </div>
+  </div>
+
+  <script>
+    // Mock data for testing
+    let testSquares = [];
+    
+    // Mock GridRenderer for testing
+    class MockGridRenderer {
+      constructor() {
+        this.testData = this.generateTestData();
+      }
+      
+      generateTestData() {
+        const challenges = [
+          "An old photo with friends",
+          "A photo from a past birthday",
+          "The oldest selfie you have",
+          "A photo showing friendship",
+          "A photo from when you looked young",
+          "Someone walking barefoot",
+          "Someone drinking beer",
+          "Someone borrowing something",
+          "Someone riding a bike",
+          "Someone dunking in tea",
+          "Someone playing ball",
+          "A baby with new family",
+          "Everyone around a fire",
+          "A sunrise or sunset",
+          "Someone cooking or grilling",
+          "Someone reading peacefully",
+          "Morning coffee in a used mug",
+          "Someone helping with tasks",
+          "A creative group photo",
+          "Someone caught laughing",
+          "A barefoot competition photo",
+          "Someone borrowing a drink",
+          "A photo showing fun",
+          "A photo showing weekend spirit",
+          "Your favorite memory moment"
+        ];
+        
+        const players = ['Alice', 'Bob', 'Carol', 'Dave', 'Eve', 'Frank'];
+        
+        return challenges.map((challenge, index) => {
+          const totalPlayers = players.length;
+          const completedCount = Math.floor(Math.random() * (totalPlayers + 1));
+          const completedPlayers = players.slice(0, completedCount);
+          const outstandingPlayers = players.slice(completedCount);
+          const completionRate = (completedCount / totalPlayers) * 100;
+          
+          return {
+            squareIndex: index,
+            challengeText: challenge,
+            completedBy: completedPlayers,
+            outstandingPlayers: outstandingPlayers,
+            completionRate: completionRate,
+            completionCount: completedCount
+          };
+        });
+      }
+      
+      openFullscreenCard(squareStat, position) {
+        // Get or create fullscreen card modal
+        let modal = document.getElementById('fullscreenCardModal');
+        if (!modal) {
+          modal = this.createFullscreenCardModal();
+        }
+
+        // Update modal content
+        this.updateFullscreenCardContent(modal, squareStat, position, squareStat.squareIndex, this.testData);
+
+        // Show modal
+        modal.classList.add('show');
+        modal.dataset.currentIndex = squareStat.squareIndex;
+        modal.dataset.totalSquares = this.testData.length;
+
+        // Add keyboard focus for accessibility
+        modal.focus();
+      }
+      
+      createFullscreenCardModal() {
+        const modal = document.createElement('div');
+        modal.id = 'fullscreenCardModal';
+        modal.className = 'fullscreen-card-modal';
+        modal.tabIndex = -1;
+
+        modal.innerHTML = `
+          <button class="nav-arrow left" id="prevCardBtn" onclick="mockGridRenderer.navigateFullscreenCard(-1)">‹</button>
+          <button class="nav-arrow right" id="nextCardBtn" onclick="mockGridRenderer.navigateFullscreenCard(1)">›</button>
+          <div class="fullscreen-card-content">
+            <div class="card-header">
+              <div class="card-position" id="cardPosition"></div>
+              <div class="card-difficulty" id="cardDifficulty"></div>
+            </div>
+            <div class="card-challenge" id="cardChallenge"></div>
+            <div class="card-stats" id="cardStats"></div>
+            <div class="card-players" id="cardPlayers"></div>
+            <div class="card-progress" id="cardProgress"></div>
+          </div>
+          <button class="fullscreen-close" onclick="mockGridRenderer.closeFullscreenCard()">Close</button>
+        `;
+
+        // Add to document
+        document.body.appendChild(modal);
+
+        // Add keyboard navigation
+        modal.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') this.closeFullscreenCard();
+          if (e.key === 'ArrowLeft') this.navigateFullscreenCard(-1);
+          if (e.key === 'ArrowRight') this.navigateFullscreenCard(1);
+        });
+
+        // Add touch navigation
+        let touchStartX = 0;
+        modal.addEventListener('touchstart', (e) => {
+          touchStartX = e.touches[0].clientX;
+        });
+
+        modal.addEventListener('touchend', (e) => {
+          const touchEndX = e.changedTouches[0].clientX;
+          const diff = touchStartX - touchEndX;
+          
+          if (Math.abs(diff) > 50) { // Minimum swipe distance
+            if (diff > 0) {
+              this.navigateFullscreenCard(1); // Swipe left = next
+            } else {
+              this.navigateFullscreenCard(-1); // Swipe right = previous
+            }
+          }
+        });
+
+        return modal;
+      }
+      
+      updateFullscreenCardContent(modal, squareStat, position, currentIndex, allSquares) {
+        // Update navigation buttons
+        const prevBtn = modal.querySelector('#prevCardBtn');
+        const nextBtn = modal.querySelector('#nextCardBtn');
+        
+        prevBtn.disabled = currentIndex <= 0;
+        nextBtn.disabled = currentIndex >= allSquares.length - 1;
+
+        // Update position and difficulty
+        const cardPosition = modal.querySelector('#cardPosition');
+        const cardDifficulty = modal.querySelector('#cardDifficulty');
+        
+        cardPosition.textContent = `Square ${position}`;
+        
+        const difficulty = this.calculateDifficulty(squareStat.completionRate);
+        const difficultyIcon = this.getDifficultyIcon(difficulty);
+        cardDifficulty.innerHTML = `${difficultyIcon} ${difficulty}`;
+        cardDifficulty.className = `card-difficulty difficulty-${difficulty.toLowerCase().replace(' ', '-')}`;
+
+        // Update challenge text
+        const cardChallenge = modal.querySelector('#cardChallenge');
+        cardChallenge.textContent = squareStat.challengeText;
+
+        // Update statistics
+        const cardStats = modal.querySelector('#cardStats');
+        const totalPlayers = squareStat.completedBy.length + squareStat.outstandingPlayers.length;
+        
+        cardStats.innerHTML = `
+          <div class="stat-row">
+            <div class="stat-item">
+              <div class="stat-value">${squareStat.completedBy.length}</div>
+              <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${squareStat.outstandingPlayers.length}</div>
+              <div class="stat-label">Outstanding</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">${squareStat.completionRate.toFixed(1)}%</div>
+              <div class="stat-label">Completion Rate</div>
+            </div>
+          </div>
+        `;
+
+        // Update progress bar
+        const cardProgress = modal.querySelector('#cardProgress');
+        cardProgress.innerHTML = `
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: ${squareStat.completionRate}%"></div>
+          </div>
+          <div class="progress-text">${squareStat.completedBy.length} of ${totalPlayers} players completed</div>
+        `;
+
+        // Update players list
+        const cardPlayers = modal.querySelector('#cardPlayers');
+        let playersHTML = '';
+
+        if (squareStat.completedBy.length > 0) {
+          playersHTML += `
+            <div class="players-section">
+              <h4>✅ Completed by:</h4>
+              <div class="players-list completed">
+                ${squareStat.completedBy.map(playerName => `
+                  <div class="player-item completed" title="${playerName}">
+                    <div class="player-icon">${this.getPlayerIcon(playerName)}</div>
+                    <div class="player-name">${playerName}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        if (squareStat.outstandingPlayers.length > 0) {
+          playersHTML += `
+            <div class="players-section">
+              <h4>⏳ Still needed from:</h4>
+              <div class="players-list outstanding">
+                ${squareStat.outstandingPlayers.map(playerName => `
+                  <div class="player-item outstanding" title="${playerName}">
+                    <div class="player-icon">${this.getPlayerIcon(playerName)}</div>
+                    <div class="player-name">${playerName}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        cardPlayers.innerHTML = playersHTML;
+      }
+      
+      navigateFullscreenCard(direction) {
+        const modal = document.getElementById('fullscreenCardModal');
+        if (!modal || !modal.classList.contains('show')) return;
+
+        const currentIndex = parseInt(modal.dataset.currentIndex);
+        const totalSquares = parseInt(modal.dataset.totalSquares);
+        const newIndex = currentIndex + direction;
+
+        if (newIndex >= 0 && newIndex < totalSquares) {
+          const newSquareStat = this.testData[newIndex];
+          const newPosition = newIndex + 1;
+
+          // Add transition effect
+          const content = modal.querySelector('.fullscreen-card-content');
+          content.style.opacity = '0.7';
+          content.style.transform = 'translateY(10px)';
+
+          setTimeout(() => {
+            this.updateFullscreenCardContent(modal, newSquareStat, newPosition, newIndex, this.testData);
+            modal.dataset.currentIndex = newIndex;
+
+            // Restore appearance
+            content.style.opacity = '1';
+            content.style.transform = 'translateY(0)';
+          }, 150);
+        }
+      }
+      
+      closeFullscreenCard() {
+        const modal = document.getElementById('fullscreenCardModal');
+        if (modal) {
+          modal.classList.remove('show');
+        }
+      }
+      
+      calculateDifficulty(completionRate) {
+        if (completionRate >= 80) return 'Easy';
+        if (completionRate >= 50) return 'Medium';
+        if (completionRate >= 20) return 'Hard';
+        return 'Very Hard';
+      }
+      
+      getDifficultyIcon(difficulty) {
+        switch (difficulty) {
+          case 'Easy': return '🟢';
+          case 'Medium': return '🟡';
+          case 'Hard': return '🟠';
+          case 'Very Hard': return '🔴';
+          default: return '⚪';
+        }
+      }
+      
+      getPlayerIcon(name) {
+        const bingoIcons = [
+          '🎯', '🎲', '🎪', '🎨', '🎭', '🎸', '🎺', '🎻', 
+          '🎮', '🎳', '🎰', '🎊', '🎉', '🎈', '🎁', '🎀',
+          '🏆', '🏅', '🥇', '🥈', '🥉', '⭐', '🌟', '✨',
+          '🔥', '💎', '👑', '🎖️', '🏵️', '🎗️', '🎫', '🎟️'
+        ];
+        
+        if (!name) return '❓';
+        
+        let hash = 0;
+        const cleanName = name.toLowerCase().trim();
+        
+        for (let i = 0; i < cleanName.length; i++) {
+          const char = cleanName.charCodeAt(i);
+          hash = ((hash << 5) - hash + char) & 0xffffffff;
+        }
+        
+        const nameLength = cleanName.length;
+        const firstChar = cleanName.charCodeAt(0) || 0;
+        const lastChar = cleanName.charCodeAt(nameLength - 1) || 0;
+        
+        const combinedHash = Math.abs(hash + nameLength * 7 + firstChar * 13 + lastChar * 17);
+        const iconIndex = combinedHash % bingoIcons.length;
+        
+        return bingoIcons[iconIndex];
+      }
+    }
+    
+    // Create mock grid renderer instance
+    const mockGridRenderer = new MockGridRenderer();
+    
+    function initializeDemo() {
+      const grid = document.getElementById('demoGrid');
+      grid.innerHTML = '';
+      
+      mockGridRenderer.testData.forEach((squareStat, index) => {
+        const square = document.createElement('div');
+        square.className = 'demo-square';
+        square.dataset.squareIndex = squareStat.squareIndex;
+        square.dataset.position = index + 1;
+        
+        square.innerHTML = `
+          <div class="square-challenge">${squareStat.challengeText}</div>
+          <div class="square-stats">
+            <div class="completion-count">${squareStat.completedBy.length}/${squareStat.completedBy.length + squareStat.outstandingPlayers.length}</div>
+            <div class="completion-rate">${squareStat.completionRate.toFixed(0)}%</div>
+          </div>
+        `;
+        
+        // Add click handler
+        square.addEventListener('click', () => {
+          mockGridRenderer.openFullscreenCard(squareStat, index + 1);
+        });
+        
+        grid.appendChild(square);
+      });
+    }
+    
+    function generateNewData() {
+      mockGridRenderer.testData = mockGridRenderer.generateTestData();
+      initializeDemo();
+    }
+    
+    // Initialize demo on page load
+    document.addEventListener('DOMContentLoaded', initializeDemo);
+  </script>
+</body>
+</html>

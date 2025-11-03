@@ -339,8 +339,8 @@ class GridRenderer {
    * @param {number} position - Position in grid
    */
   onSquareClick(squareStat, position) {
-    // For now, just log the click - could be extended for drill-down functionality
-    console.log('Square clicked:', { squareStat, position });
+    // Open fullscreen card modal for detailed view
+    this.openFullscreenCard(squareStat, position);
   }
 
   /**
@@ -494,9 +494,17 @@ class GridRenderer {
     // Re-setup click handlers for squares
     grid.querySelectorAll('.bingo-square').forEach(square => {
       square.addEventListener('click', () => {
-        const squareIndex = square.dataset.squareIndex;
-        const position = square.dataset.position;
-        this.onSquareClick({ squareIndex }, position);
+        const squareIndex = parseInt(square.dataset.squareIndex);
+        const position = parseInt(square.dataset.position);
+        
+        // Get square statistics from current state
+        if (typeof boardController !== 'undefined' && boardController.getState) {
+          const state = boardController.getState();
+          const squareStat = state.completionStats.squareStats.find(s => s.squareIndex === squareIndex);
+          if (squareStat) {
+            this.onSquareClick(squareStat, position);
+          }
+        }
       });
     });
 
@@ -509,6 +517,275 @@ class GridRenderer {
    */
   clearRenderCache() {
     this.renderCache.clear();
+  }
+
+  /**
+   * Open fullscreen card modal for detailed square view
+   * @param {Object} squareStat - Square statistics
+   * @param {number} position - Position in grid
+   */
+  openFullscreenCard(squareStat, position) {
+    // Get or create fullscreen card modal
+    let modal = document.getElementById('fullscreenCardModal');
+    if (!modal) {
+      modal = this.createFullscreenCardModal();
+    }
+
+    // Get all squares for navigation
+    const allSquares = this.getAllSquaresForNavigation();
+    const currentIndex = allSquares.findIndex(sq => sq.squareIndex === squareStat.squareIndex);
+
+    // Update modal content
+    this.updateFullscreenCardContent(modal, squareStat, position, currentIndex, allSquares);
+
+    // Show modal
+    modal.classList.add('show');
+    modal.dataset.currentIndex = currentIndex;
+    modal.dataset.totalSquares = allSquares.length;
+
+    // Add keyboard focus for accessibility
+    modal.focus();
+  }
+
+  /**
+   * Create fullscreen card modal element
+   * @returns {HTMLElement} Modal element
+   */
+  createFullscreenCardModal() {
+    const modal = document.createElement('div');
+    modal.id = 'fullscreenCardModal';
+    modal.className = 'fullscreen-card-modal';
+    modal.tabIndex = -1;
+
+    modal.innerHTML = `
+      <button class="nav-arrow left" id="prevCardBtn" onclick="gridRenderer.navigateFullscreenCard(-1)">‹</button>
+      <button class="nav-arrow right" id="nextCardBtn" onclick="gridRenderer.navigateFullscreenCard(1)">›</button>
+      <div class="fullscreen-card-content">
+        <div class="card-header">
+          <div class="card-position" id="cardPosition"></div>
+          <div class="card-difficulty" id="cardDifficulty"></div>
+        </div>
+        <div class="card-challenge" id="cardChallenge"></div>
+        <div class="card-stats" id="cardStats"></div>
+        <div class="card-players" id="cardPlayers"></div>
+        <div class="card-progress" id="cardProgress"></div>
+      </div>
+      <button class="fullscreen-close" onclick="gridRenderer.closeFullscreenCard()">Close</button>
+    `;
+
+    // Add to document
+    document.body.appendChild(modal);
+
+    // Add keyboard navigation
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.closeFullscreenCard();
+      if (e.key === 'ArrowLeft') this.navigateFullscreenCard(-1);
+      if (e.key === 'ArrowRight') this.navigateFullscreenCard(1);
+    });
+
+    // Add touch navigation
+    let touchStartX = 0;
+    modal.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+    });
+
+    modal.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > 50) { // Minimum swipe distance
+        if (diff > 0) {
+          this.navigateFullscreenCard(1); // Swipe left = next
+        } else {
+          this.navigateFullscreenCard(-1); // Swipe right = previous
+        }
+      }
+    });
+
+    return modal;
+  }
+
+  /**
+   * Update fullscreen card modal content
+   * @param {HTMLElement} modal - Modal element
+   * @param {Object} squareStat - Square statistics
+   * @param {number} position - Position in grid
+   * @param {number} currentIndex - Current square index
+   * @param {Array} allSquares - All squares for navigation
+   */
+  updateFullscreenCardContent(modal, squareStat, position, currentIndex, allSquares) {
+    // Update navigation buttons
+    const prevBtn = modal.querySelector('#prevCardBtn');
+    const nextBtn = modal.querySelector('#nextCardBtn');
+    
+    prevBtn.disabled = currentIndex <= 0;
+    nextBtn.disabled = currentIndex >= allSquares.length - 1;
+
+    // Update position and difficulty
+    const cardPosition = modal.querySelector('#cardPosition');
+    const cardDifficulty = modal.querySelector('#cardDifficulty');
+    
+    cardPosition.textContent = `Square ${position}`;
+    
+    const difficulty = this.calculateDifficulty(squareStat.completionRate);
+    const difficultyIcon = this.getDifficultyIcon(difficulty);
+    cardDifficulty.innerHTML = `${difficultyIcon} ${difficulty}`;
+    cardDifficulty.className = `card-difficulty difficulty-${difficulty.toLowerCase().replace(' ', '-')}`;
+
+    // Update challenge text
+    const cardChallenge = modal.querySelector('#cardChallenge');
+    cardChallenge.textContent = squareStat.challengeText;
+
+    // Update statistics
+    const cardStats = modal.querySelector('#cardStats');
+    const totalPlayers = squareStat.completedBy.length + squareStat.outstandingPlayers.length;
+    
+    cardStats.innerHTML = `
+      <div class="stat-row">
+        <div class="stat-item">
+          <div class="stat-value">${squareStat.completedBy.length}</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${squareStat.outstandingPlayers.length}</div>
+          <div class="stat-label">Outstanding</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${squareStat.completionRate.toFixed(1)}%</div>
+          <div class="stat-label">Completion Rate</div>
+        </div>
+      </div>
+    `;
+
+    // Update progress bar
+    const cardProgress = modal.querySelector('#cardProgress');
+    cardProgress.innerHTML = `
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" style="width: ${squareStat.completionRate}%"></div>
+      </div>
+      <div class="progress-text">${squareStat.completedBy.length} of ${totalPlayers} players completed</div>
+    `;
+
+    // Update players list
+    const cardPlayers = modal.querySelector('#cardPlayers');
+    let playersHTML = '';
+
+    if (squareStat.completedBy.length > 0) {
+      playersHTML += `
+        <div class="players-section">
+          <h4>✅ Completed by:</h4>
+          <div class="players-list completed">
+            ${squareStat.completedBy.map(playerName => `
+              <div class="player-item completed" title="${playerName}">
+                <div class="player-icon">${this.getPlayerIcon(playerName)}</div>
+                <div class="player-name">${playerName}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    if (squareStat.outstandingPlayers.length > 0) {
+      playersHTML += `
+        <div class="players-section">
+          <h4>⏳ Still needed from:</h4>
+          <div class="players-list outstanding">
+            ${squareStat.outstandingPlayers.map(playerName => `
+              <div class="player-item outstanding" title="${playerName}">
+                <div class="player-icon">${this.getPlayerIcon(playerName)}</div>
+                <div class="player-name">${playerName}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    cardPlayers.innerHTML = playersHTML;
+  }
+
+  /**
+   * Navigate to next/previous card in fullscreen view
+   * @param {number} direction - Direction to navigate (-1 for previous, 1 for next)
+   */
+  navigateFullscreenCard(direction) {
+    const modal = document.getElementById('fullscreenCardModal');
+    if (!modal || !modal.classList.contains('show')) return;
+
+    const currentIndex = parseInt(modal.dataset.currentIndex);
+    const totalSquares = parseInt(modal.dataset.totalSquares);
+    const newIndex = currentIndex + direction;
+
+    if (newIndex >= 0 && newIndex < totalSquares) {
+      const allSquares = this.getAllSquaresForNavigation();
+      const newSquareStat = allSquares[newIndex];
+      const newPosition = newIndex + 1;
+
+      // Add transition effect
+      const content = modal.querySelector('.fullscreen-card-content');
+      content.style.opacity = '0.7';
+      content.style.transform = 'translateY(10px)';
+
+      setTimeout(() => {
+        this.updateFullscreenCardContent(modal, newSquareStat, newPosition, newIndex, allSquares);
+        modal.dataset.currentIndex = newIndex;
+
+        // Restore appearance
+        content.style.opacity = '1';
+        content.style.transform = 'translateY(0)';
+      }, 150);
+    }
+  }
+
+  /**
+   * Close fullscreen card modal
+   */
+  closeFullscreenCard() {
+    const modal = document.getElementById('fullscreenCardModal');
+    if (modal) {
+      modal.classList.remove('show');
+    }
+  }
+
+  /**
+   * Get all squares for navigation in fullscreen mode
+   * @returns {Array} Array of square statistics
+   */
+  getAllSquaresForNavigation() {
+    // Access global state through boardController if available
+    if (typeof boardController !== 'undefined' && boardController.getState) {
+      const state = boardController.getState();
+      return state.completionStats.squareStats || [];
+    }
+    return [];
+  }
+
+  /**
+   * Calculate difficulty based on completion rate
+   * @param {number} completionRate - Completion rate percentage
+   * @returns {string} Difficulty level
+   */
+  calculateDifficulty(completionRate) {
+    if (completionRate >= 80) return 'Easy';
+    if (completionRate >= 50) return 'Medium';
+    if (completionRate >= 20) return 'Hard';
+    return 'Very Hard';
+  }
+
+  /**
+   * Get difficulty icon
+   * @param {string} difficulty - Difficulty level
+   * @returns {string} Icon for difficulty
+   */
+  getDifficultyIcon(difficulty) {
+    switch (difficulty) {
+      case 'Easy': return '🟢';
+      case 'Medium': return '🟡';
+      case 'Hard': return '🟠';
+      case 'Very Hard': return '🔴';
+      default: return '⚪';
+    }
   }
 
   /**
