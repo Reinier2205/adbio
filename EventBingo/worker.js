@@ -650,7 +650,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
       const photoCards = enhancedPhotos.map((p, index) => 
         `<div class="photo-card">
           <div class="photo-header">
-            <input type="checkbox" class="photo-checkbox" id="photo-${index}" data-filename="${p.betterFilename}" data-url="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.originalKey.replace('original_', ''))}">
+            <input type="checkbox" class="photo-checkbox" id="photo-${index}" data-filename="${p.betterFilename}" data-url="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.filename)}">
             <label for="photo-${index}" class="checkbox-label">Select</label>
           </div>
           <div class="photo-thumbnail">
@@ -665,7 +665,7 @@ async function handleAdminRequest(request, env, corsHeaders) {
             <div class="photo-size">${Math.round(p.data.byteLength / 1024)}KB</div>
           </div>
           <div class="photo-actions">
-            <a href="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.originalKey.replace('original_', ''))}" 
+            <a href="${url.origin}/admin/download-photo/${eventCode}/${encodeURIComponent(p.filename)}" 
                download="${p.betterFilename}" 
                class="download-btn">
               Download
