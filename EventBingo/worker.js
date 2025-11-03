@@ -423,6 +423,78 @@ async function handleAdminRequest(request, env, corsHeaders) {
     });
   }
 
+  // Download all original photos as zip
+  if (request.method === "GET" && path.startsWith("/admin/download-originals/")) {
+    const eventCode = path.split('/')[3];
+    
+    if (!eventCode) {
+      return new Response("Event code is required", { status: 400, headers: corsHeaders });
+    }
+
+    try {
+      // Get all original photos for this event
+      const list = await env.EventBingoPhotos.list();
+      const originalPhotos = [];
+      
+      for (const item of list.objects || []) {
+        const keyName = item.key;
+        if (keyName.startsWith(`original_${eventCode}_`)) {
+          const photo = await env.EventBingoPhotos.get(keyName);
+          if (photo) {
+            // Parse key to get player and square info
+            const parts = keyName.replace('original_', '').split('_');
+            const event = parts[0];
+            const player = parts[1];
+            const squareInfo = parts.slice(2, -1).join('_');
+            const timestamp = parts[parts.length - 1];
+            
+            // Create friendly filename
+            const filename = `${eventCode}_${player.replace(/_/g, ' ')}_${squareInfo}_${timestamp}.jpg`;
+            
+            originalPhotos.push({
+              filename: filename,
+              data: await photo.arrayBuffer()
+            });
+          }
+        }
+      }
+
+      if (originalPhotos.length === 0) {
+        return new Response("No original photos found for this event", { 
+          status: 404, 
+          headers: corsHeaders 
+        });
+      }
+
+      // For now, return a JSON list of available photos
+      // TODO: Implement actual zip generation when needed
+      const photoList = originalPhotos.map(p => ({
+        filename: p.filename,
+        size: p.data.byteLength
+      }));
+
+      return new Response(JSON.stringify({
+        success: true,
+        eventCode: eventCode,
+        totalPhotos: originalPhotos.length,
+        photos: photoList,
+        message: "Zip generation will be implemented when needed. For now, photos can be downloaded individually."
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    } catch (error) {
+      return new Response(JSON.stringify({ 
+        error: "Failed to retrieve original photos", 
+        details: error.message 
+      }), { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+  }
+
   // Clean up corrupted progress data
   if (request.method === "POST" && path === "/admin/cleanup-progress") {
     const data = await request.json();
@@ -528,7 +600,9 @@ export default {
           "GET /photo/<key>": "Get specific photo",
           "POST /admin/create-event": "Create event",
           "GET /admin/events": "List events",
-          "GET /admin/event/<code>": "Get event details"
+          "GET /admin/event/<code>": "Get event details",
+          "GET /admin/download-originals/<code>": "Download original photos",
+          "POST /admin/cleanup-progress": "Clean corrupted progress data"
         }
       }), {
         status: 200,
@@ -586,53 +660,63 @@ export default {
       const player = formData.get("player");
       const square = formData.get("square");
       const eventCode = formData.get("eventCode") || 'default';
+      const type = formData.get("type") || 'compressed'; // 'compressed' or 'original'
 
       if (!file || !player || !square) {
         return new Response("Missing required fields", { status: 400, headers: corsHeaders });
       }
 
       try {
-        // Check if event is locked
-        const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
-        let event = null;
-        
-        if (eventData) {
-          event = JSON.parse(eventData);
+        // Check if event is locked (only for compressed uploads to avoid duplicate locks)
+        if (type === 'compressed') {
+          const eventData = await env.EventBingoProgress.get(`event_${eventCode}`);
+          let event = null;
           
-          // If this is the first photo and event is not locked, lock it
-          if (!event.isLocked) {
-            event.isLocked = true;
-            event.lockedAt = new Date().toISOString();
-            event.lockReason = 'first_photo';
-            await env.EventBingoProgress.put(`event_${eventCode}`, JSON.stringify(event));
+          if (eventData) {
+            event = JSON.parse(eventData);
+            
+            // If this is the first photo and event is not locked, lock it
+            if (!event.isLocked) {
+              event.isLocked = true;
+              event.lockedAt = new Date().toISOString();
+              event.lockReason = 'first_photo';
+              await env.EventBingoProgress.put(`event_${eventCode}`, JSON.stringify(event));
+            }
           }
         }
 
         const timestamp = Date.now();
-        const key = `${eventCode}_${player.replace(/\s+/g, '_')}_square${square}_${timestamp}`;
+        const baseKey = `${eventCode}_${player.replace(/\s+/g, '_')}_square${square}_${timestamp}`;
+        
+        // Use different prefixes for compressed vs original
+        const key = type === 'original' ? `original_${baseKey}` : `thumb_${baseKey}`;
 
         await env.EventBingoPhotos.put(key, file);
 
-        const progressKey = `${eventCode}_${player}`;
-        let progress = await env.EventBingoProgress.get(progressKey);
-        
-        if (progress) {
-          progress = JSON.parse(progress);
-        } else {
-          progress = { completedSquares: [], photos: {} };
-        }
-
-        const squareIndex = parseInt(square);
-        if (!isNaN(squareIndex)) {
-          if (!progress.completedSquares.includes(squareIndex)) {
-            progress.completedSquares.push(squareIndex);
+        // Only update progress for compressed uploads (the main upload)
+        if (type === 'compressed') {
+          const progressKey = `${eventCode}_${player}`;
+          let progress = await env.EventBingoProgress.get(progressKey);
+          
+          if (progress) {
+            progress = JSON.parse(progress);
+          } else {
+            progress = { completedSquares: [], photos: {} };
           }
-          progress.photos[squareIndex] = key;
+
+          const squareIndex = parseInt(square);
+          if (!isNaN(squareIndex)) {
+            if (!progress.completedSquares.includes(squareIndex)) {
+              progress.completedSquares.push(squareIndex);
+            }
+            // Store the compressed version key for display
+            progress.photos[squareIndex] = key;
+          }
+
+          await env.EventBingoProgress.put(progressKey, JSON.stringify(progress));
         }
 
-        await env.EventBingoProgress.put(progressKey, JSON.stringify(progress));
-
-        return new Response(JSON.stringify({ success: true, key }), {
+        return new Response(JSON.stringify({ success: true, key, type }), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

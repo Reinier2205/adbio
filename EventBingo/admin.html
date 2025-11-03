@@ -998,6 +998,10 @@
           <span>🗑️</span>
           Delete Event
         </button>
+        <button type="button" class="btn btn-success" onclick="downloadOriginalPhotos()">
+          <span>📥</span>
+          Download Original Photos
+        </button>
         <button type="button" class="btn btn-primary" onclick="viewSelectedEvent()">
           <span>👁️</span>
           View Event
@@ -1816,6 +1820,36 @@ Please generate 25 unique photo challenges following these guidelines.`;
         deleteEvent(currentSelectedEvent).then(() => {
           backToAllEvents();
         });
+      }
+    }
+
+    async function downloadOriginalPhotos() {
+      if (!currentSelectedEvent) {
+        showMessage('Please select an event to download photos from.', 'error');
+        return;
+      }
+
+      try {
+        showMessage('Preparing download...', 'info');
+        
+        const response = await fetch(`${workerURL}admin/download-originals/${currentSelectedEvent}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showMessage(`Found ${data.totalPhotos} original photos for ${data.eventCode}. Individual photo download will be implemented soon.`, 'success');
+          console.log('Available photos:', data.photos);
+        } else {
+          showMessage('No original photos found for this event.', 'warning');
+        }
+        
+      } catch (err) {
+        console.error('Download error:', err);
+        showMessage('Failed to download photos. Please try again.', 'error');
       }
     }
 

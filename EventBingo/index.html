@@ -1425,6 +1425,124 @@
       return str.replace(/'/g, "\\'");
     }
 
+    // Photo compression function
+    async function compressImage(file) {
+      return new Promise((resolve) => {
+        // Check if browser supports canvas and required APIs
+        if (!window.HTMLCanvasElement || !window.CanvasRenderingContext2D) {
+          console.warn('Canvas not supported, using original file');
+          resolve(file);
+          return;
+        }
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx || !canvas.toBlob) {
+          console.warn('Canvas context or toBlob not supported, using original file');
+          resolve(file);
+          return;
+        }
+
+        const img = new Image();
+        
+        img.onload = function() {
+          try {
+            // Calculate new dimensions while maintaining aspect ratio
+            let { width, height } = img;
+            const maxWidth = COMPRESSION_CONFIG.maxWidth;
+            const maxHeight = COMPRESSION_CONFIG.maxHeight;
+            
+            if (width > height) {
+              if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+              }
+            } else {
+              if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+              }
+            }
+            
+            // Set canvas dimensions
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Draw and compress
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert to blob
+            canvas.toBlob(
+              (blob) => {
+                if (blob && blob.size < file.size) {
+                  // Only use compressed version if it's actually smaller
+                  resolve(blob);
+                } else {
+                  // If compression didn't help, use original
+                  resolve(file);
+                }
+              },
+              COMPRESSION_CONFIG.format,
+              COMPRESSION_CONFIG.quality
+            );
+          } catch (error) {
+            console.warn('Compression failed:', error);
+            resolve(file);
+          }
+        };
+        
+        img.onerror = function() {
+          console.warn('Image load failed, using original file');
+          resolve(file);
+        };
+        
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    // Upload both compressed and original images
+    async function uploadImages(originalFile, compressedFile, player, squareIndex, eventCode) {
+      try {
+        // Upload compressed version first (for immediate display)
+        const compressedFormData = new FormData();
+        compressedFormData.append("photo", compressedFile);
+        compressedFormData.append("player", player);
+        compressedFormData.append("square", squareIndex);
+        compressedFormData.append("eventCode", eventCode);
+        compressedFormData.append("type", "compressed");
+        
+        const compressedResponse = await fetch(`${workerURL}upload`, { 
+          method: "POST", 
+          body: compressedFormData 
+        });
+        
+        // Only upload original if it's different from compressed (i.e., compression actually happened)
+        if (originalFile !== compressedFile) {
+          // Upload original in background (don't wait for it)
+          const originalFormData = new FormData();
+          originalFormData.append("photo", originalFile);
+          originalFormData.append("player", player);
+          originalFormData.append("square", squareIndex);
+          originalFormData.append("eventCode", eventCode);
+          originalFormData.append("type", "original");
+          
+          // Background upload - don't await
+          fetch(`${workerURL}upload`, { 
+            method: "POST", 
+            body: originalFormData 
+          }).catch(err => {
+            console.warn('Background original upload failed:', err);
+          });
+        }
+        
+        return compressedResponse;
+      } catch (error) {
+        console.error('Upload failed:', error);
+        throw error;
+      }
+    }
+
     // Default squares for events without custom squares
     const defaultSquaresList = [
       "'n Ou foto saam met Anneke",
@@ -1459,6 +1577,15 @@
 
 
     const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
+    
+    // Photo compression settings - adjust these for optimal quality/performance balance
+    const COMPRESSION_CONFIG = {
+      maxWidth: 1200,
+      maxHeight: 1200,
+      quality: 0.85, // 85% quality - adjust between 0.7-0.95 for testing
+      format: 'image/jpeg'
+    };
+    
     const grid = document.getElementById("bingoGrid");
     const playerScroll = document.getElementById("playerScroll");
     const loadingSpinner = document.getElementById("loadingSpinner");
@@ -2104,20 +2231,29 @@
           const file = e.target.files[0];
           if (!file) return;
 
-            const formData = new FormData();
-            formData.append("photo", file);
-            formData.append("player", currentPlayer);
-            formData.append("square", index);
-            formData.append("eventCode", eventCode);
-
           // Show loading states
           setButtonLoading(addPhotoBtn, true);
-          resultDiv.innerHTML = '<div class="photo-loading">📤 Uploading photo...</div>';
-          showLoading("Uploading your photo...");
+          resultDiv.innerHTML = '<div class="photo-loading">📸 Compressing photo...</div>';
+          showLoading("Compressing and uploading your photo...");
 
           try {
-            const res = await fetch(`${workerURL}upload`, { method: "POST", body: formData });
+            // Compress the image
+            const compressedFile = await compressImage(file);
+            
+            // Debug info
+            const originalSize = (file.size / 1024).toFixed(1);
+            const compressedSize = (compressedFile.size / 1024).toFixed(1);
+            const compressionRatio = ((1 - compressedFile.size / file.size) * 100).toFixed(1);
+            
+            console.log(`Photo compression: ${originalSize}KB → ${compressedSize}KB (${compressionRatio}% reduction)`);
+            
+            // Update loading message
+            resultDiv.innerHTML = '<div class="photo-loading">📤 Uploading photo...</div>';
+            
+            // Upload both versions
+            const res = await uploadImages(file, compressedFile, currentPlayer, index, eventCode);
             const data = await res.json();
+            
             if (data.success && data.key) {
               const photoUrl = `${workerURL}photo/${data.key}`;
               resultDiv.innerHTML = `
@@ -2137,6 +2273,7 @@
               resultDiv.innerHTML = '<div class="photo-error">❌ Upload failed. Please try again.</div>';
             }
           } catch (err) {
+            console.error('Upload error:', err);
             resultDiv.innerHTML = '<div class="photo-error">❌ Error uploading photo. Please try again.</div>';
           } finally {
             setButtonLoading(addPhotoBtn, false);
