@@ -537,10 +537,27 @@ async function handleAdminRequest(request, env, corsHeaders) {
     }
 
     try {
-      // Get all original photos for this event
+      // Get all photos for this event (both original and thumbnails)
       const list = await env.EventBingoPhotos.list();
       const originalPhotos = [];
+      const thumbnailMap = new Map(); // Map to store thumbnail keys by player and square
       
+      // First pass: collect all thumbnails
+      for (const item of list.objects || []) {
+        const keyName = item.key;
+        if (keyName.startsWith(`thumb_${eventCode}_`)) {
+          // Parse thumbnail key: thumb_eventCode_player_squareX_timestamp
+          const parts = keyName.split('_');
+          if (parts.length >= 5) {
+            const player = parts[2];
+            const squareInfo = parts[3];
+            const thumbnailKey = `${player}_${squareInfo}`;
+            thumbnailMap.set(thumbnailKey, keyName);
+          }
+        }
+      }
+      
+      // Second pass: collect original photos and match with thumbnails
       for (const item of list.objects || []) {
         const keyName = item.key;
         if (keyName.startsWith(`original_${eventCode}_`)) {
@@ -553,12 +570,17 @@ async function handleAdminRequest(request, env, corsHeaders) {
             const squareInfo = parts.slice(2, -1).join('_');
             const timestamp = parts[parts.length - 1];
             
+            // Find matching thumbnail
+            const thumbnailKey = `${player}_${squareInfo}`;
+            const matchingThumbnail = thumbnailMap.get(thumbnailKey);
+            
             // Create friendly filename
             const filename = `${eventCode}_${player.replace(/_/g, ' ')}_${squareInfo}_${timestamp}.jpg`;
             
             originalPhotos.push({
               filename: filename,
               originalKey: keyName,
+              thumbnailKey: matchingThumbnail || null,
               data: await photo.arrayBuffer()
             });
           }
@@ -606,20 +628,21 @@ async function handleAdminRequest(request, env, corsHeaders) {
         const cleanSquareText = squareText.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').substring(0, 50);
         const betterFilename = `${eventCode}_${player.replace(/_/g, ' ')}_${cleanSquareText}.jpg`;
         
-        // Construct thumbnail URL - use the compressed version key
-        const thumbnailKey = `thumb_${eventCode}_${player}_square${squareIndex}_${timestamp}`;
+        // Use the actual thumbnail key if available
+        const thumbnailUrl = p.thumbnailKey ? `${url.origin}/photo/${p.thumbnailKey}` : null;
         
         // Debug logging
         console.log(`Original key: ${p.originalKey}`);
-        console.log(`Thumbnail key: ${thumbnailKey}`);
+        console.log(`Thumbnail key: ${p.thumbnailKey}`);
         console.log(`Better filename: ${betterFilename}`);
+        console.log(`Thumbnail URL: ${thumbnailUrl}`);
         
         return {
           ...p,
           betterFilename,
           player: player.replace(/_/g, ' '),
           squareText,
-          thumbnailUrl: `${url.origin}/photo/${thumbnailKey}`,
+          thumbnailUrl: thumbnailUrl,
           originalKey: p.originalKey
         };
       });
@@ -631,7 +654,10 @@ async function handleAdminRequest(request, env, corsHeaders) {
             <label for="photo-${index}" class="checkbox-label">Select</label>
           </div>
           <div class="photo-thumbnail">
-            <img src="${p.thumbnailUrl}" alt="Thumbnail" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0zNSA0MEw2NSA0MFY2MEgzNVY0MFoiIGZpbGw9IiM5Y2EzYWYiLz4KPGNpcmNsZSBjeD0iNDUiIGN5PSI1MCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4K'" />
+            ${p.thumbnailUrl ? 
+              `<img src="${p.thumbnailUrl}" alt="Thumbnail" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjNmNGY2Ii8+CjxwYXRoIGQ9Ik0zNSA0MEw2NSA0MFY2MEgzNVY0MFoiIGZpbGw9IiM5Y2EzYWYiLz4KPGNpcmNsZSBjeD0iNDUiIGN5PSI1MCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4K'" />` :
+              `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 0.9rem;">No Preview</div>`
+            }
           </div>
           <div class="photo-info">
             <div class="photo-title">${p.player}</div>
