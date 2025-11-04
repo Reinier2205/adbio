@@ -32,10 +32,6 @@ class AdvancedProgressUI {
     const sortingPanel = this.createSortingPanel();
     container.appendChild(sortingPanel);
 
-    // Create dark mode toggle
-    const darkModePanel = this.createDarkModePanel();
-    container.appendChild(darkModePanel);
-
     // Create statistics panel
     const statsPanel = this.createStatisticsPanel();
     container.appendChild(statsPanel);
@@ -71,27 +67,7 @@ class AdvancedProgressUI {
     return panel;
   }
 
-  /**
-   * Create dark mode toggle panel
-   * @returns {HTMLElement} Dark mode panel element
-   */
-  createDarkModePanel() {
-    const panel = document.createElement('div');
-    panel.className = 'dark-mode-settings';
-    
-    panel.innerHTML = `
-      <h4>Display Settings</h4>
-      <div class="dark-mode-options">
-        <label class="dark-mode-toggle">
-          <input type="checkbox" id="darkModeToggle">
-          <span class="toggle-slider"></span>
-          <span class="toggle-label">🌙 Dark Mode</span>
-        </label>
-      </div>
-    `;
 
-    return panel;
-  }
 
   /**
    * Create statistics panel
@@ -168,16 +144,7 @@ class AdvancedProgressUI {
       });
     }
 
-    // Dark mode toggle
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    if (darkModeToggle) {
-      // Set initial state based on current dark mode
-      darkModeToggle.checked = document.body.classList.contains('dark-mode');
-      
-      darkModeToggle.addEventListener('change', (e) => {
-        this.toggleDarkMode(e.target.checked);
-      });
-    }
+
   }
 
   /**
@@ -316,24 +283,7 @@ class AdvancedProgressUI {
     }
   }
 
-  /**
-   * Toggle dark mode
-   * @param {boolean} enabled - Whether dark mode should be enabled
-   */
-  toggleDarkMode(enabled) {
-    if (enabled) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
-    
-    // Save preference to localStorage
-    try {
-      localStorage.setItem('eventbingo:darkMode', enabled.toString());
-    } catch (error) {
-      console.log('Could not save dark mode preference');
-    }
-  }
+
 
   /**
    * Get current settings
@@ -341,11 +291,9 @@ class AdvancedProgressUI {
    */
   getSettings() {
     const challengeSort = document.getElementById('challengeSort');
-    const darkModeToggle = document.getElementById('darkModeToggle');
     
     return {
       challengeSort: challengeSort ? challengeSort.value : 'popularity-desc',
-      darkMode: darkModeToggle ? darkModeToggle.checked : false,
       isVisible: this.isVisible
     };
   }
@@ -362,13 +310,7 @@ class AdvancedProgressUI {
       }
     }
 
-    if (settings.darkMode !== undefined) {
-      const darkModeToggle = document.getElementById('darkModeToggle');
-      if (darkModeToggle) {
-        darkModeToggle.checked = settings.darkMode;
-        this.toggleDarkMode(settings.darkMode);
-      }
-    }
+
 
     if (settings.isVisible && !this.isVisible) {
       this.show();

@@ -298,21 +298,92 @@
 
     /* Dark mode for info page */
     body.dark-mode {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      background: #1a1a1a;
       color: #ffffff;
     }
+    
     body.dark-mode .top-bar,
     body.dark-mode .bottom-nav {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
+      background: #2d2d2d;
+      border-color: #404040;
     }
+    
     body.dark-mode .page-title,
     body.dark-mode .back-button,
     body.dark-mode .nav-icon {
       color: #ffffff;
     }
-    body.dark-mode .section { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
-    body.dark-mode .hero-section { box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    
+    body.dark-mode .section {
+      background: #2d2d2d;
+      border-color: #404040;
+    }
+    
+    body.dark-mode .hero-section {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    
+    body.dark-mode .step {
+      background: #333333;
+      border-left-color: var(--instagram-pink);
+    }
+    
+    body.dark-mode .step-title {
+      color: #ffffff;
+    }
+    
+    body.dark-mode .step-description {
+      color: #cccccc;
+    }
+    
+    body.dark-mode .feature-card {
+      background: #333333;
+    }
+    
+    body.dark-mode .feature-title {
+      color: #ffffff;
+    }
+    
+    body.dark-mode .feature-description {
+      color: #cccccc;
+    }
+    
+    body.dark-mode .example-card {
+      background: #2d2d2d;
+      border-left-color: var(--instagram-orange);
+    }
+    
+    body.dark-mode .example-title {
+      color: var(--instagram-orange);
+    }
+    
+    body.dark-mode .example-text {
+      color: #cccccc;
+    }
+    
+    body.dark-mode .highlight-text {
+      color: #ffffff;
+    }
+    
+    body.dark-mode #eventCodeInput {
+      background: #333333;
+      color: #ffffff;
+      border-color: #555555;
+    }
+    
+    body.dark-mode #eventCodeInput::placeholder {
+      color: #999999;
+    }
+    
+    body.dark-mode #noCodeBtn {
+      background: #333333;
+      color: #ffffff;
+      border-color: #555555;
+    }
+    
+    body.dark-mode #eventHint {
+      color: #999999;
+    }
 
     /* Loading Animation */
     @keyframes spin {
@@ -627,6 +698,25 @@
 
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
+      // Save preference to localStorage
+      try {
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        localStorage.setItem('eventbingo:darkMode', isDarkMode.toString());
+      } catch (error) {
+        console.log('Could not save dark mode preference');
+      }
+    }
+
+    // Detect and apply dark mode from app's localStorage setting
+    function detectDarkMode() {
+      try {
+        const isDarkMode = localStorage.getItem('eventbingo:darkMode') === 'true';
+        if (isDarkMode) {
+          document.body.classList.add('dark-mode');
+        }
+      } catch (error) {
+        console.log('Could not detect dark mode preference');
+      }
     }
 
     function toggleMusic() {
@@ -641,6 +731,11 @@
           behavior: 'smooth'
         });
       });
+    });
+
+    // Initialize dark mode detection
+    document.addEventListener('DOMContentLoaded', function() {
+      detectDarkMode();
     });
 
     // Landing flow: event code capture, validation, and redirection

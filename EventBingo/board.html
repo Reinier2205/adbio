@@ -266,48 +266,7 @@
       box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
     }
 
-    .dark-mode-btn {
-      font-size: 1.2rem;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      border: none;
-      background: transparent;
-      transition: all 0.2s ease;
-      color: var(--text-dark);
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
 
-    .dark-mode-btn:hover {
-      background-color: rgba(0,0,0,0.1);
-      transform: scale(1.1);
-    }
-
-    .dark-mode-btn:active {
-      transform: scale(1.05);
-      background-color: rgba(0,0,0,0.15);
-    }
-
-    .dark-mode-btn:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
-    }
-
-    body.dark-mode .dark-mode-btn {
-      color: #e0e0e0;
-    }
-
-    body.dark-mode .dark-mode-btn:hover {
-      background-color: rgba(255,255,255,0.1);
-    }
-
-    body.dark-mode .dark-mode-btn:active {
-      background-color: rgba(255,255,255,0.15);
-    }
 
     .bingo-square:focus {
       outline: none;
@@ -1157,6 +1116,14 @@
       border-color: #404040;
     }
 
+    body.dark-mode .page-title {
+      color: #ffffff;
+    }
+
+    body.dark-mode .back-button {
+      color: #ffffff;
+    }
+
     body.dark-mode .photo-item {
       background: #2d2d2d;
       border-color: #404040;
@@ -1345,81 +1312,9 @@
       box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
     }
 
-    /* Dark Mode Toggle Styles */
-    .dark-mode-settings {
-      padding: 15px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .dark-mode-settings h4 {
-      margin: 0 0 10px 0;
-      font-size: 0.9rem;
-      color: var(--text-dark);
-      font-weight: 600;
-    }
-
-    .dark-mode-toggle {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .toggle-slider {
-      position: relative;
-      width: 50px;
-      height: 24px;
-      background: #ccc;
-      border-radius: 12px;
-      transition: background 0.3s ease;
-    }
-
-    .toggle-slider::before {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      background: white;
-      border-radius: 50%;
-      transition: transform 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    #darkModeToggle {
-      display: none;
-    }
-
-    #darkModeToggle:checked + .toggle-slider {
-      background: var(--primary);
-    }
-
-    #darkModeToggle:checked + .toggle-slider::before {
-      transform: translateX(26px);
-    }
-
-    .toggle-label {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
     /* Dark mode for advanced controls */
     body.dark-mode .advanced-progress-controls {
       background: rgba(45, 45, 45, 0.95);
-    }
-
-    body.dark-mode .dark-mode-settings {
-      border-bottom-color: #555;
-    }
-
-    body.dark-mode .dark-mode-settings h4 {
-      color: #e0e0e0;
-    }
-
-    body.dark-mode .toggle-label {
-      color: #e0e0e0;
     }
 
     body.dark-mode .advanced-toggle {
@@ -1436,7 +1331,7 @@
   <div class="top-bar">
     <a href="#" class="back-button" onclick="goBack()">←</a>
     <div class="page-title">🎯 Bingo Board</div>
-    <button class="dark-mode-btn" onclick="toggleDarkModeQuick()" title="Toggle Dark Mode">🌙</button>
+    <div style="width: 50px;"></div> <!-- Spacer for centering -->
   </div>
 
   <!-- Player Selection -->
@@ -1569,37 +1464,7 @@
       window.location.href = backUrl;
     }
 
-    // Quick dark mode toggle function
-    function toggleDarkModeQuick() {
-      const isDarkMode = document.body.classList.contains('dark-mode');
-      const newDarkMode = !isDarkMode;
-      
-      if (newDarkMode) {
-        document.body.classList.add('dark-mode');
-      } else {
-        document.body.classList.remove('dark-mode');
-      }
-      
-      // Save preference to localStorage
-      try {
-        localStorage.setItem('eventbingo:darkMode', newDarkMode.toString());
-      } catch (error) {
-        console.log('Could not save dark mode preference');
-      }
-      
-      // Update the advanced UI toggle if it exists
-      const darkModeToggle = document.getElementById('darkModeToggle');
-      if (darkModeToggle) {
-        darkModeToggle.checked = newDarkMode;
-      }
-      
-      // Update button icon
-      const darkModeBtn = document.querySelector('.dark-mode-btn');
-      if (darkModeBtn) {
-        darkModeBtn.textContent = newDarkMode ? '☀️' : '🌙';
-        darkModeBtn.title = newDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode';
-      }
-    }
+
 
     // Initialize the board
     document.addEventListener('DOMContentLoaded', async function() {
@@ -1609,19 +1474,12 @@
       await initializeBoardController();
     });
 
-    // Detect and apply dark mode from localStorage
+    // Detect and apply dark mode from app's localStorage setting
     function detectDarkMode() {
       try {
         const isDarkMode = localStorage.getItem('eventbingo:darkMode') === 'true';
         if (isDarkMode) {
           document.body.classList.add('dark-mode');
-        }
-        
-        // Update dark mode button icon
-        const darkModeBtn = document.querySelector('.dark-mode-btn');
-        if (darkModeBtn) {
-          darkModeBtn.textContent = isDarkMode ? '☀️' : '🌙';
-          darkModeBtn.title = isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode';
         }
       } catch (error) {
         console.log('Could not detect dark mode preference');
