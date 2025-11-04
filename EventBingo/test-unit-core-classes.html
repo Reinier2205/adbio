@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Classes Unit Tests - EventBingo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .summary {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Core Classes Unit Tests</h1>
+        <p>Comprehensive unit tests for SessionManager, PlayerAuthenticator, FlowController, and StatePreserver classes.</p>
+        
+        <div class="test-controls">
+            <button onclick="runAllTests()">🚀 Run All Tests</button>
+            <button onclick="runSessionManagerTests()">📦 SessionManager Tests</button>
+            <button onclick="runPlayerAuthenticatorTests()">🔐 PlayerAuthenticator Tests</button>
+            <button onclick="runFlowControllerTests()">🔄 FlowController Tests</button>
+            <button onclick="runStatePreserverTests()">💾 StatePreserver Tests</button>
+            <button onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+
+        <div id="testSummary" class="summary" style="display: none;"></div>
+        <div id="testResults"></div>
+    </div>
+
+    <!-- Include required scripts -->
+    <script src="js/session-manager.js"></script>
+    <script src="js/player-authenticator.js"></script>
+    <script src="js/flow-controller.js"></script>
+    <script src="js/state-preserver.js"></script>
+
+    <script>
+        // Test tracking
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            results: []
+        };
+
+        function addResult(message, type = 'info', category = 'general') {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = `[${category.toUpperCase()}] ${message}`;
+            resultsDiv.appendChild(resultDiv);
+            
+            testStats.results.push({ message, type, category, timestamp: Date.now() });
+            
+            if (type === 'success') testStats.passed++;
+            if (type === 'error') testStats.failed++;
+            testStats.total++;
+            
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('testSummary');
+            const passRate = testStats.total > 0 ? ((testStats.passed / testStats.total) * 100).toFixed(1) : 0;
+            summaryDiv.innerHTML = `
+                📊 Test Summary: ${testStats.passed}/${testStats.total} passed (${passRate}%) | 
+                ✅ ${testStats.passed} passed | ❌ ${testStats.failed} failed
+            `;
+            summaryDiv.style.display = 'block';
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('testSummary').style.display = 'none';
+            testStats = { total: 0, passed: 0, failed: 0, results: [] };
+        }
+
+        async function runTest(testName, testFn, category = 'test') {
+            try {
+                const result = await testFn();
+                if (result === true) {
+                    addResult(`✅ ${testName}`, 'success', category);
+                } else if (result === false) {
+                    addResult(`❌ ${testName}`, 'error', category);
+                } else if (result && result.success) {
+                    addResult(`✅ ${testName}: ${result.message || 'Passed'}`, 'success', category);
+                } else if (result && !result.success) {
+                    addResult(`❌ ${testName}: ${result.message || 'Failed'}`, 'error', category);
+                } else {
+                    addResult(`⚠️ ${testName}: Unexpected result`, 'warning', category);
+                }
+            } catch (error) {
+                addResult(`❌ ${testName}: ${error.message}`, 'error', category);
+            }
+        }
+
+        // SessionManager Unit Tests
+        async function runSessionManagerTests() {
+            addResult('Starting SessionManager unit tests...', 'info', 'session');
+            
+            const sessionManager = new SessionManager();
+            const testEventCode = 'unit-test-event';
+            const testPlayerName = 'UnitTestPlayer';
+            const testQuestion = 'What is your favorite unit test?';
+            const testAnswer = 'jest';
+
+            // Clean up any existing test data
+            sessionManager.clearPlayerSession(testEventCode);
+
+            await runTest('Storage availability check', async () => {
+                return sessionManager.isStorageAvailable();
+            }, 'session');
+
+            await runTest('Save player session', async () => {
+                return await sessionManager.savePlayerSession(testEventCode, testPlayerName, testQuestion, testAnswer);
+            }, 'session');
+
+            await runTest('Get player session', async () => {
+                const session = sessionManager.getPlayerSession(testEventCode);
+                return session && session.playerName === testPlayerName && session.secretQuestion === testQuestion;
+            }, 'session');
+
+            await runTest('Validate session data', async () => {
+                const session = sessionManager.getPlayerSession(testEventCode);
+                return sessionManager.validateSessionData(session);
+            }, 'session');
+
+            await runTest('Secret answer validation (correct)', async () => {
+                const session = sessionManager.getPlayerSession(testEventCode);
+                return await sessionManager.validateSecretAnswer(testAnswer, session.secretAnswerHash);
+            }, 'session');
+
+            await runTest('Secret answer validation (incorrect)', async () => {
+                const session = sessionManager.getPlayerSession(testEventCode);
+                const result = await sessionManager.validateSecretAnswer('wrong', session.secretAnswerHash);
+                return !result; // Should return false for wrong answer
+            }, 'session');
+
+            await runTest('Clear player session', async () => {
+                return sessionManager.clearPlayerSession(testEventCode);
+            }, 'session');
+
+            addResult('SessionManager unit tests completed', 'info', 'session');
+        }
+
+        // PlayerAuthenticator Unit Tests
+        async function runPlayerAuthenticatorTests() {
+            addResult('Starting PlayerAuthenticator unit tests...', 'info', 'auth');
+            
+            const sessionManager = new SessionManager();
+            const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+            const testEventCode = 'auth-test-event';
+            const testPlayerName = 'AuthTestPlayer';
+            const testQuestion = 'What is your favorite authentication method?';
+            const testAnswer = 'oauth2';
+
+            // Clean up any existing test data
+            sessionManager.clearPlayerSession(testEventCode);
+
+            await runTest('Create player profile', async () => {
+                const result = await playerAuthenticator.createPlayerProfile(testEventCode, testPlayerName, testQuestion, testAnswer);
+                return result.success;
+            }, 'auth');
+
+            await runTest('Authenticate with correct answer', async () => {
+                const result = await playerAuthenticator.authenticatePlayer(testEventCode, testPlayerName, testAnswer);
+                return result.success;
+            }, 'auth');
+
+            await runTest('Authenticate with wrong answer', async () => {
+                const result = await playerAuthenticator.authenticatePlayer(testEventCode, testPlayerName, 'wrong');
+                return !result.success; // Should fail
+            }, 'auth');
+
+            // Clean up
+            sessionManager.clearPlayerSession(testEventCode);
+            addResult('PlayerAuthenticator unit tests completed', 'info', 'auth');
+        }
+
+        // FlowController Unit Tests
+        async function runFlowControllerTests() {
+            addResult('Starting FlowController unit tests...', 'info', 'flow');
+            
+            const sessionManager = new SessionManager();
+            const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+            const statePreserver = new StatePreserver(sessionManager);
+            const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+
+            await runTest('Determine user intent', async () => {
+                const intent = await flowController.determineUserIntent();
+                return intent && intent.action && typeof intent.reason === 'string';
+            }, 'flow');
+
+            addResult('FlowController unit tests completed', 'info', 'flow');
+        }
+
+        // StatePreserver Unit Tests
+        async function runStatePreserverTests() {
+            addResult('Starting StatePreserver unit tests...', 'info', 'state');
+            
+            const sessionManager = new SessionManager();
+            const statePreserver = new StatePreserver(sessionManager);
+
+            await runTest('Save navigation state', async () => {
+                const testState = {
+                    eventCode: 'state-test',
+                    playerName: 'StateTestPlayer',
+                    page: 'board.html',
+                    action: 'test'
+                };
+                return statePreserver.saveNavigationState(testState);
+            }, 'state');
+
+            await runTest('Restore navigation state', async () => {
+                const restored = statePreserver.restoreNavigationState();
+                return restored && restored.eventCode === 'state-test';
+            }, 'state');
+
+            addResult('StatePreserver unit tests completed', 'info', 'state');
+        }
+
+        // Run all tests
+        async function runAllTests() {
+            clearResults();
+            addResult('🚀 Starting comprehensive unit tests for all core classes...', 'info', 'main');
+            
+            await runSessionManagerTests();
+            await runPlayerAuthenticatorTests();
+            await runFlowControllerTests();
+            await runStatePreserverTests();
+            
+            addResult('🎉 All unit tests completed!', 'info', 'main');
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            addResult('Unit test suite loaded. Click "Run All Tests" to start.', 'info', 'main');
+        });
+    </script>
+</body>
+</html>

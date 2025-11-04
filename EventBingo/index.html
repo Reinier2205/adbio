@@ -1626,53 +1626,6 @@
     // Legacy AuthManager removed - now using SessionManager and PlayerAuthenticator
 
     // Legacy authentication functions removed - now using SessionManager and PlayerAuthenticator
-        
-        // Show view-only message if not already shown
-        if (!document.getElementById('viewOnlyMessage')) {
-          const message = document.createElement('div');
-          message.id = 'viewOnlyMessage';
-          message.style.cssText = `
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-            z-index: 1000;
-            font-weight: 600;
-            text-align: center;
-            max-width: 90%;
-            font-size: 0.9rem;
-          `;
-          message.innerHTML = `
-            👀 View-Only Mode<br>
-            <small style="font-size: 0.8rem; opacity: 0.9;">You can view ${currentPlayer}'s photos but cannot upload for ${currentPlayer}</small>
-          `;
-          document.body.appendChild(message);
-          
-          // Auto-hide after 5 seconds
-          setTimeout(() => {
-            if (message.parentNode) {
-              message.parentNode.removeChild(message);
-            }
-          }, 5000);
-        }
-      } else {
-        // Show upload UI elements
-        uploadSections.forEach(section => {
-          section.style.display = 'block';
-        });
-        
-        // Remove view-only message if present
-        const existingMessage = document.getElementById('viewOnlyMessage');
-        if (existingMessage && existingMessage.parentNode) {
-          existingMessage.parentNode.removeChild(existingMessage);
-        }
-      }
-    }
     
     const grid = document.getElementById("bingoGrid");
     const playerScroll = document.getElementById("playerScroll");
