@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Handler Test - EventBingo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #357abd;
+        }
+        .test-button.danger {
+            background: #e74c3c;
+        }
+        .test-button.danger:hover {
+            background: #c0392b;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e8f4fd;
+            border-left: 4px solid #4a90e2;
+        }
+        .error {
+            background: #fee;
+            border-left-color: #e74c3c;
+        }
+        .success {
+            background: #efe;
+            border-left-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <h1>Error Handler Test Suite</h1>
+    <p>This page tests the comprehensive error handling and recovery system.</p>
+
+    <div class="test-section">
+        <h2>Storage Error Tests</h2>
+        <button class="test-button" onclick="testStorageOperation()">Test Safe Storage Operation</button>
+        <button class="test-button" onclick="testStorageQuotaExceeded()">Simulate Quota Exceeded</button>
+        <button class="test-button" onclick="testStorageFallback()">Test Storage Fallback</button>
+        <div id="storage-status" class="status" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Corrupted Data Tests</h2>
+        <button class="test-button" onclick="testCorruptedDataDetection()">Test Corrupted Data Detection</button>
+        <button class="test-button" onclick="testDataRecovery()">Test Data Recovery</button>
+        <button class="test-button danger" onclick="testClearCorruptedData()">Clear Corrupted Data</button>
+        <div id="corruption-status" class="status" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Network Connectivity Tests</h2>
+        <button class="test-button" onclick="testNetworkStatus()">Check Network Status</button>
+        <button class="test-button" onclick="testOfflineMode()">Simulate Offline Mode</button>
+        <button class="test-button" onclick="testActionQueue()">Test Action Queue</button>
+        <div id="network-status" class="status" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Error Logging Tests</h2>
+        <button class="test-button" onclick="testErrorLogging()">Generate Test Errors</button>
+        <button class="test-button" onclick="testErrorAnalytics()">View Error Analytics</button>
+        <button class="test-button" onclick="testExportErrorLog()">Export Error Log</button>
+        <button class="test-button danger" onclick="testClearErrorLog()">Clear Error Log</button>
+        <div id="logging-status" class="status" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Integration Tests</h2>
+        <button class="test-button" onclick="testSessionManagerIntegration()">Test SessionManager Integration</button>
+        <button class="test-button" onclick="testPlayerAuthenticatorIntegration()">Test PlayerAuthenticator Integration</button>
+        <button class="test-button" onclick="testFlowControllerIntegration()">Test FlowController Integration</button>
+        <div id="integration-status" class="status" style="display: none;"></div>
+    </div>
+
+    <!-- Include the required JavaScript files -->
+    <script src="js/error-handler.js"></script>
+    <script src="js/session-manager.js"></script>
+    <script src="js/player-authenticator.js"></script>
+    <script src="js/flow-controller.js"></script>
+
+    <script>
+        // Initialize error handler
+        const errorHandler = new ErrorHandler();
+        const sessionManager = new SessionManager(errorHandler);
+        const playerAuthenticator = new PlayerAuthenticator(sessionManager, errorHandler);
+        const flowController = new FlowController(sessionManager, playerAuthenticator, null, errorHandler);
+
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+        }
+
+        // Storage Error Tests
+        async function testStorageOperation() {
+            try {
+                const result = await errorHandler.safeStorageOperation('setItem', 'test-key', 'test-value');
+                showStatus('storage-status', 
+                    `Storage operation ${result.success ? 'succeeded' : 'failed'}: ${result.error || 'OK'}`,
+                    result.success ? 'success' : 'error'
+                );
+            } catch (error) {
+                showStatus('storage-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testStorageQuotaExceeded() {
+            try {
+                // Create a large string to simulate quota exceeded
+                const largeData = 'x'.repeat(10 * 1024 * 1024); // 10MB string
+                const result = await errorHandler.handleStorageQuotaExceeded('test-large-key', largeData);
+                showStatus('storage-status', 
+                    `Quota handling: ${result.success ? 'handled' : 'failed'} - ${result.message || result.error}`,
+                    result.success ? 'success' : 'error'
+                );
+            } catch (error) {
+                showStatus('storage-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function testStorageFallback() {
+            const notification = errorHandler.createStorageNotification('storage_fallback', {
+                storageType: 'sessionStorage'
+            });
+            showStatus('storage-status', 'Storage fallback notification created', 'success');
+        }
+
+        // Corrupted Data Tests
+        async function testCorruptedDataDetection() {
+            try {
+                const corruptedData = '{"playerName":"John","secretQuestion":"What is"'; // Incomplete JSON
+                const result = await errorHandler.detectCorruptedData('test-corrupted-key', corruptedData);
+                showStatus('corruption-status', 
+                    `Corruption detection: ${result.success ? 'recovered data' : 'needs user action'} - ${result.message}`,
+                    result.success ? 'success' : 'error'
+                );
+            } catch (error) {
+                showStatus('corruption-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDataRecovery() {
+            try {
+                const partialData = '{"playerName":"John Doe","secretQuestion":"What is your favorite color?","incomplete';
+                const result = await errorHandler.detectCorruptedData('test-recovery-key', partialData);
+                showStatus('corruption-status', 
+                    `Data recovery: ${result.success ? 'successful' : 'failed'} - ${result.message || result.error}`,
+                    result.success ? 'success' : 'error'
+                );
+            } catch (error) {
+                showStatus('corruption-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testClearCorruptedData() {
+            try {
+                const result = await errorHandler.clearCorruptedData('test-corrupted-key', true);
+                showStatus('corruption-status', 
+                    `Clear corrupted data: ${result.success ? 'successful' : 'failed'} - ${result.message || result.error}`,
+                    result.success ? 'success' : 'error'
+                );
+            } catch (error) {
+                showStatus('corruption-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Network Connectivity Tests
+        function testNetworkStatus() {
+            const result = errorHandler.handleNetworkConnectivity();
+            showStatus('network-status', 
+                `Network status: ${result.isOnline ? 'online' : 'offline'} - ${result.message}`,
+                result.isOnline ? 'success' : 'error'
+            );
+        }
+
+        function testOfflineMode() {
+            errorHandler._enableOfflineMode();
+            const status = errorHandler.getOfflineModeStatus();
+            showStatus('network-status', 
+                `Offline mode: ${status.isOffline ? 'enabled' : 'disabled'}, queued actions: ${status.queuedActionsCount}`,
+                'info'
+            );
+        }
+
+        function testActionQueue() {
+            errorHandler.queueActionForOnline('test_action', { data: 'test' });
+            errorHandler.queueActionForOnline('save_session', { eventCode: 'test123', playerName: 'Test User' });
+            const status = errorHandler.getOfflineModeStatus();
+            showStatus('network-status', 
+                `Actions queued: ${status.queuedActionsCount}`,
+                'success'
+            );
+        }
+
+        // Error Logging Tests
+        function testErrorLogging() {
+            // Generate some test errors
+            errorHandler._logError('test_error', { message: 'This is a test error', severity: 'low' });
+            errorHandler._logError('storage_operation_failed', { operation: 'setItem', key: 'test' });
+            errorHandler._logError('network_connectivity_failed', { url: 'https://example.com' });
+            
+            showStatus('logging-status', 
+                `Generated 3 test errors. Total errors in log: ${errorHandler.errorLog.length}`,
+                'success'
+            );
+        }
+
+        function testErrorAnalytics() {
+            const analytics = errorHandler.getErrorAnalytics();
+            showStatus('logging-status', 
+                `Analytics: ${analytics.totalErrors} total errors, ${Object.keys(analytics.errorsByType).length} error types`,
+                'info'
+            );
+            console.log('Error Analytics:', analytics);
+        }
+
+        async function testExportErrorLog() {
+            try {
+                const result = await errorHandler.exportErrorLogForSupport();
+                showStatus('logging-status', 
+                    `Export ${result.success ? 'successful' : 'failed'}: ${result.filename || result.error}`,
+                    result.success ? 'success' : 'error'
+                );
+            } catch (error) {
+                showStatus('logging-status', `Export error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testClearErrorLog() {
+            try {
+                const result = await errorHandler.clearErrorLog(true); // Skip confirmation for test
+                showStatus('logging-status', 
+                    `Clear error log: ${result ? 'successful' : 'failed'}`,
+                    result ? 'success' : 'error'
+                );
+            } catch (error) {
+                showStatus('logging-status', `Clear error: ${error.message}`, 'error');
+            }
+        }
+
+        // Integration Tests
+        async function testSessionManagerIntegration() {
+            try {
+                const success = await sessionManager.savePlayerSession('test123', 'Test User', 'What is your favorite color?', 'blue');
+                const session = await sessionManager.getPlayerSession('test123');
+                
+                showStatus('integration-status', 
+                    `SessionManager integration: Save ${success ? 'successful' : 'failed'}, Load ${session ? 'successful' : 'failed'}`,
+                    (success && session) ? 'success' : 'error'
+                );
+            } catch (error) {
+                showStatus('integration-status', `SessionManager error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPlayerAuthenticatorIntegration() {
+            try {
+                // First create a player profile
+                const createResult = await playerAuthenticator.createPlayerProfile('test123', 'Test User', 'What is your favorite color?', 'blue');
+                
+                if (createResult.success) {
+                    // Then try to authenticate
+                    const authResult = await playerAuthenticator.authenticatePlayer('test123', 'Test User', 'blue');
+                    
+                    showStatus('integration-status', 
+                        `PlayerAuthenticator integration: Create ${createResult.success ? 'successful' : 'failed'}, Auth ${authResult.success ? 'successful' : 'failed'}`,
+                        (createResult.success && authResult.success) ? 'success' : 'error'
+                    );
+                } else {
+                    showStatus('integration-status', `PlayerAuthenticator create failed: ${createResult.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('integration-status', `PlayerAuthenticator error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFlowControllerIntegration() {
+            try {
+                const result = await flowController.handlePageLoad();
+                showStatus('integration-status', 
+                    `FlowController integration: ${result.success ? 'successful' : 'failed'} - ${result.action || result.error}`,
+                    result.success ? 'success' : 'error'
+                );
+            } catch (error) {
+                showStatus('integration-status', `FlowController error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Error Handler Test Suite loaded');
+            console.log('ErrorHandler instance:', errorHandler);
+            
+            // Show initial status
+            testNetworkStatus();
+        });
+    </script>
+</body>
+</html>

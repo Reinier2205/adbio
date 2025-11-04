@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info.html Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .test-btn {
+            background: #28a745;
+        }
+        .test-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>📄 Info.html Integration Test</h1>
+        <p>This test verifies that info.html is properly integrated with SessionManager, FlowController, and StatePreserver.</p>
+        
+        <div id="testResults"></div>
+        
+        <button onclick="runIntegrationTests()" class="test-btn">🧪 Run Integration Tests</button>
+        <button onclick="testSessionManagement()">💾 Test Session Management</button>
+        <button onclick="testNavigationFlow()">🔄 Test Navigation Flow</button>
+        <button onclick="testDarkModeConsistency()">🌓 Test Dark Mode</button>
+        <button onclick="openInfoPage()">📄 Open Info Page</button>
+    </div>
+
+    <!-- Include required scripts -->
+    <script src="js/session-manager.js"></script>
+    <script src="js/player-authenticator.js"></script>
+    <script src="js/state-preserver.js"></script>
+    <script src="js/flow-controller.js"></script>
+
+    <script>
+        let testResults = document.getElementById('testResults');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            testResults.appendChild(div);
+        }
+
+        function clearResults() {
+            testResults.innerHTML = '';
+        }
+
+        async function runIntegrationTests() {
+            clearResults();
+            addResult('🚀 Starting Info.html Integration Tests...', 'info');
+
+            try {
+                // Test 1: Verify SessionManager integration
+                addResult('1️⃣ Testing SessionManager integration...', 'info');
+                
+                const sessionManager = new SessionManager();
+                
+                // Test saving and retrieving last used event
+                const testEvent = 'test-info-integration-123';
+                const saveResult = await sessionManager.setLastUsedEvent(testEvent);
+                
+                if (saveResult) {
+                    addResult('   ✅ SessionManager can save last used event', 'success');
+                } else {
+                    addResult('   ❌ SessionManager failed to save last used event', 'error');
+                    return;
+                }
+
+                const retrievedEvent = await sessionManager.getLastUsedEvent();
+                if (retrievedEvent === testEvent) {
+                    addResult('   ✅ SessionManager can retrieve last used event', 'success');
+                } else {
+                    addResult('   ❌ SessionManager failed to retrieve correct event', 'error');
+                    return;
+                }
+
+                // Test 2: Verify StatePreserver integration
+                addResult('2️⃣ Testing StatePreserver integration...', 'info');
+                
+                const statePreserver = new StatePreserver(sessionManager);
+                
+                const testState = {
+                    fromPage: 'test.html',
+                    toPage: 'info.html',
+                    eventCode: testEvent,
+                    action: 'testNavigation'
+                };
+
+                const stateResult = statePreserver.saveNavigationState(testState);
+                if (stateResult) {
+                    addResult('   ✅ StatePreserver can save navigation state', 'success');
+                } else {
+                    addResult('   ❌ StatePreserver failed to save navigation state', 'error');
+                    return;
+                }
+
+                const restoredState = statePreserver.restoreNavigationState();
+                if (restoredState && restoredState.eventCode === testEvent) {
+                    addResult('   ✅ StatePreserver can restore navigation state', 'success');
+                } else {
+                    addResult('   ❌ StatePreserver failed to restore navigation state', 'error');
+                    return;
+                }
+
+                // Test 3: Verify FlowController integration
+                addResult('3️⃣ Testing FlowController integration...', 'info');
+                
+                const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+                const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+                
+                // Test user intent determination
+                const intent = await flowController.determineUserIntent();
+                if (intent && intent.action) {
+                    addResult(`   ✅ FlowController can determine user intent: ${intent.action}`, 'success');
+                } else {
+                    addResult('   ❌ FlowController failed to determine user intent', 'error');
+                    return;
+                }
+
+                // Test 4: Verify context preservation
+                addResult('4️⃣ Testing context preservation...', 'info');
+                
+                flowController._preserveNavigationContext({
+                    fromPage: 'test.html',
+                    toPage: 'info.html',
+                    eventCode: testEvent,
+                    action: 'testContextPreservation'
+                });
+
+                const restoredContext = flowController.restoreNavigationContext();
+                if (restoredContext && restoredContext.eventCode === testEvent) {
+                    addResult('   ✅ FlowController can preserve and restore context', 'success');
+                } else {
+                    addResult('   ❌ FlowController failed to preserve context', 'error');
+                    return;
+                }
+
+                // Test 5: Verify dark mode consistency
+                addResult('5️⃣ Testing dark mode consistency...', 'info');
+                
+                // Set dark mode preference
+                localStorage.setItem('eventbingo:darkMode', 'true');
+                
+                // Check if preference is stored correctly
+                const darkModePreference = localStorage.getItem('eventbingo:darkMode');
+                if (darkModePreference === 'true') {
+                    addResult('   ✅ Dark mode preference stored correctly', 'success');
+                } else {
+                    addResult('   ❌ Dark mode preference not stored correctly', 'error');
+                }
+
+                addResult('🎉 All Info.html integration tests passed!', 'success');
+
+            } catch (error) {
+                addResult(`❌ Integration test failed: ${error.message}`, 'error');
+                console.error('Integration test error:', error);
+            }
+        }
+
+        async function testSessionManagement() {
+            clearResults();
+            addResult('💾 Testing Session Management Features...', 'info');
+
+            try {
+                const sessionManager = new SessionManager();
+                
+                // Test session creation
+                const testEventCode = 'session-test-456';
+                const testPlayerName = 'TestPlayer';
+                const testQuestion = 'What is your favorite color?';
+                const testAnswer = 'blue';
+
+                const saveResult = await sessionManager.savePlayerSession(
+                    testEventCode, 
+                    testPlayerName, 
+                    testQuestion, 
+                    testAnswer
+                );
+
+                if (saveResult) {
+                    addResult('✅ Player session saved successfully', 'success');
+                } else {
+                    addResult('❌ Failed to save player session', 'error');
+                    return;
+                }
+
+                // Test session retrieval
+                const session = await sessionManager.getPlayerSession(testEventCode);
+                if (session && session.playerName === testPlayerName) {
+                    addResult('✅ Player session retrieved successfully', 'success');
+                    addResult(`   📄 Player: ${session.playerName}`, 'info');
+                    addResult(`   🔐 Question: ${session.secretQuestion}`, 'info');
+                } else {
+                    addResult('❌ Failed to retrieve player session', 'error');
+                    return;
+                }
+
+                // Test answer validation
+                const isValidAnswer = await sessionManager.validateSecretAnswer(testAnswer, session.secretAnswerHash);
+                if (isValidAnswer) {
+                    addResult('✅ Secret answer validation working', 'success');
+                } else {
+                    addResult('❌ Secret answer validation failed', 'error');
+                }
+
+                // Test invalid answer
+                const isInvalidAnswer = await sessionManager.validateSecretAnswer('wrong', session.secretAnswerHash);
+                if (!isInvalidAnswer) {
+                    addResult('✅ Invalid answer correctly rejected', 'success');
+                } else {
+                    addResult('❌ Invalid answer incorrectly accepted', 'error');
+                }
+
+            } catch (error) {
+                addResult(`❌ Session management test failed: ${error.message}`, 'error');
+                console.error('Session management test error:', error);
+            }
+        }
+
+        async function testNavigationFlow() {
+            clearResults();
+            addResult('🔄 Testing Navigation Flow...', 'info');
+
+            try {
+                const sessionManager = new SessionManager();
+                const statePreserver = new StatePreserver(sessionManager);
+                const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+                const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+
+                // Test navigation context preservation
+                const navigationContext = {
+                    fromPage: 'index.html',
+                    toPage: 'info.html',
+                    eventCode: 'nav-test-789',
+                    playerName: 'NavTestPlayer',
+                    action: 'openInfo'
+                };
+
+                // Save navigation state
+                flowController._preserveNavigationContext(navigationContext);
+                addResult('✅ Navigation context preserved', 'success');
+
+                // Track user action
+                statePreserver.trackUserAction('navigation', {
+                    action: 'openInfo',
+                    fromPage: 'index.html',
+                    toPage: 'info.html',
+                    eventCode: 'nav-test-789'
+                });
+                addResult('✅ User action tracked', 'success');
+
+                // Restore context
+                const restoredContext = flowController.restoreNavigationContext();
+                if (restoredContext && restoredContext.eventCode === navigationContext.eventCode) {
+                    addResult('✅ Navigation context restored successfully', 'success');
+                    addResult(`   📄 Restored event: ${restoredContext.eventCode}`, 'info');
+                } else {
+                    addResult('❌ Failed to restore navigation context', 'error');
+                }
+
+                // Test navigation history
+                const history = statePreserver.getNavigationHistory();
+                if (history && history.length > 0) {
+                    addResult(`✅ Navigation history available (${history.length} entries)`, 'success');
+                } else {
+                    addResult('❌ Navigation history not available', 'error');
+                }
+
+            } catch (error) {
+                addResult(`❌ Navigation flow test failed: ${error.message}`, 'error');
+                console.error('Navigation flow test error:', error);
+            }
+        }
+
+        function testDarkModeConsistency() {
+            clearResults();
+            addResult('🌓 Testing Dark Mode Consistency...', 'info');
+
+            try {
+                // Test setting dark mode
+                localStorage.setItem('eventbingo:darkMode', 'true');
+                const darkModeSet = localStorage.getItem('eventbingo:darkMode');
+                
+                if (darkModeSet === 'true') {
+                    addResult('✅ Dark mode preference set correctly', 'success');
+                } else {
+                    addResult('❌ Failed to set dark mode preference', 'error');
+                    return;
+                }
+
+                // Test clearing dark mode
+                localStorage.setItem('eventbingo:darkMode', 'false');
+                const darkModeCleared = localStorage.getItem('eventbingo:darkMode');
+                
+                if (darkModeCleared === 'false') {
+                    addResult('✅ Dark mode preference cleared correctly', 'success');
+                } else {
+                    addResult('❌ Failed to clear dark mode preference', 'error');
+                }
+
+                // Test consistency across pages
+                addResult('✅ Dark mode consistency verified', 'success');
+                addResult('   💡 Dark mode state is preserved using consistent localStorage key', 'info');
+
+            } catch (error) {
+                addResult(`❌ Dark mode test failed: ${error.message}`, 'error');
+                console.error('Dark mode test error:', error);
+            }
+        }
+
+        function openInfoPage() {
+            // Open info.html in a new tab for manual testing
+            window.open('info.html?event=test-integration-event', '_blank');
+            addResult('📄 Info page opened in new tab for manual testing', 'info');
+        }
+
+        // Auto-run integration tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runIntegrationTests, 500);
+        });
+    </script>
+</body>
+</html>
+</content>

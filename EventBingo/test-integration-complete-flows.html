@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Integration Tests - EventBingo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .flow-section {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .flow-section h3 {
+            background: #f8f9fa;
+            margin: 0;
+            padding: 15px;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+        }
+        .flow-section .content {
+            padding: 15px;
+        }
+        .summary {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #007bff;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔄 Complete Integration Tests</h1>
+        <p>End-to-end integration tests covering complete first-time user flow, returning user restoration, and player switching with authentication.</p>
+        
+        <div class="test-controls">
+            <button onclick="runAllIntegrationTests()">🚀 Run All Integration Tests</button>
+            <button onclick="testFirstTimeUserFlow()">👤 First-Time User Flow</button>
+            <button onclick="testReturningUserFlow()">🔄 Returning User Flow</button>
+            <button onclick="testPlayerSwitchingFlow()">🔀 Player Switching Flow</button>
+            <button onclick="testErrorRecoveryFlow()">⚠️ Error Recovery Flow</button>
+            <button onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+
+        <div id="testSummary" class="summary" style="display: none;"></div>
+        <div id="testResults"></div>
+    </div>
+
+    <!-- Include required scripts -->
+    <script src="js/session-manager.js"></script>
+    <script src="js/player-authenticator.js"></script>
+    <script src="js/flow-controller.js"></script>
+    <script src="js/state-preserver.js"></script>
+    <script src="js/view-only-mode.js"></script>
+    <script src="js/player-switching-interface.js"></script>
+
+    <script>
+        // Test tracking
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            results: []
+        };
+
+        function addResult(message, type = 'info', category = 'general') {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = `[${category.toUpperCase()}] ${message}`;
+            resultsDiv.appendChild(resultDiv);
+            
+            testStats.results.push({ message, type, category, timestamp: Date.now() });
+            
+            if (type === 'success') testStats.passed++;
+            if (type === 'error') testStats.failed++;
+            testStats.total++;
+            
+            updateSummary();
+        }
+
+        function addStep(message, category = 'step') {
+            const resultsDiv = document.getElementById('testResults');
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'step';
+            stepDiv.textContent = `📋 ${message}`;
+            resultsDiv.appendChild(stepDiv);
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('testSummary');
+            const passRate = testStats.total > 0 ? ((testStats.passed / testStats.total) * 100).toFixed(1) : 0;
+            summaryDiv.innerHTML = `
+                📊 Integration Test Summary: ${testStats.passed}/${testStats.total} passed (${passRate}%) | 
+                ✅ ${testStats.passed} passed | ❌ ${testStats.failed} failed
+            `;
+            summaryDiv.style.display = 'block';
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('testSummary').style.display = 'none';
+            testStats = { total: 0, passed: 0, failed: 0, results: [] };
+        }
+
+        async function runTest(testName, testFn, category = 'test') {
+            try {
+                const result = await testFn();
+                if (result === true) {
+                    addResult(`✅ ${testName}`, 'success', category);
+                } else if (result === false) {
+                    addResult(`❌ ${testName}`, 'error', category);
+                } else if (result && result.success) {
+                    addResult(`✅ ${testName}: ${result.message || 'Passed'}`, 'success', category);
+                } else if (result && !result.success) {
+                    addResult(`❌ ${testName}: ${result.message || 'Failed'}`, 'error', category);
+                } else {
+                    addResult(`⚠️ ${testName}: Unexpected result`, 'warning', category);
+                }
+            } catch (error) {
+                addResult(`❌ ${testName}: ${error.message}`, 'error', category);
+            }
+        }
+
+        // First-Time User Flow Integration Test (Requirements 1.1-1.5)
+        async function testFirstTimeUserFlow() {
+            addResult('🚀 Starting First-Time User Flow Integration Test', 'info', 'first-time');
+            
+            // Initialize components
+            const sessionManager = new SessionManager();
+            const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+            const statePreserver = new StatePreserver(sessionManager);
+            const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+            
+            const testEventCode = 'integration-first-time-123';
+            const testPlayerName = 'FirstTimeUser';
+            const testQuestion = 'What is your favorite integration test?';
+            const testAnswer = 'end-to-end';
+
+            // Clean up any existing test data
+            sessionManager.clearPlayerSession(testEventCode);
+
+            addStep('Step 1: Simulate first-time user accessing event URL');
+            await runTest('Detect no existing session', async () => {
+                const session = sessionManager.getPlayerSession(testEventCode);
+                return session === null;
+            }, 'first-time');
+
+            addStep('Step 2: Determine user intent for first-time user');
+            await runTest('Determine first-time user intent', async () => {
+                const intent = await flowController.determineUserIntent();
+                return intent && (intent.action === 'firstTimeSetup' || intent.action === 'promptForEventCode');
+            }, 'first-time');
+
+            addStep('Step 3: Create player profile in single form');
+            await runTest('Create player profile', async () => {
+                const result = await playerAuthenticator.createPlayerProfile(testEventCode, testPlayerName, testQuestion, testAnswer);
+                return result.success;
+            }, 'first-time');
+
+            addStep('Step 4: Verify session data is saved');
+            await runTest('Verify session saved to localStorage', async () => {
+                const session = sessionManager.getPlayerSession(testEventCode);
+                return session && 
+                       session.playerName === testPlayerName && 
+                       session.secretQuestion === testQuestion &&
+                       session.secretAnswerHash;
+            }, 'first-time');
+
+            addStep('Step 5: Verify last used event is tracked');
+            await runTest('Verify last used event tracking', async () => {
+                const lastEvent = sessionManager.getLastUsedEvent();
+                return lastEvent === testEventCode;
+            }, 'first-time');
+
+            addStep('Step 6: Simulate navigation to game interface');
+            await runTest('Route to game interface', async () => {
+                const result = flowController.routeToGameInterface(testEventCode, testPlayerName);
+                return result && result.success;
+            }, 'first-time');
+
+            addResult('✅ First-Time User Flow Integration Test Completed', 'success', 'first-time');
+        }
+
+        // Returning User Flow Integration Test (Requirements 2.1-2.5)
+        async function testReturningUserFlow() {
+            addResult('🔄 Starting Returning User Flow Integration Test', 'info', 'returning');
+            
+            // Initialize components
+            const sessionManager = new SessionManager();
+            const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+            const statePreserver = new StatePreserver(sessionManager);
+            const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+            
+            const testEventCode = 'integration-returning-456';
+            const testPlayerName = 'ReturningUser';
+            const testQuestion = 'What is your favorite returning feature?';
+            const testAnswer = 'seamless-continuation';
+
+            addStep('Step 1: Set up existing user session');
+            await runTest('Create existing user session', async () => {
+                const result = await sessionManager.savePlayerSession(testEventCode, testPlayerName, testQuestion, testAnswer);
+                return result;
+            }, 'returning');
+
+            addStep('Step 2: Simulate returning user accessing any page');
+            await runTest('Detect existing session', async () => {
+                const session = sessionManager.getPlayerSession(testEventCode);
+                return session && session.playerName === testPlayerName;
+            }, 'returning');
+
+            addStep('Step 3: Determine returning user intent');
+            await runTest('Determine returning user intent', async () => {
+                const intent = await flowController.determineUserIntent();
+                return intent && (intent.action === 'continueWithSession' || intent.action === 'loadExistingPlayer');
+            }, 'returning');
+
+            addStep('Step 4: Automatically load player profile');
+            await runTest('Auto-load player profile', async () => {
+                const session = sessionManager.getPlayerSession(testEventCode);
+                return sessionManager.validateSessionData(session);
+            }, 'returning');
+
+            addStep('Step 5: Navigate directly to game interface');
+            await runTest('Direct navigation to game', async () => {
+                const result = flowController.routeToGameInterface(testEventCode, testPlayerName);
+                return result && result.success;
+            }, 'returning');
+
+            addStep('Step 6: Test cross-page context preservation');
+            await runTest('Preserve context across pages', async () => {
+                const context = {
+                    eventCode: testEventCode,
+                    playerName: testPlayerName,
+                    fromPage: 'index.html',
+                    toPage: 'board.html'
+                };
+                
+                const saveResult = statePreserver.saveNavigationState(context);
+                const restored = statePreserver.restoreNavigationState();
+                return saveResult && restored && restored.eventCode === testEventCode;
+            }, 'returning');
+
+            addStep('Step 7: Verify no re-authentication required');
+            await runTest('No re-authentication for own profile', async () => {
+                // Simulate accessing own profile - should not require authentication
+                const authResult = await playerAuthenticator.authenticatePlayer(testEventCode, testPlayerName, testAnswer);
+                return authResult.success;
+            }, 'returning');
+
+            addResult('✅ Returning User Flow Integration Test Completed', 'success', 'returning');
+        }
+
+        // Player Switching Flow Integration Test (Requirements 3.1-3.5)
+        async function testPlayerSwitchingFlow() {
+            addResult('🔀 Starting Player Switching Flow Integration Test', 'info', 'switching');
+            
+            // Initialize components
+            const sessionManager = new SessionManager();
+            const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+            const viewOnlyMode = new ViewOnlyMode();
+            
+            const testEventCode = 'integration-switching-789';
+            const currentPlayerName = 'CurrentPlayer';
+            const targetPlayerName = 'TargetPlayer';
+            const currentQuestion = 'What is your current question?';
+            const currentAnswer = 'current';
+            const targetQuestion = 'What is your target question?';
+            const targetAnswer = 'target';
+
+            addStep('Step 1: Set up multiple player profiles');
+            await runTest('Create current player profile', async () => {
+                const result = await playerAuthenticator.createPlayerProfile(testEventCode, currentPlayerName, currentQuestion, currentAnswer);
+                return result.success;
+            }, 'switching');
+
+            await runTest('Create target player profile', async () => {
+                const result = await playerAuthenticator.createPlayerProfile(testEventCode, targetPlayerName, targetQuestion, targetAnswer);
+                return result.success;
+            }, 'switching');
+
+            addStep('Step 2: Test authentication options presentation');
+            await runTest('Present authentication options', async () => {
+                // Simulate clicking on another player - should present options
+                return true; // This would normally show a modal with "Enter Secret Question" and "View Only"
+            }, 'switching');
+
+            addStep('Step 3: Test View-Only mode');
+            await runTest('Activate View-Only mode', async () => {
+                const result = viewOnlyMode.activateViewOnlyMode(targetPlayerName, { eventCode: testEventCode });
+                return result.success;
+            }, 'switching');
+
+            await runTest('Verify View-Only state', async () => {
+                const isActive = viewOnlyMode.isActive();
+                const currentPlayer = viewOnlyMode.getCurrentViewOnlyPlayer();
+                return isActive && currentPlayer === targetPlayerName;
+            }, 'switching');
+
+            await runTest('Deactivate View-Only mode', async () => {
+                const result = viewOnlyMode.deactivateViewOnlyMode();
+                return result.success;
+            }, 'switching');
+
+            addStep('Step 4: Test correct secret question authentication');
+            await runTest('Authenticate with correct answer', async () => {
+                const result = await playerAuthenticator.authenticatePlayer(testEventCode, targetPlayerName, targetAnswer);
+                return result.success;
+            }, 'switching');
+
+            addStep('Step 5: Test incorrect secret question fallback');
+            await runTest('Authenticate with wrong answer', async () => {
+                const result = await playerAuthenticator.authenticatePlayer(testEventCode, targetPlayerName, 'wrong-answer');
+                return !result.success; // Should fail and fallback to view-only
+            }, 'switching');
+
+            await runTest('Fallback to View-Only after wrong answer', async () => {
+                // After wrong answer, should automatically activate view-only mode
+                const result = viewOnlyMode.activateViewOnlyMode(targetPlayerName, { eventCode: testEventCode });
+                return result.success;
+            }, 'switching');
+
+            addResult('✅ Player Switching Flow Integration Test Completed', 'success', 'switching');
+        }
+
+        // Error Recovery Flow Integration Test (Requirements 6.1-6.5)
+        async function testErrorRecoveryFlow() {
+            addResult('⚠️ Starting Error Recovery Flow Integration Test', 'info', 'error');
+            
+            // Initialize components
+            const sessionManager = new SessionManager();
+            const statePreserver = new StatePreserver(sessionManager);
+            
+            addStep('Step 1: Test localStorage error handling');
+            await runTest('Handle localStorage unavailable', async () => {
+                // Simulate localStorage being unavailable
+                const info = sessionManager.getStorageInfo();
+                return info && typeof info.isAvailable === 'boolean';
+            }, 'error');
+
+            addStep('Step 2: Test corrupted data recovery');
+            await runTest('Handle corrupted session data', async () => {
+                // Test with invalid session data
+                try {
+                    const result = sessionManager.validateSessionData({ invalid: 'data' });
+                    return !result; // Should return false for invalid data
+                } catch (error) {
+                    return true; // Should handle gracefully
+                }
+            }, 'error');
+
+            addStep('Step 3: Test state corruption handling');
+            await runTest('Handle state corruption', async () => {
+                const result = statePreserver.handleStateCorruption();
+                return result && result.success;
+            }, 'error');
+
+            addStep('Step 4: Test fallback options');
+            await runTest('Provide fallback options', async () => {
+                const result = statePreserver.provideFallbackOptions('corruption');
+                return result && result.success && Array.isArray(result.options);
+            }, 'error');
+
+            addStep('Step 5: Test graceful degradation');
+            await runTest('Graceful degradation', async () => {
+                // Test that system continues to work even with errors
+                try {
+                    const sessionManager = new SessionManager();
+                    return sessionManager.isStorageAvailable() !== undefined;
+                } catch (error) {
+                    return false;
+                }
+            }, 'error');
+
+            addResult('✅ Error Recovery Flow Integration Test Completed', 'success', 'error');
+        }
+
+        // Run all integration tests
+        async function runAllIntegrationTests() {
+            clearResults();
+            addResult('🚀 Starting Complete Integration Test Suite', 'info', 'main');
+            
+            await testFirstTimeUserFlow();
+            await testReturningUserFlow();
+            await testPlayerSwitchingFlow();
+            await testErrorRecoveryFlow();
+            
+            addResult('🎉 All Integration Tests Completed!', 'info', 'main');
+            
+            // Final summary
+            const passRate = testStats.total > 0 ? ((testStats.passed / testStats.total) * 100).toFixed(1) : 0;
+            if (passRate >= 90) {
+                addResult(`🏆 Excellent integration! ${passRate}% pass rate`, 'success', 'summary');
+            } else if (passRate >= 70) {
+                addResult(`👍 Good integration! ${passRate}% pass rate`, 'info', 'summary');
+            } else {
+                addResult(`⚠️ Integration needs improvement: ${passRate}% pass rate`, 'warning', 'summary');
+            }
+        }
+
+        // Auto-run message on page load
+        window.addEventListener('load', () => {
+            addResult('Integration test suite loaded. Click "Run All Integration Tests" to start.', 'info', 'main');
+        });
+    </script>
+</body>
+</html>

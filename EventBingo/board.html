@@ -1324,6 +1324,126 @@
     body.dark-mode .advanced-toggle:hover {
       background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
     }
+
+    /* Board-specific view-only mode styles */
+    .board-view-only-mode .bingo-square:not(.completed) {
+      position: relative;
+      pointer-events: none;
+    }
+
+    .board-view-only-mode .bingo-square:not(.completed)::after {
+      content: '🔒';
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(245, 158, 11, 0.9);
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      z-index: 5;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .board-view-only-mode .player-circle {
+      position: relative;
+    }
+
+    .board-view-only-mode .player-circle.active::before {
+      content: '👁️';
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--view-only-primary, #f59e0b);
+      color: white;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+    }
+
+    .board-view-only-mode .completion-toggles {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .board-view-only-mode .filter-bar {
+      opacity: 0.7;
+    }
+
+    /* View-only mode animations */
+    .board-view-only-mode .bingo-square:hover::after {
+      animation: viewOnlyPulse 0.5s ease;
+    }
+
+    @keyframes viewOnlyPulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.2);
+      }
+    }
+
+    /* Dark mode support for board view-only */
+    body.dark-mode.board-view-only-mode .bingo-square:not(.completed)::after {
+      background: rgba(245, 158, 11, 0.8);
+    }
+
+    body.dark-mode.board-view-only-mode .player-circle.active::before {
+      border-color: #2d2d2d;
+    }
+
+    /* Enhanced player circle styles */
+    .player-circle.view-only-active {
+      border: 3px solid var(--view-only-primary, #f59e0b) !important;
+      background-image: linear-gradient(#fff3e0, #fff3e0), linear-gradient(45deg, var(--view-only-primary, #f59e0b), var(--view-only-secondary, #fbbf24)) !important;
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3), 0 0 12px rgba(245, 158, 11, 0.5) !important;
+    }
+
+    .player-circle:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+    }
+
+    .player-circle:active {
+      transform: scale(0.95);
+      transition: transform 0.1s ease;
+    }
+
+    /* Enhanced player name styles */
+    .player-name.current-player {
+      font-weight: bold;
+      color: var(--primary);
+    }
+
+    .player-name.view-only {
+      color: var(--view-only-primary, #f59e0b);
+      font-style: italic;
+    }
+
+    /* Dark mode support for enhanced player circles */
+    body.dark-mode .player-circle.view-only-active {
+      background-image: linear-gradient(#2d2d2d, #2d2d2d), linear-gradient(45deg, var(--view-only-primary, #f59e0b), var(--view-only-secondary, #fbbf24)) !important;
+    }
+
+    body.dark-mode .player-name.current-player {
+      color: var(--primary);
+    }
+
+    body.dark-mode .player-name.view-only {
+      color: var(--view-only-secondary, #fbbf24);
+    }
   </style>
 </head>
 <body>
@@ -1415,7 +1535,11 @@
   <!-- Include CSS for advanced progress visualization -->
   <link rel="stylesheet" href="css/advanced-progress-styles.css">
 
-  <!-- Include ProgressCalculator, PerformanceMonitor, BoardController and GridRenderer -->
+  <!-- Include SessionManager and other core scripts -->
+  <script src="js/session-manager.js"></script>
+  <script src="js/player-authenticator.js"></script>
+  <script src="js/state-preserver.js"></script>
+  <script src="js/flow-controller.js"></script>
   <script src="js/progress-calc.js"></script>
   <script src="js/performance-monitor.js"></script>
   <script src="js/board-controller.js"></script>
@@ -1458,6 +1582,27 @@
         } catch(_) {}
       }
       
+      // Preserve navigation context before navigating
+      if (statePreserver) {
+        statePreserver.saveNavigationState({
+          fromPage: 'board.html',
+          toPage: 'index.html',
+          eventCode: eventCode,
+          playerName: playerToRestore,
+          action: 'goBack',
+          viewOnly: new URLSearchParams(window.location.search).get('viewOnly') === 'true',
+          boardState: boardController ? boardController.getState() : null
+        });
+        
+        statePreserver.trackUserAction('navigation', {
+          action: 'goBack',
+          fromPage: 'board.html',
+          toPage: 'index.html',
+          eventCode: eventCode,
+          playerName: playerToRestore
+        });
+      }
+      
       const backUrl = playerToRestore 
         ? `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerToRestore)}`
         : `index.html?event=${encodeURIComponent(eventCode)}`;
@@ -1469,11 +1614,83 @@
     // Detect dark mode immediately
     detectDarkMode();
 
-    // Initialize the board
+    // Global instances for seamless navigation
+    let sessionManager, playerAuthenticator, statePreserver, flowController, playerSwitchingInterface;
+
+    // Initialize the board with seamless flow
     document.addEventListener('DOMContentLoaded', async function() {
-      setupEventHandlers();
-      initializeUIEnhancements();
-      await initializeBoardController();
+      try {
+        // Initialize seamless flow components
+        sessionManager = new SessionManager();
+        playerAuthenticator = new PlayerAuthenticator(sessionManager);
+        statePreserver = new StatePreserver(sessionManager);
+        flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+        playerSwitchingInterface = new PlayerSwitchingInterface(sessionManager, playerAuthenticator);
+        
+        // Set event context for player switching
+        if (eventCode) {
+          playerSwitchingInterface.setEventContext(eventCode);
+        }
+        
+        // Restore navigation context from previous page
+        const restoredContext = flowController.restoreNavigationContext();
+        if (restoredContext) {
+          console.log('Board: Restored navigation context:', restoredContext);
+          
+          // Track that we restored context
+          statePreserver.trackUserAction('contextRestored', {
+            fromPage: restoredContext.fromPage,
+            toPage: restoredContext.toPage || 'board.html',
+            eventCode: restoredContext.eventCode,
+            playerName: restoredContext.playerName,
+            viewOnly: restoredContext.viewOnly
+          });
+          
+          // Update global variables from restored context
+          if (restoredContext.eventCode) {
+            eventCode = restoredContext.eventCode;
+          }
+          if (restoredContext.playerName) {
+            currentPlayer = restoredContext.playerName;
+          }
+        }
+        
+        // Handle page load with seamless flow
+        const flowResult = await flowController.handlePageLoad();
+        
+        console.log('Board flow controller result:', flowResult);
+        
+        if (flowResult.success && flowResult.action === 'sessionLoaded') {
+          // Update global variables with session data
+          eventCode = flowResult.eventCode;
+          currentPlayer = flowResult.playerName;
+          
+          // Save current state for context preservation
+          statePreserver.saveNavigationState({
+            eventCode: flowResult.eventCode,
+            playerName: flowResult.playerName,
+            page: 'board.html',
+            action: 'sessionLoaded',
+            viewOnly: new URLSearchParams(window.location.search).get('viewOnly') === 'true',
+            initialized: true
+          });
+        }
+        
+        // Initialize view-only mode if needed
+        initializeViewOnlyMode();
+        
+        // Continue with normal board initialization
+        setupEventHandlers();
+        initializeUIEnhancements();
+        await initializeBoardController();
+      } catch (error) {
+        console.error('Failed to initialize board with flow controller:', error);
+        
+        // Fallback to normal initialization
+        setupEventHandlers();
+        initializeUIEnhancements();
+        await initializeBoardController();
+      }
     });
 
     // Detect and apply dark mode from app's localStorage setting
@@ -1517,6 +1734,96 @@
           navigateFullscreen(1);
         }
         // Middle third does nothing (allows clicking on photo info without navigation)
+      });
+
+      // Listen for authentication state changes
+      document.addEventListener('authenticationStateChange', function(e) {
+        const { playerName, authenticationLevel, eventCode: authEventCode } = e.detail;
+        
+        console.log('Board: Authentication state changed:', e.detail);
+        
+        // Update current player if full authentication
+        if (authenticationLevel === 'full' && authEventCode === eventCode) {
+          currentPlayer = playerName;
+          
+          // Update URL to reflect new player
+          const newUrl = `board.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerName)}`;
+          window.history.replaceState({}, '', newUrl);
+          
+          // Save state
+          if (statePreserver) {
+            statePreserver.saveNavigationState({
+              eventCode: eventCode,
+              playerName: playerName,
+              page: 'board.html',
+              action: 'authenticationSuccess',
+              authenticationLevel: 'full'
+            });
+          }
+        }
+        
+        // Re-render player circles to reflect authentication state
+        if (boardController) {
+          renderPlayerCircles();
+        }
+      });
+
+      // Listen for player switch events
+      document.addEventListener('playerSwitched', function(e) {
+        const { playerName, authenticationLevel, eventCode: switchEventCode } = e.detail;
+        
+        console.log('Board: Player switched:', e.detail);
+        
+        if (switchEventCode === eventCode) {
+          // Update board state based on switch result
+          if (authenticationLevel === 'viewOnly') {
+            // Activate view-only mode
+            if (viewOnlyMode && !viewOnlyMode.isActive()) {
+              viewOnlyMode.activateViewOnlyMode(playerName, {
+                eventCode: eventCode,
+                source: 'playerSwitch'
+              });
+            }
+          } else if (authenticationLevel === 'full') {
+            // Deactivate view-only mode if active
+            if (viewOnlyMode && viewOnlyMode.isActive()) {
+              viewOnlyMode.deactivateViewOnlyMode();
+            }
+            
+            currentPlayer = playerName;
+          }
+          
+          // Re-render UI
+          renderPlayerCircles();
+        }
+      });
+
+      // Listen for navigation events to preserve context
+      window.addEventListener('beforeunload', function() {
+        if (statePreserver) {
+          statePreserver.saveNavigationState({
+            eventCode: eventCode,
+            playerName: currentPlayer,
+            page: 'board.html',
+            action: 'beforeUnload',
+            viewOnly: viewOnlyMode && viewOnlyMode.isActive(),
+            boardState: boardController ? boardController.getState() : null,
+            timestamp: Date.now()
+          });
+        }
+      });
+
+      // Listen for page visibility changes to track user engagement
+      document.addEventListener('visibilitychange', function() {
+        if (statePreserver) {
+          statePreserver.trackUserAction('visibilityChange', {
+            hidden: document.hidden,
+            eventCode: eventCode,
+            playerName: currentPlayer,
+            page: 'board.html',
+            viewOnly: viewOnlyMode && viewOnlyMode.isActive()
+          });
+        }
       });
     }
 
@@ -1570,7 +1877,7 @@
         allPlayersCircle.classList.add('active');
       }
       allPlayersCircle.textContent = '👥';
-      allPlayersCircle.title = 'All Players';
+      allPlayersCircle.title = 'All Players - Board Overview';
       allPlayersCircle.onclick = () => selectPlayer(null);
       
       const allPlayersName = document.createElement('div');
@@ -1589,19 +1896,67 @@
         const circle = document.createElement('div');
         circle.className = 'player-circle';
         circle.textContent = getPlayerIcon(player.name);
-        circle.title = player.name;
-        circle.onclick = () => selectPlayer(player.name);
+        
+        // Enhanced title with authentication context
+        let titleText = player.name;
+        if (player.name === currentPlayer) {
+          titleText += ' (Your Profile)';
+        } else {
+          titleText += ' - Click to view or authenticate';
+        }
+        circle.title = titleText;
+        
+        // Enhanced click handler with authentication
+        circle.onclick = async () => {
+          // Add visual feedback
+          circle.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            circle.style.transform = '';
+          }, 150);
+          
+          await selectPlayer(player.name);
+        };
+        
         if (player.name === currentState.selectedPlayer) {
           circle.classList.add('active');
+        }
+        
+        // Add authentication status indicator if needed
+        if (viewOnlyMode && viewOnlyMode.isActive() && viewOnlyMode.getCurrentViewOnlyPlayer() === player.name) {
+          circle.classList.add('view-only-active');
         }
         
         const name = document.createElement('div');
         name.className = 'player-name';
         name.textContent = player.name;
         
+        // Add status indicator for current player
+        if (player.name === currentPlayer) {
+          name.style.fontWeight = 'bold';
+          name.style.color = 'var(--primary)';
+        }
+        
         playerItem.appendChild(circle);
         playerItem.appendChild(name);
         playerScroll.appendChild(playerItem);
+      });
+      
+      // Add keyboard navigation support
+      playerScroll.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          const circles = playerScroll.querySelectorAll('.player-circle');
+          const activeIndex = Array.from(circles).findIndex(c => c.classList.contains('active'));
+          
+          let newIndex;
+          if (e.key === 'ArrowLeft') {
+            newIndex = activeIndex > 0 ? activeIndex - 1 : circles.length - 1;
+          } else {
+            newIndex = activeIndex < circles.length - 1 ? activeIndex + 1 : 0;
+          }
+          
+          circles[newIndex].focus();
+          circles[newIndex].click();
+        }
       });
     }
 
@@ -1806,12 +2161,106 @@
       }
     }
 
-    // Updated selectPlayer function to use BoardController
+    // Updated selectPlayer function with enhanced authentication
     async function selectPlayer(playerName) {
       try {
+        // Save current state before switching
+        if (statePreserver) {
+          statePreserver.saveNavigationState({
+            eventCode: eventCode,
+            playerName: currentPlayer,
+            page: 'board.html',
+            action: 'playerSwitch',
+            targetPlayer: playerName,
+            timestamp: Date.now()
+          });
+        }
+        
+        // Handle "All Players" selection (card view)
         if (playerName === null) {
+          // Deactivate view-only mode if active
+          if (viewOnlyMode && viewOnlyMode.isActive()) {
+            viewOnlyMode.deactivateViewOnlyMode();
+          }
+          
           await boardController.switchToCardView();
+          
+          // Track the switch
+          if (statePreserver) {
+            statePreserver.trackUserAction('viewSwitch', {
+              fromPlayer: currentPlayer,
+              toView: 'cardView',
+              eventCode: eventCode
+            });
+          }
+          
+          return;
+        }
+        
+        // Check if switching to current player's own profile
+        if (playerName === currentPlayer) {
+          // Deactivate view-only mode if active
+          if (viewOnlyMode && viewOnlyMode.isActive()) {
+            viewOnlyMode.deactivateViewOnlyMode();
+          }
+          
+          await boardController.switchToPlayerView(playerName);
+          return;
+        }
+        
+        // Switching to different player - use enhanced authentication
+        if (playerSwitchingInterface) {
+          const switchResult = await playerSwitchingInterface.handlePlayerSelection(playerName);
+          
+          if (switchResult.success) {
+            if (switchResult.authenticationLevel === 'viewOnly') {
+              // Activate view-only mode
+              if (viewOnlyMode) {
+                viewOnlyMode.activateViewOnlyMode(playerName, {
+                  eventCode: eventCode,
+                  fromPlayer: currentPlayer
+                });
+              }
+              
+              // Switch to player view in read-only mode
+              await boardController.switchToPlayerView(playerName);
+              
+              // Track view-only switch
+              if (statePreserver) {
+                statePreserver.trackUserAction('viewOnlySwitch', {
+                  fromPlayer: currentPlayer,
+                  toPlayer: playerName,
+                  eventCode: eventCode,
+                  authenticationLevel: 'viewOnly'
+                });
+              }
+            } else if (switchResult.authenticationLevel === 'full') {
+              // Deactivate view-only mode if active
+              if (viewOnlyMode && viewOnlyMode.isActive()) {
+                viewOnlyMode.deactivateViewOnlyMode();
+              }
+              
+              // Full access - switch normally
+              await boardController.switchToPlayerView(playerName);
+              
+              // Update current player
+              currentPlayer = playerName;
+              
+              // Track full access switch
+              if (statePreserver) {
+                statePreserver.trackUserAction('playerSwitch', {
+                  fromPlayer: currentPlayer,
+                  toPlayer: playerName,
+                  eventCode: eventCode,
+                  authenticationLevel: 'full'
+                });
+              }
+            }
+          } else if (!switchResult.cancelled) {
+            showError(switchResult.error || 'Failed to switch players');
+          }
         } else {
+          // Fallback to basic switching
           await boardController.switchToPlayerView(playerName);
         }
       } catch (error) {
@@ -1948,13 +2397,20 @@
       // Enhanced player and challenge display with context
       const currentState = boardController.getState();
       let contextInfo = '';
+      let viewModeInfo = '';
+      
       if (currentState.currentView === 'player') {
         contextInfo = ` • Player View`;
       } else if (currentState.currentView === 'card') {
         contextInfo = ` • Board Overview`;
       }
       
-      player.textContent = `${getPlayerIcon(photo.player)} ${photo.player}${contextInfo}`;
+      // Add view-only mode indicator
+      if (viewOnlyMode && viewOnlyMode.isActive()) {
+        viewModeInfo = ' 👁️ View Only';
+      }
+      
+      player.textContent = `${getPlayerIcon(photo.player)} ${photo.player}${contextInfo}${viewModeInfo}`;
       challenge.textContent = photo.challenge;
       
       // Update navigation buttons with context-aware labels
@@ -1964,8 +2420,14 @@
       
       // Add tooltips for navigation context
       if (currentState.currentView === 'player') {
-        prevBtn.title = `Previous photo from ${currentState.selectedPlayer}`;
-        nextBtn.title = `Next photo from ${currentState.selectedPlayer}`;
+        const playerName = currentState.selectedPlayer;
+        if (viewOnlyMode && viewOnlyMode.isActive()) {
+          prevBtn.title = `Previous photo from ${playerName} (View Only)`;
+          nextBtn.title = `Next photo from ${playerName} (View Only)`;
+        } else {
+          prevBtn.title = `Previous photo from ${playerName}`;
+          nextBtn.title = `Next photo from ${playerName}`;
+        }
       } else {
         prevBtn.title = 'Previous photo from board';
         nextBtn.title = 'Next photo from board';
@@ -1976,6 +2438,18 @@
       
       // Add keyboard focus for accessibility
       modal.focus();
+      
+      // Track photo view for analytics
+      if (statePreserver) {
+        statePreserver.trackUserAction('photoViewed', {
+          photoIndex: photoIndex,
+          playerName: photo.player,
+          challenge: photo.challenge,
+          eventCode: eventCode,
+          viewMode: viewOnlyMode && viewOnlyMode.isActive() ? 'viewOnly' : 'normal',
+          context: currentState.currentView
+        });
+      }
     }
 
     function closeFullscreen() {
@@ -2251,6 +2725,98 @@
       
       return bingoIcons[iconIndex];
     }
+
+    // Initialize view-only mode for board page
+    let viewOnlyMode = null;
+    
+    function initializeViewOnlyMode() {
+      if (!viewOnlyMode && typeof ViewOnlyMode !== 'undefined') {
+        viewOnlyMode = new ViewOnlyMode();
+        
+        // Check URL parameters for view-only mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewOnly = urlParams.get('viewOnly');
+        const player = urlParams.get('player');
+        
+        if (viewOnly === 'true' && player) {
+          console.log(`Initializing view-only mode for player: ${player}`);
+          viewOnlyMode.activateViewOnlyMode(player, {
+            eventCode: eventCode,
+            context: 'urlParameter'
+          });
+          
+          // Track view-only activation
+          if (statePreserver) {
+            statePreserver.trackUserAction('viewOnlyActivated', {
+              player: player,
+              eventCode: eventCode,
+              source: 'urlParameter',
+              page: 'board.html'
+            });
+          }
+        }
+        
+        // Listen for view-only mode events
+        document.addEventListener('viewOnlyModeActivated', (event) => {
+          console.log('View-only mode activated:', event.detail);
+          
+          // Update UI to reflect view-only state
+          updateUIForViewOnlyMode(event.detail.currentPlayer);
+        });
+        
+        document.addEventListener('viewOnlyModeDeactivated', (event) => {
+          console.log('View-only mode deactivated:', event.detail);
+          
+          // Update UI to reflect edit mode
+          updateUIForEditMode();
+        });
+      }
+    }
+    
+    // Update UI for view-only mode
+    function updateUIForViewOnlyMode(playerName) {
+      // Add visual indicators that we're in view-only mode
+      const pageTitle = document.querySelector('.page-title');
+      if (pageTitle && !pageTitle.textContent.includes('View Only')) {
+        pageTitle.textContent = `👁️ ${playerName}'s Board (View Only)`;
+      }
+      
+      // Disable any edit functionality
+      const editButtons = document.querySelectorAll('.add-photo-btn, button[onclick*="upload"]');
+      editButtons.forEach(button => {
+        button.style.opacity = '0.5';
+        button.style.pointerEvents = 'none';
+      });
+      
+      // Add view-only class to body for styling
+      document.body.classList.add('board-view-only-mode');
+    }
+    
+    // Update UI for edit mode
+    function updateUIForEditMode() {
+      // Restore original page title
+      const pageTitle = document.querySelector('.page-title');
+      if (pageTitle && pageTitle.textContent.includes('View Only')) {
+        pageTitle.textContent = '🎯 Bingo Board';
+      }
+      
+      // Re-enable edit functionality
+      const editButtons = document.querySelectorAll('.add-photo-btn, button[onclick*="upload"]');
+      editButtons.forEach(button => {
+        button.style.opacity = '';
+        button.style.pointerEvents = '';
+      });
+      
+      // Remove view-only class from body
+      document.body.classList.remove('board-view-only-mode');
+    }
   </script>
+  
+  <!-- Enhanced Player Switching Scripts -->
+  <script src="js/session-manager.js"></script>
+  <script src="js/player-authenticator.js"></script>
+  <script src="js/secret-question-auth.js"></script>
+  <script src="js/player-switching-interface.js"></script>
+  <script src="js/view-only-mode.js"></script>
 </body>
 </html>

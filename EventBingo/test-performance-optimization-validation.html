@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Optimization Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 10px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .test-card h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        
+        .test-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+        }
+        
+        .result-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .result-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .result-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .metrics-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .performance-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .comparison-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .comparison-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .comparison-legacy {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .comparison-optimized {
+            border-left: 4px solid #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🚀 Performance Optimization Validation</h1>
+            <p>Testing performance improvements in SessionManager, legacy code cleanup, and monitoring systems</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Performance Monitoring System</h3>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h4>Performance Monitor</h4>
+                    <p>Test the performance monitoring system initialization and metrics collection</p>
+                    <button class="test-button" onclick="testPerformanceMonitor()">Test Monitor</button>
+                    <button class="test-button" onclick="showPerformanceDashboard()">Show Dashboard</button>
+                </div>
+                
+                <div class="test-card">
+                    <h4>Session Operation Tracking</h4>
+                    <p>Test session operation timing and performance recording</p>
+                    <button class="test-button" onclick="testSessionOperationTracking()">Test Tracking</button>
+                </div>
+            </div>
+            <div class="results" id="monitoringResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>⚡ SessionManager Performance</h3>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h4>Caching Performance</h4>
+                    <p>Test caching effectiveness and cache hit rates</p>
+                    <button class="test-button" onclick="testCachingPerformance()">Test Caching</button>
+                </div>
+                
+                <div class="test-card">
+                    <h4>Lazy Loading</h4>
+                    <p>Test lazy loading of session data and performance impact</p>
+                    <button class="test-button" onclick="testLazyLoading()">Test Lazy Loading</button>
+                </div>
+                
+                <div class="test-card">
+                    <h4>Batch Operations</h4>
+                    <p>Test batching of non-critical operations</p>
+                    <button class="test-button" onclick="testBatchOperations()">Test Batching</button>
+                </div>
+                
+                <div class="test-card">
+                    <h4>Performance Comparison</h4>
+                    <p>Compare optimized vs legacy performance</p>
+                    <button class="test-button" onclick="runPerformanceComparison()">Run Comparison</button>
+                </div>
+            </div>
+            <div class="results" id="performanceResults"></div>
+            
+            <div class="performance-comparison" id="performanceComparison" style="display: none;">
+                <div class="comparison-card comparison-legacy">
+                    <div class="comparison-title">Legacy Performance</div>
+                    <div id="legacyMetrics"></div>
+                </div>
+                <div class="comparison-card comparison-optimized">
+                    <div class="comparison-title">Optimized Performance</div>
+                    <div id="optimizedMetrics"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧹 Legacy Code Cleanup</h3>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h4>Legacy Detection</h4>
+                    <p>Detect remaining legacy authentication code</p>
+                    <button class="test-button" onclick="testLegacyDetection()">Detect Legacy</button>
+                </div>
+                
+                <div class="test-card">
+                    <h4>Cleanup Validation</h4>
+                    <p>Validate that legacy code has been properly removed</p>
+                    <button class="test-button" onclick="testCleanupValidation()">Validate Cleanup</button>
+                </div>
+                
+                <div class="test-card">
+                    <h4>New System Integration</h4>
+                    <p>Test integration with new SessionManager system</p>
+                    <button class="test-button" onclick="testNewSystemIntegration()">Test Integration</button>
+                </div>
+            </div>
+            <div class="results" id="cleanupResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📈 Performance Metrics</h3>
+            <div class="metrics-display" id="metricsDisplay">
+                <div class="metric-card">
+                    <div class="metric-value" id="cacheHitRate">0%</div>
+                    <div class="metric-label">Cache Hit Rate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avgOperationTime">0ms</div>
+                    <div class="metric-label">Avg Operation Time</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="memoryUsage">0MB</div>
+                    <div class="metric-label">Memory Usage</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="operationsCount">0</div>
+                    <div class="metric-label">Operations Tracked</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load required scripts -->
+    <script src="js/session-manager.js"></script>
+    <script src="js/performance-monitor.js"></script>
+    <script src="js/performance-dashboard.js"></script>
+    <script src="js/legacy-cleanup.js"></script>
+
+    <script>
+        // Global test variables
+        let performanceMonitor;
+        let performanceDashboard;
+        let sessionManager;
+        let legacyCleanup;
+        let testResults = [];
+
+        // Initialize test environment
+        function initializeTestEnvironment() {
+            try {
+                // Initialize performance monitor
+                performanceMonitor = new PerformanceMonitor();
+                addResult('Performance monitor initialized', 'success', 'monitoringResults');
+                
+                // Initialize session manager with performance monitoring
+                sessionManager = new SessionManager(null, performanceMonitor);
+                addResult('SessionManager initialized with performance monitoring', 'success', 'monitoringResults');
+                
+                // Initialize performance dashboard
+                performanceDashboard = new PerformanceDashboard(performanceMonitor);
+                addResult('Performance dashboard initialized', 'success', 'monitoringResults');
+                
+                // Initialize legacy cleanup
+                legacyCleanup = new LegacyCleanup();
+                addResult('Legacy cleanup utility initialized', 'success', 'monitoringResults');
+                
+                // Start metrics update
+                updateMetricsDisplay();
+                setInterval(updateMetricsDisplay, 2000);
+                
+            } catch (error) {
+                addResult(`Initialization error: ${error.message}`, 'error', 'monitoringResults');
+            }
+        }
+
+        // Test performance monitor
+        async function testPerformanceMonitor() {
+            addResult('🔍 Testing Performance Monitor...', 'info', 'monitoringResults');
+            
+            try {
+                // Test basic functionality
+                performanceMonitor.recordSessionOperation('test-operation', 25, 'test');
+                addResult('✓ Session operation recorded', 'success', 'monitoringResults');
+                
+                // Test memory recording
+                const memoryInfo = performanceMonitor.recordMemoryUsage('test');
+                if (memoryInfo) {
+                    addResult(`✓ Memory usage recorded: ${Math.round(memoryInfo.used / 1024 / 1024)}MB`, 'success', 'monitoringResults');
+                } else {
+                    addResult('⚠ Memory monitoring not available in this browser', 'warning', 'monitoringResults');
+                }
+                
+                // Test user interaction recording
+                performanceMonitor.recordUserInteraction('test-click', 15, { target: 'button' });
+                addResult('✓ User interaction recorded', 'success', 'monitoringResults');
+                
+                // Test error recording
+                performanceMonitor.recordError('Test error', 'test-context');
+                addResult('✓ Error recorded', 'success', 'monitoringResults');
+                
+                // Get performance summary
+                const summary = performanceMonitor.getPerformanceSummary();
+                addResult(`✓ Performance summary generated: ${summary.sessionOperations.count} operations`, 'success', 'monitoringResults');
+                
+            } catch (error) {
+                addResult(`❌ Performance monitor test failed: ${error.message}`, 'error', 'monitoringResults');
+            }
+        }
+
+        // Show performance dashboard
+        function showPerformanceDashboard() {
+            try {
+                performanceDashboard.show();
+                addResult('✓ Performance dashboard shown', 'success', 'monitoringResults');
+            } catch (error) {
+                addResult(`❌ Failed to show dashboard: ${error.message}`, 'error', 'monitoringResults');
+            }
+        }
+
+        // Test session operation tracking
+        async function testSessionOperationTracking() {
+            addResult('🔍 Testing Session Operation Tracking...', 'info', 'monitoringResults');
+            
+            try {
+                // Perform multiple session operations
+                const testEventCode = 'test-event-' + Date.now();
+                
+                // Test save operation
+                const saveResult = await sessionManager.savePlayerSession(
+                    testEventCode, 
+                    'Test Player', 
+                    'What is your favorite color?', 
+                    'blue'
+                );
+                
+                if (saveResult) {
+                    addResult('✓ Save operation tracked', 'success', 'monitoringResults');
+                } else {
+                    addResult('❌ Save operation failed', 'error', 'monitoringResults');
+                }
+                
+                // Test get operation (should hit cache)
+                const session1 = await sessionManager.getPlayerSession(testEventCode);
+                if (session1) {
+                    addResult('✓ Get operation tracked (cache hit)', 'success', 'monitoringResults');
+                }
+                
+                // Clear cache and test again (should miss cache)
+                sessionManager.clearCache();
+                const session2 = await sessionManager.getPlayerSession(testEventCode);
+                if (session2) {
+                    addResult('✓ Get operation tracked (cache miss)', 'success', 'monitoringResults');
+                }
+                
+                // Test clear operation
+                const clearResult = await sessionManager.clearPlayerSession(testEventCode);
+                if (clearResult) {
+                    addResult('✓ Clear operation tracked', 'success', 'monitoringResults');
+                }
+                
+                // Check performance metrics
+                const metrics = sessionManager.getPerformanceMetrics();
+                addResult(`✓ Performance metrics: ${metrics.totalOperations} operations, ${metrics.cacheHitRate}% cache hit rate`, 'success', 'monitoringResults');
+                
+            } catch (error) {
+                addResult(`❌ Session operation tracking test failed: ${error.message}`, 'error', 'monitoringResults');
+            }
+        }
+
+        // Test caching performance
+        async function testCachingPerformance() {
+            addResult('🔍 Testing Caching Performance...', 'info', 'performanceResults');
+            
+            try {
+                const testEventCode = 'cache-test-' + Date.now();
+                
+                // Create test session
+                await sessionManager.savePlayerSession(testEventCode, 'Cache Test Player', 'Test question?', 'test answer');
+                
+                // Measure cache miss performance
+                sessionManager.clearCache();
+                const startMiss = performance.now();
+                await sessionManager.getPlayerSession(testEventCode);
+                const cacheMissTime = performance.now() - startMiss;
+                
+                // Measure cache hit performance
+                const startHit = performance.now();
+                await sessionManager.getPlayerSession(testEventCode);
+                const cacheHitTime = performance.now() - startHit;
+                
+                const improvement = ((cacheMissTime - cacheHitTime) / cacheMissTime * 100).toFixed(1);
+                
+                addResult(`✓ Cache miss: ${cacheMissTime.toFixed(2)}ms`, 'info', 'performanceResults');
+                addResult(`✓ Cache hit: ${cacheHitTime.toFixed(2)}ms`, 'info', 'performanceResults');
+                addResult(`✓ Performance improvement: ${improvement}%`, 'success', 'performanceResults');
+                
+                // Test cache optimization
+                const cleanedCount = sessionManager.optimizeCache();
+                addResult(`✓ Cache optimization cleaned ${cleanedCount} expired entries`, 'success', 'performanceResults');
+                
+                // Cleanup
+                await sessionManager.clearPlayerSession(testEventCode);
+                
+            } catch (error) {
+                addResult(`❌ Caching performance test failed: ${error.message}`, 'error', 'performanceResults');
+            }
+        }
+
+        // Test lazy loading
+        async function testLazyLoading() {
+            addResult('🔍 Testing Lazy Loading...', 'info', 'performanceResults');
+            
+            try {
+                // Create multiple test sessions
+                const eventCodes = [];
+                for (let i = 0; i < 5; i++) {
+                    const eventCode = `lazy-test-${i}-${Date.now()}`;
+                    eventCodes.push(eventCode);
+                    await sessionManager.savePlayerSession(eventCode, `Player ${i}`, `Question ${i}?`, `answer${i}`);
+                }
+                
+                // Test getAllPlayerSessions performance
+                const startTime = performance.now();
+                const sessions = await sessionManager.getAllPlayerSessions();
+                const loadTime = performance.now() - startTime;
+                
+                addResult(`✓ Loaded ${sessions.length} sessions in ${loadTime.toFixed(2)}ms`, 'success', 'performanceResults');
+                addResult(`✓ Average load time per session: ${(loadTime / sessions.length).toFixed(2)}ms`, 'info', 'performanceResults');
+                
+                // Cleanup
+                for (const eventCode of eventCodes) {
+                    await sessionManager.clearPlayerSession(eventCode);
+                }
+                
+            } catch (error) {
+                addResult(`❌ Lazy loading test failed: ${error.message}`, 'error', 'performanceResults');
+            }
+        }
+
+        // Test batch operations
+        async function testBatchOperations() {
+            addResult('🔍 Testing Batch Operations...', 'info', 'performanceResults');
+            
+            try {
+                // Test multiple setLastUsedEvent calls (should be batched)
+                const startTime = performance.now();
+                
+                for (let i = 0; i < 10; i++) {
+                    await sessionManager.setLastUsedEvent(`batch-test-${i}`);
+                }
+                
+                const batchTime = performance.now() - startTime;
+                addResult(`✓ 10 setLastUsedEvent operations completed in ${batchTime.toFixed(2)}ms`, 'success', 'performanceResults');
+                
+                // Wait for batch processing
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                const lastUsedEvent = await sessionManager.getLastUsedEvent();
+                addResult(`✓ Last used event: ${lastUsedEvent}`, 'info', 'performanceResults');
+                
+            } catch (error) {
+                addResult(`❌ Batch operations test failed: ${error.message}`, 'error', 'performanceResults');
+            }
+        }
+
+        // Run performance comparison
+        async function runPerformanceComparison() {
+            addResult('🔍 Running Performance Comparison...', 'info', 'performanceResults');
+            
+            try {
+                const iterations = 100;
+                const testEventCode = 'perf-comparison-' + Date.now();
+                
+                // Create test session
+                await sessionManager.savePlayerSession(testEventCode, 'Perf Test Player', 'Test question?', 'test answer');
+                
+                // Test optimized performance (with caching)
+                const optimizedTimes = [];
+                for (let i = 0; i < iterations; i++) {
+                    const start = performance.now();
+                    await sessionManager.getPlayerSession(testEventCode);
+                    optimizedTimes.push(performance.now() - start);
+                }
+                
+                // Test without caching (simulate legacy performance)
+                const legacyTimes = [];
+                for (let i = 0; i < iterations; i++) {
+                    sessionManager.clearCache(); // Force cache miss
+                    const start = performance.now();
+                    await sessionManager.getPlayerSession(testEventCode);
+                    legacyTimes.push(performance.now() - start);
+                }
+                
+                // Calculate statistics
+                const optimizedAvg = optimizedTimes.reduce((a, b) => a + b, 0) / optimizedTimes.length;
+                const legacyAvg = legacyTimes.reduce((a, b) => a + b, 0) / legacyTimes.length;
+                const improvement = ((legacyAvg - optimizedAvg) / legacyAvg * 100).toFixed(1);
+                
+                // Display comparison
+                document.getElementById('performanceComparison').style.display = 'grid';
+                
+                document.getElementById('legacyMetrics').innerHTML = `
+                    <div>Average: ${legacyAvg.toFixed(2)}ms</div>
+                    <div>Min: ${Math.min(...legacyTimes).toFixed(2)}ms</div>
+                    <div>Max: ${Math.max(...legacyTimes).toFixed(2)}ms</div>
+                `;
+                
+                document.getElementById('optimizedMetrics').innerHTML = `
+                    <div>Average: ${optimizedAvg.toFixed(2)}ms</div>
+                    <div>Min: ${Math.min(...optimizedTimes).toFixed(2)}ms</div>
+                    <div>Max: ${Math.max(...optimizedTimes).toFixed(2)}ms</div>
+                    <div style="color: #27ae60; font-weight: bold;">Improvement: ${improvement}%</div>
+                `;
+                
+                addResult(`✓ Performance comparison completed: ${improvement}% improvement`, 'success', 'performanceResults');
+                
+                // Cleanup
+                await sessionManager.clearPlayerSession(testEventCode);
+                
+            } catch (error) {
+                addResult(`❌ Performance comparison failed: ${error.message}`, 'error', 'performanceResults');
+            }
+        }
+
+        // Test legacy detection
+        function testLegacyDetection() {
+            addResult('🔍 Testing Legacy Code Detection...', 'info', 'cleanupResults');
+            
+            try {
+                const remaining = legacyCleanup.detectRemainingLegacyCode();
+                
+                addResult(`Functions found: ${remaining.functions.length}`, remaining.functions.length === 0 ? 'success' : 'warning', 'cleanupResults');
+                addResult(`Variables found: ${remaining.variables.length}`, remaining.variables.length === 0 ? 'success' : 'warning', 'cleanupResults');
+                addResult(`Storage keys found: ${remaining.storageKeys.length}`, remaining.storageKeys.length === 0 ? 'success' : 'warning', 'cleanupResults');
+                addResult(`DOM elements found: ${remaining.domElements.length}`, remaining.domElements.length === 0 ? 'success' : 'warning', 'cleanupResults');
+                
+                if (remaining.functions.length > 0) {
+                    addResult(`Legacy functions: ${remaining.functions.join(', ')}`, 'warning', 'cleanupResults');
+                }
+                
+                if (remaining.variables.length > 0) {
+                    addResult(`Legacy variables: ${remaining.variables.join(', ')}`, 'warning', 'cleanupResults');
+                }
+                
+                if (remaining.storageKeys.length > 0) {
+                    addResult(`Legacy storage keys: ${remaining.storageKeys.slice(0, 5).join(', ')}${remaining.storageKeys.length > 5 ? '...' : ''}`, 'warning', 'cleanupResults');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Legacy detection failed: ${error.message}`, 'error', 'cleanupResults');
+            }
+        }
+
+        // Test cleanup validation
+        function testCleanupValidation() {
+            addResult('🔍 Testing Cleanup Validation...', 'info', 'cleanupResults');
+            
+            try {
+                // Test that new system is available
+                if (typeof SessionManager !== 'undefined') {
+                    addResult('✓ New SessionManager available', 'success', 'cleanupResults');
+                } else {
+                    addResult('❌ SessionManager not available', 'error', 'cleanupResults');
+                }
+                
+                if (typeof PerformanceMonitor !== 'undefined') {
+                    addResult('✓ PerformanceMonitor available', 'success', 'cleanupResults');
+                } else {
+                    addResult('❌ PerformanceMonitor not available', 'error', 'cleanupResults');
+                }
+                
+                // Test that legacy functions are not available
+                const legacyFunctions = ['AuthManager', 'registerNewPlayer', 'verifyPlayerAuthentication'];
+                let legacyFound = 0;
+                
+                legacyFunctions.forEach(func => {
+                    if (typeof window[func] !== 'undefined') {
+                        addResult(`⚠ Legacy function still available: ${func}`, 'warning', 'cleanupResults');
+                        legacyFound++;
+                    }
+                });
+                
+                if (legacyFound === 0) {
+                    addResult('✓ No legacy functions found in global scope', 'success', 'cleanupResults');
+                }
+                
+                // Test that new authentication variables are used
+                if (typeof window.currentAuthenticationLevel !== 'undefined') {
+                    addResult('✓ New authentication state variable available', 'success', 'cleanupResults');
+                } else {
+                    addResult('⚠ New authentication state variable not found', 'warning', 'cleanupResults');
+                }
+                
+            } catch (error) {
+                addResult(`❌ Cleanup validation failed: ${error.message}`, 'error', 'cleanupResults');
+            }
+        }
+
+        // Test new system integration
+        async function testNewSystemIntegration() {
+            addResult('🔍 Testing New System Integration...', 'info', 'cleanupResults');
+            
+            try {
+                // Test SessionManager integration
+                const testEventCode = 'integration-test-' + Date.now();
+                const saveResult = await sessionManager.savePlayerSession(
+                    testEventCode, 
+                    'Integration Test Player', 
+                    'Integration question?', 
+                    'integration answer'
+                );
+                
+                if (saveResult) {
+                    addResult('✓ SessionManager integration working', 'success', 'cleanupResults');
+                } else {
+                    addResult('❌ SessionManager integration failed', 'error', 'cleanupResults');
+                }
+                
+                // Test performance monitoring integration
+                const metrics = sessionManager.getPerformanceMetrics();
+                if (metrics && metrics.totalOperations > 0) {
+                    addResult('✓ Performance monitoring integration working', 'success', 'cleanupResults');
+                } else {
+                    addResult('⚠ Performance monitoring integration not detected', 'warning', 'cleanupResults');
+                }
+                
+                // Test error handling integration
+                if (sessionManager.errorHandler || sessionManager.performanceMonitor) {
+                    addResult('✓ Error handling and monitoring integration detected', 'success', 'cleanupResults');
+                }
+                
+                // Cleanup
+                await sessionManager.clearPlayerSession(testEventCode);
+                
+            } catch (error) {
+                addResult(`❌ New system integration test failed: ${error.message}`, 'error', 'cleanupResults');
+            }
+        }
+
+        // Update metrics display
+        function updateMetricsDisplay() {
+            try {
+                if (!sessionManager || !performanceMonitor) return;
+                
+                const sessionMetrics = sessionManager.getPerformanceMetrics();
+                const performanceMetrics = performanceMonitor.getPerformanceSummary();
+                
+                // Update cache hit rate
+                document.getElementById('cacheHitRate').textContent = `${sessionMetrics.cacheHitRate}%`;
+                
+                // Update average operation time
+                document.getElementById('avgOperationTime').textContent = `${sessionMetrics.averageOperationTime}ms`;
+                
+                // Update memory usage
+                if (performanceMetrics.memoryUsage.available) {
+                    document.getElementById('memoryUsage').textContent = `${performanceMetrics.memoryUsage.current.used}MB`;
+                } else {
+                    document.getElementById('memoryUsage').textContent = 'N/A';
+                }
+                
+                // Update operations count
+                document.getElementById('operationsCount').textContent = performanceMetrics.sessionOperations.count;
+                
+            } catch (error) {
+                console.error('Failed to update metrics display:', error);
+            }
+        }
+
+        // Add result to display
+        function addResult(message, type, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result-item result-${type}`;
+            resultDiv.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            
+            container.appendChild(resultDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeTestEnvironment);
+    </script>
+</body>
+</html>

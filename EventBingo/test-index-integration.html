@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index.html Integration Test - EventBingo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #357abd;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e8f4fd;
+            border-left: 4px solid #4a90e2;
+        }
+        .error {
+            background: #fee;
+            border-left-color: #e74c3c;
+        }
+        .success {
+            background: #efe;
+            border-left-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <h1>Index.html Integration Test</h1>
+    <p>This page tests the integration of the new session management system with index.html</p>
+
+    <div class="test-section">
+        <h2>Session Management Integration</h2>
+        <button class="test-button" onclick="testSessionManagerIntegration()">Test SessionManager Integration</button>
+        <button class="test-button" onclick="testPlayerAuthenticatorIntegration()">Test PlayerAuthenticator Integration</button>
+        <button class="test-button" onclick="testFlowControllerIntegration()">Test FlowController Integration</button>
+        <div id="session-status" class="status" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Error Handling Integration</h2>
+        <button class="test-button" onclick="testErrorHandlerIntegration()">Test ErrorHandler Integration</button>
+        <button class="test-button" onclick="testStorageErrorHandling()">Test Storage Error Handling</button>
+        <button class="test-button" onclick="testNetworkErrorHandling()">Test Network Error Handling</button>
+        <div id="error-status" class="status" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Player Selection Integration</h2>
+        <button class="test-button" onclick="testPlayerSelection()">Test Enhanced Player Selection</button>
+        <button class="test-button" onclick="testAuthenticationFlow()">Test Authentication Flow</button>
+        <button class="test-button" onclick="testViewOnlyMode()">Test View-Only Mode</button>
+        <div id="player-status" class="status" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Photo Upload Integration</h2>
+        <button class="test-button" onclick="testUploadErrorHandling()">Test Upload Error Handling</button>
+        <button class="test-button" onclick="testOfflineUploadQueue()">Test Offline Upload Queue</button>
+        <button class="test-button" onclick="testUploadRetryLogic()">Test Upload Retry Logic</button>
+        <div id="upload-status" class="status" style="display: none;"></div>
+    </div>
+
+    <!-- Include the session management scripts -->
+    <script src="js/error-handler.js"></script>
+    <script src="js/session-manager.js"></script>
+    <script src="js/player-authenticator.js"></script>
+    <script src="js/flow-controller.js"></script>
+    <script src="js/state-preserver.js"></script>
+
+    <script>
+        // Test configuration
+        const TEST_CONFIG = {
+            eventCode: 'test-integration-123',
+            playerName: 'Test User',
+            secretQuestion: 'What is your favorite color?',
+            secretAnswer: 'blue'
+        };
+
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+        }
+
+        // Session Management Integration Tests
+        async function testSessionManagerIntegration() {
+            try {
+                const errorHandler = new ErrorHandler();
+                const sessionManager = new SessionManager(errorHandler);
+                
+                // Test session creation
+                const saveResult = await sessionManager.savePlayerSession(
+                    TEST_CONFIG.eventCode,
+                    TEST_CONFIG.playerName,
+                    TEST_CONFIG.secretQuestion,
+                    TEST_CONFIG.secretAnswer
+                );
+                
+                if (!saveResult) {
+                    throw new Error('Failed to save session');
+                }
+                
+                // Test session retrieval
+                const session = await sessionManager.getPlayerSession(TEST_CONFIG.eventCode);
+                
+                if (!session || session.playerName !== TEST_CONFIG.playerName) {
+                    throw new Error('Failed to retrieve session');
+                }
+                
+                showStatus('session-status', 
+                    `✅ SessionManager integration successful: Created and retrieved session for ${session.playerName}`,
+                    'success'
+                );
+            } catch (error) {
+                showStatus('session-status', `❌ SessionManager integration failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testPlayerAuthenticatorIntegration() {
+            try {
+                const errorHandler = new ErrorHandler();
+                const sessionManager = new SessionManager(errorHandler);
+                const playerAuthenticator = new PlayerAuthenticator(sessionManager, errorHandler);
+                
+                // Test player creation
+                const createResult = await playerAuthenticator.createPlayerProfile(
+                    TEST_CONFIG.eventCode,
+                    TEST_CONFIG.playerName + '2',
+                    TEST_CONFIG.secretQuestion,
+                    TEST_CONFIG.secretAnswer
+                );
+                
+                if (!createResult.success) {
+                    throw new Error(`Failed to create player: ${createResult.error}`);
+                }
+                
+                // Test authentication
+                const authResult = await playerAuthenticator.authenticatePlayer(
+                    TEST_CONFIG.eventCode,
+                    TEST_CONFIG.playerName + '2',
+                    TEST_CONFIG.secretAnswer
+                );
+                
+                if (!authResult.success) {
+                    throw new Error(`Failed to authenticate: ${authResult.error}`);
+                }
+                
+                showStatus('session-status', 
+                    `✅ PlayerAuthenticator integration successful: Created and authenticated ${createResult.playerName}`,
+                    'success'
+                );
+            } catch (error) {
+                showStatus('session-status', `❌ PlayerAuthenticator integration failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFlowControllerIntegration() {
+            try {
+                const errorHandler = new ErrorHandler();
+                const sessionManager = new SessionManager(errorHandler);
+                const playerAuthenticator = new PlayerAuthenticator(sessionManager, errorHandler);
+                const statePreserver = new StatePreserver(sessionManager);
+                const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver, errorHandler);
+                
+                // Test user intent determination
+                const intent = await flowController.determineUserIntent();
+                
+                if (!intent || !intent.action) {
+                    throw new Error('Failed to determine user intent');
+                }
+                
+                showStatus('session-status', 
+                    `✅ FlowController integration successful: Determined intent - ${intent.action}`,
+                    'success'
+                );
+            } catch (error) {
+                showStatus('session-status', `❌ FlowController integration failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Error Handling Integration Tests
+        async function testErrorHandlerIntegration() {
+            try {
+                const errorHandler = new ErrorHandler();
+                
+                // Test error logging
+                errorHandler._logError('test_error', { message: 'Integration test error' });
+                
+                // Test storage operation
+                const result = await errorHandler.safeStorageOperation('setItem', 'test-key', 'test-value');
+                
+                if (!result.success) {
+                    throw new Error(`Storage operation failed: ${result.error}`);
+                }
+                
+                // Test analytics
+                const analytics = errorHandler.getErrorAnalytics();
+                
+                if (!analytics.totalErrors) {
+                    throw new Error('Error analytics not working');
+                }
+                
+                showStatus('error-status', 
+                    `✅ ErrorHandler integration successful: Logged ${analytics.totalErrors} errors, storage working`,
+                    'success'
+                );
+            } catch (error) {
+                showStatus('error-status', `❌ ErrorHandler integration failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testStorageErrorHandling() {
+            try {
+                const errorHandler = new ErrorHandler();
+                
+                // Test quota handling simulation
+                const quotaResult = await errorHandler.handleStorageQuotaExceeded('test-quota-key', 'large-data');
+                
+                if (!quotaResult.success && quotaResult.action !== 'quota_exceeded_user_action_needed') {
+                    throw new Error('Quota handling not working correctly');
+                }
+                
+                showStatus('error-status', 
+                    `✅ Storage error handling working: ${quotaResult.message || quotaResult.action}`,
+                    'success'
+                );
+            } catch (error) {
+                showStatus('error-status', `❌ Storage error handling failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testNetworkErrorHandling() {
+            try {
+                const errorHandler = new ErrorHandler();
+                
+                // Test network status
+                const networkResult = errorHandler.handleNetworkConnectivity();
+                
+                if (!networkResult.success) {
+                    throw new Error('Network connectivity check failed');
+                }
+                
+                // Test action queueing
+                const queued = errorHandler.queueActionForOnline('test_action', { data: 'test' });
+                
+                if (!queued) {
+                    throw new Error('Action queueing failed');
+                }
+                
+                showStatus('error-status', 
+                    `✅ Network error handling working: ${networkResult.isOnline ? 'Online' : 'Offline'}, action queued`,
+                    'success'
+                );
+            } catch (error) {
+                showStatus('error-status', `❌ Network error handling failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Player Selection Integration Tests
+        function testPlayerSelection() {
+            try {
+                // Test if the enhanced selectPlayer function exists
+                if (typeof window.selectPlayer !== 'function') {
+                    throw new Error('Enhanced selectPlayer function not available');
+                }
+                
+                // Test authentication state functions
+                if (typeof window.setPlayerAuthentication !== 'function') {
+                    throw new Error('setPlayerAuthentication function not available');
+                }
+                
+                if (typeof window.updateUIForAuthState !== 'function') {
+                    throw new Error('updateUIForAuthState function not available');
+                }
+                
+                showStatus('player-status', 
+                    '✅ Enhanced player selection functions available and integrated',
+                    'success'
+                );
+            } catch (error) {
+                showStatus('player-status', `❌ Player selection integration failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testAuthenticationFlow() {
+            try {
+                // Test if authentication variables are available
+                if (typeof window.isAuthenticated === 'undefined') {
+                    throw new Error('isAuthenticated variable not available');
+                }
+                
+                if (typeof window.isViewOnlyMode === 'undefined') {
+                    throw new Error('isViewOnlyMode variable not available');
+                }
+                
+                if (typeof window.currentPlayerSecret === 'undefined') {
+                    throw new Error('currentPlayerSecret variable not available');
+                }
+                
+                showStatus('player-status', 
+                    '✅ Authentication flow variables available and integrated',
+                    'success'
+                );
+            } catch (error) {
+                showStatus('player-status', `❌ Authentication flow integration failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testViewOnlyMode() {
+            try {
+                // Test view-only mode functions
+                if (typeof window.updateUIForAuthState !== 'function') {
+                    throw new Error('updateUIForAuthState function not available');
+                }
+                
+                // Simulate view-only mode
+                window.isViewOnlyMode = true;
+                window.updateUIForAuthState();
+                
+                showStatus('player-status', 
+                    '✅ View-only mode integration working',
+                    'success'
+                );
+            } catch (error) {
+                showStatus('player-status', `❌ View-only mode integration failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Photo Upload Integration Tests
+        function testUploadErrorHandling() {
+            try {
+                // Test if upload functions have error handling
+                if (typeof window.uploadImages !== 'function') {
+                    throw new Error('uploadImages function not available');
+                }
+                
+                if (typeof window.compressImage !== 'function') {
+                    throw new Error('compressImage function not available');
+                }
+                
+                showStatus('upload-status', 
+                    '✅ Upload functions with error handling available',
+                    'success'
+                );
+            } catch (error) {
+                showStatus('upload-status', `❌ Upload error handling integration failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testOfflineUploadQueue() {
+            try {
+                const errorHandler = new ErrorHandler();
+                
+                // Test offline upload queueing
+                const queued = errorHandler.queueActionForOnline('upload_photo', {
+                    file: 'test-file',
+                    player: 'test-player',
+                    square: 0,
+                    eventCode: 'test-event'
+                });
+                
+                if (!queued) {
+                    throw new Error('Upload queueing failed');
+                }
+                
+                const status = errorHandler.getOfflineModeStatus();
+                
+                showStatus('upload-status', 
+                    `✅ Offline upload queue working: ${status.queuedActionsCount} actions queued`,
+                    'success'
+                );
+            } catch (error) {
+                showStatus('upload-status', `❌ Offline upload queue failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testUploadRetryLogic() {
+            try {
+                // Test if retry logic variables are available
+                if (typeof window.workerURL === 'undefined') {
+                    throw new Error('workerURL not available');
+                }
+                
+                if (typeof window.COMPRESSION_CONFIG === 'undefined') {
+                    throw new Error('COMPRESSION_CONFIG not available');
+                }
+                
+                showStatus('upload-status', 
+                    '✅ Upload retry logic configuration available',
+                    'success'
+                );
+            } catch (error) {
+                showStatus('upload-status', `❌ Upload retry logic integration failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Index.html Integration Test Suite loaded');
+            
+            // Show initial status
+            showStatus('session-status', 'Ready to test session management integration', 'info');
+            showStatus('error-status', 'Ready to test error handling integration', 'info');
+            showStatus('player-status', 'Ready to test player selection integration', 'info');
+            showStatus('upload-status', 'Ready to test upload integration', 'info');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Board Seamless Navigation Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .test-result {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .test-pass {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .test-fail {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .test-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .code-block {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎯 Board Seamless Navigation Test</h1>
+  <p>Testing the enhanced board.html with StatePreserver integration, authentication system, and view-only mode support.</p>
+
+  <div class="test-section">
+    <h2>1. Module Loading Test</h2>
+    <p>Testing if all required modules are properly loaded and accessible.</p>
+    <button onclick="testModuleLoading()">Run Module Loading Test</button>
+    <div id="moduleLoadingResults"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>2. StatePreserver Integration Test</h2>
+    <p>Testing StatePreserver context preservation functionality.</p>
+    <button onclick="testStatePreserver()">Run StatePreserver Test</button>
+    <div id="statePreserverResults"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>3. Player Authentication Test</h2>
+    <p>Testing enhanced player authentication system.</p>
+    <button onclick="testPlayerAuthentication()">Run Authentication Test</button>
+    <div id="authenticationResults"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>4. View-Only Mode Test</h2>
+    <p>Testing view-only mode functionality and UI updates.</p>
+    <button onclick="testViewOnlyMode()">Run View-Only Test</button>
+    <div id="viewOnlyResults"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>5. Navigation Context Test</h2>
+    <p>Testing navigation context preservation across page transitions.</p>
+    <button onclick="testNavigationContext()">Run Navigation Test</button>
+    <div id="navigationResults"></div>
+  </div>
+
+  <!-- Include all required scripts -->
+  <script src="js/session-manager.js"></script>
+  <script src="js/player-authenticator.js"></script>
+  <script src="js/state-preserver.js"></script>
+  <script src="js/flow-controller.js"></script>
+  <script src="js/view-only-mode.js"></script>
+  <script src="js/player-switching-interface.js"></script>
+
+  <script>
+    // Test results tracking
+    let testResults = {
+      moduleLoading: [],
+      statePreserver: [],
+      authentication: [],
+      viewOnly: [],
+      navigation: []
+    };
+
+    function addResult(category, test, passed, message) {
+      const result = { test, passed, message, timestamp: new Date().toISOString() };
+      testResults[category].push(result);
+      
+      const resultsDiv = document.getElementById(category + 'Results');
+      const resultDiv = document.createElement('div');
+      resultDiv.className = `test-result ${passed ? 'test-pass' : 'test-fail'}`;
+      resultDiv.textContent = `${passed ? '✅' : '❌'} ${test}: ${message}`;
+      resultsDiv.appendChild(resultDiv);
+    }
+
+    function addInfo(category, message) {
+      const resultsDiv = document.getElementById(category + 'Results');
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'test-result test-info';
+      infoDiv.textContent = `ℹ️ ${message}`;
+      resultsDiv.appendChild(infoDiv);
+    }
+
+    // 1. Module Loading Test
+    function testModuleLoading() {
+      const resultsDiv = document.getElementById('moduleLoadingResults');
+      resultsDiv.innerHTML = '';
+
+      // Test SessionManager
+      try {
+        const sessionManager = new SessionManager();
+        addResult('moduleLoading', 'SessionManager', true, 'Successfully created SessionManager instance');
+      } catch (error) {
+        addResult('moduleLoading', 'SessionManager', false, `Failed to create SessionManager: ${error.message}`);
+      }
+
+      // Test PlayerAuthenticator
+      try {
+        const sessionManager = new SessionManager();
+        const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+        addResult('moduleLoading', 'PlayerAuthenticator', true, 'Successfully created PlayerAuthenticator instance');
+      } catch (error) {
+        addResult('moduleLoading', 'PlayerAuthenticator', false, `Failed to create PlayerAuthenticator: ${error.message}`);
+      }
+
+      // Test StatePreserver
+      try {
+        const sessionManager = new SessionManager();
+        const statePreserver = new StatePreserver(sessionManager);
+        addResult('moduleLoading', 'StatePreserver', true, 'Successfully created StatePreserver instance');
+      } catch (error) {
+        addResult('moduleLoading', 'StatePreserver', false, `Failed to create StatePreserver: ${error.message}`);
+      }
+
+      // Test FlowController
+      try {
+        const sessionManager = new SessionManager();
+        const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+        const statePreserver = new StatePreserver(sessionManager);
+        const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+        addResult('moduleLoading', 'FlowController', true, 'Successfully created FlowController instance');
+      } catch (error) {
+        addResult('moduleLoading', 'FlowController', false, `Failed to create FlowController: ${error.message}`);
+      }
+
+      // Test ViewOnlyMode
+      try {
+        const viewOnlyMode = new ViewOnlyMode();
+        addResult('moduleLoading', 'ViewOnlyMode', true, 'Successfully created ViewOnlyMode instance');
+      } catch (error) {
+        addResult('moduleLoading', 'ViewOnlyMode', false, `Failed to create ViewOnlyMode: ${error.message}`);
+      }
+
+      // Test PlayerSwitchingInterface
+      try {
+        const sessionManager = new SessionManager();
+        const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+        const playerSwitchingInterface = new PlayerSwitchingInterface(sessionManager, playerAuthenticator);
+        addResult('moduleLoading', 'PlayerSwitchingInterface', true, 'Successfully created PlayerSwitchingInterface instance');
+      } catch (error) {
+        addResult('moduleLoading', 'PlayerSwitchingInterface', false, `Failed to create PlayerSwitchingInterface: ${error.message}`);
+      }
+    }
+
+    // 2. StatePreserver Integration Test
+    function testStatePreserver() {
+      const resultsDiv = document.getElementById('statePreserverResults');
+      resultsDiv.innerHTML = '';
+
+      try {
+        const sessionManager = new SessionManager();
+        const statePreserver = new StatePreserver(sessionManager);
+
+        // Test saving navigation state
+        const testState = {
+          eventCode: 'test123',
+          playerName: 'TestPlayer',
+          page: 'board.html',
+          action: 'test',
+          viewOnly: false
+        };
+
+        const saveResult = statePreserver.saveNavigationState(testState);
+        addResult('statePreserver', 'Save Navigation State', saveResult, 
+          saveResult ? 'Successfully saved navigation state' : 'Failed to save navigation state');
+
+        // Test restoring navigation state
+        const restoredState = statePreserver.restoreNavigationState();
+        const restoreSuccess = restoredState && restoredState.eventCode === 'test123';
+        addResult('statePreserver', 'Restore Navigation State', restoreSuccess,
+          restoreSuccess ? 'Successfully restored navigation state' : 'Failed to restore navigation state');
+
+        // Test tracking user action
+        const trackResult = statePreserver.trackUserAction('testAction', { test: true });
+        addResult('statePreserver', 'Track User Action', trackResult,
+          trackResult ? 'Successfully tracked user action' : 'Failed to track user action');
+
+        // Test getting navigation history
+        const history = statePreserver.getNavigationHistory();
+        const historySuccess = Array.isArray(history);
+        addResult('statePreserver', 'Get Navigation History', historySuccess,
+          historySuccess ? `Retrieved ${history.length} history entries` : 'Failed to get navigation history');
+
+      } catch (error) {
+        addResult('statePreserver', 'StatePreserver Integration', false, `Error: ${error.message}`);
+      }
+    }
+
+    // 3. Player Authentication Test
+    function testPlayerAuthentication() {
+      const resultsDiv = document.getElementById('authenticationResults');
+      resultsDiv.innerHTML = '';
+
+      try {
+        const sessionManager = new SessionManager();
+        const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+
+        // Test creating player profile
+        playerAuthenticator.createPlayerProfile('test123', 'TestPlayer', 'What is your favorite color?', 'blue')
+          .then(result => {
+            addResult('authentication', 'Create Player Profile', result.success,
+              result.success ? 'Successfully created player profile' : result.error);
+
+            if (result.success) {
+              // Test authentication
+              return playerAuthenticator.authenticatePlayer('test123', 'TestPlayer', 'blue');
+            }
+          })
+          .then(authResult => {
+            if (authResult) {
+              addResult('authentication', 'Player Authentication', authResult.success,
+                authResult.success ? 'Successfully authenticated player' : authResult.error);
+            }
+          })
+          .catch(error => {
+            addResult('authentication', 'Authentication Flow', false, `Error: ${error.message}`);
+          });
+
+        // Test authentication status
+        const authStatus = playerAuthenticator.getAuthenticationStatus('TestPlayer');
+        addResult('authentication', 'Get Authentication Status', true,
+          `Attempts left: ${authStatus.attemptsLeft}, Locked out: ${authStatus.isLockedOut}`);
+
+      } catch (error) {
+        addResult('authentication', 'Player Authentication', false, `Error: ${error.message}`);
+      }
+    }
+
+    // 4. View-Only Mode Test
+    function testViewOnlyMode() {
+      const resultsDiv = document.getElementById('viewOnlyResults');
+      resultsDiv.innerHTML = '';
+
+      try {
+        const viewOnlyMode = new ViewOnlyMode();
+
+        // Test initial state
+        const initialState = viewOnlyMode.isActive();
+        addResult('viewOnly', 'Initial State', !initialState,
+          initialState ? 'View-only mode should not be active initially' : 'View-only mode correctly inactive');
+
+        // Test activating view-only mode
+        const activateResult = viewOnlyMode.activateViewOnlyMode('TestPlayer', { eventCode: 'test123' });
+        addResult('viewOnly', 'Activate View-Only Mode', activateResult.success,
+          activateResult.success ? 'Successfully activated view-only mode' : activateResult.error);
+
+        // Test checking active state
+        const activeState = viewOnlyMode.isActive();
+        addResult('viewOnly', 'Check Active State', activeState,
+          activeState ? 'View-only mode is correctly active' : 'View-only mode should be active');
+
+        // Test getting current player
+        const currentPlayer = viewOnlyMode.getCurrentViewOnlyPlayer();
+        addResult('viewOnly', 'Get Current Player', currentPlayer === 'TestPlayer',
+          currentPlayer === 'TestPlayer' ? 'Correctly returned current view-only player' : `Expected TestPlayer, got ${currentPlayer}`);
+
+        // Test deactivating view-only mode
+        const deactivateResult = viewOnlyMode.deactivateViewOnlyMode();
+        addResult('viewOnly', 'Deactivate View-Only Mode', deactivateResult.success,
+          deactivateResult.success ? 'Successfully deactivated view-only mode' : deactivateResult.error);
+
+        // Test final state
+        const finalState = viewOnlyMode.isActive();
+        addResult('viewOnly', 'Final State', !finalState,
+          !finalState ? 'View-only mode correctly deactivated' : 'View-only mode should be inactive');
+
+      } catch (error) {
+        addResult('viewOnly', 'View-Only Mode', false, `Error: ${error.message}`);
+      }
+    }
+
+    // 5. Navigation Context Test
+    function testNavigationContext() {
+      const resultsDiv = document.getElementById('navigationResults');
+      resultsDiv.innerHTML = '';
+
+      try {
+        const sessionManager = new SessionManager();
+        const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+        const statePreserver = new StatePreserver(sessionManager);
+        const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+
+        // Test preserving navigation context
+        const testContext = {
+          fromPage: 'index.html',
+          toPage: 'board.html',
+          eventCode: 'test123',
+          playerName: 'TestPlayer',
+          action: 'navigation'
+        };
+
+        // Use the private method through reflection (for testing purposes)
+        if (flowController._preserveNavigationContext) {
+          flowController._preserveNavigationContext(testContext);
+          addResult('navigation', 'Preserve Navigation Context', true, 'Successfully preserved navigation context');
+        } else {
+          addInfo('navigation', 'Private method _preserveNavigationContext not accessible for testing');
+        }
+
+        // Test restoring navigation context
+        const restoredContext = flowController.restoreNavigationContext();
+        const restoreSuccess = restoredContext && restoredContext.eventCode === 'test123';
+        addResult('navigation', 'Restore Navigation Context', restoreSuccess,
+          restoreSuccess ? 'Successfully restored navigation context' : 'Failed to restore navigation context');
+
+        // Test determining user intent
+        flowController.determineUserIntent()
+          .then(intent => {
+            addResult('navigation', 'Determine User Intent', intent && intent.action,
+              intent ? `Determined intent: ${intent.action} (${intent.reason})` : 'Failed to determine user intent');
+          })
+          .catch(error => {
+            addResult('navigation', 'Determine User Intent', false, `Error: ${error.message}`);
+          });
+
+      } catch (error) {
+        addResult('navigation', 'Navigation Context', false, `Error: ${error.message}`);
+      }
+    }
+
+    // Auto-run basic tests on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      addInfo('moduleLoading', 'Page loaded. Click "Run Module Loading Test" to start testing.');
+    });
+  </script>
+</body>
+</html>

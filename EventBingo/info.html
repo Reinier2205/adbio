@@ -667,6 +667,12 @@
     <div class="nav-icon" onclick="toggleMusic()">🎵</div>
   </div>
 
+  <!-- Include SessionManager and FlowController -->
+  <script src="js/session-manager.js"></script>
+  <script src="js/player-authenticator.js"></script>
+  <script src="js/state-preserver.js"></script>
+  <script src="js/flow-controller.js"></script>
+  
   <script>
     const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
     // Instagram-style functions
@@ -686,22 +692,76 @@
     }
 
     function openCarousel() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const eventCode = urlParams.get('event') || 'default';
-      const player = urlParams.get('player') || '';
-      
-      const carouselUrl = player 
-        ? `carousel.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(player)}`
-        : `carousel.html?event=${encodeURIComponent(eventCode)}`;
-      window.location.href = carouselUrl;
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        let eventCode = urlParams.get('event');
+        const player = urlParams.get('player') || '';
+        
+        // If no event code in URL, try to get from session manager
+        if (!eventCode && sessionManager) {
+          sessionManager.getLastUsedEvent().then(lastEvent => {
+            if (lastEvent) {
+              eventCode = lastEvent;
+              navigateToCarousel(eventCode, player);
+            } else {
+              console.warn('No event code available for carousel navigation');
+            }
+          }).catch(error => {
+            console.error('Failed to get last used event for carousel:', error);
+          });
+          return;
+        }
+        
+        navigateToCarousel(eventCode || 'default', player);
+      } catch (error) {
+        console.error('Failed to open carousel:', error);
+      }
+    }
+
+    function navigateToCarousel(eventCode, player) {
+      try {
+        // Preserve navigation context before navigating
+        if (statePreserver) {
+          statePreserver.saveNavigationState({
+            fromPage: 'info.html',
+            toPage: 'carousel.html',
+            eventCode: eventCode,
+            playerName: player,
+            action: 'openCarousel'
+          });
+          
+          statePreserver.trackUserAction('navigation', {
+            action: 'openCarousel',
+            fromPage: 'info.html',
+            toPage: 'carousel.html',
+            eventCode: eventCode,
+            playerName: player
+          });
+        }
+        
+        const carouselUrl = player 
+          ? `carousel.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(player)}`
+          : `carousel.html?event=${encodeURIComponent(eventCode)}`;
+        window.location.href = carouselUrl;
+      } catch (error) {
+        console.error('Failed to navigate to carousel:', error);
+      }
     }
 
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
-      // Save preference to localStorage
+      // Save preference using consistent key
       try {
         const isDarkMode = document.body.classList.contains('dark-mode');
         localStorage.setItem('eventbingo:darkMode', isDarkMode.toString());
+        
+        // Track the action for consistency
+        if (statePreserver) {
+          statePreserver.trackUserAction('toggleDarkMode', {
+            darkMode: isDarkMode,
+            page: 'info.html'
+          });
+        }
       } catch (error) {
         console.log('Could not save dark mode preference');
       }
@@ -736,8 +796,157 @@
     // Detect dark mode immediately
     detectDarkMode();
 
+    // Global variables for session management
+    let sessionManager, playerAuthenticator, statePreserver, flowController;
+
+    // Initialize FlowController for seamless navigation
+    document.addEventListener('DOMContentLoaded', async function() {
+      try {
+        // Initialize seamless flow controller
+        sessionManager = new SessionManager();
+        playerAuthenticator = new PlayerAuthenticator(sessionManager);
+        statePreserver = new StatePreserver(sessionManager);
+        flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+        
+        // Restore navigation context from previous page
+        const restoredContext = flowController.restoreNavigationContext();
+        if (restoredContext) {
+          console.log('Info: Restored navigation context:', restoredContext);
+          
+          // Track that we restored context
+          statePreserver.trackUserAction('contextRestored', {
+            fromPage: restoredContext.fromPage,
+            toPage: restoredContext.toPage || 'info.html',
+            eventCode: restoredContext.eventCode,
+            action: restoredContext.action
+          });
+        }
+        
+        // Handle page load with seamless flow
+        const flowResult = await flowController.handlePageLoad();
+        
+        console.log('Info page flow controller result:', flowResult);
+        
+        if (flowResult.success) {
+          // Save current state for context preservation
+          statePreserver.saveNavigationState({
+            eventCode: flowResult.eventCode,
+            page: 'info.html',
+            action: flowResult.action,
+            initialized: true
+          });
+          
+          if (flowResult.action === 'navigatingToEventSelection') {
+            // FlowController is handling navigation, let it proceed
+            return;
+          }
+          
+          // If we have an event code from the flow controller, update the UI
+          if (flowResult.eventCode) {
+            updateUIForEvent(flowResult.eventCode);
+          }
+        }
+        
+        // Check for saved sessions and show quick continue option
+        await checkForSavedSessions();
+        
+        // Continue with normal info page functionality
+        // The existing landing flow will handle event code input
+      } catch (error) {
+        console.error('Failed to initialize info page with flow controller:', error);
+        // Continue with normal info page functionality
+      }
+    });
+
+    // Check for saved sessions and show quick continue option
+    async function checkForSavedSessions() {
+      try {
+        if (!sessionManager) return;
+        
+        const lastUsedEvent = await sessionManager.getLastUsedEvent();
+        const allSessions = await sessionManager.getAllPlayerSessions();
+        
+        if (lastUsedEvent && allSessions.length > 0) {
+          const lastSession = allSessions.find(s => s.eventCode === lastUsedEvent);
+          
+          if (lastSession) {
+            showQuickContinueOption(lastUsedEvent, lastSession.playerName);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check for saved sessions:', error);
+      }
+    }
+
+    // Show quick continue option for returning users
+    function showQuickContinueOption(eventCode, playerName) {
+      const quickContinueSection = document.getElementById('quickContinueSection');
+      const quickContinueBtn = document.getElementById('quickContinueBtn');
+      
+      if (quickContinueSection && quickContinueBtn) {
+        quickContinueBtn.textContent = `↩️ Continue as ${playerName} in ${eventCode}`;
+        quickContinueBtn.onclick = async () => {
+          try {
+            // Preserve navigation context
+            if (statePreserver) {
+              statePreserver.saveNavigationState({
+                fromPage: 'info.html',
+                toPage: 'index.html',
+                eventCode: eventCode,
+                playerName: playerName,
+                action: 'quickContinue'
+              });
+              
+              statePreserver.trackUserAction('navigation', {
+                action: 'quickContinue',
+                fromPage: 'info.html',
+                toPage: 'index.html',
+                eventCode: eventCode,
+                playerName: playerName
+              });
+            }
+            
+            // Show bottom navigation since we're continuing with a valid event
+            document.getElementById('bottomNav').style.display = 'flex';
+            
+            // Navigate to game interface
+            window.location.href = `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerName)}`;
+          } catch (error) {
+            console.error('Failed to continue with saved session:', error);
+          }
+        };
+        
+        quickContinueSection.style.display = 'block';
+      }
+    }
+
+    // Update UI when we have a valid event code
+    function updateUIForEvent(eventCode) {
+      try {
+        // Show bottom navigation
+        const bottomNav = document.getElementById('bottomNav');
+        if (bottomNav) {
+          bottomNav.style.display = 'flex';
+        }
+        
+        // Update event code input if it exists
+        const eventInput = document.getElementById('eventCodeInput');
+        if (eventInput && !eventInput.value) {
+          eventInput.value = eventCode;
+        }
+        
+        // Update page title to include event
+        const pageTitle = document.querySelector('.page-title');
+        if (pageTitle && eventCode) {
+          pageTitle.textContent = `EventBingo - ${eventCode}`;
+        }
+      } catch (error) {
+        console.error('Failed to update UI for event:', error);
+      }
+    }
+
     // Landing flow: event code capture, validation, and redirection
-    (function initLandingFlow() {
+    (async function initLandingFlow() {
       const input = document.getElementById('eventCodeInput');
       const startBtn = document.getElementById('startPlayingBtn');
       const noCodeBtn = document.getElementById('noCodeBtn');
@@ -751,20 +960,47 @@
         document.getElementById('bottomNav').style.display = 'flex';
       }
 
-      // Prefill from last used event
+      // Prefill from last used event using SessionManager
       let lastEvent = '';
       try {
-        lastEvent = localStorage.getItem('eventbingo:lastEvent') || '';
+        if (sessionManager) {
+          lastEvent = await sessionManager.getLastUsedEvent() || '';
+        } else {
+          // Fallback to direct localStorage access
+          lastEvent = localStorage.getItem('eventbingo:lastEvent') || '';
+        }
         if (lastEvent) input.value = lastEvent;
       } catch (_) {}
+      
       // Show quick-continue if we have a remembered event
       const continueBtn = document.getElementById('continueLastBtn');
       if (continueBtn && lastEvent) {
         continueBtn.style.display = 'inline-block';
-        continueBtn.onclick = () => {
-          // Show bottom navigation since we're continuing with a valid event
-          document.getElementById('bottomNav').style.display = 'flex';
-          window.location.href = `index.html?event=${encodeURIComponent(lastEvent)}`;
+        continueBtn.onclick = async () => {
+          try {
+            // Preserve navigation context before navigating
+            if (statePreserver) {
+              statePreserver.saveNavigationState({
+                fromPage: 'info.html',
+                toPage: 'index.html',
+                eventCode: lastEvent,
+                action: 'continueLastEvent'
+              });
+              
+              statePreserver.trackUserAction('navigation', {
+                action: 'continueLastEvent',
+                fromPage: 'info.html',
+                toPage: 'index.html',
+                eventCode: lastEvent
+              });
+            }
+            
+            // Show bottom navigation since we're continuing with a valid event
+            document.getElementById('bottomNav').style.display = 'flex';
+            window.location.href = `index.html?event=${encodeURIComponent(lastEvent)}`;
+          } catch (error) {
+            console.error('Failed to continue with last event:', error);
+          }
         };
       }
 
@@ -786,11 +1022,40 @@
         try {
           const res = await fetch(`${workerURL}event-info?event=${encodeURIComponent(code)}`);
           if (res.ok) {
-            try { localStorage.setItem('eventbingo:lastEvent', code); } catch (_) {}
+            // Save last used event using SessionManager
+            try {
+              if (sessionManager) {
+                await sessionManager.setLastUsedEvent(code);
+              } else {
+                // Fallback to direct localStorage
+                localStorage.setItem('eventbingo:lastEvent', code);
+              }
+            } catch (error) {
+              console.error('Failed to save last used event:', error);
+            }
+            
             startBtn.innerHTML = '✅ Event found! Redirecting...';
             // Show bottom navigation since event is valid
             document.getElementById('bottomNav').style.display = 'flex';
+            
             setTimeout(() => {
+              // Preserve navigation context before navigating
+              if (statePreserver) {
+                statePreserver.saveNavigationState({
+                  fromPage: 'info.html',
+                  toPage: 'index.html',
+                  eventCode: code,
+                  action: 'validateAndStart'
+                });
+                
+                statePreserver.trackUserAction('navigation', {
+                  action: 'validateAndStart',
+                  fromPage: 'info.html',
+                  toPage: 'index.html',
+                  eventCode: code
+                });
+              }
+              
               window.location.href = `index.html?event=${encodeURIComponent(code)}`;
             }, 500);
             return;
@@ -833,6 +1098,138 @@
       input.addEventListener('keydown', (e) => { if (e.key === 'Enter') validateAndStart(); });
       noCodeBtn?.addEventListener('click', () => showNoCodeOptions());
     })();
+
+    // Handle navigation errors and provide recovery options
+    function handleNavigationError(error, context = {}) {
+      try {
+        console.error('Navigation error occurred:', error, context);
+        
+        if (statePreserver) {
+          // Track the error for debugging
+          statePreserver.trackUserAction('navigationError', {
+            error: error.message,
+            context: context,
+            page: 'info.html',
+            timestamp: Date.now()
+          });
+          
+          // Provide fallback options
+          const fallbackOptions = statePreserver.provideFallbackOptions('navigationError');
+          
+          if (fallbackOptions.success && fallbackOptions.options.length > 0) {
+            showRecoveryOptions(fallbackOptions.options);
+          }
+        }
+      } catch (recoveryError) {
+        console.error('Failed to handle navigation error:', recoveryError);
+      }
+    }
+
+    // Show recovery options to the user
+    function showRecoveryOptions(options) {
+      try {
+        const container = document.querySelector('.main-content');
+        if (!container) return;
+        
+        // Create recovery section
+        const recoverySection = document.createElement('div');
+        recoverySection.className = 'section';
+        recoverySection.innerHTML = `
+          <div class="section-title">
+            <span>🔧</span>
+            Recovery Options
+          </div>
+          <div class="section-content">
+            <p>We encountered an issue. Here are some options to continue:</p>
+            <div id="recoveryOptions"></div>
+          </div>
+        `;
+        
+        const optionsContainer = recoverySection.querySelector('#recoveryOptions');
+        
+        options.forEach(option => {
+          const optionBtn = document.createElement('button');
+          optionBtn.className = 'setup-btn setup-btn-secondary';
+          optionBtn.style.cssText = 'margin: 5px; padding: 10px 15px; width: auto;';
+          optionBtn.textContent = option.description;
+          
+          optionBtn.onclick = () => handleRecoveryOption(option);
+          optionsContainer.appendChild(optionBtn);
+        });
+        
+        // Insert at the top of main content
+        container.insertBefore(recoverySection, container.firstChild);
+      } catch (error) {
+        console.error('Failed to show recovery options:', error);
+      }
+    }
+
+    // Handle recovery option selection
+    async function handleRecoveryOption(option) {
+      try {
+        switch (option.type) {
+          case 'continueLastEvent':
+          case 'continueLastSession':
+            if (statePreserver) {
+              statePreserver.saveNavigationState({
+                fromPage: 'info.html',
+                toPage: 'index.html',
+                eventCode: option.eventCode,
+                playerName: option.playerName,
+                action: 'recoveryNavigation'
+              });
+            }
+            window.location.href = `index.html?event=${encodeURIComponent(option.eventCode)}&player=${encodeURIComponent(option.playerName)}`;
+            break;
+            
+          case 'selectSession':
+            // Show session selection modal
+            showSessionSelectionModal(option.sessions);
+            break;
+            
+          case 'enterEventCode':
+            // Focus on event code input
+            const eventInput = document.getElementById('eventCodeInput');
+            if (eventInput) {
+              eventInput.focus();
+              eventInput.scrollIntoView({ behavior: 'smooth' });
+            }
+            break;
+            
+          case 'goToInfo':
+            // Already on info page, just scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            break;
+            
+          default:
+            console.warn('Unknown recovery option type:', option.type);
+        }
+        
+        // Track recovery action
+        if (statePreserver) {
+          statePreserver.trackUserAction('recoveryAction', {
+            optionType: option.type,
+            page: 'info.html'
+          });
+        }
+      } catch (error) {
+        console.error('Failed to handle recovery option:', error);
+      }
+    }
+
+    // Show session selection modal for recovery
+    function showSessionSelectionModal(sessions) {
+      // This would create a modal to select from available sessions
+      // For now, just navigate to the most recent session
+      if (sessions && sessions.length > 0) {
+        const mostRecent = sessions[0];
+        handleRecoveryOption({
+          type: 'continueLastSession',
+          eventCode: mostRecent.eventCode,
+          playerName: mostRecent.playerName
+        });
+      }
+    }
   </script>
 </body>
 </html>

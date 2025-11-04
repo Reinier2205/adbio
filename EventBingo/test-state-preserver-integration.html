@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StatePreserver Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .clear-btn {
+            background: #dc3545;
+        }
+        .clear-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔄 StatePreserver Integration Test</h1>
+        <p>This test verifies that StatePreserver is properly integrated and working across page navigation.</p>
+        
+        <div id="testResults"></div>
+        
+        <button onclick="runTests()">🧪 Run Tests</button>
+        <button onclick="testNavigation()">🔗 Test Navigation Context</button>
+        <button onclick="testHistory()">📋 Test History Tracking</button>
+        <button onclick="clearState()" class="clear-btn">🗑️ Clear State</button>
+    </div>
+
+    <!-- Include required scripts -->
+    <script src="js/session-manager.js"></script>
+    <script src="js/player-authenticator.js"></script>
+    <script src="js/state-preserver.js"></script>
+    <script src="js/flow-controller.js"></script>
+
+    <script>
+        let testResults = document.getElementById('testResults');
+        let sessionManager, statePreserver, flowController;
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            testResults.appendChild(div);
+        }
+
+        function clearResults() {
+            testResults.innerHTML = '';
+        }
+
+        async function runTests() {
+            clearResults();
+            addResult('🚀 Starting StatePreserver Integration Tests...', 'info');
+
+            try {
+                // Initialize components
+                sessionManager = new SessionManager();
+                statePreserver = new StatePreserver(sessionManager);
+                const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+                flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+
+                addResult('✅ Components initialized successfully', 'success');
+
+                // Test 1: Save and restore navigation state
+                addResult('1️⃣ Testing navigation state save/restore...', 'info');
+                
+                const testState = {
+                    eventCode: 'test-event-123',
+                    playerName: 'TestPlayer',
+                    fromPage: 'index.html',
+                    toPage: 'board.html',
+                    action: 'openBoard'
+                };
+
+                const saveResult = statePreserver.saveNavigationState(testState);
+                if (saveResult) {
+                    addResult('   ✅ Navigation state saved successfully', 'success');
+                } else {
+                    addResult('   ❌ Failed to save navigation state', 'error');
+                    return;
+                }
+
+                const restoredState = statePreserver.restoreNavigationState();
+                if (restoredState && restoredState.eventCode === testState.eventCode) {
+                    addResult('   ✅ Navigation state restored successfully', 'success');
+                    addResult(`   📄 Restored: ${JSON.stringify(restoredState, null, 2)}`, 'info');
+                } else {
+                    addResult('   ❌ Failed to restore navigation state', 'error');
+                    return;
+                }
+
+                // Test 2: Track user actions
+                addResult('2️⃣ Testing user action tracking...', 'info');
+                
+                const trackResult = statePreserver.trackUserAction('navigation', {
+                    action: 'testNavigation',
+                    fromPage: 'test.html',
+                    toPage: 'test2.html',
+                    eventCode: 'test-event-123'
+                });
+
+                if (trackResult) {
+                    addResult('   ✅ User action tracked successfully', 'success');
+                } else {
+                    addResult('   ❌ Failed to track user action', 'error');
+                    return;
+                }
+
+                const history = statePreserver.getNavigationHistory();
+                if (history && history.length > 0) {
+                    addResult(`   ✅ Navigation history retrieved (${history.length} entries)`, 'success');
+                    addResult(`   📋 Latest entry: ${JSON.stringify(history[0], null, 2)}`, 'info');
+                } else {
+                    addResult('   ❌ Failed to retrieve navigation history', 'error');
+                    return;
+                }
+
+                // Test 3: State corruption handling
+                addResult('3️⃣ Testing state corruption handling...', 'info');
+                
+                const recoveryOptions = statePreserver.handleStateCorruption();
+                if (recoveryOptions && recoveryOptions.success) {
+                    addResult('   ✅ State corruption handled successfully', 'success');
+                    addResult(`   🔧 Recovery options: ${recoveryOptions.options.length} available`, 'info');
+                } else {
+                    addResult('   ❌ Failed to handle state corruption', 'error');
+                }
+
+                // Test 4: Fallback options
+                addResult('4️⃣ Testing fallback options...', 'info');
+                
+                const fallbackOptions = statePreserver.provideFallbackOptions('test');
+                if (fallbackOptions && fallbackOptions.success) {
+                    addResult('   ✅ Fallback options provided successfully', 'success');
+                    addResult(`   🔄 Fallback options: ${fallbackOptions.options.length} available`, 'info');
+                } else {
+                    addResult('   ❌ Failed to provide fallback options', 'error');
+                }
+
+                // Test 5: FlowController integration
+                addResult('5️⃣ Testing FlowController integration...', 'info');
+                
+                // Test context preservation
+                flowController._preserveNavigationContext({
+                    fromPage: 'test.html',
+                    toPage: 'test2.html',
+                    eventCode: 'test-event-123',
+                    playerName: 'TestPlayer',
+                    action: 'testIntegration'
+                });
+
+                const restoredContext = flowController.restoreNavigationContext();
+                if (restoredContext && restoredContext.eventCode === 'test-event-123') {
+                    addResult('   ✅ FlowController context preservation working', 'success');
+                } else {
+                    addResult('   ❌ FlowController context preservation failed', 'error');
+                }
+
+                // Test 6: State summary
+                addResult('6️⃣ Testing state summary...', 'info');
+                
+                const stateSummary = statePreserver.getCurrentStateSummary();
+                if (stateSummary && !stateSummary.error) {
+                    addResult('   ✅ State summary generated successfully', 'success');
+                    addResult(`   📊 Summary: ${JSON.stringify(stateSummary, null, 2)}`, 'info');
+                } else {
+                    addResult('   ❌ Failed to generate state summary', 'error');
+                }
+
+                addResult('🎉 All StatePreserver integration tests completed!', 'success');
+
+            } catch (error) {
+                addResult(`❌ Test failed with error: ${error.message}`, 'error');
+                console.error('Test error:', error);
+            }
+        }
+
+        function testNavigation() {
+            clearResults();
+            addResult('🔗 Testing Navigation Context Preservation...', 'info');
+
+            if (!statePreserver) {
+                statePreserver = new StatePreserver(new SessionManager());
+            }
+
+            // Simulate navigation from index to board
+            const navigationContext = {
+                fromPage: 'index.html',
+                toPage: 'board.html',
+                eventCode: 'demo-event-456',
+                playerName: 'DemoPlayer',
+                action: 'openBoard',
+                timestamp: Date.now()
+            };
+
+            statePreserver.saveNavigationState(navigationContext);
+            statePreserver.trackUserAction('navigation', {
+                action: 'openBoard',
+                fromPage: 'index.html',
+                toPage: 'board.html',
+                eventCode: 'demo-event-456',
+                playerName: 'DemoPlayer'
+            });
+
+            addResult('✅ Navigation context saved and tracked', 'success');
+            addResult(`📄 Context: ${JSON.stringify(navigationContext, null, 2)}`, 'info');
+
+            // Test restoration
+            const restored = statePreserver.restoreNavigationState();
+            if (restored && restored.eventCode === navigationContext.eventCode) {
+                addResult('✅ Navigation context restored successfully', 'success');
+            } else {
+                addResult('❌ Navigation context restoration failed', 'error');
+            }
+        }
+
+        function testHistory() {
+            clearResults();
+            addResult('📋 Testing History Tracking...', 'info');
+
+            if (!statePreserver) {
+                statePreserver = new StatePreserver(new SessionManager());
+            }
+
+            // Add multiple history entries
+            const actions = [
+                { action: 'pageLoad', context: { page: 'index.html', eventCode: 'test-123' } },
+                { action: 'openBoard', context: { fromPage: 'index.html', toPage: 'board.html' } },
+                { action: 'goBack', context: { fromPage: 'board.html', toPage: 'index.html' } },
+                { action: 'openInfo', context: { fromPage: 'index.html', toPage: 'info.html' } }
+            ];
+
+            actions.forEach((actionData, index) => {
+                const result = statePreserver.trackUserAction(actionData.action, actionData.context);
+                if (result) {
+                    addResult(`   ✅ Action ${index + 1} tracked: ${actionData.action}`, 'success');
+                } else {
+                    addResult(`   ❌ Failed to track action ${index + 1}: ${actionData.action}`, 'error');
+                }
+            });
+
+            const history = statePreserver.getNavigationHistory();
+            addResult(`📊 Total history entries: ${history.length}`, 'info');
+            
+            history.slice(0, 3).forEach((entry, index) => {
+                addResult(`   ${index + 1}. ${entry.action} - ${new Date(entry.timestamp).toLocaleTimeString()}`, 'info');
+            });
+        }
+
+        function clearState() {
+            clearResults();
+            addResult('🗑️ Clearing all state...', 'info');
+
+            if (!statePreserver) {
+                statePreserver = new StatePreserver(new SessionManager());
+            }
+
+            const clearNav = statePreserver.clearNavigationState();
+            const clearHistory = statePreserver.clearNavigationHistory();
+
+            if (clearNav && clearHistory) {
+                addResult('✅ All state cleared successfully', 'success');
+            } else {
+                addResult('❌ Failed to clear some state', 'error');
+            }
+
+            // Also clear localStorage for clean slate
+            try {
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('eventbingo:')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                addResult('✅ localStorage cleaned', 'success');
+            } catch (error) {
+                addResult('❌ Failed to clean localStorage', 'error');
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html>

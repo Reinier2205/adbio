@@ -1333,7 +1333,40 @@
         opacity: 0;
       }
     }
+
+    /* View-Only Indicator Animations */
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+      }
+    }
   </style>
+  
+  <!-- Enhanced Session Management Scripts -->
+  <script src="js/error-handler.js"></script>
+  <script src="js/session-manager.js"></script>
+  <script src="js/player-authenticator.js"></script>
+  <script src="js/flow-controller.js"></script>
+  <script src="js/state-preserver.js"></script>
+  <script src="js/secret-question-auth.js"></script>
+  <script src="js/player-switching-interface.js"></script>
+  <script src="js/view-only-mode.js"></script>
 </head>
 <body>
   <!-- Clean Top Bar - Players Only -->
@@ -1420,6 +1453,8 @@
     <div class="page-loading-text">Loading EventBingo...</div>
   </div>
 
+  <!-- Session Management System Already Loaded Above -->
+  
   <script>
     function escapeQuotes(str) {
       return str.replace(/'/g, "\\'");
@@ -1512,10 +1547,7 @@
         compressedFormData.append("eventCode", eventCode);
         compressedFormData.append("type", "compressed");
         
-        // Add authentication if available
-        if (currentPlayerSecret) {
-          compressedFormData.append("secretAnswer", currentPlayerSecret);
-        }
+        // Authentication is now handled by SessionManager - no need to append secret
         
         const compressedResponse = await fetch(`${workerURL}upload`, { 
           method: "POST", 
@@ -1591,278 +1623,9 @@
       format: 'image/jpeg'
     };
 
-    // Authentication Manager - handles player authentication and localStorage operations
-    class AuthManager {
-      constructor() {
-        this.isLocalStorageAvailable = this.checkLocalStorageAvailability();
-      }
+    // Legacy AuthManager removed - now using SessionManager and PlayerAuthenticator
 
-      // Check if localStorage is available
-      checkLocalStorageAvailability() {
-        try {
-          const test = '__localStorage_test__';
-          localStorage.setItem(test, test);
-          localStorage.removeItem(test);
-          return true;
-        } catch (e) {
-          console.warn('localStorage not available, authentication will be session-only');
-          return false;
-        }
-      }
-
-      // Generate localStorage keys
-      getAnswerKey(eventCode, playerName) {
-        return `secret_answer_${eventCode}_${playerName}`;
-      }
-
-      getVerifiedKey(eventCode, playerName) {
-        return `secret_verified_${eventCode}_${playerName}`;
-      }
-
-      getTimestampKey(eventCode, playerName) {
-        return `secret_timestamp_${eventCode}_${playerName}`;
-      }
-
-      // Check if player has local authentication
-      hasLocalAuth(eventCode, playerName) {
-        if (!this.isLocalStorageAvailable) return false;
-        
-        try {
-          const answerKey = this.getAnswerKey(eventCode, playerName);
-          const verifiedKey = this.getVerifiedKey(eventCode, playerName);
-          
-          return localStorage.getItem(answerKey) && localStorage.getItem(verifiedKey) === 'true';
-        } catch (e) {
-          console.warn('Error checking local auth:', e);
-          return false;
-        }
-      }
-
-      // Get stored answer for auto-verification
-      getStoredAnswer(eventCode, playerName) {
-        if (!this.isLocalStorageAvailable) return null;
-        
-        try {
-          const answerKey = this.getAnswerKey(eventCode, playerName);
-          return localStorage.getItem(answerKey);
-        } catch (e) {
-          console.warn('Error getting stored answer:', e);
-          return null;
-        }
-      }
-
-      // Store authentication data locally
-      storeAuth(eventCode, playerName, answer) {
-        if (!this.isLocalStorageAvailable) {
-          console.warn('Cannot store auth data - localStorage unavailable');
-          return false;
-        }
-        
-        try {
-          const answerKey = this.getAnswerKey(eventCode, playerName);
-          const verifiedKey = this.getVerifiedKey(eventCode, playerName);
-          const timestampKey = this.getTimestampKey(eventCode, playerName);
-          
-          localStorage.setItem(answerKey, answer.toLowerCase().trim().replace(/\s+/g, ' '));
-          localStorage.setItem(verifiedKey, 'true');
-          localStorage.setItem(timestampKey, Date.now().toString());
-          
-          return true;
-        } catch (e) {
-          console.warn('Error storing auth data:', e);
-          return false;
-        }
-      }
-
-      // Clear local authentication
-      clearAuth(eventCode, playerName) {
-        if (!this.isLocalStorageAvailable) return;
-        
-        try {
-          const answerKey = this.getAnswerKey(eventCode, playerName);
-          const verifiedKey = this.getVerifiedKey(eventCode, playerName);
-          const timestampKey = this.getTimestampKey(eventCode, playerName);
-          
-          localStorage.removeItem(answerKey);
-          localStorage.removeItem(verifiedKey);
-          localStorage.removeItem(timestampKey);
-        } catch (e) {
-          console.warn('Error clearing auth data:', e);
-        }
-      }
-
-      // Verify current authentication state
-      isAuthenticated(eventCode, playerName) {
-        return this.hasLocalAuth(eventCode, playerName);
-      }
-
-      // Clean up old authentication data (optional maintenance)
-      cleanupOldAuth(maxAge = 30 * 24 * 60 * 60 * 1000) { // 30 days default
-        if (!this.isLocalStorageAvailable) return;
-        
-        try {
-          const now = Date.now();
-          const keysToRemove = [];
-          
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('secret_timestamp_')) {
-              const timestamp = parseInt(localStorage.getItem(key));
-              if (now - timestamp > maxAge) {
-                // Mark related keys for removal
-                const parts = key.replace('secret_timestamp_', '').split('_');
-                const eventCode = parts[0];
-                const playerName = parts.slice(1).join('_');
-                
-                keysToRemove.push(this.getAnswerKey(eventCode, playerName));
-                keysToRemove.push(this.getVerifiedKey(eventCode, playerName));
-                keysToRemove.push(key);
-              }
-            }
-          }
-          
-          keysToRemove.forEach(key => localStorage.removeItem(key));
-          
-          if (keysToRemove.length > 0) {
-            console.log(`Cleaned up ${keysToRemove.length / 3} old authentication entries`);
-          }
-        } catch (e) {
-          console.warn('Error during auth cleanup:', e);
-        }
-      }
-    }
-
-    // Initialize authentication manager
-    const authManager = new AuthManager();
-    
-    // Clean up old authentication data on startup
-    authManager.cleanupOldAuth();
-
-    // Authentication functions
-    async function registerNewPlayer(playerName, answer) {
-      try {
-        // Normalize answer before sending (for consistency)
-        const normalizedAnswer = answer.toLowerCase().trim().replace(/\s+/g, ' ');
-        
-        console.log('Registering player:', playerName, 'with answer:', normalizedAnswer);
-        
-        const response = await fetch(`${workerURL}auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventCode: eventCode,
-            playerName: playerName,
-            answer: normalizedAnswer
-          })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          // Store authentication locally
-          authManager.storeAuth(eventCode, playerName, normalizedAnswer);
-          currentPlayerSecret = normalizedAnswer;
-          isAuthenticated = true;
-          isViewOnlyMode = false;
-          
-          return { success: true, question: data.question };
-        } else {
-          return { success: false, message: data.message || 'Registration failed' };
-        }
-      } catch (error) {
-        console.error('Registration error:', error);
-        return { success: false, message: 'Network error during registration' };
-      }
-    }
-
-    async function verifyPlayerAuthentication(playerName, answer) {
-      try {
-        // Normalize answer before sending (for consistency)
-        const normalizedAnswer = answer.toLowerCase().trim().replace(/\s+/g, ' ');
-        
-        console.log('Verifying player:', playerName, 'with answer:', normalizedAnswer);
-        
-        const response = await fetch(`${workerURL}auth/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventCode: eventCode,
-            playerName: playerName,
-            answer: normalizedAnswer
-          })
-        });
-
-        const data = await response.json();
-        
-        if (data.success && data.authenticated) {
-          // Store authentication locally
-          authManager.storeAuth(eventCode, playerName, normalizedAnswer);
-          currentPlayerSecret = normalizedAnswer;
-          isAuthenticated = true;
-          isViewOnlyMode = false;
-          
-          return { success: true, authenticated: true };
-        } else {
-          // Authentication failed - enter view-only mode
-          currentPlayerSecret = null;
-          isAuthenticated = false;
-          isViewOnlyMode = true;
-          
-          return { success: true, authenticated: false, message: data.message };
-        }
-      } catch (error) {
-        console.error('Verification error:', error);
-        // On network error, allow view-only mode
-        currentPlayerSecret = null;
-        isAuthenticated = false;
-        isViewOnlyMode = true;
-        
-        return { success: false, message: 'Network error during verification' };
-      }
-    }
-
-    async function getPlayerQuestion(playerName) {
-      try {
-        const response = await fetch(`${workerURL}auth/question/${eventCode}/${encodeURIComponent(playerName)}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          return { success: true, question: data.question };
-        } else {
-          return { success: false, message: 'Player not found' };
-        }
-      } catch (error) {
-        console.error('Error getting question:', error);
-        return { success: false, message: 'Network error' };
-      }
-    }
-
-    // Set authentication state for a player
-    function setPlayerAuthentication(playerName) {
-      // Check if we have local authentication
-      if (authManager.hasLocalAuth(eventCode, playerName)) {
-        currentPlayerSecret = authManager.getStoredAnswer(eventCode, playerName);
-        isAuthenticated = true;
-        isViewOnlyMode = false;
-        return 'authenticated';
-      } else {
-        currentPlayerSecret = null;
-        isAuthenticated = false;
-        isViewOnlyMode = true;
-        return 'needs_auth';
-      }
-    }
-
-    // Update UI based on authentication state
-    function updateUIForAuthState() {
-      const uploadSections = document.querySelectorAll('.upload-section');
-      const addPhotoButtons = document.querySelectorAll('.add-photo-btn');
-      
-      if (isViewOnlyMode) {
-        // Hide upload UI elements
-        uploadSections.forEach(section => {
-          section.style.display = 'none';
-        });
+    // Legacy authentication functions removed - now using SessionManager and PlayerAuthenticator
         
         // Show view-only message if not already shown
         if (!document.getElementById('viewOnlyMessage')) {
@@ -1925,10 +1688,8 @@
     let currentEvent = null;
     let hasPromptedForPlayer = false;
     
-    // Authentication state
-    let isAuthenticated = false;
-    let isViewOnlyMode = false;
-    let currentPlayerSecret = null;
+    // Authentication state - now managed by SessionManager and PlayerAuthenticator
+    let currentAuthenticationLevel = 'none'; // 'none', 'viewOnly', 'full'
     const params = new URLSearchParams(window.location.search);
     let eventCode = params.get("event") || "default";
 
@@ -1989,26 +1750,87 @@
       return selectedIcon;
     }
 
-    // Instagram-style functions
-    function selectPlayer(playerName) {
-      currentPlayer = playerName;
-      
-      // Set authentication state
-      const authState = setPlayerAuthentication(playerName);
-      
-      // Save last player for this event
-      try { 
-        localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName);
-        localStorage.setItem('eventbingo:currentPlayer', playerName); // Global current player
-      } catch(_) {}
-      
-      updatePlayerCircles();
-      createGrid();
-      loadPhotos(currentPlayer);
-      updateUIForAuthState();
-      
-      // Ensure the selected player is visible in the top bar immediately
-      loadPlayers();
+    // Enhanced player selection with authentication
+    async function selectPlayer(playerName) {
+      try {
+        // If selecting the same player, no need to re-authenticate
+        if (currentPlayer === playerName && currentAuthenticationLevel === 'full') {
+          return;
+        }
+        
+        // Use the new session management system
+        if (window.sessionManager && window.playerAuthenticator) {
+          const session = await window.sessionManager.getPlayerSession(eventCode);
+          
+          if (session && session.playerName === playerName) {
+            // Player has a session, authenticate them
+            const authResult = await window.playerAuthenticator.promptForAuthentication(
+              playerName, 
+              { eventCode: eventCode, viewOnly: true }
+            );
+            
+            if (authResult.success) {
+              currentPlayer = playerName;
+              
+              currentAuthenticationLevel = authResult.authenticationLevel || 'viewOnly';
+              
+              // Update UI and load photos
+              updateUIForAuthState();
+              await loadPhotos(currentPlayer);
+              updatePlayerSelectionUI();
+              
+              // Cache state for error recovery
+              if (window.errorHandler) {
+                await window.errorHandler.cacheLastKnownGoodState({
+                  page: 'index.html',
+                  eventCode: eventCode,
+                  currentPlayer: currentPlayer,
+                  authenticationLevel: currentAuthenticationLevel,
+                  timestamp: Date.now()
+                });
+              }
+              
+              return;
+            }
+          }
+        }
+        
+        // Fallback to legacy player selection
+        currentPlayer = playerName;
+        
+        // Authentication state is now managed by SessionManager
+        
+        // Save last player for this event
+        try { 
+          localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName);
+          localStorage.setItem('eventbingo:currentPlayer', playerName); // Global current player
+        } catch(_) {}
+        
+        updatePlayerCircles();
+        createGrid();
+        loadPhotos(currentPlayer);
+        updateUIForAuthState();
+        
+        // Ensure the selected player is visible in the top bar immediately
+        loadPlayers();
+      } catch (error) {
+        console.error('Failed to select player:', error);
+        
+        // Log error for debugging
+        if (window.errorHandler) {
+          window.errorHandler._logError('player_selection_failed', {
+            playerName: playerName,
+            eventCode: eventCode,
+            error: error.message
+          });
+        }
+        
+        // Fallback to basic selection
+        currentPlayer = playerName;
+        updatePlayerCircles();
+        createGrid();
+        loadPhotos(currentPlayer);
+      }
     }
 
     function updatePlayerCircles() {
@@ -2076,6 +1898,25 @@
 
 
     function openBoard() {
+      // Preserve navigation context before navigating
+      if (typeof statePreserver !== 'undefined') {
+        statePreserver.saveNavigationState({
+          fromPage: 'index.html',
+          toPage: 'board.html',
+          eventCode: eventCode,
+          playerName: currentPlayer,
+          action: 'openBoard'
+        });
+        
+        statePreserver.trackUserAction('navigation', {
+          action: 'openBoard',
+          fromPage: 'index.html',
+          toPage: 'board.html',
+          eventCode: eventCode,
+          playerName: currentPlayer
+        });
+      }
+      
       // Navigate to the board page with current player context
       const boardUrl = currentPlayer 
         ? `board.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(currentPlayer)}`
@@ -2282,6 +2123,25 @@
     }
 
     function openBoard() {
+      // Preserve navigation context before navigating
+      if (typeof statePreserver !== 'undefined') {
+        statePreserver.saveNavigationState({
+          fromPage: 'index.html',
+          toPage: 'board.html',
+          eventCode: eventCode,
+          playerName: currentPlayer,
+          action: 'openBoard'
+        });
+        
+        statePreserver.trackUserAction('navigation', {
+          action: 'openBoard',
+          fromPage: 'index.html',
+          toPage: 'board.html',
+          eventCode: eventCode,
+          playerName: currentPlayer
+        });
+      }
+      
       // Navigate to the board page with current player context
       const boardUrl = currentPlayer 
         ? `board.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(currentPlayer)}`
@@ -2574,7 +2434,7 @@
           }
           
           // Check if user is in view-only mode
-          if (isViewOnlyMode) {
+          if (currentAuthenticationLevel === 'viewOnly') {
             alert(`You can view ${currentPlayer}'s photos but cannot upload for ${currentPlayer}. To upload photos, select your own name and authenticate.`);
             e.target.value = ""; // Clear file input
             return;
@@ -2589,6 +2449,26 @@
           showLoading("Compressing and uploading your photo...");
 
           try {
+            // Check network connectivity before upload
+            if (window.errorHandler && !navigator.onLine) {
+              // Queue the upload for when online
+              window.errorHandler.queueActionForOnline('upload_photo', {
+                file: file,
+                player: currentPlayer,
+                square: index,
+                eventCode: eventCode
+              });
+              
+              resultDiv.innerHTML = '<div class="photo-loading">📱 Offline - Upload queued for when online</div>';
+              
+              // Show offline notification
+              window.errorHandler.createStorageNotification('offline_upload_queued', {
+                message: 'Photo upload queued. It will be uploaded when you reconnect to the internet.'
+              });
+              
+              return;
+            }
+            
             // Compress the image
             const compressedFile = await compressImage(file);
             
@@ -2602,31 +2482,90 @@
             // Update loading message
             resultDiv.innerHTML = '<div class="photo-loading">📤 Uploading photo...</div>';
             
-            // Upload both versions
-            const res = await uploadImages(file, compressedFile, currentPlayer, index, eventCode);
-            const data = await res.json();
+            // Upload both versions with retry logic
+            let uploadAttempts = 0;
+            const maxAttempts = 3;
+            let uploadSuccess = false;
+            let lastError = null;
             
-            if (data.success && data.key) {
-              const photoUrl = `${workerURL}photo/${data.key}`;
-              resultDiv.innerHTML = `
-                <img src="${photoUrl}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(photoUrl)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
-              `;
-              // Hide the upload section since photo is now loaded
-              uploadSection.classList.add('hidden');
-              div.classList.add('completed');
-              updateProgress();
-              updateLeaderboard();
-              // Check if player completed all squares for confetti
-              checkForCompletion();
-              // Refresh player list to include new players and update progress table
-              // Don't await to avoid blocking the UI
-              loadPlayers().catch(() => {});
-            } else {
-              resultDiv.innerHTML = '<div class="photo-error">❌ Upload failed. Please try again.</div>';
+            while (uploadAttempts < maxAttempts && !uploadSuccess) {
+              try {
+                uploadAttempts++;
+                
+                const res = await uploadImages(file, compressedFile, currentPlayer, index, eventCode);
+                const data = await res.json();
+                
+                if (data.success && data.key) {
+                  const photoUrl = `${workerURL}photo/${data.key}`;
+                  resultDiv.innerHTML = `
+                    <img src="${photoUrl}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(photoUrl)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
+                  `;
+                  // Hide the upload section since photo is now loaded
+                  uploadSection.classList.add('hidden');
+                  div.classList.add('completed');
+                  updateProgress();
+                  updateLeaderboard();
+                  // Check if player completed all squares for confetti
+                  checkForCompletion();
+                  // Refresh player list to include new players and update progress table
+                  // Don't await to avoid blocking the UI
+                  loadPlayers().catch(() => {});
+                  
+                  uploadSuccess = true;
+                  
+                  // Cache successful state
+                  if (window.errorHandler) {
+                    await window.errorHandler.cacheLastKnownGoodState({
+                      page: 'index.html',
+                      eventCode: eventCode,
+                      currentPlayer: currentPlayer,
+                      lastUpload: { square: index, timestamp: Date.now() },
+                      timestamp: Date.now()
+                    });
+                  }
+                } else {
+                  throw new Error(data.message || 'Upload failed');
+                }
+              } catch (attemptError) {
+                lastError = attemptError;
+                console.warn(`Upload attempt ${uploadAttempts} failed:`, attemptError);
+                
+                if (uploadAttempts < maxAttempts) {
+                  // Wait before retry
+                  await new Promise(resolve => setTimeout(resolve, 1000 * uploadAttempts));
+                  resultDiv.innerHTML = `<div class="photo-loading">📤 Retrying upload (${uploadAttempts + 1}/${maxAttempts})...</div>`;
+                }
+              }
+            }
+            
+            if (!uploadSuccess) {
+              throw lastError || new Error('Upload failed after multiple attempts');
             }
           } catch (err) {
             console.error('Upload error:', err);
-            resultDiv.innerHTML = '<div class="photo-error">❌ Error uploading photo. Please try again.</div>';
+            
+            // Log error for debugging
+            if (window.errorHandler) {
+              window.errorHandler._logError('photo_upload_failed', {
+                eventCode: eventCode,
+                playerName: currentPlayer,
+                squareIndex: index,
+                error: err.message,
+                fileSize: file.size,
+                fileName: file.name
+              });
+              
+              // Show user-friendly error with recovery suggestions
+              const suggestions = window.errorHandler.getErrorRecoverySuggestions('photo_upload_failed');
+              resultDiv.innerHTML = `
+                <div class="photo-error">
+                  ❌ Upload failed: ${err.message}<br>
+                  <small style="margin-top: 5px; display: block;">Try: ${suggestions[0]}</small>
+                </div>
+              `;
+            } else {
+              resultDiv.innerHTML = '<div class="photo-error">❌ Error uploading photo. Please try again.</div>';
+            }
           } finally {
             setButtonLoading(addPhotoBtn, false);
             hideLoading();
@@ -2987,16 +2926,74 @@
       });
     }
     
+    // Enhanced player switching interface
+    let playerSwitchingInterface = null;
+    let viewOnlyMode = null;
+
+    // Initialize player switching interface
+    function initializePlayerSwitching() {
+      if (!playerSwitchingInterface && typeof PlayerSwitchingInterface !== 'undefined') {
+        const sessionManager = new SessionManager();
+        const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+        playerSwitchingInterface = new PlayerSwitchingInterface(sessionManager, playerAuthenticator);
+        playerSwitchingInterface.setEventContext(eventCode);
+      }
+      
+      // Initialize view-only mode
+      if (!viewOnlyMode && typeof ViewOnlyMode !== 'undefined') {
+        viewOnlyMode = new ViewOnlyMode();
+      }
+    }
+
     // Helper functions for player selection modal
     async function selectPlayerOption(playerName) {
-      // Check authentication state
-      if (authManager.hasLocalAuth(eventCode, playerName)) {
-        // Player has local authentication - show continue/re-enter options
-        showAuthenticationOptions(playerName);
+      // Initialize player switching interface if not already done
+      initializePlayerSwitching();
+      
+      if (playerSwitchingInterface) {
+        // Use new enhanced interface
+        const result = await playerSwitchingInterface.handlePlayerSelection(playerName);
+        if (result.success) {
+          handlePlayerSwitchResult(result);
+        }
       } else {
-        // Player needs authentication - show question
-        await showAuthenticationQuestion(playerName);
+        // Legacy authentication removed - using new SessionManager system
+          await showAuthenticationQuestion(playerName);
+        }
       }
+    }
+
+    // Handle player switch result from new interface
+    function handlePlayerSwitchResult(result) {
+      const { playerName, authenticationLevel, playerData } = result;
+      
+      // Update authentication state
+      currentAuthenticationLevel = authenticationLevel || 'viewOnly';
+      
+      // Handle view-only mode
+      if (viewOnlyMode) {
+        if (authenticationLevel === 'viewOnly') {
+          viewOnlyMode.activateViewOnlyMode(playerName, { playerData });
+        } else {
+          viewOnlyMode.deactivateViewOnlyMode();
+        }
+      }
+      
+      // Switch to the player
+      selectPlayer(playerName);
+      
+      // Show view-only indicator if needed (fallback for older browsers)
+      if (currentAuthenticationLevel === 'viewOnly' && !viewOnlyMode) {
+        showViewOnlyIndicator();
+      } else if (currentAuthenticationLevel === 'full') {
+        hideViewOnlyIndicator();
+      }
+      
+      // Dispatch event for other components
+      const event = new CustomEvent('authenticationStateChange', {
+        detail: { playerName, authenticationLevel }
+      });
+      document.dispatchEvent(event);
     }
 
     // Show authentication options for players with local auth
@@ -3243,14 +3240,8 @@
 
     // Authentication flow helper functions
     function continueAsPlayer(playerName) {
-      // Use stored authentication
-      const storedAnswer = authManager.getStoredAnswer(eventCode, playerName);
-      if (storedAnswer) {
-        currentPlayerSecret = storedAnswer;
-        isAuthenticated = true;
-        isViewOnlyMode = false;
-        
-        selectPlayer(playerName);
+      // Legacy function - now handled by SessionManager
+      selectPlayer(playerName);
         closePlayerModal();
         
         if (window.playerSelectionResolve) {
@@ -3284,11 +3275,17 @@
       button.disabled = true;
       
       try {
-        const result = await verifyPlayerAuthentication(playerName, answer);
+        // Legacy authentication removed - using PlayerAuthenticator
+        console.warn('Legacy verifyPlayerAuthentication called - should use PlayerAuthenticator');
         
-        if (result.authenticated) {
+        if (false) { // Disabled legacy path
           // Success - close modal and continue
-          selectPlayer(playerName);
+          handlePlayerSwitchResult({
+            success: true,
+            playerName,
+            authenticationLevel: 'full',
+            playerData: result.playerData
+          });
           closePlayerModal();
           
           if (window.playerSelectionResolve) {
@@ -3330,12 +3327,14 @@
     }
 
     function enterViewOnlyMode(playerName) {
-      // Set view-only mode
-      currentPlayerSecret = null;
-      isAuthenticated = false;
-      isViewOnlyMode = true;
+      // Handle view-only mode through new system
+      handlePlayerSwitchResult({
+        success: true,
+        playerName,
+        authenticationLevel: 'viewOnly',
+        playerData: null
+      });
       
-      selectPlayer(playerName);
       closePlayerModal();
       
       if (window.playerSelectionResolve) {
@@ -3365,6 +3364,51 @@
       if (window.playerSelectionResolve) {
         window.playerSelectionResolve(null);
         window.playerSelectionResolve = null;
+      }
+    }
+
+    // View-only mode indicator functions
+    function showViewOnlyIndicator() {
+      // Remove existing indicator
+      hideViewOnlyIndicator();
+      
+      const indicator = document.createElement('div');
+      indicator.id = 'viewOnlyIndicator';
+      indicator.innerHTML = `
+        <div style="
+          position: fixed;
+          top: 80px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: linear-gradient(135deg, #f59e0b, #fbbf24);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          z-index: 1001;
+          box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+          animation: slideDown 0.3s ease;
+        ">
+          👁️ View-Only Mode - Cannot edit photos
+        </div>
+      `;
+      
+      document.body.appendChild(indicator);
+      
+      // Auto-hide after 3 seconds
+      setTimeout(() => {
+        if (indicator.parentNode) {
+          indicator.style.animation = 'slideUp 0.3s ease';
+          setTimeout(() => hideViewOnlyIndicator(), 300);
+        }
+      }, 3000);
+    }
+
+    function hideViewOnlyIndicator() {
+      const indicator = document.getElementById('viewOnlyIndicator');
+      if (indicator && indicator.parentNode) {
+        document.body.removeChild(indicator);
       }
     }
     
@@ -3627,9 +3671,10 @@
         button.disabled = true;
         
         try {
-          const result = await registerNewPlayer(playerName, answer);
+          // Legacy registration removed - using PlayerAuthenticator
+          console.warn('Legacy registerNewPlayer called - should use PlayerAuthenticator');
           
-          if (result.success) {
+          if (false) { // Disabled legacy path
             // Success - set player and close modal
             currentPlayer = playerName;
             try { 
@@ -3856,20 +3901,8 @@
       }
     }
 
-    // Initialize app with page loading
+    // Initialize app with comprehensive session management and error handling
     document.addEventListener('DOMContentLoaded', async function() {
-      // If no event parameter, guide users to info page first
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasEvent = urlParams.has('event');
-      if (!hasEvent) {
-        // Preserve any potential referral info if present
-        window.location.replace('info.html');
-        return;
-      }
-
-      // Get event code from URL parameters
-      eventCode = urlParams.get('event') || 'default';
-      
       // Detect and apply dark mode from localStorage
       try {
         const savedDarkMode = localStorage.getItem('eventbingo:darkMode') === 'true';
@@ -3885,30 +3918,302 @@
       showPageLoading("Loading EventBingo...");
       
       try {
-        // Initialize the app
-        await initializeApp();
+        // Initialize comprehensive session management system with error handling
+        const errorHandler = new ErrorHandler();
+        const sessionManager = new SessionManager(errorHandler);
+        const playerAuthenticator = new PlayerAuthenticator(sessionManager, errorHandler);
+        const statePreserver = new StatePreserver(sessionManager);
+        const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver, errorHandler);
         
-        // Setup legacy functionality
-        legacyInitialization();
-      } catch (error) {
-        console.error('Failed to initialize app:', error);
+        // Make components globally available for legacy compatibility
+        window.sessionManager = sessionManager;
+        window.playerAuthenticator = playerAuthenticator;
+        window.errorHandler = errorHandler;
+        window.flowController = flowController;
         
-        // Fallback initialization if main init fails
-        console.log('Attempting fallback initialization...');
-        try {
-          await loadEventInfo();
-          legacyInitialization();
-        } catch (fallbackError) {
-          console.error('Fallback initialization also failed:', fallbackError);
+        // Cache last known good state for error recovery
+        await errorHandler.cacheLastKnownGoodState({
+          page: 'index.html',
+          eventCode: eventCode,
+          currentPlayer: currentPlayer,
+          timestamp: Date.now()
+        });
+        
+        // Restore navigation context from previous page
+        const restoredContext = flowController.restoreNavigationContext();
+        if (restoredContext) {
+          console.log('Restored navigation context:', restoredContext);
+          
+          // Track that we restored context
+          statePreserver.trackUserAction('contextRestored', {
+            fromPage: restoredContext.fromPage,
+            toPage: restoredContext.toPage || 'index.html',
+            eventCode: restoredContext.eventCode,
+            playerName: restoredContext.playerName
+          });
         }
+        
+        // Handle page load with seamless flow
+        const flowResult = await flowController.handlePageLoad();
+        
+        console.log('Flow controller result:', flowResult);
+        
+        if (flowResult.success) {
+          if (flowResult.action === 'sessionLoaded') {
+            // Session loaded, initialize with existing data
+            eventCode = flowResult.eventCode;
+            currentPlayer = flowResult.playerName;
+            
+            // Authentication state managed by SessionManager
+            
+            // Save current state for context preservation
+            statePreserver.saveNavigationState({
+              eventCode: flowResult.eventCode,
+              playerName: flowResult.playerName,
+              page: 'index.html',
+              action: 'sessionLoaded',
+              initialized: true
+            });
+            
+            // Initialize the app with session data
+            await initializeAppWithSession(flowResult);
+            
+            // Setup legacy functionality
+            legacyInitialization();
+          } else if (flowResult.action === 'navigating') {
+            // FlowController is handling navigation, don't continue initialization
+            return;
+          } else if (flowResult.action === 'showEventSelection') {
+            // No event selected, redirect to info page
+            window.location.href = 'info.html';
+            return;
+          }
+        } else {
+          // Flow controller failed, check if we can recover
+          if (flowResult.fallbackAction === 'showEventSelection') {
+            window.location.href = 'info.html';
+            return;
+          }
+          
+          // Try to recover from error handler
+          const recoveryOptions = errorHandler.provideFallbackOptions('flow_controller_failed');
+          
+          if (recoveryOptions.success && recoveryOptions.options.length > 0) {
+            const firstOption = recoveryOptions.options[0];
+            
+            if (firstOption.type === 'continueLastEvent' && firstOption.eventCode) {
+              eventCode = firstOption.eventCode;
+              currentPlayer = firstOption.playerName;
+              console.log('Recovered using last event:', eventCode, currentPlayer);
+              await legacyFallbackInitialization();
+            } else {
+              console.warn('Flow controller failed, using legacy initialization:', flowResult.error);
+              await legacyFallbackInitialization();
+            }
+          } else {
+            console.warn('Flow controller failed, using legacy initialization:', flowResult.error);
+            await legacyFallbackInitialization();
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize with flow controller:', error);
+        
+        // Log error for debugging
+        if (window.errorHandler) {
+          window.errorHandler._logError('initialization_failed', {
+            error: error.message,
+            stack: error.stack,
+            eventCode: eventCode,
+            currentPlayer: currentPlayer
+          });
+        }
+        
+        // Fallback to legacy initialization
+        console.log('Attempting legacy initialization...');
+        await legacyFallbackInitialization();
       } finally {
         hidePageLoading();
       }
     });
 
+    // Initialize app with existing session data
+    async function initializeAppWithSession(flowResult) {
+      try {
+        console.log('Initializing app with session data:', flowResult);
+        
+        // Load event information with error handling
+        try {
+          await loadEventInfo();
+        } catch (error) {
+          console.error('Failed to load event info:', error);
+          
+          // Log error and try to recover
+          if (window.errorHandler) {
+            window.errorHandler._logError('load_event_info_failed', {
+              eventCode: eventCode,
+              error: error.message
+            });
+            
+            // Try to use cached data or defaults
+            if (!squares || squares.length === 0) {
+              squares = defaultSquaresList;
+              console.log('Using default squares due to event info load failure');
+            }
+          }
+        }
+        
+        // Set current player from session
+        if (flowResult.playerName) {
+          currentPlayer = flowResult.playerName;
+          
+          // Authentication state managed by SessionManager
+          
+          // Update UI based on authentication
+          updateUIForAuthState();
+          
+          // Update player selection UI if it exists
+          updatePlayerSelectionUI();
+          
+          // Load photos with error handling
+          try {
+            await loadPhotos(currentPlayer);
+          } catch (error) {
+            console.error('Failed to load photos:', error);
+            
+            if (window.errorHandler) {
+              window.errorHandler._logError('load_photos_failed', {
+                eventCode: eventCode,
+                playerName: currentPlayer,
+                error: error.message
+              });
+            }
+          }
+        }
+        
+        // Create grid with error handling
+        try {
+          createGrid();
+        } catch (error) {
+          console.error('Failed to create grid:', error);
+          
+          if (window.errorHandler) {
+            window.errorHandler._logError('create_grid_failed', {
+              error: error.message,
+              squaresCount: squares ? squares.length : 0
+            });
+          }
+          
+          // Try with default squares
+          squares = defaultSquaresList;
+          createGrid();
+        }
+        
+        // Load players with error handling
+        try {
+          await loadPlayers();
+        } catch (error) {
+          console.error('Failed to load players:', error);
+          
+          if (window.errorHandler) {
+            window.errorHandler._logError('load_players_failed', {
+              eventCode: eventCode,
+              error: error.message
+            });
+          }
+        }
+        
+        console.log('App initialized with session data successfully');
+      } catch (error) {
+        console.error('Failed to initialize app with session data:', error);
+        
+        // Log comprehensive error
+        if (window.errorHandler) {
+          window.errorHandler._logError('app_initialization_failed', {
+            eventCode: eventCode,
+            playerName: flowResult.playerName,
+            error: error.message,
+            stack: error.stack
+          });
+        }
+        
+        throw error;
+      }
+    }
+
+    // Legacy fallback initialization with error handling
+    async function legacyFallbackInitialization() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasEvent = urlParams.has('event');
+        
+        if (!hasEvent) {
+          // No event parameter, redirect to info page
+          window.location.replace('info.html');
+          return;
+        }
+        
+        // Get event code from URL parameters
+        eventCode = urlParams.get('event') || 'default';
+        
+        // Initialize error handler if not already available
+        if (!window.errorHandler) {
+          window.errorHandler = new ErrorHandler();
+        }
+        
+        // Initialize the app with error handling
+        await initializeApp();
+        
+        // Setup legacy functionality
+        legacyInitialization();
+      } catch (error) {
+        console.error('Legacy fallback initialization failed:', error);
+        
+        // Log error for debugging
+        if (window.errorHandler) {
+          window.errorHandler._logError('legacy_initialization_failed', {
+            eventCode: eventCode,
+            error: error.message,
+            stack: error.stack
+          });
+          
+          // Show user-friendly error notification
+          window.errorHandler.createStorageNotification('initialization_failed', {
+            message: 'Failed to load EventBingo. Please refresh the page or try a different browser.'
+          });
+        } else {
+          // Fallback error display
+          showError('Failed to load EventBingo. Please refresh the page.');
+        }
+      }
+    }
+
     async function loadEventData() {
       // Load event information and squares
       await loadEventInfo();
+    }
+
+    // Update player selection UI with current player
+    function updatePlayerSelectionUI() {
+      try {
+        if (!currentPlayer) return;
+        
+        // Find and activate the current player's circle
+        const playerCircles = document.querySelectorAll('.player-circle, .player-avatar');
+        playerCircles.forEach(circle => {
+          const playerName = circle.getAttribute('data-player') || circle.title;
+          if (playerName === currentPlayer) {
+            circle.classList.add('active');
+            // Scroll to the active player if needed
+            circle.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          } else {
+            circle.classList.remove('active');
+          }
+        });
+        
+        console.log(`Player selection UI updated for: ${currentPlayer}`);
+      } catch (error) {
+        console.error('Failed to update player selection UI:', error);
+      }
     }
 
     // Helper function to validate squares data
@@ -3989,10 +4294,94 @@
     }
 
     function setupEventHandlers() {
-      // Add player button
+      // Add player button with new session management
       const addPlayerBtn = document.getElementById('addPlayerTopBtn');
       if (addPlayerBtn) {
-        addPlayerBtn.addEventListener('click', addNewPlayer);
+        addPlayerBtn.addEventListener('click', handleAddNewPlayer);
+      }
+    }
+    
+    // Enhanced add new player function using new session management
+    async function handleAddNewPlayer() {
+      try {
+        if (window.playerAuthenticator) {
+          // Use the new player creation flow
+          const playerName = prompt('Enter your name:');
+          if (!playerName || !playerName.trim()) {
+            return;
+          }
+          
+          const secretQuestion = prompt('Create a secret question (for switching between players later):');
+          if (!secretQuestion || !secretQuestion.trim()) {
+            return;
+          }
+          
+          const secretAnswer = prompt('Enter the answer to your secret question:');
+          if (!secretAnswer || !secretAnswer.trim()) {
+            return;
+          }
+          
+          // Create player profile using new system
+          const result = await window.playerAuthenticator.createPlayerProfile(
+            eventCode,
+            playerName.trim(),
+            secretQuestion.trim(),
+            secretAnswer.trim()
+          );
+          
+          if (result.success) {
+            // Player created successfully
+            currentPlayer = result.playerName;
+            currentAuthenticationLevel = 'full';
+            
+            // Update UI
+            updateUIForAuthState();
+            await loadPlayers();
+            await loadPhotos(currentPlayer);
+            updatePlayerSelectionUI();
+            
+            // Cache state
+            if (window.errorHandler) {
+              await window.errorHandler.cacheLastKnownGoodState({
+                page: 'index.html',
+                eventCode: eventCode,
+                currentPlayer: currentPlayer,
+                authenticationLevel: 'full',
+                timestamp: Date.now()
+              });
+            }
+            
+            alert(`Welcome ${result.playerName}! You can now upload photos.`);
+          } else {
+            // Handle creation failure
+            if (result.existingPlayer) {
+              const switchToExisting = confirm(`${playerName} already exists. Switch to this player?`);
+              if (switchToExisting) {
+                await selectPlayer(playerName.trim());
+              }
+            } else {
+              alert(`Failed to create player: ${result.error}`);
+            }
+          }
+        } else {
+          // Fallback to legacy add player
+          addNewPlayer();
+        }
+      } catch (error) {
+        console.error('Failed to add new player:', error);
+        
+        if (window.errorHandler) {
+          window.errorHandler._logError('add_player_failed', {
+            error: error.message,
+            eventCode: eventCode
+          });
+          
+          window.errorHandler.createStorageNotification('add_player_failed', {
+            message: 'Failed to add new player. Please try again.'
+          });
+        } else {
+          alert('Failed to add new player. Please try again.');
+        }
       }
     }
 </script>

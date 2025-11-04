@@ -1,575 +1,627 @@
 /**
- * PerformanceMonitor - Monitors and optimizes performance for the Bingo Board
- * Handles photo loading optimization, memory management, and performance tracking
+ * Performance Monitor - Comprehensive performance monitoring for EventBingo
+ * Tracks session operations, memory usage, and provides performance alerts
  */
 class PerformanceMonitor {
   constructor() {
     this.metrics = {
-      photoLoadTimes: [],
-      gridRenderTimes: [],
+      sessionOperations: [],
       memoryUsage: [],
-      cacheHitRates: [],
-      apiCallTimes: []
+      pageLoadTimes: [],
+      userInteractions: [],
+      errors: []
     };
     
-    this.photoCache = new Map();
-    this.photoCacheSize = 0;
-    this.maxCacheSize = 50 * 1024 * 1024; // 50MB cache limit
-    this.maxCacheEntries = 200; // Maximum number of cached photos
+    this.thresholds = {
+      slowOperation: 100, // ms
+      memoryWarning: 50 * 1024 * 1024, // 50MB
+      memoryAlert: 100 * 1024 * 1024, // 100MB
+      maxMetricsHistory: 1000
+    };
     
-    this.imageLoadQueue = [];
-    this.maxConcurrentLoads = 6; // Limit concurrent image loads
-    this.currentLoads = 0;
+    this.observers = [];
+    this.isMonitoring = false;
+    this.startTime = performance.now();
     
-    this.intersectionObserver = null;
-    this.setupIntersectionObserver();
-    
-    this.performanceObserver = null;
-    this.setupPerformanceObserver();
-    
-    // Debounced functions for performance
-    this.debouncedMemoryCheck = this.debounce(this.checkMemoryUsage.bind(this), 5000);
-    this.debouncedCacheCleanup = this.debounce(this.cleanupCache.bind(this), 10000);
+    // Initialize monitoring
+    this.initializeMonitoring();
   }
 
   /**
-   * Setup intersection observer for lazy loading
+   * Initialize performance monitoring
    */
-  setupIntersectionObserver() {
-    if ('IntersectionObserver' in window) {
-      this.intersectionObserver = new IntersectionObserver(
-        (entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              this.loadImageLazily(entry.target);
-              this.intersectionObserver.unobserve(entry.target);
-            }
-          });
-        },
-        {
-          rootMargin: '50px 0px', // Start loading 50px before entering viewport
-          threshold: 0.1
-        }
-      );
-    }
-  }
-
-  /**
-   * Setup performance observer for monitoring
-   */
-  setupPerformanceObserver() {
-    if ('PerformanceObserver' in window) {
-      try {
-        this.performanceObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          entries.forEach(entry => {
-            if (entry.name.includes('photo-load')) {
-              this.metrics.photoLoadTimes.push({
-                duration: entry.duration,
-                timestamp: entry.startTime,
-                name: entry.name
-              });
-            } else if (entry.name.includes('grid-render')) {
-              this.metrics.gridRenderTimes.push({
-                duration: entry.duration,
-                timestamp: entry.startTime,
-                name: entry.name
-              });
-            }
-          });
-          
-          // Keep only recent metrics (last 100 entries)
-          Object.keys(this.metrics).forEach(key => {
-            if (Array.isArray(this.metrics[key]) && this.metrics[key].length > 100) {
-              this.metrics[key] = this.metrics[key].slice(-100);
-            }
-          });
-        });
-        
-        this.performanceObserver.observe({ entryTypes: ['measure'] });
-      } catch (error) {
-        console.warn('Performance Observer not supported:', error);
-      }
-    }
-  }
-
-  /**
-   * Optimize photo loading with batching and prioritization
-   * @param {Array} photoUrls - Array of photo URLs to load
-   * @param {Object} options - Loading options
-   */
-  async optimizePhotoLoading(photoUrls, options = {}) {
-    const {
-      priority = 'normal', // 'high', 'normal', 'low'
-      batchSize = 6,
-      preload = false
-    } = options;
-
-    const startTime = performance.now();
-    performance.mark('photo-batch-start');
-
+  initializeMonitoring() {
     try {
-      // Filter out already cached photos
-      const uncachedUrls = photoUrls.filter(url => !this.photoCache.has(url));
+      // Monitor page load performance
+      this.monitorPageLoad();
       
-      if (uncachedUrls.length === 0) {
-        this.recordCacheHit(photoUrls.length, 0);
-        return Promise.resolve();
-      }
-
-      // Sort by priority
-      const prioritizedUrls = this.prioritizePhotoUrls(uncachedUrls, priority);
+      // Monitor memory usage
+      this.startMemoryMonitoring();
       
-      // Load in batches to avoid overwhelming the browser
-      const batches = this.createBatches(prioritizedUrls, batchSize);
-      const loadPromises = [];
-
-      for (const batch of batches) {
-        const batchPromise = this.loadPhotoBatch(batch, preload);
-        loadPromises.push(batchPromise);
-        
-        // Add small delay between batches to prevent browser lockup
-        if (batches.length > 1) {
-          await new Promise(resolve => setTimeout(resolve, 50));
-        }
-      }
-
-      await Promise.allSettled(loadPromises);
+      // Monitor user interactions
+      this.monitorUserInteractions();
       
-      performance.mark('photo-batch-end');
-      performance.measure('photo-batch-load', 'photo-batch-start', 'photo-batch-end');
+      // Monitor localStorage operations
+      this.monitorStorageOperations();
       
-      this.recordCacheHit(photoUrls.length - uncachedUrls.length, uncachedUrls.length);
-      this.debouncedMemoryCheck();
-      
+      this.isMonitoring = true;
+      console.log('Performance monitoring initialized');
     } catch (error) {
-      console.error('Photo loading optimization failed:', error);
+      console.error('Failed to initialize performance monitoring:', error);
     }
   }
 
   /**
-   * Load a batch of photos with concurrency control
-   * @param {Array} urls - URLs to load
-   * @param {boolean} preload - Whether to preload or fully load
+   * Record a session operation timing
+   * @param {string} operation - Operation name
+   * @param {number} duration - Duration in milliseconds
+   * @param {string} source - Data source (cache/storage/network)
+   * @param {Object} metadata - Additional metadata
    */
-  async loadPhotoBatch(urls, preload = false) {
-    const loadPromises = urls.map(url => this.loadSinglePhoto(url, preload));
-    return Promise.allSettled(loadPromises);
+  recordSessionOperation(operation, duration, source = 'unknown', metadata = {}) {
+    const record = {
+      operation,
+      duration,
+      source,
+      metadata,
+      timestamp: Date.now(),
+      performanceNow: performance.now()
+    };
+    
+    this.metrics.sessionOperations.push(record);
+    
+    // Trim history if too long
+    if (this.metrics.sessionOperations.length > this.thresholds.maxMetricsHistory) {
+      this.metrics.sessionOperations.shift();
+    }
+    
+    // Check for slow operations
+    if (duration > this.thresholds.slowOperation) {
+      this.alertSlowOperation(operation, duration, source);
+    }
+    
+    // Notify observers
+    this.notifyObservers('sessionOperation', record);
   }
 
   /**
-   * Load a single photo with caching and error handling
-   * @param {string} url - Photo URL
-   * @param {boolean} preload - Whether to preload only
+   * Record memory usage
+   * @param {string} context - Context of memory measurement
    */
-  async loadSinglePhoto(url, preload = false) {
-    if (this.photoCache.has(url)) {
-      return this.photoCache.get(url);
-    }
-
-    // Wait for available slot if at max concurrent loads
-    while (this.currentLoads >= this.maxConcurrentLoads) {
-      await new Promise(resolve => setTimeout(resolve, 10));
-    }
-
-    this.currentLoads++;
-    const startTime = performance.now();
-    performance.mark(`photo-load-start-${url}`);
-
+  recordMemoryUsage(context = 'general') {
     try {
-      const img = new Image();
-      
-      const loadPromise = new Promise((resolve, reject) => {
-        img.onload = () => {
-          const loadTime = performance.now() - startTime;
-          performance.mark(`photo-load-end-${url}`);
-          performance.measure(`photo-load-${url}`, `photo-load-start-${url}`, `photo-load-end-${url}`);
-          
-          // Cache the loaded image
-          this.cachePhoto(url, img, loadTime);
-          resolve(img);
-        };
-        
-        img.onerror = () => {
-          console.warn(`Failed to load photo: ${url}`);
-          reject(new Error(`Failed to load photo: ${url}`));
-        };
-        
-        // Set timeout for slow loading images
-        setTimeout(() => {
-          if (!img.complete) {
-            reject(new Error(`Photo load timeout: ${url}`));
-          }
-        }, 10000);
-      });
-
-      // Set source after setting up event handlers
-      img.src = url;
-      
-      if (preload) {
-        // For preloading, we don't need to wait for the image to fully load
-        return Promise.resolve();
+      if (!performance.memory) {
+        return null;
       }
       
-      return await loadPromise;
-      
-    } catch (error) {
-      console.error(`Error loading photo ${url}:`, error);
-      throw error;
-    } finally {
-      this.currentLoads--;
-    }
-  }
-
-  /**
-   * Cache a loaded photo with size tracking
-   * @param {string} url - Photo URL
-   * @param {Image} img - Loaded image
-   * @param {number} loadTime - Time taken to load
-   */
-  cachePhoto(url, img, loadTime) {
-    // Estimate image size (rough approximation)
-    const estimatedSize = (img.naturalWidth || 800) * (img.naturalHeight || 600) * 4; // 4 bytes per pixel
-    
-    // Check if adding this image would exceed cache limits
-    if (this.photoCacheSize + estimatedSize > this.maxCacheSize || 
-        this.photoCache.size >= this.maxCacheEntries) {
-      this.debouncedCacheCleanup();
-    }
-
-    this.photoCache.set(url, {
-      image: img,
-      size: estimatedSize,
-      loadTime: loadTime,
-      lastAccessed: Date.now(),
-      accessCount: 1
-    });
-    
-    this.photoCacheSize += estimatedSize;
-  }
-
-  /**
-   * Cleanup cache using LRU strategy
-   */
-  cleanupCache() {
-    if (this.photoCache.size === 0) return;
-
-    // Convert to array and sort by last accessed time and access count
-    const cacheEntries = Array.from(this.photoCache.entries()).map(([url, data]) => ({
-      url,
-      ...data,
-      score: data.accessCount * 0.7 + (Date.now() - data.lastAccessed) * 0.3
-    }));
-
-    // Sort by score (lower score = more likely to be removed)
-    cacheEntries.sort((a, b) => a.score - b.score);
-
-    // Remove entries until we're under limits
-    const targetSize = this.maxCacheSize * 0.8; // Clean to 80% of max
-    const targetEntries = Math.floor(this.maxCacheEntries * 0.8);
-
-    let removedSize = 0;
-    let removedCount = 0;
-
-    for (const entry of cacheEntries) {
-      if (this.photoCacheSize - removedSize <= targetSize && 
-          this.photoCache.size - removedCount <= targetEntries) {
-        break;
-      }
-
-      this.photoCache.delete(entry.url);
-      removedSize += entry.size;
-      removedCount++;
-    }
-
-    this.photoCacheSize -= removedSize;
-    
-    console.log(`Cache cleanup: removed ${removedCount} entries, freed ${(removedSize / 1024 / 1024).toFixed(2)}MB`);
-  }
-
-  /**
-   * Prioritize photo URLs based on priority and context
-   * @param {Array} urls - Photo URLs
-   * @param {string} priority - Priority level
-   */
-  prioritizePhotoUrls(urls, priority) {
-    // For now, simple prioritization - could be enhanced with viewport detection
-    if (priority === 'high') {
-      return urls; // Keep original order for high priority
-    } else if (priority === 'low') {
-      return urls.reverse(); // Reverse for low priority
-    }
-    return urls; // Normal priority keeps original order
-  }
-
-  /**
-   * Create batches from array
-   * @param {Array} array - Array to batch
-   * @param {number} batchSize - Size of each batch
-   */
-  createBatches(array, batchSize) {
-    const batches = [];
-    for (let i = 0; i < array.length; i += batchSize) {
-      batches.push(array.slice(i, i + batchSize));
-    }
-    return batches;
-  }
-
-  /**
-   * Setup lazy loading for an image element
-   * @param {HTMLElement} imgElement - Image element to lazy load
-   */
-  setupLazyLoading(imgElement) {
-    if (this.intersectionObserver && imgElement.dataset.src) {
-      imgElement.classList.add('lazy-loading');
-      this.intersectionObserver.observe(imgElement);
-    }
-  }
-
-  /**
-   * Load image lazily when it enters viewport
-   * @param {HTMLElement} imgElement - Image element
-   */
-  async loadImageLazily(imgElement) {
-    const src = imgElement.dataset.src;
-    if (!src) return;
-
-    try {
-      imgElement.classList.add('loading');
-      
-      // Check cache first
-      if (this.photoCache.has(src)) {
-        const cached = this.photoCache.get(src);
-        cached.lastAccessed = Date.now();
-        cached.accessCount++;
-        imgElement.src = src;
-        imgElement.classList.remove('loading', 'lazy-loading');
-        imgElement.classList.add('loaded');
-        return;
-      }
-
-      // Load the image
-      await this.loadSinglePhoto(src);
-      imgElement.src = src;
-      imgElement.classList.remove('loading', 'lazy-loading');
-      imgElement.classList.add('loaded');
-      
-    } catch (error) {
-      console.error('Lazy loading failed:', error);
-      imgElement.classList.remove('loading', 'lazy-loading');
-      imgElement.classList.add('error');
-    }
-  }
-
-  /**
-   * Monitor grid rendering performance
-   * @param {Function} renderFunction - Function that renders the grid
-   * @param {string} renderType - Type of render (card/player)
-   */
-  async monitorGridRender(renderFunction, renderType = 'unknown') {
-    const startTime = performance.now();
-    const markStart = `grid-render-start-${renderType}`;
-    const markEnd = `grid-render-end-${renderType}`;
-    
-    performance.mark(markStart);
-    
-    try {
-      const result = await renderFunction();
-      
-      performance.mark(markEnd);
-      performance.measure(`grid-render-${renderType}`, markStart, markEnd);
-      
-      const renderTime = performance.now() - startTime;
-      
-      // Log slow renders
-      if (renderTime > 100) {
-        console.warn(`Slow grid render detected: ${renderType} took ${renderTime.toFixed(2)}ms`);
-      }
-      
-      return result;
-    } catch (error) {
-      performance.mark(markEnd);
-      performance.measure(`grid-render-${renderType}-error`, markStart, markEnd);
-      throw error;
-    }
-  }
-
-  /**
-   * Check memory usage and trigger cleanup if needed
-   */
-  checkMemoryUsage() {
-    if ('memory' in performance) {
-      const memInfo = performance.memory;
-      const memoryUsage = {
-        used: memInfo.usedJSHeapSize,
-        total: memInfo.totalJSHeapSize,
-        limit: memInfo.jsHeapSizeLimit,
-        timestamp: Date.now()
+      const memoryInfo = {
+        used: performance.memory.usedJSHeapSize,
+        total: performance.memory.totalJSHeapSize,
+        limit: performance.memory.jsHeapSizeLimit,
+        context,
+        timestamp: Date.now(),
+        performanceNow: performance.now()
       };
       
-      this.metrics.memoryUsage.push(memoryUsage);
+      this.metrics.memoryUsage.push(memoryInfo);
       
-      // Trigger cleanup if memory usage is high
-      const usageRatio = memoryUsage.used / memoryUsage.limit;
-      if (usageRatio > 0.8) {
-        console.warn('High memory usage detected, triggering cache cleanup');
-        this.cleanupCache();
+      // Trim history
+      if (this.metrics.memoryUsage.length > this.thresholds.maxMetricsHistory) {
+        this.metrics.memoryUsage.shift();
       }
+      
+      // Check memory thresholds
+      if (memoryInfo.used > this.thresholds.memoryAlert) {
+        this.alertHighMemoryUsage(memoryInfo, 'alert');
+      } else if (memoryInfo.used > this.thresholds.memoryWarning) {
+        this.alertHighMemoryUsage(memoryInfo, 'warning');
+      }
+      
+      // Notify observers
+      this.notifyObservers('memoryUsage', memoryInfo);
+      
+      return memoryInfo;
+    } catch (error) {
+      console.error('Failed to record memory usage:', error);
+      return null;
     }
   }
 
   /**
-   * Record cache hit/miss statistics
-   * @param {number} hits - Number of cache hits
-   * @param {number} misses - Number of cache misses
+   * Record page load timing
+   * @param {string} page - Page identifier
    */
-  recordCacheHit(hits, misses) {
-    const total = hits + misses;
-    if (total > 0) {
-      const hitRate = (hits / total) * 100;
-      this.metrics.cacheHitRates.push({
-        hitRate,
-        hits,
-        misses,
-        total,
-        timestamp: Date.now()
+  recordPageLoad(page = window.location.pathname) {
+    try {
+      if (!performance.timing) {
+        return null;
+      }
+      
+      const timing = performance.timing;
+      const loadTime = timing.loadEventEnd - timing.navigationStart;
+      const domReady = timing.domContentLoadedEventEnd - timing.navigationStart;
+      
+      const pageLoadInfo = {
+        page,
+        loadTime,
+        domReady,
+        navigationStart: timing.navigationStart,
+        domContentLoaded: timing.domContentLoadedEventEnd,
+        loadEventEnd: timing.loadEventEnd,
+        timestamp: Date.now(),
+        performanceNow: performance.now()
+      };
+      
+      this.metrics.pageLoadTimes.push(pageLoadInfo);
+      
+      // Trim history
+      if (this.metrics.pageLoadTimes.length > this.thresholds.maxMetricsHistory) {
+        this.metrics.pageLoadTimes.shift();
+      }
+      
+      // Notify observers
+      this.notifyObservers('pageLoad', pageLoadInfo);
+      
+      return pageLoadInfo;
+    } catch (error) {
+      console.error('Failed to record page load timing:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Record user interaction timing
+   * @param {string} interaction - Interaction type
+   * @param {number} duration - Duration in milliseconds
+   * @param {Object} metadata - Additional metadata
+   */
+  recordUserInteraction(interaction, duration, metadata = {}) {
+    const record = {
+      interaction,
+      duration,
+      metadata,
+      timestamp: Date.now(),
+      performanceNow: performance.now()
+    };
+    
+    this.metrics.userInteractions.push(record);
+    
+    // Trim history
+    if (this.metrics.userInteractions.length > this.thresholds.maxMetricsHistory) {
+      this.metrics.userInteractions.shift();
+    }
+    
+    // Notify observers
+    this.notifyObservers('userInteraction', record);
+  }
+
+  /**
+   * Record performance error
+   * @param {string} error - Error description
+   * @param {string} context - Error context
+   * @param {Object} metadata - Additional metadata
+   */
+  recordError(error, context = 'unknown', metadata = {}) {
+    const record = {
+      error,
+      context,
+      metadata,
+      timestamp: Date.now(),
+      performanceNow: performance.now()
+    };
+    
+    this.metrics.errors.push(record);
+    
+    // Trim history
+    if (this.metrics.errors.length > this.thresholds.maxMetricsHistory) {
+      this.metrics.errors.shift();
+    }
+    
+    // Notify observers
+    this.notifyObservers('error', record);
+  }
+
+  /**
+   * Get performance summary
+   * @returns {Object} Performance summary
+   */
+  getPerformanceSummary() {
+    const now = performance.now();
+    const sessionDuration = now - this.startTime;
+    
+    return {
+      sessionDuration: Math.round(sessionDuration),
+      sessionOperations: this.getSessionOperationsSummary(),
+      memoryUsage: this.getMemoryUsageSummary(),
+      pageLoad: this.getPageLoadSummary(),
+      userInteractions: this.getUserInteractionsSummary(),
+      errors: this.getErrorsSummary(),
+      timestamp: Date.now()
+    };
+  }
+
+  /**
+   * Get session operations summary
+   * @returns {Object} Session operations summary
+   */
+  getSessionOperationsSummary() {
+    const operations = this.metrics.sessionOperations;
+    
+    if (operations.length === 0) {
+      return { count: 0 };
+    }
+    
+    const durations = operations.map(op => op.duration);
+    const sources = operations.reduce((acc, op) => {
+      acc[op.source] = (acc[op.source] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return {
+      count: operations.length,
+      averageDuration: Math.round(durations.reduce((a, b) => a + b, 0) / durations.length),
+      minDuration: Math.min(...durations),
+      maxDuration: Math.max(...durations),
+      slowOperations: operations.filter(op => op.duration > this.thresholds.slowOperation).length,
+      sourceBreakdown: sources,
+      recentOperations: operations.slice(-10)
+    };
+  }
+
+  /**
+   * Get memory usage summary
+   * @returns {Object} Memory usage summary
+   */
+  getMemoryUsageSummary() {
+    const memoryRecords = this.metrics.memoryUsage;
+    
+    if (memoryRecords.length === 0) {
+      return { available: false };
+    }
+    
+    const latest = memoryRecords[memoryRecords.length - 1];
+    const usedMB = Math.round(latest.used / 1024 / 1024);
+    const totalMB = Math.round(latest.total / 1024 / 1024);
+    const limitMB = Math.round(latest.limit / 1024 / 1024);
+    
+    return {
+      available: true,
+      current: {
+        used: usedMB,
+        total: totalMB,
+        limit: limitMB,
+        percentage: Math.round((latest.used / latest.limit) * 100)
+      },
+      trend: this.getMemoryTrend(),
+      alerts: this.getMemoryAlerts()
+    };
+  }
+
+  /**
+   * Get page load summary
+   * @returns {Object} Page load summary
+   */
+  getPageLoadSummary() {
+    const pageLoads = this.metrics.pageLoadTimes;
+    
+    if (pageLoads.length === 0) {
+      return { count: 0 };
+    }
+    
+    const loadTimes = pageLoads.map(pl => pl.loadTime);
+    const domTimes = pageLoads.map(pl => pl.domReady);
+    
+    return {
+      count: pageLoads.length,
+      averageLoadTime: Math.round(loadTimes.reduce((a, b) => a + b, 0) / loadTimes.length),
+      averageDomReady: Math.round(domTimes.reduce((a, b) => a + b, 0) / domTimes.length),
+      latest: pageLoads[pageLoads.length - 1]
+    };
+  }
+
+  /**
+   * Get user interactions summary
+   * @returns {Object} User interactions summary
+   */
+  getUserInteractionsSummary() {
+    const interactions = this.metrics.userInteractions;
+    
+    if (interactions.length === 0) {
+      return { count: 0 };
+    }
+    
+    const interactionTypes = interactions.reduce((acc, int) => {
+      acc[int.interaction] = (acc[int.interaction] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return {
+      count: interactions.length,
+      types: interactionTypes,
+      recent: interactions.slice(-5)
+    };
+  }
+
+  /**
+   * Get errors summary
+   * @returns {Object} Errors summary
+   */
+  getErrorsSummary() {
+    const errors = this.metrics.errors;
+    
+    return {
+      count: errors.length,
+      recent: errors.slice(-5),
+      contexts: errors.reduce((acc, err) => {
+        acc[err.context] = (acc[err.context] || 0) + 1;
+        return acc;
+      }, {})
+    };
+  }
+
+  /**
+   * Add performance observer
+   * @param {Function} callback - Observer callback
+   * @returns {Function} Unsubscribe function
+   */
+  addObserver(callback) {
+    this.observers.push(callback);
+    
+    return () => {
+      const index = this.observers.indexOf(callback);
+      if (index > -1) {
+        this.observers.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Clear all metrics
+   */
+  clearMetrics() {
+    this.metrics = {
+      sessionOperations: [],
+      memoryUsage: [],
+      pageLoadTimes: [],
+      userInteractions: [],
+      errors: []
+    };
+    
+    this.startTime = performance.now();
+    console.log('Performance metrics cleared');
+  }
+
+  /**
+   * Export metrics for analysis
+   * @returns {Object} Exported metrics
+   */
+  exportMetrics() {
+    return {
+      ...this.metrics,
+      summary: this.getPerformanceSummary(),
+      thresholds: this.thresholds,
+      exportTime: Date.now()
+    };
+  }
+
+  // Private methods
+
+  /**
+   * Monitor page load performance
+   */
+  monitorPageLoad() {
+    if (document.readyState === 'complete') {
+      this.recordPageLoad();
+    } else {
+      window.addEventListener('load', () => {
+        setTimeout(() => this.recordPageLoad(), 100);
       });
     }
   }
 
   /**
-   * Get performance metrics summary
+   * Start memory monitoring
    */
-  getPerformanceMetrics() {
-    const summary = {
-      photoCache: {
-        size: this.photoCache.size,
-        memoryUsage: `${(this.photoCacheSize / 1024 / 1024).toFixed(2)}MB`,
-        maxSize: `${(this.maxCacheSize / 1024 / 1024).toFixed(2)}MB`,
-        hitRate: this.getAverageHitRate()
-      },
-      averageLoadTime: this.getAverageLoadTime(),
-      averageRenderTime: this.getAverageRenderTime(),
-      memoryTrend: this.getMemoryTrend(),
-      recommendations: this.getPerformanceRecommendations()
+  startMemoryMonitoring() {
+    if (!performance.memory) {
+      console.warn('Memory monitoring not available in this browser');
+      return;
+    }
+    
+    // Record initial memory usage
+    this.recordMemoryUsage('initialization');
+    
+    // Monitor memory every 30 seconds
+    setInterval(() => {
+      this.recordMemoryUsage('periodic');
+    }, 30000);
+  }
+
+  /**
+   * Monitor user interactions
+   */
+  monitorUserInteractions() {
+    const interactionTypes = ['click', 'keydown', 'scroll', 'resize'];
+    
+    interactionTypes.forEach(type => {
+      let startTime = null;
+      
+      document.addEventListener(type, (event) => {
+        if (type === 'keydown' || type === 'click') {
+          startTime = performance.now();
+          
+          // Record interaction after a short delay to capture processing time
+          setTimeout(() => {
+            const duration = performance.now() - startTime;
+            this.recordUserInteraction(type, duration, {
+              target: event.target.tagName,
+              key: event.key || null
+            });
+          }, 10);
+        } else {
+          // For scroll and resize, just record the event
+          this.recordUserInteraction(type, 0, {
+            target: event.target.tagName || 'window'
+          });
+        }
+      }, { passive: true });
+    });
+  }
+
+  /**
+   * Monitor localStorage operations
+   */
+  monitorStorageOperations() {
+    const originalSetItem = localStorage.setItem;
+    const originalGetItem = localStorage.getItem;
+    const originalRemoveItem = localStorage.removeItem;
+    
+    localStorage.setItem = (key, value) => {
+      const startTime = performance.now();
+      const result = originalSetItem.call(localStorage, key, value);
+      const duration = performance.now() - startTime;
+      
+      this.recordSessionOperation('localStorage.setItem', duration, 'storage', {
+        keyLength: key.length,
+        valueLength: value ? value.length : 0
+      });
+      
+      return result;
     };
     
-    return summary;
-  }
-
-  /**
-   * Get average cache hit rate
-   */
-  getAverageHitRate() {
-    if (this.metrics.cacheHitRates.length === 0) return 0;
+    localStorage.getItem = (key) => {
+      const startTime = performance.now();
+      const result = originalGetItem.call(localStorage, key);
+      const duration = performance.now() - startTime;
+      
+      this.recordSessionOperation('localStorage.getItem', duration, 'storage', {
+        keyLength: key.length,
+        found: result !== null
+      });
+      
+      return result;
+    };
     
-    const totalHitRate = this.metrics.cacheHitRates.reduce((sum, entry) => sum + entry.hitRate, 0);
-    return (totalHitRate / this.metrics.cacheHitRates.length).toFixed(1);
-  }
-
-  /**
-   * Get average photo load time
-   */
-  getAverageLoadTime() {
-    if (this.metrics.photoLoadTimes.length === 0) return 0;
-    
-    const totalTime = this.metrics.photoLoadTimes.reduce((sum, entry) => sum + entry.duration, 0);
-    return (totalTime / this.metrics.photoLoadTimes.length).toFixed(2);
-  }
-
-  /**
-   * Get average grid render time
-   */
-  getAverageRenderTime() {
-    if (this.metrics.gridRenderTimes.length === 0) return 0;
-    
-    const totalTime = this.metrics.gridRenderTimes.reduce((sum, entry) => sum + entry.duration, 0);
-    return (totalTime / this.metrics.gridRenderTimes.length).toFixed(2);
+    localStorage.removeItem = (key) => {
+      const startTime = performance.now();
+      const result = originalRemoveItem.call(localStorage, key);
+      const duration = performance.now() - startTime;
+      
+      this.recordSessionOperation('localStorage.removeItem', duration, 'storage', {
+        keyLength: key.length
+      });
+      
+      return result;
+    };
   }
 
   /**
    * Get memory usage trend
+   * @returns {string} Trend direction
    */
   getMemoryTrend() {
-    if (this.metrics.memoryUsage.length < 2) return 'stable';
+    const memoryRecords = this.metrics.memoryUsage;
     
-    const recent = this.metrics.memoryUsage.slice(-5);
-    const trend = recent[recent.length - 1].used - recent[0].used;
+    if (memoryRecords.length < 2) {
+      return 'unknown';
+    }
     
-    if (trend > 10 * 1024 * 1024) return 'increasing'; // 10MB increase
-    if (trend < -10 * 1024 * 1024) return 'decreasing'; // 10MB decrease
+    const recent = memoryRecords.slice(-5);
+    const first = recent[0].used;
+    const last = recent[recent.length - 1].used;
+    
+    const change = ((last - first) / first) * 100;
+    
+    if (change > 10) return 'increasing';
+    if (change < -10) return 'decreasing';
     return 'stable';
   }
 
   /**
-   * Get performance recommendations
+   * Get memory alerts
+   * @returns {Array} Active memory alerts
    */
-  getPerformanceRecommendations() {
-    const recommendations = [];
+  getMemoryAlerts() {
+    const memoryRecords = this.metrics.memoryUsage;
     
-    const avgLoadTime = parseFloat(this.getAverageLoadTime());
-    if (avgLoadTime > 1000) {
-      recommendations.push('Consider reducing image sizes or implementing progressive loading');
+    if (memoryRecords.length === 0) {
+      return [];
     }
     
-    const avgRenderTime = parseFloat(this.getAverageRenderTime());
-    if (avgRenderTime > 100) {
-      recommendations.push('Grid rendering is slow - consider virtualization for large datasets');
+    const latest = memoryRecords[memoryRecords.length - 1];
+    const alerts = [];
+    
+    if (latest.used > this.thresholds.memoryAlert) {
+      alerts.push({
+        level: 'alert',
+        message: `High memory usage: ${Math.round(latest.used / 1024 / 1024)}MB`
+      });
+    } else if (latest.used > this.thresholds.memoryWarning) {
+      alerts.push({
+        level: 'warning',
+        message: `Elevated memory usage: ${Math.round(latest.used / 1024 / 1024)}MB`
+      });
     }
     
-    const hitRate = parseFloat(this.getAverageHitRate());
-    if (hitRate < 50) {
-      recommendations.push('Low cache hit rate - consider increasing cache size or improving cache strategy');
-    }
-    
-    const memoryTrend = this.getMemoryTrend();
-    if (memoryTrend === 'increasing') {
-      recommendations.push('Memory usage is increasing - monitor for memory leaks');
-    }
-    
-    if (recommendations.length === 0) {
-      recommendations.push('Performance looks good!');
-    }
-    
-    return recommendations;
+    return alerts;
   }
 
   /**
-   * Debounce utility function
-   * @param {Function} func - Function to debounce
-   * @param {number} wait - Wait time in milliseconds
+   * Alert for slow operations
+   * @param {string} operation - Operation name
+   * @param {number} duration - Duration in milliseconds
+   * @param {string} source - Data source
    */
-  debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
+  alertSlowOperation(operation, duration, source) {
+    console.warn(`Slow ${operation} operation (${source}): ${Math.round(duration)}ms`);
+    
+    this.recordError(`Slow operation: ${operation}`, 'performance', {
+      duration,
+      source,
+      threshold: this.thresholds.slowOperation
+    });
   }
 
   /**
-   * Cleanup resources
+   * Alert for high memory usage
+   * @param {Object} memoryInfo - Memory information
+   * @param {string} level - Alert level
    */
-  destroy() {
-    if (this.intersectionObserver) {
-      this.intersectionObserver.disconnect();
-    }
+  alertHighMemoryUsage(memoryInfo, level) {
+    const usedMB = Math.round(memoryInfo.used / 1024 / 1024);
+    const message = `${level === 'alert' ? 'High' : 'Elevated'} memory usage: ${usedMB}MB`;
     
-    if (this.performanceObserver) {
-      this.performanceObserver.disconnect();
-    }
+    console.warn(message);
     
-    this.photoCache.clear();
-    this.photoCacheSize = 0;
-    this.imageLoadQueue = [];
+    this.recordError(message, 'memory', {
+      used: memoryInfo.used,
+      total: memoryInfo.total,
+      percentage: Math.round((memoryInfo.used / memoryInfo.limit) * 100)
+    });
+  }
+
+  /**
+   * Notify observers of performance events
+   * @param {string} type - Event type
+   * @param {Object} data - Event data
+   */
+  notifyObservers(type, data) {
+    this.observers.forEach(callback => {
+      try {
+        callback(type, data);
+      } catch (error) {
+        console.error('Performance observer error:', error);
+      }
+    });
   }
 }
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = PerformanceMonitor;
+}
+
+// Make available globally for browser use
+if (typeof window !== 'undefined') {
+  window.PerformanceMonitor = PerformanceMonitor;
 }
