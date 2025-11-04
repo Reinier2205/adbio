@@ -143,10 +143,6 @@ class AdvancedProgressUI {
           <span class="stat-value" id="topPerformer">-</span>
           <span class="stat-label">Top Player</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-value" id="hardestChallenge">-</span>
-          <span class="stat-label">Hardest</span>
-        </div>
       </div>
     `;
 
@@ -284,27 +280,7 @@ class AdvancedProgressUI {
       : null;
     this.updateStatValue('topPerformer', topPlayer ? topPlayer.playerName : '-');
 
-    // Update hardest challenge
-    const hardestChallenge = stats.squareStats 
-      ? stats.squareStats.reduce((hardest, square) => 
-          square.completionRate < hardest.completionRate ? square : hardest
-        )
-      : null;
-    
-    if (hardestChallenge) {
-      const shortText = hardestChallenge.challengeText.length > 15 
-        ? hardestChallenge.challengeText.substring(0, 15) + '...'
-        : hardestChallenge.challengeText;
-      this.updateStatValue('hardestChallenge', shortText);
-      
-      // Add tooltip with full text
-      const hardestElement = document.getElementById('hardestChallenge');
-      if (hardestElement) {
-        hardestElement.title = `${hardestChallenge.challengeText} (${hardestChallenge.completionRate.toFixed(0)}% completion)`;
-      }
-    } else {
-      this.updateStatValue('hardestChallenge', '-');
-    }
+
   }
 
   /**
