@@ -32,9 +32,9 @@ class AdvancedProgressUI {
     const sortingPanel = this.createSortingPanel();
     container.appendChild(sortingPanel);
 
-    // Create highlight settings
-    const highlightPanel = this.createHighlightPanel();
-    container.appendChild(highlightPanel);
+    // Create dark mode toggle
+    const darkModePanel = this.createDarkModePanel();
+    container.appendChild(darkModePanel);
 
     // Create statistics panel
     const statsPanel = this.createStatisticsPanel();
@@ -59,14 +59,6 @@ class AdvancedProgressUI {
     panel.className = 'sorting-controls';
     
     panel.innerHTML = `
-      <label for="playerSort">Sort Players:</label>
-      <select id="playerSort" class="sort-select">
-        <option value="completion-desc">Completion (High to Low)</option>
-        <option value="completion-asc">Completion (Low to High)</option>
-        <option value="name-asc">Name (A to Z)</option>
-        <option value="name-desc">Name (Z to A)</option>
-      </select>
-      
       <label for="challengeSort">Sort Challenges:</label>
       <select id="challengeSort" class="sort-select">
         <option value="popularity-desc">Popularity (High to Low)</option>
@@ -80,31 +72,20 @@ class AdvancedProgressUI {
   }
 
   /**
-   * Create highlight settings panel
-   * @returns {HTMLElement} Highlight panel element
+   * Create dark mode toggle panel
+   * @returns {HTMLElement} Dark mode panel element
    */
-  createHighlightPanel() {
+  createDarkModePanel() {
     const panel = document.createElement('div');
-    panel.className = 'highlight-settings';
+    panel.className = 'dark-mode-settings';
     
     panel.innerHTML = `
-      <h4>Highlight Options</h4>
-      <div class="highlight-options">
-        <label class="highlight-toggle">
-          <input type="checkbox" id="highlightCompleted" checked>
-          <span>Fully Completed Players</span>
-        </label>
-        <label class="highlight-toggle">
-          <input type="checkbox" id="highlightPopular" checked>
-          <span>Popular Challenges</span>
-        </label>
-        <label class="highlight-toggle">
-          <input type="checkbox" id="highlightActivity" checked>
-          <span>Recent Activity</span>
-        </label>
-        <label class="highlight-toggle">
-          <input type="checkbox" id="highlightPatterns" checked>
-          <span>Completion Patterns</span>
+      <h4>Display Settings</h4>
+      <div class="dark-mode-options">
+        <label class="dark-mode-toggle">
+          <input type="checkbox" id="darkModeToggle">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">🌙 Dark Mode</span>
         </label>
       </div>
     `;
@@ -176,13 +157,7 @@ class AdvancedProgressUI {
       toggleBtn.addEventListener('click', () => this.toggleControls());
     }
 
-    // Player sorting
-    const playerSort = document.getElementById('playerSort');
-    if (playerSort) {
-      playerSort.addEventListener('change', (e) => {
-        this.visualizer.setPlayerSortOption(e.target.value);
-      });
-    }
+
 
     // Challenge sorting (placeholder for future implementation)
     const challengeSort = document.getElementById('challengeSort');
@@ -193,24 +168,16 @@ class AdvancedProgressUI {
       });
     }
 
-    // Highlight toggles
-    const highlightCheckboxes = {
-      'highlightCompleted': 'fullyCompleted',
-      'highlightPopular': 'popularChallenges',
-      'highlightActivity': 'recentActivity',
-      'highlightPatterns': 'completionPatterns'
-    };
-
-    Object.entries(highlightCheckboxes).forEach(([checkboxId, settingKey]) => {
-      const checkbox = document.getElementById(checkboxId);
-      if (checkbox) {
-        checkbox.addEventListener('change', (e) => {
-          this.visualizer.setHighlightSettings({
-            [settingKey]: e.target.checked
-          });
-        });
-      }
-    });
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (darkModeToggle) {
+      // Set initial state based on current dark mode
+      darkModeToggle.checked = document.body.classList.contains('dark-mode');
+      
+      darkModeToggle.addEventListener('change', (e) => {
+        this.toggleDarkMode(e.target.checked);
+      });
+    }
   }
 
   /**
@@ -333,18 +300,13 @@ class AdvancedProgressUI {
 
     if (currentView === 'card') {
       // Show all controls in card view
-      const playerSort = document.getElementById('playerSort');
       const challengeSort = document.getElementById('challengeSort');
       
-      if (playerSort) playerSort.parentElement.style.display = 'block';
       if (challengeSort) challengeSort.parentElement.style.display = 'block';
       
       toggleBtn.style.display = 'inline-block';
     } else if (currentView === 'player') {
-      // Hide player sorting in player view, but keep other controls
-      const playerSort = document.getElementById('playerSort');
-      if (playerSort) playerSort.parentElement.style.display = 'none';
-      
+      // Keep other controls in player view
       toggleBtn.style.display = 'inline-block';
     }
 
@@ -355,32 +317,35 @@ class AdvancedProgressUI {
   }
 
   /**
+   * Toggle dark mode
+   * @param {boolean} enabled - Whether dark mode should be enabled
+   */
+  toggleDarkMode(enabled) {
+    if (enabled) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+    
+    // Save preference to localStorage
+    try {
+      localStorage.setItem('eventbingo:darkMode', enabled.toString());
+    } catch (error) {
+      console.log('Could not save dark mode preference');
+    }
+  }
+
+  /**
    * Get current settings
    * @returns {Object} Current UI settings
    */
   getSettings() {
-    const playerSort = document.getElementById('playerSort');
     const challengeSort = document.getElementById('challengeSort');
+    const darkModeToggle = document.getElementById('darkModeToggle');
     
-    const highlightSettings = {};
-    const highlightCheckboxes = {
-      'highlightCompleted': 'fullyCompleted',
-      'highlightPopular': 'popularChallenges',
-      'highlightActivity': 'recentActivity',
-      'highlightPatterns': 'completionPatterns'
-    };
-
-    Object.entries(highlightCheckboxes).forEach(([checkboxId, settingKey]) => {
-      const checkbox = document.getElementById(checkboxId);
-      if (checkbox) {
-        highlightSettings[settingKey] = checkbox.checked;
-      }
-    });
-
     return {
-      playerSort: playerSort ? playerSort.value : 'completion-desc',
       challengeSort: challengeSort ? challengeSort.value : 'popularity-desc',
-      highlightSettings,
+      darkMode: darkModeToggle ? darkModeToggle.checked : false,
       isVisible: this.isVisible
     };
   }
@@ -390,14 +355,6 @@ class AdvancedProgressUI {
    * @param {Object} settings - Settings to apply
    */
   applySettings(settings) {
-    if (settings.playerSort) {
-      const playerSort = document.getElementById('playerSort');
-      if (playerSort) {
-        playerSort.value = settings.playerSort;
-        this.visualizer.setPlayerSortOption(settings.playerSort);
-      }
-    }
-
     if (settings.challengeSort) {
       const challengeSort = document.getElementById('challengeSort');
       if (challengeSort) {
@@ -405,22 +362,12 @@ class AdvancedProgressUI {
       }
     }
 
-    if (settings.highlightSettings) {
-      const highlightCheckboxes = {
-        'highlightCompleted': 'fullyCompleted',
-        'highlightPopular': 'popularChallenges',
-        'highlightActivity': 'recentActivity',
-        'highlightPatterns': 'completionPatterns'
-      };
-
-      Object.entries(highlightCheckboxes).forEach(([checkboxId, settingKey]) => {
-        const checkbox = document.getElementById(checkboxId);
-        if (checkbox && settings.highlightSettings.hasOwnProperty(settingKey)) {
-          checkbox.checked = settings.highlightSettings[settingKey];
-        }
-      });
-
-      this.visualizer.setHighlightSettings(settings.highlightSettings);
+    if (settings.darkMode !== undefined) {
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      if (darkModeToggle) {
+        darkModeToggle.checked = settings.darkMode;
+        this.toggleDarkMode(settings.darkMode);
+      }
     }
 
     if (settings.isVisible && !this.isVisible) {
