@@ -2254,6 +2254,13 @@
       isDarkMode = !isDarkMode;
       document.body.classList.toggle('dark-mode', isDarkMode);
       setActiveNavIcon(isDarkMode ? 3 : -1);
+      
+      // Save dark mode preference to localStorage
+      try {
+        localStorage.setItem('eventbingo:darkMode', isDarkMode.toString());
+      } catch (error) {
+        console.log('Could not save dark mode preference');
+      }
     }
 
     function toggleMusic() {
@@ -3862,6 +3869,18 @@
 
       // Get event code from URL parameters
       eventCode = urlParams.get('event') || 'default';
+      
+      // Detect and apply dark mode from localStorage
+      try {
+        const savedDarkMode = localStorage.getItem('eventbingo:darkMode') === 'true';
+        if (savedDarkMode) {
+          isDarkMode = true;
+          document.body.classList.add('dark-mode');
+          setActiveNavIcon(3); // Set dark mode icon as active
+        }
+      } catch (error) {
+        console.log('Could not detect dark mode preference');
+      }
       
       showPageLoading("Loading EventBingo...");
       
