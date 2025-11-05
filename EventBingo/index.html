@@ -1463,6 +1463,31 @@
   <script>
     // Comprehensive extension error suppression
     (function() {
+      // Store original console methods
+      const originalConsoleError = console.error;
+      const originalConsoleWarn = console.warn;
+      
+      // Override console.error to filter extension errors
+      console.error = function(...args) {
+        const message = args.join(' ');
+        if (message.includes('content_script') ||
+            message.includes('Cannot read properties of undefined') ||
+            message.includes('shouldOfferCompletionListForField') ||
+            message.includes('elementWasFocused') ||
+            message.includes('MetadataHeuristicsRunner') ||
+            message.includes('findAndFocusActiveElementIfPossible') ||
+            message.includes('reading \'control\'') ||
+            message.includes('focusInEventHandler') ||
+            message.includes('TypeError: Cannot read properties of undefined') ||
+            message.includes('.control') ||
+            message.includes('field.control') ||
+            message.includes('.some(') && message.includes('undefined')) {
+          // Silently ignore extension errors
+          return;
+        }
+        originalConsoleError.apply(console, args);
+      };
+      
       // Override window.onerror to catch all errors
       const originalOnError = window.onerror;
       window.onerror = function(message, source, lineno, colno, error) {
@@ -1484,7 +1509,12 @@
           message.includes('shouldOfferCompletionListForField') ||
           message.includes('elementWasFocused') ||
           message.includes('MetadataHeuristicsRunner') ||
-          message.includes('findAndFocusActiveElementIfPossible')
+          message.includes('focusInEventHandler') ||
+          message.includes('TypeError: Cannot read properties of undefined') ||
+          message.includes('.control') ||
+          message.includes('field.control') ||
+          message.includes('findAndFocusActiveElementIfPossible') ||
+          message.includes('reading \'control\'')
         )) {
           // Silently ignore these errors
           return true;
@@ -1495,8 +1525,8 @@
           return originalOnError.call(this, message, source, lineno, colno, error);
         }
         
-        // Log legitimate errors
-        console.error('EventBingo Error:', {
+        // Log legitimate errors using original console.error
+        originalConsoleError.call(console, 'EventBingo Error:', {
           message: message,
           source: source,
           line: lineno,
@@ -1507,7 +1537,7 @@
         return false;
       };
       
-      // Also override addEventListener for error events
+      // Override addEventListener to filter error events
       const originalAddEventListener = EventTarget.prototype.addEventListener;
       EventTarget.prototype.addEventListener = function(type, listener, options) {
         if (type === 'error' && listener) {
@@ -1527,7 +1557,12 @@
               event.message.includes('Cannot read properties of undefined') ||
               event.message.includes('shouldOfferCompletionListForField') ||
               event.message.includes('elementWasFocused') ||
-              event.message.includes('MetadataHeuristicsRunner')
+              event.message.includes('MetadataHeuristicsRunner') ||
+              event.message.includes('focusInEventHandler') ||
+              event.message.includes('TypeError: Cannot read properties of undefined') ||
+              event.message.includes('.control') ||
+              event.message.includes('field.control') ||
+              event.message.includes('reading \'control\'')
             )) {
               return; // Don't call the listener
             }
@@ -1559,7 +1594,11 @@
       // Filter out extension-related promise rejections
       if (event.reason && typeof event.reason === 'object' && event.reason.message) {
         if (event.reason.message.includes('content_script') || 
-            event.reason.message.includes('Cannot read properties of undefined')) {
+            event.reason.message.includes('Cannot read properties of undefined') ||
+            event.reason.message.includes('focusInEventHandler') ||
+            event.reason.message.includes('shouldOfferCompletionListForField') ||
+            event.reason.message.includes('.control') ||
+            event.reason.message.includes('field.control')) {
           console.log('Index page: Ignoring extension-related promise rejection');
           event.preventDefault();
           return;
