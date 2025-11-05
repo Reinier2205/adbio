@@ -1756,7 +1756,6 @@
               currentAuthenticationLevel = authResult.authenticationLevel || 'viewOnly';
               
               // Update UI and load photos
-              updateUIForAuthState();
               await loadPhotos(currentPlayer);
               updatePlayerSelectionUI();
               
@@ -1790,7 +1789,6 @@
         updatePlayerCircles();
         createGrid();
         loadPhotos(currentPlayer);
-        updateUIForAuthState();
         
         // Ensure the selected player is visible in the top bar immediately
         loadPlayers();
@@ -3069,8 +3067,20 @@
         </div>
       `;
       
-      // Get the player's question
-      const questionResult = await getPlayerQuestion(playerName);
+      // Get the player's question - using SessionManager fallback
+      let questionResult = { success: false };
+      
+      try {
+        // Try to get session data to extract the question
+        if (window.sessionManager) {
+          const session = await window.sessionManager.getPlayerSession(eventCode);
+          if (session && session.playerName === playerName && session.secretQuestion) {
+            questionResult = { success: true, question: session.secretQuestion };
+          }
+        }
+      } catch (error) {
+        console.error('Failed to get player question from session:', error);
+      }
       
       if (questionResult.success) {
         content.innerHTML = `
@@ -3935,6 +3945,15 @@
           console.log('Performance monitoring test completed');
         }
         
+        // Verify all critical functions are available
+        console.log('Index page: Verifying critical functions...');
+        console.log('loadEventInfo available:', typeof loadEventInfo);
+        console.log('loadPhotos available:', typeof loadPhotos);
+        console.log('createGrid available:', typeof createGrid);
+        console.log('loadPlayers available:', typeof loadPlayers);
+        console.log('selectPlayer available:', typeof selectPlayer);
+        console.log('updatePlayerSelectionUI available:', typeof updatePlayerSelectionUI);
+        
         // Make components globally available for legacy compatibility
         window.sessionManager = sessionManager;
         window.playerAuthenticator = playerAuthenticator;
@@ -4132,7 +4151,7 @@
           // Authentication state managed by SessionManager
           
           // Update UI based on authentication
-          updateUIForAuthState();
+          // Authentication UI updates now handled by SessionManager
           
           // Update player selection UI if it exists
           updatePlayerSelectionUI();
@@ -4398,7 +4417,6 @@
             currentAuthenticationLevel = 'full';
             
             // Update UI
-            updateUIForAuthState();
             await loadPlayers();
             await loadPhotos(currentPlayer);
             updatePlayerSelectionUI();
