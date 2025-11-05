@@ -674,10 +674,10 @@
   <script src="js/performance-monitor.js"></script>
   <script src="js/performance-dashboard.js"></script>
   <script src="js/legacy-cleanup.js"></script>
-  <script src="js/session-manager.js"></script>
-  <script src="js/player-authenticator.js"></script>
-  <script src="js/state-preserver.js"></script>
-  <script src="js/flow-controller.js"></script>
+  <script src="js/session-manager.js" onload="console.log('SessionManager script loaded')" onerror="console.error('Failed to load SessionManager script')"></script>
+  <script src="js/player-authenticator.js" onload="console.log('PlayerAuthenticator script loaded')" onerror="console.error('Failed to load PlayerAuthenticator script')"></script>
+  <script src="js/state-preserver.js" onload="console.log('StatePreserver script loaded')" onerror="console.error('Failed to load StatePreserver script')"></script>
+  <script src="js/flow-controller.js" onload="console.log('FlowController script loaded')" onerror="console.error('Failed to load FlowController script')"></script>
   <script src="js/secret-question-auth.js"></script>
   <script src="js/player-switching-interface.js"></script>
   <script src="js/view-only-mode.js"></script>
@@ -902,21 +902,36 @@
 
     // Initialize FlowController for seamless navigation
     document.addEventListener('DOMContentLoaded', async function() {
+      // Add a small delay to ensure all scripts are loaded
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       try {
         console.log('Info page: Initializing session management system...');
         
-        // Check for required classes
+        // Check for required classes with graceful fallbacks
+        console.log('Info page: Checking class availability...');
+        console.log('ErrorHandler available:', typeof ErrorHandler !== 'undefined');
+        console.log('SessionManager available:', typeof SessionManager !== 'undefined');
+        console.log('PlayerAuthenticator available:', typeof PlayerAuthenticator !== 'undefined');
+        console.log('FlowController available:', typeof FlowController !== 'undefined');
+        console.log('StatePreserver available:', typeof StatePreserver !== 'undefined');
+        
+        if (typeof SessionManager === 'undefined') {
+          throw new Error('SessionManager class not loaded - critical dependency missing');
+        }
+        
+        // For other classes, warn but don't fail completely
         if (typeof ErrorHandler === 'undefined') {
           console.warn('ErrorHandler class not loaded, using fallback');
         }
-        if (typeof SessionManager === 'undefined') {
-          throw new Error('SessionManager class not loaded');
-        }
         if (typeof PlayerAuthenticator === 'undefined') {
-          throw new Error('PlayerAuthenticator class not loaded');
+          console.warn('PlayerAuthenticator class not loaded, some features may not work');
         }
         if (typeof FlowController === 'undefined') {
-          throw new Error('FlowController class not loaded');
+          console.warn('FlowController class not loaded, using fallback navigation');
+        }
+        if (typeof StatePreserver === 'undefined') {
+          console.warn('StatePreserver class not loaded, state preservation disabled');
         }
         
         // Initialize components with error handling
@@ -925,9 +940,9 @@
         performanceDashboard = performanceMonitor && typeof PerformanceDashboard !== 'undefined' ? new PerformanceDashboard(performanceMonitor) : null;
         
         sessionManager = new SessionManager(errorHandler, performanceMonitor);
-        playerAuthenticator = new PlayerAuthenticator(sessionManager, errorHandler);
-        statePreserver = new StatePreserver(sessionManager);
-        flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver, errorHandler);
+        playerAuthenticator = typeof PlayerAuthenticator !== 'undefined' ? new PlayerAuthenticator(sessionManager, errorHandler) : null;
+        statePreserver = typeof StatePreserver !== 'undefined' ? new StatePreserver(sessionManager) : null;
+        flowController = typeof FlowController !== 'undefined' ? new FlowController(sessionManager, playerAuthenticator, statePreserver, errorHandler) : null;
         
         console.log('Info page: Session management system initialized successfully');
         
@@ -1036,17 +1051,24 @@
         }
         
         // Restore navigation context from previous page
-        const restoredContext = flowController.restoreNavigationContext();
-        if (restoredContext) {
-          console.log('Info: Restored navigation context:', restoredContext);
-          
-          // Track that we restored context
-          statePreserver.trackUserAction('contextRestored', {
-            fromPage: restoredContext.fromPage,
-            toPage: restoredContext.toPage || 'info.html',
-            eventCode: restoredContext.eventCode,
-            action: restoredContext.action
-          });
+        let restoredContext = null;
+        if (flowController && typeof flowController.restoreNavigationContext === 'function') {
+          restoredContext = flowController.restoreNavigationContext();
+          if (restoredContext) {
+            console.log('Info: Restored navigation context:', restoredContext);
+            
+            // Track that we restored context
+            if (statePreserver && typeof statePreserver.trackUserAction === 'function') {
+              statePreserver.trackUserAction('contextRestored', {
+                fromPage: restoredContext.fromPage,
+                toPage: restoredContext.toPage || 'info.html',
+                eventCode: restoredContext.eventCode,
+                action: restoredContext.action
+              });
+            }
+          }
+        } else {
+          console.log('Info: FlowController not available, skipping context restoration');
         }
         
         // Check if user explicitly navigated to info page
@@ -1072,30 +1094,41 @@
         // Handle page load with seamless flow, but respect explicit info page visits
         let flowResult;
         
-        if (shouldStayOnInfo) {
-          console.log('Info page: User wants to stay on info page, not using flow controller');
-          console.log('Info page: Reasons - stayParam:', stayOnInfo, 'explicitVisit:', explicitInfoVisit);
-          // Don't use flow controller when user explicitly wants to stay on info page
+        if (shouldStayOnInfo || !flowController) {
+          console.log('Info page: User wants to stay on info page or FlowController not available');
+          console.log('Info page: Reasons - stayParam:', stayOnInfo, 'explicitVisit:', explicitInfoVisit, 'flowController:', !!flowController);
+          // Don't use flow controller when user explicitly wants to stay on info page or it's not available
           flowResult = { 
             success: true, 
             action: 'showInfoPage', 
-            reason: 'explicit_info_visit' 
+            reason: shouldStayOnInfo ? 'explicit_info_visit' : 'flowcontroller_unavailable'
           };
         } else {
           console.log('Info page: Using flow controller for navigation');
-          flowResult = await flowController.handlePageLoad();
+          try {
+            flowResult = await flowController.handlePageLoad();
+          } catch (error) {
+            console.error('Info page: FlowController.handlePageLoad failed:', error);
+            flowResult = { 
+              success: true, 
+              action: 'showInfoPage', 
+              reason: 'flowcontroller_error'
+            };
+          }
         }
         
         console.log('Info page flow controller result:', flowResult);
         
         if (flowResult.success) {
           // Save current state for context preservation
-          statePreserver.saveNavigationState({
-            eventCode: flowResult.eventCode,
-            page: 'info.html',
-            action: flowResult.action,
-            initialized: true
-          });
+          if (statePreserver && typeof statePreserver.saveNavigationState === 'function') {
+            statePreserver.saveNavigationState({
+              eventCode: flowResult.eventCode,
+              page: 'info.html',
+              action: flowResult.action,
+              initialized: true
+            });
+          }
           
           if (flowResult.action === 'navigatingToEventSelection') {
             // FlowController is handling navigation, let it proceed
