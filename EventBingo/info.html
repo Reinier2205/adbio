@@ -685,31 +685,56 @@
   <script>
     const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
     
-    // Global error handler for debugging
+    // Comprehensive extension error suppression
+    (function() {
+      // Override window.onerror to catch all errors
+      const originalOnError = window.onerror;
+      window.onerror = function(message, source, lineno, colno, error) {
+        // Check if this is an extension error
+        if (source && (
+          source.includes('extension://') || 
+          source.includes('content_script') ||
+          source.includes('chrome-extension://') ||
+          source.includes('moz-extension://')
+        )) {
+          // Silently ignore extension errors
+          return true; // Prevents default error handling
+        }
+        
+        // Check message patterns
+        if (message && (
+          message.includes('content_script') ||
+          message.includes('Cannot read properties of undefined') ||
+          message.includes('shouldOfferCompletionListForField') ||
+          message.includes('elementWasFocused') ||
+          message.includes('MetadataHeuristicsRunner') ||
+          message.includes('findAndFocusActiveElementIfPossible')
+        )) {
+          // Silently ignore these errors
+          return true;
+        }
+        
+        // Call original handler for legitimate errors
+        if (originalOnError) {
+          return originalOnError.call(this, message, source, lineno, colno, error);
+        }
+        
+        // Log legitimate errors
+        console.error('EventBingo Info Error:', {
+          message: message,
+          source: source,
+          line: lineno,
+          column: colno,
+          error: error
+        });
+        
+        return false;
+      };
+    })();
+    
+    // Global error handler for debugging (after suppression)
     window.addEventListener('error', function(event) {
-      // Filter out extension-related errors
-      if (event.filename && (
-        event.filename.includes('extension://') || 
-        event.filename.includes('content_script') ||
-        event.filename.includes('chrome-extension://') ||
-        event.filename.includes('moz-extension://')
-      )) {
-        console.log('Info page: Ignoring browser extension error:', event.message);
-        return;
-      }
-      
-      // Also filter by error message patterns
-      if (event.message && (
-        event.message.includes('content_script') ||
-        event.message.includes('Cannot read properties of undefined (reading \'control\')') ||
-        event.message.includes('shouldOfferCompletionListForField') ||
-        event.message.includes('elementWasFocused')
-      )) {
-        console.log('Info page: Ignoring extension-related error:', event.message);
-        return;
-      }
-      
-      console.error('Info page: Global error caught:', {
+      console.error('EventBingo Info: Unfiltered error:', {
         message: event.message,
         filename: event.filename,
         lineno: event.lineno,
@@ -736,18 +761,7 @@
       });
     });
     
-    // Override console.error temporarily to filter extension errors
-    const originalConsoleError = console.error;
-    console.error = function(...args) {
-      const message = args.join(' ');
-      if (message.includes('content_script') || 
-          message.includes('Cannot read properties of undefined (reading \'control\')') ||
-          message.includes('shouldOfferCompletionListForField')) {
-        // Silently ignore extension errors
-        return;
-      }
-      originalConsoleError.apply(console, args);
-    };
+
     // Instagram-style functions
     function shareInfo() {
       console.log('shareInfo() called');

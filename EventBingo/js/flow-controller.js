@@ -426,31 +426,86 @@ class FlowController {
    */
   async _showFirstTimeSetupModal(eventCode) {
     return new Promise((resolve) => {
-      const modal = this._createFirstTimeSetupModal(eventCode);
+      console.log('FlowController: Creating first-time setup modal for event:', eventCode);
       
-      modal.onSubmit = async (playerName, secretQuestion, secretAnswer) => {
-        const result = await this.playerAuthenticator.createPlayerProfile(
-          eventCode,
-          playerName,
-          secretQuestion,
-          secretAnswer
-        );
-        
-        if (result.success) {
+      try {
+        const modal = this._createFirstTimeSetupModal(eventCode);
+        console.log('FlowController: Modal created successfully');
+      
+        modal.onSubmit = async (playerName, secretQuestion, secretAnswer) => {
+          console.log('FlowController: Modal submit called with:', { playerName, secretQuestion });
+          
+          try {
+            const result = await this.playerAuthenticator.createPlayerProfile(
+              eventCode,
+              playerName,
+              secretQuestion,
+              secretAnswer
+            );
+            
+            console.log('FlowController: Player profile creation result:', result);
+            
+            if (result.success) {
+              modal.close();
+              resolve(result);
+            } else {
+              modal.showError(result.error);
+            }
+          } catch (error) {
+            console.error('FlowController: Error creating player profile:', error);
+            modal.showError('Failed to create player profile: ' + error.message);
+          }
+        };
+      
+        modal.onCancel = () => {
+          console.log('FlowController: Modal cancelled');
           modal.close();
+          resolve({
+            success: false,
+            cancelled: true
+          });
+        };
+      } catch (error) {
+        console.error('FlowController: Error creating modal:', error);
+        
+        // Fallback to simple prompt-based setup
+        console.log('FlowController: Attempting fallback prompt-based setup');
+        try {
+          const playerName = prompt('Enter your name for EventBingo:');
+          if (!playerName) {
+            resolve({ success: false, cancelled: true });
+            return;
+          }
+          
+          const secretQuestion = prompt('Enter a secret question (for player verification):');
+          if (!secretQuestion) {
+            resolve({ success: false, cancelled: true });
+            return;
+          }
+          
+          const secretAnswer = prompt('Enter the answer to your secret question:');
+          if (!secretAnswer) {
+            resolve({ success: false, cancelled: true });
+            return;
+          }
+          
+          // Create player profile using fallback data
+          const result = await this.playerAuthenticator.createPlayerProfile(
+            eventCode,
+            playerName,
+            secretQuestion,
+            secretAnswer
+          );
+          
           resolve(result);
-        } else {
-          modal.showError(result.error);
+        } catch (fallbackError) {
+          console.error('FlowController: Fallback setup also failed:', fallbackError);
+          resolve({
+            success: false,
+            error: 'Setup failed: ' + fallbackError.message
+          });
         }
-      };
-      
-      modal.onCancel = () => {
-        modal.close();
-        resolve({
-          success: false,
-          cancelled: true
-        });
-      };
+      }
     });
   }
 
@@ -460,8 +515,11 @@ class FlowController {
    * @returns {Object} Modal object
    */
   _createFirstTimeSetupModal(eventCode) {
-    const modal = document.createElement('div');
-    modal.className = 'setup-modal-overlay';
+    console.log('FlowController: Creating modal DOM elements for event:', eventCode);
+    
+    try {
+      const modal = document.createElement('div');
+      modal.className = 'setup-modal-overlay';
     modal.innerHTML = `
       <div class="setup-modal">
         <div class="setup-modal-header">
@@ -471,16 +529,16 @@ class FlowController {
         <div class="setup-modal-body">
           <div class="setup-field">
             <label for="playerName">Your Name</label>
-            <input type="text" id="playerName" placeholder="Enter your name" maxlength="50" />
+            <input type="text" id="playerName" placeholder="Enter your name" maxlength="50" autocomplete="off" data-form-type="other" data-lpignore="true" />
           </div>
           <div class="setup-field">
             <label for="secretQuestion">Secret Question</label>
-            <input type="text" id="secretQuestion" placeholder="e.g., What's your favorite color?" maxlength="100" />
+            <input type="text" id="secretQuestion" placeholder="e.g., What's your favorite color?" maxlength="100" autocomplete="off" data-form-type="other" data-lpignore="true" />
             <small>This will be used to verify your identity when switching between players</small>
           </div>
           <div class="setup-field">
             <label for="secretAnswer">Secret Answer</label>
-            <input type="text" id="secretAnswer" placeholder="Enter your answer" maxlength="50" />
+            <input type="text" id="secretAnswer" placeholder="Enter your answer" maxlength="50" autocomplete="off" data-form-type="other" data-lpignore="true" />
             <small>Keep this simple and memorable</small>
           </div>
           <div class="setup-error" style="display: none;"></div>
@@ -537,11 +595,19 @@ class FlowController {
       errorDiv.style.display = 'block';
     };
 
-    modal.close = () => {
-      document.body.removeChild(modal);
-    };
+      modal.close = () => {
+        console.log('FlowController: Closing modal');
+        if (modal.parentNode) {
+          document.body.removeChild(modal);
+        }
+      };
 
-    return modal;
+      console.log('FlowController: Modal setup complete, returning modal');
+      return modal;
+    } catch (error) {
+      console.error('FlowController: Error in _createFirstTimeSetupModal:', error);
+      throw error;
+    }
   }
 
   /**
