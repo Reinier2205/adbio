@@ -1360,6 +1360,9 @@
   
   <!-- Enhanced Session Management Scripts -->
   <script src="js/error-handler.js"></script>
+  <script src="js/performance-monitor.js"></script>
+  <script src="js/performance-dashboard.js"></script>
+  <script src="js/legacy-cleanup.js"></script>
   <script src="js/session-manager.js"></script>
   <script src="js/player-authenticator.js"></script>
   <script src="js/flow-controller.js"></script>
@@ -2886,8 +2889,9 @@
     // Initialize player switching interface
     function initializePlayerSwitching() {
       if (!playerSwitchingInterface && typeof PlayerSwitchingInterface !== 'undefined') {
-        const sessionManager = new SessionManager();
-        const playerAuthenticator = new PlayerAuthenticator(sessionManager);
+        // Use global instances if available, otherwise create new ones
+        const sessionManager = window.sessionManager || new SessionManager();
+        const playerAuthenticator = window.playerAuthenticator || new PlayerAuthenticator(sessionManager);
         playerSwitchingInterface = new PlayerSwitchingInterface(sessionManager, playerAuthenticator);
         playerSwitchingInterface.setEventContext(eventCode);
       }
@@ -3867,17 +3871,87 @@
       
       try {
         // Initialize comprehensive session management system with error handling
+        console.log('Initializing session management system...');
+        
+        // Check for required classes
+        if (typeof ErrorHandler === 'undefined') {
+          throw new Error('ErrorHandler class not loaded');
+        }
+        if (typeof SessionManager === 'undefined') {
+          throw new Error('SessionManager class not loaded');
+        }
+        if (typeof PlayerAuthenticator === 'undefined') {
+          throw new Error('PlayerAuthenticator class not loaded');
+        }
+        if (typeof FlowController === 'undefined') {
+          throw new Error('FlowController class not loaded');
+        }
+        
         const errorHandler = new ErrorHandler();
-        const sessionManager = new SessionManager(errorHandler);
+        const performanceMonitor = typeof PerformanceMonitor !== 'undefined' ? new PerformanceMonitor() : null;
+        const performanceDashboard = performanceMonitor && typeof PerformanceDashboard !== 'undefined' ? new PerformanceDashboard(performanceMonitor) : null;
+        const sessionManager = new SessionManager(errorHandler, performanceMonitor);
         const playerAuthenticator = new PlayerAuthenticator(sessionManager, errorHandler);
         const statePreserver = new StatePreserver(sessionManager);
         const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver, errorHandler);
+        
+        console.log('Session management system initialized successfully');
+        
+        // Test basic functionality
+        console.log('Testing basic functionality...');
+        console.log('SessionManager available:', typeof sessionManager);
+        console.log('PlayerAuthenticator available:', typeof playerAuthenticator);
+        console.log('FlowController available:', typeof flowController);
+        console.log('ErrorHandler available:', typeof errorHandler);
+        
+        // Test performance monitoring
+        if (performanceMonitor) {
+          performanceMonitor.recordSessionOperation('initialization', 0, 'test');
+          console.log('Performance monitoring test completed');
+        }
         
         // Make components globally available for legacy compatibility
         window.sessionManager = sessionManager;
         window.playerAuthenticator = playerAuthenticator;
         window.errorHandler = errorHandler;
         window.flowController = flowController;
+        
+        if (performanceMonitor) {
+          window.performanceMonitor = performanceMonitor;
+          console.log('Performance monitoring enabled');
+        } else {
+          console.warn('Performance monitoring not available');
+        }
+        
+        if (performanceDashboard) {
+          window.performanceDashboard = performanceDashboard;
+          console.log('Performance dashboard enabled');
+        } else {
+          console.warn('Performance dashboard not available');
+        }
+        
+        // Initialize legacy cleanup if available
+        if (typeof LegacyCleanup !== 'undefined') {
+          const legacyCleanup = new LegacyCleanup();
+          window.legacyCleanup = legacyCleanup;
+          
+          // Perform cleanup of any remaining legacy code
+          const cleanupResult = legacyCleanup.performCompleteCleanup({
+            sessionManager,
+            playerAuthenticator,
+            flowController
+          });
+          
+          if (cleanupResult.summary.totalItemsRemoved > 0) {
+            console.log(`Legacy cleanup completed: ${cleanupResult.summary.totalItemsRemoved} items removed`);
+          }
+          
+          if (cleanupResult.summary.totalErrors > 0) {
+            console.warn(`Legacy cleanup had ${cleanupResult.summary.totalErrors} errors`);
+          }
+        } else {
+          console.warn('Legacy cleanup not available');
+        }
         
         // Cache last known good state for error recovery
         await errorHandler.cacheLastKnownGoodState({
@@ -3965,6 +4039,22 @@
         }
       } catch (error) {
         console.error('Failed to initialize with flow controller:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
+        // Check what components are available for debugging
+        console.log('Available components:', {
+          ErrorHandler: typeof ErrorHandler,
+          SessionManager: typeof SessionManager,
+          PlayerAuthenticator: typeof PlayerAuthenticator,
+          FlowController: typeof FlowController,
+          PerformanceMonitor: typeof PerformanceMonitor,
+          windowSessionManager: typeof window.sessionManager,
+          windowErrorHandler: typeof window.errorHandler
+        });
         
         // Log error for debugging
         if (window.errorHandler) {

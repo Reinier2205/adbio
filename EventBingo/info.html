@@ -667,14 +667,40 @@
     <div class="nav-icon" onclick="toggleMusic()">🎵</div>
   </div>
 
-  <!-- Include SessionManager and FlowController -->
+  <!-- Include Session Management System -->
+  <script src="js/error-handler.js"></script>
+  <script src="js/performance-monitor.js"></script>
+  <script src="js/performance-dashboard.js"></script>
+  <script src="js/legacy-cleanup.js"></script>
   <script src="js/session-manager.js"></script>
   <script src="js/player-authenticator.js"></script>
   <script src="js/state-preserver.js"></script>
   <script src="js/flow-controller.js"></script>
+  <script src="js/secret-question-auth.js"></script>
+  <script src="js/player-switching-interface.js"></script>
+  <script src="js/view-only-mode.js"></script>
   
   <script>
     const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
+    
+    // Global error handler for debugging
+    window.addEventListener('error', function(event) {
+      console.error('Info page: Global error caught:', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error
+      });
+    });
+    
+    // Unhandled promise rejection handler
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('Info page: Unhandled promise rejection:', {
+        reason: event.reason,
+        promise: event.promise
+      });
+    });
     // Instagram-style functions
     function shareInfo() {
       const url = window.location.href;
@@ -797,16 +823,89 @@
     detectDarkMode();
 
     // Global variables for session management
-    let sessionManager, playerAuthenticator, statePreserver, flowController;
+    let sessionManager, playerAuthenticator, statePreserver, flowController, errorHandler, performanceMonitor, performanceDashboard;
 
     // Initialize FlowController for seamless navigation
     document.addEventListener('DOMContentLoaded', async function() {
       try {
-        // Initialize seamless flow controller
-        sessionManager = new SessionManager();
-        playerAuthenticator = new PlayerAuthenticator(sessionManager);
+        console.log('Info page: Initializing session management system...');
+        
+        // Check for required classes
+        if (typeof ErrorHandler === 'undefined') {
+          console.warn('ErrorHandler class not loaded, using fallback');
+        }
+        if (typeof SessionManager === 'undefined') {
+          throw new Error('SessionManager class not loaded');
+        }
+        if (typeof PlayerAuthenticator === 'undefined') {
+          throw new Error('PlayerAuthenticator class not loaded');
+        }
+        if (typeof FlowController === 'undefined') {
+          throw new Error('FlowController class not loaded');
+        }
+        
+        // Initialize components with error handling
+        errorHandler = typeof ErrorHandler !== 'undefined' ? new ErrorHandler() : null;
+        performanceMonitor = typeof PerformanceMonitor !== 'undefined' ? new PerformanceMonitor() : null;
+        performanceDashboard = performanceMonitor && typeof PerformanceDashboard !== 'undefined' ? new PerformanceDashboard(performanceMonitor) : null;
+        
+        sessionManager = new SessionManager(errorHandler, performanceMonitor);
+        playerAuthenticator = new PlayerAuthenticator(sessionManager, errorHandler);
         statePreserver = new StatePreserver(sessionManager);
-        flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
+        flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver, errorHandler);
+        
+        console.log('Info page: Session management system initialized successfully');
+        
+        // Test basic functionality
+        console.log('Info page: Testing basic functionality...');
+        console.log('SessionManager available:', typeof sessionManager, sessionManager ? 'initialized' : 'not initialized');
+        console.log('PlayerAuthenticator available:', typeof playerAuthenticator, playerAuthenticator ? 'initialized' : 'not initialized');
+        console.log('FlowController available:', typeof flowController, flowController ? 'initialized' : 'not initialized');
+        console.log('ErrorHandler available:', typeof errorHandler, errorHandler ? 'initialized' : 'not initialized');
+        
+        // Test SessionManager methods
+        if (sessionManager && typeof sessionManager.isStorageAvailable === 'function') {
+          console.log('SessionManager storage available:', sessionManager.isStorageAvailable());
+        }
+        
+        // Test performance monitoring
+        if (performanceMonitor && typeof performanceMonitor.recordSessionOperation === 'function') {
+          performanceMonitor.recordSessionOperation('info-page-initialization', 0, 'test');
+          console.log('Info page: Performance monitoring test completed');
+        }
+        
+        // Make components globally available
+        window.sessionManager = sessionManager;
+        window.playerAuthenticator = playerAuthenticator;
+        window.errorHandler = errorHandler;
+        window.flowController = flowController;
+        
+        if (performanceMonitor) {
+          window.performanceMonitor = performanceMonitor;
+          console.log('Info page: Performance monitoring enabled');
+        }
+        
+        if (performanceDashboard) {
+          window.performanceDashboard = performanceDashboard;
+          console.log('Info page: Performance dashboard enabled');
+        }
+        
+        // Initialize legacy cleanup if available
+        if (typeof LegacyCleanup !== 'undefined') {
+          const legacyCleanup = new LegacyCleanup();
+          window.legacyCleanup = legacyCleanup;
+          
+          // Perform cleanup of any remaining legacy code
+          const cleanupResult = legacyCleanup.performCompleteCleanup({
+            sessionManager,
+            playerAuthenticator,
+            flowController
+          });
+          
+          if (cleanupResult.summary.totalItemsRemoved > 0) {
+            console.log(`Info page: Legacy cleanup completed: ${cleanupResult.summary.totalItemsRemoved} items removed`);
+          }
+        }
         
         // Restore navigation context from previous page
         const restoredContext = flowController.restoreNavigationContext();
@@ -854,6 +953,34 @@
         // The existing landing flow will handle event code input
       } catch (error) {
         console.error('Failed to initialize info page with flow controller:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
+        // Check what components are available for debugging
+        console.log('Available components on info page:', {
+          ErrorHandler: typeof ErrorHandler,
+          SessionManager: typeof SessionManager,
+          PlayerAuthenticator: typeof PlayerAuthenticator,
+          FlowController: typeof FlowController,
+          PerformanceMonitor: typeof PerformanceMonitor,
+          windowSessionManager: typeof window.sessionManager,
+          windowErrorHandler: typeof window.errorHandler
+        });
+        
+        // Try to initialize basic components for fallback
+        try {
+          if (typeof SessionManager !== 'undefined' && !window.sessionManager) {
+            console.log('Info page: Attempting fallback SessionManager initialization...');
+            window.sessionManager = new SessionManager();
+            sessionManager = window.sessionManager;
+          }
+        } catch (fallbackError) {
+          console.error('Info page: Fallback initialization also failed:', fallbackError);
+        }
+        
         // Continue with normal info page functionality
       }
     });
