@@ -705,7 +705,12 @@
             message.includes('TypeError: Cannot read properties of undefined') ||
             message.includes('.control') ||
             message.includes('field.control') ||
-            message.includes('.some(') && message.includes('undefined')) {
+            message.includes('.some(') && message.includes('undefined') ||
+            message.includes('Uncaught TypeError: Cannot read properties of undefined') ||
+            message.includes('at Array.some') ||
+            message.includes('at shouldOfferCompletionListForField') ||
+            message.includes('at elementWasFocused') ||
+            message.includes('at HTMLDocument.focusInEventHandler')) {
           // Silently ignore extension errors
           return;
         }
@@ -737,6 +742,11 @@
           message.includes('TypeError: Cannot read properties of undefined') ||
           message.includes('.control') ||
           message.includes('field.control') ||
+          message.includes('Uncaught TypeError: Cannot read properties of undefined') ||
+          message.includes('at Array.some') ||
+          message.includes('at shouldOfferCompletionListForField') ||
+          message.includes('at elementWasFocused') ||
+          message.includes('at HTMLDocument.focusInEventHandler') ||
           message.includes('findAndFocusActiveElementIfPossible') ||
           message.includes('reading \'control\'')
         )) {
@@ -786,6 +796,11 @@
               event.message.includes('TypeError: Cannot read properties of undefined') ||
               event.message.includes('.control') ||
               event.message.includes('field.control') ||
+              event.message.includes('Uncaught TypeError: Cannot read properties of undefined') ||
+              event.message.includes('at Array.some') ||
+              event.message.includes('at shouldOfferCompletionListForField') ||
+              event.message.includes('at elementWasFocused') ||
+              event.message.includes('at HTMLDocument.focusInEventHandler') ||
               event.message.includes('reading \'control\'')
             )) {
               return; // Don't call the listener
@@ -822,7 +837,11 @@
             event.reason.message.includes('focusInEventHandler') ||
             event.reason.message.includes('shouldOfferCompletionListForField') ||
             event.reason.message.includes('.control') ||
-            event.reason.message.includes('field.control')) {
+            event.reason.message.includes('field.control') ||
+            event.reason.message.includes('Uncaught TypeError: Cannot read properties of undefined') ||
+            event.reason.message.includes('at Array.some') ||
+            event.reason.message.includes('at elementWasFocused') ||
+            event.reason.message.includes('at HTMLDocument.focusInEventHandler')) {
           console.log('Info page: Ignoring extension-related promise rejection');
           event.preventDefault();
           return;
