@@ -685,6 +685,12 @@
     
     // Global error handler for debugging
     window.addEventListener('error', function(event) {
+      // Filter out extension-related errors
+      if (event.filename && (event.filename.includes('extension://') || event.filename.includes('content_script'))) {
+        console.log('Info page: Ignoring browser extension error');
+        return;
+      }
+      
       console.error('Info page: Global error caught:', {
         message: event.message,
         filename: event.filename,
@@ -703,29 +709,39 @@
     });
     // Instagram-style functions
     function shareInfo() {
-      const url = window.location.href;
-      if (navigator.share) {
-        navigator.share({
-          title: 'EventBingo - How to Play',
-          text: 'Learn how to play EventBingo and capture amazing memories!',
-          url: url
-        });
-      } else {
-        navigator.clipboard.writeText(url).then(() => {
-          alert('Link copied to clipboard!');
-        });
+      console.log('shareInfo() called');
+      try {
+        const url = window.location.href;
+        if (navigator.share) {
+          navigator.share({
+            title: 'EventBingo - How to Play',
+            text: 'Learn how to play EventBingo and capture amazing memories!',
+            url: url
+          });
+        } else {
+          navigator.clipboard.writeText(url).then(() => {
+            alert('Link copied to clipboard!');
+          });
+        }
+      } catch (error) {
+        console.error('shareInfo error:', error);
       }
     }
 
     function openCarousel() {
+      console.log('openCarousel() called');
       try {
         const urlParams = new URLSearchParams(window.location.search);
         let eventCode = urlParams.get('event');
         const player = urlParams.get('player') || '';
         
+        console.log('openCarousel: eventCode =', eventCode, 'player =', player);
+        
         // If no event code in URL, try to get from session manager
         if (!eventCode && sessionManager) {
+          console.log('openCarousel: Trying to get last used event from sessionManager');
           sessionManager.getLastUsedEvent().then(lastEvent => {
+            console.log('openCarousel: Got last event:', lastEvent);
             if (lastEvent) {
               eventCode = lastEvent;
               navigateToCarousel(eventCode, player);
@@ -738,6 +754,7 @@
           return;
         }
         
+        console.log('openCarousel: Navigating to carousel with eventCode:', eventCode || 'default');
         navigateToCarousel(eventCode || 'default', player);
       } catch (error) {
         console.error('Failed to open carousel:', error);
@@ -775,10 +792,12 @@
     }
 
     function toggleDarkMode() {
-      document.body.classList.toggle('dark-mode');
-      // Save preference using consistent key
+      console.log('toggleDarkMode() called');
       try {
+        document.body.classList.toggle('dark-mode');
+        // Save preference using consistent key
         const isDarkMode = document.body.classList.contains('dark-mode');
+        console.log('toggleDarkMode: isDarkMode =', isDarkMode);
         localStorage.setItem('eventbingo:darkMode', isDarkMode.toString());
         
         // Track the action for consistency
@@ -789,7 +808,7 @@
           });
         }
       } catch (error) {
-        console.log('Could not save dark mode preference');
+        console.error('toggleDarkMode error:', error);
       }
     }
 
@@ -806,6 +825,7 @@
     }
 
     function toggleMusic() {
+      console.log('toggleMusic() called');
       console.log('Music toggle - feature coming soon!');
     }
 
@@ -872,6 +892,59 @@
         if (performanceMonitor && typeof performanceMonitor.recordSessionOperation === 'function') {
           performanceMonitor.recordSessionOperation('info-page-initialization', 0, 'test');
           console.log('Info page: Performance monitoring test completed');
+        }
+        
+        // Test button functionality
+        console.log('Info page: Testing button functionality...');
+        
+        // Test if functions are available in global scope
+        console.log('shareInfo function available:', typeof shareInfo);
+        console.log('openCarousel function available:', typeof openCarousel);
+        console.log('toggleDarkMode function available:', typeof toggleDarkMode);
+        console.log('toggleMusic function available:', typeof toggleMusic);
+        
+        // Test if DOM elements exist
+        const shareButton = document.querySelector('[onclick="shareInfo()"]');
+        const carouselButton = document.querySelector('[onclick="openCarousel()"]');
+        const darkModeButton = document.querySelector('[onclick="toggleDarkMode()"]');
+        const musicButton = document.querySelector('[onclick="toggleMusic()"]');
+        
+        console.log('Share button found:', !!shareButton);
+        console.log('Carousel button found:', !!carouselButton);
+        console.log('Dark mode button found:', !!darkModeButton);
+        console.log('Music button found:', !!musicButton);
+        
+        // Add click event listeners as backup
+        if (shareButton) {
+          shareButton.addEventListener('click', function(e) {
+            console.log('Share button clicked via event listener');
+            e.preventDefault();
+            shareInfo();
+          });
+        }
+        
+        if (carouselButton) {
+          carouselButton.addEventListener('click', function(e) {
+            console.log('Carousel button clicked via event listener');
+            e.preventDefault();
+            openCarousel();
+          });
+        }
+        
+        if (darkModeButton) {
+          darkModeButton.addEventListener('click', function(e) {
+            console.log('Dark mode button clicked via event listener');
+            e.preventDefault();
+            toggleDarkMode();
+          });
+        }
+        
+        if (musicButton) {
+          musicButton.addEventListener('click', function(e) {
+            console.log('Music button clicked via event listener');
+            e.preventDefault();
+            toggleMusic();
+          });
         }
         
         // Make components globally available
@@ -1132,7 +1205,9 @@
       }
 
       async function validateAndStart() {
+        console.log('validateAndStart() called');
         const code = (input.value || '').trim();
+        console.log('validateAndStart: code =', code);
         help.style.display = 'none';
         if (!code) {
           help.textContent = 'Please enter your event code to continue.';

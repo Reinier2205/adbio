@@ -1459,6 +1459,31 @@
   <!-- Session Management System Already Loaded Above -->
   
   <script>
+    // Global error handler for debugging and filtering extension errors
+    window.addEventListener('error', function(event) {
+      // Filter out extension-related errors
+      if (event.filename && (event.filename.includes('extension://') || event.filename.includes('content_script'))) {
+        console.log('Index page: Ignoring browser extension error');
+        return;
+      }
+      
+      console.error('Index page: Global error caught:', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error
+      });
+    });
+    
+    // Unhandled promise rejection handler
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('Index page: Unhandled promise rejection:', {
+        reason: event.reason,
+        promise: event.promise
+      });
+    });
+    
     function escapeQuotes(str) {
       return str.replace(/'/g, "\\'");
     }
