@@ -490,14 +490,20 @@ class FlowController {
           }
           
           // Create player profile using fallback data
-          const result = await this.playerAuthenticator.createPlayerProfile(
+          this.playerAuthenticator.createPlayerProfile(
             eventCode,
             playerName,
             secretQuestion,
             secretAnswer
-          );
-          
-          resolve(result);
+          ).then(result => {
+            resolve(result);
+          }).catch(profileError => {
+            console.error('FlowController: Profile creation failed:', profileError);
+            resolve({
+              success: false,
+              error: 'Profile creation failed: ' + profileError.message
+            });
+          });
         } catch (fallbackError) {
           console.error('FlowController: Fallback setup also failed:', fallbackError);
           resolve({
