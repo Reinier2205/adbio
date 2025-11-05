@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="form-detection" content="telephone=no" />
   <title>EventBingo</title>
   <style>
     :root {
@@ -1462,8 +1464,24 @@
     // Global error handler for debugging and filtering extension errors
     window.addEventListener('error', function(event) {
       // Filter out extension-related errors
-      if (event.filename && (event.filename.includes('extension://') || event.filename.includes('content_script'))) {
-        console.log('Index page: Ignoring browser extension error');
+      if (event.filename && (
+        event.filename.includes('extension://') || 
+        event.filename.includes('content_script') ||
+        event.filename.includes('chrome-extension://') ||
+        event.filename.includes('moz-extension://')
+      )) {
+        console.log('Index page: Ignoring browser extension error:', event.message);
+        return;
+      }
+      
+      // Also filter by error message patterns
+      if (event.message && (
+        event.message.includes('content_script') ||
+        event.message.includes('Cannot read properties of undefined (reading \'control\')') ||
+        event.message.includes('shouldOfferCompletionListForField') ||
+        event.message.includes('elementWasFocused')
+      )) {
+        console.log('Index page: Ignoring extension-related error:', event.message);
         return;
       }
       
@@ -1478,11 +1496,34 @@
     
     // Unhandled promise rejection handler
     window.addEventListener('unhandledrejection', function(event) {
+      // Filter out extension-related promise rejections
+      if (event.reason && typeof event.reason === 'object' && event.reason.message) {
+        if (event.reason.message.includes('content_script') || 
+            event.reason.message.includes('Cannot read properties of undefined')) {
+          console.log('Index page: Ignoring extension-related promise rejection');
+          event.preventDefault();
+          return;
+        }
+      }
+      
       console.error('Index page: Unhandled promise rejection:', {
         reason: event.reason,
         promise: event.promise
       });
     });
+    
+    // Override console.error temporarily to filter extension errors
+    const originalConsoleError = console.error;
+    console.error = function(...args) {
+      const message = args.join(' ');
+      if (message.includes('content_script') || 
+          message.includes('Cannot read properties of undefined (reading \'control\')') ||
+          message.includes('shouldOfferCompletionListForField')) {
+        // Silently ignore extension errors
+        return;
+      }
+      originalConsoleError.apply(console, args);
+    };
     
     function escapeQuotes(str) {
       return str.replace(/'/g, "\\'");
