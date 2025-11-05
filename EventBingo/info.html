@@ -661,7 +661,7 @@
   <!-- Bottom Navigation -->
   <div class="bottom-nav" id="bottomNav" style="display: none;">
     <a href="index.html" class="nav-icon">🏠</a>
-    <a href="info.html" class="nav-icon active">ℹ️</a>
+    <a href="info.html?stay=true" class="nav-icon active">ℹ️</a>
     <div class="nav-icon" onclick="openCarousel()">📸</div>
     <div class="nav-icon" onclick="toggleDarkMode()">🌓</div>
     <div class="nav-icon" onclick="toggleMusic()">🎵</div>
@@ -994,8 +994,42 @@
           });
         }
         
-        // Handle page load with seamless flow
-        const flowResult = await flowController.handlePageLoad();
+        // Check if user explicitly navigated to info page
+        const urlParams = new URLSearchParams(window.location.search);
+        const stayOnInfo = urlParams.has('stay') || urlParams.has('info');
+        const explicitInfoVisit = !urlParams.has('event') && !document.referrer.includes('index.html');
+        const shouldStayOnInfo = stayOnInfo || explicitInfoVisit;
+        
+        console.log('Info page: Should stay on info:', shouldStayOnInfo);
+        
+        // Show a message if we're staying on info page due to saved session
+        if (shouldStayOnInfo && sessionManager) {
+          const lastUsedEvent = await sessionManager.getLastUsedEvent();
+          if (lastUsedEvent) {
+            console.log('Info page: Staying on info page despite having saved session for:', lastUsedEvent);
+          }
+        }
+        console.log('Info page: Stay parameter:', stayOnInfo);
+        console.log('Info page: Explicit visit detected:', explicitInfoVisit);
+        console.log('Info page: URL params:', Object.fromEntries(urlParams.entries()));
+        console.log('Info page: Referrer:', document.referrer);
+        
+        // Handle page load with seamless flow, but respect explicit info page visits
+        let flowResult;
+        
+        if (shouldStayOnInfo) {
+          console.log('Info page: User wants to stay on info page, not using flow controller');
+          console.log('Info page: Reasons - stayParam:', stayOnInfo, 'explicitVisit:', explicitInfoVisit);
+          // Don't use flow controller when user explicitly wants to stay on info page
+          flowResult = { 
+            success: true, 
+            action: 'showInfoPage', 
+            reason: 'explicit_info_visit' 
+          };
+        } else {
+          console.log('Info page: Using flow controller for navigation');
+          flowResult = await flowController.handlePageLoad();
+        }
         
         console.log('Info page flow controller result:', flowResult);
         
@@ -1010,6 +1044,12 @@
           
           if (flowResult.action === 'navigatingToEventSelection') {
             // FlowController is handling navigation, let it proceed
+            return;
+          }
+          
+          if (flowResult.action === 'navigating' || flowResult.action === 'navigatingToGameInterface') {
+            // FlowController is navigating away, let it proceed
+            console.log('Info page: FlowController is handling navigation, allowing redirect');
             return;
           }
           
