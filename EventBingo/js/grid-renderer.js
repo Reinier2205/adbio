@@ -200,17 +200,17 @@ class GridRenderer {
       const grid = document.getElementById('photoGrid');
       const emptyState = document.getElementById('emptyState');
 
-      // Check render cache first
-      const cacheKey = this.generateRenderCacheKey('player', { playerName, playerPhotos, squares });
-      if (this.renderCache.has(cacheKey)) {
-        const cachedRender = this.renderCache.get(cacheKey);
-        grid.innerHTML = cachedRender.html;
-        grid.className = cachedRender.className;
-        grid.style.display = cachedRender.display;
-        emptyState.style.display = cachedRender.emptyDisplay;
-        this.setupEventHandlersForCachedRender(grid);
-        return;
-      }
+      // Disable caching for player views to ensure photos and placeholders render correctly
+      // const cacheKey = this.generateRenderCacheKey('player', { playerName, playerPhotos, squares });
+      // if (this.renderCache.has(cacheKey)) {
+      //   const cachedRender = this.renderCache.get(cacheKey);
+      //   grid.innerHTML = cachedRender.html;
+      //   grid.className = cachedRender.className;
+      //   grid.style.display = cachedRender.display;
+      //   emptyState.style.display = cachedRender.emptyDisplay;
+      //   this.setupEventHandlersForCachedRender(grid);
+      //   return;
+      // }
 
       // Validate input data
       if (!playerName) {
@@ -257,13 +257,13 @@ class GridRenderer {
       grid.innerHTML = '';
       grid.appendChild(fragment);
 
-      // Cache the render result
-      this.cacheRenderResult(cacheKey, {
-        html: grid.innerHTML,
-        className: grid.className,
-        display: grid.style.display,
-        emptyDisplay: emptyState.style.display
-      });
+      // Disable caching for player views to ensure photos render correctly
+      // this.cacheRenderResult(cacheKey, {
+      //   html: grid.innerHTML,
+      //   className: grid.className,
+      //   display: grid.style.display,
+      //   emptyDisplay: emptyState.style.display
+      // });
 
       // Setup lazy loading for photos
       this.setupLazyLoadingForGrid(grid);
@@ -342,14 +342,15 @@ class GridRenderer {
       img.loading = 'lazy';
       img.style.cssText = 'width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; position: absolute !important; top: 0 !important; left: 0 !important; z-index: 1 !important; border: 2px solid red !important;';
       
+      // Also try loading with crossOrigin attribute
+      img.crossOrigin = 'anonymous';
+      
       // Add load/error handlers for debugging
       img.onload = () => {
         console.log(`GridRenderer: Image loaded successfully for square ${position}:`, photoUrl);
         console.log(`GridRenderer: Image dimensions:`, img.naturalWidth, 'x', img.naturalHeight);
       };
       
-      // Also try loading with crossOrigin attribute
-      img.crossOrigin = 'anonymous';
       img.onerror = (error) => {
         console.error(`GridRenderer: Image failed to load for square ${position}:`, photoUrl);
         console.error(`GridRenderer: Error details:`, error);
@@ -374,15 +375,20 @@ class GridRenderer {
         // Show a placeholder for failed images
         img.style.display = 'none';
         const placeholder = document.createElement('div');
+        placeholder.className = 'photo-placeholder';
         placeholder.style.cssText = `
-          width: 100%; 
-          height: 100%; 
-          background: #f0f0f0; 
-          display: flex; 
-          align-items: center; 
-          justify-content: center; 
-          font-size: 2rem;
-          color: #999;
+          width: 100% !important; 
+          height: 100% !important; 
+          background: #f0f0f0 !important; 
+          display: flex !important; 
+          align-items: center !important; 
+          justify-content: center !important; 
+          font-size: 2rem !important;
+          color: #999 !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          z-index: 1 !important;
         `;
         placeholder.innerHTML = '📷';
         placeholder.title = 'Photo failed to load: ' + photoUrl;
