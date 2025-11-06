@@ -1762,6 +1762,24 @@
         await initializeBoardController();
         
         console.log('Board: Initialization completed successfully!');
+        
+        // Add temporary debug button
+        const debugBtn = document.createElement('button');
+        debugBtn.textContent = 'Debug Photos';
+        debugBtn.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 9999; background: red; color: white; padding: 10px;';
+        debugBtn.onclick = () => {
+          const state = boardController.getState();
+          console.log('=== PHOTO DEBUG ===');
+          console.log('Current state:', state);
+          console.log('Selected player:', state.selectedPlayer);
+          console.log('All photos:', state.photos);
+          if (state.selectedPlayer) {
+            console.log(`Photos for ${state.selectedPlayer}:`, state.photos[state.selectedPlayer]);
+          }
+          console.log('Squares:', state.squares);
+          alert('Check console for photo debug info');
+        };
+        document.body.appendChild(debugBtn);
       } catch (error) {
         console.error('Failed to initialize board with flow controller:', error);
         console.error('Error details:', {
@@ -2216,6 +2234,14 @@
         
         // Use GridRenderer for player view
         const playerPhotos = state.photos[state.selectedPlayer] || {};
+        
+        // Debug logging
+        console.log('Board: Rendering player view for:', state.selectedPlayer);
+        console.log('Board: Player photos data:', playerPhotos);
+        console.log('Board: Available photo keys:', Object.keys(playerPhotos));
+        console.log('Board: Squares data:', state.squares);
+        console.log('Board: Square challenge texts:', state.squares.map(s => s.challengeText));
+        
         gridRenderer.renderPlayerView(state.selectedPlayer, playerPhotos, state.squares);
         
         // Add fade-in animation to grid

@@ -293,8 +293,29 @@ class GridRenderer {
     squareElement.dataset.squareIndex = square.index;
     squareElement.dataset.position = position;
 
-    const photoUrl = playerPhotos[square.challengeText];
+    // Try to find photo by challenge text first, then by square index
+    let photoUrl = playerPhotos[square.challengeText];
+    
+    // If not found by challenge text, try by square index
+    if (!photoUrl) {
+      photoUrl = playerPhotos[square.index] || playerPhotos[square.index.toString()];
+    }
+    
+    // If still not found, try by position (1-based)
+    if (!photoUrl) {
+      photoUrl = playerPhotos[position] || playerPhotos[position.toString()];
+    }
+    
     const isCompleted = photoUrl && photoUrl.trim() !== '';
+    
+    // Debug logging for photo lookup
+    if (position <= 3) { // Only log first few squares to avoid spam
+      console.log(`GridRenderer: Square ${position} - Challenge: "${square.challengeText}"`);
+      console.log(`GridRenderer: Square index: ${square.index}`);
+      console.log(`GridRenderer: Photo URL: "${photoUrl}"`);
+      console.log(`GridRenderer: Is completed: ${isCompleted}`);
+      console.log(`GridRenderer: Available photo keys:`, Object.keys(playerPhotos));
+    }
 
     if (isCompleted) {
       squareElement.classList.add('completed');
