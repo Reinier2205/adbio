@@ -1613,6 +1613,59 @@
 
     // Detect dark mode immediately
     detectDarkMode();
+    
+    // Simple error display function for debugging
+    function showPersistentError(message, details = null) {
+      console.error('Board Error:', message, details);
+      
+      // Create error overlay that stays visible
+      const errorOverlay = document.createElement('div');
+      errorOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        z-index: 10000;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 14px;
+        line-height: 1.4;
+      `;
+      
+      errorOverlay.innerHTML = `
+        <h2>Board Initialization Error</h2>
+        <p><strong>Message:</strong> ${message}</p>
+        ${details ? `<p><strong>Details:</strong> ${JSON.stringify(details, null, 2)}</p>` : ''}
+        <p><strong>Event Code:</strong> ${eventCode}</p>
+        <p><strong>Current Player:</strong> ${currentPlayer}</p>
+        <p><strong>URL:</strong> ${window.location.href}</p>
+        <button onclick="this.parentElement.remove()" style="
+          background: #dc3545;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-top: 20px;
+        ">Close Error</button>
+        <button onclick="window.location.href='index.html'" style="
+          background: #007bff;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-top: 20px;
+          margin-left: 10px;
+        ">Go to Main Page</button>
+      `;
+      
+      document.body.appendChild(errorOverlay);
+    }
 
     // Global instances for seamless navigation
     let sessionManager, playerAuthenticator, statePreserver, flowController, playerSwitchingInterface;
@@ -1620,12 +1673,18 @@
     // Initialize the board with seamless flow
     document.addEventListener('DOMContentLoaded', async function() {
       try {
+        console.log('Board: Starting initialization...');
+        console.log('Board: Event code:', eventCode);
+        console.log('Board: Current player:', currentPlayer);
+        
         // Initialize seamless flow components
+        console.log('Board: Initializing session management components...');
         sessionManager = new SessionManager();
         playerAuthenticator = new PlayerAuthenticator(sessionManager);
         statePreserver = new StatePreserver(sessionManager);
         flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver);
         playerSwitchingInterface = new PlayerSwitchingInterface(sessionManager, playerAuthenticator);
+        console.log('Board: Session management components initialized');
         
         // Set event context for player switching
         if (eventCode) {
@@ -1655,41 +1714,84 @@
           }
         }
         
-        // Handle page load with seamless flow
-        const flowResult = await flowController.handlePageLoad();
+        // Board page doesn't need FlowController routing - it's a destination page
+        // Just validate that we have the required parameters
+        if (!eventCode) {
+          console.error('No event code provided to board page');
+          alert('No event code provided. Redirecting to main page.');
+          window.location.href = 'index.html';
+          return;
+        }
         
-        console.log('Board flow controller result:', flowResult);
-        
-        if (flowResult.success && flowResult.action === 'sessionLoaded') {
-          // Update global variables with session data
-          eventCode = flowResult.eventCode;
-          currentPlayer = flowResult.playerName;
+        // Check if we have a valid session for this event
+        const session = await sessionManager.getPlayerSession(eventCode);
+        if (session) {
+          console.log('Board: Found valid session for event:', eventCode);
+          
+          // Update current player if not specified in URL
+          if (!currentPlayer) {
+            currentPlayer = session.playerName;
+          }
           
           // Save current state for context preservation
           statePreserver.saveNavigationState({
-            eventCode: flowResult.eventCode,
-            playerName: flowResult.playerName,
+            eventCode: eventCode,
+            playerName: currentPlayer,
             page: 'board.html',
             action: 'sessionLoaded',
             viewOnly: new URLSearchParams(window.location.search).get('viewOnly') === 'true',
             initialized: true
           });
+        } else {
+          console.log('Board: No session found for event:', eventCode);
+          // Continue anyway - board can work in view-only mode
         }
         
         // Initialize view-only mode if needed
+        console.log('Board: Initializing view-only mode...');
         initializeViewOnlyMode();
         
         // Continue with normal board initialization
+        console.log('Board: Setting up event handlers...');
         setupEventHandlers();
+        
+        console.log('Board: Initializing UI enhancements...');
         initializeUIEnhancements();
+        
+        console.log('Board: Initializing board controller...');
         await initializeBoardController();
+        
+        console.log('Board: Initialization completed successfully!');
       } catch (error) {
         console.error('Failed to initialize board with flow controller:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
+        // Show persistent error display
+        showPersistentError(`Board initialization failed: ${error.message}`, {
+          name: error.name,
+          stack: error.stack,
+          eventCode: eventCode,
+          currentPlayer: currentPlayer
+        });
         
         // Fallback to normal initialization
-        setupEventHandlers();
-        initializeUIEnhancements();
-        await initializeBoardController();
+        try {
+          setupEventHandlers();
+          initializeUIEnhancements();
+          await initializeBoardController();
+        } catch (fallbackError) {
+          console.error('Fallback initialization also failed:', fallbackError);
+          alert(`Fallback initialization failed: ${fallbackError.message}\n\nRedirecting to main page.`);
+          
+          // Only redirect after showing error
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 3000);
+        }
       }
     });
 
@@ -1986,8 +2088,26 @@
         showLoading(false);
       } catch (error) {
         console.error('Failed to initialize board controller:', error);
+        console.error('BoardController error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+          eventCode: eventCode,
+          currentPlayer: currentPlayer
+        });
+        
+        // Show persistent error display
+        showPersistentError(`Board controller initialization failed: ${error.message}`, {
+          name: error.name,
+          stack: error.stack,
+          eventCode: eventCode,
+          currentPlayer: currentPlayer
+        });
+        
         showError('Failed to load board. Please try again.');
         showLoading(false);
+        
+        // Don't redirect automatically, let user decide
       }
     }
 
