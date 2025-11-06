@@ -469,7 +469,9 @@ class GridRenderer {
         img.dataset.src = src;
         img.src = ''; // Clear src to prevent immediate loading
         img.classList.add('lazy-loading');
-        this.performanceMonitor.setupLazyLoading(img);
+        if (typeof this.performanceMonitor.setupLazyLoading === 'function') {
+          this.performanceMonitor.setupLazyLoading(img);
+        }
       }
     });
   }

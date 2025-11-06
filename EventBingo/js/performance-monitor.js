@@ -469,6 +469,86 @@ class PerformanceMonitor {
   }
 
   /**
+   * Monitor grid rendering performance
+   * @param {Function} renderFunction - Function to execute and monitor
+   * @param {string} renderType - Type of render (e.g., 'player', 'card', 'all')
+   * @returns {Promise} Result of the render function
+   */
+  async monitorGridRender(renderFunction, renderType = 'unknown') {
+    const startTime = performance.now();
+    
+    try {
+      // Execute the render function
+      const result = await renderFunction();
+      
+      // Record the operation
+      const duration = performance.now() - startTime;
+      this.recordSessionOperation(`gridRender_${renderType}`, duration, 'grid', {
+        renderType: renderType,
+        success: true
+      });
+      
+      return result;
+    } catch (error) {
+      // Record the failed operation
+      const duration = performance.now() - startTime;
+      this.recordSessionOperation(`gridRender_${renderType}`, duration, 'grid', {
+        renderType: renderType,
+        success: false,
+        error: error.message
+      });
+      
+      // Record the error
+      this.recordError(error, 'gridRender', {
+        renderType: renderType,
+        duration: duration
+      });
+      
+      throw error; // Re-throw to maintain error handling flow
+    }
+  }
+
+  /**
+   * Setup lazy loading monitoring for an image element
+   * @param {HTMLImageElement} imgElement - Image element to monitor
+   */
+  setupLazyLoading(imgElement) {
+    if (!imgElement || !imgElement.tagName || imgElement.tagName !== 'IMG') {
+      console.warn('setupLazyLoading called with invalid image element');
+      return;
+    }
+
+    const startTime = performance.now();
+    
+    // Monitor when the image starts loading
+    imgElement.addEventListener('loadstart', () => {
+      this.recordUserInteraction('imageLoadStart', 0, {
+        src: imgElement.src,
+        lazy: true
+      });
+    });
+
+    // Monitor when the image finishes loading
+    imgElement.addEventListener('load', () => {
+      const duration = performance.now() - startTime;
+      this.recordUserInteraction('imageLoad', duration, {
+        src: imgElement.src,
+        lazy: true,
+        success: true
+      });
+    });
+
+    // Monitor loading errors
+    imgElement.addEventListener('error', () => {
+      const duration = performance.now() - startTime;
+      this.recordError(new Error('Image load failed'), 'lazyLoading', {
+        src: imgElement.src,
+        duration: duration
+      });
+    });
+  }
+
+  /**
    * Monitor localStorage operations
    */
   monitorStorageOperations() {
