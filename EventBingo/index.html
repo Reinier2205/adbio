@@ -4047,31 +4047,86 @@
       
       showPageLoading("Loading EventBingo...");
       
+      // Wait a bit for all scripts to load
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       try {
         // Initialize comprehensive session management system with error handling
         console.log('Initializing session management system...');
         
-        // Check for required classes
+        // Check for required classes with better error reporting
+        const missingClasses = [];
         if (typeof ErrorHandler === 'undefined') {
-          throw new Error('ErrorHandler class not loaded');
+          missingClasses.push('ErrorHandler');
         }
         if (typeof SessionManager === 'undefined') {
-          throw new Error('SessionManager class not loaded');
+          missingClasses.push('SessionManager');
         }
         if (typeof PlayerAuthenticator === 'undefined') {
-          throw new Error('PlayerAuthenticator class not loaded');
+          missingClasses.push('PlayerAuthenticator');
         }
         if (typeof FlowController === 'undefined') {
-          throw new Error('FlowController class not loaded');
+          missingClasses.push('FlowController');
+        }
+        if (typeof StatePreserver === 'undefined') {
+          missingClasses.push('StatePreserver');
         }
         
-        const errorHandler = new ErrorHandler();
-        const performanceMonitor = typeof PerformanceMonitor !== 'undefined' ? new PerformanceMonitor() : null;
-        const performanceDashboard = performanceMonitor && typeof PerformanceDashboard !== 'undefined' ? new PerformanceDashboard(performanceMonitor) : null;
-        const sessionManager = new SessionManager(errorHandler, performanceMonitor);
-        const playerAuthenticator = new PlayerAuthenticator(sessionManager, errorHandler);
-        const statePreserver = new StatePreserver(sessionManager);
-        const flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver, errorHandler);
+        if (missingClasses.length > 0) {
+          throw new Error(`Missing required classes: ${missingClasses.join(', ')}`);
+        }
+        
+        // Initialize components with error handling
+        let errorHandler, sessionManager, playerAuthenticator, statePreserver, flowController;
+        let performanceMonitor = null, performanceDashboard = null;
+        
+        try {
+          errorHandler = new ErrorHandler();
+          console.log('ErrorHandler initialized');
+        } catch (error) {
+          console.error('Failed to initialize ErrorHandler:', error);
+          throw error;
+        }
+        
+        try {
+          performanceMonitor = typeof PerformanceMonitor !== 'undefined' ? new PerformanceMonitor() : null;
+          performanceDashboard = performanceMonitor && typeof PerformanceDashboard !== 'undefined' ? new PerformanceDashboard(performanceMonitor) : null;
+          console.log('Performance monitoring initialized:', !!performanceMonitor);
+        } catch (error) {
+          console.warn('Performance monitoring failed to initialize:', error);
+        }
+        
+        try {
+          sessionManager = new SessionManager(errorHandler, performanceMonitor);
+          console.log('SessionManager initialized');
+        } catch (error) {
+          console.error('Failed to initialize SessionManager:', error);
+          throw error;
+        }
+        
+        try {
+          playerAuthenticator = new PlayerAuthenticator(sessionManager, errorHandler);
+          console.log('PlayerAuthenticator initialized');
+        } catch (error) {
+          console.error('Failed to initialize PlayerAuthenticator:', error);
+          throw error;
+        }
+        
+        try {
+          statePreserver = new StatePreserver(sessionManager);
+          console.log('StatePreserver initialized');
+        } catch (error) {
+          console.error('Failed to initialize StatePreserver:', error);
+          throw error;
+        }
+        
+        try {
+          flowController = new FlowController(sessionManager, playerAuthenticator, statePreserver, errorHandler);
+          console.log('FlowController initialized');
+        } catch (error) {
+          console.error('Failed to initialize FlowController:', error);
+          throw error;
+        }
         
         console.log('Session management system initialized successfully');
         
@@ -4090,12 +4145,29 @@
         
         // Verify all critical functions are available
         console.log('Index page: Verifying critical functions...');
-        console.log('loadEventInfo available:', typeof loadEventInfo);
-        console.log('loadPhotos available:', typeof loadPhotos);
-        console.log('createGrid available:', typeof createGrid);
-        console.log('loadPlayers available:', typeof loadPlayers);
-        console.log('selectPlayer available:', typeof selectPlayer);
-        console.log('updatePlayerSelectionUI available:', typeof updatePlayerSelectionUI);
+        const criticalFunctions = {
+          loadEventInfo: typeof loadEventInfo,
+          loadPhotos: typeof loadPhotos,
+          createGrid: typeof createGrid,
+          loadPlayers: typeof loadPlayers,
+          selectPlayer: typeof selectPlayer,
+          updatePlayerSelectionUI: typeof updatePlayerSelectionUI,
+          showPageLoading: typeof showPageLoading,
+          hidePageLoading: typeof hidePageLoading,
+          legacyInitialization: typeof legacyInitialization
+        };
+        
+        console.log('Critical functions:', criticalFunctions);
+        
+        // Check if any critical functions are missing
+        const missingFunctions = Object.entries(criticalFunctions)
+          .filter(([name, type]) => type === 'undefined')
+          .map(([name]) => name);
+          
+        if (missingFunctions.length > 0) {
+          console.error('Missing critical functions:', missingFunctions);
+          throw new Error(`Missing critical functions: ${missingFunctions.join(', ')}`);
+        }
         
         // Make components globally available for legacy compatibility
         window.sessionManager = sessionManager;
@@ -4163,66 +4235,72 @@
         }
         
         // Handle page load with seamless flow
-        const flowResult = await flowController.handlePageLoad();
-        
-        console.log('Flow controller result:', flowResult);
-        
-        if (flowResult.success) {
-          if (flowResult.action === 'sessionLoaded') {
-            // Session loaded, initialize with existing data
-            eventCode = flowResult.eventCode;
-            currentPlayer = flowResult.playerName;
-            
-            // Authentication state managed by SessionManager
-            
-            // Save current state for context preservation
-            statePreserver.saveNavigationState({
-              eventCode: flowResult.eventCode,
-              playerName: flowResult.playerName,
-              page: 'index.html',
-              action: 'sessionLoaded',
-              initialized: true
-            });
-            
-            // Initialize the app with session data
-            await initializeAppWithSession(flowResult);
-            
-            // Setup legacy functionality
-            legacyInitialization();
-          } else if (flowResult.action === 'navigating') {
-            // FlowController is handling navigation, don't continue initialization
-            return;
-          } else if (flowResult.action === 'showEventSelection') {
-            // No event selected, redirect to info page
-            window.location.href = 'info.html';
-            return;
-          }
-        } else {
-          // Flow controller failed, check if we can recover
-          if (flowResult.fallbackAction === 'showEventSelection') {
-            window.location.href = 'info.html';
-            return;
-          }
+        try {
+          const flowResult = await flowController.handlePageLoad();
           
-          // Try to recover from error handler
-          const recoveryOptions = errorHandler.provideFallbackOptions('flow_controller_failed');
+          console.log('Flow controller result:', flowResult);
           
-          if (recoveryOptions.success && recoveryOptions.options.length > 0) {
-            const firstOption = recoveryOptions.options[0];
+          if (flowResult.success) {
+            if (flowResult.action === 'sessionLoaded') {
+              // Session loaded, initialize with existing data
+              eventCode = flowResult.eventCode;
+              currentPlayer = flowResult.playerName;
+              
+              // Authentication state managed by SessionManager
+              
+              // Save current state for context preservation
+              statePreserver.saveNavigationState({
+                eventCode: flowResult.eventCode,
+                playerName: flowResult.playerName,
+                page: 'index.html',
+                action: 'sessionLoaded',
+                initialized: true
+              });
+              
+              // Initialize the app with session data
+              await initializeAppWithSession(flowResult);
+              
+              // Setup legacy functionality
+              legacyInitialization();
+            } else if (flowResult.action === 'navigating') {
+              // FlowController is handling navigation, don't continue initialization
+              return;
+            } else if (flowResult.action === 'showEventSelection') {
+              // No event selected, redirect to info page
+              window.location.href = 'info.html';
+              return;
+            }
+          } else {
+            // Flow controller failed, check if we can recover
+            if (flowResult.fallbackAction === 'showEventSelection') {
+              window.location.href = 'info.html';
+              return;
+            }
             
-            if (firstOption.type === 'continueLastEvent' && firstOption.eventCode) {
-              eventCode = firstOption.eventCode;
-              currentPlayer = firstOption.playerName;
-              console.log('Recovered using last event:', eventCode, currentPlayer);
-              await legacyFallbackInitialization();
+            // Try to recover from error handler
+            const recoveryOptions = errorHandler.provideFallbackOptions('flow_controller_failed');
+            
+            if (recoveryOptions.success && recoveryOptions.options.length > 0) {
+              const firstOption = recoveryOptions.options[0];
+              
+              if (firstOption.type === 'continueLastEvent' && firstOption.eventCode) {
+                eventCode = firstOption.eventCode;
+                currentPlayer = firstOption.playerName;
+                console.log('Recovered using last event:', eventCode, currentPlayer);
+                await legacyFallbackInitialization();
+              } else {
+                console.warn('Flow controller failed, using legacy initialization:', flowResult.error);
+                await legacyFallbackInitialization();
+              }
             } else {
               console.warn('Flow controller failed, using legacy initialization:', flowResult.error);
               await legacyFallbackInitialization();
             }
-          } else {
-            console.warn('Flow controller failed, using legacy initialization:', flowResult.error);
-            await legacyFallbackInitialization();
           }
+        } catch (flowError) {
+          console.error('Flow controller threw an error:', flowError);
+          console.log('Falling back to legacy initialization');
+          await legacyFallbackInitialization();
         }
       } catch (error) {
         console.error('Failed to initialize with flow controller:', error);
@@ -4239,23 +4317,41 @@
           PlayerAuthenticator: typeof PlayerAuthenticator,
           FlowController: typeof FlowController,
           PerformanceMonitor: typeof PerformanceMonitor,
+          StatePreserver: typeof StatePreserver,
           windowSessionManager: typeof window.sessionManager,
           windowErrorHandler: typeof window.errorHandler
         });
         
         // Log error for debugging
         if (window.errorHandler) {
-          window.errorHandler._logError('initialization_failed', {
-            error: error.message,
-            stack: error.stack,
-            eventCode: eventCode,
-            currentPlayer: currentPlayer
-          });
+          try {
+            window.errorHandler._logError('initialization_failed', {
+              error: error.message,
+              stack: error.stack,
+              eventCode: eventCode,
+              currentPlayer: currentPlayer
+            });
+          } catch (logError) {
+            console.error('Failed to log error:', logError);
+          }
         }
         
         // Fallback to legacy initialization
         console.log('Attempting legacy initialization...');
-        await legacyFallbackInitialization();
+        try {
+          await legacyFallbackInitialization();
+        } catch (legacyError) {
+          console.error('Legacy initialization also failed:', legacyError);
+          
+          // Last resort: basic initialization
+          console.log('Attempting basic initialization...');
+          try {
+            await basicFallbackInitialization();
+          } catch (basicError) {
+            console.error('All initialization methods failed:', basicError);
+            showError('Failed to load EventBingo. Please refresh the page.');
+          }
+        }
       } finally {
         hidePageLoading();
       }
@@ -4526,6 +4622,88 @@
       }
     }
     
+    // Basic fallback initialization for when everything else fails
+    async function basicFallbackInitialization() {
+      try {
+        console.log('Starting basic fallback initialization...');
+        
+        // Get event code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        eventCode = urlParams.get('event') || 'default';
+        
+        if (!eventCode || eventCode === 'default') {
+          // No event code, redirect to info page
+          window.location.href = 'info.html';
+          return;
+        }
+        
+        // Use default squares
+        squares = defaultSquaresList;
+        
+        // Create basic grid
+        createGrid();
+        
+        // Try to load players
+        try {
+          await loadPlayers();
+        } catch (error) {
+          console.warn('Failed to load players in basic mode:', error);
+        }
+        
+        // Setup basic event handlers
+        setupEventHandlers();
+        
+        console.log('Basic initialization completed');
+      } catch (error) {
+        console.error('Basic initialization failed:', error);
+        throw error;
+      }
+    }
+    
+    // Show error message to user
+    function showError(message) {
+      try {
+        // Try to show in a modal or alert
+        if (document.body) {
+          const errorDiv = document.createElement('div');
+          errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            z-index: 10000;
+            max-width: 400px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+          `;
+          errorDiv.innerHTML = `
+            <h3>Error</h3>
+            <p>${message}</p>
+            <button onclick="this.parentElement.remove()" style="
+              background: #dc3545;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin-top: 10px;
+            ">Close</button>
+          `;
+          document.body.appendChild(errorDiv);
+        } else {
+          alert(message);
+        }
+      } catch (error) {
+        console.error('Failed to show error message:', error);
+        alert(message);
+      }
+    }
+
     // Enhanced add new player function using new session management
     async function handleAddNewPlayer() {
       try {
@@ -4608,4 +4786,6 @@
         }
       }
     }
-</script>
+</script></bo
+dy>
+</html>
