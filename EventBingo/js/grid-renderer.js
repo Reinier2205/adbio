@@ -293,17 +293,22 @@ class GridRenderer {
     squareElement.dataset.squareIndex = square.index;
     squareElement.dataset.position = position;
 
-    // Try to find photo by challenge text first, then by square index
-    let photoUrl = playerPhotos[square.challengeText];
+    // Photos should be a key-value object where keys are challenge text and values are URLs
+    let photoUrl = null;
     
-    // If not found by challenge text, try by square index
-    if (!photoUrl) {
-      photoUrl = playerPhotos[square.index] || playerPhotos[square.index.toString()];
-    }
-    
-    // If still not found, try by position (1-based)
-    if (!photoUrl) {
-      photoUrl = playerPhotos[position] || playerPhotos[position.toString()];
+    if (typeof playerPhotos === 'object' && playerPhotos !== null && !Array.isArray(playerPhotos)) {
+      // Standard format: object with challenge text as keys and URLs as values
+      photoUrl = playerPhotos[square.challengeText];
+    } else if (Array.isArray(playerPhotos)) {
+      // If we get an array (which seems wrong), try to find a matching photo object
+      console.warn('GridRenderer: Received array instead of object for player photos');
+      const photoObj = playerPhotos.find(photo => 
+        photo.challengeText === square.challengeText || 
+        photo.index === square.index
+      );
+      photoUrl = photoObj ? (photoObj.url || photoObj.photoUrl) : null;
+    } else {
+      console.warn('GridRenderer: Invalid photo data format:', typeof playerPhotos);
     }
     
     const isCompleted = photoUrl && photoUrl.trim() !== '';
@@ -314,7 +319,16 @@ class GridRenderer {
       console.log(`GridRenderer: Square index: ${square.index}`);
       console.log(`GridRenderer: Photo URL: "${photoUrl}"`);
       console.log(`GridRenderer: Is completed: ${isCompleted}`);
-      console.log(`GridRenderer: Available photo keys:`, Object.keys(playerPhotos));
+      
+      if (Array.isArray(playerPhotos)) {
+        console.log(`GridRenderer: Player photos is array with ${playerPhotos.length} items`);
+        if (playerPhotos.length > 0) {
+          console.log(`GridRenderer: First photo object:`, playerPhotos[0]);
+          console.log(`GridRenderer: Photo object keys:`, Object.keys(playerPhotos[0]));
+        }
+      } else {
+        console.log(`GridRenderer: Player photos is object with keys:`, Object.keys(playerPhotos));
+      }
     }
 
     if (isCompleted) {

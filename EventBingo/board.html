@@ -1762,24 +1762,6 @@
         await initializeBoardController();
         
         console.log('Board: Initialization completed successfully!');
-        
-        // Add temporary debug button
-        const debugBtn = document.createElement('button');
-        debugBtn.textContent = 'Debug Photos';
-        debugBtn.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 9999; background: red; color: white; padding: 10px;';
-        debugBtn.onclick = () => {
-          const state = boardController.getState();
-          console.log('=== PHOTO DEBUG ===');
-          console.log('Current state:', state);
-          console.log('Selected player:', state.selectedPlayer);
-          console.log('All photos:', state.photos);
-          if (state.selectedPlayer) {
-            console.log(`Photos for ${state.selectedPlayer}:`, state.photos[state.selectedPlayer]);
-          }
-          console.log('Squares:', state.squares);
-          alert('Check console for photo debug info');
-        };
-        document.body.appendChild(debugBtn);
       } catch (error) {
         console.error('Failed to initialize board with flow controller:', error);
         console.error('Error details:', {
@@ -2354,61 +2336,21 @@
           return;
         }
         
-        // Switching to different player - use enhanced authentication
-        if (playerSwitchingInterface) {
-          const switchResult = await playerSwitchingInterface.handlePlayerSelection(playerName);
-          
-          if (switchResult.success) {
-            if (switchResult.authenticationLevel === 'viewOnly') {
-              // Activate view-only mode
-              if (viewOnlyMode) {
-                viewOnlyMode.activateViewOnlyMode(playerName, {
-                  eventCode: eventCode,
-                  fromPlayer: currentPlayer
-                });
-              }
-              
-              // Switch to player view in read-only mode
-              await boardController.switchToPlayerView(playerName);
-              
-              // Track view-only switch
-              if (statePreserver) {
-                statePreserver.trackUserAction('viewOnlySwitch', {
-                  fromPlayer: currentPlayer,
-                  toPlayer: playerName,
-                  eventCode: eventCode,
-                  authenticationLevel: 'viewOnly'
-                });
-              }
-            } else if (switchResult.authenticationLevel === 'full') {
-              // Deactivate view-only mode if active
-              if (viewOnlyMode && viewOnlyMode.isActive()) {
-                viewOnlyMode.deactivateViewOnlyMode();
-              }
-              
-              // Full access - switch normally
-              await boardController.switchToPlayerView(playerName);
-              
-              // Update current player
-              currentPlayer = playerName;
-              
-              // Track full access switch
-              if (statePreserver) {
-                statePreserver.trackUserAction('playerSwitch', {
-                  fromPlayer: currentPlayer,
-                  toPlayer: playerName,
-                  eventCode: eventCode,
-                  authenticationLevel: 'full'
-                });
-              }
-            }
-          } else if (!switchResult.cancelled) {
-            showError(switchResult.error || 'Failed to switch players');
-          }
-        } else {
-          // Fallback to basic switching
-          await boardController.switchToPlayerView(playerName);
+        // Switching to different player - board view should be view-only by default
+        console.log(`Board: Switching to view ${playerName}'s photos`);
+        
+        // Activate view-only mode for viewing other players
+        if (viewOnlyMode) {
+          viewOnlyMode.activateViewOnlyMode(playerName, {
+            eventCode: eventCode,
+            fromPlayer: currentPlayer
+          });
         }
+        
+        // Switch to player view directly (no authentication needed for viewing)
+        await boardController.switchToPlayerView(playerName);
+        
+
       } catch (error) {
         console.error('Failed to select player:', error);
         showError('Failed to switch view. Please try again.');

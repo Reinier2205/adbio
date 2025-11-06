@@ -621,7 +621,9 @@ class BoardController {
    */
   async loadPlayerPhotos(playerName) {
     try {
-      const response = await fetch(`${this.workerURL}player?name=${encodeURIComponent(playerName)}&event=${this.state.eventCode}`);
+      const apiUrl = `${this.workerURL}player?name=${encodeURIComponent(playerName)}&event=${this.state.eventCode}`;
+      console.log(`BoardController: Fetching photos from: ${apiUrl}`);
+      const response = await fetch(apiUrl);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -639,6 +641,11 @@ class BoardController {
       }
       
       const playerPhotos = await response.json();
+      
+      // Debug: Log the actual API response
+      console.log(`BoardController: API response for ${playerName}:`, playerPhotos);
+      console.log(`BoardController: Response type:`, typeof playerPhotos);
+      console.log(`BoardController: Is array:`, Array.isArray(playerPhotos));
       
       // Validate photo data
       if (typeof playerPhotos !== 'object' || playerPhotos === null) {
