@@ -628,7 +628,7 @@ class BoardController {
       if (!response.ok) {
         if (response.status === 404) {
           // Player not found or no photos - this is not necessarily an error
-          console.warn(`No photos found for player: ${playerName}`);
+          console.warn(`BoardController: No photos found for player: ${playerName} (404 response)`);
           this.state.photos[playerName] = {};
           return;
         } else if (response.status === 403) {
@@ -643,18 +643,35 @@ class BoardController {
       const playerPhotos = await response.json();
       
       // Debug: Log the actual API response
-      console.log(`BoardController: API response for ${playerName}:`, playerPhotos);
+      console.log(`BoardController: Raw API response for ${playerName}:`, playerPhotos);
       console.log(`BoardController: Response type:`, typeof playerPhotos);
       console.log(`BoardController: Is array:`, Array.isArray(playerPhotos));
+      console.log(`BoardController: Response keys:`, Object.keys(playerPhotos || {}));
+      console.log(`BoardController: Response length:`, Array.isArray(playerPhotos) ? playerPhotos.length : 'N/A');
       
-      // Validate photo data
-      if (typeof playerPhotos !== 'object' || playerPhotos === null) {
-        console.warn(`Invalid photo data for ${playerName}, using empty object`);
+      // Handle different response formats
+      if (Array.isArray(playerPhotos)) {
+        if (playerPhotos.length === 0) {
+          console.log(`BoardController: Player ${playerName} has no photos (empty array)`);
+          this.state.photos[playerName] = {};
+        } else {
+          // Convert array format to object format if needed
+          console.log(`BoardController: Converting array format to object for ${playerName}`);
+          const photoObj = {};
+          playerPhotos.forEach(photo => {
+            if (photo.challenge && photo.url) {
+              photoObj[photo.challenge] = photo.url;
+            }
+          });
+          this.state.photos[playerName] = photoObj;
+        }
+      } else if (typeof playerPhotos === 'object' && playerPhotos !== null) {
+        // Standard object format
+        this.state.photos[playerName] = playerPhotos;
+      } else {
+        console.warn(`BoardController: Invalid photo data type for ${playerName}:`, typeof playerPhotos);
         this.state.photos[playerName] = {};
-        return;
       }
-      
-      this.state.photos[playerName] = playerPhotos;
     } catch (error) {
       console.error(`Error loading photos for ${playerName}:`, error);
       // Set empty photos object to prevent repeated failures
