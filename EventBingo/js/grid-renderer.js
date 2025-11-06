@@ -333,26 +333,66 @@ class GridRenderer {
 
     if (isCompleted) {
       squareElement.classList.add('completed');
+      squareElement.style.position = 'relative'; // Ensure positioning context
       
       // Create image element with debugging
       const img = document.createElement('img');
       img.src = photoUrl;
       img.alt = square.challengeText;
       img.loading = 'lazy';
-      img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;';
+      img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; top: 0; left: 0; z-index: 1; border: 2px solid red;';
       
       // Add load/error handlers for debugging
       img.onload = () => {
         console.log(`GridRenderer: Image loaded successfully for square ${position}:`, photoUrl);
+        console.log(`GridRenderer: Image dimensions:`, img.naturalWidth, 'x', img.naturalHeight);
       };
+      
+      // Also try loading with crossOrigin attribute
+      img.crossOrigin = 'anonymous';
       img.onerror = (error) => {
-        console.error(`GridRenderer: Image failed to load for square ${position}:`, photoUrl, error);
+        console.error(`GridRenderer: Image failed to load for square ${position}:`, photoUrl);
+        console.error(`GridRenderer: Error details:`, error);
+        console.error(`GridRenderer: Image element:`, img);
+        console.error(`GridRenderer: Image naturalWidth:`, img.naturalWidth);
+        console.error(`GridRenderer: Image naturalHeight:`, img.naturalHeight);
+        
+        // Try to fetch the URL directly to see what the server returns
+        fetch(photoUrl)
+          .then(response => {
+            console.log(`GridRenderer: Direct fetch response:`, response.status, response.statusText);
+            console.log(`GridRenderer: Response headers:`, [...response.headers.entries()]);
+            return response.blob();
+          })
+          .then(blob => {
+            console.log(`GridRenderer: Response blob:`, blob.type, blob.size);
+          })
+          .catch(fetchError => {
+            console.error(`GridRenderer: Direct fetch failed:`, fetchError);
+          });
+          
+        // Show a placeholder for failed images
+        img.style.display = 'none';
+        const placeholder = document.createElement('div');
+        placeholder.style.cssText = `
+          width: 100%; 
+          height: 100%; 
+          background: #f0f0f0; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          font-size: 2rem;
+          color: #999;
+        `;
+        placeholder.innerHTML = '📷';
+        placeholder.title = 'Photo failed to load: ' + photoUrl;
+        squareElement.insertBefore(placeholder, overlay);
       };
       
       // Create overlay that doesn't interfere with clicks
       const overlay = document.createElement('div');
       overlay.className = 'square-overlay';
-      overlay.style.pointerEvents = 'none'; // Allow clicks to pass through
+      overlay.style.cssText = 'pointer-events: none; z-index: 2; position: absolute; top: 0; left: 0; right: 0; bottom: 0;';
       overlay.innerHTML = '<div class="completion-indicator">✓</div>';
       
       // Add elements to square
