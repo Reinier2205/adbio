@@ -340,7 +340,7 @@ class GridRenderer {
       img.src = photoUrl;
       img.alt = square.challengeText;
       img.loading = 'lazy';
-      img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; top: 0; left: 0; z-index: 1; border: 2px solid red;';
+      img.style.cssText = 'width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; position: absolute !important; top: 0 !important; left: 0 !important; z-index: 1 !important; border: 2px solid red !important;';
       
       // Add load/error handlers for debugging
       img.onload = () => {
