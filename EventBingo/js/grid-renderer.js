@@ -333,15 +333,37 @@ class GridRenderer {
 
     if (isCompleted) {
       squareElement.classList.add('completed');
-      squareElement.innerHTML = `
-        <img src="${photoUrl}" alt="${square.challengeText}" loading="lazy">
-        <div class="square-overlay">
-          <div class="completion-indicator">✓</div>
-        </div>
-      `;
+      
+      // Create image element with debugging
+      const img = document.createElement('img');
+      img.src = photoUrl;
+      img.alt = square.challengeText;
+      img.loading = 'lazy';
+      img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; display: block;';
+      
+      // Add load/error handlers for debugging
+      img.onload = () => {
+        console.log(`GridRenderer: Image loaded successfully for square ${position}:`, photoUrl);
+      };
+      img.onerror = (error) => {
+        console.error(`GridRenderer: Image failed to load for square ${position}:`, photoUrl, error);
+      };
+      
+      // Create overlay that doesn't interfere with clicks
+      const overlay = document.createElement('div');
+      overlay.className = 'square-overlay';
+      overlay.style.pointerEvents = 'none'; // Allow clicks to pass through
+      overlay.innerHTML = '<div class="completion-indicator">✓</div>';
+      
+      // Add elements to square
+      squareElement.appendChild(img);
+      squareElement.appendChild(overlay);
       
       // Add click handler for fullscreen view
-      squareElement.addEventListener('click', () => {
+      squareElement.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log(`GridRenderer: Square clicked for photo:`, photoUrl);
         this.onPhotoClick(photoUrl, square.challengeText, position);
       });
     } else {
@@ -530,16 +552,28 @@ class GridRenderer {
 
     // Re-setup click handlers for squares
     grid.querySelectorAll('.bingo-square').forEach(square => {
-      square.addEventListener('click', () => {
+      square.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const squareIndex = parseInt(square.dataset.squareIndex);
         const position = parseInt(square.dataset.position);
         
-        // Get square statistics from current state
-        if (typeof boardController !== 'undefined' && boardController.getState) {
-          const state = boardController.getState();
-          const squareStat = state.completionStats.squareStats.find(s => s.squareIndex === squareIndex);
-          if (squareStat) {
-            this.onSquareClick(squareStat, position);
+        // Check if this is a completed square with a photo (player view)
+        if (square.classList.contains('completed') && square.querySelector('img')) {
+          const img = square.querySelector('img');
+          const photoUrl = img.src;
+          const challengeText = img.alt;
+          console.log(`GridRenderer: Cached square clicked for photo:`, photoUrl);
+          this.onPhotoClick(photoUrl, challengeText, position);
+        } else {
+          // For incomplete squares or card view, show stats
+          if (typeof boardController !== 'undefined' && boardController.getState) {
+            const state = boardController.getState();
+            const squareStat = state.completionStats.squareStats.find(s => s.squareIndex === squareIndex);
+            if (squareStat) {
+              this.onSquareClick(squareStat, position);
+            }
           }
         }
       });
