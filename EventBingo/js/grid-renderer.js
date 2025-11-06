@@ -347,29 +347,29 @@ class GridRenderer {
       
       // Add load/error handlers for debugging
       img.onload = () => {
-        console.log(`GridRenderer: Image loaded successfully for square ${position}:`, photoUrl);
-        console.log(`GridRenderer: Image dimensions:`, img.naturalWidth, 'x', img.naturalHeight);
+        console.log(`GridRenderer: Image loaded successfully for square ${position}: ${photoUrl}`);
+        console.log('GridRenderer: Image dimensions:', img.naturalWidth, 'x', img.naturalHeight);
       };
       
       img.onerror = (error) => {
-        console.error(`GridRenderer: Image failed to load for square ${position}:`, photoUrl);
-        console.error(`GridRenderer: Error details:`, error);
-        console.error(`GridRenderer: Image element:`, img);
-        console.error(`GridRenderer: Image naturalWidth:`, img.naturalWidth);
-        console.error(`GridRenderer: Image naturalHeight:`, img.naturalHeight);
+        console.error(`GridRenderer: Image failed to load for square ${position}: ${photoUrl}`);
+        console.error('GridRenderer: Error details:', error);
+        console.error('GridRenderer: Image element:', img);
+        console.error('GridRenderer: Image naturalWidth:', img.naturalWidth);
+        console.error('GridRenderer: Image naturalHeight:', img.naturalHeight);
         
         // Try to fetch the URL directly to see what the server returns
         fetch(photoUrl)
           .then(response => {
-            console.log(`GridRenderer: Direct fetch response:`, response.status, response.statusText);
-            console.log(`GridRenderer: Response headers:`, [...response.headers.entries()]);
+            console.log('GridRenderer: Direct fetch response:', response.status, response.statusText);
+            console.log('GridRenderer: Response headers:', [...response.headers.entries()]);
             return response.blob();
           })
           .then(blob => {
-            console.log(`GridRenderer: Response blob:`, blob.type, blob.size);
+            console.log('GridRenderer: Response blob:', blob.type, blob.size);
           })
           .catch(fetchError => {
-            console.error(`GridRenderer: Direct fetch failed:`, fetchError);
+            console.error('GridRenderer: Direct fetch failed:', fetchError);
           });
           
         // Show a placeholder for failed images
