@@ -2795,10 +2795,17 @@
       });
     }
 
-    // Add view-only mode styles
-    (function addViewOnlyStyles() {
+    // Add view-only mode styles and hide performance monitor
+    (function addCustomStyles() {
       const style = document.createElement('style');
       style.textContent = `
+        /* Hide performance monitor always */
+        .performance-toggle,
+        .performance-monitor,
+        #performanceMonitor {
+          display: none !important;
+        }
+        
         /* View-only mode - hide action buttons */
         body.view-only-mode button[onclick*="add"],
         body.view-only-mode button[onclick*="upload"],
