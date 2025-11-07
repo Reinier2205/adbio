@@ -276,6 +276,69 @@
       box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
     }
 
+    /* Align player name styling with index.html top bar */
+    .top-bar .player-name {
+      font-size: 0.8rem !important;
+      color: var(--text-dark);
+      font-weight: 400;
+      text-align: center;
+      max-width: none;
+      overflow: visible;
+      text-overflow: clip;
+      white-space: normal;
+      line-height: 1.2;
+    }
+    body.dark-mode .top-bar .player-name { color: #e0e0e0; }
+
+    /* Bottom Navigation Bar (match index.html) */
+    .bottom-nav {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100vw !important;
+      background: var(--bg-light);
+      display: flex;
+      justify-content: space-around;
+      padding: 16px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      backdrop-filter: blur(10px);
+      z-index: 9999 !important;
+      margin: 0 !important;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      transform: translateZ(0);
+    }
+
+    .nav-icon {
+      font-size: 1.8rem;
+      cursor: pointer;
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      min-height: 48px;
+    }
+
+    .nav-icon:hover {
+      background-color: rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+
+    .nav-icon.active {
+      background: var(--story-gradient);
+      color: white;
+      box-shadow: 0 4px 12px rgba(228, 64, 95, 0.3);
+    }
+
+    body.dark-mode .bottom-nav {
+      background: #2d2d2d;
+      color: #ffffff;
+      border: 1px solid #404040;
+    }
+
     /* Main Content */
     .main-content {
       padding: 15px;
@@ -1450,19 +1513,14 @@
   </style>
 </head>
 <body>
-  <!-- Top Bar -->
+  <!-- Top Bar (aligned with index.html) -->
   <div class="top-bar">
-    <a href="#" class="back-button" onclick="goBack()">←</a>
-    <div class="page-title">🎯 Bingo Board</div>
-    <div style="width: 50px;"></div> <!-- Spacer for centering -->
-  </div>
-
-  <!-- Player Selection -->
-  <div class="player-selection">
     <div class="player-scroll" id="playerScroll">
       <!-- Player circles will be dynamically added here -->
     </div>
   </div>
+
+  <!-- Player selection moved into top bar to match index.html -->
 
   <!-- Filter Bar -->
   <div class="filter-bar">
@@ -1477,6 +1535,16 @@
         <option value="card">By Card</option>
       </select>
     </div>
+  </div>
+
+  <!-- Bottom Navigation (consistent with index.html) -->
+  <div class="bottom-nav">
+    <div class="nav-icon" onclick="goHome()">🏠</div>
+    <div class="nav-icon active" onclick="openBoardFromBoard()">🎯</div>
+    <div class="nav-icon" onclick="openLeaderboardFromBoard()">🥇</div>
+    <div class="nav-icon" onclick="shareBingo()">📤</div>
+    <a href="info.html?stay=true" class="nav-icon">ℹ️</a>
+    <div class="nav-icon" onclick="toggleDarkMode()">🌓</div>
   </div>
 
   <!-- Completion Toggles (shown only in card view) -->
@@ -1765,6 +1833,8 @@
         await initializeBoardController();
         
         console.log('Board: Initialization completed successfully!');
+        // Highlight bottom nav for Board
+        setActiveNavIcon(1);
       } catch (error) {
         console.error('Failed to initialize board with flow controller:', error);
         console.error('Error details:', {
@@ -1797,6 +1867,80 @@
         }
       }
     });
+
+    // Bottom navigation helpers (consistent with index.html)
+    function setActiveNavIcon(index) {
+      document.querySelectorAll('.bottom-nav .nav-icon').forEach((icon, i) => {
+        // Skip anchors when computing index order (they are part of NodeList)
+        const isInfoLink = icon.tagName === 'A';
+        // Maintain visual active class based on position; we still compare by index
+        icon.classList.toggle('active', i === index);
+      });
+    }
+
+    async function goHome() {
+      try {
+        setActiveNavIcon(0);
+        let savedEvent = null;
+        if (window.sessionManager && typeof window.sessionManager.getLastUsedEvent === 'function') {
+          try { savedEvent = await window.sessionManager.getLastUsedEvent(); } catch (_) {}
+        }
+        if (!savedEvent) {
+          try { savedEvent = localStorage.getItem('eventbingo:lastEvent') || null; } catch (_) {}
+        }
+        const eventToUse = savedEvent || (typeof eventCode !== 'undefined' && eventCode) || 'default';
+        let savedPlayer = '';
+        try { savedPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventToUse}`) || ''; } catch (_) {}
+        if (!savedPlayer) {
+          try { savedPlayer = localStorage.getItem('eventbingo:currentPlayer') || ''; } catch (_) {}
+        }
+        const targetUrl = savedPlayer
+          ? `index.html?event=${encodeURIComponent(eventToUse)}&player=${encodeURIComponent(savedPlayer)}`
+          : `index.html?event=${encodeURIComponent(eventToUse)}`;
+        window.location.href = targetUrl;
+      } catch (_) {
+        const fallbackEvent = (typeof eventCode !== 'undefined' && eventCode) ? eventCode : 'default';
+        window.location.href = `index.html?event=${encodeURIComponent(fallbackEvent)}`;
+      }
+    }
+
+    function openBoardFromBoard() {
+      // Ensure current page reflects current event/player
+      setActiveNavIcon(1);
+      const params = new URLSearchParams(window.location.search);
+      const evt = params.get('event') || (typeof eventCode !== 'undefined' ? eventCode : 'default');
+      const ply = params.get('player') || (typeof currentPlayer !== 'undefined' ? currentPlayer : '');
+      const url = ply
+        ? `board.html?event=${encodeURIComponent(evt)}&player=${encodeURIComponent(ply)}`
+        : `board.html?event=${encodeURIComponent(evt)}`;
+      if (!window.location.href.endsWith(url)) {
+        window.location.href = url;
+      }
+    }
+
+    function openLeaderboardFromBoard() {
+      setActiveNavIcon(2);
+      const params = new URLSearchParams(window.location.search);
+      const evt = params.get('event') || (typeof eventCode !== 'undefined' ? eventCode : 'default');
+      window.location.href = `index.html?event=${encodeURIComponent(evt)}`;
+    }
+
+    function shareBingo() {
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({ title: 'EventBingo', text: 'Check out the board!', url });
+      } else {
+        try { navigator.clipboard.writeText(url); } catch (_) {}
+        alert('Link copied to clipboard!');
+      }
+    }
+
+    function toggleDarkMode() {
+      const isDark = !document.body.classList.contains('dark-mode');
+      document.body.classList.toggle('dark-mode', isDark);
+      try { localStorage.setItem('eventbingo:darkMode', isDark.toString()); } catch (_) {}
+      setActiveNavIcon(isDark ? 5 : -1);
+    }
 
     // Detect and apply dark mode from app's localStorage setting
     function detectDarkMode() {
