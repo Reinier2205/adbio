@@ -2795,6 +2795,40 @@
       });
     }
 
+    // Add view-only mode styles
+    (function addViewOnlyStyles() {
+      const style = document.createElement('style');
+      style.textContent = `
+        /* View-only mode - hide action buttons */
+        body.view-only-mode button[onclick*="add"],
+        body.view-only-mode button[onclick*="upload"],
+        body.view-only-mode button[onclick*="Add"],
+        body.view-only-mode button[onclick*="Upload"],
+        body.view-only-mode .add-photo-btn,
+        body.view-only-mode .upload-btn,
+        body.view-only-mode button:has(input[type="file"]) {
+          display: none !important;
+        }
+        
+        /* View-only indicator */
+        body.view-only-mode::after {
+          content: '👁️ View Only';
+          position: fixed;
+          top: 70px;
+          right: 20px;
+          background: rgba(245, 158, 11, 0.95);
+          color: white;
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          z-index: 1000;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+      `;
+      document.head.appendChild(style);
+    })();
+
     // Select a player with authentication
     async function selectPlayer(playerName) {
       try {
@@ -2827,6 +2861,13 @@
           // Update authentication level
           currentAuthenticationLevel = authResult.authenticationLevel || 'viewOnly';
           currentPlayer = playerName;
+          
+          // Add/remove view-only mode class on body
+          if (authResult.authenticationLevel === 'viewOnly') {
+            document.body.classList.add('view-only-mode');
+          } else {
+            document.body.classList.remove('view-only-mode');
+          }
           
           // If full authentication, save the session locally so we don't ask again
           if (authResult.authenticationLevel === 'full') {
