@@ -89,9 +89,16 @@ class PlayerAuthenticator {
         // Clear any failed attempts
         this.authAttempts.delete(playerName);
         
+        // Create minimal player data object
+        const playerData = {
+          playerName: playerName,
+          eventCode: eventCode,
+          authenticated: true
+        };
+        
         return {
           success: true,
-          playerData: session,
+          playerData: playerData,
           authenticationLevel: 'full'
         };
       } else {
