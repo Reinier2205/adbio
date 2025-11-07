@@ -161,7 +161,37 @@ class PlayerAuthenticator {
         };
       }
 
-      // Save the player session
+      // Register with backend worker first
+      try {
+        const workerURL = window.workerURL || 'https://eventbingo.reijier.workers.dev/';
+        const response = await fetch(`${workerURL}auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventCode,
+            playerName: playerName.trim(),
+            question: secretQuestion.trim(),
+            answer: secretAnswer.trim()
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Backend registration failed:', errorText);
+          return {
+            success: false,
+            error: 'Failed to register with server'
+          };
+        }
+      } catch (error) {
+        console.error('Backend registration error:', error);
+        return {
+          success: false,
+          error: 'Network error during registration'
+        };
+      }
+
+      // Save the player session locally
       const success = await this.sessionManager.savePlayerSession(
         eventCode,
         playerName,
@@ -178,7 +208,7 @@ class PlayerAuthenticator {
       } else {
         return {
           success: false,
-          error: 'Failed to save player profile'
+          error: 'Failed to save player profile locally'
         };
       }
     } catch (error) {
