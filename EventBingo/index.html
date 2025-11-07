@@ -3670,8 +3670,8 @@
             margin-bottom: 20px;
             border-left: 4px solid var(--primary);
           ">
-            <p style="margin: 0 0 10px 0; font-weight: 600; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}">Your Secret Question:</p>
-            <p id="assignedQuestion" style="margin: 0; font-size: 1.1rem; font-style: italic; ${isDark ? 'color:#e5e7eb;' : 'color:#4b5563;'}"></p>
+            <p style="margin: 0 0 5px 0; font-size: 0.85rem; ${isDark ? 'color:#9ca3af;' : 'color:#6b7280;'}">🎲 We've assigned you this question:</p>
+            <p id="assignedQuestion" style="margin: 0; font-size: 1.1rem; font-weight: 600; ${isDark ? 'color:#fff;' : 'color:#1f2937;'}"></p>
           </div>
 
           <div style="margin-bottom: 20px;">
@@ -3785,7 +3785,7 @@
           console.warn('Could not check existing players:', error);
         }
         
-        // Generate random question
+        // Generate random question from the same list used by worker
         const questions = [
           "What is your go-to snack?",
           "Favourite song right now?",
@@ -3808,7 +3808,9 @@
           "A word that describes you today?"
         ];
         
+        // Assign random question to this player
         window.assignedQuestion = questions[Math.floor(Math.random() * questions.length)];
+        window.assignedPlayerName = playerName;
         
         // Show question section
         document.getElementById('assignedQuestion').textContent = window.assignedQuestion;
@@ -3835,11 +3837,12 @@
         window.registrationStep = 2;
         
       } else if (window.registrationStep === 2) {
-        // Step 2: Register player
+        // Step 2: Register player with assigned question and provided answer
         const nameInput = document.getElementById('newPlayerName');
         const answerInput = document.getElementById('secretAnswer');
-        const playerName = nameInput.value.trim();
+        const playerName = window.assignedPlayerName || nameInput.value.trim();
         const answer = answerInput.value.trim();
+        const question = window.assignedQuestion;
         
         if (!answer) {
           answerInput.style.borderColor = '#ef4444';
@@ -3861,28 +3864,44 @@
         button.disabled = true;
         
         try {
-          // Legacy registration removed - using PlayerAuthenticator
-          console.warn('Legacy registerNewPlayer called - should use PlayerAuthenticator');
-          
-          if (false) { // Disabled legacy path
-            // Success - set player and close modal
-            currentPlayer = playerName;
-            try { 
-              localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, currentPlayer); 
-            } catch(_) {}
+          // Use PlayerAuthenticator to create profile
+          if (window.playerAuthenticator) {
+            const result = await window.playerAuthenticator.createPlayerProfile(
+              eventCode,
+              playerName,
+              question,
+              answer
+            );
             
-            selectPlayer(playerName);
-            closeRegistrationModal();
-            
-            if (window.registrationResolve) {
-              window.registrationResolve(playerName);
-              window.registrationResolve = null;
+            if (result.success) {
+              // Success - set player and close modal
+              currentPlayer = playerName;
+              currentAuthenticationLevel = 'full';
+              
+              try { 
+                localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, currentPlayer); 
+              } catch(_) {}
+              
+              selectPlayer(playerName);
+              closeRegistrationModal();
+              
+              if (window.registrationResolve) {
+                window.registrationResolve(playerName);
+                window.registrationResolve = null;
+              }
+              
+              // Reload players and photos
+              await loadPlayers();
+              await loadPhotos(currentPlayer);
+              updatePlayerSelectionUI();
+            } else {
+              // Registration failed
+              answerInput.style.borderColor = '#ef4444';
+              answerInput.placeholder = result.error || 'Registration failed';
+              answerInput.value = '';
             }
           } else {
-            // Registration failed
-            answerInput.style.borderColor = '#ef4444';
-            answerInput.placeholder = 'Registration failed';
-            answerInput.value = '';
+            throw new Error('PlayerAuthenticator not available');
           }
         } catch (error) {
           console.error('Registration error:', error);
