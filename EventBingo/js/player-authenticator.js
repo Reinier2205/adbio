@@ -40,36 +40,50 @@ class PlayerAuthenticator {
         };
       }
 
-      // Get player session
-      const session = await this.sessionManager.getPlayerSession(eventCode);
-      if (!session) {
-        if (this.errorHandler) {
-          this.errorHandler._logError('authentication_session_not_found', {
-            eventCode: eventCode,
-            playerName: playerName
-          });
+      // Authenticate against backend worker
+      let isValid = false;
+      try {
+        const workerURL = window.workerURL 
+          || (window.boardController && window.boardController.workerURL)
+          || 'https://shy-recipe-5fb1.reinier-olivier.workers.dev/';
+        
+        const response = await fetch(`${workerURL}auth/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventCode,
+            playerName,
+            answer: providedAnswer
+          })
+        });
+
+        if (!response.ok) {
+          return {
+            success: false,
+            error: 'Authentication service unavailable',
+            canRetry: true
+          };
         }
-        return {
-          success: false,
-          error: 'Player session not found',
-          canRetry: false
-        };
-      }
 
-      // Verify player name matches
-      if (session.playerName !== playerName) {
-        return {
-          success: false,
-          error: 'Player name mismatch',
-          canRetry: false
-        };
+        const result = await response.json();
+        isValid = result.authenticated;
+      } catch (error) {
+        console.error('Backend authentication error:', error);
+        // Fallback to local session validation
+        const session = await this.sessionManager.getPlayerSession(eventCode);
+        if (!session || session.playerName !== playerName) {
+          return {
+            success: false,
+            error: 'Player session not found',
+            canRetry: false
+          };
+        }
+        
+        isValid = await this.sessionManager.validateSecretAnswer(
+          providedAnswer,
+          session.secretAnswerHash
+        );
       }
-
-      // Validate the secret answer
-      const isValid = await this.sessionManager.validateSecretAnswer(
-        providedAnswer,
-        session.secretAnswerHash
-      );
 
       if (isValid) {
         // Clear any failed attempts
@@ -238,16 +252,39 @@ class PlayerAuthenticator {
     const { viewOnly = true, title = 'Player Authentication' } = options;
 
     try {
-      const session = await this.sessionManager.getPlayerSession(options.eventCode);
-      if (!session) {
-        return {
-          success: false,
-          error: 'Player session not found'
-        };
+      // Fetch the player's question from backend
+      let secretQuestion = null;
+      try {
+        const workerURL = window.workerURL 
+          || (window.boardController && window.boardController.workerURL)
+          || 'https://shy-recipe-5fb1.reinier-olivier.workers.dev/';
+        
+        const response = await fetch(
+          `${workerURL}auth/question/${encodeURIComponent(options.eventCode)}/${encodeURIComponent(targetPlayerName)}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          secretQuestion = data.question;
+        }
+      } catch (error) {
+        console.error('Failed to fetch question from backend:', error);
+      }
+      
+      // Fallback to local session if backend fails
+      if (!secretQuestion) {
+        const session = await this.sessionManager.getPlayerSession(options.eventCode);
+        if (!session) {
+          return {
+            success: false,
+            error: 'Player session not found'
+          };
+        }
+        secretQuestion = session.secretQuestion;
       }
 
       // Create authentication modal
-      const modal = this._createAuthModal(targetPlayerName, session.secretQuestion, {
+      const modal = this._createAuthModal(targetPlayerName, secretQuestion, {
         viewOnly,
         title,
         attemptsLeft: this.maxAuthAttempts - this._getAttemptCount(targetPlayerName)
