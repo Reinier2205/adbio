@@ -705,16 +705,10 @@
           <span>📋</span>
           All Events
         </div>
-        <div style="display: flex; gap: 15px;">
-          <button class="btn btn-primary" onclick="startCreateEventWorkflow()">
-            <span>➕</span>
-            Create New Event
-          </button>
-          <button class="btn btn-secondary btn-small" onclick="testWorkerConnection()">
-            <span>🧪</span>
-            Test Connection
-          </button>
-        </div>
+        <button class="btn btn-primary" onclick="startCreateEventWorkflow()">
+          <span>➕</span>
+          Create New Event
+        </button>
       </div>
       
       <div id="eventsList">
@@ -1682,9 +1676,6 @@ Please generate 25 unique photo challenges following these guidelines.`;
               <button class="btn btn-small btn-secondary" onclick="viewEvent('${event.code}')">
                 <span>👁️</span> View
               </button>
-              <button class="btn btn-small btn-danger" onclick="deleteEvent('${event.code}')">
-                <span>🗑️</span> Delete
-              </button>
             </div>
           </div>
         `).join('');
@@ -1700,8 +1691,15 @@ Please generate 25 unique photo challenges following these guidelines.`;
     }
 
     function selectEventForManagement(eventCode) {
-      // This could be expanded to show detailed event management
-      // For now, we'll just show a basic management interface
+      // Password protection for management access
+      const password = prompt('Enter admin password to manage this event:');
+      
+      if (password !== 'BingoBoss') {
+        alert('Incorrect password. Access denied.');
+        return;
+      }
+      
+      // Password correct - proceed to management
       currentSelectedEvent = eventCode;
       
       document.getElementById('allEventsSection').classList.add('hidden');
