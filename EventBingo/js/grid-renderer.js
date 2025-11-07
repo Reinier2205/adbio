@@ -341,10 +341,13 @@ class GridRenderer {
       img.alt = square.challengeText;
       img.loading = 'lazy';
       img.style.cssText = 'width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; position: absolute !important; top: 0 !important; left: 0 !important; z-index: 1 !important; border: 2px solid red !important;';
-      
-      // Also try loading with crossOrigin attribute
-      img.crossOrigin = 'anonymous';
-      
+
+      // Create overlay that doesn't interfere with clicks (added before handlers to ensure availability)
+      const overlay = document.createElement('div');
+      overlay.className = 'square-overlay';
+      overlay.style.cssText = 'pointer-events: none; z-index: 2; position: absolute; top: 0; left: 0; right: 0; bottom: 0;';
+      overlay.innerHTML = '<div class="completion-indicator">✓</div>';
+
       // Add load/error handlers for debugging
       img.onload = () => {
         console.log(`GridRenderer: Image loaded successfully for square ${position}: ${photoUrl}`);
@@ -394,12 +397,6 @@ class GridRenderer {
         placeholder.title = 'Photo failed to load: ' + photoUrl;
         squareElement.insertBefore(placeholder, overlay);
       };
-      
-      // Create overlay that doesn't interfere with clicks
-      const overlay = document.createElement('div');
-      overlay.className = 'square-overlay';
-      overlay.style.cssText = 'pointer-events: none; z-index: 2; position: absolute; top: 0; left: 0; right: 0; bottom: 0;';
-      overlay.innerHTML = '<div class="completion-indicator">✓</div>';
       
       // Add elements to square
       squareElement.appendChild(img);
@@ -562,19 +559,17 @@ class GridRenderer {
    * @param {HTMLElement} grid - Grid container
    */
   setupLazyLoadingForGrid(grid) {
-    if (!this.performanceMonitor) return;
+    // Use native browser lazy-loading by default. If a performance monitor
+    // provides a helper, use it without clearing existing src attributes.
+    if (!this.performanceMonitor || typeof this.performanceMonitor.setupLazyLoading !== 'function') {
+      return;
+    }
 
     const images = grid.querySelectorAll('img[src]');
     images.forEach(img => {
-      // Convert to lazy loading if performance monitor is available
-      if (img.src && !img.classList.contains('lazy-loading')) {
-        const src = img.src;
-        img.dataset.src = src;
-        img.src = ''; // Clear src to prevent immediate loading
+      if (!img.classList.contains('lazy-loading')) {
         img.classList.add('lazy-loading');
-        if (typeof this.performanceMonitor.setupLazyLoading === 'function') {
-          this.performanceMonitor.setupLazyLoading(img);
-        }
+        this.performanceMonitor.setupLazyLoading(img);
       }
     });
   }
