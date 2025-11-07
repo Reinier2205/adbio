@@ -1510,6 +1510,50 @@
     body.dark-mode .player-name.view-only {
       color: var(--view-only-secondary, #fbbf24);
     }
+
+    /* Modern close button for fullscreen modal */
+    .modal-close-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      font-size: 24px;
+      font-weight: 300;
+      cursor: pointer;
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      transform: scale(1.1) rotate(90deg);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-close-btn:active {
+      transform: scale(0.95) rotate(90deg);
+    }
+
+    body.dark-mode .modal-close-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    body.dark-mode .modal-close-btn:hover {
+      background: rgba(255, 255, 255, 0.95);
+      color: #1f2937;
+    }
   </style>
 </head>
 <body>
@@ -1591,6 +1635,7 @@
 
   <!-- Full Screen Modal -->
   <div class="fullscreen-modal" id="fullscreenModal">
+    <button class="modal-close-btn" onclick="closeFullscreen()" title="Close">✕</button>
     <button class="nav-arrow left" id="prevPhotoBtn" onclick="navigateFullscreen(-1)">‹</button>
     <button class="nav-arrow right" id="nextPhotoBtn" onclick="navigateFullscreen(1)">›</button>
     <div class="fullscreen-content">
@@ -1600,7 +1645,6 @@
         <div class="fullscreen-challenge" id="fullscreenChallenge"></div>
       </div>
     </div>
-    <button class="fullscreen-close" onclick="closeFullscreen()">Close</button>
   </div>
 
   <!-- Include CSS for advanced progress visualization -->
@@ -1642,6 +1686,11 @@
     let selectedPlayer = null; // null means "All Players" is selected
     let currentToggleState = 'count';
 
+    // Function to go home (same as goBack but for consistency with nav icon)
+    function goHome() {
+      goBack();
+    }
+
     // Function to go back with preserved context
     function goBack() {
       // Try to get current player from URL params or localStorage
@@ -1662,7 +1711,8 @@
           playerName: playerToRestore,
           action: 'goBack',
           viewOnly: new URLSearchParams(window.location.search).get('viewOnly') === 'true',
-          boardState: boardController ? boardController.getState() : null
+          boardState: boardController ? boardController.getState() : null,
+          skipAuthentication: true  // Don't require auth when going home
         });
         
         statePreserver.trackUserAction('navigation', {

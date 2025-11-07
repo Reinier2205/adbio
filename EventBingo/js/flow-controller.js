@@ -92,6 +92,18 @@ class FlowController {
       const session = await this.sessionManager.getPlayerSession(this.eventCode);
       
       if (session) {
+        // Check if we should skip authentication (e.g., navigating home)
+        const restoredContext = this.restoreNavigationContext();
+        if (restoredContext && restoredContext.skipAuthentication) {
+          console.log('Skipping authentication due to skipAuthentication flag');
+          return {
+            action: 'continueWithSession',
+            eventCode: this.eventCode,
+            playerName: session.playerName,
+            reason: 'Skip authentication requested'
+          };
+        }
+        
         // Check if specific player was requested
         if (this.playerParam && this.playerParam !== session.playerName) {
           return {

@@ -2795,6 +2795,63 @@
       });
     }
 
+    // Select a player with authentication
+    async function selectPlayer(playerName) {
+      try {
+        // If selecting the same player, just reload
+        if (playerName === currentPlayer) {
+          await loadPhotos(currentPlayer);
+          return;
+        }
+        
+        // Check if we need authentication
+        const session = await window.sessionManager.getPlayerSession(eventCode);
+        
+        // If switching to a different player, require authentication
+        if (session && session.playerName !== playerName) {
+          // Prompt for authentication
+          const authResult = await window.playerAuthenticator.promptForAuthentication(
+            playerName,
+            { eventCode, viewOnly: true, title: 'Switch Player' }
+          );
+          
+          if (!authResult.success) {
+            console.log('Authentication cancelled or failed');
+            return;
+          }
+          
+          // Update authentication level
+          currentAuthenticationLevel = authResult.authenticationLevel || 'viewOnly';
+        }
+        
+        // Switch to the player
+        currentPlayer = playerName;
+        
+        // Save to localStorage
+        try {
+          localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, currentPlayer);
+          localStorage.setItem('eventbingo:currentPlayer', currentPlayer);
+        } catch(_) {}
+        
+        // Update UI
+        document.querySelectorAll('.player-circle').forEach(circle => {
+          circle.classList.remove('active');
+        });
+        const selectedCircle = Array.from(document.querySelectorAll('.player-circle'))
+          .find(c => c.title === playerName);
+        if (selectedCircle) {
+          selectedCircle.classList.add('active');
+        }
+        
+        // Reload photos for the selected player
+        await loadPhotos(currentPlayer);
+        
+      } catch (error) {
+        console.error('Error selecting player:', error);
+        alert('Failed to switch player. Please try again.');
+      }
+    }
+
     async function loadPlayers() {
       try {
         showLoading("Loading players...");
