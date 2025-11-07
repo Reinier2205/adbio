@@ -163,7 +163,14 @@ class PlayerAuthenticator {
 
       // Register with backend worker first
       try {
-        const workerURL = window.workerURL || 'https://eventbingo.reijier.workers.dev/';
+        // Get worker URL from window or BoardController or use default
+        let workerURL = window.workerURL 
+          || (window.boardController && window.boardController.workerURL)
+          || 'https://shy-recipe-5fb1.reinier-olivier.workers.dev/';
+        // Ensure workerURL ends with a slash
+        if (!workerURL.endsWith('/')) {
+          workerURL += '/';
+        }
         const response = await fetch(`${workerURL}auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
