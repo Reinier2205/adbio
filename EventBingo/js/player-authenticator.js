@@ -321,7 +321,11 @@ class PlayerAuthenticator {
           resolve({
             success: true,
             authenticationLevel: 'viewOnly',
-            playerData: session
+            playerData: {
+              playerName: targetPlayerName,
+              eventCode: options.eventCode,
+              viewOnly: true
+            }
           });
         };
 

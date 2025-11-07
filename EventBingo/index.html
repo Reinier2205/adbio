@@ -2804,12 +2804,16 @@
           return;
         }
         
-        // Check if we need authentication
-        const session = await window.sessionManager.getPlayerSession(eventCode);
+        // Check if we already have a session for this player
+        const existingSession = await window.sessionManager.getPlayerSession(eventCode);
         
-        // If switching to a different player, require authentication
-        if (session && session.playerName !== playerName) {
-          // Prompt for authentication
+        // If we have a session for this player, no need to authenticate
+        if (existingSession && existingSession.playerName === playerName) {
+          console.log('Already have session for this player, no authentication needed');
+          currentPlayer = playerName;
+          currentAuthenticationLevel = 'full';
+        } else {
+          // Need to authenticate to switch to this player
           const authResult = await window.playerAuthenticator.promptForAuthentication(
             playerName,
             { eventCode, viewOnly: true, title: 'Switch Player' }
@@ -2822,10 +2826,35 @@
           
           // Update authentication level
           currentAuthenticationLevel = authResult.authenticationLevel || 'viewOnly';
+          currentPlayer = playerName;
+          
+          // If full authentication, save the session locally so we don't ask again
+          if (authResult.authenticationLevel === 'full') {
+            // Fetch the question from backend to save locally
+            try {
+              const workerURL = window.workerURL || 
+                (window.boardController && window.boardController.workerURL) ||
+                'https://shy-recipe-5fb1.reinier-olivier.workers.dev/';
+              
+              const response = await fetch(
+                `${workerURL}auth/question/${encodeURIComponent(eventCode)}/${encodeURIComponent(playerName)}`
+              );
+              
+              if (response.ok) {
+                const data = await response.json();
+                // Save session locally with a dummy answer hash (we'll verify against backend anyway)
+                await window.sessionManager.savePlayerSession(
+                  eventCode,
+                  playerName,
+                  data.question,
+                  'authenticated' // Dummy answer since we verify against backend
+                );
+              }
+            } catch (error) {
+              console.error('Failed to save session locally:', error);
+            }
+          }
         }
-        
-        // Switch to the player
-        currentPlayer = playerName;
         
         // Save to localStorage
         try {
