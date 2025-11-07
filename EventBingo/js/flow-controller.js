@@ -526,6 +526,30 @@ class FlowController {
     try {
       const modal = document.createElement('div');
       modal.className = 'setup-modal-overlay';
+    // Generate random question from predefined list
+    const questions = [
+      "What is your go-to snack?",
+      "Favourite song right now?",
+      "Favourite colour?",
+      "What time of day do you like most?",
+      "Your comfort food?",
+      "Your favourite drink?",
+      "Your favourite cartoon growing up?",
+      "Your happy place?",
+      "What is your lucky number?",
+      "Coffee or tea?",
+      "Your favourite weekend activity?",
+      "What animal do you like most?",
+      "Your favourite season?",
+      "Your favourite movie or series?",
+      "Cats, dogs, or both?",
+      "Sweet or savoury?",
+      "Your favourite treat as a child?",
+      "Your favourite pizza topping?",
+      "A word that describes you today?"
+    ];
+    const assignedQuestion = questions[Math.floor(Math.random() * questions.length)];
+    
     modal.innerHTML = `
       <div class="setup-modal">
         <div class="setup-modal-header">
@@ -538,14 +562,16 @@ class FlowController {
             <input type="text" id="playerName" placeholder="Enter your name" maxlength="50" autocomplete="off" data-form-type="other" data-lpignore="true" />
           </div>
           <div class="setup-field">
-            <label for="secretQuestion">Secret Question</label>
-            <input type="text" id="secretQuestion" placeholder="e.g., What's your favorite color?" maxlength="100" autocomplete="off" data-form-type="other" data-lpignore="true" />
-            <small>This will be used to verify your identity when switching between players</small>
+            <label>🎲 Your Secret Question</label>
+            <div style="background: rgba(74, 144, 226, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #4a90e2; margin-bottom: 8px;">
+              <p style="margin: 0; font-weight: 600; color: #333; font-size: 1.05rem;">${assignedQuestion}</p>
+            </div>
+            <small>We've assigned you this question - remember your answer to verify your identity later</small>
           </div>
           <div class="setup-field">
-            <label for="secretAnswer">Secret Answer</label>
+            <label for="secretAnswer">Your Answer</label>
             <input type="text" id="secretAnswer" placeholder="Enter your answer" maxlength="50" autocomplete="off" data-form-type="other" data-lpignore="true" />
-            <small>Keep this simple and memorable</small>
+            <small>Keep this simple and memorable - you'll need it to upload photos on any device</small>
           </div>
           <div class="setup-error" style="display: none;"></div>
         </div>
@@ -559,6 +585,9 @@ class FlowController {
         </div>
       </div>
     `;
+    
+    // Store the assigned question on the modal
+    modal.assignedQuestion = assignedQuestion;
 
     // Add styles
     this._addSetupModalStyles();
@@ -587,11 +616,11 @@ class FlowController {
     // Modal methods
     modal.submit = () => {
       const playerName = modal.querySelector('#playerName').value.trim();
-      const secretQuestion = modal.querySelector('#secretQuestion').value.trim();
       const secretAnswer = modal.querySelector('#secretAnswer').value.trim();
       
       if (modal.onSubmit) {
-        modal.onSubmit(playerName, secretQuestion, secretAnswer);
+        // Use the assigned question stored on the modal
+        modal.onSubmit(playerName, modal.assignedQuestion, secretAnswer);
       }
     };
 
