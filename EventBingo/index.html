@@ -2336,6 +2336,30 @@
       showLeaderboard();
     }
 
+    // Auto-open leaderboard if requested via URL parameter
+    (function checkAutoOpenLeaderboard() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('showLeaderboard') === 'true') {
+          // Wait for page to be ready, then open leaderboard
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+              setTimeout(() => showLeaderboard(), 500);
+            });
+          } else {
+            setTimeout(() => showLeaderboard(), 500);
+          }
+          
+          // Clean up URL parameter
+          urlParams.delete('showLeaderboard');
+          const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+          window.history.replaceState({}, '', newUrl);
+        }
+      } catch (e) {
+        console.error('Error checking auto-open leaderboard:', e);
+      }
+    })();
+
     function showCarousel() {
       const carouselModal = document.getElementById('carouselModal');
       carouselModal.classList.add('show');

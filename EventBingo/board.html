@@ -1922,7 +1922,13 @@
       setActiveNavIcon(2);
       const params = new URLSearchParams(window.location.search);
       const evt = params.get('event') || (typeof eventCode !== 'undefined' ? eventCode : 'default');
-      window.location.href = `index.html?event=${encodeURIComponent(evt)}`;
+      const ply = params.get('player') || (typeof currentPlayer !== 'undefined' ? currentPlayer : '');
+      
+      // Navigate to index with showLeaderboard parameter
+      const url = ply
+        ? `index.html?event=${encodeURIComponent(evt)}&player=${encodeURIComponent(ply)}&showLeaderboard=true`
+        : `index.html?event=${encodeURIComponent(evt)}&showLeaderboard=true`;
+      window.location.href = url;
     }
 
     function shareBingo() {
