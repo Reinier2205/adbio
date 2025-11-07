@@ -2013,9 +2013,47 @@
       }
     }
 
-    function goHome() {
-      setActiveNavIcon(0);
-      // Already on home view
+    async function goHome() {
+      try {
+        setActiveNavIcon(0);
+        let savedEvent = null;
+        // Prefer SessionManager (async), fallback to localStorage
+        if (window.sessionManager && typeof window.sessionManager.getLastUsedEvent === 'function') {
+          try {
+            savedEvent = await window.sessionManager.getLastUsedEvent();
+          } catch (_) {}
+        }
+        if (!savedEvent) {
+          try { savedEvent = localStorage.getItem('eventbingo:lastEvent') || null; } catch (_) {}
+        }
+
+        const eventToUse = savedEvent || (typeof eventCode !== 'undefined' && eventCode) || 'default';
+
+        // Resolve last player for that event
+        let savedPlayer = '';
+        try { savedPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventToUse}`) || ''; } catch (_) {}
+        if (!savedPlayer) {
+          try { savedPlayer = localStorage.getItem('eventbingo:currentPlayer') || ''; } catch (_) {}
+        }
+
+        const targetUrl = savedPlayer
+          ? `index.html?event=${encodeURIComponent(eventToUse)}&player=${encodeURIComponent(savedPlayer)}`
+          : `index.html?event=${encodeURIComponent(eventToUse)}`;
+        if (window.location.href.indexOf(targetUrl) === -1) {
+          window.location.href = targetUrl;
+        } else {
+          // If already on the same URL, simulate initial load behaviors
+          createGrid();
+          if (savedPlayer) {
+            await loadPhotos(savedPlayer);
+          }
+          await loadPlayers();
+        }
+      } catch (_) {
+        // Fallback: just reload to index with current event
+        const fallbackEvent = (typeof eventCode !== 'undefined' && eventCode) ? eventCode : 'default';
+        window.location.href = `index.html?event=${encodeURIComponent(fallbackEvent)}`;
+      }
     }
 
 
@@ -2240,8 +2278,30 @@
     }
 
     // Remove search from nav icon indices
-    function goHome() {
-      setActiveNavIcon(0);
+    async function goHome() {
+      try {
+        setActiveNavIcon(0);
+        let savedEvent = null;
+        if (window.sessionManager && typeof window.sessionManager.getLastUsedEvent === 'function') {
+          try { savedEvent = await window.sessionManager.getLastUsedEvent(); } catch (_) {}
+        }
+        if (!savedEvent) {
+          try { savedEvent = localStorage.getItem('eventbingo:lastEvent') || null; } catch (_) {}
+        }
+        const eventToUse = savedEvent || (typeof eventCode !== 'undefined' && eventCode) || 'default';
+        let savedPlayer = '';
+        try { savedPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventToUse}`) || ''; } catch (_) {}
+        if (!savedPlayer) {
+          try { savedPlayer = localStorage.getItem('eventbingo:currentPlayer') || ''; } catch (_) {}
+        }
+        const targetUrl = savedPlayer
+          ? `index.html?event=${encodeURIComponent(eventToUse)}&player=${encodeURIComponent(savedPlayer)}`
+          : `index.html?event=${encodeURIComponent(eventToUse)}`;
+        window.location.href = targetUrl;
+      } catch (_) {
+        const fallbackEvent = (typeof eventCode !== 'undefined' && eventCode) ? eventCode : 'default';
+        window.location.href = `index.html?event=${encodeURIComponent(fallbackEvent)}`;
+      }
     }
 
     function openBoard() {
