@@ -2084,6 +2084,17 @@
         
         // Initialize advanced progress UI
         advancedProgressUI.initialize(advancedProgressVisualizer);
+
+        // Remove the advanced "Sort Challenges" control entirely when advanced is shown
+        (function removeAdvancedSort() {
+          const sortEl = document.getElementById('challengeSort');
+          if (sortEl && sortEl.parentElement) {
+            sortEl.parentElement.remove();
+          } else {
+            // Retry shortly in case controls were not yet added to the DOM
+            setTimeout(removeAdvancedSort, 0);
+          }
+        })();
         
         showLoading(false);
       } catch (error) {
