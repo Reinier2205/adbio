@@ -152,6 +152,12 @@ function getAuthKey(eventCode, playerName) {
   return `auth_${eventCode}_${playerName}`;
 }
 
+// Helper function to get authentication key
+function getProgessKey(eventCode, playerName) {
+  return `${eventCode}_${playerName}`;
+}
+
+
 // Admin request handler
 async function handleAdminRequest(request, env, corsHeaders) {
   const url = new URL(request.url);
@@ -1175,8 +1181,17 @@ async function handleAuthRequest(request, env, corsHeaders) {
       // Check if player already exists
       const authKey = getAuthKey(eventCode, playerName);
       const existingAuth = await env.EventBingoProgress.get(authKey);
-      
+
+      const progressKey = getProgessKey(eventCode, playerName);
+      const progress = await env.EventBingoProgress.get(progressKey);
+
       if (existingAuth) {
+        // Ensure each user when authenticated has progress if created
+        if (!progress) {
+          progress = { completedSquares: [], photos: {} };
+          await env.EventBingoProgress.put(progressKey, JSON.stringify({ completedSquares: [], photos: {} }));
+        }
+
         return new Response("Player already exists", { status: 409, headers: corsHeaders });
       }
 
@@ -1194,6 +1209,9 @@ async function handleAuthRequest(request, env, corsHeaders) {
       };
 
       await env.EventBingoProgress.put(authKey, JSON.stringify(authData));
+
+      // Set empty progess on event for new player
+      await env.EventBingoProgress.put(progressKey, JSON.stringify({ completedSquares: [], photos: {} }));
 
       return new Response(JSON.stringify({ 
         success: true, 
@@ -1460,7 +1478,7 @@ export default {
 
         // Only update progress for compressed uploads (the main upload)
         if (type === 'compressed') {
-          const progressKey = `${eventCode}_${player}`;
+          const progressKey = getProgessKey(eventCode, player);
           let progress = await env.EventBingoProgress.get(progressKey);
           
           if (progress) {
