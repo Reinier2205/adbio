@@ -2250,7 +2250,7 @@
       }
     }
     
-    async function signInAsPlayer(playerName) {
+    async function signInAsPlayer(playerName, secretAnswer = null) {
       try {
         // Use PlayerAuthenticator to authenticate
         if (window.playerAuthenticator) {
@@ -2272,7 +2272,10 @@
             currentAuthenticationLevel = 'full';
             document.body.classList.remove('view-only-mode');
             
-            // Save to localStorage
+            // Session is now saved by PlayerAuthenticator.promptForAuthentication()
+            console.log('✅ Signed in successfully - session saved to SessionManager');
+            
+            // Save to legacy localStorage for compatibility
             try {
               localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName);
               localStorage.setItem('eventbingo:currentPlayer', playerName);
@@ -4975,9 +4978,21 @@
             if (flowResult.action === 'sessionLoaded') {
               // Session loaded, initialize with existing data
               eventCode = flowResult.eventCode;
-              currentPlayer = flowResult.playerName;
               
-              // Authentication state managed by SessionManager
+              // Only set player variables if we have a playerName (session exists)
+              if (flowResult.playerName) {
+                currentPlayer = flowResult.playerName;
+                viewingPlayer = flowResult.playerName;
+                currentAuthenticationLevel = 'full';
+                console.log('✅ Session restored successfully:', { 
+                  currentPlayer, 
+                  viewingPlayer, 
+                  authLevel: currentAuthenticationLevel,
+                  eventCode: flowResult.eventCode
+                });
+              } else {
+                console.log('ℹ️ No session found - user needs to sign in manually');
+              }
               
               // Save current state for context preservation
               statePreserver.saveNavigationState({
@@ -5114,14 +5129,13 @@
           }
         }
         
-        // Set current player from session
+        // Set current player from session (already set in DOMContentLoaded handler)
+        // Just update UI and load data
         if (flowResult.playerName) {
-          currentPlayer = flowResult.playerName;
-          
-          // Authentication state managed by SessionManager
+          // Variables already set: currentPlayer, viewingPlayer, currentAuthenticationLevel
           
           // Update UI based on authentication
-          // Authentication UI updates now handled by SessionManager
+          updateUserIcon(); // Update sign-out button visibility
           
           // Update player selection UI if it exists
           updatePlayerSelectionUI();
@@ -5306,37 +5320,15 @@
     }
 
     async function initializeApp() {
-      // Check for player in URL params - for VIEW ONLY, not for setting signed-in user
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlPlayer = urlParams.get('player');
-      const viewOnlyPlayer = urlParams.get('viewOnly') === 'true' && urlPlayer ? urlPlayer : null;
+      // No longer reading player from URL - only from SessionManager/localStorage
+      // This simplifies the logic and prevents confusion
       
-      // Only read signed-in user from localStorage
-      if (!viewOnlyPlayer) {
-        try {
-          const savedPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || 
-                             localStorage.getItem('eventbingo:currentPlayer') || '';
-          if (savedPlayer) {
-            currentPlayer = savedPlayer;
-            viewingPlayer = savedPlayer; // Initially viewing own photos
-          }
-        } catch(_) {}
-      } else {
-        // View-only mode: use URL player for viewing but don't change signed-in user
-        try {
-          const savedPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || 
-                             localStorage.getItem('eventbingo:currentPlayer') || '';
-          if (savedPlayer) {
-            currentPlayer = savedPlayer;
-          }
-        } catch(_) {}
-        viewingPlayer = viewOnlyPlayer;
-        currentAuthenticationLevel = 'viewOnly';
-        document.body.classList.add('view-only-mode');
-        if (viewOnlyMode) {
-          viewOnlyMode.activateViewOnlyMode(viewOnlyPlayer, { eventCode, context: 'urlParameter' });
-        }
-      }
+      // Note: Player state is now managed by:
+      // 1. SessionManager (eventbingo:session:eventCode) - primary source
+      // 2. Legacy localStorage (eventbingo:lastPlayer:eventCode) - fallback
+      // 3. FlowController handles restoration on page load
+      
+      // Don't set currentPlayer here - let FlowController handle it
       
       // Load event data and squares
       if (eventCode && eventCode !== 'default') {
@@ -5490,9 +5482,11 @@
           if (result.success) {
             // Player created successfully
             currentPlayer = result.playerName;
+            viewingPlayer = result.playerName;
             currentAuthenticationLevel = 'full';
             
             // Update UI
+            updateUserIcon();
             await loadPlayers();
             await loadPhotos(currentPlayer);
             updatePlayerSelectionUI();

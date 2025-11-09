@@ -11,7 +11,7 @@ class FlowController {
     this.currentPage = this._detectCurrentPage();
     this.urlParams = new URLSearchParams(window.location.search);
     this.eventCode = this.urlParams.get('event');
-    this.playerParam = this.urlParams.get('player');
+    // Removed: this.playerParam - no longer using player in URL
   }
 
   /**
@@ -102,29 +102,6 @@ class FlowController {
       const session = await this.sessionManager.getPlayerSession(this.eventCode);
       
       if (session) {
-        // Check if we should skip authentication (e.g., navigating home)
-        const restoredContext = this.restoreNavigationContext();
-        if (restoredContext && restoredContext.skipAuthentication) {
-          console.log('Skipping authentication due to skipAuthentication flag');
-          return {
-            action: 'continueWithSession',
-            eventCode: this.eventCode,
-            playerName: session.playerName,
-            reason: 'Skip authentication requested'
-          };
-        }
-        
-        // Check if specific player was requested
-        if (this.playerParam && this.playerParam !== session.playerName) {
-          return {
-            action: 'playerSwitching',
-            eventCode: this.eventCode,
-            currentPlayer: session.playerName,
-            targetPlayer: this.playerParam,
-            reason: 'Different player requested than current session'
-          };
-        }
-        
         // Continue with existing session
         return {
           action: 'continueWithSession',
@@ -206,10 +183,10 @@ class FlowController {
     try {
       console.log(`Routing to game interface: ${eventCode} / ${playerName}`);
       
-      // Update URL if needed
-      const targetUrl = `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerName)}`;
+      // Update URL if needed (only event code, no player parameter)
+      const targetUrl = `index.html?event=${encodeURIComponent(eventCode)}`;
       
-      if (this.currentPage !== 'index.html' || window.location.search !== `?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerName)}`) {
+      if (this.currentPage !== 'index.html' || window.location.search !== `?event=${encodeURIComponent(eventCode)}`) {
         // Preserve navigation context
         this._preserveNavigationContext({
           fromPage: this.currentPage,
@@ -261,8 +238,8 @@ class FlowController {
           // Full access granted, navigate to player's interface
           return await this.routeToGameInterface(eventCode, targetPlayer);
         } else if (authResult.authenticationLevel === 'viewOnly') {
-          // View-only access, navigate to board view
-          const boardUrl = `board.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(targetPlayer)}&viewOnly=true`;
+          // View-only access, navigate to board view (no player in URL)
+          const boardUrl = `board.html?event=${encodeURIComponent(eventCode)}&viewOnly=true`;
           
           this._preserveNavigationContext({
             fromPage: this.currentPage,

@@ -93,7 +93,8 @@ class PlayerAuthenticator {
         const playerData = {
           playerName: playerName,
           eventCode: eventCode,
-          authenticated: true
+          authenticated: true,
+          providedAnswer: providedAnswer // Include for session creation
         };
         
         return {
@@ -306,6 +307,27 @@ class PlayerAuthenticator {
           );
           
           if (result.success) {
+            // Save/update session in SessionManager after successful authentication
+            try {
+              const existingSession = await this.sessionManager.getPlayerSession(options.eventCode);
+              
+              if (!existingSession || existingSession.playerName !== targetPlayerName) {
+                // Session doesn't exist locally - create it
+                console.log('Creating local session after authentication');
+                await this.sessionManager.savePlayerSession(
+                  options.eventCode,
+                  targetPlayerName,
+                  secretQuestion,
+                  answer
+                );
+                console.log('✅ Local session created');
+              } else {
+                console.log('✅ Local session already exists');
+              }
+            } catch (error) {
+              console.error('Failed to save session after authentication:', error);
+            }
+            
             modal.close();
             resolve(result);
           } else {
