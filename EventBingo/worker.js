@@ -1188,7 +1188,6 @@ async function handleAuthRequest(request, env, corsHeaders) {
       if (existingAuth) {
         // Ensure each user when authenticated has progress if created
         if (!progress) {
-          progress = { completedSquares: [], photos: {} };
           await env.EventBingoProgress.put(progressKey, JSON.stringify({ completedSquares: [], photos: {} }));
         }
 
