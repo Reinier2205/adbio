@@ -882,7 +882,13 @@
       try {
         const urlParams = new URLSearchParams(window.location.search);
         let eventCode = urlParams.get('event');
-        const player = urlParams.get('player') || '';
+        
+        // Read signed-in player from localStorage only, not from URL
+        let player = '';
+        try {
+          player = localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || 
+                   localStorage.getItem('eventbingo:currentPlayer') || '';
+        } catch(_) {}
         
         console.log('openCarousel: eventCode =', eventCode, 'player =', player);
         
@@ -931,9 +937,8 @@
           });
         }
         
-        const carouselUrl = player 
-          ? `carousel.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(player)}`
-          : `carousel.html?event=${encodeURIComponent(eventCode)}`;
+        // Navigate without player parameter - will be read from localStorage
+        const carouselUrl = `carousel.html?event=${encodeURIComponent(eventCode)}`;
         window.location.href = carouselUrl;
       } catch (error) {
         console.error('Failed to navigate to carousel:', error);
@@ -1331,8 +1336,8 @@
             // Show bottom navigation since we're continuing with a valid event
             document.getElementById('bottomNav').style.display = 'flex';
             
-            // Navigate to game interface
-            window.location.href = `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerName)}`;
+            // Navigate to game interface - player will be read from localStorage
+            window.location.href = `index.html?event=${encodeURIComponent(eventCode)}`;
           } catch (error) {
             console.error('Failed to continue with saved session:', error);
           }
@@ -1655,7 +1660,8 @@
                 action: 'recoveryNavigation'
               });
             }
-            window.location.href = `index.html?event=${encodeURIComponent(option.eventCode)}&player=${encodeURIComponent(option.playerName)}`;
+            // Navigate without player parameter - will be read from localStorage
+            window.location.href = `index.html?event=${encodeURIComponent(option.eventCode)}`;
             break;
             
           case 'selectSession':
