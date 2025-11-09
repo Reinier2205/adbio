@@ -2068,16 +2068,233 @@
       }
     }
     
-    function signOut() {
+    // Show sign-in modal for returning users
+    async function showSignInModal() {
+      try {
+        // Get all players for this event
+        const res = await fetch(`${workerURL}players?event=${eventCode}`);
+        if (!res.ok) {
+          throw new Error('Failed to load players');
+        }
+        const players = await res.json();
+        
+        if (players.length === 0) {
+          alert('No players found for this event. Click "+ Add Player" to create a new player.');
+          return;
+        }
+        
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'signInModal';
+        modal.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+          animation: fadeIn 0.2s ease;
+        `;
+        
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: ${document.body.classList.contains('dark-mode') ? '#1f2937' : 'white'};
+          border-radius: 16px;
+          padding: 24px;
+          max-width: 500px;
+          width: 90%;
+          max-height: 80vh;
+          overflow-y: auto;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        `;
+        
+        modalContent.innerHTML = `
+          <h2 style="margin: 0 0 20px 0; color: ${document.body.classList.contains('dark-mode') ? '#ffffff' : '#1f2937'};">
+            Sign In
+          </h2>
+          <p style="margin: 0 0 20px 0; color: ${document.body.classList.contains('dark-mode') ? '#d1d5db' : '#6b7280'};">
+            Select your player to sign in:
+          </p>
+          <div id="playerList" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Players will be added here -->
+          </div>
+          <button onclick="closeSignInModal()" style="
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: ${document.body.classList.contains('dark-mode') ? '#374151' : '#e5e7eb'};
+            color: ${document.body.classList.contains('dark-mode') ? '#e5e7eb' : '#374151'};
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          ">
+            Cancel
+          </button>
+        `;
+        
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Add players to the list
+        const playerList = document.getElementById('playerList');
+        players.forEach(player => {
+          const playerButton = document.createElement('button');
+          playerButton.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border: 2px solid ${document.body.classList.contains('dark-mode') ? '#374151' : '#e5e7eb'};
+            border-radius: 12px;
+            background: ${document.body.classList.contains('dark-mode') ? '#374151' : '#f9fafb'};
+            color: ${document.body.classList.contains('dark-mode') ? '#ffffff' : '#1f2937'};
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            text-align: left;
+          `;
+          
+          playerButton.innerHTML = `
+            <div style="
+              width: 50px;
+              height: 50px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, var(--primary), var(--secondary));
+              color: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1.5rem;
+              flex-shrink: 0;
+            ">
+              ${getPlayerIcon(player.name)}
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; margin-bottom: 4px;">${player.name}</div>
+              <div style="font-size: 0.85rem; opacity: 0.7;">${player.count || 0} / ${squares.length} completed</div>
+            </div>
+          `;
+          
+          playerButton.onmouseover = () => {
+            playerButton.style.borderColor = 'var(--primary)';
+            playerButton.style.transform = 'translateY(-2px)';
+            playerButton.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+          };
+          
+          playerButton.onmouseout = () => {
+            playerButton.style.borderColor = document.body.classList.contains('dark-mode') ? '#374151' : '#e5e7eb';
+            playerButton.style.transform = 'translateY(0)';
+            playerButton.style.boxShadow = 'none';
+          };
+          
+          playerButton.onclick = () => signInAsPlayer(player.name);
+          
+          playerList.appendChild(playerButton);
+        });
+        
+        // Close on background click
+        modal.onclick = (e) => {
+          if (e.target === modal) {
+            closeSignInModal();
+          }
+        };
+        
+      } catch (error) {
+        console.error('Failed to show sign-in modal:', error);
+        alert('Failed to load players. Please try again.');
+      }
+    }
+    
+    function closeSignInModal() {
+      const modal = document.getElementById('signInModal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+    
+    async function signInAsPlayer(playerName) {
+      try {
+        // Use PlayerAuthenticator to authenticate
+        if (window.playerAuthenticator) {
+          const authResult = await window.playerAuthenticator.promptForAuthentication(
+            playerName,
+            { eventCode, viewOnly: false, title: 'Sign In' }
+          );
+          
+          if (!authResult.success) {
+            console.log('Authentication cancelled or failed');
+            return;
+          }
+          
+          // Check if authentication was successful (not view-only)
+          if (authResult.authenticationLevel === 'full') {
+            // Sign in the user
+            currentPlayer = playerName;
+            viewingPlayer = playerName;
+            currentAuthenticationLevel = 'full';
+            document.body.classList.remove('view-only-mode');
+            
+            // Save to localStorage
+            try {
+              localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName);
+              localStorage.setItem('eventbingo:currentPlayer', playerName);
+            } catch(_) {}
+            
+            // Close modal
+            closeSignInModal();
+            
+            // Update UI
+            updateUserIcon();
+            await loadPlayers();
+            await loadPhotos(playerName);
+            
+            // Show success message
+            console.log(`Successfully signed in as ${playerName}`);
+          } else {
+            alert('Authentication failed. Please try again with the correct secret answer.');
+          }
+        } else {
+          throw new Error('PlayerAuthenticator not available');
+        }
+      } catch (error) {
+        console.error('Failed to sign in:', error);
+        alert('Failed to sign in. Please try again.');
+      }
+    }
+    
+    async function signOut() {
       if (!confirm('Are you sure you want to sign out?')) {
         return;
       }
       
-      // Clear localStorage
+      // Clear localStorage for all possible keys
       try {
         localStorage.removeItem('eventbingo:currentPlayer');
         localStorage.removeItem(`eventbingo:lastPlayer:${eventCode}`);
+        
+        // Also clear any other event-specific keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('currentPlayer') || key.includes('lastPlayer'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
       } catch(_) {}
+      
+      // Clear session manager data
+      if (window.sessionManager && typeof window.sessionManager.clearPlayerSession === 'function') {
+        try {
+          await window.sessionManager.clearPlayerSession(eventCode);
+        } catch(_) {}
+      }
       
       // Clear current player and viewing player
       currentPlayer = '';
@@ -3076,15 +3293,17 @@
           separator.className = "player-separator";
           playerScroll.appendChild(separator);
         } else {
-          // No user signed in - show generic icon
+          // No user signed in - show generic icon with click to sign in
           const genericItem = document.createElement("div");
           genericItem.className = "player-item";
           
           const genericCircle = document.createElement("div");
           genericCircle.className = "player-circle";
           genericCircle.textContent = '👤';
-          genericCircle.title = 'No user signed in - Select a player';
+          genericCircle.title = 'Click to sign in';
           genericCircle.style.opacity = '0.5';
+          genericCircle.style.cursor = 'pointer';
+          genericCircle.onclick = () => showSignInModal();
           
           const genericName = document.createElement("div");
           genericName.className = "player-name";

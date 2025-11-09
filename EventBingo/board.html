@@ -2272,16 +2272,33 @@
       }
     }
     
-    function signOut() {
+    async function signOut() {
       if (!confirm('Are you sure you want to sign out?')) {
         return;
       }
       
-      // Clear localStorage
+      // Clear localStorage for all possible keys
       try {
         localStorage.removeItem('eventbingo:currentPlayer');
         localStorage.removeItem(`eventbingo:lastPlayer:${eventCode}`);
+        
+        // Also clear any other event-specific keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('currentPlayer') || key.includes('lastPlayer'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
       } catch(_) {}
+      
+      // Clear session manager data
+      if (window.sessionManager && typeof window.sessionManager.clearPlayerSession === 'function') {
+        try {
+          await window.sessionManager.clearPlayerSession(eventCode);
+        } catch(_) {}
+      }
       
       // Clear current player
       currentPlayer = '';
@@ -2344,15 +2361,20 @@
         separator.className = 'player-separator';
         playerScroll.appendChild(separator);
       } else {
-        // No user signed in - show generic icon
+        // No user signed in - show generic icon with click to sign in
         const genericItem = document.createElement('div');
         genericItem.className = 'player-item';
         
         const genericCircle = document.createElement('div');
         genericCircle.className = 'player-circle';
         genericCircle.textContent = '👤';
-        genericCircle.title = 'No user signed in - Select a player';
+        genericCircle.title = 'Click to sign in';
         genericCircle.style.opacity = '0.5';
+        genericCircle.style.cursor = 'pointer';
+        genericCircle.onclick = () => {
+          // Redirect to index.html to sign in
+          window.location.href = `index.html?event=${encodeURIComponent(eventCode)}`;
+        };
         
         const genericName = document.createElement('div');
         genericName.className = 'player-name';
