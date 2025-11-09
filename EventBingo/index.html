@@ -2122,9 +2122,24 @@
           <div id="playerList" style="display: flex; flex-direction: column; gap: 12px;">
             <!-- Players will be added here -->
           </div>
-          <button onclick="closeSignInModal()" style="
+          <button id="registerNewPlayerBtn" style="
             width: 100%;
             margin-top: 20px;
+            padding: 14px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+          ">
+            + Register New Player
+          </button>
+          <button onclick="closeSignInModal()" style="
+            width: 100%;
+            margin-top: 12px;
             padding: 12px;
             border: none;
             border-radius: 8px;
@@ -2198,6 +2213,23 @@
           playerList.appendChild(playerButton);
         });
         
+        // Add register button handler
+        const registerBtn = document.getElementById('registerNewPlayerBtn');
+        if (registerBtn) {
+          registerBtn.onmouseover = () => {
+            registerBtn.style.background = 'var(--primary)';
+            registerBtn.style.color = 'white';
+          };
+          registerBtn.onmouseout = () => {
+            registerBtn.style.background = 'transparent';
+            registerBtn.style.color = 'var(--primary)';
+          };
+          registerBtn.onclick = () => {
+            closeSignInModal();
+            registerNewPlayer();
+          };
+        }
+        
         // Close on background click
         modal.onclick = (e) => {
           if (e.target === modal) {
@@ -2265,6 +2297,104 @@
       } catch (error) {
         console.error('Failed to sign in:', error);
         alert('Failed to sign in. Please try again.');
+      }
+    }
+    
+    async function registerNewPlayer() {
+      try {
+        // Use FlowController's setup modal if available
+        if (window.flowController && typeof window.flowController._showFirstTimeSetupModal === 'function') {
+          const setupResult = await window.flowController._showFirstTimeSetupModal(eventCode);
+          
+          if (setupResult.success) {
+            // Sign in the new player
+            currentPlayer = setupResult.playerName;
+            viewingPlayer = setupResult.playerName;
+            currentAuthenticationLevel = 'full';
+            document.body.classList.remove('view-only-mode');
+            
+            // Save to localStorage
+            try {
+              localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, setupResult.playerName);
+              localStorage.setItem('eventbingo:currentPlayer', setupResult.playerName);
+            } catch(_) {}
+            
+            // Update UI
+            updateUserIcon();
+            await loadPlayers();
+            await loadPhotos(setupResult.playerName);
+            
+            console.log(`Successfully registered and signed in as ${setupResult.playerName}`);
+          }
+          // If cancelled or failed, just return (modal handles error messages)
+          return;
+        }
+        
+        // Fallback to simple prompts if FlowController not available
+        const playerName = prompt('Enter your name:');
+        if (!playerName || !playerName.trim()) {
+          return;
+        }
+        
+        // Check if player already exists
+        const res = await fetch(`${workerURL}players?event=${eventCode}`);
+        if (res.ok) {
+          const players = await res.json();
+          const existingPlayer = players.find(p => p.name.toLowerCase() === playerName.trim().toLowerCase());
+          
+          if (existingPlayer) {
+            const switchToExisting = confirm(`${playerName} already exists. Would you like to sign in as this player instead?`);
+            if (switchToExisting) {
+              showSignInModal();
+            }
+            return;
+          }
+        }
+        
+        const secretQuestion = prompt('Create a secret question (for signing in later):');
+        if (!secretQuestion || !secretQuestion.trim()) {
+          return;
+        }
+        
+        const secretAnswer = prompt(`Answer to: ${secretQuestion}`);
+        if (!secretAnswer || !secretAnswer.trim()) {
+          return;
+        }
+        
+        // Create player profile using PlayerAuthenticator
+        if (window.playerAuthenticator) {
+          const result = await window.playerAuthenticator.createPlayerProfile(
+            eventCode,
+            playerName.trim(),
+            secretQuestion.trim(),
+            secretAnswer.trim()
+          );
+          
+          if (result.success) {
+            currentPlayer = playerName.trim();
+            viewingPlayer = playerName.trim();
+            currentAuthenticationLevel = 'full';
+            document.body.classList.remove('view-only-mode');
+            
+            try {
+              localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName.trim());
+              localStorage.setItem('eventbingo:currentPlayer', playerName.trim());
+            } catch(_) {}
+            
+            updateUserIcon();
+            await loadPlayers();
+            await loadPhotos(playerName.trim());
+            
+            alert(`Welcome, ${playerName}! You're now signed in.`);
+          } else {
+            alert('Failed to register. Please try again.');
+          }
+        } else {
+          throw new Error('PlayerAuthenticator not available');
+        }
+      } catch (error) {
+        console.error('Failed to register new player:', error);
+        alert('Failed to register. Please try again.');
       }
     }
     
@@ -4542,19 +4672,7 @@
         });
       }
 
-      // Prompt immediately on page load if no player is selected yet
-      setTimeout(async () => {
-        if (!currentPlayer && !hasPromptedForPlayer) {
-          hasPromptedForPlayer = true;
-          const name = await promptForPlayerSelection();
-          if (name) {
-            currentPlayer = name;
-            createGrid();
-            loadPhotos(currentPlayer);
-            loadPlayers();
-          }
-        }
-      }, 300);
+      // Removed automatic prompt - users now click "Not signed in" to sign in or register
     }
 
     async function loadEventInfo() {
