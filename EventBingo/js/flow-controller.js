@@ -32,6 +32,16 @@ class FlowController {
         case 'continueWithSession':
           return await this.routeToGameInterface(intent.eventCode, intent.playerName);
           
+        case 'continueWithoutSession':
+          // User needs to sign in manually - don't auto-prompt
+          return {
+            success: true,
+            action: 'sessionLoaded',
+            eventCode: intent.eventCode,
+            playerName: null,
+            reason: 'No session - user must sign in manually'
+          };
+          
         case 'firstTimeSetup':
           return await this.routeToFirstTimeSetup(intent.eventCode);
           
@@ -133,11 +143,11 @@ class FlowController {
         };
       }
 
-      // No session, need first-time setup
+      // No session - user needs to sign in manually (don't auto-prompt)
       return {
-        action: 'firstTimeSetup',
+        action: 'continueWithoutSession',
         eventCode: this.eventCode,
-        reason: 'No existing session for event'
+        reason: 'No existing session for event - user must sign in manually'
       };
     } catch (error) {
       console.error('Error determining user intent:', error);

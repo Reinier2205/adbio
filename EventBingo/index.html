@@ -51,6 +51,78 @@
       top: 0;
       z-index: 1000;
       backdrop-filter: blur(10px);
+      gap: 12px;
+    }
+    
+    .user-status-section {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    
+    .user-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+      color: #6b7280;
+      border: 2px solid #9ca3af;
+      flex-shrink: 0;
+    }
+    
+    .user-icon.signed-in {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: 2px solid var(--primary);
+    }
+    
+    .sign-out-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: white;
+      color: #374151;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    
+    .sign-out-btn:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+    
+    .sign-out-btn:active {
+      transform: scale(0.95);
+    }
+    
+    body.dark-mode .user-icon {
+      background: linear-gradient(135deg, #374151, #4b5563);
+      color: #9ca3af;
+      border-color: #6b7280;
+    }
+    
+    body.dark-mode .user-icon.signed-in {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    body.dark-mode .sign-out-btn {
+      background: #374151;
+      color: #e5e7eb;
+      border-color: #4b5563;
+    }
+    
+    body.dark-mode .sign-out-btn:hover {
+      background: #4b5563;
+      border-color: #6b7280;
     }
 
     .player-scroll {
@@ -64,6 +136,18 @@
 
     .player-scroll::-webkit-scrollbar {
       display: none;
+    }
+    
+    .player-separator {
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, #9ca3af, transparent);
+      margin: 0 4px;
+      align-self: stretch;
+      flex-shrink: 0;
+    }
+    
+    body.dark-mode .player-separator {
+      background: linear-gradient(to bottom, transparent, #6b7280, transparent);
     }
 
     .player-circle {
@@ -97,6 +181,12 @@
       border: 4px solid #ff0000;
       background-image: linear-gradient(#fff3f3, #fff3f3), linear-gradient(45deg, #ff0000, #ff4444);
       box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3), 0 0 12px rgba(255, 0, 0, 0.5);
+    }
+    
+    .player-circle.viewing {
+      border: 4px solid #3b82f6;
+      background-image: linear-gradient(#eff6ff, #eff6ff), linear-gradient(45deg, #3b82f6, #60a5fa);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), 0 0 12px rgba(59, 130, 246, 0.5);
     }
 
     .player-circle::before {
@@ -142,6 +232,10 @@
     body.dark-mode .player-circle {
       background-image: linear-gradient(#2d2d2d, #2d2d2d), var(--story-gradient);
       color: #ffffff;
+    }
+    
+    body.dark-mode .player-circle.viewing {
+      background-image: linear-gradient(#1e3a5f, #1e3a5f), linear-gradient(45deg, #3b82f6, #60a5fa);
     }
 
     body.dark-mode .player-avatar {
@@ -1379,6 +1473,7 @@
     <div class="player-scroll" id="playerScroll">
       <!-- Player circles will be dynamically added here -->
     </div>
+    <button class="sign-out-btn" id="signOutBtn" style="display: none;" onclick="signOut()">Sign Out</button>
   </div>
 
   <!-- Event Banner -->
@@ -1810,7 +1905,8 @@
     const carouselImage = document.getElementById("carouselImage");
     const carouselCaption = document.getElementById("carouselCaption");
 
-    let currentPlayer = "";
+    let currentPlayer = ""; // The signed-in user (persisted in localStorage)
+    let viewingPlayer = ""; // The player whose photos we're currently viewing
     let allPhotos = [];
     let isDarkMode = false;
     let isMusicPlaying = false;
@@ -1959,6 +2055,396 @@
       playerScroll.innerHTML = "";
       // This will be populated when we load players
     }
+    
+    function updateUserIcon() {
+      // User icon is now shown in the player scroll list, not separately
+      // Just update the sign-out button visibility
+      const signOutBtn = document.getElementById('signOutBtn');
+      
+      if (currentPlayer) {
+        signOutBtn.style.display = 'block';
+      } else {
+        signOutBtn.style.display = 'none';
+      }
+    }
+    
+    // Show sign-in modal for returning users
+    async function showSignInModal() {
+      try {
+        // Get all players for this event
+        const res = await fetch(`${workerURL}players?event=${eventCode}`);
+        if (!res.ok) {
+          throw new Error('Failed to load players');
+        }
+        const players = await res.json();
+        
+        if (players.length === 0) {
+          alert('No players found for this event. Click "+ Add Player" to create a new player.');
+          return;
+        }
+        
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'signInModal';
+        modal.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+          animation: fadeIn 0.2s ease;
+        `;
+        
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: ${document.body.classList.contains('dark-mode') ? '#1f2937' : 'white'};
+          border-radius: 16px;
+          padding: 24px;
+          max-width: 500px;
+          width: 90%;
+          max-height: 80vh;
+          overflow-y: auto;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        `;
+        
+        modalContent.innerHTML = `
+          <h2 style="margin: 0 0 20px 0; color: ${document.body.classList.contains('dark-mode') ? '#ffffff' : '#1f2937'};">
+            Sign In
+          </h2>
+          <p style="margin: 0 0 20px 0; color: ${document.body.classList.contains('dark-mode') ? '#d1d5db' : '#6b7280'};">
+            Select your player to sign in:
+          </p>
+          <div id="playerList" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Players will be added here -->
+          </div>
+          <button id="registerNewPlayerBtn" style="
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+          ">
+            + Register New Player
+          </button>
+          <button onclick="closeSignInModal()" style="
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: ${document.body.classList.contains('dark-mode') ? '#374151' : '#e5e7eb'};
+            color: ${document.body.classList.contains('dark-mode') ? '#e5e7eb' : '#374151'};
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          ">
+            Cancel
+          </button>
+        `;
+        
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Add players to the list
+        const playerList = document.getElementById('playerList');
+        players.forEach(player => {
+          const playerButton = document.createElement('button');
+          playerButton.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border: 2px solid ${document.body.classList.contains('dark-mode') ? '#374151' : '#e5e7eb'};
+            border-radius: 12px;
+            background: ${document.body.classList.contains('dark-mode') ? '#374151' : '#f9fafb'};
+            color: ${document.body.classList.contains('dark-mode') ? '#ffffff' : '#1f2937'};
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            text-align: left;
+          `;
+          
+          playerButton.innerHTML = `
+            <div style="
+              width: 50px;
+              height: 50px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, var(--primary), var(--secondary));
+              color: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1.5rem;
+              flex-shrink: 0;
+            ">
+              ${getPlayerIcon(player.name)}
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; margin-bottom: 4px;">${player.name}</div>
+              <div style="font-size: 0.85rem; opacity: 0.7;">${player.count || 0} / ${squares.length} completed</div>
+            </div>
+          `;
+          
+          playerButton.onmouseover = () => {
+            playerButton.style.borderColor = 'var(--primary)';
+            playerButton.style.transform = 'translateY(-2px)';
+            playerButton.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+          };
+          
+          playerButton.onmouseout = () => {
+            playerButton.style.borderColor = document.body.classList.contains('dark-mode') ? '#374151' : '#e5e7eb';
+            playerButton.style.transform = 'translateY(0)';
+            playerButton.style.boxShadow = 'none';
+          };
+          
+          playerButton.onclick = () => signInAsPlayer(player.name);
+          
+          playerList.appendChild(playerButton);
+        });
+        
+        // Add register button handler
+        const registerBtn = document.getElementById('registerNewPlayerBtn');
+        if (registerBtn) {
+          registerBtn.onmouseover = () => {
+            registerBtn.style.background = 'var(--primary)';
+            registerBtn.style.color = 'white';
+          };
+          registerBtn.onmouseout = () => {
+            registerBtn.style.background = 'transparent';
+            registerBtn.style.color = 'var(--primary)';
+          };
+          registerBtn.onclick = () => {
+            closeSignInModal();
+            registerNewPlayer();
+          };
+        }
+        
+        // Close on background click
+        modal.onclick = (e) => {
+          if (e.target === modal) {
+            closeSignInModal();
+          }
+        };
+        
+      } catch (error) {
+        console.error('Failed to show sign-in modal:', error);
+        alert('Failed to load players. Please try again.');
+      }
+    }
+    
+    function closeSignInModal() {
+      const modal = document.getElementById('signInModal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+    
+    async function signInAsPlayer(playerName) {
+      try {
+        // Use PlayerAuthenticator to authenticate
+        if (window.playerAuthenticator) {
+          const authResult = await window.playerAuthenticator.promptForAuthentication(
+            playerName,
+            { eventCode, viewOnly: false, title: 'Sign In' }
+          );
+          
+          if (!authResult.success) {
+            console.log('Authentication cancelled or failed');
+            return;
+          }
+          
+          // Check if authentication was successful (not view-only)
+          if (authResult.authenticationLevel === 'full') {
+            // Sign in the user
+            currentPlayer = playerName;
+            viewingPlayer = playerName;
+            currentAuthenticationLevel = 'full';
+            document.body.classList.remove('view-only-mode');
+            
+            // Save to localStorage
+            try {
+              localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName);
+              localStorage.setItem('eventbingo:currentPlayer', playerName);
+            } catch(_) {}
+            
+            // Close modal
+            closeSignInModal();
+            
+            // Update UI
+            updateUserIcon();
+            await loadPlayers();
+            await loadPhotos(playerName);
+            
+            // Show success message
+            console.log(`Successfully signed in as ${playerName}`);
+          } else {
+            alert('Authentication failed. Please try again with the correct secret answer.');
+          }
+        } else {
+          throw new Error('PlayerAuthenticator not available');
+        }
+      } catch (error) {
+        console.error('Failed to sign in:', error);
+        alert('Failed to sign in. Please try again.');
+      }
+    }
+    
+    async function registerNewPlayer() {
+      try {
+        // Use FlowController's setup modal if available
+        if (window.flowController && typeof window.flowController._showFirstTimeSetupModal === 'function') {
+          const setupResult = await window.flowController._showFirstTimeSetupModal(eventCode);
+          
+          if (setupResult.success) {
+            // Sign in the new player
+            currentPlayer = setupResult.playerName;
+            viewingPlayer = setupResult.playerName;
+            currentAuthenticationLevel = 'full';
+            document.body.classList.remove('view-only-mode');
+            
+            // Save to localStorage
+            try {
+              localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, setupResult.playerName);
+              localStorage.setItem('eventbingo:currentPlayer', setupResult.playerName);
+            } catch(_) {}
+            
+            // Update UI
+            updateUserIcon();
+            await loadPlayers();
+            await loadPhotos(setupResult.playerName);
+            
+            console.log(`Successfully registered and signed in as ${setupResult.playerName}`);
+          }
+          // If cancelled or failed, just return (modal handles error messages)
+          return;
+        }
+        
+        // Fallback to simple prompts if FlowController not available
+        const playerName = prompt('Enter your name:');
+        if (!playerName || !playerName.trim()) {
+          return;
+        }
+        
+        // Check if player already exists
+        const res = await fetch(`${workerURL}players?event=${eventCode}`);
+        if (res.ok) {
+          const players = await res.json();
+          const existingPlayer = players.find(p => p.name.toLowerCase() === playerName.trim().toLowerCase());
+          
+          if (existingPlayer) {
+            const switchToExisting = confirm(`${playerName} already exists. Would you like to sign in as this player instead?`);
+            if (switchToExisting) {
+              showSignInModal();
+            }
+            return;
+          }
+        }
+        
+        const secretQuestion = prompt('Create a secret question (for signing in later):');
+        if (!secretQuestion || !secretQuestion.trim()) {
+          return;
+        }
+        
+        const secretAnswer = prompt(`Answer to: ${secretQuestion}`);
+        if (!secretAnswer || !secretAnswer.trim()) {
+          return;
+        }
+        
+        // Create player profile using PlayerAuthenticator
+        if (window.playerAuthenticator) {
+          const result = await window.playerAuthenticator.createPlayerProfile(
+            eventCode,
+            playerName.trim(),
+            secretQuestion.trim(),
+            secretAnswer.trim()
+          );
+          
+          if (result.success) {
+            currentPlayer = playerName.trim();
+            viewingPlayer = playerName.trim();
+            currentAuthenticationLevel = 'full';
+            document.body.classList.remove('view-only-mode');
+            
+            try {
+              localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName.trim());
+              localStorage.setItem('eventbingo:currentPlayer', playerName.trim());
+            } catch(_) {}
+            
+            updateUserIcon();
+            await loadPlayers();
+            await loadPhotos(playerName.trim());
+            
+            alert(`Welcome, ${playerName}! You're now signed in.`);
+          } else {
+            alert('Failed to register. Please try again.');
+          }
+        } else {
+          throw new Error('PlayerAuthenticator not available');
+        }
+      } catch (error) {
+        console.error('Failed to register new player:', error);
+        alert('Failed to register. Please try again.');
+      }
+    }
+    
+    async function signOut() {
+      if (!confirm('Are you sure you want to sign out?')) {
+        return;
+      }
+      
+      // Clear localStorage for all possible keys
+      try {
+        localStorage.removeItem('eventbingo:currentPlayer');
+        localStorage.removeItem(`eventbingo:lastPlayer:${eventCode}`);
+        
+        // Also clear any other event-specific keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('currentPlayer') || key.includes('lastPlayer'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+      } catch(_) {}
+      
+      // Clear session manager data
+      if (window.sessionManager && typeof window.sessionManager.clearPlayerSession === 'function') {
+        try {
+          await window.sessionManager.clearPlayerSession(eventCode);
+        } catch(_) {}
+      }
+      
+      // Clear current player and viewing player
+      currentPlayer = '';
+      viewingPlayer = '';
+      currentAuthenticationLevel = 'none';
+      document.body.classList.remove('view-only-mode');
+      
+      // Update UI
+      updateUserIcon();
+      updatePlayerCircles();
+      
+      // Clear the grid
+      createGrid();
+      
+      // Reload players to show all
+      loadPlayers();
+      
+      // Show a message
+      alert('You have been signed out. Select a player to sign in again.');
+    }
 
     function toggleReaction(index, emoji) {
       const reactionsContainer = document.querySelector(`#reactions${index}`);
@@ -2036,9 +2522,8 @@
           try { savedPlayer = localStorage.getItem('eventbingo:currentPlayer') || ''; } catch (_) {}
         }
 
-        const targetUrl = savedPlayer
-          ? `index.html?event=${encodeURIComponent(eventToUse)}&player=${encodeURIComponent(savedPlayer)}`
-          : `index.html?event=${encodeURIComponent(eventToUse)}`;
+        // Navigate without player parameter - will be read from localStorage
+        const targetUrl = `index.html?event=${encodeURIComponent(eventToUse)}`;
         if (window.location.href.indexOf(targetUrl) === -1) {
           window.location.href = targetUrl;
         } else {
@@ -2077,10 +2562,8 @@
         });
       }
       
-      // Navigate to the board page with current player context
-      const boardUrl = currentPlayer 
-        ? `board.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(currentPlayer)}`
-        : `board.html?event=${encodeURIComponent(eventCode)}`;
+      // Navigate to the board page - player will be read from localStorage
+      const boardUrl = `board.html?event=${encodeURIComponent(eventCode)}`;
       window.location.href = boardUrl;
     }
 
@@ -2294,9 +2777,8 @@
         if (!savedPlayer) {
           try { savedPlayer = localStorage.getItem('eventbingo:currentPlayer') || ''; } catch (_) {}
         }
-        const targetUrl = savedPlayer
-          ? `index.html?event=${encodeURIComponent(eventToUse)}&player=${encodeURIComponent(savedPlayer)}`
-          : `index.html?event=${encodeURIComponent(eventToUse)}`;
+        // Navigate without player parameter - will be read from localStorage
+        const targetUrl = `index.html?event=${encodeURIComponent(eventToUse)}`;
         window.location.href = targetUrl;
       } catch (_) {
         const fallbackEvent = (typeof eventCode !== 'undefined' && eventCode) ? eventCode : 'default';
@@ -2324,10 +2806,8 @@
         });
       }
       
-      // Navigate to the board page with current player context
-      const boardUrl = currentPlayer 
-        ? `board.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(currentPlayer)}`
-        : `board.html?event=${encodeURIComponent(eventCode)}`;
+      // Navigate to the board page - player will be read from localStorage
+      const boardUrl = `board.html?event=${encodeURIComponent(eventCode)}`;
       window.location.href = boardUrl;
     }
 
@@ -2836,92 +3316,53 @@
       document.head.appendChild(style);
     })();
 
-    // Select a player with authentication
+    // Select a player to VIEW (does not change signed-in user)
     async function selectPlayer(playerName) {
       try {
-        // If selecting the same player, just reload
-        if (playerName === currentPlayer) {
-          await loadPhotos(currentPlayer);
+        // If selecting the same player we're viewing, just reload
+        if (playerName === viewingPlayer) {
+          await loadPhotos(viewingPlayer);
           return;
         }
         
-        // Check if we already have a session for this player
-        const existingSession = await window.sessionManager.getPlayerSession(eventCode);
-        
-        // If we have a session for this player, no need to authenticate
-        if (existingSession && existingSession.playerName === playerName) {
-          console.log('Already have session for this player, no authentication needed');
-          currentPlayer = playerName;
+        // If clicking on the signed-in user, just view their photos
+        if (playerName === currentPlayer) {
+          viewingPlayer = playerName;
           currentAuthenticationLevel = 'full';
+          document.body.classList.remove('view-only-mode');
         } else {
-          // Need to authenticate to switch to this player
-          const authResult = await window.playerAuthenticator.promptForAuthentication(
-            playerName,
-            { eventCode, viewOnly: true, title: 'Switch Player' }
-          );
-          
-          if (!authResult.success) {
-            console.log('Authentication cancelled or failed');
-            return;
-          }
-          
-          // Update authentication level
-          currentAuthenticationLevel = authResult.authenticationLevel || 'viewOnly';
-          currentPlayer = playerName;
-          
-          // Add/remove view-only mode class on body
-          if (authResult.authenticationLevel === 'viewOnly') {
-            document.body.classList.add('view-only-mode');
-          } else {
-            document.body.classList.remove('view-only-mode');
-          }
-          
-          // If full authentication, save the session locally so we don't ask again
-          if (authResult.authenticationLevel === 'full') {
-            // Fetch the question from backend to save locally
-            try {
-              const workerURL = window.workerURL || 
-                (window.boardController && window.boardController.workerURL) ||
-                'https://shy-recipe-5fb1.reinier-olivier.workers.dev/';
-              
-              const response = await fetch(
-                `${workerURL}auth/question/${encodeURIComponent(eventCode)}/${encodeURIComponent(playerName)}`
-              );
-              
-              if (response.ok) {
-                const data = await response.json();
-                // Save session locally with a dummy answer hash (we'll verify against backend anyway)
-                await window.sessionManager.savePlayerSession(
-                  eventCode,
-                  playerName,
-                  data.question,
-                  'authenticated' // Dummy answer since we verify against backend
-                );
-              }
-            } catch (error) {
-              console.error('Failed to save session locally:', error);
-            }
-          }
+          // Viewing another player - always view-only mode
+          viewingPlayer = playerName;
+          currentAuthenticationLevel = 'viewOnly';
+          document.body.classList.add('view-only-mode');
         }
         
-        // Save to localStorage
-        try {
-          localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, currentPlayer);
-          localStorage.setItem('eventbingo:currentPlayer', currentPlayer);
-        } catch(_) {}
-        
-        // Update UI
+        // Update UI - highlight the player being viewed
         document.querySelectorAll('.player-circle').forEach(circle => {
-          circle.classList.remove('active');
+          // Remove both active and viewing classes
+          circle.classList.remove('active', 'viewing');
         });
-        const selectedCircle = Array.from(document.querySelectorAll('.player-circle'))
-          .find(c => c.title === playerName);
-        if (selectedCircle) {
-          selectedCircle.classList.add('active');
+        
+        // Mark the signed-in user with 'active' class
+        if (currentPlayer) {
+          const signedInCircle = Array.from(document.querySelectorAll('.player-circle'))
+            .find(c => c.title === currentPlayer || c.title.startsWith(currentPlayer + ' '));
+          if (signedInCircle) {
+            signedInCircle.classList.add('active');
+          }
         }
         
-        // Reload photos for the selected player
-        await loadPhotos(currentPlayer);
+        // Mark the viewing player with 'viewing' class if different from signed-in
+        if (viewingPlayer && viewingPlayer !== currentPlayer) {
+          const viewingCircle = Array.from(document.querySelectorAll('.player-circle'))
+            .find(c => c.title === viewingPlayer);
+          if (viewingCircle) {
+            viewingCircle.classList.add('viewing');
+          }
+        }
+        
+        // Reload photos for the player being viewed
+        await loadPhotos(viewingPlayer);
         
       } catch (error) {
         console.error('Error selecting player:', error);
@@ -2949,8 +3390,68 @@
           players.unshift({ name: currentPlayer, count: 0 });
         }
 
-        // Render players
-        players.forEach((player, index) => {
+        // Separate signed-in user from other players
+        const signedInPlayer = players.find(p => p.name === currentPlayer);
+        const otherPlayers = players.filter(p => p.name !== currentPlayer);
+
+        // If signed in, render signed-in user first
+        if (signedInPlayer) {
+          const playerItem = document.createElement("div");
+          playerItem.className = "player-item";
+          
+          const circle = document.createElement("div");
+          circle.className = "player-circle active";
+          circle.textContent = getPlayerIcon(signedInPlayer.name);
+          circle.title = signedInPlayer.name + ' (Your Profile)';
+          circle.onclick = () => selectPlayer(signedInPlayer.name);
+          
+          // If viewing this player, also add viewing class
+          if (viewingPlayer === signedInPlayer.name) {
+            circle.classList.add('viewing');
+          }
+          
+          const name = document.createElement("div");
+          name.className = "player-name";
+          name.textContent = signedInPlayer.name;
+          
+          playerItem.appendChild(circle);
+          playerItem.appendChild(name);
+          playerScroll.appendChild(playerItem);
+          
+          // Add separator after signed-in user
+          const separator = document.createElement("div");
+          separator.className = "player-separator";
+          playerScroll.appendChild(separator);
+        } else {
+          // No user signed in - show generic icon with click to sign in
+          const genericItem = document.createElement("div");
+          genericItem.className = "player-item";
+          
+          const genericCircle = document.createElement("div");
+          genericCircle.className = "player-circle";
+          genericCircle.textContent = '👤';
+          genericCircle.title = 'Click to sign in';
+          genericCircle.style.opacity = '0.5';
+          genericCircle.style.cursor = 'pointer';
+          genericCircle.onclick = () => showSignInModal();
+          
+          const genericName = document.createElement("div");
+          genericName.className = "player-name";
+          genericName.textContent = 'Not signed in';
+          genericName.style.opacity = '0.5';
+          
+          genericItem.appendChild(genericCircle);
+          genericItem.appendChild(genericName);
+          playerScroll.appendChild(genericItem);
+          
+          // Add separator after generic icon
+          const separator = document.createElement("div");
+          separator.className = "player-separator";
+          playerScroll.appendChild(separator);
+        }
+
+        // Render other players
+        otherPlayers.forEach((player, index) => {
           const playerItem = document.createElement("div");
           playerItem.className = "player-item";
           
@@ -2959,8 +3460,10 @@
           circle.textContent = getPlayerIcon(player.name);
           circle.title = player.name;
           circle.onclick = () => selectPlayer(player.name);
-          if (player.name === currentPlayer) {
-            circle.classList.add('active');
+          
+          // If viewing this player, add viewing class
+          if (viewingPlayer === player.name) {
+            circle.classList.add('viewing');
           }
           
           const name = document.createElement("div");
@@ -2972,6 +3475,9 @@
           playerScroll.appendChild(playerItem);
         });
         // If no player selected yet and we haven't prompted on load, we rely on the on-load prompt
+        
+        // Update user icon
+        updateUserIcon();
         
       } catch (err) {
         
@@ -4166,19 +4672,7 @@
         });
       }
 
-      // Prompt immediately on page load if no player is selected yet
-      setTimeout(async () => {
-        if (!currentPlayer && !hasPromptedForPlayer) {
-          hasPromptedForPlayer = true;
-          const name = await promptForPlayerSelection();
-          if (name) {
-            currentPlayer = name;
-            createGrid();
-            loadPhotos(currentPlayer);
-            loadPlayers();
-          }
-        }
-      }, 300);
+      // Removed automatic prompt - users now click "Not signed in" to sign in or register
     }
 
     async function loadEventInfo() {
@@ -4812,15 +5306,36 @@
     }
 
     async function initializeApp() {
-      // Check for player in URL params
+      // Check for player in URL params - for VIEW ONLY, not for setting signed-in user
       const urlParams = new URLSearchParams(window.location.search);
       const urlPlayer = urlParams.get('player');
-      if (urlPlayer) {
-        currentPlayer = urlPlayer;
+      const viewOnlyPlayer = urlParams.get('viewOnly') === 'true' && urlPlayer ? urlPlayer : null;
+      
+      // Only read signed-in user from localStorage
+      if (!viewOnlyPlayer) {
         try {
-          localStorage.setItem('eventbingo:currentPlayer', urlPlayer);
-          localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, urlPlayer);
+          const savedPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || 
+                             localStorage.getItem('eventbingo:currentPlayer') || '';
+          if (savedPlayer) {
+            currentPlayer = savedPlayer;
+            viewingPlayer = savedPlayer; // Initially viewing own photos
+          }
         } catch(_) {}
+      } else {
+        // View-only mode: use URL player for viewing but don't change signed-in user
+        try {
+          const savedPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || 
+                             localStorage.getItem('eventbingo:currentPlayer') || '';
+          if (savedPlayer) {
+            currentPlayer = savedPlayer;
+          }
+        } catch(_) {}
+        viewingPlayer = viewOnlyPlayer;
+        currentAuthenticationLevel = 'viewOnly';
+        document.body.classList.add('view-only-mode');
+        if (viewOnlyMode) {
+          viewOnlyMode.activateViewOnlyMode(viewOnlyPlayer, { eventCode, context: 'urlParameter' });
+        }
       }
       
       // Load event data and squares
@@ -4841,11 +5356,14 @@
       showPageLoading("Loading players...");
       await loadPlayers();
       
-      // Load photos for current player
-      if (currentPlayer) {
-        showPageLoading("Loading your photos...");
-        await loadPhotos(currentPlayer);
+      // Load photos for viewing player
+      if (viewingPlayer) {
+        showPageLoading("Loading photos...");
+        await loadPhotos(viewingPlayer);
       }
+      
+      // Update user icon
+      updateUserIcon();
       
       // Setup event handlers
       setupEventHandlers();

@@ -679,7 +679,23 @@
     const workerURL = "https://shy-recipe-5fb1.reinier-olivier.workers.dev/";
     const params = new URLSearchParams(window.location.search);
     const eventCode = params.get("event") || "default";
-    const currentPlayer = params.get("player") || "";
+    
+    // Check if viewing another player (viewOnly mode)
+    const viewOnlyParam = params.get("viewOnly") === "true";
+    const urlPlayer = params.get("player") || "";
+    
+    // Only read signed-in user from localStorage, URL is for viewing only
+    let currentPlayer = "";
+    if (viewOnlyParam && urlPlayer) {
+      // View-only mode: use URL player but don't save to localStorage
+      currentPlayer = urlPlayer;
+    } else {
+      // Read signed-in user from localStorage only
+      try {
+        currentPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || 
+                       localStorage.getItem('eventbingo:currentPlayer') || '';
+      } catch(_) {}
+    }
     
     let allPhotos = [];
     let filteredPhotos = [];
@@ -689,18 +705,15 @@
 
     // Function to go back with preserved context
     function goBack() {
-      // Try to get current player from URL params or localStorage
-      let playerToRestore = currentPlayer;
-      if (!playerToRestore) {
-        try {
-          playerToRestore = localStorage.getItem('eventbingo:currentPlayer') || 
-                           localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || '';
-        } catch(_) {}
-      }
+      // Always use signed-in user from localStorage for navigation
+      let playerToRestore = "";
+      try {
+        playerToRestore = localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || 
+                         localStorage.getItem('eventbingo:currentPlayer') || '';
+      } catch(_) {}
       
-      const backUrl = playerToRestore 
-        ? `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerToRestore)}`
-        : `index.html?event=${encodeURIComponent(eventCode)}`;
+      // Navigate without player parameter - will be read from localStorage
+      const backUrl = `index.html?event=${encodeURIComponent(eventCode)}`;
       window.location.href = backUrl;
     }
 

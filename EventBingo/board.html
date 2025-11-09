@@ -50,6 +50,78 @@
       top: 0;
       z-index: 1000;
       backdrop-filter: blur(10px);
+      gap: 12px;
+    }
+    
+    .user-status-section {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    
+    .user-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+      color: #6b7280;
+      border: 2px solid #9ca3af;
+      flex-shrink: 0;
+    }
+    
+    .user-icon.signed-in {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: 2px solid var(--primary);
+    }
+    
+    .sign-out-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: white;
+      color: #374151;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    
+    .sign-out-btn:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+    
+    .sign-out-btn:active {
+      transform: scale(0.95);
+    }
+    
+    body.dark-mode .user-icon {
+      background: linear-gradient(135deg, #374151, #4b5563);
+      color: #9ca3af;
+      border-color: #6b7280;
+    }
+    
+    body.dark-mode .user-icon.signed-in {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    body.dark-mode .sign-out-btn {
+      background: #374151;
+      color: #e5e7eb;
+      border-color: #4b5563;
+    }
+    
+    body.dark-mode .sign-out-btn:hover {
+      background: #4b5563;
+      border-color: #6b7280;
     }
 
     .back-button {
@@ -107,6 +179,18 @@
 
     .player-scroll::-webkit-scrollbar {
       display: none;
+    }
+    
+    .player-separator {
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, #9ca3af, transparent);
+      margin: 0 4px;
+      align-self: stretch;
+      flex-shrink: 0;
+    }
+    
+    body.dark-mode .player-separator {
+      background: linear-gradient(to bottom, transparent, #6b7280, transparent);
     }
 
     .player-circle {
@@ -1565,6 +1649,7 @@
     <div class="player-scroll" id="playerScroll">
       <!-- Player circles will be dynamically added here -->
     </div>
+    <button class="sign-out-btn" id="signOutBtn" style="display: none;" onclick="signOut()">Sign Out</button>
   </div>
 
   <!-- Player selection moved into top bar to match index.html -->
@@ -1669,7 +1754,23 @@
     // Global variables
     const params = new URLSearchParams(window.location.search);
     let eventCode = params.get("event") || "default";
-    let currentPlayer = params.get("player") || "";
+    
+    // Check if viewing another player (viewOnly mode)
+    const viewOnlyParam = params.get("viewOnly") === "true";
+    const urlPlayer = params.get("player") || "";
+    
+    // Only read signed-in user from localStorage, URL is for viewing only
+    let currentPlayer = "";
+    if (viewOnlyParam && urlPlayer) {
+      // View-only mode: use URL player but don't save to localStorage
+      currentPlayer = urlPlayer;
+    } else {
+      // Read signed-in user from localStorage only
+      try {
+        currentPlayer = localStorage.getItem(`eventbingo:lastPlayer:${eventCode}`) || 
+                       localStorage.getItem('eventbingo:currentPlayer') || '';
+      } catch(_) {}
+    }
     
     // Initialize BoardController and GridRenderer
     const boardController = new BoardController();
@@ -1727,9 +1828,8 @@
         });
       }
       
-      const backUrl = playerToRestore 
-        ? `index.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerToRestore)}`
-        : `index.html?event=${encodeURIComponent(eventCode)}`;
+      // Navigate without player parameter - will be read from localStorage
+      const backUrl = `index.html?event=${encodeURIComponent(eventCode)}`;
       window.location.href = backUrl;
     }
 
@@ -1947,9 +2047,8 @@
         if (!savedPlayer) {
           try { savedPlayer = localStorage.getItem('eventbingo:currentPlayer') || ''; } catch (_) {}
         }
-        const targetUrl = savedPlayer
-          ? `index.html?event=${encodeURIComponent(eventToUse)}&player=${encodeURIComponent(savedPlayer)}`
-          : `index.html?event=${encodeURIComponent(eventToUse)}`;
+        // Navigate without player parameter - will be read from localStorage
+        const targetUrl = `index.html?event=${encodeURIComponent(eventToUse)}`;
         window.location.href = targetUrl;
       } catch (_) {
         const fallbackEvent = (typeof eventCode !== 'undefined' && eventCode) ? eventCode : 'default';
@@ -1962,10 +2061,8 @@
       setActiveNavIcon(1);
       const params = new URLSearchParams(window.location.search);
       const evt = params.get('event') || (typeof eventCode !== 'undefined' ? eventCode : 'default');
-      const ply = params.get('player') || (typeof currentPlayer !== 'undefined' ? currentPlayer : '');
-      const url = ply
-        ? `board.html?event=${encodeURIComponent(evt)}&player=${encodeURIComponent(ply)}`
-        : `board.html?event=${encodeURIComponent(evt)}`;
+      // Navigate without player parameter - will be read from localStorage
+      const url = `board.html?event=${encodeURIComponent(evt)}`;
       if (!window.location.href.endsWith(url)) {
         window.location.href = url;
       }
@@ -1975,12 +2072,8 @@
       setActiveNavIcon(2);
       const params = new URLSearchParams(window.location.search);
       const evt = params.get('event') || (typeof eventCode !== 'undefined' ? eventCode : 'default');
-      const ply = params.get('player') || (typeof currentPlayer !== 'undefined' ? currentPlayer : '');
-      
-      // Navigate to index with showLeaderboard parameter
-      const url = ply
-        ? `index.html?event=${encodeURIComponent(evt)}&player=${encodeURIComponent(ply)}&showLeaderboard=true`
-        : `index.html?event=${encodeURIComponent(evt)}&showLeaderboard=true`;
+      // Navigate to index with showLeaderboard parameter - player will be read from localStorage
+      const url = `index.html?event=${encodeURIComponent(evt)}&showLeaderboard=true`;
       window.location.href = url;
     }
 
@@ -2054,9 +2147,7 @@
         if (authenticationLevel === 'full' && authEventCode === eventCode) {
           currentPlayer = playerName;
           
-          // Update URL to reflect new player
-          const newUrl = `board.html?event=${encodeURIComponent(eventCode)}&player=${encodeURIComponent(playerName)}`;
-          window.history.replaceState({}, '', newUrl);
+          // No need to update URL - player is stored in localStorage only
           
           // Save state
           if (statePreserver) {
@@ -2168,6 +2259,59 @@
     async function loadPhotos() {
       console.warn('loadPhotos() is deprecated - using BoardController instead');
     }
+    
+    function updateUserIcon() {
+      // User icon is now shown in the player scroll list, not separately
+      // Just update the sign-out button visibility
+      const signOutBtn = document.getElementById('signOutBtn');
+      
+      if (currentPlayer) {
+        signOutBtn.style.display = 'block';
+      } else {
+        signOutBtn.style.display = 'none';
+      }
+    }
+    
+    async function signOut() {
+      if (!confirm('Are you sure you want to sign out?')) {
+        return;
+      }
+      
+      // Clear localStorage for all possible keys
+      try {
+        localStorage.removeItem('eventbingo:currentPlayer');
+        localStorage.removeItem(`eventbingo:lastPlayer:${eventCode}`);
+        
+        // Also clear any other event-specific keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('currentPlayer') || key.includes('lastPlayer'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+      } catch(_) {}
+      
+      // Clear session manager data
+      if (window.sessionManager && typeof window.sessionManager.clearPlayerSession === 'function') {
+        try {
+          await window.sessionManager.clearPlayerSession(eventCode);
+        } catch(_) {}
+      }
+      
+      // Clear current player
+      currentPlayer = '';
+      
+      // Update UI
+      updateUserIcon();
+      
+      // Reset board to show all players
+      selectPlayer(null);
+      
+      // Show a message
+      alert('You have been signed out. Select a player to sign in again.');
+    }
 
     function renderPlayerCircles() {
       const playerScroll = document.getElementById('playerScroll');
@@ -2175,7 +2319,79 @@
 
       const currentState = boardController.getState();
 
-      // Add "All Players" circle first
+      // Separate signed-in user from other players
+      const signedInPlayer = currentState.players.find(p => p.name === currentPlayer);
+      const otherPlayers = currentState.players.filter(p => p.name !== currentPlayer);
+
+      // If signed in, render signed-in user first
+      if (signedInPlayer) {
+        const playerItem = document.createElement('div');
+        playerItem.className = 'player-item';
+        
+        const circle = document.createElement('div');
+        circle.className = 'player-circle active';
+        circle.textContent = getPlayerIcon(signedInPlayer.name);
+        circle.title = signedInPlayer.name + ' (Your Profile)';
+        circle.onclick = async () => {
+          circle.style.transform = 'scale(0.95)';
+          setTimeout(() => { circle.style.transform = ''; }, 150);
+          await selectPlayer(signedInPlayer.name);
+        };
+        
+        if (signedInPlayer.name === currentState.selectedPlayer) {
+          circle.classList.add('active');
+        }
+        
+        if (viewOnlyMode && viewOnlyMode.isActive() && viewOnlyMode.getCurrentViewOnlyPlayer() === signedInPlayer.name) {
+          circle.classList.add('view-only-active');
+        }
+        
+        const name = document.createElement('div');
+        name.className = 'player-name';
+        name.textContent = signedInPlayer.name;
+        name.style.fontWeight = 'bold';
+        name.style.color = 'var(--primary)';
+        
+        playerItem.appendChild(circle);
+        playerItem.appendChild(name);
+        playerScroll.appendChild(playerItem);
+        
+        // Add separator after signed-in user
+        const separator = document.createElement('div');
+        separator.className = 'player-separator';
+        playerScroll.appendChild(separator);
+      } else {
+        // No user signed in - show generic icon with click to sign in
+        const genericItem = document.createElement('div');
+        genericItem.className = 'player-item';
+        
+        const genericCircle = document.createElement('div');
+        genericCircle.className = 'player-circle';
+        genericCircle.textContent = '👤';
+        genericCircle.title = 'Click to sign in';
+        genericCircle.style.opacity = '0.5';
+        genericCircle.style.cursor = 'pointer';
+        genericCircle.onclick = () => {
+          // Redirect to index.html to sign in
+          window.location.href = `index.html?event=${encodeURIComponent(eventCode)}`;
+        };
+        
+        const genericName = document.createElement('div');
+        genericName.className = 'player-name';
+        genericName.textContent = 'Not signed in';
+        genericName.style.opacity = '0.5';
+        
+        genericItem.appendChild(genericCircle);
+        genericItem.appendChild(genericName);
+        playerScroll.appendChild(genericItem);
+        
+        // Add separator after generic icon
+        const separator = document.createElement('div');
+        separator.className = 'player-separator';
+        playerScroll.appendChild(separator);
+      }
+
+      // Add "All Players" circle
       const allPlayersItem = document.createElement('div');
       allPlayersItem.className = 'player-item';
       
@@ -2196,8 +2412,8 @@
       allPlayersItem.appendChild(allPlayersName);
       playerScroll.appendChild(allPlayersItem);
 
-      // Add individual player circles
-      currentState.players.forEach(player => {
+      // Add other player circles
+      otherPlayers.forEach(player => {
         const playerItem = document.createElement('div');
         playerItem.className = 'player-item';
         
@@ -2266,6 +2482,9 @@
           circles[newIndex].click();
         }
       });
+      
+      // Update user icon
+      updateUserIcon();
     }
 
     // Initialize BoardController and set up event listeners
