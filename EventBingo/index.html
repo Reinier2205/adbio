@@ -2286,6 +2286,17 @@
             
             // Update UI
             updateUserIcon();
+            
+            // Ensure grid is created before loading photos
+            if (!squares || squares.length === 0) {
+              console.log('Squares not loaded, loading event info first...');
+              await loadEventInfo();
+            }
+            
+            // Recreate grid to ensure it's fresh
+            createGrid();
+            
+            // Load players and photos
             await loadPlayers();
             await loadPhotos(playerName);
             
@@ -2324,6 +2335,17 @@
             
             // Update UI
             updateUserIcon();
+            
+            // Ensure grid is created before loading photos
+            if (!squares || squares.length === 0) {
+              console.log('Squares not loaded, loading event info first...');
+              await loadEventInfo();
+            }
+            
+            // Recreate grid to ensure it's fresh
+            createGrid();
+            
+            // Load players and photos
             await loadPlayers();
             await loadPhotos(setupResult.playerName);
             
@@ -3365,7 +3387,8 @@
         }
         
         // Reload photos for the player being viewed
-        await loadPhotos(viewingPlayer);
+        // TODO: loadPhotos function is missing - needs to be restored
+        // await loadPhotos(viewingPlayer);
         
       } catch (error) {
         console.error('Error selecting player:', error);
@@ -4543,19 +4566,28 @@
             if (result.success) {
               // Success - set player and close modal
               currentPlayer = playerName;
+              viewingPlayer = playerName;
               currentAuthenticationLevel = 'full';
               
               try { 
                 localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, currentPlayer); 
               } catch(_) {}
               
-              selectPlayer(playerName);
               closeRegistrationModal();
               
               if (window.registrationResolve) {
                 window.registrationResolve(playerName);
                 window.registrationResolve = null;
               }
+              
+              // Ensure grid is created before loading photos
+              if (!squares || squares.length === 0) {
+                console.log('Squares not loaded, loading event info first...');
+                await loadEventInfo();
+              }
+              
+              // Recreate grid to ensure it's fresh
+              createGrid();
               
               // Reload players and photos
               await loadPlayers();
