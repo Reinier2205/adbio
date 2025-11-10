@@ -1473,7 +1473,9 @@
     <div class="player-scroll" id="playerScroll">
       <!-- Player circles will be dynamically added here -->
     </div>
-    <button class="sign-out-btn" id="signOutBtn" style="display: none;" onclick="signOut()">Sign Out</button>
+    <div id="viewOnlyIndicator" style="display: none; padding: 6px 14px; border-radius: 20px; background: rgba(245, 158, 11, 0.95); color: white; font-size: 0.85rem; font-weight: 600; white-space: nowrap;">
+      👁️ View Only
+    </div>
   </div>
 
   <!-- Event Banner -->
@@ -3248,16 +3250,26 @@
           return;
         }
         
+        const viewOnlyIndicator = document.getElementById('viewOnlyIndicator');
+        
         // If clicking on the signed-in user, just view their photos
         if (playerName === currentPlayer) {
           viewingPlayer = playerName;
           currentAuthenticationLevel = 'full';
           document.body.classList.remove('view-only-mode');
+          // Hide view-only indicator
+          if (viewOnlyIndicator) {
+            viewOnlyIndicator.style.display = 'none';
+          }
         } else {
           // Viewing another player - always view-only mode
           viewingPlayer = playerName;
           currentAuthenticationLevel = 'viewOnly';
           document.body.classList.add('view-only-mode');
+          // Show view-only indicator
+          if (viewOnlyIndicator) {
+            viewOnlyIndicator.style.display = 'block';
+          }
         }
         
         // Update UI - highlight the player being viewed
