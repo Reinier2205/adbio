@@ -1975,81 +1975,7 @@
       return selectedIcon;
     }
 
-    // Enhanced player selection with authentication
-    async function selectPlayer(playerName) {
-      try {
-        // If selecting the same player, no need to re-authenticate
-        if (currentPlayer === playerName && currentAuthenticationLevel === 'full') {
-          return;
-        }
-        
-        // Use the new session management system
-        if (window.sessionManager && window.playerAuthenticator) {
-          const session = await window.sessionManager.getPlayerSession(eventCode);
-          
-          if (session && session.playerName === playerName) {
-            // Player has a valid session, authenticate them automatically
-            console.log(`Found valid session for player ${playerName}, authenticating automatically`);
-            
-            currentPlayer = playerName;
-            currentAuthenticationLevel = 'authenticated'; // They have a valid session
-            
-            // Update UI and load photos immediately
-            await loadPhotos(currentPlayer);
-            updatePlayerSelectionUI();
-            
-            // Cache state for error recovery
-            if (window.errorHandler) {
-              await window.errorHandler.cacheLastKnownGoodState({
-                page: 'index.html',
-                eventCode: eventCode,
-                currentPlayer: currentPlayer,
-                authenticationLevel: currentAuthenticationLevel,
-                timestamp: Date.now()
-              });
-            }
-            
-            console.log(`Player ${playerName} automatically authenticated with existing session`);
-            return;
-          }
-        }
-        
-        // Fallback to legacy player selection
-        currentPlayer = playerName;
-        
-        // Authentication state is now managed by SessionManager
-        
-        // Save last player for this event
-        try { 
-          localStorage.setItem(`eventbingo:lastPlayer:${eventCode}`, playerName);
-          localStorage.setItem('eventbingo:currentPlayer', playerName); // Global current player
-        } catch(_) {}
-        
-        updatePlayerCircles();
-        createGrid();
-        loadPhotos(currentPlayer);
-        
-        // Ensure the selected player is visible in the top bar immediately
-        loadPlayers();
-      } catch (error) {
-        console.error('Failed to select player:', error);
-        
-        // Log error for debugging
-        if (window.errorHandler) {
-          window.errorHandler._logError('player_selection_failed', {
-            playerName: playerName,
-            eventCode: eventCode,
-            error: error.message
-          });
-        }
-        
-        // Fallback to basic selection
-        currentPlayer = playerName;
-        updatePlayerCircles();
-        createGrid();
-        loadPhotos(currentPlayer);
-      }
-    }
+
 
     function updatePlayerCircles() {
       playerScroll.innerHTML = "";
@@ -3365,8 +3291,7 @@
         }
         
         // Reload photos for the player being viewed
-        // TODO: loadPhotos function is missing - needs to be restored
-        // await loadPhotos(viewingPlayer);
+        await loadPhotos(viewingPlayer);
         
       } catch (error) {
         console.error('Error selecting player:', error);
@@ -3548,15 +3473,27 @@
           }
         });
         updateProgress();
-        // Refresh progress table after loading photos
-        loadPlayers();
+        // Note: Removed automatic loadPlayers() call to prevent unnecessary reloads
+        // The player list is already loaded and doesn't need to refresh when viewing photos
       } catch (err) {
+        console.error('Failed to load photos:', err);
+        console.error('Error details:', {
+          player: player,
+          eventCode: eventCode,
+          squaresLength: squares ? squares.length : 0,
+          error: err.message,
+          stack: err.stack
+        });
         
         // Clear all photo displays on error
-        squares.forEach((square, index) => {
-          const resultDiv = document.getElementById(`result${index}`);
-          resultDiv.innerHTML = "";
-        });
+        if (squares && squares.length > 0) {
+          squares.forEach((square, index) => {
+            const resultDiv = document.getElementById(`result${index}`);
+            if (resultDiv) {
+              resultDiv.innerHTML = "";
+            }
+          });
+        }
       } finally {
         hideLoading();
       }
