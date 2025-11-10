@@ -5067,34 +5067,7 @@
           }
         }
         
-        // Set current player from session (already set in DOMContentLoaded handler)
-        // Just update UI and load data
-        if (flowResult.playerName) {
-          // Variables already set: currentPlayer, viewingPlayer, currentAuthenticationLevel
-          
-          // Update UI based on authentication
-          updateUserIcon(); // Update sign-out button visibility
-          
-          // Update player selection UI if it exists
-          updatePlayerSelectionUI();
-          
-          // Load photos with error handling
-          try {
-            await loadPhotos(currentPlayer);
-          } catch (error) {
-            console.error('Failed to load photos:', error);
-            
-            if (window.errorHandler) {
-              window.errorHandler._logError('load_photos_failed', {
-                eventCode: eventCode,
-                playerName: currentPlayer,
-                error: error.message
-              });
-            }
-          }
-        }
-        
-        // Create grid with error handling
+        // Create grid FIRST (before loading photos)
         try {
           createGrid();
         } catch (error) {
@@ -5110,6 +5083,33 @@
           // Try with default squares
           squares = defaultSquaresList;
           createGrid();
+        }
+        
+        // Set current player from session (already set in DOMContentLoaded handler)
+        // Just update UI and load data
+        if (flowResult.playerName) {
+          // Variables already set: currentPlayer, viewingPlayer, currentAuthenticationLevel
+          
+          // Update UI based on authentication
+          updateUserIcon(); // Update sign-out button visibility
+          
+          // Update player selection UI if it exists
+          updatePlayerSelectionUI();
+          
+          // Load photos with error handling (AFTER grid is created)
+          try {
+            await loadPhotos(currentPlayer);
+          } catch (error) {
+            console.error('Failed to load photos:', error);
+            
+            if (window.errorHandler) {
+              window.errorHandler._logError('load_photos_failed', {
+                eventCode: eventCode,
+                playerName: currentPlayer,
+                error: error.message
+              });
+            }
+          }
         }
         
         // Load players with error handling
