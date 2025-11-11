@@ -1276,22 +1276,61 @@
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .filter-bar label {
-      display: flex;
-      align-items: center;
+      flex-wrap: wrap;
       gap: 10px;
-      cursor: pointer;
-      font-weight: 500;
+      justify-content: center;
     }
 
-    .filter-bar input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--instagram-pink);
+    .filter-btn {
+      padding: 10px 20px;
+      border-radius: 25px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      color: #374151;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--primary);
+      background: rgba(74, 144, 226, 0.05);
+      transform: translateY(-1px);
+    }
+
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+    }
+
+    .filter-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Dark mode filter buttons */
+    body.dark-mode .filter-bar {
+      background: #2d2d2d;
+    }
+
+    body.dark-mode .filter-btn {
+      background: #374151;
+      color: #e5e7eb;
+      border-color: #4b5563;
+    }
+
+    body.dark-mode .filter-btn:hover {
+      background: #4b5563;
+      border-color: var(--primary);
+    }
+
+    body.dark-mode .filter-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-color: var(--primary);
     }
 
     /* Reactions */
@@ -1497,14 +1536,15 @@
   <div class="main-content">
     <!-- Filter Bar -->
     <div class="filter-bar">
-      <label>
-        <input type="checkbox" id="showCompletedOnly" onchange="toggleCompleted()">
-        Show completed squares
-      </label>
-      <label>
-        <input type="checkbox" id="showOutstandingOnly" onchange="toggleOutstanding()">
-        Show outstanding squares
-      </label>
+      <button class="filter-btn active" id="showAllBtn" onclick="showAllSquares()">
+        Show All Squares
+      </button>
+      <button class="filter-btn" id="showCompletedBtn" onclick="showCompletedSquares()">
+        Show Completed
+      </button>
+      <button class="filter-btn" id="showOutstandingBtn" onclick="showOutstandingSquares()">
+        Show Outstanding
+      </button>
     </div>
     
     <!-- Bingo Grid -->
@@ -2870,45 +2910,41 @@
       });
     }
 
-    function toggleCompleted() {
-      const showCompletedOnly = document.getElementById('showCompletedOnly').checked;
-      const showOutstandingOnly = document.getElementById('showOutstandingOnly');
+    function showAllSquares() {
+      // Update button states
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('showAllBtn').classList.add('active');
       
-      // If completed is checked, uncheck outstanding
-      if (showCompletedOnly) {
-        showOutstandingOnly.checked = false;
-      }
-      
+      // Show all cards
       const cards = document.querySelectorAll('.card');
-      
       cards.forEach(card => {
-        const hasPhoto = card.querySelector('img');
-        if (showCompletedOnly) {
-          card.style.display = hasPhoto ? 'block' : 'none';
-        } else {
-          card.style.display = 'block';
-        }
+        card.style.display = 'block';
       });
     }
 
-    function toggleOutstanding() {
-      const showOutstandingOnly = document.getElementById('showOutstandingOnly').checked;
-      const showCompletedOnly = document.getElementById('showCompletedOnly');
+    function showCompletedSquares() {
+      // Update button states
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('showCompletedBtn').classList.add('active');
       
-      // If outstanding is checked, uncheck completed
-      if (showOutstandingOnly) {
-        showCompletedOnly.checked = false;
-      }
-      
+      // Show only completed cards
       const cards = document.querySelectorAll('.card');
-      
       cards.forEach(card => {
         const hasPhoto = card.querySelector('img');
-        if (showOutstandingOnly) {
-          card.style.display = hasPhoto ? 'none' : 'block';
-        } else {
-          card.style.display = 'block';
-        }
+        card.style.display = hasPhoto ? 'block' : 'none';
+      });
+    }
+
+    function showOutstandingSquares() {
+      // Update button states
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('showOutstandingBtn').classList.add('active');
+      
+      // Show only outstanding cards
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        const hasPhoto = card.querySelector('img');
+        card.style.display = hasPhoto ? 'none' : 'block';
       });
     }
 
