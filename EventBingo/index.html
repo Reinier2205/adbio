@@ -2427,23 +2427,22 @@
       
       if (!reaction) return;
       
-      const square = squares[index];
       const photoOwner = viewingPlayer || currentPlayer;
       
-      if (!photoOwner || !square) {
-        console.warn('Cannot react: no player or square selected');
+      if (!photoOwner) {
+        console.warn('Cannot react: no player selected');
         return;
       }
       
       try {
-        // Send reaction to backend
+        // Send reaction to backend with square index
         const response = await fetch(`${workerURL}react`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             eventCode,
             playerName: photoOwner,
-            square,
+            square: index.toString(), // Send square index as string
             emoji
           })
         });
@@ -3622,9 +3621,11 @@
         const reactionsData = await response.json();
         
         // Update UI for each square that has reactions
-        squares.forEach((square, index) => {
-          if (reactionsData[square]) {
-            updateReactionDisplay(index, reactionsData[square]);
+        // reactionsData is keyed by square index (0-24)
+        Object.keys(reactionsData).forEach(squareIndex => {
+          const index = parseInt(squareIndex);
+          if (!isNaN(index) && reactionsData[squareIndex]) {
+            updateReactionDisplay(index, reactionsData[squareIndex]);
           }
         });
       } catch (error) {
