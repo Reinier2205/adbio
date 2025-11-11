@@ -53,7 +53,7 @@ class PlayerAuthenticator {
           body: JSON.stringify({
             eventCode,
             playerName,
-            answer: providedAnswer
+            answer: providedAnswer.trim()
           })
         });
 
@@ -80,7 +80,7 @@ class PlayerAuthenticator {
         }
         
         isValid = await this.sessionManager.validateSecretAnswer(
-          providedAnswer,
+          providedAnswer.trim(),
           session.secretAnswerHash
         );
       }
