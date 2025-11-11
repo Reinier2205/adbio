@@ -1343,6 +1343,8 @@ export default {
           "GET /players?event=<code>": "Get all players",
           "GET /photos?event=<code>": "Get all photos",
           "GET /photo/<key>": "Get specific photo",
+          "POST /react": "Save a reaction to a photo",
+          "GET /reactions?event=<code>&player=<name>": "Get all reactions for a player's photos",
           "POST /auth/register": "Register new player with authentication",
           "POST /auth/verify": "Verify player authentication",
           "GET /auth/question/<event>/<player>": "Get player's secret question",
@@ -1701,6 +1703,103 @@ export default {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Save a reaction
+    if (request.method === "POST" && path === "/react") {
+      try {
+        const data = await request.json();
+        const { eventCode, playerName, square, emoji } = data;
+
+        if (!eventCode || !playerName || square === undefined || !emoji) {
+          return new Response("Missing required fields", { status: 400, headers: corsHeaders });
+        }
+
+        // Validate emoji is one of the allowed ones
+        const allowedEmojis = ['❤️', '😂', '🔥', '🙌'];
+        if (!allowedEmojis.includes(emoji)) {
+          return new Response("Invalid emoji", { status: 400, headers: corsHeaders });
+        }
+
+        // Get current reactions for this photo
+        const reactionKey = `reactions:${eventCode}:${playerName}:${square}`;
+        let reactions = {};
+        
+        const existingData = await env.EventBingoProgress.get(reactionKey);
+        if (existingData) {
+          reactions = JSON.parse(existingData);
+        }
+
+        // Initialize emoji count if it doesn't exist
+        if (!reactions[emoji]) {
+          reactions[emoji] = 0;
+        }
+
+        // Increment the count
+        reactions[emoji]++;
+
+        // Save back to KV
+        await env.EventBingoProgress.put(reactionKey, JSON.stringify(reactions));
+
+        return new Response(JSON.stringify({ 
+          success: true, 
+          reactions 
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ 
+          error: "Failed to save reaction",
+          details: error.message 
+        }), { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
+    // Get all reactions for a player's photos
+    if (request.method === "GET" && path === "/reactions") {
+      try {
+        const eventCode = getEventCode(request);
+        const playerName = url.searchParams.get('player');
+
+        if (!playerName) {
+          return new Response("Player parameter required", { status: 400, headers: corsHeaders });
+        }
+
+        // Get all reaction keys for this player
+        const prefix = `reactions:${eventCode}:${playerName}:`;
+        const list = await env.EventBingoProgress.list({ prefix });
+        const allReactions = {};
+
+        for (const item of list.keys || []) {
+          const keyName = item.name || item.key;
+          // Extract square number from key: reactions:eventCode:playerName:square
+          const parts = keyName.split(':');
+          if (parts.length === 4) {
+            const square = parts[3];
+            const reactionData = await env.EventBingoProgress.get(keyName);
+            if (reactionData) {
+              allReactions[square] = JSON.parse(reactionData);
+            }
+          }
+        }
+
+        return new Response(JSON.stringify(allReactions), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ 
+          error: "Failed to get reactions",
+          details: error.message 
+        }), { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
     }
 
     return new Response("Not found", { status: 404, headers: corsHeaders });

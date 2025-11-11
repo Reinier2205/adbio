@@ -2421,30 +2421,99 @@
       alert('You have been signed out. Select a player to sign in again.');
     }
 
-    function toggleReaction(index, emoji) {
+    async function toggleReaction(index, emoji) {
       const reactionsContainer = document.querySelector(`#reactions${index}`);
       const reaction = reactionsContainer.querySelector(`.reaction[onclick*="${emoji}"]`);
       
       if (!reaction) return;
       
-      // Instagram-like behavior: only one reaction can be active at a time
-      const allReactions = reactionsContainer.querySelectorAll('.reaction');
-      allReactions.forEach(r => r.classList.remove('active'));
+      const square = squares[index];
+      const photoOwner = viewingPlayer || currentPlayer;
       
-      // Toggle the clicked reaction
-      reaction.classList.add('active');
+      if (!photoOwner || !square) {
+        console.warn('Cannot react: no player or square selected');
+        return;
+      }
       
-      // Add a bounce animation
-      reaction.style.transform = 'scale(1.5)';
-      setTimeout(() => {
-        reaction.style.transform = 'scale(1.3)';
-      }, 150);
-      
-      // Save reaction to localStorage (optional persistence)
       try {
-        const reactionKey = `eventbingo:reaction:${eventCode}:${index}`;
-        localStorage.setItem(reactionKey, emoji);
-      } catch(_) {}
+        // Send reaction to backend
+        const response = await fetch(`${workerURL}react`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventCode,
+            playerName: photoOwner,
+            square,
+            emoji
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to save reaction');
+        }
+        
+        const result = await response.json();
+        
+        // Update UI with new counts
+        if (result.success && result.reactions) {
+          updateReactionDisplay(index, result.reactions);
+        }
+        
+        // Add bounce animation
+        reaction.style.transform = 'scale(1.5)';
+        setTimeout(() => {
+          reaction.style.transform = 'scale(1)';
+        }, 150);
+        
+      } catch (error) {
+        console.error('Failed to save reaction:', error);
+        // Still show visual feedback even if backend fails
+        reaction.style.transform = 'scale(1.5)';
+        setTimeout(() => {
+          reaction.style.transform = 'scale(1)';
+        }, 150);
+      }
+    }
+    
+    function updateReactionDisplay(index, reactions) {
+      const reactionsContainer = document.querySelector(`#reactions${index}`);
+      if (!reactionsContainer) return;
+      
+      // Update each reaction with its count
+      ['❤️', '😂', '🔥', '🙌'].forEach(emoji => {
+        const reactionEl = reactionsContainer.querySelector(`.reaction[onclick*="${emoji}"]`);
+        if (reactionEl) {
+          const count = reactions[emoji] || 0;
+          
+          // Remove existing count
+          const existingCount = reactionEl.querySelector('.reaction-count');
+          if (existingCount) {
+            existingCount.remove();
+          }
+          
+          // Add count if > 0
+          if (count > 0) {
+            const countEl = document.createElement('span');
+            countEl.className = 'reaction-count';
+            countEl.textContent = count;
+            countEl.style.cssText = `
+              position: absolute;
+              bottom: -4px;
+              right: -4px;
+              background: var(--instagram-pink);
+              color: white;
+              font-size: 0.7rem;
+              font-weight: bold;
+              padding: 2px 5px;
+              border-radius: 10px;
+              min-width: 18px;
+              text-align: center;
+            `;
+            reactionEl.style.position = 'relative';
+            reactionEl.appendChild(countEl);
+          }
+        }
+      });
     }
 
     function checkForCompletion() {
@@ -3515,6 +3584,10 @@
           }
         });
         updateProgress();
+        
+        // Load reaction counts for all photos
+        await loadReactionCounts(player);
+        
         // Note: Removed automatic loadPlayers() call to prevent unnecessary reloads
         // The player list is already loaded and doesn't need to refresh when viewing photos
       } catch (err) {
@@ -3538,6 +3611,24 @@
         }
       } finally {
         hideLoading();
+      }
+    }
+
+    async function loadReactionCounts(player) {
+      try {
+        const response = await fetch(`${workerURL}reactions?event=${eventCode}&player=${encodeURIComponent(player)}`);
+        if (!response.ok) return;
+        
+        const reactionsData = await response.json();
+        
+        // Update UI for each square that has reactions
+        squares.forEach((square, index) => {
+          if (reactionsData[square]) {
+            updateReactionDisplay(index, reactionsData[square]);
+          }
+        });
+      } catch (error) {
+        console.warn('Failed to load reaction counts:', error);
       }
     }
 
