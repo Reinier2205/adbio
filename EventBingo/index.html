@@ -3149,152 +3149,7 @@
         });
 
         fileInput.addEventListener("change", async (e) => {
-          if (!currentPlayer) {
-            const selected = await promptForPlayerSelection();
-            if (!selected) {
-              e.target.value = ""; // Clear file input
-              return;
-            }
-            currentPlayer = selected;
-          }
-          
-          // Check if user is in view-only mode
-          if (currentAuthenticationLevel === 'viewOnly') {
-            alert(`You can view ${currentPlayer}'s photos but cannot upload for ${currentPlayer}. To upload photos, select your own name and authenticate.`);
-            e.target.value = ""; // Clear file input
-            return;
-          }
-          
-          const file = e.target.files[0];
-          if (!file) return;
-
-          // Show loading states
-          setButtonLoading(addPhotoBtn, true);
-          resultDiv.innerHTML = '<div class="photo-loading">📸 Compressing photo...</div>';
-          showLoading("Compressing and uploading your photo...");
-
-          try {
-            // Check network connectivity before upload
-            if (window.errorHandler && !navigator.onLine) {
-              // Queue the upload for when online
-              window.errorHandler.queueActionForOnline('upload_photo', {
-                file: file,
-                player: currentPlayer,
-                square: index,
-                eventCode: eventCode
-              });
-              
-              resultDiv.innerHTML = '<div class="photo-loading">📱 Offline - Upload queued for when online</div>';
-              
-              // Show offline notification
-              window.errorHandler.createStorageNotification('offline_upload_queued', {
-                message: 'Photo upload queued. It will be uploaded when you reconnect to the internet.'
-              });
-              
-              return;
-            }
-            
-            // Compress the image
-            const compressedFile = await compressImage(file);
-            
-            // Debug info
-            const originalSize = (file.size / 1024).toFixed(1);
-            const compressedSize = (compressedFile.size / 1024).toFixed(1);
-            const compressionRatio = ((1 - compressedFile.size / file.size) * 100).toFixed(1);
-            
-            console.log(`Photo compression: ${originalSize}KB → ${compressedSize}KB (${compressionRatio}% reduction)`);
-            
-            // Update loading message
-            resultDiv.innerHTML = '<div class="photo-loading">📤 Uploading photo...</div>';
-            
-            // Upload both versions with retry logic
-            let uploadAttempts = 0;
-            const maxAttempts = 3;
-            let uploadSuccess = false;
-            let lastError = null;
-            
-            while (uploadAttempts < maxAttempts && !uploadSuccess) {
-              try {
-                uploadAttempts++;
-                
-                const res = await uploadImages(file, compressedFile, currentPlayer, index, eventCode);
-                const data = await res.json();
-                
-                if (data.success && data.key) {
-                  const photoUrl = `${workerURL}photo/${data.key}`;
-                  resultDiv.innerHTML = `
-                    <img src="${photoUrl}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(photoUrl)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
-                  `;
-                  // Hide the upload section since photo is now loaded
-                  uploadSection.classList.add('hidden');
-                  div.classList.add('completed');
-                  updateProgress();
-                  updateLeaderboard();
-                  // Check if player completed all squares for confetti
-                  checkForCompletion();
-                  // Refresh player list to include new players and update progress table
-                  // Don't await to avoid blocking the UI
-                  loadPlayers().catch(() => {});
-                  
-                  uploadSuccess = true;
-                  
-                  // Cache successful state
-                  if (window.errorHandler) {
-                    await window.errorHandler.cacheLastKnownGoodState({
-                      page: 'index.html',
-                      eventCode: eventCode,
-                      currentPlayer: currentPlayer,
-                      lastUpload: { square: index, timestamp: Date.now() },
-                      timestamp: Date.now()
-                    });
-                  }
-                } else {
-                  throw new Error(data.message || 'Upload failed');
-                }
-              } catch (attemptError) {
-                lastError = attemptError;
-                console.warn(`Upload attempt ${uploadAttempts} failed:`, attemptError);
-                
-                if (uploadAttempts < maxAttempts) {
-                  // Wait before retry
-                  await new Promise(resolve => setTimeout(resolve, 1000 * uploadAttempts));
-                  resultDiv.innerHTML = `<div class="photo-loading">📤 Retrying upload (${uploadAttempts + 1}/${maxAttempts})...</div>`;
-                }
-              }
-            }
-            
-            if (!uploadSuccess) {
-              throw lastError || new Error('Upload failed after multiple attempts');
-            }
-          } catch (err) {
-            console.error('Upload error:', err);
-            
-            // Log error for debugging
-            if (window.errorHandler) {
-              window.errorHandler._logError('photo_upload_failed', {
-                eventCode: eventCode,
-                playerName: currentPlayer,
-                squareIndex: index,
-                error: err.message,
-                fileSize: file.size,
-                fileName: file.name
-              });
-              
-              // Show user-friendly error with recovery suggestions
-              const suggestions = window.errorHandler.getErrorRecoverySuggestions('photo_upload_failed');
-              resultDiv.innerHTML = `
-                <div class="photo-error">
-                  ❌ Upload failed: ${err.message}<br>
-                  <small style="margin-top: 5px; display: block;">Try: ${suggestions[0]}</small>
-                </div>
-              `;
-            } else {
-              resultDiv.innerHTML = '<div class="photo-error">❌ Error uploading photo. Please try again.</div>';
-            }
-          } finally {
-            setButtonLoading(addPhotoBtn, false);
-            hideLoading();
-          }
+          await handlePhotoUpload(e, index, fileInput, resultDiv, uploadSection, addPhotoBtn, div, false);
         });
       });
       
@@ -3312,6 +3167,205 @@
           }
         } catch(_) {}
       });
+    }
+
+    // Centralized photo upload handler
+    async function handlePhotoUpload(e, index, fileInput, resultDiv, uploadSection, addPhotoBtn, cardDiv, isReplace = false) {
+      if (!currentPlayer) {
+        const selected = await promptForPlayerSelection();
+        if (!selected) {
+          e.target.value = ""; // Clear file input
+          return;
+        }
+        currentPlayer = selected;
+      }
+      
+      // Check if user is in view-only mode
+      if (currentAuthenticationLevel === 'viewOnly') {
+        alert(`You can view ${currentPlayer}'s photos but cannot upload for ${currentPlayer}. To upload photos, select your own name and authenticate.`);
+        e.target.value = ""; // Clear file input
+        return;
+      }
+      
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Show loading states
+      setButtonLoading(addPhotoBtn, true);
+      resultDiv.innerHTML = '<div class="photo-loading">📸 Compressing photo...</div>';
+      showLoading(isReplace ? "Replacing photo..." : "Compressing and uploading your photo...");
+
+      try {
+        // Check network connectivity before upload
+        if (window.errorHandler && !navigator.onLine) {
+          // Queue the upload for when online
+          window.errorHandler.queueActionForOnline('upload_photo', {
+            file: file,
+            player: currentPlayer,
+            square: index,
+            eventCode: eventCode
+          });
+          
+          resultDiv.innerHTML = '<div class="photo-loading">📱 Offline - Upload queued for when online</div>';
+          
+          // Show offline notification
+          window.errorHandler.createStorageNotification('offline_upload_queued', {
+            message: 'Photo upload queued. It will be uploaded when you reconnect to the internet.'
+          });
+          
+          return;
+        }
+        
+        // Compress the image
+        const compressedFile = await compressImage(file);
+        
+        // Debug info
+        const originalSize = (file.size / 1024).toFixed(1);
+        const compressedSize = (compressedFile.size / 1024).toFixed(1);
+        const compressionRatio = ((1 - compressedFile.size / file.size) * 100).toFixed(1);
+        
+        console.log(`Photo compression: ${originalSize}KB → ${compressedSize}KB (${compressionRatio}% reduction)`);
+        
+        // Update loading message
+        resultDiv.innerHTML = '<div class="photo-loading">📤 Uploading photo...</div>';
+        
+        // Upload both versions with retry logic
+        let uploadAttempts = 0;
+        const maxAttempts = 3;
+        let uploadSuccess = false;
+        let lastError = null;
+        
+        while (uploadAttempts < maxAttempts && !uploadSuccess) {
+          try {
+            uploadAttempts++;
+            
+            const res = await uploadImages(file, compressedFile, currentPlayer, index, eventCode);
+            const data = await res.json();
+            
+            if (data.success && data.key) {
+              const photoUrl = `${workerURL}photo/${data.key}`;
+              resultDiv.innerHTML = `
+                <img src="${photoUrl}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(photoUrl)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
+                <button class="replace-photo-btn" onclick="replacePhoto(${index})" style="
+                  position: absolute;
+                  bottom: 10px;
+                  right: 10px;
+                  padding: 8px 14px;
+                  background: linear-gradient(135deg, var(--primary), var(--secondary));
+                  color: white;
+                  border: none;
+                  border-radius: 8px;
+                  font-size: 0.85rem;
+                  font-weight: 600;
+                  cursor: pointer;
+                  transition: all 0.2s ease;
+                  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+                  z-index: 10;
+                ">
+                  🔄 Replace
+                </button>
+              `;
+              // Hide the upload section since photo is now loaded
+              uploadSection.classList.add('hidden');
+              cardDiv.classList.add('completed');
+              
+              // Make card-photo position relative for absolute button positioning
+              resultDiv.style.position = 'relative';
+              
+              updateProgress();
+              updateLeaderboard();
+              // Check if player completed all squares for confetti
+              checkForCompletion();
+              // Refresh player list to include new players and update progress table
+              // Don't await to avoid blocking the UI
+              loadPlayers().catch(() => {});
+              
+              uploadSuccess = true;
+              
+              // Cache successful state
+              if (window.errorHandler) {
+                await window.errorHandler.cacheLastKnownGoodState({
+                  page: 'index.html',
+                  eventCode: eventCode,
+                  currentPlayer: currentPlayer,
+                  lastUpload: { square: index, timestamp: Date.now() },
+                  timestamp: Date.now()
+                });
+              }
+            } else {
+              throw new Error(data.message || 'Upload failed');
+            }
+          } catch (attemptError) {
+            lastError = attemptError;
+            console.warn(`Upload attempt ${uploadAttempts} failed:`, attemptError);
+            
+            if (uploadAttempts < maxAttempts) {
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 1000 * uploadAttempts));
+              resultDiv.innerHTML = `<div class="photo-loading">📤 Retrying upload (${uploadAttempts + 1}/${maxAttempts})...</div>`;
+            }
+          }
+        }
+        
+        if (!uploadSuccess) {
+          throw lastError || new Error('Upload failed after multiple attempts');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        
+        // Log error for debugging
+        if (window.errorHandler) {
+          window.errorHandler._logError('photo_upload_failed', {
+            eventCode: eventCode,
+            playerName: currentPlayer,
+            squareIndex: index,
+            error: err.message,
+            fileSize: file.size,
+            fileName: file.name
+          });
+          
+          // Show user-friendly error with recovery suggestions
+          const suggestions = window.errorHandler.getErrorRecoverySuggestions('photo_upload_failed');
+          resultDiv.innerHTML = `
+            <div class="photo-error">
+              ❌ Upload failed: ${err.message}<br>
+              <small style="margin-top: 5px; display: block;">Try: ${suggestions[0]}</small>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = '<div class="photo-error">❌ Error uploading photo. Please try again.</div>';
+        }
+      } finally {
+        setButtonLoading(addPhotoBtn, false);
+        hideLoading();
+        // Clear file input
+        fileInput.value = '';
+      }
+    }
+
+    // Replace photo function
+    async function replacePhoto(index) {
+      if (!currentPlayer) {
+        alert('Please sign in to replace photos');
+        return;
+      }
+      
+      // Check if user is in view-only mode
+      if (currentAuthenticationLevel === 'viewOnly') {
+        alert(`You can view ${currentPlayer}'s photos but cannot replace photos for ${currentPlayer}. To replace photos, select your own name and authenticate.`);
+        return;
+      }
+      
+      // Confirm replacement
+      if (!confirm('Are you sure you want to replace this photo? The old photo will be deleted.')) {
+        return;
+      }
+      
+      // Trigger file input
+      const fileInput = document.getElementById(`file${index}`);
+      if (fileInput) {
+        fileInput.click();
+      }
     }
 
     // Add view-only mode styles and hide performance monitor
