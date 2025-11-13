@@ -3246,10 +3246,24 @@
               const photoUrl = `${workerURL}photo/${data.key}`;
               resultDiv.innerHTML = `
                 <img src="${photoUrl}" alt="Uploaded photo" onclick="window.open('${escapeQuotes(photoUrl)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
-                <button class="replace-photo-btn" onclick="replacePhoto(${index})" style="
-                  position: absolute;
-                  bottom: 10px;
-                  right: 10px;
+              `;
+              
+              // Add replace button to reactions row
+              const reactionsDiv = document.getElementById(`reactions${index}`);
+              if (reactionsDiv) {
+                // Remove existing replace button if any
+                const existingBtn = reactionsDiv.querySelector('.replace-photo-btn');
+                if (existingBtn) {
+                  existingBtn.remove();
+                }
+                
+                // Add new replace button
+                const replaceBtn = document.createElement('button');
+                replaceBtn.className = 'replace-photo-btn';
+                replaceBtn.onclick = () => replacePhoto(index);
+                replaceBtn.innerHTML = '🔄 Replace';
+                replaceBtn.style.cssText = `
+                  margin-left: auto;
                   padding: 8px 14px;
                   background: linear-gradient(135deg, var(--primary), var(--secondary));
                   color: white;
@@ -3260,17 +3274,21 @@
                   cursor: pointer;
                   transition: all 0.2s ease;
                   box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
-                  z-index: 10;
-                ">
-                  🔄 Replace
-                </button>
-              `;
+                `;
+                replaceBtn.onmouseover = function() {
+                  this.style.transform = 'translateY(-2px)';
+                  this.style.boxShadow = '0 4px 15px rgba(74, 144, 226, 0.4)';
+                };
+                replaceBtn.onmouseout = function() {
+                  this.style.transform = 'translateY(0)';
+                  this.style.boxShadow = '0 2px 8px rgba(74, 144, 226, 0.3)';
+                };
+                reactionsDiv.appendChild(replaceBtn);
+              }
+              
               // Hide the upload section since photo is now loaded
               uploadSection.classList.add('hidden');
               cardDiv.classList.add('completed');
-              
-              // Make card-photo position relative for absolute button positioning
-              resultDiv.style.position = 'relative';
               
               updateProgress();
               updateLeaderboard();
