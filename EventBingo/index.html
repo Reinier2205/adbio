@@ -3610,6 +3610,7 @@
         squares.forEach((square, index) => {
           const resultDiv = document.getElementById(`result${index}`);
           const uploadSection = document.getElementById(`upload${index}`);
+          const reactionsDiv = document.getElementById(`reactions${index}`);
           const card = resultDiv.closest('.card');
           const url = data[square];
           if (url) {
@@ -3618,11 +3619,19 @@
             
             resultDiv.innerHTML = `
               <img src="${url}" alt="${escapeQuotes(square)}" onclick="window.open('${escapeQuotes(url)}', '_blank')" style="cursor: pointer; opacity:0; transition: opacity 0.3s ease;" onload="this.style.opacity='1'" />
-              ${canReplace ? `
-                <button class="replace-photo-btn" onclick="replacePhoto(${index})" style="
-                  position: absolute;
-                  bottom: 10px;
-                  right: 10px;
+            `;
+            
+            // Add replace button to reactions row if user can replace
+            if (canReplace && reactionsDiv) {
+              // Check if replace button already exists
+              let replaceBtn = reactionsDiv.querySelector('.replace-photo-btn');
+              if (!replaceBtn) {
+                replaceBtn = document.createElement('button');
+                replaceBtn.className = 'replace-photo-btn';
+                replaceBtn.onclick = () => replacePhoto(index);
+                replaceBtn.innerHTML = '🔄 Replace';
+                replaceBtn.style.cssText = `
+                  margin-left: auto;
                   padding: 8px 14px;
                   background: linear-gradient(135deg, var(--primary), var(--secondary));
                   color: white;
@@ -3633,15 +3642,24 @@
                   cursor: pointer;
                   transition: all 0.2s ease;
                   box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
-                  z-index: 10;
-                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 15px rgba(74, 144, 226, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(74, 144, 226, 0.3)';">
-                  🔄 Replace
-                </button>
-              ` : ''}
-            `;
-            
-            // Make card-photo position relative for absolute button positioning
-            resultDiv.style.position = 'relative';
+                `;
+                replaceBtn.onmouseover = function() {
+                  this.style.transform = 'translateY(-2px)';
+                  this.style.boxShadow = '0 4px 15px rgba(74, 144, 226, 0.4)';
+                };
+                replaceBtn.onmouseout = function() {
+                  this.style.transform = 'translateY(0)';
+                  this.style.boxShadow = '0 2px 8px rgba(74, 144, 226, 0.3)';
+                };
+                reactionsDiv.appendChild(replaceBtn);
+              }
+            } else if (reactionsDiv) {
+              // Remove replace button if it exists but user can't replace
+              const existingBtn = reactionsDiv.querySelector('.replace-photo-btn');
+              if (existingBtn) {
+                existingBtn.remove();
+              }
+            }
             
             // Hide the upload section since photo is already loaded
             if (uploadSection) {
@@ -3653,10 +3671,16 @@
             }
           } else {
             resultDiv.innerHTML = "";
-            resultDiv.style.position = '';
             // Show the upload section if no photo is loaded
             if (uploadSection) {
               uploadSection.classList.remove('hidden');
+            }
+            // Remove replace button if no photo
+            if (reactionsDiv) {
+              const existingBtn = reactionsDiv.querySelector('.replace-photo-btn');
+              if (existingBtn) {
+                existingBtn.remove();
+              }
             }
             // Remove completed class
             if (card) {
