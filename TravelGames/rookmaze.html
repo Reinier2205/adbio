@@ -87,6 +87,11 @@
         }
         .square.possible-move {
             box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.7);
+            cursor: pointer;
+        }
+        .square.possible-move:hover {
+            background-color: #0d6d49;
+            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.9);
         }
         .square:hover:not(.visited):not(.player-x):not(.player-o) {
             background-color: #0d6d49;
@@ -228,7 +233,6 @@
                 <p>A strategic battle of wits on the chessboard</p>
             </div>
 
-```
         <div class="form-group">
             <label for="board-size">Board Size:</label>
             <select id="board-size">
@@ -257,10 +261,10 @@
         <div class="game-rules">
             <h3>How to Play:</h3>
             <ol>
-                <li>Players start in opposite corners</li>
-                <li>Move like a chess rook (horizontally/vertically)</li>
-                <li>You cannot jump over pieces or land on visited squares</li>
-                <li>Win by capturing your opponent or blocking their moves</li>
+                <li>Players start in opposite corners (X in top-left, O in bottom-right)</li>
+                <li>Click any highlighted square to move like a chess rook (horizontally/vertically)</li>
+                <li>You cannot jump over visited squares or land on them</li>
+                <li>Win by capturing your opponent or blocking all their moves</li>
             </ol>
         </div>
     </div>
@@ -283,7 +287,7 @@
         </div>
         
         <div class="status">
-            <div id="status-message" class="status-message">Player X's turn</div>
+            <div id="status-message" class="status-message">Player X's turn - Click a highlighted square to move</div>
         </div>
         
         <div id="board" class="board"></div>
@@ -533,7 +537,8 @@
     // Update UI
     function updateUI() {
         if (gameState === 'playing') {
-            statusMessage.textContent = `${currentPlayer === 'X' ? 'Player X' : 'Player O'}'s turn`;
+            const playerName = currentPlayer === 'X' ? 'Player X' : 'Player O';
+            statusMessage.textContent = `${playerName}'s turn - Click a highlighted square to move`;
         }
         
         playerXIndicator.className = 'player-indicator' + (currentPlayer === 'X' && gameState === 'playing' ? ' player-active' : '');
@@ -554,6 +559,7 @@
     });
     newGameBtn.addEventListener('click', initializeGame);
 </script>
+
 
 </body>
 </html>
