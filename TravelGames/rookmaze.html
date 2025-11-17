@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -33,6 +34,7 @@
         .header {
             text-align: center;
             margin-bottom: 24px;
+            position: relative;
         }
         .header h1 {
             font-size: 2.5rem;
@@ -48,12 +50,12 @@
             font-size: 1rem;
         }
         .board {
-            display: inline-block;
+            display: block;
             background: rgba(16, 60, 32, 0.8);
             padding: 12px;
             border-radius: 8px;
             margin: 0 auto;
-            display: block;
+            width: fit-content;
         }
         .board-row {
             display: flex;
@@ -196,6 +198,25 @@
         .hidden {
             display: none;
         }
+        .reset-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(16,60,32,0.8);
+            border: 2px solid #fbbf24;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .reset-btn:hover {
+            background: rgba(22, 78, 42, 0.9);
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -206,324 +227,333 @@
                 <h1>Rook's Maze</h1>
                 <p>A strategic battle of wits on the chessboard</p>
             </div>
-            
-            <div class="form-group">
-                <label for="board-size">Board Size:</label>
-                <select id="board-size">
-                    <option value="6">6x6</option>
-                    <option value="8" selected>8x8</option>
-                    <option value="10">10x10</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Game Mode:</label>
-                <div style="display: flex; gap: 12px; margin-top: 8px;">
-                    <label style="flex: 1; display: flex; align-items: center; cursor: pointer;">
-                        <input type="radio" name="game-mode" value="human" checked>
-                        <span style="margin-left: 8px;">Human vs Human</span>
-                    </label>
-                    <label style="flex: 1; display: flex; align-items: center; cursor: pointer;">
-                        <input type="radio" name="game-mode" value="ai">
-                        <span style="margin-left: 8px;">Human vs AI</span>
-                    </label>
-                </div>
-            </div>
-            
-            <button id="start-btn" class="btn btn-primary">Start Game</button>
-            
-            <div class="game-rules">
-                <h3>How to Play:</h3>
-                <ol>
-                    <li>Players start in opposite corners</li>
-                    <li>Move like a chess rook (horizontally/vertically)</li>
-                    <li>You cannot jump over pieces or land on visited squares</li>
-                    <li>Win by capturing your opponent or blocking their moves</li>
-                </ol>
+
+```
+        <div class="form-group">
+            <label for="board-size">Board Size:</label>
+            <select id="board-size">
+                <option value="6">6x6</option>
+                <option value="8" selected>8x8</option>
+                <option value="10">10x10</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Game Mode:</label>
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <label style="flex: 1; display: flex; align-items: center; cursor: pointer;">
+                    <input type="radio" name="game-mode" value="human" checked>
+                    <span style="margin-left: 8px;">Human vs Human</span>
+                </label>
+                <label style="flex: 1; display: flex; align-items: center; cursor: pointer;">
+                    <input type="radio" name="game-mode" value="ai">
+                    <span style="margin-left: 8px;">Human vs AI</span>
+                </label>
             </div>
         </div>
         
-        <!-- Game Screen -->
-        <div id="game-screen" class="card hidden">
-            <div class="header">
-                <h1>Rook's Maze</h1>
-                <button id="reset-btn" style="position: absolute; top: 12px; right: 12px; background: rgba(16,60,32,0.8); border: 2px solid #fbbf24; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#fbbf24" viewBox="0 0 16 16">
-                        <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                    </svg>
-                </button>
-            </div>
-            
-            <div class="players">
-                <div id="player-x-indicator" class="player-indicator player-active">Player X</div>
-                <div id="player-o-indicator" class="player-indicator">Player O</div>
-            </div>
-            
-            <div class="status">
-                <div id="status-message" class="status-message">Player X's turn</div>
-            </div>
-            
-            <div id="board" class="board"></div>
-            
-            <div class="controls">
-                <button id="new-game-btn" class="btn btn-primary">New Game</button>
-                <button id="menu-btn" class="btn btn-secondary">Menu</button>
-            </div>
+        <button id="start-btn" class="btn btn-primary">Start Game</button>
+        
+        <div class="game-rules">
+            <h3>How to Play:</h3>
+            <ol>
+                <li>Players start in opposite corners</li>
+                <li>Move like a chess rook (horizontally/vertically)</li>
+                <li>You cannot jump over pieces or land on visited squares</li>
+                <li>Win by capturing your opponent or blocking their moves</li>
+            </ol>
         </div>
     </div>
+    
+    <!-- Game Screen -->
+    <div id="game-screen" class="card hidden">
+        <div class="header">
+            <h1>Rook's Maze</h1>
+            <button id="reset-btn" class="reset-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#fbbf24" viewBox="0 0 16 16">
+                    <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="players">
+            <div id="player-x-indicator" class="player-indicator player-active">Player X</div>
+            <div id="player-o-indicator" class="player-indicator">Player O</div>
+        </div>
+        
+        <div class="status">
+            <div id="status-message" class="status-message">Player X's turn</div>
+        </div>
+        
+        <div id="board" class="board"></div>
+        
+        <div class="controls">
+            <button id="new-game-btn" class="btn btn-primary">New Game</button>
+            <button id="menu-btn" class="btn btn-secondary">Menu</button>
+        </div>
+    </div>
+</div>
 
-    <script>
-        // Game state
-        let gameState = 'menu'; // menu, playing, gameOver
-        let boardSize = 8;
-        let currentPlayer = 'X';
-        let playerXPosition = { row: 0, col: 0 };
-        let playerOPosition = { row: 7, col: 7 };
-        let visitedSquares = new Set();
-        let winner = null;
-        let isHumanVsHuman = true;
+<script>
+    // Game state
+    let gameState = 'menu';
+    let boardSize = 8;
+    let currentPlayer = 'X';
+    let playerXPosition = { row: 0, col: 0 };
+    let playerOPosition = { row: 7, col: 7 };
+    let visitedSquares = new Set();
+    let winner = null;
+    let isHumanVsHuman = true;
 
-        // DOM elements
-        const menuScreen = document.getElementById('menu-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const boardElement = document.getElementById('board');
-        const statusMessage = document.getElementById('status-message');
-        const playerXIndicator = document.getElementById('player-x-indicator');
-        const playerOIndicator = document.getElementById('player-o-indicator');
-        const resetBtn = document.getElementById('reset-btn');
-        const menuBtn = document.getElementById('menu-btn');
-        const newGameBtn = document.getElementById('new-game-btn');
-        const startBtn = document.getElementById('start-btn');
-        const boardSizeSelect = document.getElementById('board-size');
-        const gameModeRadios = document.querySelectorAll('input[name="game-mode"]');
+    // DOM elements
+    const menuScreen = document.getElementById('menu-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const boardElement = document.getElementById('board');
+    const statusMessage = document.getElementById('status-message');
+    const playerXIndicator = document.getElementById('player-x-indicator');
+    const playerOIndicator = document.getElementById('player-o-indicator');
+    const resetBtn = document.getElementById('reset-btn');
+    const menuBtn = document.getElementById('menu-btn');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const startBtn = document.getElementById('start-btn');
+    const boardSizeSelect = document.getElementById('board-size');
 
-        // Initialize game
-        function initializeGame() {
-            boardSize = parseInt(boardSizeSelect.value);
-            isHumanVsHuman = document.querySelector('input[name="game-mode"]:checked').value === 'human';
-            
-            visitedSquares = new Set();
-            visitedSquares.add('0,0');
-            visitedSquares.add(`${boardSize-1},${boardSize-1}`);
-            
-            playerXPosition = { row: 0, col: 0 };
-            playerOPosition = { row: boardSize-1, col: boardSize-1 };
-            currentPlayer = 'X';
-            winner = null;
-            
-            renderBoard();
-            updateUI();
-            gameState = 'playing';
-            
-            menuScreen.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
+    // Initialize game
+    function initializeGame() {
+        boardSize = parseInt(boardSizeSelect.value);
+        isHumanVsHuman = document.querySelector('input[name="game-mode"]:checked').value === 'human';
+        
+        visitedSquares = new Set();
+        visitedSquares.add('0,0');
+        visitedSquares.add(`${boardSize-1},${boardSize-1}`);
+        
+        playerXPosition = { row: 0, col: 0 };
+        playerOPosition = { row: boardSize-1, col: boardSize-1 };
+        currentPlayer = 'X';
+        winner = null;
+        gameState = 'playing';
+        
+        menuScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+        
+        renderBoard();
+        updateUI();
+    }
+
+    // Check if a move is valid
+    function isValidMove(fromRow, fromCol, toRow, toCol) {
+        if (fromRow !== toRow && fromCol !== toCol) {
+            return false;
         }
 
-        // Check if a move is valid
-        function isValidMove(fromRow, fromCol, toRow, toCol) {
-            if (fromRow !== toRow && fromCol !== toCol) {
-                return false;
-            }
-
-            let rowStep = 0;
-            let colStep = 0;
-            
-            if (fromRow !== toRow) {
-                rowStep = toRow > fromRow ? 1 : -1;
-            } else {
-                colStep = toCol > fromCol ? 1 : -1;
-            }
-
-            let currentRow = fromRow + rowStep;
-            let currentCol = fromCol + colStep;
-            
-            while (currentRow !== toRow || currentCol !== toCol) {
-                const key = `${currentRow},${currentCol}`;
-                if (visitedSquares.has(key)) {
-                    return false;
-                }
-                currentRow += rowStep;
-                currentCol += colStep;
-            }
-
-            const destKey = `${toRow},${toCol}`;
-            if (visitedSquares.has(destKey)) {
-                return false;
-            }
-
-            return true;
+        let rowStep = 0;
+        let colStep = 0;
+        
+        if (fromRow !== toRow) {
+            rowStep = toRow > fromRow ? 1 : -1;
+        } else {
+            colStep = toCol > fromCol ? 1 : -1;
         }
 
-        // Get all possible moves for current player
-        function getPossibleMoves(playerPos) {
-            const moves = [];
-            const { row, col } = playerPos;
-            const opponentPos = currentPlayer === 'X' ? playerOPosition : playerXPosition;
+        let currentRow = fromRow + rowStep;
+        let currentCol = fromCol + colStep;
+        
+        while (currentRow !== toRow || currentCol !== toCol) {
+            const key = `${currentRow},${currentCol}`;
+            if (visitedSquares.has(key)) {
+                return false;
+            }
+            currentRow += rowStep;
+            currentCol += colStep;
+        }
+
+        const destKey = `${toRow},${toCol}`;
+        if (visitedSquares.has(destKey)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Get all possible moves for current player
+    function getPossibleMoves(playerPos) {
+        const moves = [];
+        const { row, col } = playerPos;
+        const opponentPos = currentPlayer === 'X' ? playerOPosition : playerXPosition;
+        
+        const directions = [
+            { dr: 0, dc: 1 },
+            { dr: 0, dc: -1 },
+            { dr: 1, dc: 0 },
+            { dr: -1, dc: 0 }
+        ];
+        
+        for (const { dr, dc } of directions) {
+            let r = row + dr;
+            let c = col + dc;
             
-            const directions = [
-                { dr: 0, dc: 1 },
-                { dr: 0, dc: -1 },
-                { dr: 1, dc: 0 },
-                { dr: -1, dc: 0 }
-            ];
-            
-            for (const { dr, dc } of directions) {
-                let r = row + dr;
-                let c = col + dc;
+            while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+                const key = `${r},${c}`;
                 
-                while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
-                    const key = `${r},${c}`;
-                    
-                    if (r === opponentPos.row && c === opponentPos.col) {
-                        moves.push({ row: r, col: c });
-                        break;
-                    }
-                    
-                    if (visitedSquares.has(key)) {
-                        break;
-                    }
-                    
+                if (r === opponentPos.row && c === opponentPos.col) {
                     moves.push({ row: r, col: c });
-                    r += dr;
-                    c += dc;
+                    break;
                 }
+                
+                if (visitedSquares.has(key)) {
+                    break;
+                }
+                
+                moves.push({ row: r, col: c });
+                r += dr;
+                c += dc;
             }
-            
-            return moves;
         }
+        
+        return moves;
+    }
 
-        // Make a move
-        function makeMove(row, col) {
-            if (gameState !== 'playing') return;
+    // Make a move
+    function makeMove(row, col) {
+        if (gameState !== 'playing') return;
+        
+        const currentPlayerPos = currentPlayer === 'X' ? playerXPosition : playerOPosition;
+        const isValid = isValidMove(currentPlayerPos.row, currentPlayerPos.col, row, col);
+        
+        if (!isValid) return;
+        
+        if (currentPlayer === 'X') {
+            playerXPosition = { row, col };
+        } else {
+            playerOPosition = { row, col };
+        }
+        
+        visitedSquares.add(`${row},${col}`);
+        
+        // Check win conditions BEFORE switching players
+        checkWinConditions(row, col);
+        
+        // Only switch players if game is still ongoing
+        if (gameState === 'playing') {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
             
-            const currentPlayerPos = currentPlayer === 'X' ? playerXPosition : playerOPosition;
-            const isValid = isValidMove(currentPlayerPos.row, currentPlayerPos.col, row, col);
-            
-            if (!isValid) return;
-            
-            if (currentPlayer === 'X') {
-                playerXPosition = { row, col };
-            } else {
-                playerOPosition = { row, col };
-            }
-            
-            visitedSquares.add(`${row},${col}`);
-            
-            checkWinConditions(row, col);
             renderBoard();
             updateUI();
             
-            if (gameState !== 'gameOver') {
-                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                updateUI();
+            // AI move
+            if (currentPlayer === 'O' && !isHumanVsHuman && gameState === 'playing') {
+                setTimeout(() => {
+                    makeAIMove();
+                }, 500);
+            }
+        } else {
+            // Game over, just update the display
+            renderBoard();
+            updateUI();
+        }
+    }
+
+    // Check for win conditions
+    function checkWinConditions(row, col) {
+        const opponentPos = currentPlayer === 'X' ? playerOPosition : playerXPosition;
+        
+        if (row === opponentPos.row && col === opponentPos.col) {
+            winner = currentPlayer;
+            statusMessage.textContent = `Player ${currentPlayer} wins by capturing!`;
+            gameState = 'gameOver';
+            return;
+        }
+        
+        const opponentPossibleMoves = getPossibleMoves(opponentPos);
+        if (opponentPossibleMoves.length === 0) {
+            winner = currentPlayer;
+            statusMessage.textContent = `Player ${currentPlayer} wins by blocking!`;
+            gameState = 'gameOver';
+            return;
+        }
+    }
+
+    // AI move
+    function makeAIMove() {
+        if (gameState !== 'playing') return;
+        
+        const possibleMoves = getPossibleMoves(playerOPosition);
+        
+        if (possibleMoves.length > 0) {
+            const randomIndex = Math.floor(Math.random() * possibleMoves.length);
+            const { row, col } = possibleMoves[randomIndex];
+            makeMove(row, col);
+        }
+    }
+
+    // Render board
+    function renderBoard() {
+        boardElement.innerHTML = '';
+        
+        const currentPlayerPos = currentPlayer === 'X' ? playerXPosition : playerOPosition;
+        const possibleMoves = getPossibleMoves(currentPlayerPos);
+        const possibleMovesSet = new Set(possibleMoves.map(move => `${move.row},${move.col}`));
+        
+        for (let row = 0; row < boardSize; row++) {
+            const rowElement = document.createElement('div');
+            rowElement.className = 'board-row';
+            
+            for (let col = 0; col < boardSize; col++) {
+                const squareElement = document.createElement('div');
+                squareElement.className = 'square';
+                const key = `${row},${col}`;
                 
-                if (currentPlayer === 'O' && !isHumanVsHuman && gameState === 'playing') {
-                    setTimeout(() => {
-                        makeAIMove();
-                    }, 500);
+                if (visitedSquares.has(key)) {
+                    squareElement.classList.add('visited');
                 }
-            }
-        }
-
-        // Check for win conditions
-        function checkWinConditions(row, col) {
-            const opponentPos = currentPlayer === 'X' ? playerOPosition : playerXPosition;
-            
-            if (row === opponentPos.row && col === opponentPos.col) {
-                winner = currentPlayer;
-                statusMessage.textContent = `Player ${currentPlayer} wins by capturing!`;
-                gameState = 'gameOver';
-                return;
-            }
-            
-            const opponentPossibleMoves = getPossibleMoves(opponentPos);
-            if (opponentPossibleMoves.length === 0) {
-                winner = currentPlayer;
-                statusMessage.textContent = `Player ${currentPlayer} wins by blocking!`;
-                gameState = 'gameOver';
-                return;
-            }
-        }
-
-        // AI move (simple random choice)
-        function makeAIMove() {
-            if (gameState !== 'playing') return;
-            
-            const currentPlayerPos = currentPlayer === 'X' ? playerXPosition : playerOPosition;
-            const possibleMoves = getPossibleMoves(currentPlayerPos);
-            
-            if (possibleMoves.length > 0) {
-                const randomIndex = Math.floor(Math.random() * possibleMoves.length);
-                const { row, col } = possibleMoves[randomIndex];
-                makeMove(row, col);
-            }
-        }
-
-        // Render board
-        function renderBoard() {
-            boardElement.innerHTML = '';
-            
-            const possibleMoves = currentPlayer === 'X' ? getPossibleMoves(playerXPosition) : getPossibleMoves(playerOPosition);
-            const possibleMovesSet = new Set(possibleMoves.map(move => `${move.row},${move.col}`));
-            
-            for (let row = 0; row < boardSize; row++) {
-                const rowElement = document.createElement('div');
-                rowElement.className = 'board-row';
                 
-                for (let col = 0; col < boardSize; col++) {
-                    const squareElement = document.createElement('div');
-                    squareElement.className = 'square';
-                    const key = `${row},${col}`;
-                    
-                    if (visitedSquares.has(key)) {
-                        squareElement.classList.add('visited');
-                    }
-                    
-                    if (playerXPosition.row === row && playerXPosition.col === col) {
-                        squareElement.classList.add('player-x');
-                        squareElement.textContent = 'X';
-                    } else if (playerOPosition.row === row && playerOPosition.col === col) {
-                        squareElement.classList.add('player-o');
-                        squareElement.textContent = 'O';
-                    } else if (possibleMovesSet.has(key)) {
-                        squareElement.classList.add('possible-move');
-                    }
-                    
-                    squareElement.addEventListener('click', () => {
-                        if (gameState !== 'playing') return;
-                        if (currentPlayer === 'O' && !isHumanVsHuman) return;
-                        makeMove(row, col);
-                    });
-                    
-                    rowElement.appendChild(squareElement);
+                if (playerXPosition.row === row && playerXPosition.col === col) {
+                    squareElement.classList.add('player-x');
+                    squareElement.textContent = 'X';
+                } else if (playerOPosition.row === row && playerOPosition.col === col) {
+                    squareElement.classList.add('player-o');
+                    squareElement.textContent = 'O';
+                } else if (possibleMovesSet.has(key) && gameState === 'playing') {
+                    squareElement.classList.add('possible-move');
                 }
-                boardElement.appendChild(rowElement);
+                
+                squareElement.addEventListener('click', () => {
+                    if (gameState !== 'playing') return;
+                    if (currentPlayer === 'O' && !isHumanVsHuman) return;
+                    makeMove(row, col);
+                });
+                
+                rowElement.appendChild(squareElement);
             }
+            boardElement.appendChild(rowElement);
         }
+    }
 
-        // Update UI
-        function updateUI() {
-            statusMessage.textContent = gameState === 'playing' ? 
-                `${currentPlayer === 'X' ? 'Player X' : 'Player O'}'s turn` : 
-                statusMessage.textContent;
-            
-            playerXIndicator.className = 'player-indicator' + (currentPlayer === 'X' ? ' player-active' : '');
-            playerOIndicator.className = 'player-indicator' + (currentPlayer === 'O' ? ' player-active' : '');
+    // Update UI
+    function updateUI() {
+        if (gameState === 'playing') {
+            statusMessage.textContent = `${currentPlayer === 'X' ? 'Player X' : 'Player O'}'s turn`;
         }
+        
+        playerXIndicator.className = 'player-indicator' + (currentPlayer === 'X' && gameState === 'playing' ? ' player-active' : '');
+        playerOIndicator.className = 'player-indicator' + (currentPlayer === 'O' && gameState === 'playing' ? ' player-active' : '');
+    }
 
-        // Event listeners
-        startBtn.addEventListener('click', initializeGame);
-        resetBtn.addEventListener('click', () => {
-            menuScreen.classList.remove('hidden');
-            gameScreen.classList.add('hidden');
-        });
-        menuBtn.addEventListener('click', () => {
-            menuScreen.classList.remove('hidden');
-            gameScreen.classList.add('hidden');
-        });
-        newGameBtn.addEventListener('click', initializeGame);
-    </script>
+    // Event listeners
+    startBtn.addEventListener('click', initializeGame);
+    resetBtn.addEventListener('click', () => {
+        menuScreen.classList.remove('hidden');
+        gameScreen.classList.add('hidden');
+        gameState = 'menu';
+    });
+    menuBtn.addEventListener('click', () => {
+        menuScreen.classList.remove('hidden');
+        gameScreen.classList.add('hidden');
+        gameState = 'menu';
+    });
+    newGameBtn.addEventListener('click', initializeGame);
+</script>
+
 </body>
 </html>
-
