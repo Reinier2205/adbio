@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rook's Maze</title>
+    <title>Knight's Maze</title>
     <style>
         * {
             margin: 0;
@@ -229,9 +229,10 @@
         <!-- Menu Screen -->
         <div id="menu-screen" class="card">
             <div class="header">
-                <h1>Rook's Maze</h1>
+                <h1>Knight's Maze</h1>
                 <p>A strategic battle of wits on the chessboard</p>
             </div>
+
 
         <div class="form-group">
             <label for="board-size">Board Size:</label>
@@ -262,8 +263,9 @@
             <h3>How to Play:</h3>
             <ol>
                 <li>Players start in opposite corners (X in top-left, O in bottom-right)</li>
-                <li>Click any highlighted square to move like a chess rook (horizontally/vertically)</li>
-                <li>You cannot jump over visited squares or land on them</li>
+                <li>Move like a chess knight in an L-shape: 2 squares in one direction + 1 square perpendicular</li>
+                <li>Click any highlighted square to move there</li>
+                <li>You cannot land on visited squares</li>
                 <li>Win by capturing your opponent or blocking all their moves</li>
             </ol>
         </div>
@@ -272,7 +274,7 @@
     <!-- Game Screen -->
     <div id="game-screen" class="card hidden">
         <div class="header">
-            <h1>Rook's Maze</h1>
+            <h1>Knight's Maze</h1>
             <button id="reset-btn" class="reset-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#fbbf24" viewBox="0 0 16 16">
                     <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
@@ -323,6 +325,14 @@
     const startBtn = document.getElementById('start-btn');
     const boardSizeSelect = document.getElementById('board-size');
 
+    // Knight move offsets (L-shaped moves)
+    const knightMoves = [
+        { dr: -2, dc: -1 }, { dr: -2, dc: 1 },
+        { dr: -1, dc: -2 }, { dr: -1, dc: 2 },
+        { dr: 1, dc: -2 }, { dr: 1, dc: 2 },
+        { dr: 2, dc: -1 }, { dr: 2, dc: 1 }
+    ];
+
     // Initialize game
     function initializeGame() {
         boardSize = parseInt(boardSizeSelect.value);
@@ -345,73 +355,28 @@
         updateUI();
     }
 
-    // Check if a move is valid
-    function isValidMove(fromRow, fromCol, toRow, toCol) {
-        if (fromRow !== toRow && fromCol !== toCol) {
-            return false;
-        }
-
-        let rowStep = 0;
-        let colStep = 0;
-        
-        if (fromRow !== toRow) {
-            rowStep = toRow > fromRow ? 1 : -1;
-        } else {
-            colStep = toCol > fromCol ? 1 : -1;
-        }
-
-        let currentRow = fromRow + rowStep;
-        let currentCol = fromCol + colStep;
-        
-        while (currentRow !== toRow || currentCol !== toCol) {
-            const key = `${currentRow},${currentCol}`;
-            if (visitedSquares.has(key)) {
-                return false;
-            }
-            currentRow += rowStep;
-            currentCol += colStep;
-        }
-
-        const destKey = `${toRow},${toCol}`;
-        if (visitedSquares.has(destKey)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    // Get all possible moves for current player
+    // Get all possible knight moves for a position
     function getPossibleMoves(playerPos) {
         const moves = [];
         const { row, col } = playerPos;
         const opponentPos = currentPlayer === 'X' ? playerOPosition : playerXPosition;
         
-        const directions = [
-            { dr: 0, dc: 1 },
-            { dr: 0, dc: -1 },
-            { dr: 1, dc: 0 },
-            { dr: -1, dc: 0 }
-        ];
-        
-        for (const { dr, dc } of directions) {
-            let r = row + dr;
-            let c = col + dc;
+        for (const { dr, dc } of knightMoves) {
+            const newRow = row + dr;
+            const newCol = col + dc;
             
-            while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
-                const key = `${r},${c}`;
+            // Check if move is within board boundaries
+            if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
+                const key = `${newRow},${newCol}`;
                 
-                if (r === opponentPos.row && c === opponentPos.col) {
-                    moves.push({ row: r, col: c });
-                    break;
+                // Can move to opponent's position (capture)
+                if (newRow === opponentPos.row && newCol === opponentPos.col) {
+                    moves.push({ row: newRow, col: newCol });
                 }
-                
-                if (visitedSquares.has(key)) {
-                    break;
+                // Can move to unvisited squares
+                else if (!visitedSquares.has(key)) {
+                    moves.push({ row: newRow, col: newCol });
                 }
-                
-                moves.push({ row: r, col: c });
-                r += dr;
-                c += dc;
             }
         }
         
@@ -423,10 +388,13 @@
         if (gameState !== 'playing') return;
         
         const currentPlayerPos = currentPlayer === 'X' ? playerXPosition : playerOPosition;
-        const isValid = isValidMove(currentPlayerPos.row, currentPlayerPos.col, row, col);
+        const possibleMoves = getPossibleMoves(currentPlayerPos);
         
-        if (!isValid) return;
+        // Check if the clicked square is a valid move
+        const isValidMove = possibleMoves.some(move => move.row === row && move.col === col);
+        if (!isValidMove) return;
         
+        // Update player position
         if (currentPlayer === 'X') {
             playerXPosition = { row, col };
         } else {
@@ -462,6 +430,7 @@
     function checkWinConditions(row, col) {
         const opponentPos = currentPlayer === 'X' ? playerOPosition : playerXPosition;
         
+        // Check if player captured opponent
         if (row === opponentPos.row && col === opponentPos.col) {
             winner = currentPlayer;
             statusMessage.textContent = `Player ${currentPlayer} wins by capturing!`;
@@ -469,6 +438,7 @@
             return;
         }
         
+        // Check if opponent has no valid moves left
         const opponentPossibleMoves = getPossibleMoves(opponentPos);
         if (opponentPossibleMoves.length === 0) {
             winner = currentPlayer;
@@ -478,7 +448,7 @@
         }
     }
 
-    // AI move
+    // AI move (random valid move)
     function makeAIMove() {
         if (gameState !== 'playing') return;
         
@@ -559,7 +529,6 @@
     });
     newGameBtn.addEventListener('click', initializeGame);
 </script>
-
 
 </body>
 </html>
