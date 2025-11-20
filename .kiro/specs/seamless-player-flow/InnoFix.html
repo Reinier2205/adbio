@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InnoFix | Appliance & Solar Repair Fourways</title>
+    <meta name="description" content="Don't replace it, fix it! Innocent offers honest, affordable repairs for fridges, washing machines, and solar systems in Fourways & Sandton. 8 Years Experience.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#0A192F', // Deep Navy (Main BG)
+                            800: '#112240', // Slate Blue (Cards)
+                            700: '#233554', // Lighter Navy (Hover)
+                        },
+                        teal: {
+                            400: '#64FFDA', // Electric Teal (Action)
+                            900: 'rgba(100, 255, 218, 0.1)', // Teal Tint
+                        },
+                        gold: {
+                            400: '#FFD700', // Solar Gold
+                        },
+                        text: {
+                            main: '#E6F1FF', // Crisp White
+                            muted: '#8892b0', // Grey blue
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A192F;
+            color: #E6F1FF;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A192F; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #233554; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64FFDA; 
+        }
+        
+        /* Text Selection Color */
+        ::selection {
+            background: #112240;
+            color: #64FFDA;
+        }
+
+        .text-gradient {
+             background: linear-gradient(to right, #E6F1FF, #64FFDA);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-teal-400 selection:text-navy-900">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-navy-900/90 backdrop-blur-md border-b border-navy-800 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <!-- Custom SVG Logo: Gear + Sun -->
+                    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Bottom Gear (Teal) -->
+                        <path d="M50 75C63.8071 75 75 63.8071 75 50C75 48.5 74.8 47 74.5 45.6L82 40L78 30L70 32C67 28 63 25 59 23L58 15H42L41 23C37 25 33 28 30 32L22 30L18 40L25.5 45.6C25.2 47 25 48.5 25 50C25 63.8071 36.1929 75 50 75Z" stroke="#64FFDA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <!-- Top Sun Rays (Gold) -->
+                        <path d="M50 10V20M80 20L72 28M20 20L28 28" stroke="#FFD700" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="50" cy="50" r="10" fill="#64FFDA"/>
+                    </svg>
+                    <span class="font-heading font-bold text-xl tracking-tight text-white">Inno<span class="text-teal-400">Fix</span></span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#about" class="text-text-muted hover:text-teal-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">About</a>
+                        <a href="#services" class="text-text-muted hover:text-teal-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Services</a>
+                        <a href="#why-us" class="text-text-muted hover:text-teal-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Why Us</a>
+                        <a href="#testimonials" class="text-text-muted hover:text-teal-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Reviews</a>
+                        <a href="https://wa.me/27123456789" target="_blank" class="bg-transparent border border-teal-400 text-teal-400 hover:bg-teal-400/10 px-4 py-2 rounded-md text-sm font-semibold transition-all flex items-center gap-2">
+                            <i class="ph-bold ph-whatsapp-logo"></i> WhatsApp
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-teal-400 hover:text-white focus:outline-none p-2">
+                        <i class="ph-bold ph-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-navy-800 border-b border-navy-700">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#about" class="text-gray-300 hover:text-teal-400 block px-3 py-2 rounded-md text-base font-medium">About</a>
+                <a href="#services" class="text-gray-300 hover:text-teal-400 block px-3 py-2 rounded-md text-base font-medium">Services</a>
+                <a href="#why-us" class="text-gray-300 hover:text-teal-400 block px-3 py-2 rounded-md text-base font-medium">Why Us</a>
+                <a href="https://wa.me/27123456789" class="text-teal-400 block px-3 py-2 rounded-md text-base font-bold">Chat on WhatsApp</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
+        <!-- Background Image with Overlay -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?q=80&w=2070&auto=format&fit=crop" alt="Modern Kitchen" class="w-full h-full object-cover opacity-40">
+            <div class="absolute inset-0 bg-navy-900/80 bg-blend-multiply"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-teal-400 font-mono mb-4 tracking-wider text-sm md:text-base">FOURWAYS & SANDTON APPLIANCE REPAIR</h2>
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold font-heading text-white mb-6 leading-tight">
+                Don't Stress, <br/> <span class="text-teal-400">Innocent is Here.</span>
+            </h1>
+            <p class="mt-4 max-w-2xl mx-auto text-xl text-text-muted mb-10">
+                Specialist repair for Fridges, Washing Machines, & Solar Systems. Honest work, fair prices, and 8 years of keeping Sandton homes running.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="https://wa.me/27123456789" target="_blank" class="w-full sm:w-auto px-8 py-4 bg-teal-400 text-navy-900 font-bold rounded-lg hover:bg-teal-400/90 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 shadow-lg shadow-teal-400/20">
+                    <i class="ph-bold ph-whatsapp-logo text-xl"></i> Chat on WhatsApp
+                </a>
+                <a href="#services" class="w-full sm:w-auto px-8 py-4 border border-text-muted text-text-muted font-semibold rounded-lg hover:border-teal-400 hover:text-teal-400 transition-all">
+                    View Services
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 bg-navy-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <!-- Text -->
+                <div class="order-2 md:order-1">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="h-px w-8 bg-teal-400"></span>
+                        <span class="text-teal-400 font-mono text-sm">MEET YOUR TECHNICIAN</span>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-heading font-bold text-white mb-6">
+                        Your Local Tech, Not Just a Call Center.
+                    </h2>
+                    <div class="space-y-4 text-text-muted text-lg leading-relaxed">
+                        <p>
+                            Hi, I’m <strong class="text-white">Innocent</strong>. I’ve been fixing appliances in the Fourways and Sandton area for over 8 years. My philosophy is simple: <span class="text-teal-400">Repair first, replace last.</span>
+                        </p>
+                        <p>
+                            While big companies try to sell you a new machine the moment something breaks, I use my experience to diagnose the real issue. Whether it’s a 20-year-old fridge or a brand new solar inverter, I treat your home with respect and your wallet with care.
+                        </p>
+                        <p>
+                            I’m open, honest, and I stand by my work.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Image Placeholder -->
+                <div class="order-1 md:order-2 relative group">
+                    <div class="absolute -inset-4 bg-teal-400/20 rounded-xl blur-lg group-hover:bg-teal-400/30 transition duration-300"></div>
+                    <div class="relative rounded-xl overflow-hidden border-2 border-navy-700 shadow-2xl">
+                        <!-- Placeholder for Innocent's Photo -->
+                        <img src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=1000&auto=format&fit=crop" alt="Technician Working" class="w-full h-full object-cover grayscale hover:grayscale-0 transition duration-500">
+                        <!-- Overlay Badge -->
+                        <div class="absolute bottom-0 left-0 right-0 bg-navy-900/90 backdrop-blur p-4 border-t border-teal-400/30">
+                            <p class="text-white font-bold font-heading">Innocent</p>
+                            <p class="text-teal-400 text-sm">Owner & Lead Technician</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-24 bg-navy-800 relative">
+        <!-- Decorative Element -->
+        <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-teal-400/30 to-transparent"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-heading font-bold text-white mb-4">All Makes. All Models.</h2>
+                <p class="text-text-muted text-lg max-w-2xl mx-auto">From vintage models to the latest smart appliances, we have the tools and knowledge to fix it.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Kitchen Category -->
+                <div class="col-span-full flex items-center gap-4 mb-4 mt-8">
+                    <span class="h-px flex-1 bg-navy-700"></span>
+                    <h3 class="text-teal-400 font-mono">KITCHEN ESSENTIALS</h3>
+                    <span class="h-px flex-1 bg-navy-700"></span>
+                </div>
+
+                <!-- Service Card 1 -->
+                <div class="bg-navy-900 p-6 rounded-lg border border-navy-700 hover:border-teal-400/50 hover:-translate-y-1 transition-all group">
+                    <i class="ph ph-snowflake text-4xl text-teal-400 mb-4 group-hover:scale-110 transition-transform inline-block"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Fridges & Freezers</h3>
+                    <p class="text-text-muted text-sm">Regassing, thermostat repairs, leak fixes, and compressor diagnostics.</p>
+                </div>
+
+                <!-- Service Card 2 -->
+                <div class="bg-navy-900 p-6 rounded-lg border border-navy-700 hover:border-teal-400/50 hover:-translate-y-1 transition-all group">
+                    <i class="ph ph-fire text-4xl text-teal-400 mb-4 group-hover:scale-110 transition-transform inline-block"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Stoves & Ovens</h3>
+                    <p class="text-text-muted text-sm">Element replacements, wiring fixes, and temperature calibration.</p>
+                </div>
+
+                <!-- Service Card 3 -->
+                <div class="bg-navy-900 p-6 rounded-lg border border-navy-700 hover:border-teal-400/50 hover:-translate-y-1 transition-all group">
+                    <i class="ph ph-waves text-4xl text-teal-400 mb-4 group-hover:scale-110 transition-transform inline-block"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Dishwashers</h3>
+                    <p class="text-text-muted text-sm">Draining issues, pump repairs, and resolving error codes.</p>
+                </div>
+
+                <!-- Laundry Category -->
+                <div class="col-span-full flex items-center gap-4 mb-4 mt-8">
+                    <span class="h-px flex-1 bg-navy-700"></span>
+                    <h3 class="text-teal-400 font-mono">LAUNDRY CARE</h3>
+                    <span class="h-px flex-1 bg-navy-700"></span>
+                </div>
+
+                <!-- Service Card 4 -->
+                <div class="bg-navy-900 p-6 rounded-lg border border-navy-700 hover:border-teal-400/50 hover:-translate-y-1 transition-all group">
+                    <i class="ph ph-t-shirt text-4xl text-teal-400 mb-4 group-hover:scale-110 transition-transform inline-block"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Washing Machines</h3>
+                    <p class="text-text-muted text-sm">Drum alignment, spin issues, leaks, and bearing replacement.</p>
+                </div>
+
+                <!-- Service Card 5 -->
+                <div class="bg-navy-900 p-6 rounded-lg border border-navy-700 hover:border-teal-400/50 hover:-translate-y-1 transition-all group">
+                    <i class="ph ph-wind text-4xl text-teal-400 mb-4 group-hover:scale-110 transition-transform inline-block"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Tumble Dryers</h3>
+                    <p class="text-text-muted text-sm">Belt replacements, heating element issues, and sensor repairs.</p>
+                </div>
+
+                 <!-- Solar Category -->
+                 <div class="col-span-full flex items-center gap-4 mb-4 mt-8">
+                    <span class="h-px flex-1 bg-navy-700"></span>
+                    <h3 class="text-gold-400 font-mono">CLIMATE & ENERGY</h3>
+                    <span class="h-px flex-1 bg-navy-700"></span>
+                </div>
+
+                <!-- Service Card 6 (Solar - Highlighted) -->
+                <div class="bg-navy-900 p-6 rounded-lg border border-gold-400/30 hover:border-gold-400 hover:-translate-y-1 transition-all group shadow-lg shadow-gold-400/5">
+                    <i class="ph ph-sun text-4xl text-gold-400 mb-4 group-hover:rotate-180 transition-transform duration-700 inline-block"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Solar Systems</h3>
+                    <p class="text-text-muted text-sm">Inverter maintenance, connection checks, and panel cleaning.</p>
+                </div>
+
+                <!-- Service Card 7 -->
+                <div class="bg-navy-900 p-6 rounded-lg border border-navy-700 hover:border-teal-400/50 hover:-translate-y-1 transition-all group">
+                    <i class="ph ph-thermometer-cold text-4xl text-teal-400 mb-4 group-hover:scale-110 transition-transform inline-block"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Air Conditioners</h3>
+                    <p class="text-text-muted text-sm">Servicing, repairs, regassing, and filter cleaning.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Factors -->
+    <section id="why-us" class="py-20 bg-navy-900 border-y border-navy-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                
+                <div class="p-6">
+                    <div class="w-16 h-16 mx-auto bg-teal-900 rounded-full flex items-center justify-center mb-4">
+                        <i class="ph ph-shield-check text-3xl text-teal-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">6-Month Guarantee</h3>
+                    <p class="text-text-muted">Peace of mind on every job. If the workmanship fails, we come back for free.</p>
+                </div>
+
+                <div class="p-6">
+                    <div class="w-16 h-16 mx-auto bg-teal-900 rounded-full flex items-center justify-center mb-4">
+                        <i class="ph ph-wallet text-3xl text-teal-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Fair & Transparent</h3>
+                    <p class="text-text-muted">No hidden call-out fees when we do the job. You know the price before we start.</p>
+                </div>
+
+                <div class="p-6">
+                    <div class="w-16 h-16 mx-auto bg-teal-900 rounded-full flex items-center justify-center mb-4">
+                        <i class="ph ph-wrench text-3xl text-teal-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Legacy Skills</h3>
+                    <p class="text-text-muted">We don't shy away from older models. If it can be fixed, we will fix it.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Service Areas -->
+    <section class="py-16 bg-navy-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h2 class="text-2xl md:text-3xl font-heading font-bold text-white mb-6">Serving Our Community</h2>
+            <div class="flex flex-wrap justify-center gap-3 md:gap-6">
+                <span class="px-4 py-2 rounded-full bg-navy-900 border border-navy-700 text-text-muted text-sm">Fourways</span>
+                <span class="px-4 py-2 rounded-full bg-navy-900 border border-navy-700 text-text-muted text-sm">Sandton</span>
+                <span class="px-4 py-2 rounded-full bg-navy-900 border border-navy-700 text-text-muted text-sm">Douglasdale</span>
+                <span class="px-4 py-2 rounded-full bg-navy-900 border border-navy-700 text-text-muted text-sm">Lonehill</span>
+                <span class="px-4 py-2 rounded-full bg-navy-900 border border-navy-700 text-text-muted text-sm">Broadacres</span>
+                <span class="px-4 py-2 rounded-full bg-navy-900 border border-navy-700 text-text-muted text-sm">Bryanston</span>
+                <span class="px-4 py-2 rounded-full bg-navy-900 border border-navy-700 text-text-muted text-sm">Paulshof</span>
+                <span class="px-4 py-2 rounded-full bg-navy-900 border border-navy-700 text-text-muted text-sm">Sunninghill</span>
+            </div>
+            <p class="mt-6 text-teal-400 text-sm italic">Based locally in Fourways for fast response times.</p>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="py-24 bg-navy-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl md:text-4xl font-heading font-bold text-white text-center mb-12">What The Community Says</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Review 1 -->
+                <div class="bg-navy-800 p-6 rounded-xl shadow-lg relative">
+                    <i class="ph-fill ph-quotes text-4xl text-teal-400/20 absolute top-4 right-4"></i>
+                    <div class="flex items-center gap-1 text-gold-400 mb-4">
+                        <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+                    </div>
+                    <p class="text-text-muted mb-6">"Innocent is a gem! He fixed my old Defy fridge when two other companies told me to scrap it. He saved me thousands."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-navy-700 flex items-center justify-center text-teal-400 font-bold">S</div>
+                        <div>
+                            <p class="text-white font-bold text-sm">Sarah J.</p>
+                            <p class="text-xs text-text-muted">Broadacres</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="bg-navy-800 p-6 rounded-xl shadow-lg relative">
+                    <i class="ph-fill ph-quotes text-4xl text-teal-400/20 absolute top-4 right-4"></i>
+                    <div class="flex items-center gap-1 text-gold-400 mb-4">
+                        <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+                    </div>
+                    <p class="text-text-muted mb-6">"Honest and reliable. He came to check my solar inverter, found a loose wire, and fixed it in 10 minutes. Highly recommended."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-navy-700 flex items-center justify-center text-teal-400 font-bold">M</div>
+                        <div>
+                            <p class="text-white font-bold text-sm">Mike v.R.</p>
+                            <p class="text-xs text-text-muted">Lonehill</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="bg-navy-800 p-6 rounded-xl shadow-lg relative">
+                    <i class="ph-fill ph-quotes text-4xl text-teal-400/20 absolute top-4 right-4"></i>
+                    <div class="flex items-center gap-1 text-gold-400 mb-4">
+                        <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+                    </div>
+                    <p class="text-text-muted mb-6">"Prompt service and very friendly. It’s hard to find tradesmen you feel comfortable letting into your home, but Innocent is great."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-navy-700 flex items-center justify-center text-teal-400 font-bold">T</div>
+                        <div>
+                            <p class="text-white font-bold text-sm">Thandi M.</p>
+                            <p class="text-xs text-text-muted">Sandton</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-navy-900 border-t border-navy-800 pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Need a Quick Fix?</h2>
+                <a href="https://wa.me/27123456789" class="inline-flex items-center gap-2 text-2xl font-bold text-teal-400 hover:text-teal-300 transition-colors">
+                    <i class="ph-fill ph-whatsapp-logo"></i> 082 123 4567
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-text-muted border-b border-navy-800 pb-8 mb-8">
+                <div>
+                    <h4 class="text-white font-bold mb-2">InnoFix</h4>
+                    <p>Appliance & Solar Repair Specialists.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-2">Hours</h4>
+                    <p>Mon - Fri: 08:00 - 17:00</p>
+                    <p>Sat: 09:00 - 13:00</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-2">Location</h4>
+                    <p>Fourways, Sandton</p>
+                    <p>Gauteng, South Africa</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-600">&copy; 2024 InnoFix Appliance & Solar. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Sticky Mobile WhatsApp Button -->
+    <div class="fixed bottom-4 right-4 z-50 md:hidden">
+        <a href="https://wa.me/27123456789" class="bg-teal-400 text-navy-900 p-4 rounded-full shadow-xl flex items-center justify-center hover:bg-teal-300 transition-colors">
+            <i class="ph-fill ph-whatsapp-logo text-3xl"></i>
+        </a>
+    </div>
+
+    <script>
+        // Simple mobile menu toggle logic
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+                // Close mobile menu on click
+                document.getElementById('mobile-menu').classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
