@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knight's Maze</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a5f20 0%, #0d4f1a 50%, #0a5f20 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+        .card {
+            background: rgba(5, 35, 20, 0.95);
+            border: 4px solid #fbbf24;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fbbf24, #fcd34d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .header p {
+            color: #bbf7d0;
+            font-size: 1rem;
+        }
+        .board {
+            display: block;
+            background: rgba(16, 60, 32, 0.8);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 0 auto;
+            width: fit-content;
+        }
+        .board-row {
+            display: flex;
+        }
+        .square {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #fbbf24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #064e3b;
+        }
+        .square.visited {
+            background-color: #1a4d2e;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .square.player-x {
+            background-color: #fbbf24;
+            color: #064e3b;
+        }
+        .square.player-o {
+            background-color: #f87171;
+            color: #064e3b;
+        }
+        .square.invalid-move {
+            background-color: rgba(251, 146, 60, 0.4);
+            animation: fadeInvalid 0.3s ease;
+        }
+        @keyframes fadeInvalid {
+            from { background-color: rgba(251, 146, 60, 0.8); }
+            to { background-color: rgba(251, 146, 60, 0.4); }
+        }
+        .square:hover:not(.visited):not(.player-x):not(.player-o) {
+            background-color: #0d6d49;
+        }
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #fbbf24, #fcd34d);
+            color: #064e3b;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(to right, #fcd34d, #fbbf24);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: rgba(16, 60, 32, 0.8);
+            color: #bbf7d0;
+            border: 2px solid #fbbf24;
+        }
+        .btn-secondary:hover {
+            background: rgba(22, 78, 42, 0.9);
+            transform: translateY(-2px);
+        }
+        .status {
+            text-align: center;
+            margin: 16px 0;
+            min-height: 28px;
+        }
+        .status-message {
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: linear-gradient(to right, #fbbf24, #fcd34d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .players {
+            display: flex;
+            justify-content: space-between;
+            margin: 16px 0;
+        }
+        .player-indicator {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            background: rgba(16, 60, 32, 0.8);
+            color: #bbf7d0;
+        }
+        .player-active {
+            background: linear-gradient(to right, #fbbf24, #fcd34d);
+            color: #064e3b;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #bbf7d0;
+            font-weight: 600;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 2px solid #fbbf24;
+            background: rgba(16, 60, 32, 0.8);
+            color: #bbf7d0;
+            font-size: 1rem;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #fcd34d;
+        }
+        .game-rules {
+            background: rgba(16, 60, 32, 0.6);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            color: #bbf7d0;
+        }
+        .game-rules h3 {
+            color: #fbbf24;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        .game-rules ol {
+            padding-left: 20px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .game-rules li {
+            margin-bottom: 4px;
+        }
+        .hidden {
+            display: none;
+        }
+        .reset-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(16,60,32,0.8);
+            border: 2px solid #fbbf24;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .reset-btn:hover {
+            background: rgba(22, 78, 42, 0.9);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Menu Screen -->
+        <div id="menu-screen" class="card">
+            <div class="header">
+                <h1>Knight's Maze</h1>
+                <p>A strategic battle of wits on the chessboard</p>
+            </div>
+
+
+        <div class="form-group">
+            <label for="board-size">Board Size:</label>
+            <select id="board-size">
+                <option value="6">6x6</option>
+                <option value="8" selected>8x8</option>
+                <option value="10">10x10</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Game Mode:</label>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="radio" name="game-mode" value="human" checked style="width: auto; margin-right: 8px;">
+                    <span>Human vs Human</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="radio" name="game-mode" value="ai" style="width: auto; margin-right: 8px;">
+                    <span>Human vs AI</span>
+                </label>
+            </div>
+        </div>
+        
+        <button id="start-btn" class="btn btn-primary">Start Game</button>
+        
+        <div class="game-rules">
+            <h3>How to Play:</h3>
+            <ol>
+                <li>Players start in opposite corners (X in top-left, O in bottom-right)</li>
+                <li>Move like a chess knight in an L-shape: 2 squares in one direction + 1 square perpendicular</li>
+                <li>Click any square to attempt a move - invalid moves will flash orange</li>
+                <li>Previously occupied squares become blocked (dark green)</li>
+                <li>Win by capturing your opponent or blocking all their moves</li>
+            </ol>
+        </div>
+    </div>
+    
+    <!-- Game Screen -->
+    <div id="game-screen" class="card hidden">
+        <div class="header">
+            <h1>Knight's Maze</h1>
+            <button id="reset-btn" class="reset-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#fbbf24" viewBox="0 0 16 16">
+                    <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="players">
+            <div id="player-x-indicator" class="player-indicator player-active">Player X</div>
+            <div id="player-o-indicator" class="player-indicator">Player O</div>
+        </div>
+        
+        <div class="status">
+            <div id="status-message" class="status-message">Player X's turn - Click a highlighted square to move</div>
+        </div>
+        
+        <div id="board" class="board"></div>
+        
+        <div class="controls">
+            <button id="new-game-btn" class="btn btn-primary">New Game</button>
+            <button id="menu-btn" class="btn btn-secondary">Menu</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Game state
+    let gameState = 'menu';
+    let boardSize = 8;
+    let currentPlayer = 'X';
+    let playerXPosition = { row: 0, col: 0 };
+    let playerOPosition = { row: 7, col: 7 };
+    let visitedSquares = new Set();
+    let invalidSquare = null; // Track invalid click
+    let winner = null;
+    let isHumanVsHuman = true;
+
+    // DOM elements
+    const menuScreen = document.getElementById('menu-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const boardElement = document.getElementById('board');
+    const statusMessage = document.getElementById('status-message');
+    const playerXIndicator = document.getElementById('player-x-indicator');
+    const playerOIndicator = document.getElementById('player-o-indicator');
+    const resetBtn = document.getElementById('reset-btn');
+    const menuBtn = document.getElementById('menu-btn');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const startBtn = document.getElementById('start-btn');
+    const boardSizeSelect = document.getElementById('board-size');
+
+    // Knight move offsets (L-shaped moves)
+    const knightMoves = [
+        { dr: -2, dc: -1 }, { dr: -2, dc: 1 },
+        { dr: -1, dc: -2 }, { dr: -1, dc: 2 },
+        { dr: 1, dc: -2 }, { dr: 1, dc: 2 },
+        { dr: 2, dc: -1 }, { dr: 2, dc: 1 }
+    ];
+
+    // Initialize game
+    function initializeGame() {
+        boardSize = parseInt(boardSizeSelect.value);
+        isHumanVsHuman = document.querySelector('input[name="game-mode"]:checked').value === 'human';
+        
+        visitedSquares = new Set();
+        invalidSquare = null;
+        visitedSquares.add('0,0');
+        visitedSquares.add(`${boardSize-1},${boardSize-1}`);
+        
+        playerXPosition = { row: 0, col: 0 };
+        playerOPosition = { row: boardSize-1, col: boardSize-1 };
+        currentPlayer = 'X';
+        winner = null;
+        gameState = 'playing';
+        
+        menuScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+        
+        renderBoard();
+        updateUI();
+    }
+
+    // Get all possible knight moves for a position
+    function getPossibleMoves(playerPos) {
+        const moves = [];
+        const { row, col } = playerPos;
+        const opponentPos = currentPlayer === 'X' ? playerOPosition : playerXPosition;
+        
+        for (const { dr, dc } of knightMoves) {
+            const newRow = row + dr;
+            const newCol = col + dc;
+            
+            // Check if move is within board boundaries
+            if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
+                const key = `${newRow},${newCol}`;
+                
+                // Can move to opponent's position (capture)
+                if (newRow === opponentPos.row && newCol === opponentPos.col) {
+                    moves.push({ row: newRow, col: newCol });
+                }
+                // Can move to unvisited squares
+                else if (!visitedSquares.has(key)) {
+                    moves.push({ row: newRow, col: newCol });
+                }
+            }
+        }
+        
+        return moves;
+    }
+
+    // Make a move
+    function makeMove(row, col) {
+        if (gameState !== 'playing') return;
+        
+        const currentPlayerPos = currentPlayer === 'X' ? playerXPosition : playerOPosition;
+        const possibleMoves = getPossibleMoves(currentPlayerPos);
+        
+        // Check if the clicked square is a valid move
+        const isValidMove = possibleMoves.some(move => move.row === row && move.col === col);
+        
+        if (!isValidMove) {
+            // Show invalid move feedback
+            invalidSquare = `${row},${col}`;
+            renderBoard();
+            return;
+        }
+        
+        // Clear invalid square feedback
+        invalidSquare = null;
+        
+        // Mark the current position as visited before moving
+        const currentKey = `${currentPlayerPos.row},${currentPlayerPos.col}`;
+        visitedSquares.add(currentKey);
+        
+        // Update player position
+        if (currentPlayer === 'X') {
+            playerXPosition = { row, col };
+        } else {
+            playerOPosition = { row, col };
+        }
+        
+        // Check win conditions BEFORE switching players
+        checkWinConditions(row, col);
+        
+        // Only switch players if game is still ongoing
+        if (gameState === 'playing') {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            
+            renderBoard();
+            updateUI();
+            
+            // AI move
+            if (currentPlayer === 'O' && !isHumanVsHuman && gameState === 'playing') {
+                setTimeout(() => {
+                    makeAIMove();
+                }, 500);
+            }
+        } else {
+            // Game over, just update the display
+            renderBoard();
+            updateUI();
+        }
+    }
+
+    // Check for win conditions
+    function checkWinConditions(row, col) {
+        const opponentPos = currentPlayer === 'X' ? playerOPosition : playerXPosition;
+        
+        // Check if player captured opponent
+        if (row === opponentPos.row && col === opponentPos.col) {
+            winner = currentPlayer;
+            statusMessage.textContent = `Player ${currentPlayer} wins by capturing!`;
+            gameState = 'gameOver';
+            return;
+        }
+        
+        // Check if opponent has no valid moves left
+        const opponentPossibleMoves = getPossibleMoves(opponentPos);
+        if (opponentPossibleMoves.length === 0) {
+            winner = currentPlayer;
+            statusMessage.textContent = `Player ${currentPlayer} wins by blocking!`;
+            gameState = 'gameOver';
+            return;
+        }
+    }
+
+    // AI move (random valid move)
+    function makeAIMove() {
+        if (gameState !== 'playing') return;
+        
+        const possibleMoves = getPossibleMoves(playerOPosition);
+        
+        if (possibleMoves.length > 0) {
+            const randomIndex = Math.floor(Math.random() * possibleMoves.length);
+            const { row, col } = possibleMoves[randomIndex];
+            makeMove(row, col);
+        }
+    }
+
+    // Render board
+    function renderBoard() {
+        boardElement.innerHTML = '';
+        
+        for (let row = 0; row < boardSize; row++) {
+            const rowElement = document.createElement('div');
+            rowElement.className = 'board-row';
+            
+            for (let col = 0; col < boardSize; col++) {
+                const squareElement = document.createElement('div');
+                squareElement.className = 'square';
+                const key = `${row},${col}`;
+                
+                // Mark visited squares (dark green blocked squares)
+                if (visitedSquares.has(key)) {
+                    squareElement.classList.add('visited');
+                }
+                
+                // Show current player positions
+                if (playerXPosition.row === row && playerXPosition.col === col) {
+                    squareElement.classList.add('player-x');
+                    squareElement.textContent = 'X';
+                } else if (playerOPosition.row === row && playerOPosition.col === col) {
+                    squareElement.classList.add('player-o');
+                    squareElement.textContent = 'O';
+                }
+                
+                // Show invalid move feedback
+                if (invalidSquare === key) {
+                    squareElement.classList.add('invalid-move');
+                }
+                
+                squareElement.addEventListener('click', () => {
+                    if (gameState !== 'playing') return;
+                    if (currentPlayer === 'O' && !isHumanVsHuman) return;
+                    makeMove(row, col);
+                });
+                
+                rowElement.appendChild(squareElement);
+            }
+            boardElement.appendChild(rowElement);
+        }
+    }
+
+    // Update UI
+    function updateUI() {
+        if (gameState === 'playing') {
+            const playerName = currentPlayer === 'X' ? 'Player X' : 'Player O';
+            statusMessage.textContent = `${playerName}'s turn - Make your move!`;
+        }
+        
+        playerXIndicator.className = 'player-indicator' + (currentPlayer === 'X' && gameState === 'playing' ? ' player-active' : '');
+        playerOIndicator.className = 'player-indicator' + (currentPlayer === 'O' && gameState === 'playing' ? ' player-active' : '');
+    }
+
+    // Event listeners
+    startBtn.addEventListener('click', initializeGame);
+    resetBtn.addEventListener('click', () => {
+        menuScreen.classList.remove('hidden');
+        gameScreen.classList.add('hidden');
+        gameState = 'menu';
+    });
+    menuBtn.addEventListener('click', () => {
+        menuScreen.classList.remove('hidden');
+        gameScreen.classList.add('hidden');
+        gameState = 'menu';
+    });
+    newGameBtn.addEventListener('click', initializeGame);
+</script>
+
+
+</body>
+</html>

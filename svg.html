@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+  /* 1. The Container */
+  .hero-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 50px;
+    font-family: sans-serif;
+    background-color: #f9f9f9;
+    overflow: hidden; /* Keeps the blob from overflowing if it gets too big */
+    height: 400px;
+  }
+
+  /* 2. The Text Area */
+  .text-content {
+    width: 50%;
+    z-index: 2; /* Ensures text sits on top */
+  }
+
+  h1 { font-size: 3rem; margin-bottom: 10px; color: #333; }
+  p { font-size: 1.2rem; color: #666; }
+
+  /* 3. The Image Wrapper (Holds both Blob and Photo) */
+  .image-wrapper {
+    position: relative; /* This allows us to stack things inside it */
+    width: 400px;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 4. The SVG (Background Shape) */
+  .blob-svg {
+    position: absolute; /* Takes it out of the flow to sit behind */
+    width: 120%; /* Make it slightly larger than the photo */
+    z-index: 0; /* Send to back */
+    fill: #FF6B6B; /* We can change this color easily! */
+    
+    /* Optional: Add a slow float animation to the SVG only */
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* 5. The PNG (Foreground Photo) */
+  .hero-photo {
+    position: relative;
+    width: 100%;
+    z-index: 1; /* Bring to front */
+    object-fit: contain;
+    /* Drop shadow helps separate photo from the flat SVG */
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+  }
+
+  /* Simple Float Animation */
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero-section">
+  
+  <div class="text-content">
+    <h1>Design with Logic</h1>
+    <p>This text is standard HTML. The graphic on the right mixes SVG code with a Raster image.</p>
+    <button style="padding: 10px 20px; background: #333; color: #fff; border: none; margin-top: 20px;">Get Started</button>
+  </div>
+
+  <div class="image-wrapper">
+    
+    <svg class="blob-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <path d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,79.6,-46.3C87.4,-33.5,90.1,-18,88.5,-3.3C86.9,11.4,81,25.3,71.5,36.8C62,48.3,48.9,57.4,35.4,63.3C21.9,69.2,8,72,-5.6,81.7C-19.2,91.4,-32.5,108,-43.3,106.9C-54.1,105.8,-62.4,87,-70.3,71.1C-78.2,55.2,-85.7,42.2,-88.1,28.4C-90.5,14.6,-87.8,0,-82.2,-12.6C-76.6,-25.2,-68.1,-35.8,-57.7,-44.6C-47.3,-53.4,-35,-60.4,-22.6,-64.6C-10.2,-68.8,-2,-70.2,10.2,-72.2C22.4,-74.2,44.7,-76.4,44.7,-76.4Z" transform="translate(100 100)" />
+    </svg>
+
+    <img class="hero-photo" src="https://freepngimg.com/thumb/man/22654-6-man-thumb.png" alt="Happy Person">
+    
+  </div>
+
+</div>
+
+</body>
+</html>
