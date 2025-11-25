@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booklet Photo Preparer</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load html2canvas for saving the image -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        /* Define A4 aspect ratio (approx. 1:1.414) container */
+        .a4-container {
+            width: min(95vw, 700px); /* Responsive width */
+            padding-top: calc(100% * 1.414); /* Maintain A4 aspect ratio */
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background-color: white;
+            border: 2px solid #ccc;
+        }
+
+        /* Grid specific styles for fold lines */
+        .print-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+        }
+
+        /* Styling for the red dotted fold lines (between cells) */
+        .grid-cell:nth-child(4n - 2) {
+            border-right: 1px solid #ccc;
+        }
+        .grid-cell:nth-child(4n - 1) {
+            border-right: 2px dashed #EF4444; /* Vertical fold line */
+        }
+        .grid-cell:nth-child(4n) {
+            border-right: 1px solid #ccc;
+        }
+
+        /* Horizontal dividing lines */
+        .grid-cell:nth-child(n+1) { border-bottom: 1px solid #ccc; }
+        .grid-cell:nth-child(n+5) { border-bottom: 1px solid #ccc; }
+
+        /* The main horizontal fold line between rows 2 and 3 */
+        .grid-cell:nth-child(n+5):nth-child(-n+8) {
+            border-bottom: 2px dashed #EF4444; 
+        }
+
+        /* Remove bottom border from the last row */
+        .grid-cell:nth-child(n+13) {
+            border-bottom: none !important;
+        }
+
+        /* CSS for rotating the content (image + button) by 180 degrees */
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+
+        /* Ensure images fill the cell correctly */
+        .cell-image {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10; /* Image layer */
+        }
+
+        .content-overlay {
+            z-index: 20; /* Text/Button layer */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 font-sans antialiased flex flex-col items-center min-h-screen">
+
+    <header class="text-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Booklet Photo Preparer</h1>
+        <p class="text-gray-600 mt-1">Upload and position your photos for the A4 print sheet.</p>
+        <p class="text-xs text-red-500 mt-2">
+            Photos in the **red dashed** rows (1 & 3) will be printed **upside down** for correct folding.
+        </p>
+    </header>
+
+    <main class="w-full flex justify-center">
+        <!-- A4 Page Container (The print area) -->
+        <div id="a4-page" class="a4-container shadow-2xl rounded-lg overflow-hidden mb-8">
+            <div id="print-area" class="print-area">
+                <!-- Grid Cells will be injected here by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Save Button and Instructions -->
+    <footer class="w-full max-w-lg p-4 bg-white rounded-lg shadow-xl text-center">
+        <button id="saveButton" class="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 disabled:opacity-50">
+            Save Final Print File (PNG)
+        </button>
+        <p class="text-sm text-gray-500 mt-3">
+            Clicking Save will capture the entire grid above as a single high-resolution image ready for printing.
+        </p>
+    </footer>
+
+    <script>
+        // Data map for the 4x4 grid. This dictates the content and orientation.
+        const templateData = [
+            // R1: All UPSIDE DOWN (Red emphasis)
+            { index: 0, content: "Page 8", orientation: "UPSIDE DOWN", photoUrl: null, row: 1, col: 1 },
+            { index: 1, content: "Page 7", orientation: "UPSIDE DOWN", photoUrl: null, row: 1, col: 2 },
+            { index: 2, content: "Page 6", orientation: "UPSIDE DOWN", photoUrl: null, row: 1, col: 3 },
+            { index: 3, content: "Page 5", orientation: "UPSIDE DOWN", photoUrl: null, row: 1, col: 4 },
+            // R2: All UPRIGHT (Blue emphasis)
+            { index: 4, content: "Page 9", orientation: "UPRIGHT", photoUrl: null, row: 2, col: 1 },
+            { index: 5, content: "Page 10", orientation: "UPRIGHT", photoUrl: null, row: 2, col: 2 },
+            { index: 6, content: "Page 3", orientation: "UPRIGHT", photoUrl: null, row: 2, col: 3 },
+            { index: 7, content: "Page 4", orientation: "UPRIGHT", photoUrl: null, row: 2, col: 4 },
+            // R3: All UPSIDE DOWN (Red emphasis)
+            { index: 8, content: "Page 12", orientation: "UPSIDE DOWN", photoUrl: null, row: 3, col: 1 },
+            { index: 9, content: "Page 11", orientation: "UPSIDE DOWN", photoUrl: null, row: 3, col: 2 },
+            { index: 10, content: "Page 2", orientation: "UPSIDE DOWN", photoUrl: null, row: 3, col: 3 },
+            { index: 11, content: "Page 1", orientation: "UPSIDE DOWN", photoUrl: null, row: 3, col: 4 },
+            // R4: All UPRIGHT (Covers - Green emphasis)
+            { index: 12, content: "Page 13", orientation: "UPRIGHT", photoUrl: null, row: 4, col: 1 },
+            { index: 13, content: "Page 14", orientation: "UPRIGHT", photoUrl: null, row: 4, col: 2 },
+            { index: 14, content: "BACK COVER", orientation: "UPRIGHT", photoUrl: null, row: 4, col: 3 },
+            { index: 15, content: "FRONT COVER", orientation: "UPRIGHT", photoUrl: null, row: 4, col: 4 },
+        ];
+
+        const printArea = document.getElementById('print-area');
+        const saveButton = document.getElementById('saveButton');
+        let imageFiles = new Array(16).fill(null); // To store file data
+
+        /**
+         * Renders the 4x4 grid based on templateData.
+         */
+        function renderGrid() {
+            printArea.innerHTML = ''; // Clear previous content
+
+            templateData.forEach((cell, index) => {
+                const isUpsideDown = cell.orientation === "UPSIDE DOWN";
+                const isCover = cell.content.includes("COVER");
+
+                // Base classes for every cell
+                let cellClasses = `grid-cell relative overflow-hidden flex flex-col justify-center items-center text-center p-2 transition-all duration-300`;
+                
+                // Add border styling based on position for the red fold lines
+                if (cell.col === 2) cellClasses += ' border-r-2 border-red-400 border-dashed';
+                if (cell.row === 2) cellClasses += ' border-b-2 border-red-400 border-dashed';
+                
+                // Background and text color based on orientation/type
+                if (isCover) {
+                    cellClasses += ' bg-green-100 text-green-800';
+                } else if (isUpsideDown) {
+                    cellClasses += ' bg-red-100 text-red-800';
+                } else {
+                    cellClasses += ' bg-blue-100 text-blue-800';
+                }
+
+                const cellDiv = document.createElement('div');
+                cellDiv.className = cellClasses;
+                cellDiv.id = `cell-${index}`;
+
+                // --- Photo/Image Element ---
+                if (cell.photoUrl) {
+                    const img = document.createElement('img');
+                    img.src = cell.photoUrl;
+                    img.className = `cell-image ${isUpsideDown ? 'rotate-180' : ''}`;
+                    img.setAttribute('draggable', 'false'); // Prevent dragging default browser behavior
+                    img.alt = cell.content;
+                    cellDiv.appendChild(img);
+                }
+
+                // --- Content Overlay (Button and Text) ---
+                const overlay = document.createElement('div');
+                overlay.className = `content-overlay absolute inset-0 flex flex-col justify-center items-center p-2 bg-black bg-opacity-30 ${cell.photoUrl ? 'opacity-0 hover:opacity-100' : 'opacity-100'}`;
+                
+                // Apply rotation to the overlay content so text is readable while the image beneath is rotated for print
+                if (cell.photoUrl && isUpsideDown) {
+                    overlay.classList.add('rotate-180');
+                    overlay.classList.remove('bg-black', 'bg-opacity-30'); // Clear background on hover for rotated image
+                    overlay.classList.add('bg-transparent');
+                } else if (cell.photoUrl && !isUpsideDown) {
+                    overlay.classList.remove('bg-black', 'bg-opacity-30'); 
+                    overlay.classList.add('bg-transparent');
+                }
+                
+                // Status Text
+                const statusText = document.createElement('p');
+                statusText.className = `font-bold text-lg ${cell.photoUrl ? 'text-white' : 'text-gray-700'}`;
+                statusText.textContent = cell.content;
+                overlay.appendChild(statusText);
+
+                const orientationText = document.createElement('p');
+                orientationText.className = `text-sm ${cell.photoUrl ? 'text-gray-200' : 'text-gray-500'}`;
+                orientationText.textContent = `(${cell.orientation})`;
+                overlay.appendChild(orientationText);
+
+                // Hidden File Input
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.className = 'hidden';
+                fileInput.onchange = (e) => handleFileUpload(e, index);
+                
+                // Button to trigger file input
+                const button = document.createElement('button');
+                button.className = `mt-3 px-4 py-2 text-sm font-semibold rounded-full shadow-lg transition duration-200 
+                                    ${cell.photoUrl ? 'bg-yellow-500 hover:bg-yellow-600 text-gray-800' : 'bg-indigo-500 hover:bg-indigo-600 text-white'}`;
+                button.textContent = cell.photoUrl ? 'Replace Photo' : 'Add Photo';
+                button.onclick = () => fileInput.click();
+                overlay.appendChild(button);
+
+                cellDiv.appendChild(fileInput);
+                cellDiv.appendChild(overlay);
+                printArea.appendChild(cellDiv);
+            });
+        }
+
+        /**
+         * Handles file upload, updates the data model, and re-renders the grid.
+         * @param {Event} event - The change event from the file input.
+         * @param {number} index - The index of the cell being updated.
+         */
+        function handleFileUpload(event, index) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    // Update data model with base64 image data
+                    templateData[index].photoUrl = e.target.result;
+                    
+                    // Re-render the grid to display the new image
+                    renderGrid();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        /**
+         * Captures the print-area div as a PNG and triggers a download.
+         */
+        async function saveForPrint() {
+            saveButton.textContent = 'Preparing image...';
+            saveButton.disabled = true;
+
+            const printElement = document.getElementById('a4-page');
+
+            try {
+                // Use a high scale for high resolution output
+                const canvas = await html2canvas(printElement, {
+                    scale: 4, // 4x resolution for high-quality print
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false
+                });
+
+                // Convert canvas to image and trigger download
+                const image = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = image;
+                link.download = 'booklet_print_template.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } catch (error) {
+                console.error('Error saving image:', error);
+                alert('Could not save the image. See console for details.');
+            } finally {
+                saveButton.textContent = 'Save Final Print File (PNG)';
+                saveButton.disabled = false;
+            }
+        }
+
+        // Initialize the app
+        window.onload = () => {
+            renderGrid();
+            saveButton.addEventListener('click', saveForPrint);
+        };
+    </script>
+</body>
+</html>
+
