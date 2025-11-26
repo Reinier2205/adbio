@@ -73,6 +73,7 @@
 
         /* Rotation applied to the image wrapper for PRINTING */
         .rotate-180 .cell-image {
+            /* Note: The image element itself is rotated 180 degrees for printing */
             transform: rotate(180deg) !important; 
         }
 
@@ -196,16 +197,19 @@
     </div>
     
     <script>
+        // Placeholder URL for immediate testing and visibility
+        const PLACEHOLDER_URL = "https://placehold.co/1200x800/1E3A8A/FFFFFF?text=Click+to+Frame";
+
         // Data map now includes position and scale for image manipulation
         const templateData = [
             // R1: All UPSIDE DOWN 
-            { index: 0, content: "Page 8", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 1, col: 1 },
+            { index: 0, content: "Page 8", orientation: "UPSIDE DOWN", photoUrl: PLACEHOLDER_URL, scale: 1, x: 0, y: 0, row: 1, col: 1 },
             { index: 1, content: "Page 7", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 1, col: 2 },
-            { index: 2, content: "Page 6", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 1, col: 3 },
+            { index: 2, content: "Page 6", orientation: "UPSIDE DOWN", photoUrl: PLACEHOLDER_URL, scale: 1, x: 0, y: 0, row: 1, col: 3 },
             { index: 3, content: "Page 5", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 1, col: 4 },
             // R2: All UPRIGHT
             { index: 4, content: "Page 9", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 2, col: 1 },
-            { index: 5, content: "Page 10", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 2, col: 2 },
+            { index: 5, content: "Page 10", orientation: "UPRIGHT", photoUrl: PLACEHOLDER_URL, scale: 1, x: 0, y: 0, row: 2, col: 2 },
             { index: 6, content: "Page 3", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 2, col: 3 },
             { index: 7, content: "Page 4", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 2, col: 4 },
             // R3: All UPSIDE DOWN
@@ -232,6 +236,7 @@
         
         let activeDrag = null; // Tracks the current drag state
         let editingIndex = null; // Tracks the index of the cell currently being edited
+        let editorImageRef = null; // Direct reference to the image element in the editor
 
         /**
          * Renders the 4x4 grid based on templateData.
@@ -266,7 +271,8 @@
 
                 // --- Photo Wrapper (for overflow:hidden and pointer events) ---
                 if (cell.photoUrl) {
-                    const wrapper = createPhotoWrapper(cell, index, isUpsideDown);
+                    // isEditing=false here, so rotation is applied if upside down
+                    const wrapper = createPhotoWrapper(cell, index, isUpsideDown, false); 
                     cellDiv.appendChild(wrapper);
                 }
 
@@ -319,6 +325,7 @@
          */
         function createPhotoWrapper(cell, index, isUpsideDown, isEditing = false) {
             const wrapper = document.createElement('div');
+            // Apply rotate-180 class ONLY for printing view if upside down
             wrapper.className = `img-wrapper ${!isEditing && isUpsideDown ? 'rotate-180' : ''}`;
             wrapper.id = `wrapper-${index}`;
             wrapper.dataset.index = index;
@@ -328,7 +335,7 @@
             img.className = 'cell-image absolute';
             img.alt = cell.content;
             
-            // Apply saved position and scale
+            // Apply saved position and scale. Rotation is only added if NOT editing.
             const rotation = !isEditing && isUpsideDown ? 'rotate(180deg)' : '';
             img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale}) ${rotation}`;
             
@@ -347,26 +354,28 @@
             // 1. Setup Header
             focusTitle.textContent = `Editing: ${cell.content} (${cell.orientation})`;
             
-            // 2. Clone the image wrapper and move it to the focus area
+            // 2. Create the wrapper WITHOUT the 180deg rotation (isEditing=true)
             const isUpsideDown = cell.orientation === "UPSIDE DOWN";
-            
-            // Create a wrapper without the print rotation (if needed)
             const wrapper = createPhotoWrapper(cell, index, isUpsideDown, true); 
             
             focusImageArea.innerHTML = '';
             focusImageArea.appendChild(wrapper);
 
+            // Set direct reference to the image element inside the editor
+            editorImageRef = wrapper.querySelector('.cell-image'); 
+            
+            // Log for debugging
+            console.log(`[EDIT MODE ENTERED] Index ${index}. Image Ref set:`, editorImageRef);
+
             // 3. Setup interaction handlers on the new wrapper
             setupPanEvents(wrapper, index);
             
             // 4. Setup Zoom Button Handlers
+            // Passed index to ensure they modify the correct item in templateData
             zoomInButton.onclick = () => updateScale(index, 0.1);
             zoomOutButton.onclick = () => updateScale(index, -0.1);
+            // Re-apply wheel listener to the editor wrapper
             wrapper.addEventListener('wheel', (e) => handleZoom(e, index), { passive: false });
-
-            // 5. Setup Replace Photo Handler
-            const fileInput = document.getElementById(`file-input-${index}`);
-            replacePhotoButton.onclick = () => fileInput.click(); 
         }
 
         /**
@@ -374,14 +383,18 @@
          */
         function exitEditMode() {
             if (editingIndex === null) return;
+            
+            console.log(`[EDIT MODE EXIT] Saving changes for index ${editingIndex}`);
 
-            // 1. Save data (already updated by pan/zoom logic)
-            // 2. Cleanup and hide overlay
+            // 1. Cleanup and hide overlay
             focusImageArea.innerHTML = '';
             document.body.classList.remove('is-editing');
+            
+            // Clear the direct reference
+            editorImageRef = null;
             editingIndex = null;
             
-            // 3. Re-render the grid to reflect saved changes
+            // 2. Re-render the grid to reflect saved changes
             renderGrid();
         }
 
@@ -389,12 +402,12 @@
          * Setup pan/drag events for an image wrapper.
          */
         function setupPanEvents(wrapper, index) {
-            const cell = templateData[index];
-            const img = wrapper.querySelector('.cell-image');
-
-            // --- Reset pointer events for clean editor experience ---
+            // Note: The event listeners are attached to the wrapper element within the editor.
+            // Using remove/add to ensure listeners are clean
             wrapper.removeEventListener('pointerdown', handlePointerDown);
             wrapper.addEventListener('pointerdown', (e) => handlePointerDown(e, wrapper, index), false);
+            
+            // Document listeners for move/up ensure drag continues even if pointer leaves wrapper
             document.removeEventListener('pointermove', handlePointerMove);
             document.addEventListener('pointermove', handlePointerMove, false);
             document.removeEventListener('pointerup', handlePointerUp);
@@ -402,16 +415,21 @@
         }
 
         function handlePointerDown(e, wrapper, index) {
-            // Only start drag on primary mouse button or touch
-            if (e.button !== 0 && e.pointerType !== 'touch') return; 
+            // Check for primary button (left click or touch)
+            if (e.button !== 0) return; 
 
             e.preventDefault(); 
             e.stopPropagation();
+            
+            const img = editorImageRef;
+            if (!img) {
+                console.error("[DRAG START ERROR] editorImageRef is null.");
+                return;
+            }
+
+            console.log(`[DRAG START] Pointer Down on image. Index: ${index}, Type: ${e.pointerType}, Button: ${e.button}`);
 
             const cell = templateData[index];
-            const img = wrapper.querySelector('.cell-image');
-            
-            // Need to get the container bounds based on the active state (either tiny cell or large focus area)
             const containerRect = wrapper.getBoundingClientRect(); 
             
             activeDrag = {
@@ -421,11 +439,13 @@
                 startY: e.clientY,
                 initialX: cell.x,
                 initialY: cell.y,
-                // Note: img.clientWidth/Height are base dimensions without scale/transform.
                 cellWidth: containerRect.width, 
                 cellHeight: containerRect.height,
             };
+            
+            // Crucial for continuous drag and preventing selection on the editor wrapper
             wrapper.setPointerCapture(e.pointerId);
+            img.parentElement.style.cursor = 'grabbing'; // Change cursor on the wrapper
         }
         
         function handlePointerMove(e) {
@@ -443,34 +463,39 @@
             let newX = initialX + dx;
             let newY = initialY + dy;
 
-            const img = document.querySelector(`#wrapper-${cellIndex} .cell-image`);
+            const img = editorImageRef;
             if (!img) return;
-
+            
             // Compute scaled image dimensions to determine boundaries
             const scaledImgWidth = img.clientWidth * cell.scale;
             const scaledImgHeight = img.clientHeight * cell.scale;
             
-            // --- Boundary checking (Crucial: Photo must always fill the cell) ---
-            // Furthest left/top the image can go (negative values)
+            // --- Boundary checking (Photo must always fill the cell) ---
             const minX = cellWidth - scaledImgWidth; 
             const minY = cellHeight - scaledImgHeight; 
 
-            // Clamp X (X must be between minX and 0)
+            // Clamp X and Y (position must be between min and 0)
             newX = Math.min(0, Math.max(minX, newX));
-
-            // Clamp Y (Y must be between minY and 0)
             newY = Math.min(0, Math.max(minY, newY));
 
             cell.x = newX;
             cell.y = newY;
 
-            // Apply transform directly for smooth panning
-            const rotation = !editingIndex && cell.orientation === "UPSIDE DOWN" ? 'rotate(180deg)' : '';
-            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale}) ${rotation}`;
+            // Apply transform (no rotation in edit mode)
+            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale})`;
         }
 
         function handlePointerUp(e) {
             if (!activeDrag || activeDrag.pointerId !== e.pointerId) return;
+            
+            // Release pointer capture and reset cursor
+            if (editorImageRef) {
+                editorImageRef.parentElement.style.cursor = 'grab';
+                editorImageRef.parentElement.releasePointerCapture(e.pointerId);
+            }
+            
+            console.log(`[DRAG END] Drag finished. Final position: (${templateData[activeDrag.cellIndex].x.toFixed(1)}, ${templateData[activeDrag.cellIndex].y.toFixed(1)})`);
+
             activeDrag = null; // End drag
         }
         
@@ -480,17 +505,19 @@
         function updateScale(index, delta) {
             const cell = templateData[index];
             const MIN_SCALE = 1.0;
-            cell.scale = Math.max(MIN_SCALE, cell.scale + delta); 
             
-            const img = document.querySelector(`#wrapper-${index} .cell-image`);
+            // Prevent zooming out past the minimum scale
+            const newScale = Math.max(MIN_SCALE, cell.scale + delta);
+            if (newScale === cell.scale) return; // Scale didn't change
+            cell.scale = newScale; 
+            
+            const img = editorImageRef;
             if (!img) return;
             
-            // Re-apply scale and boundary check immediately
             const wrapperRect = img.parentElement.getBoundingClientRect();
-
-            // Apply temporary transform to get current dimensions for clamping
-            const rotation = !editingIndex && cell.orientation === "UPSIDE DOWN" ? 'rotate(180deg)' : '';
-            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale}) ${rotation}`;
+            
+            // 1. Temporarily apply new scale to get new theoretical dimensions for clamping
+            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale})`;
             
             const scaledImgWidth = img.clientWidth * cell.scale;
             const scaledImgHeight = img.clientHeight * cell.scale;
@@ -498,12 +525,13 @@
             const minX = wrapperRect.width - scaledImgWidth;
             const minY = wrapperRect.height - scaledImgHeight;
 
-            // Clamp position to ensure no whitespace appears after zooming
+            // 2. Clamp position to ensure no whitespace appears after zooming
+            // If the image is now smaller than the view and positioned outside [0,0], snap it back
             cell.x = Math.min(0, Math.max(minX, cell.x));
             cell.y = Math.min(0, Math.max(minY, cell.y));
 
-            // Apply final clamped position and scale
-            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale}) ${rotation}`;
+            // 3. Apply final clamped position and scale
+            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale})`;
         }
         
         /**
@@ -595,7 +623,8 @@
             editorFileInput.type = 'file';
             editorFileInput.accept = 'image/*';
             editorFileInput.className = 'hidden';
-            editorFileInput.onchange = (e) => handleFileUpload(e, editingIndex, true);
+            // The file input uses editingIndex, which is set when the editor is active
+            editorFileInput.onchange = (e) => handleFileUpload(e, editingIndex, true); 
             replacePhotoButton.addEventListener('click', () => editorFileInput.click());
             document.body.appendChild(editorFileInput); // Must be in the DOM to trigger click()
         };
