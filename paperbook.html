@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booklet Photo Preparer</title>
+    <title>Booklet Photo Preparer - Interactive Editor</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load html2canvas for saving the image -->
@@ -11,8 +11,8 @@
     <style>
         /* Define A4 aspect ratio (approx. 1:1.414) container */
         .a4-container {
-            width: min(95vw, 700px); /* Responsive width */
-            padding-top: calc(100% * 1.414); /* Maintain A4 aspect ratio */
+            width: min(95vw, 800px); 
+            padding-top: calc(100% * 1.414);
             position: relative;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             background-color: white;
@@ -29,61 +29,120 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(4, 1fr);
+            touch-action: none; 
         }
 
-        /* Styling for the red dotted fold lines (between cells) */
-        .grid-cell:nth-child(4n - 2) {
-            border-right: 1px solid #ccc;
-        }
-        .grid-cell:nth-child(4n - 1) {
-            border-right: 2px dashed #EF4444; /* Vertical fold line */
-        }
-        .grid-cell:nth-child(4n) {
-            border-right: 1px solid #ccc;
-        }
+        /* Standard cell borders */
+        .grid-cell { border: 1px solid #ccc; }
+        
+        /* Red dashed fold lines (Vertical: between Col 2 & 3) */
+        .grid-cell:nth-child(4n + 2) { border-right: 1px solid #ccc; }
+        .grid-cell:nth-child(4n + 3) { border-right: 2px dashed #EF4444; } /* Vertical fold */
 
-        /* Horizontal dividing lines */
-        .grid-cell:nth-child(n+1) { border-bottom: 1px solid #ccc; }
-        .grid-cell:nth-child(n+5) { border-bottom: 1px solid #ccc; }
-
-        /* The main horizontal fold line between rows 2 and 3 */
+        /* Red dashed fold lines (Horizontal: between Row 2 & 3) */
         .grid-cell:nth-child(n+5):nth-child(-n+8) {
             border-bottom: 2px dashed #EF4444; 
         }
 
-        /* Remove bottom border from the last row */
-        .grid-cell:nth-child(n+13) {
-            border-bottom: none !important;
-        }
+        /* Remove double borders */
+        .grid-cell:nth-child(4n) { border-right: none; }
+        .grid-cell:nth-child(n+13) { border-bottom: none !important; }
 
-        /* CSS for rotating the content (image + button) by 180 degrees */
-        .rotate-180 {
-            transform: rotate(180deg);
-        }
-
-        /* Ensure images fill the cell correctly */
-        .cell-image {
-            object-fit: cover;
-            width: 100%;
-            height: 100%;
+        /* Key CSS for Image Manipulation */
+        .img-wrapper {
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 10; /* Image layer */
+            width: 100%;
+            height: 100%;
+            overflow: hidden; 
+            cursor: grab;
+        }
+        
+        .img-wrapper:active {
+            cursor: grabbing;
+        }
+
+        .cell-image {
+            object-fit: cover; 
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-origin: 0 0; 
+        }
+
+        /* Rotation applied to the image wrapper for PRINTING */
+        .rotate-180 .cell-image {
+            transform: rotate(180deg) !important; 
+        }
+
+        /* Focus Editor Overlay styles */
+        #editor-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none; /* Initially hidden */
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        #focus-container {
+            position: relative;
+            background: white;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+            
+            /* Target size: 80vh and a corresponding width to maintain aspect ratio */
+            height: 80vh;
+            width: calc(80vh / 1.414); /* A4 aspect ratio (1 / 1.414) */
+            max-width: 95vw; /* Ensure it fits on screen horizontally */
+            max-height: 95vh;
+            
+            display: flex;
+            flex-direction: column;
+        }
+
+        #focus-image-area {
+            position: relative;
+            flex-grow: 1; /* Image takes all available space */
+            overflow: hidden;
+            width: 100%;
+        }
+
+        /* Ensure the wrapper inside the focus area uses the full size */
+        #focus-image-area .img-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .content-overlay {
-            z-index: 20; /* Text/Button layer */
+            z-index: 30; /* Above image and controls */
+        }
+        
+        /* Hide main content when editing */
+        .is-editing main, .is-editing footer {
+            display: none;
+        }
+        .is-editing #editor-overlay {
+            display: flex;
         }
     </style>
 </head>
 <body class="bg-gray-100 p-4 font-sans antialiased flex flex-col items-center min-h-screen">
 
     <header class="text-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Booklet Photo Preparer</h1>
-        <p class="text-gray-600 mt-1">Upload and position your photos for the A4 print sheet.</p>
-        <p class="text-xs text-red-500 mt-2">
-            Photos in the **red dashed** rows (1 & 3) will be printed **upside down** for correct folding.
+        <h1 class="text-3xl font-extrabold text-indigo-700">Interactive Photo Editor</h1>
+        <p class="text-gray-600 mt-1">Frame your photos and prepare the sheet for printing.</p>
+        <p class="text-sm text-red-600 mt-2 font-medium">
+            **Red rows** (1 & 3) are **UPSIDE DOWN** for printing. Click on a photo to zoom and frame it.
         </p>
     </header>
 
@@ -97,43 +156,82 @@
     </main>
 
     <!-- Save Button and Instructions -->
-    <footer class="w-full max-w-lg p-4 bg-white rounded-lg shadow-xl text-center">
-        <button id="saveButton" class="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 disabled:opacity-50">
+    <footer class="w-full max-w-2xl p-4 bg-white rounded-lg shadow-xl text-center">
+        <button id="saveButton" class="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 disabled:opacity-50 flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             Save Final Print File (PNG)
         </button>
-        <p class="text-sm text-gray-500 mt-3">
-            Clicking Save will capture the entire grid above as a single high-resolution image ready for printing.
+        <p class="text-xs text-gray-500 mt-3">
+            The final image will be a high-resolution PNG of the grid, with all photos correctly scaled and oriented.
         </p>
     </footer>
 
+    <!-- FOCUS EDITOR OVERLAY -->
+    <div id="editor-overlay">
+        <div id="focus-container">
+            <!-- Header for title and exit -->
+            <div id="focus-header" class="p-3 bg-indigo-700 text-white flex justify-between items-center">
+                <h2 id="focus-title" class="text-xl font-bold">Editing Photo</h2>
+                <button id="exitEditButton" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-200">
+                    Done Editing
+                </button>
+            </div>
+            
+            <!-- Area where the image is displayed and manipulated -->
+            <div id="focus-image-area">
+                <!-- Image wrapper and image content will be moved here -->
+            </div>
+            
+            <!-- Controls at the bottom -->
+            <div id="focus-controls" class="p-4 bg-gray-100 flex justify-between items-center border-t border-gray-200">
+                <button id="replacePhotoButton" class="px-4 py-2 text-sm font-semibold rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-800 transition duration-200">
+                    Replace Photo
+                </button>
+                <div class="flex space-x-2">
+                    <button id="zoomOutButton" class="w-10 h-10 text-gray-800 text-xl font-bold bg-white border border-gray-300 hover:bg-gray-200 rounded-full transition">-</button>
+                    <button id="zoomInButton" class="w-10 h-10 text-gray-800 text-xl font-bold bg-white border border-gray-300 hover:bg-gray-200 rounded-full transition">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
-        // Data map for the 4x4 grid. This dictates the content and orientation.
+        // Data map now includes position and scale for image manipulation
         const templateData = [
-            // R1: All UPSIDE DOWN (Red emphasis)
-            { index: 0, content: "Page 8", orientation: "UPSIDE DOWN", photoUrl: null, row: 1, col: 1 },
-            { index: 1, content: "Page 7", orientation: "UPSIDE DOWN", photoUrl: null, row: 1, col: 2 },
-            { index: 2, content: "Page 6", orientation: "UPSIDE DOWN", photoUrl: null, row: 1, col: 3 },
-            { index: 3, content: "Page 5", orientation: "UPSIDE DOWN", photoUrl: null, row: 1, col: 4 },
-            // R2: All UPRIGHT (Blue emphasis)
-            { index: 4, content: "Page 9", orientation: "UPRIGHT", photoUrl: null, row: 2, col: 1 },
-            { index: 5, content: "Page 10", orientation: "UPRIGHT", photoUrl: null, row: 2, col: 2 },
-            { index: 6, content: "Page 3", orientation: "UPRIGHT", photoUrl: null, row: 2, col: 3 },
-            { index: 7, content: "Page 4", orientation: "UPRIGHT", photoUrl: null, row: 2, col: 4 },
-            // R3: All UPSIDE DOWN (Red emphasis)
-            { index: 8, content: "Page 12", orientation: "UPSIDE DOWN", photoUrl: null, row: 3, col: 1 },
-            { index: 9, content: "Page 11", orientation: "UPSIDE DOWN", photoUrl: null, row: 3, col: 2 },
-            { index: 10, content: "Page 2", orientation: "UPSIDE DOWN", photoUrl: null, row: 3, col: 3 },
-            { index: 11, content: "Page 1", orientation: "UPSIDE DOWN", photoUrl: null, row: 3, col: 4 },
-            // R4: All UPRIGHT (Covers - Green emphasis)
-            { index: 12, content: "Page 13", orientation: "UPRIGHT", photoUrl: null, row: 4, col: 1 },
-            { index: 13, content: "Page 14", orientation: "UPRIGHT", photoUrl: null, row: 4, col: 2 },
-            { index: 14, content: "BACK COVER", orientation: "UPRIGHT", photoUrl: null, row: 4, col: 3 },
-            { index: 15, content: "FRONT COVER", orientation: "UPRIGHT", photoUrl: null, row: 4, col: 4 },
+            // R1: All UPSIDE DOWN 
+            { index: 0, content: "Page 8", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 1, col: 1 },
+            { index: 1, content: "Page 7", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 1, col: 2 },
+            { index: 2, content: "Page 6", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 1, col: 3 },
+            { index: 3, content: "Page 5", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 1, col: 4 },
+            // R2: All UPRIGHT
+            { index: 4, content: "Page 9", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 2, col: 1 },
+            { index: 5, content: "Page 10", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 2, col: 2 },
+            { index: 6, content: "Page 3", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 2, col: 3 },
+            { index: 7, content: "Page 4", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 2, col: 4 },
+            // R3: All UPSIDE DOWN
+            { index: 8, content: "Page 12", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 3, col: 1 },
+            { index: 9, content: "Page 11", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 3, col: 2 },
+            { index: 10, content: "Page 2", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 3, col: 3 },
+            { index: 11, content: "Page 1", orientation: "UPSIDE DOWN", photoUrl: null, scale: 1, x: 0, y: 0, row: 3, col: 4 },
+            // R4: All UPRIGHT (Covers)
+            { index: 12, content: "Page 13", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 4, col: 1 },
+            { index: 13, content: "Page 14", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 4, col: 2 },
+            { index: 14, content: "BACK COVER", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 4, col: 3 },
+            { index: 15, content: "FRONT COVER", orientation: "UPRIGHT", photoUrl: null, scale: 1, x: 0, y: 0, row: 4, col: 4 },
         ];
 
         const printArea = document.getElementById('print-area');
         const saveButton = document.getElementById('saveButton');
-        let imageFiles = new Array(16).fill(null); // To store file data
+        const overlay = document.getElementById('editor-overlay');
+        const focusImageArea = document.getElementById('focus-image-area');
+        const focusTitle = document.getElementById('focus-title');
+        const exitEditButton = document.getElementById('exitEditButton');
+        const replacePhotoButton = document.getElementById('replacePhotoButton');
+        const zoomInButton = document.getElementById('zoomInButton');
+        const zoomOutButton = document.getElementById('zoomOutButton');
+        
+        let activeDrag = null; // Tracks the current drag state
+        let editingIndex = null; // Tracks the index of the cell currently being edited
 
         /**
          * Renders the 4x4 grid based on templateData.
@@ -145,97 +243,301 @@
                 const isUpsideDown = cell.orientation === "UPSIDE DOWN";
                 const isCover = cell.content.includes("COVER");
 
-                // Base classes for every cell
-                let cellClasses = `grid-cell relative overflow-hidden flex flex-col justify-center items-center text-center p-2 transition-all duration-300`;
-                
-                // Add border styling based on position for the red fold lines
-                if (cell.col === 2) cellClasses += ' border-r-2 border-red-400 border-dashed';
-                if (cell.row === 2) cellClasses += ' border-b-2 border-red-400 border-dashed';
+                let cellClasses = `grid-cell relative overflow-hidden flex flex-col justify-center items-center text-center transition-all duration-300`;
                 
                 // Background and text color based on orientation/type
                 if (isCover) {
-                    cellClasses += ' bg-green-100 text-green-800';
+                    cellClasses += ' bg-green-50 text-green-800';
                 } else if (isUpsideDown) {
-                    cellClasses += ' bg-red-100 text-red-800';
+                    cellClasses += ' bg-red-50 text-red-800';
                 } else {
-                    cellClasses += ' bg-blue-100 text-blue-800';
+                    cellClasses += ' bg-blue-50 text-blue-800';
                 }
 
                 const cellDiv = document.createElement('div');
                 cellDiv.className = cellClasses;
                 cellDiv.id = `cell-${index}`;
 
-                // --- Photo/Image Element ---
+                // Add click handler to enter edit mode if a photo exists
                 if (cell.photoUrl) {
-                    const img = document.createElement('img');
-                    img.src = cell.photoUrl;
-                    img.className = `cell-image ${isUpsideDown ? 'rotate-180' : ''}`;
-                    img.setAttribute('draggable', 'false'); // Prevent dragging default browser behavior
-                    img.alt = cell.content;
-                    cellDiv.appendChild(img);
+                    cellDiv.classList.add('cursor-pointer', 'hover:shadow-lg', 'hover:scale-[1.02]');
+                    cellDiv.addEventListener('click', () => enterEditMode(index));
+                }
+
+                // --- Photo Wrapper (for overflow:hidden and pointer events) ---
+                if (cell.photoUrl) {
+                    const wrapper = createPhotoWrapper(cell, index, isUpsideDown);
+                    cellDiv.appendChild(wrapper);
                 }
 
                 // --- Content Overlay (Button and Text) ---
-                const overlay = document.createElement('div');
-                overlay.className = `content-overlay absolute inset-0 flex flex-col justify-center items-center p-2 bg-black bg-opacity-30 ${cell.photoUrl ? 'opacity-0 hover:opacity-100' : 'opacity-100'}`;
+                const overlayContent = document.createElement('div');
+                overlayContent.className = `content-overlay absolute inset-0 flex flex-col justify-center items-center p-2 
+                                     ${cell.photoUrl ? 'bg-transparent text-white opacity-0 hover:opacity-100 transition-opacity duration-300' : 'bg-white bg-opacity-70 text-gray-700'}`;
                 
-                // Apply rotation to the overlay content so text is readable while the image beneath is rotated for print
+                // If a photo exists, the overlay should be rotated to keep the text readable
                 if (cell.photoUrl && isUpsideDown) {
-                    overlay.classList.add('rotate-180');
-                    overlay.classList.remove('bg-black', 'bg-opacity-30'); // Clear background on hover for rotated image
-                    overlay.classList.add('bg-transparent');
-                } else if (cell.photoUrl && !isUpsideDown) {
-                    overlay.classList.remove('bg-black', 'bg-opacity-30'); 
-                    overlay.classList.add('bg-transparent');
+                    overlayContent.classList.add('rotate-180');
                 }
                 
                 // Status Text
                 const statusText = document.createElement('p');
-                statusText.className = `font-bold text-lg ${cell.photoUrl ? 'text-white' : 'text-gray-700'}`;
+                statusText.className = `font-extrabold text-lg ${cell.photoUrl ? 'text-white' : 'text-gray-700'}`;
                 statusText.textContent = cell.content;
-                overlay.appendChild(statusText);
+                overlayContent.appendChild(statusText);
 
                 const orientationText = document.createElement('p');
-                orientationText.className = `text-sm ${cell.photoUrl ? 'text-gray-200' : 'text-gray-500'}`;
+                orientationText.className = `text-sm ${cell.photoUrl ? 'text-gray-300' : 'text-gray-500'}`;
                 orientationText.textContent = `(${cell.orientation})`;
-                overlay.appendChild(orientationText);
+                overlayContent.appendChild(orientationText);
 
-                // Hidden File Input
+                // --- Hidden File Input (for Replace button) ---
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
                 fileInput.accept = 'image/*';
                 fileInput.className = 'hidden';
-                fileInput.onchange = (e) => handleFileUpload(e, index);
+                fileInput.id = `file-input-${index}`;
+                fileInput.onchange = (e) => handleFileUpload(e, index, false);
                 
-                // Button to trigger file input
+                // --- Button to trigger file input ---
                 const button = document.createElement('button');
                 button.className = `mt-3 px-4 py-2 text-sm font-semibold rounded-full shadow-lg transition duration-200 
                                     ${cell.photoUrl ? 'bg-yellow-500 hover:bg-yellow-600 text-gray-800' : 'bg-indigo-500 hover:bg-indigo-600 text-white'}`;
                 button.textContent = cell.photoUrl ? 'Replace Photo' : 'Add Photo';
-                button.onclick = () => fileInput.click();
-                overlay.appendChild(button);
+                button.onclick = (e) => { e.stopPropagation(); fileInput.click(); }; 
+                overlayContent.appendChild(button);
+
 
                 cellDiv.appendChild(fileInput);
-                cellDiv.appendChild(overlay);
+                cellDiv.appendChild(overlayContent);
                 printArea.appendChild(cellDiv);
             });
         }
+        
+        /**
+         * Creates the image wrapper and image element for a cell.
+         */
+        function createPhotoWrapper(cell, index, isUpsideDown, isEditing = false) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `img-wrapper ${!isEditing && isUpsideDown ? 'rotate-180' : ''}`;
+            wrapper.id = `wrapper-${index}`;
+            wrapper.dataset.index = index;
+
+            const img = document.createElement('img');
+            img.src = cell.photoUrl;
+            img.className = 'cell-image absolute';
+            img.alt = cell.content;
+            
+            // Apply saved position and scale
+            const rotation = !isEditing && isUpsideDown ? 'rotate(180deg)' : '';
+            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale}) ${rotation}`;
+            
+            wrapper.appendChild(img);
+            return wrapper;
+        }
 
         /**
-         * Handles file upload, updates the data model, and re-renders the grid.
-         * @param {Event} event - The change event from the file input.
-         * @param {number} index - The index of the cell being updated.
+         * Enters the dedicated photo editing mode (Focus Mode).
          */
-        function handleFileUpload(event, index) {
+        function enterEditMode(index) {
+            const cell = templateData[index];
+            editingIndex = index;
+            document.body.classList.add('is-editing');
+            
+            // 1. Setup Header
+            focusTitle.textContent = `Editing: ${cell.content} (${cell.orientation})`;
+            
+            // 2. Clone the image wrapper and move it to the focus area
+            const isUpsideDown = cell.orientation === "UPSIDE DOWN";
+            
+            // Create a wrapper without the print rotation (if needed)
+            const wrapper = createPhotoWrapper(cell, index, isUpsideDown, true); 
+            
+            focusImageArea.innerHTML = '';
+            focusImageArea.appendChild(wrapper);
+
+            // 3. Setup interaction handlers on the new wrapper
+            setupPanEvents(wrapper, index);
+            
+            // 4. Setup Zoom Button Handlers
+            zoomInButton.onclick = () => updateScale(index, 0.1);
+            zoomOutButton.onclick = () => updateScale(index, -0.1);
+            wrapper.addEventListener('wheel', (e) => handleZoom(e, index), { passive: false });
+
+            // 5. Setup Replace Photo Handler
+            const fileInput = document.getElementById(`file-input-${index}`);
+            replacePhotoButton.onclick = () => fileInput.click(); 
+        }
+
+        /**
+         * Exits the dedicated photo editing mode.
+         */
+        function exitEditMode() {
+            if (editingIndex === null) return;
+
+            // 1. Save data (already updated by pan/zoom logic)
+            // 2. Cleanup and hide overlay
+            focusImageArea.innerHTML = '';
+            document.body.classList.remove('is-editing');
+            editingIndex = null;
+            
+            // 3. Re-render the grid to reflect saved changes
+            renderGrid();
+        }
+
+        /**
+         * Setup pan/drag events for an image wrapper.
+         */
+        function setupPanEvents(wrapper, index) {
+            const cell = templateData[index];
+            const img = wrapper.querySelector('.cell-image');
+
+            // --- Reset pointer events for clean editor experience ---
+            wrapper.removeEventListener('pointerdown', handlePointerDown);
+            wrapper.addEventListener('pointerdown', (e) => handlePointerDown(e, wrapper, index), false);
+            document.removeEventListener('pointermove', handlePointerMove);
+            document.addEventListener('pointermove', handlePointerMove, false);
+            document.removeEventListener('pointerup', handlePointerUp);
+            document.addEventListener('pointerup', handlePointerUp, false);
+        }
+
+        function handlePointerDown(e, wrapper, index) {
+            // Only start drag on primary mouse button or touch
+            if (e.button !== 0 && e.pointerType !== 'touch') return; 
+
+            e.preventDefault(); 
+            e.stopPropagation();
+
+            const cell = templateData[index];
+            const img = wrapper.querySelector('.cell-image');
+            
+            // Need to get the container bounds based on the active state (either tiny cell or large focus area)
+            const containerRect = wrapper.getBoundingClientRect(); 
+            
+            activeDrag = {
+                pointerId: e.pointerId,
+                cellIndex: index,
+                startX: e.clientX,
+                startY: e.clientY,
+                initialX: cell.x,
+                initialY: cell.y,
+                // Note: img.clientWidth/Height are base dimensions without scale/transform.
+                cellWidth: containerRect.width, 
+                cellHeight: containerRect.height,
+            };
+            wrapper.setPointerCapture(e.pointerId);
+        }
+        
+        function handlePointerMove(e) {
+            if (!activeDrag || activeDrag.pointerId !== e.pointerId) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const { cellIndex, startX, startY, initialX, cellWidth, cellHeight } = activeDrag;
+            const cell = templateData[cellIndex];
+
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+
+            let newX = initialX + dx;
+            let newY = initialY + dy;
+
+            const img = document.querySelector(`#wrapper-${cellIndex} .cell-image`);
+            if (!img) return;
+
+            // Compute scaled image dimensions to determine boundaries
+            const scaledImgWidth = img.clientWidth * cell.scale;
+            const scaledImgHeight = img.clientHeight * cell.scale;
+            
+            // --- Boundary checking (Crucial: Photo must always fill the cell) ---
+            // Furthest left/top the image can go (negative values)
+            const minX = cellWidth - scaledImgWidth; 
+            const minY = cellHeight - scaledImgHeight; 
+
+            // Clamp X (X must be between minX and 0)
+            newX = Math.min(0, Math.max(minX, newX));
+
+            // Clamp Y (Y must be between minY and 0)
+            newY = Math.min(0, Math.max(minY, newY));
+
+            cell.x = newX;
+            cell.y = newY;
+
+            // Apply transform directly for smooth panning
+            const rotation = !editingIndex && cell.orientation === "UPSIDE DOWN" ? 'rotate(180deg)' : '';
+            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale}) ${rotation}`;
+        }
+
+        function handlePointerUp(e) {
+            if (!activeDrag || activeDrag.pointerId !== e.pointerId) return;
+            activeDrag = null; // End drag
+        }
+        
+        /**
+         * Updates the scale (zoom) level for a cell.
+         */
+        function updateScale(index, delta) {
+            const cell = templateData[index];
+            const MIN_SCALE = 1.0;
+            cell.scale = Math.max(MIN_SCALE, cell.scale + delta); 
+            
+            const img = document.querySelector(`#wrapper-${index} .cell-image`);
+            if (!img) return;
+            
+            // Re-apply scale and boundary check immediately
+            const wrapperRect = img.parentElement.getBoundingClientRect();
+
+            // Apply temporary transform to get current dimensions for clamping
+            const rotation = !editingIndex && cell.orientation === "UPSIDE DOWN" ? 'rotate(180deg)' : '';
+            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale}) ${rotation}`;
+            
+            const scaledImgWidth = img.clientWidth * cell.scale;
+            const scaledImgHeight = img.clientHeight * cell.scale;
+            
+            const minX = wrapperRect.width - scaledImgWidth;
+            const minY = wrapperRect.height - scaledImgHeight;
+
+            // Clamp position to ensure no whitespace appears after zooming
+            cell.x = Math.min(0, Math.max(minX, cell.x));
+            cell.y = Math.min(0, Math.max(minY, cell.y));
+
+            // Apply final clamped position and scale
+            img.style.transform = `translate(${cell.x}px, ${cell.y}px) scale(${cell.scale}) ${rotation}`;
+        }
+        
+        /**
+         * Handles mouse wheel zoom.
+         */
+        function handleZoom(e, index) {
+            e.preventDefault(); // Prevent page scrolling
+            if (editingIndex !== index) return;
+            
+            const delta = e.deltaY < 0 ? 0.1 : -0.1; // Zoom in for negative deltaY (scroll up)
+            updateScale(index, delta);
+        }
+
+        /**
+         * Handles file upload, updates the data model, and resets transformations.
+         */
+        function handleFileUpload(event, index, isReplaceInEditor) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    // Update data model with base64 image data
+                    // Reset position and scale on new upload
                     templateData[index].photoUrl = e.target.result;
+                    templateData[index].scale = 1;
+                    templateData[index].x = 0;
+                    templateData[index].y = 0;
                     
-                    // Re-render the grid to display the new image
-                    renderGrid();
+                    if (isReplaceInEditor) {
+                        // If replacing inside the editor, re-enter to refresh the focus view
+                        enterEditMode(index);
+                    } else {
+                        // If adding/replacing in grid view, re-render
+                        renderGrid();
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -245,7 +547,11 @@
          * Captures the print-area div as a PNG and triggers a download.
          */
         async function saveForPrint() {
-            saveButton.textContent = 'Preparing image...';
+            if (editingIndex !== null) {
+                // Prevent saving while in edit mode
+                return;
+            }
+            saveButton.textContent = 'Preparing image... Please wait.';
             saveButton.disabled = true;
 
             const printElement = document.getElementById('a4-page');
@@ -253,10 +559,10 @@
             try {
                 // Use a high scale for high resolution output
                 const canvas = await html2canvas(printElement, {
-                    scale: 4, // 4x resolution for high-quality print
+                    scale: 5, 
                     useCORS: true,
                     allowTaint: true,
-                    logging: false
+                    logging: false,
                 });
 
                 // Convert canvas to image and trigger download
@@ -270,9 +576,10 @@
 
             } catch (error) {
                 console.error('Error saving image:', error);
-                alert('Could not save the image. See console for details.');
+                // Use a custom message since alert() is forbidden
+                console.log('--- ERROR: Could not save the image. See console for details. ---'); 
             } finally {
-                saveButton.textContent = 'Save Final Print File (PNG)';
+                saveButton.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Save Final Print File (PNG)';
                 saveButton.disabled = false;
             }
         }
@@ -281,6 +588,16 @@
         window.onload = () => {
             renderGrid();
             saveButton.addEventListener('click', saveForPrint);
+            exitEditButton.addEventListener('click', exitEditMode);
+            
+            // Set up a single file input handler for the editor's replace button
+            const editorFileInput = document.createElement('input');
+            editorFileInput.type = 'file';
+            editorFileInput.accept = 'image/*';
+            editorFileInput.className = 'hidden';
+            editorFileInput.onchange = (e) => handleFileUpload(e, editingIndex, true);
+            replacePhotoButton.addEventListener('click', () => editorFileInput.click());
+            document.body.appendChild(editorFileInput); // Must be in the DOM to trigger click()
         };
     </script>
 </body>
