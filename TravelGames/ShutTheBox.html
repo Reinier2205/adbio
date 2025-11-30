@@ -30,6 +30,10 @@
   /* Unified dice theme */
   --dice-red: #7b0d1e;
   --dice-red-dark: #4a070f;
+  --dice-teal: #008080;
+  --dice-teal-dark: #005050;
+  --dice-maroon: #800000;
+  --dice-maroon-dark: #500000;
   --pip-color: #fff8e1;
   --pip-shadow: rgba(0,0,0,0.35);
 }
@@ -147,6 +151,17 @@ h1{
     font-family: 'Cinzel', serif;
     font-weight: bold;
     box-shadow: inset 8px 8px 16px rgba(0,0,0,0.35), inset -4px -4px 10px rgba(255,255,255,0.08), 0 10px 20px rgba(0,0,0,0.6);
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.die.teal .die-face {
+    background: radial-gradient(120% 120% at 30% 20%, #00a6a6, var(--dice-teal) 40%, var(--dice-teal-dark) 100%);
+    border-color: var(--dice-teal-dark);
+}
+
+.die.maroon .die-face {
+    background: radial-gradient(120% 120% at 30% 20%, #a00000, var(--dice-maroon) 40%, var(--dice-maroon-dark) 100%);
+    border-color: var(--dice-maroon-dark);
 }
 .face-1 { transform: rotateY(0deg) translateZ(28px); }
 .face-6 { transform: rotateY(180deg) translateZ(28px); }
@@ -179,8 +194,68 @@ h1{
 
 .player-indicator.active {
     border-color: var(--gold);
-    transform: scale(1.05);
-    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4), 0 0 20px var(--gold);
+    border-width: 4px;
+    transform: scale(1.08);
+    box-shadow: 
+        inset 0 2px 5px rgba(0,0,0,0.5), 
+        0 5px 15px rgba(0,0,0,0.4), 
+        0 0 30px var(--gold),
+        0 0 50px rgba(212, 175, 55, 0.6),
+        0 0 70px rgba(212, 175, 55, 0.4);
+    animation: playerGlow 2s ease-in-out infinite;
+}
+
+@keyframes playerGlow {
+    0%, 100% {
+        box-shadow: 
+            inset 0 2px 5px rgba(0,0,0,0.5), 
+            0 5px 15px rgba(0,0,0,0.4), 
+            0 0 30px var(--gold),
+            0 0 50px rgba(212, 175, 55, 0.6),
+            0 0 70px rgba(212, 175, 55, 0.4);
+    }
+    50% {
+        box-shadow: 
+            inset 0 2px 5px rgba(0,0,0,0.5), 
+            0 5px 15px rgba(0,0,0,0.4), 
+            0 0 40px var(--gold),
+            0 0 70px rgba(212, 175, 55, 0.8),
+            0 0 100px rgba(212, 175, 55, 0.6);
+    }
+}
+
+.player-indicator.active.player-switch {
+    animation: playerSwitch 0.8s ease-out;
+}
+
+@keyframes playerSwitch {
+    0% {
+        transform: scale(1.08);
+        box-shadow: 
+            inset 0 2px 5px rgba(0,0,0,0.5), 
+            0 5px 15px rgba(0,0,0,0.4), 
+            0 0 30px var(--gold),
+            0 0 50px rgba(212, 175, 55, 0.6),
+            0 0 70px rgba(212, 175, 55, 0.4);
+    }
+    50% {
+        transform: scale(1.15);
+        box-shadow: 
+            inset 0 2px 5px rgba(0,0,0,0.5), 
+            0 5px 15px rgba(0,0,0,0.4), 
+            0 0 60px var(--gold),
+            0 0 100px rgba(212, 175, 55, 1),
+            0 0 140px rgba(212, 175, 55, 0.8);
+    }
+    100% {
+        transform: scale(1.08);
+        box-shadow: 
+            inset 0 2px 5px rgba(0,0,0,0.5), 
+            0 5px 15px rgba(0,0,0,0.4), 
+            0 0 30px var(--gold),
+            0 0 50px rgba(212, 175, 55, 0.6),
+            0 0 70px rgba(212, 175, 55, 0.4);
+    }
 }
 
 
@@ -681,6 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         renderUI();
         updateStatus(`${players[currentPlayerIndex].name}'s turn to roll. ${playerMode[currentPlayerIndex] ? 'Shut' : 'Open'} tiles.`);
+        updateDiceColor();
         updateControls();
     }
 
@@ -793,8 +869,17 @@ document.addEventListener('DOMContentLoaded', () => {
      * Highlights the current player's indicator.
      */
     function highlightActivePlayer() {
-        document.querySelectorAll('.player-indicator').forEach(el => el.classList.remove('active'));
-        document.getElementById(`player-indicator-${currentPlayerIndex}`)?.classList.add('active');
+        document.querySelectorAll('.player-indicator').forEach(el => {
+            el.classList.remove('active', 'player-switch');
+        });
+        const activeIndicator = document.getElementById(`player-indicator-${currentPlayerIndex}`);
+        if (activeIndicator) {
+            activeIndicator.classList.add('active', 'player-switch');
+            // Remove the switch animation class after animation completes
+            setTimeout(() => {
+                activeIndicator.classList.remove('player-switch');
+            }, 800);
+        }
     }
 
     /**
@@ -817,6 +902,31 @@ document.addEventListener('DOMContentLoaded', () => {
             rollOneBtn.style.display = 'block';
         } else {
             rollOneBtn.style.display = 'none';
+        }
+    }
+
+    /**
+     * Updates dice colors based on current player's mode.
+     * Teal = shutting mode (tap teal/open tiles)
+     * Maroon = opening mode (tap maroon/shut tiles)
+     */
+    function updateDiceColor() {
+        if (players.length === 0) return; // No players yet
+        
+        const isShutting = playerMode[currentPlayerIndex];
+        // Remove existing color classes
+        die1El.classList.remove('teal', 'maroon');
+        die2El.classList.remove('teal', 'maroon');
+        
+        // Add appropriate color class
+        if (isShutting) {
+            // Player is shutting - tap teal tiles
+            die1El.classList.add('teal');
+            die2El.classList.add('teal');
+        } else {
+            // Player is opening - tap maroon tiles
+            die1El.classList.add('maroon');
+            die2El.classList.add('maroon');
         }
     }
 
@@ -863,6 +973,9 @@ document.addEventListener('DOMContentLoaded', () => {
      * Rolls the specified number of dice.
      */
     function rollDice(numDice) {
+        // Ensure dice colors are correct before rolling
+        updateDiceColor();
+        
         const d1 = Math.floor(Math.random() * 6) + 1;
         let d2 = 0;
         
@@ -973,6 +1086,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         gameState = 'AWAITING_ROLL';
         updateStatus(`${players[currentPlayerIndex].name}'s turn to roll. ${playerMode[currentPlayerIndex] ? 'Shut' : 'Open'} tiles.`);
+        updateDiceColor();
         highlightActivePlayer();
         updateControls();
     }
