@@ -292,6 +292,36 @@
             color: var(--gold-light);
         }
 
+        /* Help button */
+        .help-btn{
+            position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
+            border:2px solid #111;background:radial-gradient(circle at 30% 30%, var(--gold), #b8860b);
+            color:#111;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+            box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .help-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+        
+        /* Home button (top-left) */
+        .home-btn{
+            position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;
+            border:2px solid #111;background:radial-gradient(circle at 30% 30%, var(--gold), #b8860b);
+            color:#111;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+            box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);text-decoration:none;
+        }
+        .home-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+
+        /* Help modal */
+        .help-modal{ position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:all .3s ease; z-index:1000; }
+        .help-modal.show{ opacity:1; visibility:visible; }
+        .help-panel{ background:linear-gradient(145deg,#3e1e24,#2a1a1f); color:var(--light-gold); padding:2rem 2.2rem; border-radius:15px; border:3px solid var(--gold); box-shadow:0 0 30px var(--gold); max-width:560px; width:90%; text-align:left; transform:scale(.9); transition:transform .3s ease; }
+        .help-modal.show .help-panel{ transform:scale(1); }
+        .help-panel h3{ font-family:'Playfair Display', serif; font-size:2rem; color:var(--gold); margin:0 0 .75rem; }
+        .help-panel h4{ font-family:'Roboto',sans-serif; font-size:1.1rem; color:var(--light-gold); margin:1rem 0 .4rem; }
+        .help-panel p, .help-panel li{ font-size:1rem; line-height:1.5; }
+        .help-actions{ margin-top:1.25rem; text-align:center; }
+        .close-help{ font-family:'Playfair Display',serif; font-size:1.1rem; padding:.7rem 1.6rem; border:2px solid #111; border-radius:8px; background:linear-gradient(145deg, #ffeb3b, var(--gold)); cursor:pointer; box-shadow:0 4px 0 #111, 0 5px 10px rgba(0,0,0,.5); }
+        .close-help:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+
         /* Mobile Adjustments */
         @media (max-width: 500px) {
             .table {
@@ -320,6 +350,8 @@
 
 <!-- Apply .table styling to the main container -->
 <div class="table">
+    <a href="index.html" class="home-btn" aria-label="Home">🏠</a>
+    <button class="help-btn" id="help-btn" aria-label="How to play">?</button>
     <div class="title">Morabaraba</div>
     
     <!-- Player Info -->
@@ -372,6 +404,39 @@
             **Crucially: All moves and jumps must follow the straight lines of the graph.**
             Jumps are optional. A player can choose a simple move even if a capture jump is available. The game continues until a player is left with only two pieces, or if a player is completely blocked and cannot make any valid move. The player who cannot move or is reduced to two pieces loses.
         </p>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div id="help-modal" class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="help-panel" tabindex="-1">
+        <h3 id="help-title">How to Play: Morabaraba</h3>
+        <p>Morabaraba is a strategic board game where players move pieces across a connected graph and capture opponents by jumping over them.</p>
+        <h4>Setup</h4>
+        <ul>
+            <li>Player 1 (Yellow/Gold) starts with pieces on nodes A, C, D, F, G, H</li>
+            <li>Player 2 (Red) starts with pieces on nodes K, L, N, O, P, R</li>
+            <li>The central node M starts empty</li>
+        </ul>
+        <h4>First Move</h4>
+        <ul>
+            <li>Player 1 must move one piece to the central M node</li>
+        </ul>
+        <h4>Gameplay</h4>
+        <ul>
+            <li>Move a piece to an adjacent, unoccupied node (Simple Move)</li>
+            <li>Jump over an opponent's piece to capture it (Capture Jump)</li>
+            <li>All moves must follow the straight lines of the graph</li>
+            <li>Jumps are optional - you can choose a simple move even if a capture is available</li>
+        </ul>
+        <h4>Winning</h4>
+        <ul>
+            <li>Win by reducing your opponent to only two pieces</li>
+            <li>Win by blocking all of your opponent's moves</li>
+        </ul>
+        <div class="help-actions">
+            <button id="close-help" class="close-help">Got it</button>
+        </div>
     </div>
 </div>
 
@@ -1041,6 +1106,18 @@
         setupCanvasInteractions();
         resetGame(); // Calls drawGraph and sets initial status
     }
+    
+    // Help modal wiring
+    const helpBtn = document.getElementById('help-btn');
+    const helpModal = document.getElementById('help-modal');
+    const panel = helpModal.querySelector('.help-panel');
+    const closeHelp = document.getElementById('close-help');
+    const open = () => { helpModal.classList.add('show'); setTimeout(()=>panel.focus(),0); };
+    const close = () => { helpModal.classList.remove('show'); helpBtn.focus(); };
+    helpBtn.addEventListener('click', open);
+    closeHelp.addEventListener('click', close);
+    helpModal.addEventListener('click', (e)=>{ if(e.target === helpModal) close(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && helpModal.classList.contains('show')) close(); });
     
     // Run the drawing function and initialize when the window loads
     window.onload = initializeApp;

@@ -30,6 +30,7 @@
             border-radius: 16px;
             padding: 24px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
         .header {
             text-align: center;
@@ -206,7 +207,7 @@
         }
         .reset-btn {
             position: absolute;
-            top: 12px;
+            top: 60px;
             right: 12px;
             background: rgba(16,60,32,0.8);
             border: 2px solid #fbbf24;
@@ -218,17 +219,51 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
+            z-index: 10;
         }
         .reset-btn:hover {
             background: rgba(22, 78, 42, 0.9);
             transform: scale(1.1);
         }
+        /* Help button */
+        .help-btn{
+            position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
+            border:2px solid #111;background:radial-gradient(circle at 30% 30%, #fbbf24, #f59e0b);
+            color:#111;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+            box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .help-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+        
+        /* Home button (top-left) */
+        .home-btn{
+            position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;
+            border:2px solid #111;background:radial-gradient(circle at 30% 30%, #fbbf24, #f59e0b);
+            color:#111;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+            box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);text-decoration:none;
+            z-index: 10;
+        }
+        .home-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+
+        /* Help modal */
+        .help-modal{ position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; opacity:0; visibility:hidden; transition:all .3s ease; z-index:1000; }
+        .help-modal.show{ opacity:1; visibility:visible; }
+        .help-panel{ background:rgba(5, 35, 20, 0.98); color:#bbf7d0; padding:2rem 2.2rem; border-radius:15px; border:3px solid #fbbf24; box-shadow:0 0 30px #fbbf24; max-width:560px; width:90%; text-align:left; transform:scale(.9); transition:transform .3s ease; }
+        .help-modal.show .help-panel{ transform:scale(1); }
+        .help-panel h3{ font-size:2rem; color:#fbbf24; margin:0 0 .75rem; }
+        .help-panel h4{ font-size:1.1rem; color:#bbf7d0; margin:1rem 0 .4rem; }
+        .help-panel p, .help-panel li{ font-size:1rem; line-height:1.5; }
+        .help-actions{ margin-top:1.25rem; text-align:center; }
+        .close-help{ font-size:1.1rem; padding:.7rem 1.6rem; border:2px solid #111; border-radius:8px; background:linear-gradient(145deg, #fcd34d, #fbbf24); cursor:pointer; box-shadow:0 4px 0 #111, 0 5px 10px rgba(0,0,0,.5); color:#064e3b; font-weight:700; }
+        .close-help:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Menu Screen -->
         <div id="menu-screen" class="card">
+            <a href="index.html" class="home-btn" aria-label="Home">🏠</a>
+            <button class="help-btn" id="help-btn-menu" aria-label="How to play">?</button>
             <div class="header">
                 <h1>Knight's Maze</h1>
                 <p>A strategic battle of wits on the chessboard</p>
@@ -274,6 +309,8 @@
     
     <!-- Game Screen -->
     <div id="game-screen" class="card hidden">
+        <a href="index.html" class="home-btn" aria-label="Home">🏠</a>
+        <button class="help-btn" id="help-btn-game" aria-label="How to play">?</button>
         <div class="header">
             <h1>Knight's Maze</h1>
             <button id="reset-btn" class="reset-btn">
@@ -298,6 +335,41 @@
         <div class="controls">
             <button id="new-game-btn" class="btn btn-primary">New Game</button>
             <button id="menu-btn" class="btn btn-secondary">Menu</button>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div id="help-modal" class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="help-panel" tabindex="-1">
+        <h3 id="help-title">How to Play: Knight's Maze</h3>
+        <p>Knight's Maze is a strategic battle where players move like chess knights in L-shapes across a board.</p>
+        <h4>Setup</h4>
+        <ul>
+            <li>Player X starts in the top-left corner</li>
+            <li>Player O starts in the bottom-right corner</li>
+            <li>Choose your board size (6x6, 8x8, or 10x10)</li>
+            <li>Choose to play against a friend or AI</li>
+        </ul>
+        <h4>Movement</h4>
+        <ul>
+            <li>Move like a chess knight: 2 squares in one direction, then 1 square perpendicular (L-shape)</li>
+            <li>Click any square to attempt a move</li>
+            <li>Invalid moves will flash orange</li>
+            <li>Previously occupied squares become blocked (dark green)</li>
+        </ul>
+        <h4>Winning</h4>
+        <ul>
+            <li>Win by capturing your opponent (moving to their square)</li>
+            <li>Win by blocking all of your opponent's possible moves</li>
+        </ul>
+        <h4>AI Mode</h4>
+        <ul>
+            <li>Play against an AI opponent that makes random valid moves</li>
+            <li>Toggle AI mode in the menu before starting</li>
+        </ul>
+        <div class="help-actions">
+            <button id="close-help" class="close-help">Got it</button>
         </div>
     </div>
 </div>
@@ -543,6 +615,20 @@
         gameState = 'menu';
     });
     newGameBtn.addEventListener('click', initializeGame);
+    
+    // Help modal wiring
+    const helpBtnMenu = document.getElementById('help-btn-menu');
+    const helpBtnGame = document.getElementById('help-btn-game');
+    const helpModal = document.getElementById('help-modal');
+    const panel = helpModal.querySelector('.help-panel');
+    const closeHelp = document.getElementById('close-help');
+    const open = () => { helpModal.classList.add('show'); setTimeout(()=>panel.focus(),0); };
+    const close = () => { helpModal.classList.remove('show'); (helpBtnMenu || helpBtnGame)?.focus(); };
+    helpBtnMenu.addEventListener('click', open);
+    helpBtnGame.addEventListener('click', open);
+    closeHelp.addEventListener('click', close);
+    helpModal.addEventListener('click', (e)=>{ if(e.target === helpModal) close(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && helpModal.classList.contains('show')) close(); });
 </script>
 
 
