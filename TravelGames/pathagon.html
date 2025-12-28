@@ -49,7 +49,7 @@
         .board-wrapper {
             background: rgba(16, 60, 32, 0.8);
             border-radius: 12px;
-            padding: 40px 60px; /* Increased padding to make room for targets */
+            padding: 40px 60px;
             position: relative;
             margin: 10px 0;
             display: flex;
@@ -58,7 +58,7 @@
             border: 2px solid rgba(251, 191, 36, 0.3);
         }
 
-        /* Target Indicators - Perfectly Centered */
+        /* Target Indicators - Centered vertically on the grid */
         .goal-indicator {
             position: absolute;
             font-size: 0.6rem;
@@ -73,7 +73,7 @@
         .top-goal { top: 15px; left: 50%; transform: translateX(-50%); }
         .bottom-goal { bottom: 15px; left: 50%; transform: translateX(-50%); }
         
-        /* Centering Red Targets Vertically on the grid */
+        /* Centering Red Targets Vertically */
         .left-goal { 
             left: 10px; 
             top: 50%; 
@@ -95,7 +95,7 @@
         .octagon-slot {
             width: 46px;
             height: 46px;
-            background-color: #fbbf24; /* Board "Grout" */
+            background-color: #fbbf24;
             clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
             display: flex;
             align-items: center;
@@ -122,16 +122,13 @@
             clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
             position: relative;
             transition: all 0.2s ease-out;
-            /* Give it a shadow layer beneath the stone */
             filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.5));
         }
 
-        /* The Gold Beveled look */
         .stone.gold {
             background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 45%, #b45309 100%);
             border: 1px solid #fcd34d;
         }
-        /* Top sheen for the Gold stone */
         .stone.gold::after {
             content: "";
             position: absolute;
@@ -140,12 +137,10 @@
             clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
         }
 
-        /* The Red Beveled look */
         .stone.red {
             background: linear-gradient(135deg, #fecaca 0%, #ef4444 45%, #7f1d1d 100%);
             border: 1px solid #f87171;
         }
-        /* Top sheen for the Red stone */
         .stone.red::after {
             content: "";
             position: absolute;
@@ -204,10 +199,10 @@
                 <label style="color: #bbf7d0; display: block; margin-bottom: 12px; font-weight: 600;">Match Type:</label>
                 <div style="display: flex; gap: 10px;">
                     <label style="flex: 1; cursor: pointer; background: rgba(16,60,32,0.8); padding: 15px; border-radius: 8px; border: 1px solid #fbbf24; color: #bbf7d0; text-align: center;">
-                        <input type="radio" name="game-mode" value="human" checked> Human vs Human
+                        <input type="radio" name="game-mode" value="human" checked> 2 Players
                     </label>
                     <label style="flex: 1; cursor: pointer; background: rgba(16,60,32,0.8); padding: 15px; border-radius: 8px; border: 1px solid #fbbf24; color: #bbf7d0; text-align: center;">
-                        <input type="radio" name="game-mode" value="ai"> Play vs CPU
+                        <input type="radio" name="game-mode" value="ai"> vs AI
                     </label>
                 </div>
             </div>
@@ -276,7 +271,8 @@
         }
 
         function startGame() {
-            isAI = document.querySelector('input[name="game-mode"]:checked').value === 'ai';
+            const mode = document.querySelector('input[name="game-mode"]:checked').value;
+            isAI = mode === 'ai';
             boardState = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
             currentPlayer = 1;
             isGameOver = false;
