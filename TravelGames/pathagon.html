@@ -29,7 +29,7 @@
             border: 4px solid #fbbf24;
             border-radius: 16px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
             position: relative;
         }
         .header {
@@ -49,7 +49,7 @@
         .board-wrapper {
             background: rgba(16, 60, 32, 0.8);
             border-radius: 12px;
-            padding: 35px 45px; /* Increased horizontal padding for targets */
+            padding: 40px 60px; /* Increased padding to make room for targets */
             position: relative;
             margin: 10px 0;
             display: flex;
@@ -58,110 +58,124 @@
             border: 2px solid rgba(251, 191, 36, 0.3);
         }
 
-        /* Target Indicators - Repositioned to clear the grid */
+        /* Target Indicators - Perfectly Centered */
         .goal-indicator {
             position: absolute;
             font-size: 0.6rem;
             font-weight: bold;
             letter-spacing: 1.5px;
             z-index: 5;
-            white-space: nowrap;
+            text-transform: uppercase;
         }
         .goal-gold { color: #fbbf24; }
         .goal-red { color: #f87171; }
         
-        .top-goal { top: 12px; left: 50%; transform: translateX(-50%); }
-        .bottom-goal { bottom: 12px; left: 50%; transform: translateX(-50%); }
-        .left-goal { left: 10px; top: 50%; transform: rotate(-90deg) translateX(50%); transform-origin: left; }
-        .right-goal { right: 10px; top: 50%; transform: rotate(90deg) translateX(-50%); transform-origin: right; }
+        .top-goal { top: 15px; left: 50%; transform: translateX(-50%); }
+        .bottom-goal { bottom: 15px; left: 50%; transform: translateX(-50%); }
+        
+        /* Centering Red Targets Vertically on the grid */
+        .left-goal { 
+            left: 10px; 
+            top: 50%; 
+            transform: translateY(-50%) rotate(-90deg);
+        }
+        .right-goal { 
+            right: 10px; 
+            top: 50%; 
+            transform: translateY(-50%) rotate(90deg);
+        }
 
         .octagon-grid {
             display: grid;
-            grid-template-columns: repeat(7, 45px);
-            grid-template-rows: repeat(7, 45px);
+            grid-template-columns: repeat(7, 46px);
+            grid-template-rows: repeat(7, 46px);
             gap: 4px;
         }
 
-        .octagon {
-            width: 45px;
-            height: 45px;
-            background-color: #fbbf24; /* Grout/Border */
+        .octagon-slot {
+            width: 46px;
+            height: 46px;
+            background-color: #fbbf24; /* Board "Grout" */
             clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
             position: relative;
+            cursor: pointer;
         }
 
-        .octagon::after {
+        .octagon-slot::after {
             content: "";
             position: absolute;
-            width: 39px;
-            height: 39px;
+            width: 40px;
+            height: 40px;
             background: #064e3b;
             clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
             z-index: 1;
         }
 
-        /* --- OCTAGONAL 3D STONES --- */
+        /* --- REDESIGNED 3D OCTAGONAL STONES --- */
         .stone {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             z-index: 10;
             clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
             position: relative;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: all 0.2s ease-out;
+            /* Give it a shadow layer beneath the stone */
+            filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.5));
         }
 
-        /* 3D Depth Shadow */
-        .stone::before {
+        /* The Gold Beveled look */
+        .stone.gold {
+            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 45%, #b45309 100%);
+            border: 1px solid #fcd34d;
+        }
+        /* Top sheen for the Gold stone */
+        .stone.gold::after {
             content: "";
             position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            transform: translateY(2px);
-            z-index: -1;
+            top: 15%; left: 15%; width: 70%; height: 70%;
+            background: rgba(255,255,255,0.15);
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
         }
 
-        .stone.gold {
-            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 50%, #d97706 100%);
-            border: 1px solid #fcd34d;
-            box-shadow: inset 0 0 8px rgba(255,255,255,0.5);
-        }
-
+        /* The Red Beveled look */
         .stone.red {
-            background: linear-gradient(135deg, #fecaca 0%, #ef4444 50%, #991b1b 100%);
+            background: linear-gradient(135deg, #fecaca 0%, #ef4444 45%, #7f1d1d 100%);
             border: 1px solid #f87171;
-            box-shadow: inset 0 0 8px rgba(255,255,255,0.3);
+        }
+        /* Top sheen for the Red stone */
+        .stone.red::after {
+            content: "";
+            position: absolute;
+            top: 15%; left: 15%; width: 70%; height: 70%;
+            background: rgba(255,255,255,0.1);
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
         }
 
         .stone.winning-path {
             animation: pulse-win 0.8s infinite alternate;
-            filter: drop-shadow(0 0 8px currentColor);
+            z-index: 20;
         }
 
         @keyframes pulse-win {
-            from { transform: scale(1); filter: brightness(1); }
-            to { transform: scale(1.15); filter: brightness(1.3) saturate(1.5); }
+            from { transform: scale(1); filter: drop-shadow(0 0 5px #fbbf24) brightness(1); }
+            to { transform: scale(1.1); filter: drop-shadow(0 0 12px #fbbf24) brightness(1.3); }
         }
 
         /* --- UI CONTROLS --- */
-        .controls { display: flex; gap: 8px; margin-top: 15px; }
+        .players { display: flex; justify-content: space-between; margin-bottom: 12px; }
+        .player-indicator { padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; background: rgba(16, 60, 32, 0.8); color: #bbf7d0; display: flex; align-items: center; gap: 8px; opacity: 0.4; border: 1px solid transparent; }
+        .player-active { opacity: 1; border-color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
+
         .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: linear-gradient(to right, #fbbf24, #fcd34d); color: #064e3b; }
         .btn-secondary { background: rgba(16, 60, 32, 0.8); color: #bbf7d0; border: 2px solid #fbbf24; }
-        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         
-        .status { text-align: center; margin: 10px 0; min-height: 24px; }
+        .status { text-align: center; margin-bottom: 10px; height: 24px; }
         .status-message { font-size: 1rem; font-weight: bold; color: #fbbf24; }
-        
-        .players { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .player-indicator { padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; background: rgba(16, 60, 32, 0.8); color: #bbf7d0; display: flex; align-items: center; gap: 8px; opacity: 0.4; transition: 0.3s; }
-        .player-active { opacity: 1; border: 1px solid #fbbf24; background: rgba(251, 191, 36, 0.1); }
 
         .icon-btn { position: absolute; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #111; background: #fbbf24; color: #111; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; z-index: 100; text-decoration: none; }
         .home-btn { top: 12px; left: 12px; }
@@ -183,22 +197,22 @@
             <button class="help-btn" onclick="toggleHelp(true)">?</button>
             <div class="header">
                 <h1>Pathagon</h1>
-                <p>Octagonal Pathfinding Quest</p>
+                <p>Tactical Octagonal Connection</p>
             </div>
 
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label style="color: #bbf7d0; display: block; margin-bottom: 10px; font-weight: 600;">Select Mode:</label>
+            <div style="margin-bottom: 25px;">
+                <label style="color: #bbf7d0; display: block; margin-bottom: 12px; font-weight: 600;">Match Type:</label>
                 <div style="display: flex; gap: 10px;">
-                    <label style="flex: 1; cursor: pointer; background: rgba(16,60,32,0.8); padding: 12px; border-radius: 8px; border: 1px solid #fbbf24; color: #bbf7d0; text-align: center;">
-                        <input type="radio" name="game-mode" value="human" checked> Human
+                    <label style="flex: 1; cursor: pointer; background: rgba(16,60,32,0.8); padding: 15px; border-radius: 8px; border: 1px solid #fbbf24; color: #bbf7d0; text-align: center;">
+                        <input type="radio" name="game-mode" value="human" checked> Human vs Human
                     </label>
-                    <label style="flex: 1; cursor: pointer; background: rgba(16,60,32,0.8); padding: 12px; border-radius: 8px; border: 1px solid #fbbf24; color: #bbf7d0; text-align: center;">
-                        <input type="radio" name="game-mode" value="ai"> CPU
+                    <label style="flex: 1; cursor: pointer; background: rgba(16,60,32,0.8); padding: 15px; border-radius: 8px; border: 1px solid #fbbf24; color: #bbf7d0; text-align: center;">
+                        <input type="radio" name="game-mode" value="ai"> Play vs CPU
                     </label>
                 </div>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;" onclick="startGame()">Play Now</button>
+            <button class="btn btn-primary" style="width: 100%; padding: 18px; font-size: 1.2rem;" onclick="startGame()">Start Quest</button>
         </div>
 
         <!-- GAME SCREEN -->
@@ -212,10 +226,10 @@
 
             <div class="players">
                 <div id="p1-ind" class="player-indicator player-active">
-                    <div style="width:12px; height:12px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); background:#fbbf24;"></div> Gold
+                    <div style="width:14px; height:14px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); background: linear-gradient(135deg, #fef3c7, #fbbf24);"></div> Gold Path
                 </div>
                 <div id="p2-ind" class="player-indicator">
-                    <div style="width:12px; height:12px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); background:#f87171;"></div> Red
+                    <div style="width:14px; height:14px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); background: linear-gradient(135deg, #fecaca, #ef4444);"></div> Red Path
                 </div>
             </div>
 
@@ -232,7 +246,7 @@
                 <div id="board" class="octagon-grid"></div>
             </div>
 
-            <div class="controls">
+            <div class="controls" style="display:flex; gap:10px; margin-top:20px;">
                 <button class="btn btn-secondary" onclick="location.reload()">Menu</button>
                 <button class="btn btn-primary" onclick="startGame()">Restart</button>
             </div>
@@ -242,11 +256,11 @@
     <!-- HELP MODAL -->
     <div id="help-modal" class="help-modal">
         <div class="help-panel">
-            <h2 style="color:#fbbf24; margin-bottom:12px;">Rules</h2>
-            <p>1. Connect your two sides to win.</p>
-            <p style="margin: 8px 0;">2. <b>Trapping:</b> If you place a stone so that an enemy stone is between two of yours (horizontally or vertically), it is removed from the board.</p>
-            <p>3. Diagonal moves are allowed for path connection, but traps only occur on straight lines.</p>
-            <button class="btn btn-primary" style="width:100%; margin-top: 20px;" onclick="toggleHelp(false)">Got it!</button>
+            <h2 style="color:#fbbf24; margin-bottom:15px;">How to Play</h2>
+            <p>• Connect your two target sides to win.</p>
+            <p style="margin: 10px 0;">• <b>The Trap:</b> Sandwich an enemy stone between two of your own (horizontally or vertically) to remove it.</p>
+            <p>• You can use diagonals for your path, but traps only trigger in straight lines.</p>
+            <button class="btn btn-primary" style="width:100%; margin-top: 25px;" onclick="toggleHelp(false)">I'm Ready</button>
         </div>
     </div>
 
@@ -277,21 +291,21 @@
             boardEl.innerHTML = '';
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
-                    const oct = document.createElement('div');
-                    oct.className = 'octagon';
+                    const slot = document.createElement('div');
+                    slot.className = 'octagon-slot';
                     
                     if (boardState[r][c] === 1) {
                         const s = document.createElement('div');
                         s.className = 'stone gold';
-                        oct.appendChild(s);
+                        slot.appendChild(s);
                     } else if (boardState[r][c] === 2) {
                         const s = document.createElement('div');
                         s.className = 'stone red';
-                        oct.appendChild(s);
+                        slot.appendChild(s);
                     }
 
-                    oct.onclick = () => handleCellClick(r, c);
-                    boardEl.appendChild(oct);
+                    slot.onclick = () => handleCellClick(r, c);
+                    boardEl.appendChild(slot);
                 }
             }
         }
@@ -310,7 +324,7 @@
             if (winningPath) {
                 isGameOver = true;
                 highlightWinner(winningPath);
-                document.getElementById('status-text').textContent = `${currentPlayer === 1 ? 'GOLD' : 'RED'} WINS!`;
+                document.getElementById('status-text').textContent = `${currentPlayer === 1 ? 'GOLD' : 'RED'} HAS WON!`;
             } else {
                 currentPlayer = currentPlayer === 1 ? 2 : 1;
                 updateUI();
@@ -324,11 +338,9 @@
         function checkTraps(r, c, player) {
             const opponent = player === 1 ? 2 : 1;
             const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-
             dirs.forEach(([dr, dc]) => {
                 const nr1 = r + dr, nc1 = c + dc;
                 const nr2 = r + (dr * 2), nc2 = c + (dc * 2);
-
                 if (isValid(nr2, nc2)) {
                     if (boardState[nr1][nc1] === opponent && boardState[nr2][nc2] === player) {
                         boardState[nr1][nc1] = 0;
@@ -360,14 +372,13 @@
             const visited = new Set();
             const queue = [];
             for (let i = 0; i < GRID_SIZE; i++) {
-                let r = player === 1 ? 0 : i;
-                let c = player === 1 ? i : 0;
+                let r = (player === 1) ? 0 : i;
+                let c = (player === 1) ? i : 0;
                 if (boardState[r][c] === player) {
                     queue.push({r, c, path: [`${r},${c}`]});
                     visited.add(`${r},${c}`);
                 }
             }
-
             while (queue.length > 0) {
                 const {r, c, path} = queue.shift();
                 if (player === 1 && r === GRID_SIZE - 1) return path;
@@ -390,14 +401,14 @@
 
         function highlightWinner(path) {
             setTimeout(() => {
-                const octs = document.querySelectorAll('.octagon');
+                const slots = document.querySelectorAll('.octagon-slot');
                 path.forEach(coord => {
                     const [r, c] = coord.split(',').map(Number);
                     const idx = r * GRID_SIZE + c;
-                    const stone = octs[idx].querySelector('.stone');
+                    const stone = slots[idx].querySelector('.stone');
                     if (stone) stone.classList.add('winning-path');
                 });
-            }, 100);
+            }, 50);
         }
     </script>
 </body>
