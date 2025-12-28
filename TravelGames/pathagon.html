@@ -18,159 +18,140 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
+            padding: 10px;
         }
         .container {
-            max-width: 600px;
+            max-width: 500px;
             width: 100%;
         }
         .card {
             background: rgba(5, 35, 20, 0.95);
             border: 4px solid #fbbf24;
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             position: relative;
         }
         .header {
             text-align: center;
-            margin-bottom: 20px;
-            position: relative;
+            margin-bottom: 15px;
         }
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: 800;
             background: linear-gradient(to right, #fbbf24, #fcd34d);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
-        .header p {
-            color: #bbf7d0;
-            font-size: 1rem;
+
+        /* --- OCTAGONAL BOARD DESIGN --- */
+        .board-wrapper {
+            background: rgba(16, 60, 32, 0.8);
+            border-radius: 12px;
+            padding: 30px;
+            position: relative;
+            margin: 10px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid rgba(251, 191, 36, 0.3);
         }
 
-        /* --- HEXAGONAL BOARD STYLING --- */
-        .board-container {
-            position: relative;
-            background: rgba(16, 60, 32, 0.8);
-            padding: 30px 10px;
-            border-radius: 12px;
-            margin: 0 auto;
-            width: fit-content;
-            overflow: visible;
-        }
-        
-        /* Goal Indicators */
+        /* Target Indicators */
         .goal-indicator {
             position: absolute;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: bold;
-            text-transform: uppercase;
             letter-spacing: 1px;
+            z-index: 5;
         }
-        .goal-gold { color: #fbbf24; text-shadow: 0 0 5px #fbbf24; }
-        .goal-red { color: #f87171; text-shadow: 0 0 5px #f87171; }
+        .goal-gold { color: #fbbf24; }
+        .goal-red { color: #f87171; }
         
-        .top-goal { top: 5px; left: 50%; transform: translateX(-50%); }
-        .bottom-goal { bottom: 5px; left: 50%; transform: translateX(-50%); }
-        .left-goal { left: -15px; top: 50%; transform: rotate(-90deg) translateX(50%); transform-origin: left; }
-        .right-goal { right: -35px; top: 50%; transform: rotate(90deg) translateX(-50%); transform-origin: right; }
+        .top-goal { top: 8px; left: 50%; transform: translateX(-50%); }
+        .bottom-goal { bottom: 8px; left: 50%; transform: translateX(-50%); }
+        .left-goal { left: 5px; top: 50%; transform: rotate(-90deg) translateY(-50%); }
+        .right-goal { right: 5px; top: 50%; transform: rotate(90deg) translateY(-50%); }
 
-        .hex-grid {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .octagon-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 45px);
+            grid-template-rows: repeat(7, 45px);
+            gap: 4px;
         }
-        .hex-row {
-            display: flex;
-            margin-top: -8px; /* Offset for honeycomb overlap */
-        }
-        .hexagon {
-            width: 44px;
-            height: 50px;
-            background-color: #064e3b;
-            margin: 2px;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+
+        .octagon {
+            width: 45px;
+            height: 45px;
+            background-color: #fbbf24; /* "Grout" / Border color */
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
             position: relative;
+            transition: transform 0.1s;
         }
-        .hexagon::before { /* The Gold Border */
+
+        .octagon::after {
             content: "";
             position: absolute;
-            inset: 2px;
+            width: 39px;
+            height: 39px;
             background: #064e3b;
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
             z-index: 1;
         }
-        .hexagon.border-active {
-            background-color: #fbbf24;
+
+        .octagon:hover::after {
+            background: #0d6d49;
         }
-        .hexagon:hover:not(.occupied) {
-            background-color: #fcd34d;
-        }
-        
-        /* Game Pieces (Stones) */
+
+        /* The small connecting squares at intersections are implied by the grid gap and clip-path */
+
         .stone {
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            z-index: 2;
-            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.4), 2px 2px 4px rgba(0,0,0,0.3);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(1);
+            z-index: 10;
+            box-shadow: inset -2px -2px 6px rgba(0,0,0,0.5), 2px 2px 4px rgba(0,0,0,0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .stone.gold {
-            background: radial-gradient(circle at 30% 30%, #fde68a, #fbbf24);
-        }
-        .stone.red {
-            background: radial-gradient(circle at 30% 30%, #fca5a5, #ef4444);
-        }
+        .stone.gold { background: radial-gradient(circle at 30% 30%, #fde68a, #fbbf24); }
+        .stone.red { background: radial-gradient(circle at 30% 30%, #fca5a5, #ef4444); }
+        
         .stone.winning-path {
-            animation: pulse-win 1s infinite alternate;
+            animation: pulse-win 0.8s infinite alternate;
             box-shadow: 0 0 15px currentColor;
         }
         @keyframes pulse-win {
             from { transform: scale(1); filter: brightness(1); }
-            to { transform: scale(1.2); filter: brightness(1.3); }
+            to { transform: scale(1.15); filter: brightness(1.3); }
         }
 
-        /* --- UI CONTROLS SYNC --- */
-        .controls { display: flex; gap: 12px; margin-top: 20px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; }
+        /* --- UI CONTROLS --- */
+        .controls { display: flex; gap: 8px; margin-top: 15px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-primary { background: linear-gradient(to right, #fbbf24, #fcd34d); color: #064e3b; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); }
         .btn-secondary { background: rgba(16, 60, 32, 0.8); color: #bbf7d0; border: 2px solid #fbbf24; }
         
-        .status { text-align: center; margin: 16px 0; min-height: 40px; }
-        .status-message { font-size: 1.1rem; font-weight: bold; color: #fbbf24; }
+        .status { text-align: center; margin: 10px 0; min-height: 24px; }
+        .status-message { font-size: 1rem; font-weight: bold; color: #fbbf24; }
         
-        .players { display: flex; justify-content: space-between; margin: 16px 0; }
-        .player-indicator { padding: 8px 16px; border-radius: 20px; font-weight: bold; background: rgba(16, 60, 32, 0.8); color: #bbf7d0; display: flex; align-items: center; gap: 8px; opacity: 0.5; transition: all 0.3s; }
-        .player-active { opacity: 1; background: rgba(251, 191, 36, 0.2); border: 1px solid #fbbf24; transform: scale(1.05); }
-        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .players { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .player-indicator { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; background: rgba(16, 60, 32, 0.8); color: #bbf7d0; display: flex; align-items: center; gap: 6px; opacity: 0.5; }
+        .player-active { opacity: 1; border: 1px solid #fbbf24; }
 
-        /* Menu / Help */
-        .form-group { margin-bottom: 16px; color: #bbf7d0; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
-        .game-rules { background: rgba(16, 60, 32, 0.6); padding: 16px; border-radius: 8px; margin-top: 20px; color: #bbf7d0; font-size: 0.9rem; }
-        .hidden { display: none; }
-        
-        .icon-btn { position: absolute; width: 36px; height: 36px; border-radius: 50%; border: 2px solid #111; background: radial-gradient(circle at 30% 30%, #fbbf24, #f59e0b); color: #111; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; z-index: 10; text-decoration: none; }
+        .icon-btn { position: absolute; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #111; background: #fbbf24; color: #111; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; z-index: 100; text-decoration: none; }
         .home-btn { top: 12px; left: 12px; }
         .help-btn { top: 12px; right: 12px; }
-        .reset-btn { top: 60px; right: 12px; background: rgba(16,60,32,0.8); border: 2px solid #fbbf24; color: #fbbf24; }
+        
+        .hidden { display: none; }
 
-        /* Modal */
         .help-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s; z-index: 1000; padding: 20px; }
         .help-modal.show { opacity: 1; visibility: visible; }
-        .help-panel { background: #052314; color: #bbf7d0; padding: 25px; border-radius: 15px; border: 3px solid #fbbf24; max-width: 500px; }
+        .help-panel { background: #052314; color: #bbf7d0; padding: 20px; border-radius: 12px; border: 3px solid #fbbf24; max-width: 400px; width: 100%; }
     </style>
 </head>
 <body>
@@ -182,38 +163,28 @@
             <button class="help-btn" onclick="toggleHelp(true)">?</button>
             <div class="header">
                 <h1>Pathagon</h1>
-                <p>Strategic Hexagonal Connection</p>
+                <p>Octagonal Pathfinding Quest</p>
             </div>
 
-            <div class="form-group">
-                <label>Opponent Type:</label>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="color: #bbf7d0; display: block; margin-bottom: 10px;">Select Mode:</label>
                 <div style="display: flex; gap: 10px;">
-                    <label style="flex: 1; cursor: pointer;">
-                        <input type="radio" name="game-mode" value="human" checked> Local PvP
+                    <label style="flex: 1; cursor: pointer; background: rgba(16,60,32,0.8); padding: 12px; border-radius: 8px; border: 1px solid #fbbf24; color: #bbf7d0; text-align: center;">
+                        <input type="radio" name="game-mode" value="human" checked> Human
                     </label>
-                    <label style="flex: 1; cursor: pointer;">
-                        <input type="radio" name="game-mode" value="ai"> CPU (Easy)
+                    <label style="flex: 1; cursor: pointer; background: rgba(16,60,32,0.8); padding: 12px; border-radius: 8px; border: 1px solid #fbbf24; color: #bbf7d0; text-align: center;">
+                        <input type="radio" name="game-mode" value="ai"> CPU
                     </label>
                 </div>
             </div>
 
-            <button class="btn btn-primary" onclick="startGame()">Start Game</button>
-
-            <div class="game-rules">
-                <h3 style="color:#fbbf24; margin-bottom: 8px;">How to Play:</h3>
-                <ul style="padding-left: 18px;">
-                    <li><b>Gold:</b> Connect Top to Bottom.</li>
-                    <li><b>Red:</b> Connect Left to Right.</li>
-                    <li><b>Trap:</b> Sandwich an enemy stone between two of yours to remove it.</li>
-                </ul>
-            </div>
+            <button class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;" onclick="startGame()">Play Now</button>
         </div>
 
         <!-- GAME SCREEN -->
         <div id="game-screen" class="card hidden">
             <a href="#" class="home-btn" onclick="location.reload()">🏠</a>
             <button class="help-btn" onclick="toggleHelp(true)">?</button>
-            <button class="reset-btn icon-btn" onclick="startGame()">↺</button>
             
             <div class="header">
                 <h1>Pathagon</h1>
@@ -221,29 +192,29 @@
 
             <div class="players">
                 <div id="p1-ind" class="player-indicator player-active">
-                    <div class="dot stone gold"></div> Player 1 (Top-Bottom)
+                    <div style="width:10px; height:10px; border-radius:50%; background:#fbbf24;"></div> Gold
                 </div>
                 <div id="p2-ind" class="player-indicator">
-                    <div class="dot stone red"></div> Player 2 (Left-Right)
+                    <div style="width:10px; height:10px; border-radius:50%; background:#f87171;"></div> Red
                 </div>
             </div>
 
             <div class="status">
-                <div id="status-text" class="status-message">Gold's Turn - Place a stone</div>
+                <div id="status-text" class="status-message">Gold's Turn</div>
             </div>
 
-            <div class="board-container">
+            <div class="board-wrapper">
                 <div class="goal-indicator goal-gold top-goal">GOLD TARGET</div>
                 <div class="goal-indicator goal-gold bottom-goal">GOLD TARGET</div>
                 <div class="goal-indicator goal-red left-goal">RED TARGET</div>
                 <div class="goal-indicator goal-red right-goal">RED TARGET</div>
                 
-                <div id="board" class="hex-grid"></div>
+                <div id="board" class="octagon-grid"></div>
             </div>
 
             <div class="controls">
                 <button class="btn btn-secondary" onclick="location.reload()">Menu</button>
-                <button class="btn btn-primary" onclick="startGame()">New Game</button>
+                <button class="btn btn-primary" onclick="startGame()">Restart</button>
             </div>
         </div>
     </div>
@@ -251,26 +222,20 @@
     <!-- HELP MODAL -->
     <div id="help-modal" class="help-modal">
         <div class="help-panel">
-            <h2 style="color:#fbbf24; margin-bottom:15px;">Pathagon Rules</h2>
-            <p><b>Goal:</b> Be the first to build a path of your colored stones connecting your two sides.</p>
-            <p style="margin: 10px 0;"><b>Movement:</b> Place one stone per turn on any empty space.</p>
-            <p style="margin: 10px 0;"><b>The Trap:</b> If you sandwich <i>one</i> opponent's stone between <i>two</i> of your stones in a straight line, the opponent's stone is removed from the board.</p>
-            <p><b>Note:</b> You cannot trap your own stone by moving into a sandwich (Suicide moves are allowed but don't result in self-capture).</p>
-            <button class="btn btn-primary" style="margin-top:20px; width:100%;" onclick="toggleHelp(false)">Got it!</button>
+            <h2 style="color:#fbbf24; margin-bottom:12px;">Rules</h2>
+            <p>1. Connect your two sides to win.</p>
+            <p style="margin: 8px 0;">2. <b>Trapping:</b> If you place a stone so that an enemy stone is between two of yours (horizontally or vertically), it is removed.</p>
+            <p>3. Diagonal moves are allowed for path connection, but traps only happen on straight lines.</p>
+            <button class="btn btn-primary" style="width:100%; margin-top: 15px;" onclick="toggleHelp(false)">Got it!</button>
         </div>
     </div>
 
     <script>
-        const BOARD_SIZE = 7; // Rows/Cols
-        let boardState = []; // 2D Array: 0 empty, 1 gold, 2 red
+        const GRID_SIZE = 7;
+        let boardState = []; 
         let currentPlayer = 1;
         let isAI = false;
         let isGameOver = false;
-
-        const boardEl = document.getElementById('board');
-        const statusEl = document.getElementById('status-text');
-        const p1Ind = document.getElementById('p1-ind');
-        const p2Ind = document.getElementById('p2-ind');
 
         function toggleHelp(show) {
             document.getElementById('help-modal').classList.toggle('show', show);
@@ -278,68 +243,54 @@
 
         function startGame() {
             isAI = document.querySelector('input[name="game-mode"]:checked').value === 'ai';
-            boardState = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+            boardState = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
             currentPlayer = 1;
             isGameOver = false;
-            
             document.getElementById('menu-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
-            
             renderBoard();
             updateUI();
         }
 
         function renderBoard() {
+            const boardEl = document.getElementById('board');
             boardEl.innerHTML = '';
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                const rowEl = document.createElement('div');
-                rowEl.className = 'hex-row';
-                
-                // Indent every other row for hex effect
-                if (r % 2 !== 0) rowEl.style.marginLeft = '24px';
-
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    const hex = document.createElement('div');
-                    hex.className = 'hexagon border-active';
-                    if (boardState[r][c] !== 0) hex.classList.add('occupied');
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const oct = document.createElement('div');
+                    oct.className = 'octagon';
                     
                     if (boardState[r][c] === 1) {
-                        const stone = document.createElement('div');
-                        stone.className = 'stone gold';
-                        hex.appendChild(stone);
+                        const s = document.createElement('div');
+                        s.className = 'stone gold';
+                        oct.appendChild(s);
                     } else if (boardState[r][c] === 2) {
-                        const stone = document.createElement('div');
-                        stone.className = 'stone red';
-                        hex.appendChild(stone);
+                        const s = document.createElement('div');
+                        s.className = 'stone red';
+                        oct.appendChild(s);
                     }
 
-                    hex.onclick = () => handleCellClick(r, c);
-                    rowEl.appendChild(hex);
+                    oct.onclick = () => handleCellClick(r, c);
+                    boardEl.appendChild(oct);
                 }
-                boardEl.appendChild(rowEl);
             }
         }
 
         function handleCellClick(r, c) {
             if (isGameOver || boardState[r][c] !== 0) return;
             if (currentPlayer === 2 && isAI) return;
-
             processMove(r, c);
         }
 
         function processMove(r, c) {
             boardState[r][c] = currentPlayer;
+            checkTraps(r, c, currentPlayer);
             
-            // 1. Check Traps
-            const captured = checkTraps(r, c, currentPlayer);
-            
-            // 2. Check Win
-            const winningPath = checkWin(currentPlayer);
-            
+            const winningPath = findWinningPath(currentPlayer);
             if (winningPath) {
                 isGameOver = true;
                 highlightWinner(winningPath);
-                statusEl.textContent = `${currentPlayer === 1 ? 'GOLD' : 'RED'} HAS WON THE PATH!`;
+                document.getElementById('status-text').textContent = `${currentPlayer === 1 ? 'GOLD' : 'RED'} WINS!`;
             } else {
                 currentPlayer = currentPlayer === 1 ? 2 : 1;
                 updateUI();
@@ -352,60 +303,46 @@
 
         function checkTraps(r, c, player) {
             const opponent = player === 1 ? 2 : 1;
-            const directions = [
-                [0, 1], [0, -1], [1, 0], [-1, 0], 
-                [1, -1], [-1, 1] // Hex diagonal neighbors
-            ];
+            const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
 
-            let captureFound = false;
-            directions.forEach(([dr, dc]) => {
+            dirs.forEach(([dr, dc]) => {
                 const nr1 = r + dr, nc1 = c + dc;
                 const nr2 = r + (dr * 2), nc2 = c + (dc * 2);
 
                 if (isValid(nr2, nc2)) {
                     if (boardState[nr1][nc1] === opponent && boardState[nr2][nc2] === player) {
-                        boardState[nr1][nc1] = 0; // Remove trapped stone
-                        captureFound = true;
+                        boardState[nr1][nc1] = 0;
                     }
                 }
             });
-            return captureFound;
         }
 
-        function isValid(r, c) {
-            return r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE;
-        }
+        function isValid(r, c) { return r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE; }
 
         function updateUI() {
-            p1Ind.classList.toggle('player-active', currentPlayer === 1);
-            p2Ind.classList.toggle('player-active', currentPlayer === 2);
-            if (!isGameOver) {
-                statusEl.textContent = `${currentPlayer === 1 ? "Gold's" : "Red's"} Turn - Place your stone`;
-            }
+            document.getElementById('p1-ind').classList.toggle('player-active', currentPlayer === 1);
+            document.getElementById('p2-ind').classList.toggle('player-active', currentPlayer === 2);
+            if (!isGameOver) document.getElementById('status-text').textContent = `${currentPlayer === 1 ? "Gold" : "Red"}'s Turn`;
         }
 
         function aiMove() {
             let moves = [];
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
+            for (let r = 0; r < GRID_SIZE; r++) 
+                for (let c = 0; c < GRID_SIZE; c++) 
                     if (boardState[r][c] === 0) moves.push({r, c});
-                }
-            }
             if (moves.length > 0) {
-                const move = moves[Math.floor(Math.random() * moves.length)];
-                processMove(move.r, move.c);
+                const m = moves[Math.floor(Math.random() * moves.length)];
+                processMove(m.r, m.c);
             }
         }
 
-        // BFS Pathfinding for Connection
-        function checkWin(player) {
+        function findWinningPath(player) {
             const visited = new Set();
             const queue = [];
-
-            // Gold: Top (row 0) to Bottom (row 6)
-            // Red: Left (col 0) to Right (col 6)
             
-            for (let i = 0; i < BOARD_SIZE; i++) {
+            // Player 1 connects Top (r=0) to Bottom (r=6)
+            // Player 2 connects Left (c=0) to Right (c=6)
+            for (let i = 0; i < GRID_SIZE; i++) {
                 let r = player === 1 ? 0 : i;
                 let c = player === 1 ? i : 0;
                 if (boardState[r][c] === player) {
@@ -416,21 +353,19 @@
 
             while (queue.length > 0) {
                 const {r, c, path} = queue.shift();
+                if (player === 1 && r === GRID_SIZE - 1) return path;
+                if (player === 2 && c === GRID_SIZE - 1) return path;
 
-                // Check Win Condition
-                if (player === 1 && r === BOARD_SIZE - 1) return path;
-                if (player === 2 && c === BOARD_SIZE - 1) return path;
-
-                const neighbors = [
-                    [r, c+1], [r, c-1], [r+1, c], [r-1, c],
-                    [r+1, c-1], [r-1, c+1]
-                ];
-
-                for (const [nr, nc] of neighbors) {
-                    const key = `${nr},${nc}`;
-                    if (isValid(nr, nc) && boardState[nr][nc] === player && !visited.has(key)) {
-                        visited.add(key);
-                        queue.push({r: nr, c: nc, path: [...path, key]});
+                // Octagonal connectivity includes diagonals for the path
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        const nr = r + dr, nc = c + dc;
+                        const k = `${nr},${nc}`;
+                        if (isValid(nr, nc) && boardState[nr][nc] === player && !visited.has(k)) {
+                            visited.add(k);
+                            queue.push({r: nr, c: nc, path: [...path, k]});
+                        }
                     }
                 }
             }
@@ -438,14 +373,15 @@
         }
 
         function highlightWinner(path) {
-            renderBoard(); // Final draw
-            const hexes = document.querySelectorAll('.hexagon');
-            path.forEach(coord => {
-                const [r, c] = coord.split(',').map(Number);
-                const index = r * BOARD_SIZE + c;
-                const stone = hexes[index].querySelector('.stone');
-                if (stone) stone.classList.add('winning-path');
-            });
+            setTimeout(() => {
+                const octs = document.querySelectorAll('.octagon');
+                path.forEach(coord => {
+                    const [r, c] = coord.split(',').map(Number);
+                    const idx = r * GRID_SIZE + c;
+                    const stone = octs[idx].querySelector('.stone');
+                    if (stone) stone.classList.add('winning-path');
+                });
+            }, 100);
         }
     </script>
 </body>
