@@ -3,8 +3,8 @@
 ## Overview
 The InnoFix application consists of two main components:
 
-### 1. Homepage (`InnoFix.html`)
-- **Purpose**: Main landing page and business information
+### 1. Homepage (`index.html`)
+- **Purpose**: Main landing page and business information (DEFAULT PAGE)
 - **Technology**: Static HTML with Tailwind CSS
 - **Content**: 
   - Hero section with contact info
@@ -13,7 +13,7 @@ The InnoFix application consists of two main components:
   - Testimonials
   - Contact information
 
-### 2. Gallery/Showcase (`index.html` + JavaScript App)
+### 2. Gallery/Showcase (`gallery.html` + JavaScript App)
 - **Purpose**: Portfolio showcasing completed repair work
 - **Technology**: React with JavaScript (ES6 modules), Tailwind CSS
 - **Content**:
@@ -24,18 +24,18 @@ The InnoFix application consists of two main components:
 
 ## Navigation Flow
 ```
-InnoFix.html (Homepage)
+index.html (Homepage - DEFAULT)
     ↓ "View Our Work" button
-index.html (Gallery)
+gallery.html (Gallery)
     ↓ "Home" link in navbar
-InnoFix.html (Homepage)
+index.html (Homepage)
 ```
 
 ## File Structure
 ```
 innofix/
-├── InnoFix.html          # Main homepage (static)
-├── index.html            # Gallery app entry point
+├── index.html            # Main homepage (DEFAULT - static HTML)
+├── gallery.html          # Gallery app entry point (React)
 ├── index.js              # React app root (JavaScript)
 ├── App.js                # Main React component (JavaScript)
 ├── components/           # React components (JavaScript)
@@ -47,12 +47,12 @@ innofix/
 ```
 
 ## How to Use
-1. **Start with homepage**: Open `InnoFix.html` in browser
-2. **View portfolio**: Click "View Our Work" to see `index.html` (React gallery)
+1. **Start with homepage**: Open `index.html` in browser (DEFAULT PAGE)
+2. **View portfolio**: Click "View Our Work" to see `gallery.html` (React gallery)
 3. **Return home**: Click "Home" in gallery navbar
 
 ## Development
-- Homepage: Edit `InnoFix.html` directly
+- Homepage: Edit `index.html` directly
 - Gallery: Uses JavaScript ES6 modules with React via ESM.sh CDN
 
 Both apps share the same design system (colors, fonts, styling) for consistency.

@@ -12,7 +12,7 @@ const Navbar = () => {
         
         React.createElement('div', { className: "hidden md:flex items-center space-x-8" },
           React.createElement('a', { 
-            href: "InnoFix.html", 
+            href: "index.html", 
             className: "text-text-muted hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors" 
           }, "Home"),
           React.createElement('span', { className: "text-primary font-bold px-3 py-2 text-sm" }, "Our Work"),
@@ -41,7 +41,7 @@ const Navbar = () => {
     isOpen && React.createElement('div', { className: "md:hidden bg-white border-b border-gray-200 shadow-lg animate-in slide-in-from-top duration-300" },
       React.createElement('div', { className: "px-2 pt-2 pb-3 space-y-1 sm:px-3" },
         React.createElement('a', { 
-          href: "InnoFix.html", 
+          href: "index.html", 
           className: "text-text-muted hover:text-primary block px-3 py-2 rounded-md text-base font-medium" 
         }, "Home"),
         React.createElement('span', { className: "text-primary block px-3 py-2 rounded-md text-base font-bold" }, "Our Work Gallery"),
