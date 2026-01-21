@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #eff7ff;
+      color: #000000;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1, h3 {
+      text-align: center;
+      color: #0078d4;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #dffeff;
+      box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      display: flex; /* Add display flex to create a flex container */
+    }
+
+    .form {
+      flex: 1; /* Add flex: 1 to make the form take the remaining space */
+      display: flex;
+      flex-direction: column;
+    }
+
+    .radio-container {
+      display: flex;
+      flex-direction: column; /* Change flex direction to column */
+      align-items: flex-start; /* Align items to the start */
+      margin-right: 20px;
+    }
+
+    .label, .input, .button {
+      margin: 10px 0;
+    }
+
+    .input, .textarea {
+      border: 1px solid #cccccc;
+      border-radius: 5px;
+      padding: 5px;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    .input {
+      height: 40px;
+    }
+
+    .textarea {
+      height: 60px;
+    }
+
+    .button {
+      height: 40px;
+      background-color: #0078d4;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .button:hover {
+      background-color: #005a9e;
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: space-around;
+    }
+  </style>
+</head>
+<body>
+  <h1>The Project Manager AI Prompter v5</h1>
+  <div class="container">
+    <div class="radio-container">
+<p><button class="button" onclick="reloadPage()">Reload</button> <p> 
+      <h3>Options</h3>
+      <label><input type="radio" name="aiPrompt" value="AI Prompt 1" onclick="setAIPrompt('I have written an email and I would like you to proofread it for me. Please check it for any errors in grammar, spelling, punctuation, and style. Also, please let me know if there are any ways to improve the clarity and tone of my message. Write the improved text, no need to explain the changes. Here is the email: ', 'Proofread my email for errors and improve clarity and tone.', 'Formatted response in improved text.')"> Proofread Email</label>
+      <label><input type="radio" name="aiPrompt" value="AI Prompt 7" onclick="setAIPrompt('I have written an progress report and I would like you to proofread it for me. Please check it for any errors in grammar, spelling, punctuation, and style. Also, please let me know if there are any ways to improve the clarity and tone of my report. Write the improved text, no need to explain the changes. Here is the progress report: ', 'Proofread my progress report for errors and improve clarity and tone.', 'Formatted response in improved text.')"> Proofread Progress Report</label>
+      <label><input type="radio" name="aiPrompt" value="AI Prompt 2" onclick="setAIPrompt('I received an email with the following specific information and need to respond', 'Respond to the provided email.', 'Response in email format.')"> Respond to Email</label>
+
+      <label><input type="radio" name="aiPrompt" value="AI Prompt 3 " onclick="setAIPrompt('You are an experienced software project risk manager who can identify and mitigate potential problems in a project. Rewrite the problem below as a risk management statement (Because of <cause(s)>, <risk> might occur, which would lead to <effect(s)> for a project in the risk meta language and then list 5 actionable mitigation actions. Ask clarifying questions until you have enough information to write the risk statement and its mitigation actions in the Risk Meta language', 'Rewrite the problem as a risk management statement and provide 5 actionable mitigation actions.', 'Formatted response with risk statement and mitigation actions.')"> Risk Mitigation</label>
+
+<label><input type="radio" name="aiPrompt" value="AI Prompt 4" onclick="setAIPrompt('You are an experienced software project manager who can identify an issue in a project. Rewrite the specific information below as a single issue statement. The statement should include the Gap, Orientation, Impact, and Vision, and then list 5 actionable actions.', 'Rewrite the problem as an issue statement and provide 5 actionable actions. Ask clarifying questions until you have enough information to write the issue statement and its actions with the information provided', 'Formatted response with issue statement and actions.')"> Issue description</a></label>
+
+
+      <label><input type="radio" name="aiPrompt" value="AI Prompt 5" onclick="setAIPrompt('I need to provide performance review feedback for annual staff appraisals. Please write short feedback on this question -', 'Write clear, concise, and constructive feedback that will help them improve skills and performance. Provide positive/negative feedback - reason: ', 'Write a statement using her name and direct it to her manager')"> Performance Feedback </label>
+      <label><input type="radio" name="aiPrompt" value="AI Prompt 6" onclick="setAIPrompt('You are an experienced scrum master and you are busy with SAFE PI Planning and need to write SMART Objective for the PI goals. Do not explain what a SMART objective is, just write the a concise SMART Objective based on the specific information provided. Ask me clarifying questions until you fully understand what we intent to achieve, then write the smart objective for this statement-', 'Write clear and concise SMART Objective that will explain the benefit to the business and how it will be measured', 'Write a SMART Objective')"> SMART Objective</label>
+      <label><input type="radio" name="aiPrompt" value="AI Prompt 7" onclick="setAIPrompt('Write 5 perfect AI prompts that will really show off the power of AI. Focus the prompts around-', 'Before you write anything ask me questions to ensure you understand what I want to write for the optimal prompt', 'Maximin length of the text should be 300 words or a bullet list.')"> AI Self Prompt </label>
+      <label><input type="radio" name="aiPrompt" value="AI Prompt 8" onclick="setAIPrompt('I have written text and I would like you to proofread it for me. Please check it for any errors in grammar, spelling, punctuation, and style. Write the improved text to improve the clarity and tone, no need to explain the changes. Here is the Text: ', 'Proofread my text for errors and improve clarity and tone.', 'Formatted response in improved text.')"> Proofread Text</label>
+
+    </div>
+
+    <div class="form">
+	<h3>Prompt</h3>
+      <label class="label" for="input1">Context</label>
+      <textarea class="input textarea" id="input1" placeholder="Enter the AI Prompt here or select one of the preset prompts from the Radio buttons below"></textarea>
+
+      <label class="label" for="input2">Specific Information</label>
+      <textarea class="input textarea" id="input2" placeholder="Enter or paste Specific Information here"></textarea>
+
+      <label class="label" for="input3">Intent/Goal</label>
+      <textarea class="input textarea" id="input3" placeholder="What should the AI model do for you?"></textarea>
+
+      <label class="label" for="input4">Response Format</label>
+      <textarea class="input textarea" id="input4" placeholder="How should the response be formatted? Paragraphs, list, bullets"></textarea>
+
+      <div class="button-container">
+        <button class="button" onclick="combineAndCopyChat('Gemini')">Google Gemini</button>
+<!--        <button class="button" onclick="combineAndCopyChat('ChatGPT')">ChatGPT</button>
+            <button class="button" onclick="combineAndCopyChat('Bard')">Bard Chat</button>   -->
+
+      </div>
+
+      <label class="label" for="output">AI Prompt:</label>
+      <textarea class="input textarea" id="output" readonly></textarea>
+    </div>
+  </div>
+
+  <script>
+    var selectedAIPrompt = "";
+
+    function combineAndCopyChat(chatPlatform) {
+      var input1 = document.getElementById("input1").value;
+      var input2 = document.getElementById("input2").value;
+      var input3 = document.getElementById("input3").value;
+      var input4 = document.getElementById("input4").value;
+
+      var output = "Context: " + input1 + ". Specific Information: " + input2 + ". Intent/Goal: " + input3 + ". Response Format: " + input4;
+
+      document.getElementById("output").value = output;
+      copyOutput(); // Copy to clipboard
+
+      if (chatPlatform === 'ChatGPT') {
+        openChatGPT();
+      } else if (chatPlatform === 'Gemini') {
+        openGemini();
+      } else if (chatPlatform === 'Bard') {
+        openBardChat();
+      }
+    }
+
+    function copyOutput() {
+      var output = document.getElementById("output");
+      output.select();
+      output.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+    }
+
+    function openChatGPT() {
+      var url = "https://chat.openai.com/";
+      window.open(url, "_blank");
+    }
+
+    function openGemini() {
+      var url = "https://gemini.google.com/";
+      window.open(url, "_blank");
+    }
+
+    function openBardChat() {
+      var url = "https://bard.google.com/chat?hl=en";
+      window.open(url, "_blank");
+    }
+
+    function reloadPage() {
+      location.reload();
+    }
+    function setAIPrompt(prompt, intent, responseFormat) {
+      selectedAIPrompt = prompt;
+      document.getElementById("input1").value = selectedAIPrompt;
+      document.getElementById("input3").value = intent;
+      document.getElementById("input4").value = responseFormat;
+    }
+  </script>
+</body>
+</html>
