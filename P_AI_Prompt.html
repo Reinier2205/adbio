@@ -25,6 +25,26 @@
       display: flex; /* Add display flex to create a flex container */
     }
 
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        padding: 10px;
+      }
+      
+      .radio-container {
+        margin-right: 0;
+        margin-bottom: 20px;
+      }
+      
+      .button-container {
+        flex-direction: column;
+      }
+      
+      .button-container .button {
+        margin: 5px 0;
+      }
+    }
+
     .form {
       flex: 1; /* Add flex: 1 to make the form take the remaining space */
       display: flex;
@@ -75,11 +95,19 @@
     .button-container {
       display: flex;
       justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .button-container .button {
+      flex: 1;
+      min-width: 120px;
+      font-size: 12px;
     }
   </style>
 </head>
 <body>
-  <h1>The Project Manager AI Prompter v5</h1>
+  <h1>The Project Manager AI Prompter v6 ✨</h1>
   <div class="container">
     <div class="radio-container">
 <p><button class="button" onclick="reloadPage()">Reload</button> <p> 
@@ -115,14 +143,29 @@
       <textarea class="input textarea" id="input4" placeholder="How should the response be formatted? Paragraphs, list, bullets"></textarea>
 
       <div class="button-container">
-        <button class="button" onclick="combineAndCopyChat('Gemini')">Google Gemini</button>
-<!--        <button class="button" onclick="combineAndCopyChat('ChatGPT')">ChatGPT</button>
-            <button class="button" onclick="combineAndCopyChat('Bard')">Bard Chat</button>   -->
-
+        <button class="button" onclick="combineAndCopyChat('Gemini')">🔗 Google Gemini</button>
+        <button class="button" onclick="combineAndCopyChat('ChatGPT')">🔗 ChatGPT</button>
+        <button class="button" onclick="combineAndCopyChat('Claude')">🔗 Claude</button>
+        <button class="button" onclick="combineAndCopyChat('Copilot')">🔗 Copilot</button>
+      </div>
+      
+      <div style="text-align: center; margin: 10px 0; font-size: 12px; color: #666;">
+        💡 Tip: Press Ctrl+Enter for quick Gemini launch
       </div>
 
-      <label class="label" for="output">AI Prompt:</label>
-      <textarea class="input textarea" id="output" readonly></textarea>
+      <label class="label" for="output">AI Prompt: <button class="button" onclick="copyToClipboard(document.getElementById('output').value); showSuccessMessage('Prompt copied!')" style="height: 25px; font-size: 11px; margin-left: 10px;">📋 Copy</button></label>
+      <textarea class="input textarea" id="output" readonly placeholder="Your consolidated prompt will appear here..."></textarea>
+      
+      <div style="margin-top: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px; font-size: 12px;">
+        <strong>🚀 New Features:</strong>
+        <ul style="margin: 5px 0; padding-left: 20px;">
+          <li>✅ Auto-copy to clipboard</li>
+          <li>🔗 Direct links to multiple AI platforms</li>
+          <li>💾 Auto-save your work</li>
+          <li>⌨️ Keyboard shortcut (Ctrl+Enter)</li>
+          <li>📱 Better mobile experience</li>
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -138,48 +181,212 @@
       var output = "Context: " + input1 + ". Specific Information: " + input2 + ". Intent/Goal: " + input3 + ". Response Format: " + input4;
 
       document.getElementById("output").value = output;
-      copyOutput(); // Copy to clipboard
+      
+      // Show success message
+      showSuccessMessage("Prompt copied to clipboard!");
+      
+      // Copy to clipboard with modern API
+      copyToClipboard(output);
 
       if (chatPlatform === 'ChatGPT') {
-        openChatGPT();
+        openChatGPTWithPrompt(output);
       } else if (chatPlatform === 'Gemini') {
-        openGemini();
-      } else if (chatPlatform === 'Bard') {
-        openBardChat();
+        openGeminiWithPrompt(output);
+      } else if (chatPlatform === 'Claude') {
+        openClaudeWithPrompt(output);
+      } else if (chatPlatform === 'Copilot') {
+        openCopilotWithPrompt(output);
       }
     }
 
-    function copyOutput() {
-      var output = document.getElementById("output");
-      output.select();
-      output.setSelectionRange(0, 99999);
-      document.execCommand("copy");
+    async function copyToClipboard(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          // Fallback for older browsers
+          var textArea = document.createElement("textarea");
+          textArea.value = text;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand('copy');
+          textArea.remove();
+        }
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
     }
 
-    function openChatGPT() {
+    function showSuccessMessage(message) {
+      // Create or update success message
+      var existingMsg = document.getElementById('success-message');
+      if (existingMsg) {
+        existingMsg.remove();
+      }
+      
+      var successDiv = document.createElement('div');
+      successDiv.id = 'success-message';
+      successDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #4CAF50;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 1000;
+        font-weight: bold;
+        animation: slideIn 0.3s ease-out;
+      `;
+      successDiv.textContent = message;
+      
+      // Add CSS animation
+      if (!document.getElementById('success-animation-style')) {
+        var style = document.createElement('style');
+        style.id = 'success-animation-style';
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      document.body.appendChild(successDiv);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        if (successDiv.parentNode) {
+          successDiv.remove();
+        }
+      }, 3000);
+    }
+
+    function openChatGPTWithPrompt(prompt) {
+      // ChatGPT doesn't support URL parameters for prompts, so we open and copy
       var url = "https://chat.openai.com/";
       window.open(url, "_blank");
+      showInstructions("ChatGPT opened in new tab. The prompt is already copied to your clipboard - just paste it (Ctrl+V) in the chat!");
     }
 
-    function openGemini() {
-      var url = "https://gemini.google.com/";
+    function openGeminiWithPrompt(prompt) {
+      // Try to open Gemini with prompt in URL (experimental)
+      var encodedPrompt = encodeURIComponent(prompt);
+      var url = "https://gemini.google.com/app?q=" + encodedPrompt;
       window.open(url, "_blank");
+      showInstructions("Gemini opened with your prompt. If the prompt didn't auto-fill, it's copied to your clipboard - just paste it!");
     }
 
-    function openBardChat() {
-      var url = "https://bard.google.com/chat?hl=en";
+    function openClaudeWithPrompt(prompt) {
+      var url = "https://claude.ai/";
       window.open(url, "_blank");
+      showInstructions("Claude opened in new tab. The prompt is copied to your clipboard - just paste it (Ctrl+V) in the chat!");
+    }
+
+    function openCopilotWithPrompt(prompt) {
+      var url = "https://copilot.microsoft.com/";
+      window.open(url, "_blank");
+      showInstructions("Copilot opened in new tab. The prompt is copied to your clipboard - just paste it (Ctrl+V) in the chat!");
+    }
+
+    function showInstructions(message) {
+      setTimeout(() => {
+        var instructionDiv = document.createElement('div');
+        instructionDiv.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background-color: #2196F3;
+          color: white;
+          padding: 20px 30px;
+          border-radius: 10px;
+          box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+          z-index: 1001;
+          max-width: 400px;
+          text-align: center;
+          font-size: 16px;
+          line-height: 1.4;
+        `;
+        instructionDiv.innerHTML = message + '<br><br><button onclick="this.parentNode.remove()" style="background: white; color: #2196F3; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold;">Got it!</button>';
+        
+        document.body.appendChild(instructionDiv);
+        
+        // Auto-remove after 8 seconds
+        setTimeout(() => {
+          if (instructionDiv.parentNode) {
+            instructionDiv.remove();
+          }
+        }, 8000);
+      }, 500);
     }
 
     function reloadPage() {
       location.reload();
     }
+
     function setAIPrompt(prompt, intent, responseFormat) {
       selectedAIPrompt = prompt;
       document.getElementById("input1").value = selectedAIPrompt;
       document.getElementById("input3").value = intent;
       document.getElementById("input4").value = responseFormat;
+      
+      // Show visual feedback
+      var inputs = document.querySelectorAll('.textarea');
+      inputs.forEach(input => {
+        input.style.borderColor = '#4CAF50';
+        input.style.borderWidth = '2px';
+        setTimeout(() => {
+          input.style.borderColor = '#cccccc';
+          input.style.borderWidth = '1px';
+        }, 1000);
+      });
     }
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        combineAndCopyChat('Gemini');
+      }
+    });
+
+    // Auto-save to localStorage
+    function autoSave() {
+      var data = {
+        input1: document.getElementById("input1").value,
+        input2: document.getElementById("input2").value,
+        input3: document.getElementById("input3").value,
+        input4: document.getElementById("input4").value
+      };
+      localStorage.setItem('aiPromptData', JSON.stringify(data));
+    }
+
+    function loadSavedData() {
+      var saved = localStorage.getItem('aiPromptData');
+      if (saved) {
+        var data = JSON.parse(saved);
+        document.getElementById("input1").value = data.input1 || '';
+        document.getElementById("input2").value = data.input2 || '';
+        document.getElementById("input3").value = data.input3 || '';
+        document.getElementById("input4").value = data.input4 || '';
+      }
+    }
+
+    // Add event listeners for auto-save
+    window.addEventListener('load', function() {
+      loadSavedData();
+      
+      var inputs = document.querySelectorAll('.textarea');
+      inputs.forEach(input => {
+        input.addEventListener('input', autoSave);
+      });
+    });
   </script>
 </body>
 </html>
