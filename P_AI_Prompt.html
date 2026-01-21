@@ -143,28 +143,76 @@
       <textarea class="input textarea" id="input4" placeholder="How should the response be formatted? Paragraphs, list, bullets"></textarea>
 
       <div class="button-container">
-        <button class="button" onclick="combineAndCopyChat('Gemini')">🔗 Google Gemini</button>
-        <button class="button" onclick="combineAndCopyChat('ChatGPT')">🔗 ChatGPT</button>
-        <button class="button" onclick="combineAndCopyChat('Claude')">🔗 Claude</button>
-        <button class="button" onclick="combineAndCopyChat('Copilot')">🔗 Copilot</button>
+        <button class="button" onclick="sendToAI('gemini')" id="gemini-btn">🤖 Ask Gemini</button>
+        <button class="button" onclick="sendToAI('openai')" id="openai-btn">🤖 Ask ChatGPT</button>
+        <button class="button" onclick="sendToAI('claude')" id="claude-btn">🤖 Ask Claude</button>
+        <button class="button" onclick="combineAndCopyChat('Copilot')">🔗 Open Copilot</button>
       </div>
       
-      <div style="text-align: center; margin: 10px 0; font-size: 12px; color: #666;">
-        💡 Tip: Press Ctrl+Enter for quick Gemini launch
+      <div style="text-align: center; margin: 10px 0;">
+        <button class="button" onclick="showApiSetup()" style="background-color: #6c757d; font-size: 12px; height: 30px;">⚙️ Setup API Keys</button>
+        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+          💡 Configure API keys to get responses directly on this page
+        </div>
       </div>
 
       <label class="label" for="output">AI Prompt: <button class="button" onclick="copyToClipboard(document.getElementById('output').value); showSuccessMessage('Prompt copied!')" style="height: 25px; font-size: 11px; margin-left: 10px;">📋 Copy</button></label>
       <textarea class="input textarea" id="output" readonly placeholder="Your consolidated prompt will appear here..."></textarea>
       
+      <!-- AI Response Section -->
+      <div id="response-section" style="display: none; margin-top: 20px;">
+        <label class="label">🤖 AI Response:</label>
+        <div id="response-container" style="border: 1px solid #cccccc; border-radius: 5px; padding: 15px; background-color: #f9f9f9; min-height: 100px; max-height: 400px; overflow-y: auto;">
+          <div id="response-content">Response will appear here...</div>
+        </div>
+        <div style="margin-top: 10px; text-align: right;">
+          <button class="button" onclick="copyToClipboard(document.getElementById('response-content').innerText); showSuccessMessage('Response copied!')" style="height: 30px; font-size: 12px;">📋 Copy Response</button>
+        </div>
+      </div>
+      
       <div style="margin-top: 15px; padding: 10px; background-color: #f0f8ff; border-radius: 5px; font-size: 12px;">
-        <strong>🚀 New Features:</strong>
+        <strong>🚀 Features:</strong>
         <ul style="margin: 5px 0; padding-left: 20px;">
+          <li>🤖 Direct AI integration (with API keys)</li>
+          <li>🔗 Fallback to external links</li>
           <li>✅ Auto-copy to clipboard</li>
-          <li>🔗 Direct links to multiple AI platforms</li>
           <li>💾 Auto-save your work</li>
-          <li>⌨️ Keyboard shortcut (Ctrl+Enter)</li>
-          <li>📱 Better mobile experience</li>
+          <li>⌨️ Keyboard shortcuts</li>
         </ul>
+      </div>
+      
+      <!-- API Setup Modal -->
+      <div id="api-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+          <h3 style="margin-top: 0; color: #0078d4;">⚙️ API Configuration</h3>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">OpenAI API Key:</label>
+            <input type="password" id="openai-key" placeholder="sk-..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <small style="color: #666;">Get from: <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a></small>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Google Gemini API Key:</label>
+            <input type="password" id="gemini-key" placeholder="AIza..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <small style="color: #666;">Get from: <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Anthropic Claude API Key:</label>
+            <input type="password" id="claude-key" placeholder="sk-ant-..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <small style="color: #666;">Get from: <a href="https://console.anthropic.com/" target="_blank">Anthropic Console</a></small>
+          </div>
+          
+          <div style="background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 12px;">
+            <strong>⚠️ Important:</strong> API keys are stored locally in your browser and never sent to our servers. However, due to CORS restrictions, direct API calls may not work from this page. Consider using a local proxy server for production use.
+          </div>
+          
+          <div style="text-align: right;">
+            <button onclick="saveApiKeys()" style="background-color: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-right: 10px; cursor: pointer;">💾 Save Keys</button>
+            <button onclick="closeApiSetup()" style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
