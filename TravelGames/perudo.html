@@ -40,7 +40,7 @@
             border: 12px solid #3d2522;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.5), 0 0 0 5px var(--gold);
             border-radius: 30px;
-            padding: 3rem;
+            padding: 2.5rem 1.5rem;
             width: 100%;
             max-width: 950px;
             margin: 0 auto;
@@ -51,7 +51,7 @@
         .bg-icon {
             position: absolute;
             font-size: 15rem;
-            color: rgba(0,0,0,0.1);
+            color: rgba(0,0,0,0.05);
             z-index: 0;
             pointer-events: none;
         }
@@ -63,7 +63,7 @@
         h1 {
             font-family: 'Playfair Display', serif;
             color: var(--gold);
-            font-size: 4.5rem;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
             font-weight: 900;
             letter-spacing: 4px;
             text-shadow: 4px 4px 0px #000;
@@ -72,12 +72,11 @@
         }
 
         .subtitle {
-            font-size: 1.4rem;
+            font-size: 1.1rem;
             color: var(--accent-orange);
             font-weight: 700;
             letter-spacing: 2px;
             text-transform: uppercase;
-            margin-top: -10px;
         }
 
         .section {
@@ -85,25 +84,25 @@
             z-index: 1;
             background: rgba(0, 0, 0, 0.4);
             border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 2.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
             border: 1px solid rgba(255, 215, 0, 0.2);
         }
 
         h2 {
             font-family: 'Playfair Display', serif;
             color: var(--gold);
-            font-size: 2rem;
+            font-size: 1.8rem;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             margin-top: 0;
         }
 
         .ace-icon {
             display: inline-block;
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             background: var(--dice-red);
             border-radius: 4px;
             vertical-align: middle;
@@ -125,16 +124,17 @@
             background: linear-gradient(135deg, var(--velvet-blue), var(--velvet-blue-glow)) !important;
             background-image: url('https://www.transparenttextures.com/patterns/padded-little.png') !important;
             border: 2px solid var(--gold);
-            padding: 2.5rem;
+            padding: 2rem 1.5rem;
             border-radius: 20px;
             margin-top: 2rem;
             box-shadow: 0 15px 40px rgba(0,0,0,0.7);
         }
 
+        /* Updated to Single Column */
         .strategy-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             margin-top: 1.5rem;
         }
 
@@ -145,19 +145,19 @@
             border-left: 4px solid var(--gold);
         }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th { text-align: left; color: var(--gold); padding: 12px; border-bottom: 2px solid var(--gold); }
-        td { padding: 12px; border-bottom: 1px solid rgba(255,215,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+        th { text-align: left; color: var(--gold); padding: 8px; border-bottom: 2px solid var(--gold); }
+        td { padding: 8px; border-bottom: 1px solid rgba(255,215,0,0.1); }
 
         .highlight-text { color: var(--gold); font-weight: bold; }
 
         .home-btn {
-            position: absolute; top: 25px; left: 25px;
-            width: 50px; height: 50px; border-radius: 50%;
+            position: absolute; top: 15px; left: 15px;
+            width: 40px; height: 40px; border-radius: 50%;
             background: var(--gold); color: #111;
             display: flex; align-items: center; justify-content: center;
-            text-decoration: none; font-size: 1.5rem;
-            box-shadow: 0 5px 0 #b8860b; z-index: 10;
+            text-decoration: none; font-size: 1.2rem;
+            box-shadow: 0 4px 0 #b8860b; z-index: 10;
         }
     </style>
 </head>
@@ -165,7 +165,7 @@
 
     <div class="casino-table">
         <i class="fa-solid fa-dice bg-icon bg-1"></i>
-        <i class="fa-solid fa-skull-crossbones bg-icon bg-2"></i>
+        <i class="fa-solid fa-flag bg-icon bg-2"></i>
 
         <a href="index.html" class="home-btn"><i class="fa-solid fa-anchor"></i></a>
         
@@ -175,7 +175,7 @@
         </header>
 
         <div class="section">
-            <h2><i class="fa-solid fa-skull"></i> The Objective</h2>
+            <h2><i class="fa-solid fa-flag"></i> The Objective</h2>
             <p>Listen close, ye scoundrel. Your greatest weapon isn't your dice—it's your <strong>poker face</strong>. Be the last pirate standing with at least one die in your cup. When the "Dudo" (Liar) is called, someone is losing a die. Make sure it isn't you, or you'll be walking the plank.</p>
         </div>
 
@@ -185,35 +185,31 @@
             <ul>
                 <li><strong>The Bid:</strong> "I think there be <span class="highlight-text">Seven 5s</span> on this table."</li>
                 <li><strong>The Response:</strong> The next pirate must either <span class="highlight-text">Raise</span> the bid or call <span class="highlight-text">Dudo</span> (Liar!).</li>
-                <li><strong>Aces are Wild:</strong> <span class="ace-icon"></span> <strong>1s count as whatever number is being bid!</strong> They be the ultimate game-changers on the high seas.</li>
+                <li><strong>Aces are Wild:</strong> <span class="ace-icon"></span> <strong>1s count as whatever number is being bid!</strong> They be the ultimate game-changers.</li>
             </ul>
         </div>
 
         <div class="section">
-            <h2><i class="fa-solid fa-gavel"></i> The Bidding Ladder</h2>
+            <h2><i class="fa-solid fa-compass"></i> The Bidding Ladder</h2>
             <table>
                 <thead>
                     <tr>
                         <th>Action</th>
                         <th>Example</th>
-                        <th>Outcome</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td><strong>Raise the Crew</strong></td>
                         <td>Five 4s &rarr; <span class="highlight-text">Six 4s</span></td>
-                        <td>Play it safe, keep the value low.</td>
                     </tr>
                     <tr>
                         <td><strong>Raise the Value</strong></td>
                         <td>Five 4s &rarr; <span class="highlight-text">Five 6s</span></td>
-                        <td>Aggressive move, forces the next pirate high.</td>
                     </tr>
                     <tr>
                         <td><strong>The Ace Jump</strong></td>
                         <td>Ten 3s &rarr; <span class="highlight-text">Five 1s</span></td>
-                        <td>Halve the count to switch to Wild Aces.</td>
                     </tr>
                 </tbody>
             </table>
@@ -245,8 +241,8 @@
 
     </div>
 
-    <footer style="text-align: center; margin-top: 2rem; color: var(--gold); opacity: 0.6; font-size: 0.9rem;">
-        <p><i class="fa-solid fa-skull-crossbones"></i> Play at your own risk. May the best liar win. <i class="fa-solid fa-skull-crossbones"></i></p>
+    <footer style="text-align: center; margin-top: 2rem; color: var(--gold); opacity: 0.6; font-size: 0.8rem;">
+        <p><i class="fa-solid fa-flag"></i> Play at your own risk. May the best liar win. <i class="fa-solid fa-flag"></i></p>
     </footer>
 
 </body>
