@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perudo: Master the Art of the Bluff</title>
+    <title>Perudo: The Pirate's Code</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
@@ -14,11 +14,9 @@
             --dark-wood: #1a0f12;
             --gold: #ffd700;
             --light-gold: #fff8e1;
-            --ivory: #faf8f0;
             --dice-red: #9a1428;
             --dice-red-dark: #4a070f;
             --accent-orange: #ff8c00;
-            /* New Velvet Blue Palette */
             --velvet-blue: #050a18;
             --velvet-blue-glow: #0d1b3e;
         }
@@ -68,7 +66,7 @@
             font-size: 4.5rem;
             font-weight: 900;
             letter-spacing: 4px;
-            text-shadow: 4px 4px 0px #000, 0 0 20px rgba(255,215,0,0.4);
+            text-shadow: 4px 4px 0px #000;
             margin: 0;
             text-transform: uppercase;
         }
@@ -86,12 +84,10 @@
             position: relative;
             z-index: 1;
             background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(5px);
             border-radius: 20px;
             padding: 2rem;
             margin-bottom: 2.5rem;
             border: 1px solid rgba(255, 215, 0, 0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         h2 {
@@ -104,17 +100,35 @@
             margin-top: 0;
         }
 
-        h2 i { font-size: 1.5rem; color: var(--accent-orange); }
+        .ace-icon {
+            display: inline-block;
+            width: 26px;
+            height: 26px;
+            background: var(--dice-red);
+            border-radius: 4px;
+            vertical-align: middle;
+            margin: 0 5px;
+            position: relative;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+        .ace-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px; height: 6px;
+            background: white;
+            border-radius: 50%;
+        }
 
-        /* The Strategy Box - Corrected to Velvet Blue */
         .strategy-box {
-            background: linear-gradient(145deg, var(--velvet-blue), var(--velvet-blue-glow)) !important;
+            background: linear-gradient(135deg, var(--velvet-blue), var(--velvet-blue-glow)) !important;
             background-image: url('https://www.transparenttextures.com/patterns/padded-little.png') !important;
             border: 2px solid var(--gold);
             padding: 2.5rem;
             border-radius: 20px;
             margin-top: 2rem;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
         }
 
         .strategy-grid {
@@ -131,32 +145,11 @@
             border-left: 4px solid var(--gold);
         }
 
-        .tip-card h4 { color: var(--gold); margin-top: 0; display: flex; align-items: center; gap: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { text-align: left; color: var(--gold); padding: 12px; border-bottom: 2px solid var(--gold); }
+        td { padding: 12px; border-bottom: 1px solid rgba(255,215,0,0.1); }
 
-        /* ACE DIE ICON (Showing only the 1) */
-        .ace-icon {
-            display: inline-block;
-            width: 28px;
-            height: 28px;
-            background: var(--dice-red);
-            border-radius: 5px;
-            vertical-align: middle;
-            margin: 0 5px;
-            position: relative;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-            border: 1px solid var(--dice-red-dark);
-        }
-        /* The single center pip for the Ace */
-        .ace-icon::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 7px; height: 7px;
-            background: white;
-            border-radius: 50%;
-            box-shadow: inset 0 1px 1px rgba(0,0,0,0.5);
-        }
+        .highlight-text { color: var(--gold); font-weight: bold; }
 
         .home-btn {
             position: absolute; top: 25px; left: 25px;
@@ -164,20 +157,7 @@
             background: var(--gold); color: #111;
             display: flex; align-items: center; justify-content: center;
             text-decoration: none; font-size: 1.5rem;
-            box-shadow: 0 5px 0 #b8860b, 0 8px 15px rgba(0,0,0,0.4);
-            z-index: 10; transition: 0.2s;
-        }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th { text-align: left; color: var(--gold); padding: 12px; border-bottom: 2px solid var(--gold); }
-        td { padding: 12px; border-bottom: 1px solid rgba(255,215,0,0.1); }
-
-        .highlight-text { color: var(--gold); font-weight: bold; }
-
-        @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            .strategy-grid { grid-template-columns: 1fr; }
-            .casino-table { padding: 1.5rem; border-width: 6px; }
+            box-shadow: 0 5px 0 #b8860b; z-index: 10;
         }
     </style>
 </head>
@@ -187,48 +167,48 @@
         <i class="fa-solid fa-dice bg-icon bg-1"></i>
         <i class="fa-solid fa-skull-crossbones bg-icon bg-2"></i>
 
-        <a href="index.html" class="home-btn"><i class="fa-solid fa-house"></i></a>
+        <a href="index.html" class="home-btn"><i class="fa-solid fa-anchor"></i></a>
         
         <header>
             <h1>Perudo</h1>
-            <div class="subtitle">Lies, Luck & Legend</div>
+            <div class="subtitle">The Art of the Pirate's Bluff</div>
         </header>
 
         <div class="section">
-            <h2><i class="fa-solid fa-crosshairs"></i> The Objective</h2>
-            <p>In this game, your greatest weapon isn't your dice—it's your <strong>poker face</strong>. Be the last pirate standing with at least one die in your cup. When the "Dudo" (Liar) is called, someone is losing a die. Make sure it isn't you.</p>
+            <h2><i class="fa-solid fa-skull"></i> The Objective</h2>
+            <p>Listen close, ye scoundrel. Your greatest weapon isn't your dice—it's your <strong>poker face</strong>. Be the last pirate standing with at least one die in your cup. When the "Dudo" (Liar) is called, someone is losing a die. Make sure it isn't you, or you'll be walking the plank.</p>
         </div>
 
         <div class="section">
-            <h2><i class="fa-solid fa-scroll"></i> How to Play</h2>
-            <p>Players make a collective bid on how many dice of a certain value exist under <strong>all</strong> cups combined.</p>
+            <h2><i class="fa-solid fa-scroll"></i> The Pirate's Code</h2>
+            <p>Every pirate makes a collective bid on how many dice of a certain value exist under <strong>all</strong> cups combined.</p>
             <ul>
-                <li><strong>The Bid:</strong> "I think there are <span class="highlight-text">Seven 5s</span> on this table."</li>
-                <li><strong>The Response:</strong> The next player must either <span class="highlight-text">Raise</span> the bid or call <span class="highlight-text">Dudo</span> (Liar!).</li>
-                <li><strong>Aces are Wild:</strong> <span class="ace-icon"></span> <strong>1s count as whatever number is being bid!</strong> They are the ultimate game-changers.</li>
+                <li><strong>The Bid:</strong> "I think there be <span class="highlight-text">Seven 5s</span> on this table."</li>
+                <li><strong>The Response:</strong> The next pirate must either <span class="highlight-text">Raise</span> the bid or call <span class="highlight-text">Dudo</span> (Liar!).</li>
+                <li><strong>Aces are Wild:</strong> <span class="ace-icon"></span> <strong>1s count as whatever number is being bid!</strong> They be the ultimate game-changers on the high seas.</li>
             </ul>
         </div>
 
         <div class="section">
-            <h2><i class="fa-solid fa-chart-line"></i> The Bidding Ladder</h2>
+            <h2><i class="fa-solid fa-gavel"></i> The Bidding Ladder</h2>
             <table>
                 <thead>
                     <tr>
                         <th>Action</th>
                         <th>Example</th>
-                        <th>Result</th>
+                        <th>Outcome</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>Raise Count</strong></td>
+                        <td><strong>Raise the Crew</strong></td>
                         <td>Five 4s &rarr; <span class="highlight-text">Six 4s</span></td>
-                        <td>Safer, keeps the value low.</td>
+                        <td>Play it safe, keep the value low.</td>
                     </tr>
                     <tr>
-                        <td><strong>Raise Value</strong></td>
+                        <td><strong>Raise the Value</strong></td>
                         <td>Five 4s &rarr; <span class="highlight-text">Five 6s</span></td>
-                        <td>Aggressive, forces the next player high.</td>
+                        <td>Aggressive move, forces the next pirate high.</td>
                     </tr>
                     <tr>
                         <td><strong>The Ace Jump</strong></td>
@@ -240,13 +220,13 @@
         </div>
 
         <div class="strategy-box">
-            <h2><i class="fa-solid fa-user-secret"></i> Secret Strategy Tips</h2>
-            <p style="opacity: 0.9;">Master these hidden tactics to dominate the table:</p>
+            <h2 style="color: var(--gold);"><i class="fa-solid fa-user-secret"></i> Secret Strategy Tips</h2>
+            <p style="opacity: 0.9;">Master these hidden tactics to dominate the tavern:</p>
             
             <div class="strategy-grid">
                 <div class="tip-card">
                     <h4><i class="fa-solid fa-calculator"></i> The Rule of Thirds</h4>
-                    <p>Statistically, <span class="highlight-text">1/3</span> of the dice on the table will match your bid (Value + Aces). If there are 15 dice total, expect five of any number.</p>
+                    <p>Statistically, <span class="highlight-text">1/3</span> of the dice on the table will match your bid (Value + Aces). Use this math to spot a lying dog.</p>
                 </div>
                 <div class="tip-card">
                     <h4><i class="fa-solid fa-ghost"></i> The "Phantom" Bid</h4>
@@ -254,11 +234,11 @@
                 </div>
                 <div class="tip-card">
                     <h4><i class="fa-solid fa-shield-halved"></i> The Ace Trap</h4>
-                    <p>Switching to Aces early confuses players. If you have two 1s, jump to them quickly to flush out other players' hidden Aces.</p>
+                    <p>Switching to Aces early confuses the crew. If you have two 1s, jump to them quickly to flush out the other pirates' hidden Aces.</p>
                 </div>
                 <div class="tip-card">
                     <h4><i class="fa-solid fa-eye"></i> The Palafico Round</h4>
-                    <p>When you have 1 die left, you are Palafico. In this special round, <strong>Aces are NOT wild</strong>. Don't get caught out by the rule change!</p>
+                    <p>When you have 1 die left, you are Palafico. In this special round, <strong>Aces are NOT wild</strong>. Don't let your guard down, matey!</p>
                 </div>
             </div>
         </div>
@@ -266,7 +246,7 @@
     </div>
 
     <footer style="text-align: center; margin-top: 2rem; color: var(--gold); opacity: 0.6; font-size: 0.9rem;">
-        <p><i class="fa-solid fa-skull"></i> Play at your own risk. May the best liar win. <i class="fa-solid fa-skull"></i></p>
+        <p><i class="fa-solid fa-skull-crossbones"></i> Play at your own risk. May the best liar win. <i class="fa-solid fa-skull-crossbones"></i></p>
     </footer>
 
 </body>
