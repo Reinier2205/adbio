@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perudo: The Rules of Deception</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS variables shared with your dice roller */
+        :root {
+            --felt-green: #0a4821;
+            --dark-wood: #2a1a1f;
+            --gold: #ffd700;
+            --light-gold: #fff8e1;
+            --ivory: #faf8f0;
+            --dice-red: #7b0d1e;
+            --dice-red-dark: #4a070f;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark-wood);
+            background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
+            color: var(--light-gold);
+            margin: 0;
+            padding: 2rem 1rem;
+            line-height: 1.6;
+        }
+
+        .casino-table {
+            background: var(--felt-green);
+            border: 10px solid #4a2c2a;
+            box-shadow: 0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 3rem;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-style: italic;
+            color: var(--light-gold);
+            margin-bottom: 2.5rem;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--gold);
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            margin-top: 0;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        .bidding-logic {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .dice-example {
+            display: inline-block;
+            background: var(--dice-red);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid var(--dice-red-dark);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: rgba(0,0,0,0.3);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,215,0,0.2);
+        }
+
+        th { color: var(--gold); text-transform: uppercase; font-size: 0.9rem; }
+
+        .home-btn {
+            position: absolute; top: 15px; left: 15px;
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 2px solid #111; background: var(--gold);
+            color: #111; display: flex; align-items: center;
+            justify-content: center; text-decoration: none;
+            font-weight: bold; box-shadow: 0 3px 0 #111;
+        }
+
+        .highlight { color: var(--gold); font-weight: bold; }
+
+        ul { padding-left: 1.2rem; }
+        li { margin-bottom: 0.8rem; }
+
+        @media (max-width: 600px) {
+            .bidding-logic { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+            .casino-table { padding: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="casino-table">
+        <a href="index.html" class="home-btn" title="Back to Game">🏠</a>
+        
+        <h1>PERUDO</h1>
+        <p class="subtitle">The Ancient Game of Liar's Dice</p>
+
+        <div class="section">
+            <h2>The Objective</h2>
+            <p>Be the <strong>last player</strong> with at least one die remaining. Perudo is a game of bluffing, probability, and nerves of steel. You don't need to have the best dice; you just need your friends to think you do.</p>
+        </div>
+
+        <div class="section">
+            <h2>The Setup</h2>
+            <ul>
+                <li>Each player starts with <span class="highlight">5 dice</span> and a cup.</li>
+                <li>Everyone shakes their cup and flips it onto the table, keeping the dice hidden from others.</li>
+                <li>You may look at your own dice at any time, but keep them secret!</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>How to Play</h2>
+            <p>The first player makes a <strong>Bid</strong>. A bid consists of a <strong>Quantity</strong> and a <strong>Face Value</strong> (e.g., <em>"Four 5s"</em>).</p>
+            <p>The next player must then choose one of two actions:</p>
+            
+            <div class="bidding-logic">
+                <div>
+                    <h4 class="highlight">1. Raise the Bid</h4>
+                    <p>You must increase the previous bid. You can:</p>
+                    <ul>
+                        <li>Increase the <strong>Quantity</strong> (e.g., "Five 5s").</li>
+                        <li>Increase the <strong>Face Value</strong> (e.g., "Four 6s").</li>
+                        <li>Increase <strong>Both</strong>.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="highlight">2. Call "Dudo" (Liar)</h4>
+                    <p>If you think the current bid is impossible, shout <strong>"Dudo!"</strong>. Everyone reveals their dice.</p>
+                    <ul>
+                        <li>If the bid was <strong>wrong</strong> (fewer dice than claimed), the bidder loses a die.</li>
+                        <li>If the bid was <strong>right</strong> (equal or more), the challenger loses a die.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>The Wild Card: Aces <span class="dice-example">1</span></h2>
+            <p>In Perudo, the <span class="dice-example">1</span> (Aces) are <strong>Wild</strong>. They count as whatever face value is currently being bid.</p>
+            <blockquote>
+                <em>Example: If the bid is "Five 4s," and there are three <span class="dice-example">4</span>s and two <span class="dice-example">1</span>s on the table, the bid is successful!</em>
+            </blockquote>
+        </div>
+
+        <div class="section">
+            <h2>Bidding Ladder</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bid Type</th>
+                        <th>Example</th>
+                        <th>Rule</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Normal Raise</td>
+                        <td>Three 4s &rarr; <span class="highlight">Four 4s</span></td>
+                        <td>Higher quantity, same value.</td>
+                    </tr>
+                    <tr>
+                        <td>Value Raise</td>
+                        <td>Three 4s &rarr; <span class="highlight">Three 5s</span></td>
+                        <td>Same quantity, higher value.</td>
+                    </tr>
+                    <tr>
+                        <td>Jumping to Aces</td>
+                        <td>Six 4s &rarr; <span class="highlight">Three 1s</span></td>
+                        <td>You can bid Aces by halving the current quantity.</td>
+                    </tr>
+                    <tr>
+                        <td>Leaving Aces</td>
+                        <td>Two 1s &rarr; <span class="highlight">Five 2s</span></td>
+                        <td>Double the Aces plus one to return to normal numbers.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" style="border-left-color: #ff4444;">
+            <h2>Calza (Optional Rule)</h2>
+            <p>If you believe the bid is <strong>exactly correct</strong>, you can shout <strong>"Calza!"</strong>. If you are right, you regain a previously lost die. If you are wrong, you lose one.</p>
+        </div>
+
+    </div>
+
+    <footer style="text-align: center; margin-top: 2rem; opacity: 0.6; font-size: 0.8rem;">
+        &copy; 2026 Perudo Rules - Ready for Game Night
+    </footer>
+
+</body>
+</html>
