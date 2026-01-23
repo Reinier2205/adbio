@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perudo: Master the Art of the Bluff</title>
+    <title>Perudo: The Master's Guide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --felt-green: #0a4821;
-            --dark-wood: #2a1a1f;
-            --gold: #ffd700;
-            --light-gold: #fff8e1;
-            --ivory: #faf8f0;
-            --dice-red: #9a1428;
-            --dice-red-dark: #4a070f;
-            --accent-orange: #ff8c00;
+            --felt-green: #063d1c;
+            --dark-wood: #1a0f12;
+            --gold: #d4af37;
+            --light-gold: #f4e4bc;
+            --dice-red: #8b0000;
+            --velvet-blue: #0a1128; /* Dark Velvet Blue */
+            --velvet-shadow: #050814;
         }
 
         *, *::before, *::after { box-sizing: border-box; }
@@ -25,7 +24,7 @@
         body {
             font-family: 'Roboto', sans-serif;
             background-color: var(--dark-wood);
-            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://www.transparenttextures.com/patterns/dark-leather.png'), radial-gradient(circle, #4d322e 0%, var(--dark-wood) 100%);
+            background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://www.transparenttextures.com/patterns/black-linen.png');
             color: var(--light-gold);
             margin: 0;
             padding: 2rem 1rem;
@@ -34,62 +33,45 @@
 
         .casino-table {
             background: var(--felt-green);
-            background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 30px 30px;
-            border: 12px solid #3d2522;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.5), 0 0 0 5px var(--gold);
-            border-radius: 30px;
-            padding: 3rem;
+            background-image: radial-gradient(circle at center, #0a5c2a 0%, var(--felt-green) 100%);
+            border: 15px solid #2a1a1a;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 0 120px rgba(0,0,0,0.6), 0 0 0 2px var(--gold);
+            border-radius: 40px;
+            padding: 3.5rem;
             width: 100%;
             max-width: 950px;
             margin: 0 auto;
             position: relative;
-            overflow: hidden;
         }
 
-        /* Decorative Background Icons */
-        .bg-icon {
-            position: absolute;
-            font-size: 15rem;
-            color: rgba(0,0,0,0.1);
-            z-index: 0;
-            pointer-events: none;
-        }
-        .bg-1 { top: -20px; right: -20px; transform: rotate(15deg); }
-        .bg-2 { bottom: -20px; left: -20px; transform: rotate(-15deg); }
-
-        header { position: relative; z-index: 1; text-align: center; margin-bottom: 3rem; }
+        header { text-align: center; margin-bottom: 3.5rem; position: relative; }
 
         h1 {
             font-family: 'Playfair Display', serif;
             color: var(--gold);
             font-size: 4.5rem;
             font-weight: 900;
-            letter-spacing: 4px;
-            text-shadow: 4px 4px 0px #000, 0 0 20px rgba(255,215,0,0.4);
+            letter-spacing: 6px;
+            text-shadow: 3px 3px 0px #000;
             margin: 0;
             text-transform: uppercase;
         }
 
         .subtitle {
-            font-size: 1.4rem;
-            color: var(--accent-orange);
-            font-weight: 700;
-            letter-spacing: 2px;
+            font-size: 1.2rem;
+            color: var(--light-gold);
+            letter-spacing: 4px;
             text-transform: uppercase;
-            margin-top: -10px;
+            opacity: 0.8;
+            margin-top: 5px;
         }
 
         .section {
-            position: relative;
-            z-index: 1;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(5px);
-            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
             padding: 2rem;
             margin-bottom: 2.5rem;
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(212, 175, 55, 0.2);
         }
 
         h2 {
@@ -102,166 +84,177 @@
             margin-top: 0;
         }
 
-        h2 i { font-size: 1.5rem; color: var(--accent-orange); }
+        /* 3D ACE DIE CSS */
+        .ace-container {
+            display: inline-block;
+            perspective: 400px;
+            vertical-align: middle;
+            margin: 0 10px;
+        }
+        .ace-die {
+            width: 40px;
+            height: 40px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-20deg) rotateY(-20deg);
+        }
+        .ace-face {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, #a00, var(--dice-red));
+            border: 1px solid #400;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
+        }
+        .ace-pip {
+            width: 10px;
+            height: 10px;
+            background: var(--light-gold);
+            border-radius: 50%;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+        }
+        /* Positions for 3D look */
+        .f-front { transform: translateZ(20px); }
+        .f-right { transform: rotateY(90deg) translateZ(20px); background: #700; }
+        .f-top   { transform: rotateX(90deg) translateZ(20px); background: #900; }
 
-        /* The Strategy Box */
+        /* DARK VELVET STRATEGY BOX */
         .strategy-box {
-            background: linear-gradient(145deg, #1e3c72, #2a5298); /* Deep blue for "Secret" vibe */
-            border-left: 8px solid var(--gold);
-            padding: 2rem;
-            border-radius: 15px;
-            margin-top: 2rem;
+            background: linear-gradient(135deg, var(--velvet-blue) 0%, var(--velvet-shadow) 100%);
+            background-image: url('https://www.transparenttextures.com/patterns/padded-little.png'); /* Velvet padding texture */
+            border: 2px solid var(--gold);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
 
         .strategy-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 1.5rem;
+            gap: 25px;
+            margin-top: 2rem;
         }
 
         .tip-card {
-            background: rgba(255,255,255,0.1);
-            padding: 1.2rem;
-            border-radius: 10px;
-            border: 1px dashed rgba(255,215,0,0.4);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 3px solid var(--gold);
+            transition: transform 0.3s ease;
         }
-
-        .tip-card h4 { color: var(--gold); margin-top: 0; display: flex; align-items: center; gap: 8px; }
-
-        /* Mini Dice Icons */
-        .dice-icon {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            background: var(--dice-red);
-            border-radius: 4px;
-            vertical-align: middle;
-            margin: 0 2px;
-            position: relative;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-        }
-        .dice-icon::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 5px; height: 5px;
-            background: white;
-            border-radius: 50%;
-            box-shadow: -6px -6px white, 6px 6px white, -6px 6px white, 6px -6px white;
-        }
+        .tip-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.08); }
+        .tip-card h4 { color: var(--gold); margin-top: 0; font-size: 1.1rem; text-transform: uppercase; }
 
         .home-btn {
-            position: absolute; top: 25px; left: 25px;
-            width: 50px; height: 50px; border-radius: 50%;
-            background: var(--gold); color: #111;
+            position: absolute; top: 20px; left: 20px;
+            width: 45px; height: 45px; border-radius: 50%;
+            background: var(--gold); color: var(--dark-wood);
             display: flex; align-items: center; justify-content: center;
-            text-decoration: none; font-size: 1.5rem;
-            box-shadow: 0 5px 0 #b8860b, 0 8px 15px rgba(0,0,0,0.4);
-            z-index: 10; transition: 0.2s;
+            text-decoration: none; font-size: 1.2rem;
+            box-shadow: 0 4px 0 #8a6d29; z-index: 10;
         }
-        .home-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #b8860b; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th { text-align: left; color: var(--gold); padding: 12px; border-bottom: 2px solid var(--gold); }
-        td { padding: 12px; border-bottom: 1px solid rgba(255,215,0,0.1); }
+        th { text-align: left; color: var(--gold); padding: 15px; border-bottom: 2px solid var(--gold); font-family: 'Playfair Display', serif; }
+        td { padding: 15px; border-bottom: 1px solid rgba(212, 175, 55, 0.1); }
 
-        .highlight-text { color: var(--gold); font-weight: bold; }
+        .highlight { color: var(--gold); font-weight: bold; }
 
         @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
+            h1 { font-size: 2.8rem; }
             .strategy-grid { grid-template-columns: 1fr; }
-            .casino-table { padding: 1.5rem; border-width: 6px; }
+            .casino-table { padding: 1.5rem; }
         }
     </style>
 </head>
 <body>
 
     <div class="casino-table">
-        <i class="fa-solid fa-dice bg-icon bg-1"></i>
-        <i class="fa-solid fa-skull-crossbones bg-icon bg-2"></i>
-
-        <a href="index.html" class="home-btn"><i class="fa-solid fa-house"></i></a>
+        <a href="index.html" class="home-btn"><i class="fa-solid fa-chevron-left"></i></a>
         
         <header>
             <h1>Perudo</h1>
-            <div class="subtitle">Lies, Luck & Legend</div>
+            <div class="subtitle">The Gentlemen's Game of Deception</div>
         </header>
 
         <div class="section">
-            <h2><i class="fa-solid fa-crosshairs"></i> The Objective</h2>
-            <p>In this game, your greatest weapon isn't your dice—it's your <strong>poker face</strong>. Be the last pirate standing with at least one die in your cup. When the "Dudo" (Liar) is called, someone is losing a die. Make sure it isn't you.</p>
+            <h2><i class="fa-solid fa-eye"></i> Objective</h2>
+            <p>Outlast your opponents by protecting your dice. In Perudo, you don't play the dice—you play the <strong>person</strong> across from you. Keep them guessing, catch their bluffs, and never let them see your fear.</p>
         </div>
 
         <div class="section">
-            <h2><i class="fa-solid fa-scroll"></i> How to Play</h2>
-            <p>Players make a collective bid on how many dice of a certain value exist under <strong>all</strong> cups combined.</p>
-            <ul>
-                <li><strong>The Bid:</strong> "I think there are <span class="highlight-text">Seven 5s</span> on this table."</li>
-                <li><strong>The Response:</strong> The next player must either <span class="highlight-text">Raise</span> the bid or call <span class="highlight-text">Dudo</span> (Liar!).</li>
-                <li><strong>Aces are Wild:</strong> <span class="dice-icon"></span> 1s count as whatever number is being bid! They are the ultimate game-changers.</li>
-            </ul>
+            <h2><i class="fa-solid fa-dice-one"></i> The Wild Aces</h2>
+            <p>The 
+                <div class="ace-container">
+                    <div class="ace-die">
+                        <div class="ace-face f-front"><div class="ace-pip"></div></div>
+                        <div class="ace-face f-right"></div>
+                        <div class="ace-face f-top"></div>
+                    </div>
+                </div> 
+                <strong>Aces (1s)</strong> are the most powerful dice in the game.
+            </p>
+            <p>They are <span class="highlight">Wild</span>. This means they count as whatever face value is currently being bid. If the bid is "Seven 6s," every Ace on the table is added to the total count of 6s.</p>
         </div>
 
         <div class="section">
-            <h2><i class="fa-solid fa-chart-line"></i> The Bidding Ladder</h2>
+            <h2><i class="fa-solid fa-gavel"></i> The Rules of the Table</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Action</th>
-                        <th>Example</th>
-                        <th>Result</th>
+                        <th>Your Move</th>
+                        <th>Requirement</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>Raise Count</strong></td>
-                        <td>Five 4s &rarr; <span class="highlight-text">Six 4s</span></td>
-                        <td>Safer, keeps the value low.</td>
+                        <td><span class="highlight">Raise Quantity</span></td>
+                        <td>Keep the die value, but increase the number (e.g., 4 Fives &rarr; 5 Fives).</td>
                     </tr>
                     <tr>
-                        <td><strong>Raise Value</strong></td>
-                        <td>Five 4s &rarr; <span class="highlight-text">Five 6s</span></td>
-                        <td>Agresive, forces the next player high.</td>
+                        <td><span class="highlight">Raise Value</span></td>
+                        <td>Keep the quantity, but increase the die face (e.g., 4 Fives &rarr; 4 Sixes).</td>
                     </tr>
                     <tr>
-                        <td><strong>The Ace Jump</strong></td>
-                        <td>Ten 3s &rarr; <span class="highlight-text">Five 1s</span></td>
-                        <td>Halve the count to switch to Wild Aces.</td>
+                        <td><span class="highlight">Dudo (Liar)</span></td>
+                        <td>Challenge the previous bid. If they are even 1 die short, they lose.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="strategy-box">
-            <h2><i class="fa-solid fa-user-secret"></i> Secret Strategy Tips</h2>
-            <p>New to the game? Use these tactics to destroy your friends:</p>
+            <h2 style="color: var(--gold);"><i class="fa-solid fa-user-secret"></i> Elite Strategy</h2>
+            <p style="opacity: 0.9;">Inside info for the discerning player:</p>
             
             <div class="strategy-grid">
                 <div class="tip-card">
-                    <h4><i class="fa-solid fa-calculator"></i> The Rule of Thirds</h4>
-                    <p>Statistically, <span class="highlight-text">1/3</span> of the dice on the table will match your bid (Value + Wild Aces). If there are 15 dice total, expect five of any number.</p>
+                    <h4>The "Aces" Pivot</h4>
+                    <p>When the bidding gets too high (e.g., "Nine 6s"), jump to <span class="highlight">Aces</span>. You only need to bid half the current quantity (e.g., "Five Aces") to reset the tension.</p>
                 </div>
                 <div class="tip-card">
-                    <h4><i class="fa-solid fa-ghost"></i> The "Phantom" Bid</h4>
-                    <p>Bid high on a number you <strong>don't</strong> have. If you have four 2s, bid "Four 6s." Your friends will think you have the 6s, and you've set a trap!</p>
+                    <h4>Probability Play</h4>
+                    <p>Always remember: The total number of dice divided by 3 is the "Safe Zone" for any bid. Anything higher is a pure bluff.</p>
                 </div>
                 <div class="tip-card">
-                    <h4><i class="fa-solid fa-shield-halved"></i> The Ace Trap</h4>
-                    <p>Switching to Aces early often confuses players. If you have two 1s, jump to them quickly to flush out the other players' hidden Aces.</p>
+                    <h4>The Reverse Bluff</h4>
+                    <p>Bidding a number you actually have plenty of is sometimes too obvious. Try bidding a number you have <strong>zero</strong> of early on to lead others into a trap.</p>
                 </div>
                 <div class="tip-card">
-                    <h4><i class="fa-solid fa-eye"></i> Watch the Losers</h4>
-                    <p>As players lose dice, the total count drops. Adjust your probability! Bidding "Seven 5s" with 10 dice total is much riskier than with 20.</p>
+                    <h4>The End-Game</h4>
+                    <p>When you are down to 1 die, you are <span class="highlight">Palafico</span>. In this round, Aces are <strong>not</strong> wild. Use this to catch opponents who forget the change in rules!</p>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <footer style="text-align: center; margin-top: 2rem; color: var(--gold); opacity: 0.6; font-size: 0.9rem;">
-        <p><i class="fa-solid fa-skull"></i> Play at your own risk. May the best liar win. <i class="fa-solid fa-skull"></i></p>
+    <footer style="text-align: center; margin-top: 3rem; color: var(--gold); opacity: 0.5; font-size: 0.8rem; letter-spacing: 2px;">
+        ESTABLISHED 1800 &bull; THE PIRATE'S TRADITION
     </footer>
 
 </body>
