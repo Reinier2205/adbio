@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Prevents auto-zoom on mobile while allowing vertical scroll -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Campfire Cravings - Travel Games</title>
     <style>
@@ -86,7 +85,7 @@
             border-color: #fbbf24;
         }
 
-        /* --- LARDER (INPUT) STYLE --- */
+        /* --- INPUT GROUP --- */
         .input-group {
             display: flex;
             gap: 10px;
@@ -116,9 +115,9 @@
             font-size: 14px;
         }
 
-        /* Compact Larder List */
+        /* Compact Pantry List */
         .larder-list {
-            max-height: 180px; /* Reduced height for compactness */
+            max-height: 180px; 
             overflow-y: auto;
             border: 1px solid rgba(251, 191, 36, 0.2);
             border-radius: 8px;
@@ -130,7 +129,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px; /* Reduced padding for compactness */
+            padding: 8px 12px;
             border-bottom: 1px solid rgba(251, 191, 36, 0.1);
             animation: slideIn 0.3s ease-out;
             font-size: 0.95rem;
@@ -142,7 +141,7 @@
             background: rgba(0,0,0,0.1);
         }
 
-        /* --- PICKER AREA --- */
+        /* --- DINNER BELL AREA --- */
         .randomizer-area {
             text-align: center;
             padding: 10px 0;
@@ -214,33 +213,35 @@
         <div class="card">
             <div class="header">
                 <h1>Campfire Cravings</h1>
-                <p>Holiday Meal Planner</p>
+                <p>The Dinner Party Planner</p>
             </div>
 
             <div class="tabs">
-                <button id="tab-larder" class="tab-btn active" onclick="switchTab('larder')">Stock Larder</button>
+                <button id="tab-larder" class="tab-btn active" onclick="switchTab('larder')">Provision Pantry</button>
                 <button id="tab-picker" class="tab-btn" onclick="switchTab('picker')">Dinner Bell</button>
             </div>
 
+            <!-- TAB 1: PROVISION PANTRY -->
             <div id="section-larder">
                 <div class="input-group">
-                    <input type="text" id="meal-input" placeholder="Enter meal..." onkeypress="handleKey(event)" inputmode="text">
+                    <input type="text" id="meal-input" placeholder="Stock the pantry..." onkeypress="handleKey(event)" inputmode="text">
                     <button class="btn-add" onclick="addMeal()">ADD</button>
                 </div>
 
                 <div id="larder-container" class="larder-list"></div>
                 
                 <p style="font-size: 0.75rem; margin-top: 12px; text-align: center; opacity: 0.6;">
-                    Mark items to skip them in the draw.
+                    Mark items to flag them as served!
                 </p>
             </div>
 
+            <!-- TAB 2: DINNER BELL -->
             <div id="section-picker" class="hidden">
                 <div class="randomizer-area">
                     <div id="fire-icon" class="campfire-icon">🔥</div>
-                    <div id="result-text" class="result-display">What's for dinner?</div>
+                    <div id="result-text" class="result-display">Who's hungry?</div>
                     
-                    <button id="draw-btn" class="btn btn-gold" onclick="drawMeal()">Roll the Dice</button>
+                    <button id="draw-btn" class="btn btn-gold" onclick="drawMeal()">Ring the Bell</button>
                     <button id="serve-btn" class="btn btn-outline hidden" onclick="markAsServed()">Flag as Served</button>
                 </div>
             </div>
@@ -252,11 +253,9 @@
     </div>
 
     <script>
-        // State management
         let meals = [];
         let currentDrawIndex = -1;
 
-        // Load data on start
         function loadData() {
             const saved = localStorage.getItem('campfire_meals');
             if (saved) {
@@ -276,9 +275,9 @@
             document.getElementById('tab-picker').classList.toggle('active', tab === 'picker');
             
             if (tab === 'picker') {
-                document.getElementById('result-text').textContent = "Ready to stoke the fire?";
+                document.getElementById('result-text').textContent = "Ready to start the party?";
                 document.getElementById('serve-btn').classList.add('hidden');
-                document.getElementById('draw-btn').textContent = "Roll the Dice";
+                document.getElementById('draw-btn').textContent = "Ring the Bell";
             }
         }
 
@@ -308,7 +307,7 @@
         function renderLarder() {
             const container = document.getElementById('larder-container');
             if (!meals || meals.length === 0) {
-                container.innerHTML = '<div class="empty-state">Larder is empty...</div>';
+                container.innerHTML = '<div class="empty-state">Pantry is empty...</div>';
                 return;
             }
 
@@ -338,7 +337,7 @@
         function drawMeal() {
             const available = meals.filter(m => !m.served);
             if (available.length === 0) {
-                document.getElementById('result-text').textContent = "Larder is empty!";
+                document.getElementById('result-text').textContent = "Pantry is empty!";
                 return;
             }
 
@@ -348,7 +347,7 @@
             
             btn.disabled = true;
             fire.classList.add('flame-anim');
-            result.textContent = "Cooking...";
+            result.textContent = "Selecting...";
 
             let counter = 0;
             const interval = setInterval(() => {
@@ -358,12 +357,12 @@
                 if (counter > 15) {
                     clearInterval(interval);
                     const finalChoice = available[Math.floor(Math.random() * available.length)];
-                    result.textContent = "🍴 " + finalChoice.name;
+                    result.textContent = "✨ " + finalChoice.name + " ✨";
                     currentDrawIndex = meals.findIndex(m => m.id === finalChoice.id);
                     
                     fire.classList.remove('flame-anim');
                     btn.disabled = false;
-                    btn.textContent = "Draw Again";
+                    btn.textContent = "Pick Another";
                     document.getElementById('serve-btn').classList.remove('hidden');
                 }
             }, 80);
@@ -374,7 +373,7 @@
                 meals[currentDrawIndex].served = true;
                 save();
                 renderLarder();
-                document.getElementById('result-text').textContent = "Served! Check the larder.";
+                document.getElementById('result-text').textContent = "Party on! Served.";
                 document.getElementById('serve-btn').classList.add('hidden');
                 currentDrawIndex = -1;
             }
@@ -384,20 +383,16 @@
             localStorage.setItem('campfire_meals', JSON.stringify(meals));
         }
 
-        // Direct event listener for better reliability on mobile
         document.getElementById('clear-btn').addEventListener('click', function() {
-            // Using a custom prompt feel if alert fails, but standard confirm should work 
-            // once triggered by a direct user click event.
-            if (window.confirm("Clear your entire holiday inventory?")) {
+            if (window.confirm("Empty the Provision Pantry?")) {
                 meals = [];
                 localStorage.removeItem('campfire_meals');
                 renderLarder();
                 switchTab('larder');
-                document.getElementById('result-text').textContent = "What's for dinner?";
+                document.getElementById('result-text').textContent = "Who's hungry?";
             }
         });
 
-        // Start
         loadData();
     </script>
 </body>
