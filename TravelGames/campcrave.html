@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Prevents auto-zoom on mobile while allowing vertical scroll -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Campfire Cravings - Travel Games</title>
+    <style>
+        /* --- SIGNATURE STYLE SYNC --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a5f20 0%, #0d4f1a 50%, #0a5f20 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            color: #bbf7d0;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(5, 35, 20, 0.95);
+            border: 4px solid #fbbf24;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fbbf24, #fcd34d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 5px;
+        }
+
+        /* --- TABS --- */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            background: rgba(16, 60, 32, 0.8);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            color: #bbf7d0;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .tab-btn.active {
+            background: #fbbf24;
+            color: #064e3b;
+            border-color: #fbbf24;
+        }
+
+        /* --- LARDER (INPUT) STYLE --- */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #fbbf24;
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            outline: none;
+            font-size: 16px; 
+            user-select: text;
+        }
+
+        .btn-add {
+            background: #fbbf24;
+            color: #064e3b;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Compact Larder List */
+        .larder-list {
+            max-height: 180px; /* Reduced height for compactness */
+            overflow-y: auto;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px; /* Reduced padding for compactness */
+            border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+            animation: slideIn 0.3s ease-out;
+            font-size: 0.95rem;
+        }
+
+        .meal-item.served {
+            opacity: 0.4;
+            text-decoration: line-through;
+            background: rgba(0,0,0,0.1);
+        }
+
+        /* --- PICKER AREA --- */
+        .randomizer-area {
+            text-align: center;
+            padding: 10px 0;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .campfire-icon {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 10px #fbbf24);
+        }
+        .result-display {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #fbbf24;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            padding: 15px;
+            border: 2px dashed rgba(251, 191, 36, 0.3);
+            border-radius: 12px;
+            width: 100%;
+            line-height: 1.2;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        .btn-gold {
+            background: linear-gradient(to right, #fbbf24, #fcd34d);
+            color: #064e3b;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #fbbf24;
+            color: #fbbf24;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .flame-anim { animation: flicker 0.4s infinite alternate; }
+        @keyframes flicker {
+            from { opacity: 0.7; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1.1); }
+        }
+
+        .hidden { display: none; }
+        .empty-state { text-align: center; padding: 30px; opacity: 0.5; font-style: italic; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Campfire Cravings</h1>
+                <p>Holiday Meal Planner</p>
+            </div>
+
+            <div class="tabs">
+                <button id="tab-larder" class="tab-btn active" onclick="switchTab('larder')">Stock Larder</button>
+                <button id="tab-picker" class="tab-btn" onclick="switchTab('picker')">Dinner Bell</button>
+            </div>
+
+            <div id="section-larder">
+                <div class="input-group">
+                    <input type="text" id="meal-input" placeholder="Enter meal..." onkeypress="handleKey(event)" inputmode="text">
+                    <button class="btn-add" onclick="addMeal()">ADD</button>
+                </div>
+
+                <div id="larder-container" class="larder-list"></div>
+                
+                <p style="font-size: 0.75rem; margin-top: 12px; text-align: center; opacity: 0.6;">
+                    Mark items to skip them in the draw.
+                </p>
+            </div>
+
+            <div id="section-picker" class="hidden">
+                <div class="randomizer-area">
+                    <div id="fire-icon" class="campfire-icon">🔥</div>
+                    <div id="result-text" class="result-display">What's for dinner?</div>
+                    
+                    <button id="draw-btn" class="btn btn-gold" onclick="drawMeal()">Roll the Dice</button>
+                    <button id="serve-btn" class="btn btn-outline hidden" onclick="markAsServed()">Flag as Served</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; border-top: 1px solid rgba(251,191,36,0.2); padding-top: 15px;">
+                <button id="clear-btn" class="btn btn-outline" style="padding: 10px; font-size: 0.8rem; border-width: 1px; margin-top: 0;">Clear Holiday Inventory</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let meals = [];
+        let currentDrawIndex = -1;
+
+        // Load data on start
+        function loadData() {
+            const saved = localStorage.getItem('campfire_meals');
+            if (saved) {
+                try {
+                    meals = JSON.parse(saved);
+                } catch (e) {
+                    meals = [];
+                }
+            }
+            renderLarder();
+        }
+
+        function switchTab(tab) {
+            document.getElementById('section-larder').classList.toggle('hidden', tab !== 'larder');
+            document.getElementById('section-picker').classList.toggle('hidden', tab !== 'picker');
+            document.getElementById('tab-larder').classList.toggle('active', tab === 'larder');
+            document.getElementById('tab-picker').classList.toggle('active', tab === 'picker');
+            
+            if (tab === 'picker') {
+                document.getElementById('result-text').textContent = "Ready to stoke the fire?";
+                document.getElementById('serve-btn').classList.add('hidden');
+                document.getElementById('draw-btn').textContent = "Roll the Dice";
+            }
+        }
+
+        function handleKey(e) {
+            if (e.key === 'Enter') {
+                addMeal();
+                e.target.blur(); 
+            }
+        }
+
+        function addMeal() {
+            const input = document.getElementById('meal-input');
+            const name = input.value.trim();
+            if (!name) return;
+
+            meals.push({
+                name: name,
+                served: false,
+                id: Date.now()
+            });
+
+            input.value = '';
+            save();
+            renderLarder();
+        }
+
+        function renderLarder() {
+            const container = document.getElementById('larder-container');
+            if (!meals || meals.length === 0) {
+                container.innerHTML = '<div class="empty-state">Larder is empty...</div>';
+                return;
+            }
+
+            container.innerHTML = meals.map((meal, index) => `
+                <div class="meal-item ${meal.served ? 'served' : ''}">
+                    <span style="flex: 1; padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${meal.name}</span>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <input type="checkbox" ${meal.served ? 'checked' : ''} onchange="toggleServed(${index})" style="width: 18px; height: 18px; accent-color: #fbbf24;">
+                        <span style="color: #f87171; font-weight: bold; padding: 5px 10px; cursor: pointer;" onclick="removeMeal(${index})">✕</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleServed(index) {
+            meals[index].served = !meals[index].served;
+            save();
+            renderLarder();
+        }
+
+        function removeMeal(index) {
+            meals.splice(index, 1);
+            save();
+            renderLarder();
+        }
+
+        function drawMeal() {
+            const available = meals.filter(m => !m.served);
+            if (available.length === 0) {
+                document.getElementById('result-text').textContent = "Larder is empty!";
+                return;
+            }
+
+            const btn = document.getElementById('draw-btn');
+            const result = document.getElementById('result-text');
+            const fire = document.getElementById('fire-icon');
+            
+            btn.disabled = true;
+            fire.classList.add('flame-anim');
+            result.textContent = "Cooking...";
+
+            let counter = 0;
+            const interval = setInterval(() => {
+                const tempIdx = Math.floor(Math.random() * available.length);
+                result.textContent = available[tempIdx].name;
+                counter++;
+                if (counter > 15) {
+                    clearInterval(interval);
+                    const finalChoice = available[Math.floor(Math.random() * available.length)];
+                    result.textContent = "🍴 " + finalChoice.name;
+                    currentDrawIndex = meals.findIndex(m => m.id === finalChoice.id);
+                    
+                    fire.classList.remove('flame-anim');
+                    btn.disabled = false;
+                    btn.textContent = "Draw Again";
+                    document.getElementById('serve-btn').classList.remove('hidden');
+                }
+            }, 80);
+        }
+
+        function markAsServed() {
+            if (currentDrawIndex > -1) {
+                meals[currentDrawIndex].served = true;
+                save();
+                renderLarder();
+                document.getElementById('result-text').textContent = "Served! Check the larder.";
+                document.getElementById('serve-btn').classList.add('hidden');
+                currentDrawIndex = -1;
+            }
+        }
+
+        function save() {
+            localStorage.setItem('campfire_meals', JSON.stringify(meals));
+        }
+
+        // Direct event listener for better reliability on mobile
+        document.getElementById('clear-btn').addEventListener('click', function() {
+            // Using a custom prompt feel if alert fails, but standard confirm should work 
+            // once triggered by a direct user click event.
+            if (window.confirm("Clear your entire holiday inventory?")) {
+                meals = [];
+                localStorage.removeItem('campfire_meals');
+                renderLarder();
+                switchTab('larder');
+                document.getElementById('result-text').textContent = "What's for dinner?";
+            }
+        });
+
+        // Start
+        loadData();
+    </script>
+</body>
+</html>
+
