@@ -241,7 +241,7 @@ export function AddLinkForm({ onClose }: { onClose?: () => void }) {
                 onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
                 onBlur={handleUrlBlur}
                 onPaste={handleUrlPaste}
-                className="w-full pl-10 pr-4 py-3 border border-input-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-main placeholder-muted text-base"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white/80 dark:bg-[rgba(30,41,59,0.85)] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-base shadow-sm"
                 placeholder="https://example.com"
                 required
               />
@@ -274,7 +274,7 @@ export function AddLinkForm({ onClose }: { onClose?: () => void }) {
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 rows={1}
-                className="w-full px-4 py-3 pr-10 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-main placeholder-muted text-base"
+                className="w-full px-4 py-3 pr-10 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white/80 dark:bg-[rgba(30,41,59,0.85)] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none text-base shadow-sm"
               placeholder="Link title (auto-generated if empty)"
                 style={{overflow: 'hidden'}}
               />
