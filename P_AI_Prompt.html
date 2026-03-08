@@ -204,8 +204,14 @@
             <small style="color: #666;">Get from: <a href="https://console.anthropic.com/" target="_blank">Anthropic Console</a></small>
           </div>
           
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Cloudflare Worker URL (Optional):</label>
+            <input type="text" id="worker-url" placeholder="https://your-worker.your-subdomain.workers.dev" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <small style="color: #666;">Leave empty to use direct API calls (may not work due to CORS)</small>
+          </div>
+          
           <div style="background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 12px;">
-            <strong>⚠️ Important:</strong> API keys are stored locally in your browser and never sent to our servers. However, due to CORS restrictions, direct API calls may not work from this page. Consider using a local proxy server for production use.
+            <strong>⚠️ Important:</strong> API keys are stored locally in your browser and never sent to our servers. However, due to CORS restrictions, direct API calls may not work from this page. Consider using a Cloudflare Worker proxy for production use.
           </div>
           
           <div style="text-align: right;">
@@ -400,7 +406,230 @@
     // Add keyboard shortcuts
     document.addEventListener('keydown', function(e) {
       if (e.ctrlKey && e.key === 'Enter') {
-        combineAndCopyChat('Gemini');
+        sendToAI('gemini');
+      }
+    });
+
+    // API Integration Functions
+    async function sendToAI(provider) {
+      var input1 = document.getElementById("input1").value;
+      var input2 = document.getElementById("input2").value;
+      var input3 = document.getElementById("input3").value;
+      var input4 = document.getElementById("input4").value;
+
+      if (!input1 && !input2) {
+        showErrorMessage("Please enter some content before sending to AI");
+        return;
+      }
+
+      var prompt = "Context: " + input1 + ". Specific Information: " + input2 + ". Intent/Goal: " + input3 + ". Response Format: " + input4;
+      document.getElementById("output").value = prompt;
+
+      // Check if API key exists
+      var apiKey = localStorage.getItem(provider + '_api_key');
+      if (!apiKey) {
+        showErrorMessage(`${provider.toUpperCase()} API key not configured. Click "Setup API Keys" to configure.`);
+        return;
+      }
+
+      // Show loading state
+      showLoadingState(provider);
+      
+      try {
+        var response;
+        switch(provider) {
+          case 'openai':
+            response = await callOpenAI(prompt, apiKey);
+            break;
+          case 'gemini':
+            response = await callGemini(prompt, apiKey);
+            break;
+          case 'claude':
+            response = await callClaude(prompt, apiKey);
+            break;
+          default:
+            throw new Error('Unknown provider');
+        }
+        
+        displayResponse(response, provider);
+      } catch (error) {
+        console.error('API Error:', error);
+        showErrorMessage(`Error calling ${provider.toUpperCase()}: ${error.message}. This might be due to CORS restrictions. Consider using the "Open" buttons instead.`);
+        hideLoadingState();
+      }
+    }
+
+    async function callOpenAI(prompt, apiKey) {
+      return await callWorkerProxy('openai', prompt, apiKey);
+    }
+
+    async function callGemini(prompt, apiKey) {
+      return await callWorkerProxy('gemini', prompt, apiKey);
+    }
+
+    async function callClaude(prompt, apiKey) {
+      return await callWorkerProxy('claude', prompt, apiKey);
+    }
+
+    async function callWorkerProxy(provider, prompt, apiKey) {
+      // Get worker URL from settings or use default
+      const WORKER_URL = localStorage.getItem('worker_url') || 'https://your-worker-name.your-subdomain.workers.dev';
+      
+      if (WORKER_URL === 'https://your-worker-name.your-subdomain.workers.dev') {
+        throw new Error('Please configure your Cloudflare Worker URL in the API settings');
+      }
+      
+      const response = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: provider,
+          prompt: prompt,
+          apiKey: apiKey
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Worker Error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Parse response based on provider
+      switch (provider) {
+        case 'openai':
+          return data.choices[0].message.content;
+        case 'gemini':
+          return data.candidates[0].content.parts[0].text;
+        case 'claude':
+          return data.content[0].text;
+        default:
+          throw new Error('Unknown provider response format');
+      }
+    }
+
+    function showLoadingState(provider) {
+      var btn = document.getElementById(provider + '-btn');
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Thinking...';
+      
+      document.getElementById('response-section').style.display = 'block';
+      document.getElementById('response-content').innerHTML = `
+        <div style="text-align: center; color: #666;">
+          <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #0078d4; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <p>Getting response from ${provider.toUpperCase()}...</p>
+        </div>
+      `;
+      
+      // Add spinner animation if not exists
+      if (!document.getElementById('spinner-style')) {
+        var style = document.createElement('style');
+        style.id = 'spinner-style';
+        style.textContent = `
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+
+    function hideLoadingState() {
+      var buttons = ['openai-btn', 'gemini-btn', 'claude-btn'];
+      buttons.forEach(btnId => {
+        var btn = document.getElementById(btnId);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = btn.innerHTML.replace('⏳ Thinking...', btn.getAttribute('data-original') || '🤖 Ask AI');
+        }
+      });
+    }
+
+    function displayResponse(response, provider) {
+      hideLoadingState();
+      
+      document.getElementById('response-section').style.display = 'block';
+      document.getElementById('response-content').innerHTML = `
+        <div style="margin-bottom: 10px; font-size: 12px; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+          Response from ${provider.toUpperCase()}:
+        </div>
+        <div style="white-space: pre-wrap; line-height: 1.5;">${response}</div>
+      `;
+      
+      // Scroll to response
+      document.getElementById('response-section').scrollIntoView({ behavior: 'smooth' });
+      
+      showSuccessMessage(`Response received from ${provider.toUpperCase()}!`);
+    }
+
+    function showErrorMessage(message) {
+      var errorDiv = document.createElement('div');
+      errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #dc3545;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 1000;
+        max-width: 300px;
+        font-size: 14px;
+      `;
+      errorDiv.textContent = message;
+      
+      document.body.appendChild(errorDiv);
+      
+      setTimeout(() => {
+        if (errorDiv.parentNode) {
+          errorDiv.remove();
+        }
+      }, 5000);
+    }
+
+    // API Setup Functions
+    function showApiSetup() {
+      document.getElementById('api-modal').style.display = 'block';
+      
+      // Load existing keys
+      document.getElementById('openai-key').value = localStorage.getItem('openai_api_key') || '';
+      document.getElementById('gemini-key').value = localStorage.getItem('gemini_api_key') || '';
+      document.getElementById('claude-key').value = localStorage.getItem('claude_api_key') || '';
+      document.getElementById('worker-url').value = localStorage.getItem('worker_url') || '';
+    }
+
+    function closeApiSetup() {
+      document.getElementById('api-modal').style.display = 'none';
+    }
+
+    function saveApiKeys() {
+      var openaiKey = document.getElementById('openai-key').value.trim();
+      var geminiKey = document.getElementById('gemini-key').value.trim();
+      var claudeKey = document.getElementById('claude-key').value.trim();
+      var workerUrl = document.getElementById('worker-url').value.trim();
+      
+      if (openaiKey) localStorage.setItem('openai_api_key', openaiKey);
+      if (geminiKey) localStorage.setItem('gemini_api_key', geminiKey);
+      if (claudeKey) localStorage.setItem('claude_api_key', claudeKey);
+      if (workerUrl) localStorage.setItem('worker_url', workerUrl);
+      
+      closeApiSetup();
+      showSuccessMessage('API keys saved successfully!');
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(e) {
+      var modal = document.getElementById('api-modal');
+      if (e.target === modal) {
+        closeApiSetup();
       }
     });
 
@@ -434,6 +663,11 @@
       inputs.forEach(input => {
         input.addEventListener('input', autoSave);
       });
+      
+      // Store original button text
+      document.getElementById('openai-btn').setAttribute('data-original', '🤖 Ask ChatGPT');
+      document.getElementById('gemini-btn').setAttribute('data-original', '🤖 Ask Gemini');
+      document.getElementById('claude-btn').setAttribute('data-original', '🤖 Ask Claude');
     });
   </script>
 </body>
