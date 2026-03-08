@@ -18,7 +18,8 @@
             --gold: #d4af37;
             --gold-light: #ffd700;
             --light-gold: #fff8e1;
-            --silver: #e0e0e0;
+            --silver: #f5f5f5;
+            --silver-bright: #ffffff;
             --dark-red: #8c0000;
             --square-size: 70px;
         }
@@ -133,7 +134,7 @@
         }
 
         /* Strict Color Inheritance */
-        .piece.white { color: var(--silver) !important; }
+        .piece.white { color: var(--silver-bright) !important; }
         .piece.black { color: var(--gold) !important; }
 
         /* Reversed pawn styling - ensure color is preserved during rotation */
@@ -251,9 +252,9 @@
     <div class="casino-table" id="table">
         <h1>CHESS TACTICS</h1>
         
-        <div id="game-status">WHITE'S TURN</div>
+        <div id="game-status">SILVER'S TURN</div>
 
-        <!-- Black Reserve (Gold) -->
+        <!-- Gold Reserve -->
         <div id="reserve-black" class="reserve-tray"></div>
 
         <!-- Board -->
@@ -261,7 +262,7 @@
             <div id="board" class="chess-board"></div>
         </div>
 
-        <!-- White Reserve (Silver) -->
+        <!-- Silver Reserve -->
         <div id="reserve-white" class="reserve-tray"></div>
 
         <div class="controls-row">
@@ -339,8 +340,9 @@
             renderReserve('black');
 
             const statusEl = document.getElementById('game-status');
-            statusEl.innerText = `${turn.toUpperCase()}'S TURN`;
-            statusEl.style.color = turn === 'white' ? 'var(--silver)' : 'var(--gold)';
+            const displayTurn = turn === 'white' ? 'SILVER' : 'GOLD';
+            statusEl.innerText = `${displayTurn}'S TURN`;
+            statusEl.style.color = turn === 'white' ? 'var(--silver-bright)' : 'var(--gold)';
         }
 
         function renderReserve(color) {
@@ -473,7 +475,8 @@
 
         function endGame(winner) {
             gameOver = true;
-            document.getElementById('winMessage').innerText = `${winner.toUpperCase()} WINS THE POT!`;
+            const displayWinner = winner === 'white' ? 'SILVER' : 'GOLD';
+            document.getElementById('winMessage').innerText = `${displayWinner} WINS THE POT!`;
             document.getElementById('winModal').style.display = 'flex';
         }
 
