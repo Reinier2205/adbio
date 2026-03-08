@@ -420,10 +420,12 @@
             } else if (p.type === 'N') {
                 [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]].forEach(o => add(r+o[0], c+o[1]));
             } else if (p.type === 'P') {
-                // Correct Direction Logic:
-                // White starts moving Down (+1), Black starts moving Up (-1)
-                // If isReversed is true, they go the opposite way.
-                const dir = p.color === 'white' ? (p.isReversed ? -1 : 1) : (p.isReversed ? 1 : -1);
+                // Pawn movement logic:
+                // Silver (white) starts flipped (isReversed=true), moves DOWN (+1)
+                // When flipped at bottom, moves UP (-1)
+                // Gold (black) starts upright (isReversed=false), moves UP (-1)
+                // When flipped at top, moves DOWN (+1)
+                const dir = p.color === 'white' ? (p.isReversed ? 1 : -1) : (p.isReversed ? 1 : -1);
                 add(r + dir, c, false, true); 
                 add(r + dir, c + 1, true, false);
                 add(r + dir, c - 1, true, false);
@@ -433,7 +435,7 @@
 
         function executeMove(sel, targetIdx) {
             const movingPiece = (sel.type === 'reserve') 
-                ? { type: sel.piece, color: sel.color, isReversed: false } 
+                ? { type: sel.piece, color: sel.color, isReversed: sel.color === 'white' ? true : false } 
                 : board[sel.index];
 
             const captured = board[targetIdx];
@@ -447,14 +449,14 @@
             // Handle Pawn Reversal/Bouncing
             if (movingPiece.type === 'P') {
                 const targetRow = Math.floor(targetIdx / 4);
-                // If White hits the bottom (Row 3), it reverses to move Up
-                if (movingPiece.color === 'white' && targetRow === 3) movingPiece.isReversed = true;
-                // If White hits the top (Row 0) while reversed, it goes back Down
-                else if (movingPiece.color === 'white' && targetRow === 0) movingPiece.isReversed = false;
+                // Silver (white) starts flipped, moves down. When it hits bottom (Row 3), flip to move up
+                if (movingPiece.color === 'white' && targetRow === 3) movingPiece.isReversed = false;
+                // When it hits top (Row 0) while moving up, flip back to move down
+                else if (movingPiece.color === 'white' && targetRow === 0) movingPiece.isReversed = true;
                 
-                // If Black hits the top (Row 0), it reverses to move Down
+                // Gold (black) starts upright, moves up. When it hits top (Row 0), flip to move down
                 if (movingPiece.color === 'black' && targetRow === 0) movingPiece.isReversed = true;
-                // If Black hits the bottom (Row 3) while reversed, it goes back Up
+                // When it hits bottom (Row 3) while moving down, flip back to move up
                 else if (movingPiece.color === 'black' && targetRow === 3) movingPiece.isReversed = false;
             }
 
