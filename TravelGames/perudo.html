@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perudo: The Pirate's Code</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --felt-green: #0a4821;
+            --dark-wood: #1a0f12;
+            --gold: #ffd700;
+            --light-gold: #fff8e1;
+            --dice-red: #9a1428;
+            --dice-red-dark: #4a070f;
+            --accent-orange: #ff8c00;
+            --velvet-blue: #050a18;
+            --velvet-blue-glow: #0d1b3e;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark-wood);
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://www.transparenttextures.com/patterns/dark-leather.png'), radial-gradient(circle, #4d322e 0%, var(--dark-wood) 100%);
+            color: var(--light-gold);
+            margin: 0;
+            padding: 2rem 1rem;
+            line-height: 1.6;
+        }
+
+        .casino-table {
+            background: var(--felt-green);
+            background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            border: 12px solid #3d2522;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.5), 0 0 0 5px var(--gold);
+            border-radius: 30px;
+            padding: 2.5rem 1.5rem;
+            width: 100%;
+            max-width: 950px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bg-icon {
+            position: absolute;
+            font-size: 15rem;
+            color: rgba(0,0,0,0.05);
+            z-index: 0;
+            pointer-events: none;
+        }
+        .bg-1 { top: -20px; right: -20px; transform: rotate(15deg); }
+        .bg-2 { bottom: -20px; left: -20px; transform: rotate(-15deg); }
+
+        header { position: relative; z-index: 1; text-align: center; margin-bottom: 3rem; }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-shadow: 4px 4px 0px #000;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--accent-orange);
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .section {
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 0;
+        }
+
+        .ace-icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--dice-red);
+            border-radius: 4px;
+            vertical-align: middle;
+            margin: 0 5px;
+            position: relative;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+        .ace-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px; height: 6px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .strategy-box {
+            background: linear-gradient(135deg, var(--velvet-blue), var(--velvet-blue-glow)) !important;
+            background-image: url('https://www.transparenttextures.com/patterns/padded-little.png') !important;
+            border: 2px solid var(--gold);
+            padding: 2rem 1.5rem;
+            border-radius: 20px;
+            margin-top: 2rem;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+        }
+
+        .strategy-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 1.5rem;
+        }
+
+        .tip-card {
+            background: rgba(255,255,255,0.05);
+            padding: 1.2rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--gold);
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem; }
+        th { text-align: left; color: var(--gold); padding: 10px; border-bottom: 2px solid var(--gold); }
+        td { padding: 12px 10px; border-bottom: 1px solid rgba(255,215,0,0.1); vertical-align: middle; }
+
+        .highlight-text { color: var(--gold); font-weight: bold; }
+
+        .home-btn {
+            position: absolute; top: 15px; left: 15px;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--gold); color: #111;
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; font-size: 1.2rem;
+            box-shadow: 0 4px 0 #b8860b; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="casino-table">
+        <i class="fa-solid fa-dice bg-icon bg-1"></i>
+        <i class="fa-solid fa-flag bg-icon bg-2"></i>
+
+        <a href="index.html" class="home-btn"><i class="fa-solid fa-anchor"></i></a>
+        
+        <header>
+            <h1>Perudo</h1>
+            <div class="subtitle">The Art of the Pirate's Bluff</div>
+        </header>
+
+        <div class="section">
+            <h2><i class="fa-solid fa-flag"></i> The Objective</h2>
+            <p>Listen close, ye scoundrel. Your greatest weapon isn't your dice—it's your <strong>poker face</strong>. Be the last pirate standing with at least one die in your cup. When the "Dudo" (Liar) is called, someone is losing a die. Make sure it isn't you, or you'll be walking the plank.</p>
+        </div>
+
+        <div class="section">
+            <h2><i class="fa-solid fa-scroll"></i> The Pirate's Code</h2>
+            <p>Every pirate makes a collective bid on how many dice of a certain value exist under <strong>all</strong> cups combined.</p>
+            <ul>
+                <li><strong>The Bid:</strong> "I think there be <span class="highlight-text">Seven 5s</span> on this table."</li>
+                <li><strong>The Response:</strong> The next pirate must either <span class="highlight-text">Raise</span> the bid or call <span class="highlight-text">Dudo</span> (Liar!).</li>
+                <li><strong>Aces are Wild:</strong> <span class="ace-icon"></span> <strong>1s count as whatever number is being bid!</strong> They be the ultimate game-changers.</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2><i class="fa-solid fa-compass"></i> The Bidding Ladder</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>To Move...</th>
+                        <th>The Pirate's Rule</th>
+                        <th>Example (from Five 4s)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Raise Count</strong></td>
+                        <td>Keep the value, increase quantity.</td>
+                        <td><span class="highlight-text">Six 4s</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Raise Value</strong></td>
+                        <td>Keep quantity, increase value.</td>
+                        <td><span class="highlight-text">Five 6s</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Jump TO Aces</strong></td>
+                        <td>Halve the quantity (round up).</td>
+                        <td><span class="highlight-text">Three Aces</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Leave Aces</strong></td>
+                        <td>Double Ace bid and add one.</td>
+                        <td>Three Aces &rarr; <span class="highlight-text">Seven 2s</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="strategy-box">
+            <h2 style="color: var(--gold);"><i class="fa-solid fa-user-secret"></i> Secret Strategy Tips</h2>
+            <p style="opacity: 0.9;">Master these hidden tactics to dominate the tavern:</p>
+            
+            <div class="strategy-grid">
+                <div class="tip-card">
+                    <h4><i class="fa-solid fa-calculator"></i> The Rule of Thirds</h4>
+                    <p>Statistically, <span class="highlight-text">1/3</span> of the dice on the table will match your bid (Value + Aces). Use this math to spot a lying dog.</p>
+                </div>
+                <div class="tip-card">
+                    <h4><i class="fa-solid fa-ghost"></i> The "Phantom" Bid</h4>
+                    <p>Bid high on a number you <strong>don't</strong> have. It traps others into thinking those dice are safe on the table.</p>
+                </div>
+                <div class="tip-card">
+                    <h4><i class="fa-solid fa-shield-halved"></i> The Ace Trap</h4>
+                    <p>Switching to Aces resets the pressure. Use it to flush out the other pirates' hidden wild cards.</p>
+                </div>
+                <div class="tip-card">
+                    <h4><i class="fa-solid fa-eye"></i> The Palafico Round</h4>
+                    <p>When you have 1 die left, you are Palafico. In this special round, <strong>Aces are NOT wild</strong>. Don't forget the change in the code!</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer style="text-align: center; margin-top: 2rem; border-top: 1px solid rgba(255,215,0,0.2); padding-top: 1rem; color: var(--gold); opacity: 0.6; font-size: 0.8rem;">
+        <p><i class="fa-solid fa-flag"></i> Play at your own risk. May the best liar win. <i class="fa-solid fa-flag"></i></p>
+    </footer>
+
+</body>
+</html>
