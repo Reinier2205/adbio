@@ -107,10 +107,48 @@ body{
 .footer{display:flex;justify-content:space-between;align-items:center;color:var(--light-gold);margin-top:10px;font-size:.95rem}
 
 /* help modal */
-.help-modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.75); visibility:hidden; opacity:0; transition:all .18s ease; z-index:1000 }
+.help-modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.8); visibility:hidden; opacity:0; transition:all .3s ease; z-index:1000 }
 .help-modal.show{ visibility:visible; opacity:1 }
-.help-panel{ width:92%; max-width:680px; background:linear-gradient(145deg,#3e1e24,#2a1a1f); color:var(--light-gold); border-radius:12px; padding:14px; border:3px solid var(--gold); box-shadow:0 0 30px var(--gold) }
-.help-panel h3{ font-family:'Cinzel',serif;color:var(--gold-light); margin-bottom:8px }
+.help-panel{ 
+  width:92%; max-width:600px; 
+  background:linear-gradient(145deg,#3e1e24,#2a1a1f); 
+  color:var(--light-gold); 
+  border-radius:15px; 
+  padding:2rem; 
+  border:3px solid var(--gold); 
+  box-shadow:0 0 30px var(--gold);
+  max-height:80vh;
+  overflow-y:auto;
+}
+.help-panel h3{ 
+  font-family:'Cinzel',serif;
+  color:var(--gold-light); 
+  font-size:1.8rem;
+  margin-bottom:1rem;
+  text-align:center;
+}
+.help-panel ul{
+  margin-left:1.5rem;
+  line-height:1.8;
+}
+.help-panel li{
+  margin-bottom:0.5rem;
+}
+.help-panel .btn{
+  margin-top:1.5rem;
+  background:linear-gradient(145deg, var(--gold), #b8860b);
+  color:white;
+  font-weight:600;
+  padding:0.5rem 1.5rem;
+  border:2px solid #111;
+  border-radius:8px;
+  cursor:pointer;
+  box-shadow:0 4px 0 #111;
+}
+.help-panel .btn:active{
+  transform:translateY(2px);
+  box-shadow:0 2px 0 #111;
+}
 
 /* Home button (top-left) */
 .home-btn{
@@ -120,6 +158,16 @@ body{
     box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);text-decoration:none;z-index:10;
 }
 .home-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
+
+/* Help button (top-right) */
+.help-btn{
+    position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;
+    border:2px solid #111;background:radial-gradient(circle at 30% 30%, var(--gold), #b8860b);
+    display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+    box-shadow:0 3px 0 #111, 0 5px 10px rgba(0,0,0,0.5);
+    color:#111;font-weight:700;cursor:pointer;z-index:10;
+}
+.help-btn:active{ transform: translateY(2px); box-shadow:0 1px 0 #111; }
 
 /* small screens */
 @media (max-width:520px){
@@ -131,6 +179,7 @@ body{
 <body>
   <main class="container" role="main" aria-label="Fox and Geese Travel Edition">
     <a href="index.html" class="home-btn" aria-label="Home">🏠</a>
+    <button id="btnRules" class="help-btn" aria-label="Help">?</button>
     <div class="header">
       <div class="title">Fox &amp; Geese — Travel Edition</div>
 
@@ -151,7 +200,6 @@ body{
         </select>
 
         <button id="btnNew" class="btn" aria-label="Start new game">New Game</button>
-        <button id="btnRules" class="btn alt" aria-label="Show rules">Rules</button>
       </div>
     </div>
 
@@ -180,7 +228,7 @@ body{
         <li>Win: Geese win if fox has no legal move. Fox wins if geese are reduced to 2 or fewer.</li>
       </ul>
       <div style="text-align:center;margin-top:8px">
-        <button id="closeRules" class="btn">Close</button>
+        <button id="closeRules" class="btn">GOT IT</button>
       </div>
     </div>
   </div>
