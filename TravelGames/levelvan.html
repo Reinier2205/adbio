@@ -5,7 +5,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a1628">
 <title>LevelVan</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -21,7 +20,7 @@
                radial-gradient(ellipse at 80% 80%,rgba(0,212,255,0.08),transparent 50%);pointer-events:none}
   .grid{position:fixed;inset:0;z-index:0;
     background-image:linear-gradient(rgba(0,212,255,0.04) 1px,transparent 1px),
-                     linear-gradient(90deg,rgba(0,212,255,0.04) 1px,transparent 1px);
+    linear-gradient(90deg,rgba(0,212,255,0.04) 1px,transparent 1px);
     background-size:40px 40px;pointer-events:none}
   .screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;
     align-items:center;justify-content:center;padding:16px;overflow-y:auto}
@@ -30,7 +29,7 @@
 /* HOME */
 .logo{font-family:‘Orbitron’,monospace;font-size:1.9rem;font-weight:900;
 color:var(–accent);text-shadow:var(–glow);letter-spacing:4px;margin-bottom:4px}
-.tagline{color:var(–dim);font-size:.7rem;letter-spacing:2px;margin-bottom:32px}
+.tagline{color:var(–dim);font-size:.7rem;letter-spacing:2px;margin-bottom:28px}
 .cards{display:flex;gap:14px;width:100%;max-width:340px}
 .card{flex:1;padding:22px 14px;border-radius:12px;background:var(–panel);
 border:1px solid var(–border);cursor:pointer;text-align:center;
@@ -56,41 +55,40 @@ font-size:.8rem;padding:4px 8px;font-family:‘Share Tech Mono’,monospace}
 .dot.err{background:var(–danger)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
 .pnl{background:var(–panel);border:1px solid var(–border);border-radius:12px;
-padding:16px;width:100%;max-width:380px;flex-shrink:0}
-.pnl-t{font-family:‘Orbitron’,monospace;font-size:.58rem;color:var(–dim);
-letter-spacing:3px;margin-bottom:12px}
+padding:14px;width:100%;max-width:380px;flex-shrink:0}
+.pnl-t{font-family:‘Orbitron’,monospace;font-size:.57rem;color:var(–dim);
+letter-spacing:3px;margin-bottom:10px}
 .btn{display:flex;align-items:center;justify-content:center;padding:12px;
 border-radius:8px;border:none;cursor:pointer;font-family:‘Orbitron’,monospace;
 font-size:.68rem;font-weight:700;letter-spacing:2px;transition:all .2s;width:100%}
 .btn:active{transform:scale(.97)}
 .btn-p{background:var(–accent);color:var(–bg);box-shadow:var(–glow)}
 .btn-s{background:var(–accent2);color:var(–bg);box-shadow:var(–glow2)}
-.btn-g{background:transparent;color:var(–dim);border:1px solid var(–border)}
 .btn:disabled{opacity:.4;pointer-events:none}
-.g8{height:8px;flex-shrink:0}.g12{height:12px;flex-shrink:0}
+.g8{height:8px;flex-shrink:0}
 .tip{font-size:.6rem;color:var(–dim);text-align:center;line-height:1.7;max-width:340px}
 
-/* QR */
-#qr-canvas{border-radius:8px;background:#fff;padding:8px;display:block}
-.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-.qr-label{font-size:.6rem;color:var(–dim);letter-spacing:2px;text-align:center}
+/* QR display */
+.qr-outer{background:#fff;padding:10px;border-radius:10px;display:inline-block}
+#qr-target, #d-qr-target{width:200px;height:200px}
+.qr-label{font-size:.6rem;color:var(–accent2);letter-spacing:2px;text-align:center;margin-top:6px}
 
 /* CAMERA */
-#cam-wrap{position:relative;width:100%;max-width:280px;border-radius:12px;overflow:hidden;flex-shrink:0}
-#cam-video{width:100%;display:block;border-radius:12px}
-.scan-line{position:absolute;left:10%;right:10%;height:2px;background:var(–accent);
-box-shadow:var(–glow);animation:scanmove 2s ease-in-out infinite;top:20%}
-@keyframes scanmove{0%,100%{top:20%}50%{top:75%}}
-#scan-canvas{display:none}
+.cam-box{position:relative;width:100%;max-width:280px;border-radius:10px;overflow:hidden}
+.cam-box video{width:100%;display:block}
+.scan-line{position:absolute;left:8%;right:8%;height:2px;background:var(–accent);
+box-shadow:var(–glow);animation:scan 2s ease-in-out infinite;top:20%;pointer-events:none}
+@keyframes scan{0%,100%{top:15%}50%{top:80%}}
 
 /* BUBBLE */
 .bwrap{position:relative;width:140px;height:140px;flex-shrink:0}
 .bring{position:absolute;inset:0;border-radius:50%;border:2px solid var(–border);
 background:radial-gradient(circle at 40% 35%,rgba(0,212,255,0.06),var(–bg2) 70%)}
 .ch{position:absolute;background:rgba(0,212,255,0.15)}
-.ch-h{top:50%;left:0;right:0;height:1px;transform:translateY(-50%)}
-.ch-v{left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%)}
+.ch.h{top:50%;left:0;right:0;height:1px;transform:translateY(-50%)}
+.ch.v{left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%)}
 .cring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
 width:34px;height:34px;border-radius:50%;border:1px solid var(–dim);opacity:.5}
 .bubble{position:absolute;width:26px;height:26px;border-radius:50%;
@@ -101,19 +99,17 @@ transition:left .08s,top .08s}
 .bubble.lv{background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.6),rgba(0,255,136,.8) 60%,rgba(0,180,80,.6));
 border-color:var(–accent2);box-shadow:0 0 12px rgba(0,255,136,.6)}
 
-/* ANGLES / BADGE */
 .arow{display:flex;gap:20px;align-items:center}
 .ai{text-align:center}
 .ax{font-size:.56rem;color:var(–dim);letter-spacing:2px}
 .av{font-family:‘Orbitron’,monospace;font-size:1rem}
 .ok{color:var(–accent2)}.wn{color:var(–warn)}.bd{color:var(–danger)}
 .badge{font-family:‘Orbitron’,monospace;font-size:.72rem;letter-spacing:3px;
-padding:6px 14px;border-radius:4px;border:1px solid var(–border);text-align:center}
-.badge.LV{color:var(–accent2);border-color:var(–accent2);text-shadow:0 0 8px var(–accent2)}
+padding:6px 14px;border-radius:4px;border:1px solid var(–border)}
+.badge.LV{color:var(–accent2);border-color:var(–accent2)}
 .badge.CL{color:var(–warn);border-color:var(–warn)}
 .badge.AD{color:var(–danger);border-color:var(–danger)}
 
-/* BARS */
 .bars{display:flex;gap:10px;width:100%;max-width:380px;flex-shrink:0}
 .bw{flex:1}
 .bl{font-size:.56rem;color:var(–dim);letter-spacing:2px;margin-bottom:4px;
@@ -124,7 +120,6 @@ border:1px solid var(–border);overflow:hidden}
 opacity:.3;transform:translateX(-50%)}
 .bf{position:absolute;top:1px;bottom:1px;border-radius:4px;transition:all .1s}
 
-/* ARROWS */
 .agrid{display:grid;grid-template-columns:1fr 1fr 1fr;
 grid-template-rows:1fr 1fr 1fr;width:170px;height:170px;gap:3px;flex-shrink:0}
 .ac{display:flex;align-items:center;justify-content:center}
@@ -140,6 +135,7 @@ box-shadow:0 0 12px rgba(255,68,68,.4);opacity:1;animation:throb .5s ease infini
 border:1px solid var(–border);display:flex;align-items:center;
 justify-content:center;font-size:1.3rem}
 .cico.lv{border-color:var(–accent2);box-shadow:0 0 12px rgba(0,255,136,.4)}
+
 .instr{font-family:‘Orbitron’,monospace;font-size:.82rem;font-weight:700;
 letter-spacing:2px;text-align:center;padding:10px 12px;border-radius:8px;
 min-height:44px;display:flex;align-items:center;justify-content:center;
@@ -151,13 +147,12 @@ width:100%;max-width:380px;transition:all .3s;flex-shrink:0}
 .instr.wt{color:var(–dim)}
 
 .log{width:100%;max-width:380px;background:var(–bg2);border:1px solid var(–border);
-border-radius:8px;padding:7px;font-size:.56rem;color:var(–dim);
-max-height:60px;overflow-y:auto;flex-shrink:0;line-height:1.6}
+border-radius:8px;padding:7px;font-size:.55rem;color:var(–dim);
+max-height:58px;overflow-y:auto;flex-shrink:0;line-height:1.6}
 .dots::after{content:’’;animation:da 1.5s infinite}
 @keyframes da{0%{content:’.’}33%{content:’..’}66%{content:’…’}100%{content:’’}}
 
-#sensor-screen,#display-screen{justify-content:flex-start;padding-top:40px;gap:7px}
-#step2-sensor,#step2-display{display:none}
+#sensor-screen,#display-screen{justify-content:flex-start;padding-top:38px;gap:7px}
 </style>
 
 </head>
@@ -181,12 +176,8 @@ max-height:60px;overflow-y:auto;flex-shrink:0;line-height:1.6}
       <div class="card-desc">Hold this and read the level</div>
     </div>
   </div>
-  <div class="g12"></div>
-  <div class="tip">
-    ✅ Works with <strong style="color:var(--accent)">no mobile signal</strong><br>
-    One device creates a WiFi hotspot · Other device joins it<br>
-    Then open the app on both · Android &amp; iOS
-  </div>
+  <div class="g8"></div>
+  <div class="tip">✅ Works offline · One device hotspot · Other joins it<br>Cloudflare loads the page · QR pairs the devices</div>
 </div>
 
 <!-- SENSOR -->
@@ -195,40 +186,43 @@ max-height:60px;overflow-y:auto;flex-shrink:0;line-height:1.6}
   <div class="hdr">
     <button class="back" onclick="goHome()">← BACK</button>
     <div class="hdr-title">SENSOR</div>
-    <div class="stbar"><div class="dot" id="s-dot"></div><span id="s-st">READY</span></div>
+    <div class="stbar"><div class="dot busy" id="s-dot"></div><span id="s-st">STARTING</span></div>
   </div>
 
-  <!-- STEP 1: Generate QR offer -->
+  <!-- Pairing view -->
 
-  <div id="step1-sensor">
-    <div class="pnl">
-      <div class="pnl-t">STEP 1 — SHOW THIS QR CODE TO THE DISPLAY DEVICE</div>
-      <div class="qr-wrap">
-        <canvas id="qr-canvas" width="200" height="200"></canvas>
-        <div class="qr-label" id="qr-status">Generating offer QR...</div>
-      </div>
+  <div id="s-pair" style="width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:7px">
+    <div class="pnl" style="text-align:center">
+      <div class="pnl-t">STEP 1 — SHOW THIS QR TO THE DISPLAY DEVICE</div>
+      <div class="qr-outer"><div id="qr-target"></div></div>
+      <div class="qr-label" id="qr-label">Generating...</div>
     </div>
-    <div class="g8"></div>
-    <div class="pnl">
-      <div class="pnl-t">STEP 2 — SCAN THE ANSWER QR FROM DISPLAY DEVICE</div>
-      <div id="cam-wrap">
-        <video id="s-cam-video" autoplay playsinline muted></video>
-        <div class="scan-line"></div>
-        <canvas id="s-scan-canvas"></canvas>
-      </div>
-      <div class="g8"></div>
-      <div class="tip" id="s-scan-hint">Point camera at the QR shown on Display device</div>
-      <div class="g8"></div>
-      <button class="btn btn-p" onclick="startSensorCamera()" id="s-cam-btn" style="font-size:.62rem">START CAMERA TO SCAN ANSWER</button>
-    </div>
+
+```
+<div class="pnl">
+  <div class="pnl-t">STEP 2 — SCAN THE ANSWER QR FROM DISPLAY DEVICE</div>
+  <div id="s-cam-box" class="cam-box" style="display:none;margin:0 auto">
+    <video id="s-video" autoplay playsinline muted></video>
+    <div class="scan-line"></div>
+    <canvas id="s-canvas" style="display:none"></canvas>
+  </div>
+  <div class="g8"></div>
+  <button class="btn btn-p" id="s-cam-btn" onclick="startSensorCam()" style="font-size:.62rem">START CAMERA TO SCAN ANSWER</button>
+</div>
+
+<div id="perm-wrap" style="display:none;width:100%">
+  <button class="btn btn-p" onclick="requestMotion()" style="font-size:.62rem">ALLOW MOTION SENSOR (iOS)</button>
+</div>
+```
+
   </div>
 
-  <!-- STEP 2: Live level display -->
+  <!-- Live level view -->
 
-  <div id="step2-sensor">
+  <div id="s-live" style="display:none;width:100%;max-width:380px;flex-direction:column;align-items:center;gap:7px">
     <div class="bwrap">
       <div class="bring"></div>
-      <div class="ch ch-h"></div><div class="ch ch-v"></div>
+      <div class="ch h"></div><div class="ch v"></div>
       <div class="cring"></div>
       <div class="bubble" id="s-bubble" style="left:50%;top:50%"></div>
     </div>
@@ -243,14 +237,9 @@ max-height:60px;overflow-y:auto;flex-shrink:0;line-height:1.6}
       <div class="bw"><div class="bl"><span>PITCH</span><span id="s-pt-d"></span></div>
         <div class="bt"><div class="bc"></div><div class="bf" id="s-pt-b"></div></div></div>
     </div>
-    <div class="stbar" style="justify-content:center">
-      <div class="dot ok"></div><span style="color:var(--accent2);font-size:.65rem">STREAMING TO DISPLAY</span>
-    </div>
+    <div class="stbar"><div class="dot ok"></div><span style="color:var(--accent2);font-size:.65rem">STREAMING TO DISPLAY</span></div>
   </div>
 
-  <div id="perm-wrap" style="display:none;width:100%;max-width:380px">
-    <button class="btn btn-p" onclick="requestMotion()" style="font-size:.62rem">TAP TO ALLOW MOTION (iOS)</button>
-  </div>
   <div class="log" id="s-log"></div>
 </div>
 
@@ -263,34 +252,33 @@ max-height:60px;overflow-y:auto;flex-shrink:0;line-height:1.6}
     <div class="stbar"><div class="dot" id="d-dot"></div><span id="d-st">READY</span></div>
   </div>
 
-  <!-- STEP 1: Scan sensor QR, show answer QR -->
+  <!-- Pairing view -->
 
-  <div id="step1-display">
+  <div id="d-pair" style="width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:7px">
     <div class="pnl">
       <div class="pnl-t">STEP 1 — SCAN THE QR CODE FROM THE SENSOR DEVICE</div>
-      <div id="d-cam-wrap">
-        <video id="d-cam-video" autoplay playsinline muted style="width:100%;display:block;border-radius:8px"></video>
+      <div id="d-cam-box" class="cam-box" style="display:none;margin:0 auto">
+        <video id="d-video" autoplay playsinline muted></video>
         <div class="scan-line"></div>
-        <canvas id="d-scan-canvas" style="display:none"></canvas>
+        <canvas id="d-canvas" style="display:none"></canvas>
       </div>
       <div class="g8"></div>
-      <div class="tip" id="d-scan-hint">Point at the QR shown on Sensor device</div>
-      <div class="g8"></div>
-      <button class="btn btn-s" onclick="startDisplayCamera()" id="d-cam-btn" style="font-size:.62rem">START CAMERA TO SCAN</button>
+      <button class="btn btn-s" id="d-cam-btn" onclick="startDisplayCam()" style="font-size:.62rem">START CAMERA TO SCAN</button>
     </div>
-    <div class="g8"></div>
-    <div class="pnl" id="d-answer-panel" style="display:none">
-      <div class="pnl-t">STEP 2 — SHOW THIS QR CODE TO THE SENSOR DEVICE</div>
-      <div class="qr-wrap">
-        <canvas id="d-qr-canvas" width="200" height="200"></canvas>
-        <div class="qr-label">Sensor device scans this to complete pairing</div>
-      </div>
-    </div>
+
+```
+<div class="pnl" id="d-answer-pnl" style="display:none;text-align:center">
+  <div class="pnl-t">STEP 2 — SHOW THIS QR TO THE SENSOR DEVICE</div>
+  <div class="qr-outer"><div id="d-qr-target"></div></div>
+  <div class="qr-label">Sensor scans this to complete pairing</div>
+</div>
+```
+
   </div>
 
-  <!-- STEP 2: Live display -->
+  <!-- Live display view -->
 
-  <div id="step2-display" style="display:none;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:7px">
+  <div id="d-live" style="display:none;width:100%;max-width:380px;flex-direction:column;align-items:center;gap:7px">
     <div class="agrid">
       <div class="ac"></div>
       <div class="ac"><div class="arr" id="d-up">⬆️</div></div>
@@ -318,393 +306,396 @@ max-height:60px;overflow-y:auto;flex-shrink:0;line-height:1.6}
   <div class="log" id="d-log"></div>
 </div>
 
-<!-- QR libs -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <script>
 // ═══════════════════════════════════════════════════════
-//  LevelVan — Fully offline WebRTC via QR code exchange
+//  LevelVan — Offline WebRTC via COMPACT QR pairing
 //
-//  HOW IT WORKS:
-//  1. Sensor generates WebRTC offer → encodes as QR
-//  2. Display scans QR → generates answer → encodes as QR
-//  3. Sensor scans answer QR → P2P connection established
-//  4. Level data streams peer-to-peer over local WiFi/hotspot
-//  NO INTERNET NEEDED AFTER PAGE LOAD
+//  KEY FIX: SDP is stripped to ~200 chars before QR encoding
+//  Full SDP (~3000 chars) made QR too dense to scan.
+//  We extract only the 4 fields needed to reconnect SDP,
+//  encode as a tiny JSON, then rebuild full SDP on the other side.
 // ═══════════════════════════════════════════════════════
 
-const LT=1.5, CT=4.0, MD=15;
-let mode=null, pc=null, dc=null, motionActive=false;
-let sCamStream=null, dCamStream=null;
-let scanInterval=null;
+const LT=1.5,CT=4.0,MD=15;
+let mode=null,pc=null,dc=null,motionActive=false;
+let sCamStream=null,dCamStream=null,scanTick=null;
 
+// ── STUN only — for local hotspot P2P, STUN isn't even needed
+// but we include it as fallback for when WiFi is available
 const ICE={iceServers:[
   {urls:'stun:stun.l.google.com:19302'},
   {urls:'stun:stun1.l.google.com:19302'}
 ]};
 
-// jsQR — inline minimal decoder via CDN
-function loadJsQR(cb){
-  if(window.jsQR){cb();return;}
-  const s=document.createElement('script');
-  s.src='https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js';
-  s.onload=cb; s.onerror=()=>sLog('jsQR load failed');
+// ══════════════════════════════════════════
+//  SDP COMPRESSION — The critical fix
+//  Strips a ~3000 char SDP down to ~180 chars
+//  by extracting only the 4 essential fields
+// ══════════════════════════════════════════
+function compressSDP(sdp) {
+  const lines = sdp.sdp.split('\r\n');
+  const get = (prefix) => {
+    const l = lines.find(l => l.startsWith(prefix));
+    return l ? l.slice(prefix.length) : '';
+  };
+  // Extract only what's needed to reconstruct
+  const mini = {
+    t: sdp.type,                                    // 'offer' or 'answer'
+    u: get('a=ice-ufrag:'),                         // ICE username
+    p: get('a=ice-pwd:'),                           // ICE password
+    f: get('a=fingerprint:').replace('sha-256 ',''),// DTLS fingerprint
+    c: (get('a=candidate:') || '').split(' ').slice(0,8).join(' ') // first candidate
+  };
+  return JSON.stringify(mini);
+}
+
+function rebuildSDP(mini) {
+  const m = JSON.parse(mini);
+  // Reconstruct a minimal but valid SDP
+  const fp = m.f;
+  const sdpStr = [
+    'v=0',
+    'o=- 1 1 IN IP4 0.0.0.0',
+    's=-',
+    't=0 0',
+    'a=msid-semantic: WMS',
+    'm=application 9 UDP/DTLS/SCTP webrtc-datachannel',
+    'c=IN IP4 0.0.0.0',
+    'a=ice-ufrag:' + m.u,
+    'a=ice-pwd:' + m.p,
+    'a=ice-options:trickle',
+    'a=fingerprint:sha-256 ' + fp,
+    'a=setup:' + (m.t === 'offer' ? 'actpass' : 'active'),
+    'a=mid:0',
+    'a=sctp-port:5000',
+    'a=max-message-size:262144',
+    m.c ? 'a=candidate:' + m.c : ''
+  ].filter(Boolean).join('\r\n') + '\r\n';
+  return { type: m.t, sdp: sdpStr };
+}
+
+// ── Load libraries
+function loadLib(src, cb) {
+  if (document.querySelector('script[src="'+src+'"]')) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = src; s.onload = cb;
+  s.onerror = () => log('⚠️ Failed to load: ' + src.split('/').pop());
   document.head.appendChild(s);
 }
+function loadQR(cb)  { loadLib('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', cb); }
+function loadJsQR(cb){ loadLib('https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js', cb); }
 
-// ── Utils
-const el=id=>document.getElementById(id);
-function setDot(p,st,tx){
-  el(p+'-dot').className='dot'+(st?' '+st:'');
-  el(p+'-st').textContent=tx;
+// ── Helpers
+const el = id => document.getElementById(id);
+function setDot(p,st,tx){ el(p+'-dot').className='dot'+(st?' '+st:''); el(p+'-st').textContent=tx; }
+function sLog(m){ const e=el('s-log'); if(e){e.innerHTML+=m+'<br>';e.scrollTop=e.scrollHeight;} console.log('[S]',m); }
+function dLog(m){ const e=el('d-log'); if(e){e.innerHTML+=m+'<br>';e.scrollTop=e.scrollHeight;} console.log('[D]',m); }
+
+function showLive(prefix) {
+  el(prefix+'-pair').style.display = 'none';
+  const live = el(prefix+'-live');
+  live.style.display = 'flex';
+  live.style.flexDirection = 'column';
+  live.style.alignItems = 'center';
 }
-function sLog(m){const e=el('s-log');if(e){e.innerHTML+=m+'<br>';e.scrollTop=e.scrollHeight;}console.log('[S]',m)}
-function dLog(m){const e=el('d-log');if(e){e.innerHTML+=m+'<br>';e.scrollTop=e.scrollHeight;}console.log('[D]',m)}
-function showEl(id){el(id).style.display='flex';el(id).style.flexDirection='column';el(id).style.alignItems='center';el(id).style.gap='7px'}
-function hideEl(id){el(id).style.display='none'}
+
+// ── QR generation
+function makeQR(targetId, text) {
+  const target = el(targetId);
+  target.innerHTML = '';
+  new QRCode(target, {
+    text, width: 200, height: 200,
+    colorDark: '#000000', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.L  // lowest error correction = fewer dots = scannable!
+  });
+  console.log('QR data length:', text.length, 'chars');
+}
 
 // ── Navigation
-window.goHome=function(){cleanup();showScreen('home-screen')};
-window.startSensor=function(){mode='sensor';showScreen('sensor-screen');initSensor()};
-window.startDisplay=function(){mode='display';showScreen('display-screen');initDisplay()};
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));el(id).classList.remove('hidden');}
+window.goHome    = function(){ cleanup(); showScreen('home-screen'); };
+window.startSensor = function(){ mode='sensor'; showScreen('sensor-screen'); initSensor(); };
+window.startDisplay = function(){ mode='display'; showScreen('display-screen'); };
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden')); el(id).classList.remove('hidden'); }
 
-// ════════════════════════════
-//  QR GENERATION
-// ════════════════════════════
-function drawQR(canvasId, text){
-  const canvas=el(canvasId);
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  // Use qrcodejs to render into a temp div then grab the image
-  const tmp=document.createElement('div');
-  document.body.appendChild(tmp);
-  new QRCode(tmp,{text,width:200,height:200,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.L});
-  setTimeout(()=>{
-    const img=tmp.querySelector('img')||tmp.querySelector('canvas');
-    if(img){
-      const i=new Image();
-      i.onload=()=>{ctx.drawImage(i,0,0,200,200);};
-      i.src=img.src||(img.tagName==='CANVAS'?img.toDataURL():'');
-      if(img.tagName==='CANVAS') ctx.drawImage(img,0,0,200,200);
-    }
-    document.body.removeChild(tmp);
-  },300);
-}
-
-// ════════════════════════════
-//  SENSOR SIDE
-// ════════════════════════════
-async function initSensor(){
-  setDot('s','busy','GENERATING OFFER');
+// ══════════════════════════════
+//  SENSOR
+// ══════════════════════════════
+async function initSensor() {
+  setDot('s','busy','GENERATING QR');
   setupMotion();
 
-  pc=new RTCPeerConnection(ICE);
-  dc=pc.createDataChannel('lv',{ordered:false,maxRetransmits:0});
-  dc.onopen=()=>{
-    setDot('s','ok','DISPLAY CONNECTED');
-    sLog('Connected! Streaming...');
-    hideEl('step1-sensor');
-    el('step2-sensor').style.display='flex';
-    el('step2-sensor').style.flexDirection='column';
-    el('step2-sensor').style.alignItems='center';
-    el('step2-sensor').style.gap='7px';
-    stopSensorCamera();
-  };
-  dc.onclose=()=>setDot('s','busy','DISPLAY DISCONNECTED');
+  pc = new RTCPeerConnection(ICE);
+  dc = pc.createDataChannel('lv', {ordered:false, maxRetransmits:0});
+  dc.onopen  = () => { setDot('s','ok','DISPLAY CONNECTED'); sLog('Connected!'); stopSensorCam(); showLive('s'); };
+  dc.onclose = () => setDot('s','busy','DISPLAY LEFT');
 
-  pc.onconnectionstatechange=()=>{
-    sLog('PC: '+pc.connectionState);
-    if(pc.connectionState==='failed') setDot('s','err','CONN FAILED');
+  pc.onconnectionstatechange = () => {
+    sLog('State: ' + pc.connectionState);
+    if (pc.connectionState === 'failed') setDot('s','err','FAILED — retry');
   };
 
-  // Gather all ICE then show QR
-  pc.onicecandidate=()=>{};
-  pc.onicegatheringstatechange=async()=>{
-    if(pc.iceGatheringState==='complete'){
-      const sdp=JSON.stringify(pc.localDescription);
-      // Compress: just use the raw SDP string, encode to base64
-      const b64=btoa(unescape(encodeURIComponent(sdp)));
-      sLog('Offer ready ('+b64.length+' chars)');
-      el('qr-status').textContent='Offer QR ready — show to Display';
-      drawQR('qr-canvas','LVOF:'+b64);
-      setDot('s','busy','WAITING FOR DISPLAY TO SCAN');
-    }
+  // Wait for ICE then show compact QR
+  pc.onicegatheringstatechange = () => {
+    if (pc.iceGatheringState === 'complete') publishOfferQR();
   };
 
-  const offer=await pc.createOffer();
+  // Fallback: publish after 6s regardless
+  setTimeout(() => { if (pc && pc.iceGatheringState !== 'complete') publishOfferQR(); }, 6000);
+
+  const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
-  sLog('Gathering ICE (5-10s)...');
-
-  // Timeout fallback — some networks slow ICE
-  setTimeout(async()=>{
-    if(pc&&pc.iceGatheringState!=='complete'){
-      sLog('ICE timeout — publishing partial offer');
-      pc.onicegatheringstatechange=()=>{};
-      const sdp=JSON.stringify(pc.localDescription);
-      const b64=btoa(unescape(encodeURIComponent(sdp)));
-      drawQR('qr-canvas','LVOF:'+b64);
-      el('qr-status').textContent='Offer ready (partial ICE)';
-      setDot('s','busy','WAITING FOR DISPLAY TO SCAN');
-    }
-  },8000);
+  sLog('Gathering ICE...');
 }
 
-window.startSensorCamera=async function(){
-  loadJsQR(()=>{});
-  el('s-cam-btn').style.display='none';
-  try{
-    sCamStream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}},audio:false
+function publishOfferQR() {
+  if (!pc || !pc.localDescription) return;
+  try {
+    const compact = compressSDP(pc.localDescription);
+    const payload = 'LVO:' + compact;
+    sLog('QR payload: ' + payload.length + ' chars ✓');
+    loadQR(() => {
+      makeQR('qr-target', payload);
+      el('qr-label').textContent = '✓ Ready — show to Display device';
+      setDot('s','busy','WAITING FOR DISPLAY TO SCAN');
     });
-    el('s-cam-video').srcObject=sCamStream;
-    el('s-cam-video').style.display='block';
-    sLog('Camera started — scan answer QR');
-    setDot('s','busy','SCAN ANSWER FROM DISPLAY');
-    scanInterval=setInterval(()=>scanFrame('s-cam-video','s-scan-canvas',processSensorScan),300);
-  }catch(e){sLog('Camera error: '+e.message);}
+  } catch(e) { sLog('QR error: ' + e.message); }
+}
+
+window.startSensorCam = async function() {
+  loadJsQR(() => sLog('jsQR ready'));
+  el('s-cam-btn').style.display = 'none';
+  try {
+    sCamStream = await navigator.mediaDevices.getUserMedia({
+      video: {facingMode:'environment', width:{ideal:1280}, height:{ideal:720}}, audio:false
+    });
+    el('s-video').srcObject = sCamStream;
+    el('s-cam-box').style.display = 'block';
+    setDot('s','busy','SCAN ANSWER QR FROM DISPLAY');
+    sLog('Camera on — scan answer QR');
+    scanTick = setInterval(() => scanFrame('s-video','s-canvas', handleSensorScan), 250);
+  } catch(e) { sLog('Camera: ' + e.message); }
 };
 
-async function processSensorScan(data){
-  if(!data.startsWith('LVAN:')) return false;
-  sLog('Answer QR detected!');
-  stopSensorCamera();
-  const b64=data.slice(5);
-  try{
-    const sdp=JSON.parse(decodeURIComponent(escape(atob(b64))));
+async function handleSensorScan(data) {
+  if (!data.startsWith('LVA:')) return false;
+  sLog('Answer QR scanned!');
+  stopSensorCam();
+  try {
+    const sdp = rebuildSDP(data.slice(4));
     await pc.setRemoteDescription(sdp);
-    sLog('Answer set — connecting P2P...');
-    setDot('s','busy','CONNECTING');
-  }catch(e){sLog('SRD error: '+e.message);}
+    sLog('Connecting P2P...');
+    setDot('s','busy','CONNECTING...');
+  } catch(e) { sLog('Answer error: ' + e.message); }
   return true;
 }
 
-function stopSensorCamera(){
-  clearInterval(scanInterval); scanInterval=null;
-  if(sCamStream){sCamStream.getTracks().forEach(t=>t.stop());sCamStream=null;}
-  el('s-cam-video').style.display='none';
+function stopSensorCam() {
+  clearInterval(scanTick); scanTick = null;
+  if (sCamStream) { sCamStream.getTracks().forEach(t=>t.stop()); sCamStream = null; }
+  el('s-cam-box').style.display = 'none';
 }
 
-// ════════════════════════════
-//  DISPLAY SIDE
-// ════════════════════════════
-function initDisplay(){
-  setDot('d','','READY');
-  dLog('Start camera to scan Sensor QR');
-}
-
-window.startDisplayCamera=async function(){
-  loadJsQR(()=>{});
-  el('d-cam-btn').style.display='none';
-  try{
-    dCamStream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}},audio:false
+// ══════════════════════════════
+//  DISPLAY
+// ══════════════════════════════
+window.startDisplayCam = async function() {
+  loadJsQR(() => dLog('jsQR ready'));
+  el('d-cam-btn').style.display = 'none';
+  try {
+    dCamStream = await navigator.mediaDevices.getUserMedia({
+      video: {facingMode:'environment', width:{ideal:1280}, height:{ideal:720}}, audio:false
     });
-    el('d-cam-video').srcObject=dCamStream;
+    el('d-video').srcObject = dCamStream;
+    el('d-cam-box').style.display = 'block';
+    setDot('d','busy','SCAN OFFER QR FROM SENSOR');
     dLog('Camera on — scan Sensor QR');
-    setDot('d','busy','SCANNING OFFER QR');
-    scanInterval=setInterval(()=>scanFrame('d-cam-video','d-scan-canvas',processDisplayScan),300);
-  }catch(e){dLog('Camera error: '+e.message);}
+    scanTick = setInterval(() => scanFrame('d-video','d-canvas', handleDisplayScan), 250);
+  } catch(e) { dLog('Camera: ' + e.message); }
 };
 
-async function processDisplayScan(data){
-  if(!data.startsWith('LVOF:')) return false;
-  dLog('Offer QR detected!');
-  stopDisplayCamera();
-  const b64=data.slice(5);
-  try{
-    const sdp=JSON.parse(decodeURIComponent(escape(atob(b64))));
-    pc=new RTCPeerConnection(ICE);
+async function handleDisplayScan(data) {
+  if (!data.startsWith('LVO:')) return false;
+  dLog('Offer QR scanned!');
+  stopDisplayCam();
+  try {
+    const sdp = rebuildSDP(data.slice(4));
+    pc = new RTCPeerConnection(ICE);
 
-    pc.ondatachannel=e=>{
-      dc=e.channel;
-      dc.onopen=()=>{
-        setDot('d','ok','SENSOR CONNECTED');
-        dLog('Connected! Receiving data...');
-        hideEl('step1-display');
-        el('step2-display').style.display='flex';
-        el('step2-display').style.flexDirection='column';
-        el('step2-display').style.alignItems='center';
-      };
-      dc.onclose=()=>setDot('d','err','SENSOR LOST');
-      dc.onmessage=e=>{try{const d=JSON.parse(e.data);updateDisplayUI(d.roll,d.pitch);}catch(_){}};
+    pc.ondatachannel = e => {
+      dc = e.channel;
+      dc.onopen  = () => { setDot('d','ok','SENSOR CONNECTED'); dLog('Live!'); showLive('d'); };
+      dc.onclose = () => setDot('d','err','SENSOR LOST');
+      dc.onmessage = e => { try { const d=JSON.parse(e.data); updateDisplayUI(d.roll,d.pitch); } catch(_){} };
     };
-
-    pc.onconnectionstatechange=()=>{
-      dLog('PC: '+pc.connectionState);
-      if(pc.connectionState==='failed') setDot('d','err','CONN FAILED');
+    pc.onconnectionstatechange = () => {
+      dLog('State: ' + pc.connectionState);
+      if (pc.connectionState === 'failed') setDot('d','err','FAILED — retry');
     };
 
     // Gather ICE then show answer QR
-    pc.onicegatheringstatechange=async()=>{
-      if(pc.iceGatheringState==='complete'){
-        const b64a=btoa(unescape(encodeURIComponent(JSON.stringify(pc.localDescription))));
-        dLog('Answer QR ready — show to Sensor');
-        el('d-answer-panel').style.display='block';
-        drawQR('d-qr-canvas','LVAN:'+b64a);
-        setDot('d','busy','SHOW THIS QR TO SENSOR');
-      }
+    pc.onicegatheringstatechange = () => {
+      if (pc.iceGatheringState === 'complete') publishAnswerQR();
     };
+    setTimeout(() => { if (pc && pc.iceGatheringState !== 'complete') publishAnswerQR(); }, 6000);
 
     await pc.setRemoteDescription(sdp);
-    const answer=await pc.createAnswer();
+    const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     dLog('Gathering ICE for answer...');
-
-    // Timeout fallback
-    setTimeout(()=>{
-      if(pc&&pc.iceGatheringState!=='complete'){
-        pc.onicegatheringstatechange=()=>{};
-        const b64a=btoa(unescape(encodeURIComponent(JSON.stringify(pc.localDescription))));
-        el('d-answer-panel').style.display='block';
-        drawQR('d-qr-canvas','LVAN:'+b64a);
-        dLog('Answer QR ready (partial ICE)');
-        setDot('d','busy','SHOW THIS QR TO SENSOR');
-      }
-    },8000);
-
-  }catch(e){dLog('Error: '+e.message);}
+    setDot('d','busy','GENERATING ANSWER QR');
+  } catch(e) { dLog('Error: ' + e.message); }
   return true;
 }
 
-function stopDisplayCamera(){
-  clearInterval(scanInterval); scanInterval=null;
-  if(dCamStream){dCamStream.getTracks().forEach(t=>t.stop());dCamStream=null;}
+function publishAnswerQR() {
+  if (!pc || !pc.localDescription) return;
+  try {
+    const compact = compressSDP(pc.localDescription);
+    const payload = 'LVA:' + compact;
+    dLog('Answer QR: ' + payload.length + ' chars ✓');
+    loadQR(() => {
+      makeQR('d-qr-target', payload);
+      el('d-answer-pnl').style.display = 'block';
+      setDot('d','busy','SHOW THIS QR TO SENSOR');
+    });
+  } catch(e) { dLog('QR error: ' + e.message); }
 }
 
-// ════════════════════════════
-//  QR SCANNING (jsQR)
-// ════════════════════════════
-function scanFrame(videoId, canvasId, callback){
-  if(!window.jsQR) return;
-  const video=el(videoId);
-  if(!video||video.readyState<2) return;
-  const canvas=el(canvasId);
-  canvas.width=video.videoWidth;
-  canvas.height=video.videoHeight;
-  if(!canvas.width||!canvas.height) return;
-  const ctx=canvas.getContext('2d');
-  ctx.drawImage(video,0,0);
-  const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-  const code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
-  if(code){
-    callback(code.data).then(handled=>{
-      if(handled) clearInterval(scanInterval);
-    }).catch(()=>{});
+function stopDisplayCam() {
+  clearInterval(scanTick); scanTick = null;
+  if (dCamStream) { dCamStream.getTracks().forEach(t=>t.stop()); dCamStream = null; }
+  el('d-cam-box').style.display = 'none';
+}
+
+// ══════════════════════════════
+//  QR SCANNER
+// ══════════════════════════════
+function scanFrame(videoId, canvasId, callback) {
+  if (!window.jsQR) return;
+  const video = el(videoId);
+  if (!video || video.readyState < 2 || !video.videoWidth) return;
+  const canvas = el(canvasId);
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(img.data, img.width, img.height, {inversionAttempts:'dontInvert'});
+  if (code) {
+    clearInterval(scanTick);
+    callback(code.data).then(ok => {
+      if (!ok) scanTick = setInterval(() => scanFrame(videoId, canvasId, callback), 250);
+    }).catch(() => {
+      scanTick = setInterval(() => scanFrame(videoId, canvasId, callback), 250);
+    });
   }
 }
 
-// ════════════════════════════
+// ══════════════════════════════
 //  MOTION
-// ════════════════════════════
-function setupMotion(){
-  if(typeof DeviceOrientationEvent==='undefined'){sLog('No motion API');return;}
-  if(typeof DeviceOrientationEvent.requestPermission==='function'){
-    el('perm-wrap').style.display='block';
-    sLog('iOS: tap button to allow motion');
+// ══════════════════════════════
+function setupMotion() {
+  if (typeof DeviceOrientationEvent === 'undefined') { sLog('No motion sensor'); return; }
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    el('perm-wrap').style.display = 'block';
+    sLog('iOS: tap the button to allow motion');
   } else {
-    window.addEventListener('deviceorientation',onOrient,true);
-    motionActive=true; sLog('Motion active');
+    window.addEventListener('deviceorientation', onOrient, true);
+    motionActive = true; sLog('Motion sensor active');
   }
 }
-window.requestMotion=async function(){
-  try{
-    const r=await DeviceOrientationEvent.requestPermission();
-    if(r==='granted'){
-      window.addEventListener('deviceorientation',onOrient,true);
-      motionActive=true; el('perm-wrap').style.display='none';
-      sLog('Motion granted');
+window.requestMotion = async function() {
+  try {
+    const r = await DeviceOrientationEvent.requestPermission();
+    if (r === 'granted') {
+      window.addEventListener('deviceorientation', onOrient, true);
+      motionActive = true;
+      el('perm-wrap').style.display = 'none';
+      sLog('Motion granted ✓');
     }
-  }catch(e){sLog('Perm: '+e.message);}
+  } catch(e) { sLog('Motion error: ' + e.message); }
 };
-function onOrient(ev){
-  if(mode!=='sensor') return;
-  const roll=Math.max(-90,Math.min(90,ev.gamma||0));
-  const pitch=Math.max(-90,Math.min(90,ev.beta||0));
-  updateSensorUI(roll,pitch);
-  if(dc&&dc.readyState==='open'){
-    try{dc.send(JSON.stringify({roll:+roll.toFixed(2),pitch:+pitch.toFixed(2)}));}catch(_){}
+function onOrient(ev) {
+  if (mode !== 'sensor') return;
+  const roll  = Math.max(-90, Math.min(90, ev.gamma || 0));
+  const pitch = Math.max(-90, Math.min(90, ev.beta  || 0));
+  updateSensorUI(roll, pitch);
+  if (dc && dc.readyState === 'open') {
+    try { dc.send(JSON.stringify({roll:+roll.toFixed(2), pitch:+pitch.toFixed(2)})); } catch(_) {}
   }
 }
 
-// ════════════════════════════
+// ══════════════════════════════
 //  SENSOR UI
-// ════════════════════════════
-function updateSensorUI(r,p){
-  const ar=Math.abs(r),ap=Math.abs(p),mx=Math.max(ar,ap);
-  const lv=mx<=LT,cl=mx<=CT;
-  const bx=Math.max(10,Math.min(90,50+(r/30)*50));
-  const by=Math.max(10,Math.min(90,50+(p/30)*50));
-  const b=el('s-bubble');
-  b.style.left=bx+'%';b.style.top=by+'%';
-  b.className='bubble'+(lv?' lv':'');
-  el('s-roll').textContent=r.toFixed(1)+'°';
-  el('s-pitch').textContent=p.toFixed(1)+'°';
-  el('s-roll').className='av '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
-  el('s-pitch').className='av '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
-  const b2=el('s-badge');
-  b2.className='badge '+(lv?'LV':cl?'CL':'AD');
-  b2.textContent=lv?'✓ LEVEL':cl?'≈ CLOSE':'✗ ADJUST';
-  setBar('s-rl-b','s-rl-d',r);setBar('s-pt-b','s-pt-d',p);
+// ══════════════════════════════
+function updateSensorUI(r, p) {
+  const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
+  const lv=mx<=LT, cl=mx<=CT;
+  el('s-bubble').style.left = Math.max(10,Math.min(90, 50+(r/30)*50))+'%';
+  el('s-bubble').style.top  = Math.max(10,Math.min(90, 50+(p/30)*50))+'%';
+  el('s-bubble').className  = 'bubble'+(lv?' lv':'');
+  el('s-roll').textContent  = r.toFixed(1)+'°';
+  el('s-pitch').textContent = p.toFixed(1)+'°';
+  el('s-roll').className    = 'av '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
+  el('s-pitch').className   = 'av '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
+  el('s-badge').className   = 'badge '+(lv?'LV':cl?'CL':'AD');
+  el('s-badge').textContent = lv?'✓ LEVEL':cl?'≈ CLOSE':'✗ ADJUST';
+  setBar('s-rl-b','s-rl-d',r); setBar('s-pt-b','s-pt-d',p);
 }
 
-// ════════════════════════════
+// ══════════════════════════════
 //  DISPLAY UI
-// ════════════════════════════
-function updateDisplayUI(r,p){
-  const ar=Math.abs(r),ap=Math.abs(p),mx=Math.max(ar,ap);
-  const lv=mx<=LT,cl=mx<=CT;
-  ['up','down','left','right'].forEach(a=>el('d-'+a).className='arr');
-  if(!lv){
-    const c=mx>CT?'ad':'cl';
-    if(p>LT)  el('d-up').className='arr '+c;
-    if(p<-LT) el('d-down').className='arr '+c;
-    if(r>LT)  el('d-right').className='arr '+c;
-    if(r<-LT) el('d-left').className='arr '+c;
-  } else ['up','down','left','right'].forEach(a=>el('d-'+a).className='arr ok');
-  el('d-car').className='cico'+(lv?' lv':'');
-  const ins=el('d-instr');
-  ins.className='instr '+(lv?'LV':cl?'CL':'AD');
-  if(lv) ins.textContent='✓ PERFECTLY LEVEL';
-  else if(cl) ins.textContent='≈ ALMOST — FINE ADJUST';
-  else{
+// ══════════════════════════════
+function updateDisplayUI(r, p) {
+  const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
+  const lv=mx<=LT, cl=mx<=CT;
+  ['up','down','left','right'].forEach(a => el('d-'+a).className='arr');
+  if (!lv) {
+    const c = mx>CT ? 'ad' : 'cl';
+    if (p >  LT) el('d-up').className    = 'arr '+c;
+    if (p < -LT) el('d-down').className  = 'arr '+c;
+    if (r >  LT) el('d-right').className = 'arr '+c;
+    if (r < -LT) el('d-left').className  = 'arr '+c;
+  } else ['up','down','left','right'].forEach(a => el('d-'+a).className='arr ok');
+  el('d-car').className = 'cico'+(lv?' lv':'');
+  const ins = el('d-instr');
+  ins.className = 'instr '+(lv?'LV':cl?'CL':'AD');
+  if (lv) ins.textContent = '✓ PERFECTLY LEVEL';
+  else if (cl) ins.textContent = '≈ ALMOST — FINE ADJUST';
+  else {
     const pts=[];
-    if(ap>LT) pts.push(p>0?'LIFT FRONT':'LIFT REAR');
-    if(ar>LT) pts.push(r>0?'LIFT RIGHT':'LIFT LEFT');
-    ins.textContent=pts.join(' + ');
+    if (ap>LT) pts.push(p>0?'LIFT FRONT':'LIFT REAR');
+    if (ar>LT) pts.push(r>0?'LIFT RIGHT':'LIFT LEFT');
+    ins.textContent = pts.join(' + ');
   }
-  el('d-roll').textContent=r.toFixed(1)+'°';
-  el('d-pitch').textContent=p.toFixed(1)+'°';
-  el('d-roll').className='av '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
-  el('d-pitch').className='av '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
-  setBar('d-rl-b','d-rl-d',r);setBar('d-pt-b','d-pt-d',p);
+  el('d-roll').textContent  = r.toFixed(1)+'°';
+  el('d-pitch').textContent = p.toFixed(1)+'°';
+  el('d-roll').className    = 'av '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
+  el('d-pitch').className   = 'av '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
+  setBar('d-rl-b','d-rl-d',r); setBar('d-pt-b','d-pt-d',p);
 }
 
-function setBar(bid,did,angle){
-  const pct=Math.min(Math.abs(angle)/MD*50,48);
-  const lv=Math.abs(angle)<=LT,cl=Math.abs(angle)<=CT;
-  const col=lv?'var(--accent2)':cl?'var(--warn)':'var(--danger)';
-  const bar=el(bid);
-  if(angle>=0){bar.style.left='50%';bar.style.width=pct+'%';}
-  else{bar.style.left=(50-pct)+'%';bar.style.width=pct+'%';}
-  bar.style.background=col;
-  const d=el(did);
-  d.textContent=lv?'✓':angle>0?'+'+angle.toFixed(1)+'°':angle.toFixed(1)+'°';
-  d.style.color=col;
+function setBar(bid, did, angle) {
+  const pct = Math.min(Math.abs(angle)/MD*50, 48);
+  const col = Math.abs(angle)<=LT?'var(--accent2)':Math.abs(angle)<=CT?'var(--warn)':'var(--danger)';
+  const bar = el(bid);
+  if (angle>=0) { bar.style.left='50%'; bar.style.width=pct+'%'; }
+  else { bar.style.left=(50-pct)+'%'; bar.style.width=pct+'%'; }
+  bar.style.background = col;
+  el(did).textContent = Math.abs(angle)<=LT ? '✓' : (angle>0?'+':'')+angle.toFixed(1)+'°';
+  el(did).style.color = col;
 }
 
-// ════════════════════════════
+// ══════════════════════════════
 //  CLEANUP
-// ════════════════════════════
-function cleanup(){
-  clearInterval(scanInterval); scanInterval=null;
-  if(sCamStream){sCamStream.getTracks().forEach(t=>t.stop());sCamStream=null;}
-  if(dCamStream){dCamStream.getTracks().forEach(t=>t.stop());dCamStream=null;}
-  if(dc){try{dc.close();}catch(_){}}; dc=null;
-  if(pc){try{pc.close();}catch(_){}}; pc=null;
-  if(motionActive){window.removeEventListener('deviceorientation',onOrient,true);motionActive=false;}
+// ══════════════════════════════
+function cleanup() {
+  clearInterval(scanTick); scanTick = null;
+  if (sCamStream) { sCamStream.getTracks().forEach(t=>t.stop()); sCamStream=null; }
+  if (dCamStream) { dCamStream.getTracks().forEach(t=>t.stop()); dCamStream=null; }
+  if (dc) { try{dc.close();}catch(_){} dc=null; }
+  if (pc) { try{pc.close();}catch(_){} pc=null; }
+  if (motionActive) { window.removeEventListener('deviceorientation',onOrient,true); motionActive=false; }
   mode=null;
 }
 </script>
