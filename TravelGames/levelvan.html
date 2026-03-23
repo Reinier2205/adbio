@@ -234,7 +234,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
     <!-- 3D caravan view (sensor) -->
     <div class="van3d-scene">
-      <div class="van3d-stage" id="s-van3d">
+      <div class="van3d-stage" id="s-van3d" style="transform:rotateZ(180deg)">
         <svg class="van3d-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="s-bodyFill" x1="0" y1="0" x2="0" y2="1">
@@ -717,11 +717,11 @@ function updateSensor(r, p) {
 
   // 3D tilt — rotateY for roll (left/right), rotateX for pitch (front/back)
   const rx = Math.max(-35, Math.min(35, p * 2.5)) * -1;
-  const ry = Math.max(-35, Math.min(35, r * 2.5));
-  $('s-van3d').style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+  const ry = Math.max(-35, Math.min(35, r * 2.5)) * -1; // inverted for 180° flip
+  $('s-van3d').style.transform = `rotateZ(180deg) rotateX(${rx}deg) rotateY(${ry}deg)`;
 
   // Bubble inside sensor SVG
-  const sbx = 100 + Math.max(-11, Math.min(11, r / 90 * 22));
+  const sbx = 100 + Math.max(-11, Math.min(11, r / 90 * 22)) * -1;
   const sby = 126 + Math.max(-11, Math.min(11, p / 90 * 22));
   const sb = $('s-van-bubble');
   if (sb) {
