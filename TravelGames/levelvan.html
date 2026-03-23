@@ -32,6 +32,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .panel{display:none;flex-direction:column;align-items:center;
   gap:16px;width:100%;max-width:320px;padding-top:52px}
 .panel.active{display:flex}
+/* HOME */
 .logo{font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;
   color:var(--accent);text-shadow:var(--glow);letter-spacing:4px}
 .sub{color:var(--dim);font-size:.68rem;letter-spacing:2px;margin-top:-12px}
@@ -45,23 +46,39 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .card-title{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;letter-spacing:2px}
 .card.s .card-title{color:var(--accent)}.card.d .card-title{color:var(--accent2)}
 .card-desc{font-size:.63rem;color:var(--dim);line-height:1.6}
+/* Status */
 .srow{display:flex;align-items:center;gap:10px;font-size:.7rem;color:var(--dim)}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--dim);flex-shrink:0}
 .dot.ok{background:var(--accent2);box-shadow:0 0 8px var(--accent2);animation:pulse 2s infinite}
 .dot.busy{background:var(--warn);animation:blink .7s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+/* PIN display */
+.pin-display{font-family:'Orbitron',monospace;font-size:3.5rem;font-weight:900;
+  letter-spacing:12px;color:var(--accent);text-shadow:var(--glow);
+  background:var(--panel);border:2px solid var(--accent);border-radius:16px;
+  padding:20px 28px;text-align:center;width:100%}
+.pin-label{font-size:.6rem;color:var(--dim);letter-spacing:3px;text-align:center}
+/* PIN entry */
+.pin-entry{display:flex;gap:10px;justify-content:center;width:100%}
+.pin-digit{width:56px;height:72px;border-radius:12px;background:var(--panel);
+  border:2px solid var(--border);color:var(--accent);font-family:'Orbitron',monospace;
+  font-size:2rem;font-weight:700;text-align:center;outline:none;
+  -webkit-appearance:none;caret-color:var(--accent)}
+.pin-digit:focus{border-color:var(--accent);box-shadow:var(--glow)}
+/* Buttons */
 .sbtn{display:flex;flex-direction:column;align-items:center;gap:8px;
-  padding:22px 24px;border-radius:16px;cursor:pointer;width:100%;
+  padding:18px 24px;border-radius:16px;cursor:pointer;width:100%;
   font-family:'Orbitron',monospace;transition:all .2s;border:2px solid}
 .sbtn:active{transform:scale(.96)}
 .sbtn.blue{border-color:var(--accent);background:rgba(0,212,255,.08);color:var(--accent);box-shadow:var(--glow)}
 .sbtn.green{border-color:var(--accent2);background:rgba(0,255,136,.08);color:var(--accent2);box-shadow:var(--glow2)}
 .sbtn.warn{border-color:var(--warn);background:rgba(255,170,0,.08);color:var(--warn)}
-.sbtn-ico{font-size:2.2rem}
+.sbtn-ico{font-size:2rem}
 .sbtn-title{font-size:.82rem;font-weight:700;letter-spacing:3px}
 .sbtn-hint{font-size:.6rem;opacity:.7;font-family:'Share Tech Mono',monospace}
 .hint{font-size:.62rem;color:var(--dim);text-align:center;max-width:280px;line-height:1.8}
+/* Bubble level */
 .bwrap{position:relative;width:150px;height:150px;flex-shrink:0}
 .bring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--border);
   background:radial-gradient(circle at 40% 35%,rgba(0,212,255,.07),var(--bg2) 70%)}
@@ -77,6 +94,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   transition:left .08s,top .08s}
 .bubble.lv{background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.6),rgba(0,255,136,.8) 60%,rgba(0,180,80,.6));
   border-color:var(--accent2);box-shadow:0 0 12px rgba(0,255,136,.6)}
+/* Angles */
 .angles{display:flex;gap:20px;align-items:center}
 .angle{text-align:center}
 .albl{font-size:.56rem;color:var(--dim);letter-spacing:2px}
@@ -87,6 +105,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .badge.LV{color:var(--accent2);border-color:var(--accent2)}
 .badge.CL{color:var(--warn);border-color:var(--warn)}
 .badge.AD{color:var(--danger);border-color:var(--danger)}
+/* Bars */
 .bars{display:flex;gap:10px;width:100%}
 .bw{flex:1}
 .blbl{font-size:.55rem;color:var(--dim);letter-spacing:2px;margin-bottom:4px;
@@ -96,6 +115,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .bmid{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--accent);
   opacity:.3;transform:translateX(-50%)}
 .bfill{position:absolute;top:1px;bottom:1px;border-radius:4px;transition:all .1s}
+/* Arrow grid */
 .agrid{display:grid;grid-template-columns:1fr 1fr 1fr;
   grid-template-rows:1fr 1fr 1fr;width:180px;height:180px;gap:4px}
 .ac{display:flex;align-items:center;justify-content:center}
@@ -120,13 +140,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .instr.CL{color:var(--warn);border-color:var(--warn)}
 .instr.AD{color:var(--danger);border-color:var(--danger)}
 .instr.wt{color:var(--dim)}
-.cam-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000}
-.cam-wrap video{width:100%;display:block}
-.scan-line{position:absolute;left:8%;right:8%;height:2px;background:var(--accent);
-  box-shadow:var(--glow);animation:scanmove 2s ease-in-out infinite;pointer-events:none}
-@keyframes scanmove{0%,100%{top:15%}50%{top:80%}}
-.qr-box{background:#fff;padding:10px;border-radius:12px;display:inline-block}
-.err{color:var(--danger);font-size:.65rem;text-align:center;max-width:280px;line-height:1.8}
+.conn-count{font-size:.65rem;color:var(--dim);text-align:center}
+.conn-count span{color:var(--accent2)}
 </style>
 </head>
 <body>
@@ -154,26 +169,23 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 <div class="screen hidden" id="sensor-screen">
   <button class="back" onclick="goHome()">← back</button>
 
-  <!-- s1: creating offer -->
+  <!-- s1: creating / showing PIN -->
   <div class="panel" id="s1">
-    <div class="srow"><div class="dot busy"></div><span>creating connection offer...</span></div>
+    <div class="srow"><div class="dot busy"></div><span id="s1-txt">creating session...</span></div>
     <div class="hint">Takes a moment</div>
   </div>
 
-  <!-- s2: share offer — show QR of offer + share button -->
+  <!-- s2: PIN ready, waiting for displays -->
   <div class="panel" id="s2">
-    <div class="srow"><div class="dot busy"></div><span>share to display device</span></div>
-    <button class="sbtn blue" onclick="shareOffer()">
+    <div class="pin-label">SESSION PIN — enter on Display device</div>
+    <div class="pin-display" id="s-pin">----</div>
+    <div class="hint">Any device can join. Share the PIN or send the link below.</div>
+    <button class="sbtn blue" onclick="shareLink()">
       <div class="sbtn-ico">📤</div>
-      <div class="sbtn-title">SHARE TO DISPLAY</div>
+      <div class="sbtn-title">SHARE LINK</div>
       <div class="sbtn-hint">AirDrop · iMessage · WhatsApp</div>
     </button>
-    <div class="hint">After sharing, tap SCAN ANSWER below when the Display shows a QR code.</div>
-    <button class="sbtn green" onclick="goToScan()" id="scan-btn" style="display:none">
-      <div class="sbtn-ico">📷</div>
-      <div class="sbtn-title">SCAN ANSWER QR</div>
-      <div class="sbtn-hint">Point at the QR on the Display screen</div>
-    </button>
+    <div class="conn-count" id="s-conn-count">waiting for display devices...</div>
     <div id="perm-wrap" style="display:none;width:100%">
       <button class="sbtn warn" onclick="askMotion()">
         <div class="sbtn-ico">📐</div>
@@ -183,25 +195,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     </div>
   </div>
 
-  <!-- s3: scan answer QR -->
+  <!-- s3: live level (sensor) -->
   <div class="panel" id="s3">
-    <div class="srow"><div class="dot busy"></div><span>scan QR from display device</span></div>
-    <div class="cam-wrap">
-      <video id="s-video" autoplay playsinline muted></video>
-      <div class="scan-line"></div>
-      <canvas id="s-canvas" style="display:none"></canvas>
-    </div>
-    <div class="hint" id="s-cam-hint">Point camera at the QR on the Display screen</div>
-  </div>
-
-  <!-- s4: connecting -->
-  <div class="panel" id="s4">
-    <div class="srow"><div class="dot busy"></div><span id="s4-txt">connecting...</span></div>
-  </div>
-
-  <!-- s5: live level -->
-  <div class="panel" id="s5">
-    <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">display connected ✓</span></div>
+    <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)" id="s3-status">connected ✓</span></div>
     <div class="bwrap">
       <div class="bring"></div><div class="ch h"></div><div class="ch v"></div>
       <div class="cring"></div>
@@ -218,6 +214,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="bw"><div class="blbl"><span>PITCH</span><span id="s-pd"></span></div>
         <div class="btrack"><div class="bmid"></div><div class="bfill" id="s-pb"></div></div></div>
     </div>
+    <div class="conn-count" id="s3-conn-count"></div>
   </div>
 </div>
 
@@ -225,26 +222,30 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 <div class="screen hidden" id="display-screen">
   <button class="back" onclick="goHome()">← back</button>
 
-  <!-- d1: waiting for link -->
+  <!-- d1: enter PIN -->
   <div class="panel" id="d1">
-    <div class="srow"><div class="dot busy"></div><span>open the link from sensor</span></div>
-    <div class="hint">The Sensor device will share a link. Open it on this device.</div>
+    <div class="srow"><div class="dot busy"></div><span>enter sensor PIN</span></div>
+    <div class="pin-label">4-DIGIT PIN FROM SENSOR DEVICE</div>
+    <div class="pin-entry">
+      <input class="pin-digit" id="p0" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input class="pin-digit" id="p1" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input class="pin-digit" id="p2" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      <input class="pin-digit" id="p3" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+    </div>
+    <button class="sbtn green" onclick="connectWithPin()">
+      <div class="sbtn-ico">🔗</div>
+      <div class="sbtn-title">CONNECT</div>
+    </button>
+    <div class="hint" id="d1-hint">Enter the 4-digit PIN shown on the Sensor device</div>
   </div>
 
-  <!-- d2: processing offer -->
+  <!-- d2: connecting -->
   <div class="panel" id="d2">
-    <div class="srow"><div class="dot busy"></div><span id="d2-txt">processing offer...</span></div>
+    <div class="srow"><div class="dot busy"></div><span id="d2-txt">connecting...</span></div>
   </div>
 
-  <!-- d3: show answer QR -->
+  <!-- d3: live display -->
   <div class="panel" id="d3">
-    <div class="srow"><div class="dot busy"></div><span>sensor scans this QR to connect</span></div>
-    <div class="qr-box"><div id="d-qr" style="width:220px;height:220px"></div></div>
-    <div class="hint">Point the Sensor device camera at this QR code</div>
-  </div>
-
-  <!-- d4: live display -->
-  <div class="panel" id="d4">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected ✓</span></div>
     <div class="agrid">
       <div class="ac"></div><div class="ac"><div class="arr" id="d-up">⬆️</div></div><div class="ac"></div>
@@ -267,58 +268,69 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
-
 <script>
 // ═══════════════════════════════════════════════════════
-//  LevelVan — fixed rebuild
+//  LevelVan — PIN-based signalling via PeerJS public server
 //
-//  KEY FIXES vs previous version:
-//  1. CSS used en-dash (–) instead of double-hyphen (--) for CSS vars — all styles were broken
-//  2. ICE candidates were collected AFTER gatherICE() completed — answer had no candidates
-//  3. shareOffer() advanced to scan panel before user confirmed share — now explicit button
-//  4. Answer QR onicecandidate handler set after gathering was done — useless, now fixed
-//  5. gatherICE() on display side: candidates now collected BEFORE calling gatherICE()
+//  ARCHITECTURE:
+//  - Sensor generates a random 4-digit PIN
+//  - PIN maps to a PeerJS peer ID: "levelvan-XXXX-sensor"
+//  - Display connects to "levelvan-XXXX-sensor" via PeerJS
+//  - PeerJS handles WebRTC signalling (SDP + ICE) automatically
+//  - Once connected, data flows P2P over local WiFi at ~15Hz
+//  - Multiple display devices can connect to the same sensor PIN
 //
-//  PAIRING FLOW:
-//  1. Sensor creates offer + gathers ICE → shares URL via AirDrop/share sheet
-//  2. Sensor shows "SCAN ANSWER QR" button — user taps it after Display shows QR
-//  3. Display opens URL → processes offer → creates answer → gathers ICE → shows QR
-//  4. Sensor scans QR → applies answer → P2P connected
+//  PAIRING:
+//  1. Sensor taps SENSOR → sees PIN e.g. "7342"
+//  2. Display taps DISPLAY → types "7342" → tap CONNECT
+//     OR sensor shares link → display opens it pre-filled
+//  3. Connected. Done.
+//
+//  REQUIREMENTS:
+//  - Internet needed briefly for WebRTC signalling (PeerJS server)
+//  - After connection, all data is P2P over local WiFi
+//  - PeerJS public server: 0.peerjs.com (free, no account needed)
 // ═══════════════════════════════════════════════════════
 
 const LT=1.5, CT=4.0, MD=15;
-let pc=null, dc=null, motionOn=false, mode=null;
-let camStream=null, scanTick=null;
+const PEER_HOST = '0.peerjs.com';
+const PEER_PORT = 443;
+const PEER_PATH = '/';
+const PEER_SECURE = true;
 
-const ICE = { iceServers: [] }; // local WiFi only — host candidates, no STUN/TURN needed
+let peer = null;          // our PeerJS instance
+let conns = [];           // active DataConnections (sensor can have many)
+let mode = null;
+let motionOn = false;
+let _lastSend = 0;
+let _pin = null;
 
-const $   = id => document.getElementById(id);
-const enc = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-const dec = str => { str=str.replace(/-/g,'+').replace(/_/g,'/'); while(str.length%4)str+='='; return JSON.parse(decodeURIComponent(escape(atob(str)))); };
+const $ = id => document.getElementById(id);
 
 function showPanel(id) {
-  const target = $(id);
-  if (!target) { console.error('Panel not found:', id); return; }
-  target.closest('.screen').querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  target.classList.add('active');
+  const t = $(id); if (!t) return;
+  t.closest('.screen').querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  t.classList.add('active');
 }
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   $(id).classList.remove('hidden');
 }
 
-// Read hash before any navigation clears it
+// Check for pre-filled PIN in URL hash (from shared link)
 const _hash = location.hash.slice(1);
 history.replaceState(null, '', location.pathname);
 
 window.addEventListener('load', () => {
-  if (_hash.startsWith('LVO:')) {
+  if (_hash.startsWith('LVP:')) {
+    // Link shared from sensor — go straight to display with PIN pre-filled
+    const pin = _hash.slice(4);
     mode = 'display';
     showScreen('display-screen');
-    showPanel('d2');
-    processOffer(_hash.slice(4));
+    showPanel('d1');
+    fillPin(pin);
+    // Auto-connect after a short delay so user sees what's happening
+    setTimeout(() => connectWithPin(), 600);
   } else {
     showScreen('home-screen');
   }
@@ -326,190 +338,166 @@ window.addEventListener('load', () => {
 
 window.goHome = () => { cleanup(); showScreen('home-screen'); };
 window.startSensor  = () => { mode='sensor';  showScreen('sensor-screen'); showPanel('s1'); initSensor(); };
-window.startDisplay = () => { mode='display'; showScreen('display-screen'); showPanel('d1'); };
+window.startDisplay = () => { mode='display'; showScreen('display-screen'); showPanel('d1'); setupPinInputs(); };
 
 // ════════════════════════════════
 //  SENSOR
 // ════════════════════════════════
-async function initSensor() {
+function initSensor() {
   setupMotion();
-  pc = new RTCPeerConnection(ICE);
-  dc = pc.createDataChannel('lv', { ordered:false, maxRetransmits:0 });
-  dc.onopen  = () => { stopCamera(); showPanel('s5'); startSendingData(); };
-  pc.onconnectionstatechange = () => {
-    console.log('Sensor state:', pc.connectionState);
-    if (pc.connectionState === 'connected') { stopCamera(); showPanel('s5'); startSendingData(); }
-    if (pc.connectionState === 'failed') { $('s4-txt').textContent = 'connection failed — go back and retry'; }
-  };
+  _pin = String(Math.floor(1000 + Math.random() * 9000)); // 1000–9999
+  const peerId = 'levelvan-' + _pin + '-sensor';
+  $('s1-txt').textContent = 'connecting to relay...';
 
-  // FIX: set up candidate collection BEFORE creating offer
-  const cands = [];
-  pc.onicecandidate = e => { if (e.candidate) cands.push(e.candidate.candidate); };
-
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  await gatherICE(pc);
-
-  // Use localDescription after gathering — SDP has embedded candidates
-  const pkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands };
-  window._offerURL = location.origin + location.pathname + '#LVO:' + enc(pkg);
-  console.log('Offer ready, URL length:', window._offerURL.length, 'candidates:', cands.length);
-  showPanel('s2');
-}
-
-// FIX: proper ICE gathering — wait for complete state or timeout
-function gatherICE(peerConn) {
-  return new Promise(resolve => {
-    if (peerConn.iceGatheringState === 'complete') { resolve(); return; }
-    const done = () => { if (peerConn.iceGatheringState === 'complete') { resolve(); } };
-    peerConn.addEventListener('icegatheringstatechange', done);
-    // Fallback: 4s timeout — on local WiFi host candidates appear in <500ms
-    setTimeout(resolve, 4000);
+  peer = new Peer(peerId, {
+    host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE,
+    debug: 0,
+    config: { iceServers: [] } // local WiFi only — no STUN/TURN
   });
-}
 
-window.shareOffer = async () => {
-  if (!window._offerURL) { alert('Not ready yet'); return; }
-  await doShare(window._offerURL, 'LevelVan — open on Display device', 'Open on the DISPLAY device');
-  // Show scan button regardless — user taps it when Display shows QR
-  $('scan-btn').style.display = '';
-};
-
-// Separate button so user explicitly triggers camera after Display is ready
-window.goToScan = () => {
-  showPanel('s3');
-  startCamera();
-};
-
-function startCamera() {
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode:'environment', width:{ideal:1280}, height:{ideal:720} },
-    audio: false
-  }).then(stream => {
-    camStream = stream;
-    $('s-video').srcObject = stream;
-    $('s-video').play().catch(()=>{});
-    scanTick = setInterval(scanFrame, 200);
-  }).catch(e => {
-    console.error('Camera error:', e);
-    $('s-cam-hint').textContent = '⚠️ Camera unavailable: ' + e.message;
+  peer.on('open', id => {
+    console.log('Sensor peer open:', id);
+    $('s-pin').textContent = _pin;
+    showPanel('s2');
   });
-}
 
-function scanFrame() {
-  if (!window.jsQR) return;
-  const v = $('s-video');
-  if (!v || v.readyState < 2 || !v.videoWidth) return;
-  const c = $('s-canvas');
-  c.width = v.videoWidth; c.height = v.videoHeight;
-  const ctx = c.getContext('2d');
-  ctx.drawImage(v, 0, 0);
-  const img = ctx.getImageData(0, 0, c.width, c.height);
-  // Try both normal and inverted (white-on-dark screens)
-  const code = jsQR(img.data, img.width, img.height, { inversionAttempts:'attemptBoth' });
-  if (code && code.data.startsWith('LVA:')) {
-    clearInterval(scanTick); scanTick = null;
-    stopCamera();
-    applyAnswer(code.data.slice(4));
-  }
-}
+  peer.on('connection', conn => {
+    console.log('Display connected:', conn.peer);
+    setupSensorConn(conn);
+  });
 
-function stopCamera() {
-  if (scanTick) { clearInterval(scanTick); scanTick = null; }
-  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
-}
-
-async function applyAnswer(encoded) {
-  showPanel('s4');
-  $('s4-txt').textContent = 'applying answer...';
-  try {
-    const pkg = dec(encoded);
-    console.log('Answer candidates:', (pkg.cands||[]).length);
-    await pc.setRemoteDescription({ type: pkg.type, sdp: pkg.sdp });
-    for (const c of (pkg.cands||[])) {
-      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(e){ console.warn('ICE add:', e); }
+  peer.on('error', e => {
+    console.error('Peer error:', e);
+    if (e.type === 'unavailable-id') {
+      // PIN collision — regenerate
+      peer.destroy(); peer = null;
+      initSensor();
+    } else {
+      $('s1-txt').textContent = '⚠️ ' + e.message;
     }
-    $('s4-txt').textContent = 'connecting...';
-  } catch(e) {
-    console.error('applyAnswer error:', e);
-    $('s4-txt').textContent = '⚠️ ' + e.message;
-  }
+  });
 }
+
+function setupSensorConn(conn) {
+  conn.on('open', () => {
+    conns.push(conn);
+    updateSensorConnCount();
+    if (conns.length === 1) showPanel('s3');
+  });
+  conn.on('close', () => {
+    conns = conns.filter(c => c !== conn);
+    updateSensorConnCount();
+    if (conns.length === 0) showPanel('s2');
+  });
+  conn.on('error', e => console.warn('conn error:', e));
+}
+
+function updateSensorConnCount() {
+  const n = conns.length;
+  const txt = n === 0 ? 'waiting for display devices...'
+            : n === 1 ? '<span>1</span> display connected'
+            : '<span>' + n + '</span> displays connected';
+  $('s-conn-count').innerHTML = txt;
+  $('s3-conn-count').innerHTML = txt;
+  $('s3-status').textContent = n + ' display' + (n===1?'':'s') + ' connected ✓';
+}
+
+window.shareLink = async () => {
+  if (!_pin) return;
+  const url = location.origin + location.pathname + '#LVP:' + _pin;
+  if (navigator.share) {
+    try { await navigator.share({ title:'LevelVan', text:'Open on the Display device', url }); return; }
+    catch(e) { if (e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); alert('Link copied — paste and send to the Display device.'); return; } catch(_){}
+  prompt('Copy and send to Display device:', url);
+};
 
 // ════════════════════════════════
 //  DISPLAY
 // ════════════════════════════════
-async function processOffer(encoded) {
-  try {
-    const pkg = dec(encoded);
-    pc = new RTCPeerConnection(ICE);
-
-    pc.ondatachannel = e => {
-      dc = e.channel;
-      dc.onopen    = () => showPanel('d4');
-      dc.onmessage = ev => { try { updateDisplay(JSON.parse(ev.data)); } catch(_){} };
-    };
-    pc.onconnectionstatechange = () => {
-      console.log('Display state:', pc.connectionState);
-      if (pc.connectionState === 'connected') showPanel('d4');
-      if (pc.connectionState === 'failed') { $('d2-txt').textContent = '⚠️ failed — go back and retry'; showPanel('d2'); }
-    };
-
-    await pc.setRemoteDescription({ type: pkg.type, sdp: pkg.sdp });
-    for (const c of (pkg.cands||[])) {
-      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(e){ console.warn('ICE add:', e); }
-    }
-
-    // FIX: collect answer candidates BEFORE calling createAnswer/setLocalDescription
-    const answerCands = [];
-    pc.onicecandidate = e => { if (e.candidate) answerCands.push(e.candidate.candidate); };
-
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    await gatherICE(pc);
-
-    // Build answer package with gathered candidates
-    const answerPkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands: answerCands };
-    const qrData = 'LVA:' + enc(answerPkg);
-    console.log('Answer QR length:', qrData.length, 'candidates:', answerCands.length);
-
-    showPanel('d3');
-    renderQR('d-qr', qrData);
-
-  } catch(e) {
-    console.error('processOffer error:', e);
-    $('d2-txt').textContent = '⚠️ ' + e.message;
-    showPanel('d2');
-  }
-}
-
-function renderQR(targetId, text) {
-  const target = $(targetId);
-  target.innerHTML = '';
-  const tryRender = () => {
-    if (!window.QRCode) { setTimeout(tryRender, 200); return; }
-    new QRCode(target, {
-      text,
-      width: 220, height: 220,
-      colorDark: '#000000',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.L  // lowest error correction = fewest dots = most scannable
+function setupPinInputs() {
+  for (let i = 0; i < 4; i++) {
+    const el = $('p' + i);
+    el.value = '';
+    el.addEventListener('input', () => {
+      el.value = el.value.replace(/\D/g,'').slice(-1);
+      if (el.value && i < 3) $('p' + (i+1)).focus();
+      if (i === 3 && getPinValue().length === 4) connectWithPin();
     });
-    console.log('QR rendered, data length:', text.length);
-  };
-  tryRender();
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !el.value && i > 0) $('p' + (i-1)).focus();
+    });
+    el.addEventListener('paste', e => {
+      e.preventDefault();
+      const txt = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,4);
+      for (let j = 0; j < txt.length; j++) { const d = $('p'+j); if(d) d.value = txt[j]; }
+      if (txt.length === 4) connectWithPin();
+    });
+  }
+  setTimeout(() => $('p0').focus(), 300);
 }
 
-// ════════════════════════════════
-//  SHARE
-// ════════════════════════════════
-async function doShare(url, title, text) {
-  if (navigator.share) {
-    try { await navigator.share({ title, text, url }); return; } catch(e) { if (e.name !== 'AbortError') console.warn('share:', e); }
-  }
-  try { await navigator.clipboard.writeText(url); alert('Link copied to clipboard — paste and send to the Display device.'); return; } catch(_){}
-  prompt('Copy this link and send to the Display device:', url);
+function fillPin(pin) {
+  for (let i = 0; i < 4; i++) { const d = $('p'+i); if(d) d.value = pin[i]||''; }
 }
+
+function getPinValue() {
+  return [0,1,2,3].map(i => ($('p'+i)||{value:''}).value).join('');
+}
+
+window.connectWithPin = () => {
+  const pin = getPinValue();
+  if (pin.length !== 4) { $('d1-hint').textContent = '⚠️ Enter all 4 digits'; return; }
+  showPanel('d2');
+  $('d2-txt').textContent = 'connecting to sensor...';
+
+  // Each display gets a unique peer ID
+  const myId = 'levelvan-' + pin + '-display-' + Date.now();
+  const sensorId = 'levelvan-' + pin + '-sensor';
+
+  peer = new Peer(myId, {
+    host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE,
+    debug: 0,
+    config: { iceServers: [] }
+  });
+
+  peer.on('open', () => {
+    console.log('Display peer open, connecting to sensor:', sensorId);
+    const conn = peer.connect(sensorId, { reliable: false, serialization: 'json' });
+
+    conn.on('open', () => {
+      console.log('Connected to sensor');
+      conns = [conn];
+      showPanel('d3');
+    });
+
+    conn.on('data', data => {
+      try { updateDisplay(data); } catch(_){}
+    });
+
+    conn.on('close', () => {
+      $('d2-txt').textContent = '⚠️ Sensor disconnected — go back and retry';
+      showPanel('d2');
+    });
+
+    conn.on('error', e => {
+      console.error('conn error:', e);
+      $('d2-txt').textContent = '⚠️ ' + e.message;
+      showPanel('d2');
+    });
+  });
+
+  peer.on('error', e => {
+    console.error('Peer error:', e);
+    let msg = e.message;
+    if (e.type === 'peer-unavailable') msg = 'Sensor not found — check PIN and try again';
+    $('d2-txt').textContent = '⚠️ ' + msg;
+    showPanel('d2');
+    // Go back to PIN entry after a moment
+    setTimeout(() => { showPanel('d1'); $('d1-hint').textContent = '⚠️ ' + msg; }, 2000);
+  });
+};
 
 // ════════════════════════════════
 //  MOTION (iOS permission)
@@ -517,7 +505,7 @@ async function doShare(url, title, text) {
 function setupMotion() {
   if (typeof DeviceOrientationEvent === 'undefined') return;
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    $('perm-wrap').style.display = 'block'; // iOS 13+ needs explicit permission
+    $('perm-wrap').style.display = 'block';
   } else {
     window.addEventListener('deviceorientation', onOrient, true);
     motionOn = true;
@@ -534,24 +522,17 @@ window.askMotion = async () => {
   } catch(e) { console.error('Motion permission:', e); }
 };
 
-let _lastSend = 0;
 function onOrient(ev) {
   if (mode !== 'sensor') return;
   const r = Math.max(-90, Math.min(90, ev.gamma||0));
   const p = Math.max(-90, Math.min(90, ev.beta||0));
   updateSensor(r, p);
-  // Send at ~15Hz — don't flood the channel
   const now = Date.now();
-  if (dc?.readyState === 'open' && now - _lastSend > 66) {
+  if (conns.length > 0 && now - _lastSend > 66) { // ~15Hz
     _lastSend = now;
-    try { dc.send(JSON.stringify({ roll:+r.toFixed(2), pitch:+p.toFixed(2) })); } catch(_){}
+    const data = { roll:+r.toFixed(2), pitch:+p.toFixed(2) };
+    conns.forEach(c => { try { if(c.open) c.send(data); } catch(_){} });
   }
-}
-
-// Only start sending once connected — avoids sending before dc is open
-function startSendingData() {
-  // Motion listener already set up in setupMotion() — nothing extra needed
-  // onOrient() checks dc.readyState === 'open' before sending
 }
 
 // ════════════════════════════════
@@ -613,14 +594,15 @@ function setBar(fid, lid, angle) {
 function clamp(v){ return Math.max(10,Math.min(90,v)); }
 
 function cleanup() {
-  stopCamera();
-  if(dc){try{dc.close();}catch(_){}} dc=null;
-  if(pc){try{pc.close();}catch(_){}} pc=null;
+  conns.forEach(c => { try{c.close();}catch(_){} }); conns = [];
+  if(peer){try{peer.destroy();}catch(_){}} peer = null;
   if(motionOn){window.removeEventListener('deviceorientation',onOrient,true);motionOn=false;}
-  mode=null; window._offerURL=null; _lastSend=0;
-  $('scan-btn').style.display='none';
-  $('perm-wrap').style.display='none';
+  mode=null; _pin=null; _lastSend=0;
 }
 </script>
+
+<!-- PeerJS for WebRTC signalling -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
 </body>
 </html>
