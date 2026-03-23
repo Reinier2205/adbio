@@ -24,177 +24,212 @@
     background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),
     linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);
     background-size:40px 40px;pointer-events:none}
-  .screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;padding:24px;gap:20px}
-  .screen.hidden{display:none}
-  .back{position:fixed;top:16px;left:16px;background:none;border:none;color:var(--dim);
-    font-family:'Share Tech Mono',monospace;font-size:.8rem;cursor:pointer;z-index:10;padding:6px 10px}
 
+/* Screens */
+.screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;
+align-items:center;padding:24px;overflow-y:auto}
+.screen.home{justify-content:center;gap:20px}
+.screen.hidden{display:none!important}
+.back{position:fixed;top:16px;left:16px;background:none;border:none;color:var(–dim);
+font-family:‘Share Tech Mono’,monospace;font-size:.8rem;cursor:pointer;z-index:10;padding:6px 10px}
+
+/* Panels — only one visible at a time per screen */
+.panel{display:none;flex-direction:column;align-items:center;
+gap:16px;width:100%;max-width:320px;padding-top:52px}
+.panel.active{display:flex}
+
+/* HOME */
 .logo{font-family:‘Orbitron’,monospace;font-size:2rem;font-weight:900;
 color:var(–accent);text-shadow:var(–glow);letter-spacing:4px}
 .sub{color:var(–dim);font-size:.68rem;letter-spacing:2px;margin-top:-12px}
-.cards{display:flex;gap:16px;width:100%;max-width:340px}
-.card{flex:1;padding:28px 14px;border-radius:14px;background:var(–panel);
+.cards{display:flex;gap:16px;width:100%;max-width:320px}
+.card{flex:1;padding:28px 12px;border-radius:14px;background:var(–panel);
 border:2px solid var(–border);cursor:pointer;text-align:center;
 display:flex;flex-direction:column;align-items:center;gap:12px;transition:all .15s}
 .card:active{transform:scale(.95)}
 .card.s{border-color:rgba(0,212,255,.5)}.card.d{border-color:rgba(0,255,136,.5)}
-.card-ico{font-size:2.6rem}
-.card-title{font-family:‘Orbitron’,monospace;font-size:.85rem;font-weight:700;letter-spacing:2px}
+.card-ico{font-size:2.4rem}
+.card-title{font-family:‘Orbitron’,monospace;font-size:.82rem;font-weight:700;letter-spacing:2px}
 .card.s .card-title{color:var(–accent)}.card.d .card-title{color:var(–accent2)}
-.card-desc{font-size:.64rem;color:var(–dim);line-height:1.6}
+.card-desc{font-size:.63rem;color:var(–dim);line-height:1.6}
 
-.dot{width:9px;height:9px;border-radius:50%;background:var(–dim);flex-shrink:0;display:inline-block}
+/* Status row */
+.srow{display:flex;align-items:center;gap:10px;font-size:.7rem;color:var(–dim)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(–dim);flex-shrink:0}
 .dot.ok{background:var(–accent2);box-shadow:0 0 8px var(–accent2);animation:pulse 2s infinite}
 .dot.busy{background:var(–warn);animation:blink .7s infinite}
-.dot.err{background:var(–danger)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-.srow{display:flex;align-items:center;gap:10px;font-size:.7rem;color:var(–dim)}
 
-.share-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;
-gap:8px;padding:22px 28px;border-radius:16px;border:2px solid var(–accent);
-background:rgba(0,212,255,.08);cursor:pointer;width:100%;max-width:300px;
-font-family:‘Orbitron’,monospace;color:var(–accent);transition:all .2s;box-shadow:var(–glow)}
-.share-btn:active{transform:scale(.96)}
-.share-btn.green{border-color:var(–accent2);background:rgba(0,255,136,.08);
+/* Share button */
+.sbtn{display:flex;flex-direction:column;align-items:center;gap:8px;
+padding:22px 24px;border-radius:16px;cursor:pointer;width:100%;
+font-family:‘Orbitron’,monospace;transition:all .2s}
+.sbtn:active{transform:scale(.96)}
+.sbtn.blue{border:2px solid var(–accent);background:rgba(0,212,255,.08);
+color:var(–accent);box-shadow:var(–glow)}
+.sbtn.green{border:2px solid var(–accent2);background:rgba(0,255,136,.08);
 color:var(–accent2);box-shadow:var(–glow2)}
-.share-btn.warn{border-color:var(–warn);background:rgba(255,170,0,.08);color:var(–warn)}
-.share-ico{font-size:2.4rem}
-.share-title{font-size:.85rem;font-weight:700;letter-spacing:3px}
-.share-hint{font-size:.62rem;opacity:.7;letter-spacing:1px;font-family:‘Share Tech Mono’,monospace}
+.sbtn.warn{border:2px solid var(–warn);background:rgba(255,170,0,.08);color:var(–warn)}
+.sbtn-ico{font-size:2.2rem}
+.sbtn-title{font-size:.82rem;font-weight:700;letter-spacing:3px}
+.sbtn-hint{font-size:.6rem;opacity:.7;font-family:‘Share Tech Mono’,monospace}
 
-.bwrap{position:relative;width:155px;height:155px;flex-shrink:0}
+/* Hint text */
+.hint{font-size:.62rem;color:var(–dim);text-align:center;max-width:280px;line-height:1.8}
+
+/* Bubble level */
+.bwrap{position:relative;width:150px;height:150px;flex-shrink:0}
 .bring{position:absolute;inset:0;border-radius:50%;border:2px solid var(–border);
 background:radial-gradient(circle at 40% 35%,rgba(0,212,255,.07),var(–bg2) 70%)}
 .ch{position:absolute;background:rgba(0,212,255,.15)}
 .ch.h{top:50%;left:0;right:0;height:1px;transform:translateY(-50%)}
 .ch.v{left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%)}
 .cring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-width:38px;height:38px;border-radius:50%;border:1px solid var(–dim);opacity:.4}
-.bubble{position:absolute;width:30px;height:30px;border-radius:50%;
+width:36px;height:36px;border-radius:50%;border:1px solid var(–dim);opacity:.4}
+.bubble{position:absolute;width:28px;height:28px;border-radius:50%;
 transform:translate(-50%,-50%);
 background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.6),rgba(0,212,255,.8) 60%,rgba(0,100,200,.6));
-border:1px solid rgba(0,212,255,.8);box-shadow:0 0 14px rgba(0,212,255,.6);
+border:1px solid rgba(0,212,255,.8);box-shadow:0 0 12px rgba(0,212,255,.6);
 transition:left .08s,top .08s}
 .bubble.lv{background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.6),rgba(0,255,136,.8) 60%,rgba(0,180,80,.6));
-border-color:var(–accent2);box-shadow:0 0 14px rgba(0,255,136,.6)}
+border-color:var(–accent2);box-shadow:0 0 12px rgba(0,255,136,.6)}
 
-.angles{display:flex;gap:24px;align-items:center}
+/* Angles */
+.angles{display:flex;gap:20px;align-items:center}
 .angle{text-align:center}
-.albl{font-size:.58rem;color:var(–dim);letter-spacing:2px}
-.aval{font-family:‘Orbitron’,monospace;font-size:1.05rem;margin-top:2px}
-.c-ok{color:var(–accent2)}.c-wn{color:var(–warn)}.c-bd{color:var(–danger)}
-.badge{font-family:‘Orbitron’,monospace;font-size:.78rem;letter-spacing:3px;
-padding:7px 16px;border-radius:6px;border:1px solid}
-.badge.LV{color:var(–accent2);border-color:var(–accent2);text-shadow:0 0 8px var(–accent2)}
+.albl{font-size:.56rem;color:var(–dim);letter-spacing:2px}
+.aval{font-family:‘Orbitron’,monospace;font-size:1rem;margin-top:2px}
+.ok{color:var(–accent2)}.wn{color:var(–warn)}.bd{color:var(–danger)}
+.badge{font-family:‘Orbitron’,monospace;font-size:.75rem;letter-spacing:2px;
+padding:6px 14px;border-radius:6px;border:1px solid}
+.badge.LV{color:var(–accent2);border-color:var(–accent2)}
 .badge.CL{color:var(–warn);border-color:var(–warn)}
 .badge.AD{color:var(–danger);border-color:var(–danger)}
 
-.bars{display:flex;gap:12px;width:100%;max-width:340px}
+/* Bars */
+.bars{display:flex;gap:10px;width:100%}
 .bw{flex:1}
-.blbl{font-size:.57rem;color:var(–dim);letter-spacing:2px;margin-bottom:5px;
+.blbl{font-size:.55rem;color:var(–dim);letter-spacing:2px;margin-bottom:4px;
 display:flex;justify-content:space-between}
-.btrack{position:relative;height:10px;background:var(–bg2);border-radius:5px;
+.btrack{position:relative;height:9px;background:var(–bg2);border-radius:5px;
 border:1px solid var(–border);overflow:hidden}
 .bmid{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(–accent);
 opacity:.3;transform:translateX(-50%)}
 .bfill{position:absolute;top:1px;bottom:1px;border-radius:4px;transition:all .1s}
 
+/* Arrow grid */
 .agrid{display:grid;grid-template-columns:1fr 1fr 1fr;
-grid-template-rows:1fr 1fr 1fr;width:185px;height:185px;gap:4px}
+grid-template-rows:1fr 1fr 1fr;width:180px;height:180px;gap:4px}
 .ac{display:flex;align-items:center;justify-content:center}
-.arr{width:52px;height:52px;border-radius:10px;background:var(–panel);
+.arr{width:50px;height:50px;border-radius:10px;background:var(–panel);
 border:1px solid var(–border);display:flex;align-items:center;
-justify-content:center;font-size:1.4rem;opacity:.15;transition:all .2s}
+justify-content:center;font-size:1.3rem;opacity:.15;transition:all .2s}
 .arr.ad{background:rgba(255,68,68,.2);border-color:var(–danger);
-box-shadow:0 0 14px rgba(255,68,68,.4);opacity:1;animation:throb .5s infinite}
+box-shadow:0 0 12px rgba(255,68,68,.4);opacity:1;animation:throb .5s infinite}
 .arr.cl{background:rgba(255,170,0,.15);border-color:var(–warn);opacity:.75}
 .arr.ok{background:rgba(0,255,136,.1);border-color:var(–accent2);opacity:.55}
 @keyframes throb{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-.van{width:52px;height:52px;border-radius:10px;background:var(–bg2);
+.van{width:50px;height:50px;border-radius:10px;background:var(–bg2);
 border:1px solid var(–border);display:flex;align-items:center;
-justify-content:center;font-size:1.4rem}
-.van.lv{border-color:var(–accent2);box-shadow:0 0 14px rgba(0,255,136,.4)}
-
-.instr{font-family:‘Orbitron’,monospace;font-size:.88rem;font-weight:700;
-letter-spacing:2px;text-align:center;padding:12px 16px;border-radius:10px;
+justify-content:center;font-size:1.3rem}
+.van.lv{border-color:var(–accent2);box-shadow:0 0 12px rgba(0,255,136,.4)}
+.instr{font-family:‘Orbitron’,monospace;font-size:.85rem;font-weight:700;
+letter-spacing:2px;text-align:center;padding:11px 14px;border-radius:10px;
 display:flex;align-items:center;justify-content:center;
 border:1px solid var(–border);background:var(–panel);
-width:100%;max-width:340px;transition:all .3s;min-height:48px}
+width:100%;transition:all .3s;min-height:46px}
 .instr.LV{color:var(–accent2);border-color:var(–accent2);box-shadow:var(–glow2)}
 .instr.CL{color:var(–warn);border-color:var(–warn)}
 .instr.AD{color:var(–danger);border-color:var(–danger)}
 .instr.wt{color:var(–dim)}
 
-#sensor-screen,#display-screen{overflow-y:auto;justify-content:flex-start;padding-top:56px}
-.col{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
-.hint{font-size:.62rem;color:var(–dim);text-align:center;max-width:280px;line-height:1.8}
+/* Camera */
+.cam-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000}
+.cam-wrap video{width:100%;display:block}
+.scan-line{position:absolute;left:8%;right:8%;height:2px;background:var(–accent);
+box-shadow:var(–glow);animation:scanmove 2s ease-in-out infinite;pointer-events:none}
+@keyframes scanmove{0%,100%{top:15%}50%{top:80%}}
+
+/* QR */
+.qr-box{background:#fff;padding:10px;border-radius:12px;display:inline-block}
 </style>
 
 </head>
 <body>
 <div class="grid"></div>
 
-<!-- HOME -->
+<!-- ══ HOME ══ -->
 
-<div class="screen" id="home-screen">
+<div class="screen home" id="home-screen">
   <div class="logo">LEVELVAN</div>
   <div class="sub">CARAVAN LEVELING SYSTEM</div>
   <div class="cards">
     <div class="card s" onclick="startSensor()">
       <div class="card-ico">📡</div>
       <div class="card-title">SENSOR</div>
-      <div class="card-desc">Place on the caravan.<br>Measures the tilt.</div>
+      <div class="card-desc">Place on the caravan. Measures the tilt.</div>
     </div>
     <div class="card d" onclick="startDisplay()">
       <div class="card-ico">📺</div>
       <div class="card-title">DISPLAY</div>
-      <div class="card-desc">Hold this phone.<br>Shows leveling guide.</div>
+      <div class="card-desc">Hold this phone. Shows leveling guide.</div>
     </div>
   </div>
 </div>
 
-<!-- SENSOR -->
+<!-- ══ SENSOR SCREEN ══ -->
 
 <div class="screen hidden" id="sensor-screen">
   <button class="back" onclick="goHome()">← back</button>
 
-  <div class="col hidden" id="s-generating">
+  <!-- s1: generating offer -->
+
+  <div class="panel" id="s1">
     <div class="srow"><div class="dot busy"></div><span>creating offer...</span></div>
-    <div class="hint">Takes 2–3 seconds</div>
+    <div class="hint">Takes a couple of seconds</div>
   </div>
 
-  <div class="col hidden" id="s-share-offer">
-    <div class="srow"><div class="dot busy"></div><span>share to display device</span></div>
-    <button class="share-btn" onclick="shareOffer()">
-      <div class="share-ico">📤</div>
-      <div class="share-title">SHARE TO DISPLAY</div>
-      <div class="share-hint">AirDrop · iMessage · WhatsApp</div>
+  <!-- s2: share offer to display -->
+
+  <div class="panel" id="s2">
+    <div class="srow"><div class="dot busy"></div><span>ready — share to display device</span></div>
+    <button class="sbtn blue" onclick="shareOffer()">
+      <div class="sbtn-ico">📤</div>
+      <div class="sbtn-title">SHARE TO DISPLAY</div>
+      <div class="sbtn-hint">AirDrop · iMessage · WhatsApp</div>
     </button>
-    <div class="hint">Send to the Display device.<br>They open it, then share a link back.</div>
-    <div id="perm-wrap" style="display:none;width:100%;max-width:300px">
-      <button class="share-btn warn" onclick="askMotion()">
-        <div class="share-ico">📐</div>
-        <div class="share-title">ALLOW MOTION</div>
-        <div class="share-hint">Required on iOS — tap to enable</div>
+    <div class="hint">Send to the Display device.<br>They'll show a QR code — come back here to scan it.</div>
+    <div id="perm-wrap" style="display:none;width:100%">
+      <button class="sbtn warn" onclick="askMotion()">
+        <div class="sbtn-ico">📐</div>
+        <div class="sbtn-title">ALLOW MOTION</div>
+        <div class="sbtn-hint">Required on iOS — tap to enable</div>
       </button>
     </div>
   </div>
 
-  <div class="col hidden" id="s-wait-answer">
-    <div class="srow"><div class="dot busy"></div><span>waiting for answer...</span></div>
-    <div class="hint">
-      The Display will share a link back.<br>
-      <strong style="color:var(--accent)">Open that link — it brings you straight back here.</strong>
+  <!-- s3: scan the QR shown on display -->
+
+  <div class="panel" id="s3">
+    <div class="srow"><div class="dot busy"></div><span>scan QR from display device</span></div>
+    <div class="cam-wrap" id="s-cam-wrap">
+      <video id="s-video" autoplay playsinline muted></video>
+      <div class="scan-line"></div>
+      <canvas id="s-canvas" style="display:none"></canvas>
     </div>
+    <div class="hint" id="s-cam-hint">Point camera at the QR on the Display screen</div>
   </div>
 
-  <div class="col hidden" id="s-connecting">
-    <div class="srow"><div class="dot busy"></div><span id="s-conn-txt">connecting...</span></div>
+  <!-- s4: connecting -->
+
+  <div class="panel" id="s4">
+    <div class="srow"><div class="dot busy"></div><span id="s4-txt">connecting...</span></div>
   </div>
 
-  <div class="col hidden" id="s-live">
+  <!-- s5: live level -->
+
+  <div class="panel" id="s5">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">display connected ✓</span></div>
     <div class="bwrap">
       <div class="bring"></div><div class="ch h"></div><div class="ch v"></div>
@@ -202,9 +237,9 @@ width:100%;max-width:340px;transition:all .3s;min-height:48px}
       <div class="bubble" id="s-bubble" style="left:50%;top:50%"></div>
     </div>
     <div class="angles">
-      <div class="angle"><div class="albl">ROLL ↔</div><div class="aval c-bd" id="s-roll">0.0°</div></div>
+      <div class="angle"><div class="albl">ROLL ↔</div><div class="aval bd" id="s-roll">0.0°</div></div>
       <div class="badge AD" id="s-badge">--</div>
-      <div class="angle"><div class="albl">PITCH ↕</div><div class="aval c-bd" id="s-pitch">0.0°</div></div>
+      <div class="angle"><div class="albl">PITCH ↕</div><div class="aval bd" id="s-pitch">0.0°</div></div>
     </div>
     <div class="bars">
       <div class="bw"><div class="blbl"><span>ROLL</span><span id="s-rd"></span></div>
@@ -215,31 +250,35 @@ width:100%;max-width:340px;transition:all .3s;min-height:48px}
   </div>
 </div>
 
-<!-- DISPLAY -->
+<!-- ══ DISPLAY SCREEN ══ -->
 
 <div class="screen hidden" id="display-screen">
   <button class="back" onclick="goHome()">← back</button>
 
-  <div class="col hidden" id="d-wait-offer">
-    <div class="srow"><div class="dot busy"></div><span>waiting for sensor link</span></div>
-    <div class="hint">Open the link shared by the Sensor device.</div>
+  <!-- d1: waiting (manual nav, no hash) -->
+
+  <div class="panel" id="d1">
+    <div class="srow"><div class="dot busy"></div><span>open the link from sensor</span></div>
+    <div class="hint">The Sensor device will share a link. Open it on this device.</div>
   </div>
 
-  <div class="col hidden" id="d-processing">
-    <div class="srow"><div class="dot busy"></div><span id="d-proc-txt">processing...</span></div>
+  <!-- d2: processing offer -->
+
+  <div class="panel" id="d2">
+    <div class="srow"><div class="dot busy"></div><span id="d2-txt">processing offer...</span></div>
   </div>
 
-  <div class="col hidden" id="d-share-answer">
-    <div class="srow"><div class="dot busy"></div><span>share answer back to sensor</span></div>
-    <button class="share-btn green" onclick="shareAnswer()">
-      <div class="share-ico">📤</div>
-      <div class="share-title">SHARE ANSWER BACK</div>
-      <div class="share-hint">AirDrop back to the Sensor device</div>
-    </button>
-    <div class="hint">Send back to the Sensor device.<br>They open it and you're both connected.</div>
+  <!-- d3: show answer QR for sensor to scan -->
+
+  <div class="panel" id="d3">
+    <div class="srow"><div class="dot busy"></div><span>sensor scans this QR to connect</span></div>
+    <div class="qr-box"><div id="d-qr" style="width:220px;height:220px"></div></div>
+    <div class="hint">Point the Sensor device camera at this QR code</div>
   </div>
 
-  <div class="col hidden" id="d-live">
+  <!-- d4: live display -->
+
+  <div class="panel" id="d4">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected ✓</span></div>
     <div class="agrid">
       <div class="ac"></div><div class="ac"><div class="arr" id="d-up">⬆️</div></div><div class="ac"></div>
@@ -262,330 +301,248 @@ width:100%;max-width:340px;transition:all .3s;min-height:48px}
   </div>
 </div>
 
+<!-- Load QR libs up front while online -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+
 <script>
-// ═══════════════════════════════════════════════════════════════════
-//  LevelVan — localStorage persistence fixes the "one tab" problem
+// ═══════════════════════════════════════════════════════
+//  LevelVan — clean rebuild
 //
-//  THE PROBLEM:
-//  iOS Safari opens AirDrop links in the SAME tab (replaces page).
-//  So the original RTCPeerConnection is destroyed.
-//  We cannot keep it alive across a page load.
+//  PAIRING FLOW:
+//  1. Sensor creates offer → shares URL (AirDrop) to Display
+//  2. Display opens URL → processes offer → shows ANSWER QR on screen
+//  3. Sensor (never leaves page) scans QR with camera → applies answer
+//  4. Connected — P2P data flows over local WiFi
 //
-//  THE INSIGHT:
-//  We don't need to keep the PC alive. We need to keep the OFFER alive.
-//  When the sensor opens the answer link, we:
-//  1. Read the answer from the URL hash
-//  2. Read our saved offer from localStorage (same device, persists across loads)
-//  3. Create a brand new RTCPeerConnection
-//  4. Set our saved offer as localDescription — BUT this causes fingerprint mismatch!
-//
-//  WAIT — that's the old problem. Let's think differently.
-//
-//  THE REAL INSIGHT:
-//  The display answered our ORIGINAL offer, which had a specific fingerprint.
-//  If we create a new PC, it has a new fingerprint. Mismatch.
-//
-//  THE ACTUAL SOLUTION:
-//  We use RTCPeerConnection.setLocalDescription() with our ORIGINAL SDP.
-//  BUT: setLocalDescription requires the SDP to match the PC's own certificate.
-//  A new PC won't accept another PC's SDP as its local description.
-//
-//  THEREFORE: The only way to avoid the fingerprint problem is to
-//  NEVER navigate away from the sensor page.
-//
-//  HOW: When the sensor opens the answer link, instead of navigating,
-//  we intercept the link BEFORE it navigates. We can't do that with AirDrop.
-//
-//  THE CORRECT SOLUTION FOR REAL:
-//  Do a FULL new handshake when sensor opens the answer link:
-//  1. Sensor opens answer link → new page load
-//  2. Page detects it's an answer → creates NEW PC → new offer
-//  3. Applies the display's answer from the hash? NO — wrong fingerprint.
-//
-//  ═══ FUNDAMENTAL TRUTH ═══
-//  WebRTC across a page reload without a server is fundamentally broken
-//  because DTLS certificates don't survive page reloads.
-//
-//  THE ONLY BROWSER-ONLY OFFLINE SOLUTION:
-//  Do the ENTIRE handshake without any page navigation.
-//  = Both devices visit the page, one is sensor, one is display.
-//  = They exchange data WITHOUT navigating.
-//  = Use a VISUAL channel that doesn't require navigation:
-//    → Display shows answer as TEXT on screen
-//    → Sensor user TYPES that text (or reads it)
-//  = A short numeric/alpha CODE that the user types manually.
-//
-//  This is the approach that actually works offline, browser-only, no server.
-//  The code exchange is ~6 alphanumeric characters typed by the user.
-//  No navigation. No page reloads. Original PC stays alive throughout.
-// ═══════════════════════════════════════════════════════════════════
+//  KEY: Sensor stays on page the whole time. No navigation = no
+//  fingerprint mismatch. Camera replaces the need for AirDrop back.
+// ═══════════════════════════════════════════════════════
 
 const LT=1.5, CT=4.0, MD=15;
 let pc=null, dc=null, motionOn=false, mode=null;
-let _answerURL=null;
+let camStream=null, scanTick=null;
 
-const ICE = { iceServers: [] };
+const ICE = { iceServers: [] }; // local WiFi only, no internet needed
+
 const $   = id => document.getElementById(id);
 const enc = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 const dec = str => { str=str.replace(/-/g,'+').replace(/_/g,'/'); while(str.length%4)str+='='; return JSON.parse(decodeURIComponent(escape(atob(str)))); };
 
-// Encode large SDP payload to short user-typeable code via localStorage relay
-// Key insight: both devices visit the same origin. We use localStorage as a
-// temporary mailbox. The "code" is just a 4-char random key into localStorage.
-// Sensor writes offer to localStorage['lv_offer_XXXX']
-// Display reads it, writes answer to localStorage['lv_answer_XXXX']
-// Sensor polls for the answer.
-// THIS WORKS because... wait, localStorage is per-device. Different devices.
-//
-// OK. Final answer. We use the approach that works:
-// The SDP is carried in the URL hash (as before for offer→display direction).
-// For the answer→sensor direction, we show it as TEXT on the display screen,
-// and the sensor user READS and TYPES a short code.
-// The "code" indexes into a compressed form of the answer.
-// We split it: display shows a 6-char code, sensor types it.
-// The full answer SDP is reconstructed from the code on the sensor side.
-//
-// But SDP is too large to fit in 6 chars...
-//
-// REAL REAL FINAL: We compress the answer to its 4 variable fields
-// (ufrag 4 chars + pwd ~22 chars + fingerprint 64 hex + 1 IP candidate)
-// and show that as a code. BUT we showed earlier this causes SDP reconstruction issues.
-//
-// ═══ WHAT ACTUALLY WORKS ═══
-// Show the full answer as a QR code on the DISPLAY screen.
-// Sensor scans it with camera. No navigation needed on sensor side.
-// The QR carries the answer. Sensor reads it via camera, applies it to existing PC.
-// Display generates QR from answer SDP. Sensor scans QR. Done.
-// QR is generated client-side (no library needed for small data — we use a free CDN).
-// Camera scanning uses jsQR (CDN). Both loaded at page open while online.
-// After that, fully offline.
-//
-// This is the correct, working, offline solution. Let's build it properly.
-
-function showCol(id) {
-  document.querySelectorAll('.col').forEach(e => { e.classList.add('hidden'); e.style.display='none'; });
-  const e=$(id); e.classList.remove('hidden');
-  Object.assign(e.style, {display:'flex', flexDirection:'column', alignItems:'center', gap:'16px', width:'100%'});
+// Show one panel within a screen, hide all others in that screen
+function showPanel(id) {
+  const target = $(id);
+  if (!target) { console.error('Panel not found:', id); return; }
+  const screen = target.closest('.screen');
+  screen.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  target.classList.add('active');
 }
+
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   $(id).classList.remove('hidden');
 }
 
-// ── On load: check hash for incoming offer (display device)
-window.addEventListener('DOMContentLoaded', () => {
-  const hash = location.hash.slice(1);
-  history.replaceState(null,'',location.pathname);
+// ── Read hash BEFORE clearing it
+const _hash = location.hash.slice(1);
+history.replaceState(null, '', location.pathname);
 
-  // Pre-load QR libs while we have connectivity
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', ()=>console.log('QRCode ready'));
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js', ()=>console.log('jsQR ready'));
-
-  if (hash.startsWith('LVO:')) {
+window.addEventListener('load', () => {
+  if (_hash.startsWith('LVO:')) {
+    // Display device: received offer
     mode = 'display';
     showScreen('display-screen');
-    showCol('d-processing');
-    processOffer(hash.slice(4));
+    showPanel('d2');
+    processOffer(_hash.slice(4));
   } else {
     showScreen('home-screen');
   }
 });
 
-function loadScript(src, cb) {
-  if (document.querySelector(`script[src="${src}"]`)) { cb(); return; }
-  const s = document.createElement('script');
-  s.src=src; s.onload=cb; s.onerror=()=>console.warn('Could not load',src);
-  document.head.appendChild(s);
-}
+window.goHome = () => { cleanup(); showScreen('home-screen'); };
+window.startSensor  = () => { mode='sensor';  showScreen('sensor-screen'); showPanel('s1'); initSensor(); };
+window.startDisplay = () => { mode='display'; showScreen('display-screen'); showPanel('d1'); };
 
-window.goHome    = () => { cleanup(); showScreen('home-screen'); };
-window.startSensor  = () => { mode='sensor';  showScreen('sensor-screen'); initSensor(); };
-window.startDisplay = () => { mode='display'; showScreen('display-screen'); showCol('d-wait-offer'); };
-
-// ════════════════════════════════════════
-//  SENSOR — create offer, share URL
-//  Stays on this page the whole time.
-//  Answer comes back via QR scan.
-// ════════════════════════════════════════
+// ════════════════════════════════
+//  SENSOR
+// ════════════════════════════════
 async function initSensor() {
-  showCol('s-generating');
   setupMotion();
 
   pc = new RTCPeerConnection(ICE);
-  dc = pc.createDataChannel('lv', {ordered:false, maxRetransmits:0});
-  dc.onopen  = () => showCol('s-live');
+  dc = pc.createDataChannel('lv', { ordered:false, maxRetransmits:0 });
+  dc.onopen  = () => { stopCamera(); showPanel('s5'); };
   dc.onclose = () => {};
   pc.onconnectionstatechange = () => {
-    console.log('Sensor PC:', pc.connectionState);
-    if (pc.connectionState==='connected') showCol('s-live');
-    if (pc.connectionState==='failed')    { $('s-conn-txt').textContent='failed — go back and retry'; }
+    console.log('Sensor:', pc.connectionState);
+    if (pc.connectionState === 'connected') { stopCamera(); showPanel('s5'); }
+    if (pc.connectionState === 'failed') $('s4-txt').textContent = 'failed — go back and retry';
   };
 
+  // Collect host candidates
   const cands = [];
-  pc.onicecandidate = e => { if(e.candidate) cands.push(e.candidate.candidate); };
+  pc.onicecandidate = e => { if (e.candidate) cands.push(e.candidate.candidate); };
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
 
-  await new Promise(resolve => {
-    if (pc.iceGatheringState==='complete') { resolve(); return; }
-    pc.onicegatheringstatechange = () => { if(pc.iceGatheringState==='complete') resolve(); };
-    setTimeout(resolve, 3000);
-  });
+  // Wait for ICE — local network only, fast
+  await gatherICE();
 
   const pkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands };
-  const offerURL = location.origin + location.pathname + '#LVO:' + enc(pkg);
-  console.log('Offer URL length:', offerURL.length);
-  window._offerURL = offerURL;
-  showCol('s-share-offer');
+  window._offerURL = location.origin + location.pathname + '#LVO:' + enc(pkg);
+  console.log('Offer ready, URL length:', window._offerURL.length);
+  showPanel('s2');
+}
+
+function gatherICE() {
+  return new Promise(resolve => {
+    if (pc.iceGatheringState === 'complete') { resolve(); return; }
+    pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') resolve(); };
+    setTimeout(resolve, 3000);
+  });
 }
 
 window.shareOffer = async () => {
   if (!window._offerURL) { alert('Not ready yet'); return; }
-  const shared = await doShare(window._offerURL, 'LevelVan — open on Display device', 'Open on the DISPLAY device');
-  if (shared) {
-    // Switch to scan-answer view
-    showCol('s-scan-answer');
-    startSensorCamera();
+  const ok = await doShare(window._offerURL, 'LevelVan — open on Display', 'Open on the DISPLAY device');
+  if (ok) {
+    showPanel('s3');
+    startCamera();
   }
 };
 
-// ════════════════════════════════════════
-//  SENSOR — scan the answer QR from display
-// ════════════════════════════════════════
-let scanInterval = null;
-let camStream = null;
-
-function startSensorCamera() {
-  if (!window.jsQR) {
-    setTimeout(startSensorCamera, 500); // wait for jsQR to load
-    return;
-  }
+// ── Camera: scan answer QR from display screen
+function startCamera() {
   navigator.mediaDevices.getUserMedia({
     video: { facingMode:'environment', width:{ideal:1280}, height:{ideal:720} },
     audio: false
   }).then(stream => {
     camStream = stream;
-    const video = $('s-cam-video');
-    video.srcObject = stream;
-    video.style.display = 'block';
-    scanInterval = setInterval(scanForAnswer, 250);
+    $('s-video').srcObject = stream;
+    scanTick = setInterval(scanFrame, 250);
   }).catch(e => {
-    console.error('Camera error:', e);
-    $('s-scan-hint').textContent = 'Camera unavailable — check permissions';
+    console.error('Camera:', e);
+    $('s-cam-hint').textContent = '⚠️ Camera unavailable — ' + e.message;
   });
 }
 
-function scanForAnswer() {
-  const video = $('s-cam-video');
-  if (!video || video.readyState < 2 || !video.videoWidth) return;
-  const canvas = $('s-scan-canvas');
-  canvas.width  = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const code = jsQR(img.data, img.width, img.height, {inversionAttempts:'dontInvert'});
+function scanFrame() {
+  if (!window.jsQR) return;
+  const v = $('s-video');
+  if (!v || v.readyState < 2 || !v.videoWidth) return;
+  const c = $('s-canvas');
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(v, 0, 0);
+  const img  = ctx.getImageData(0, 0, c.width, c.height);
+  const code = jsQR(img.data, img.width, img.height, { inversionAttempts:'dontInvert' });
   if (code && code.data.startsWith('LVA:')) {
-    clearInterval(scanInterval);
-    camStream?.getTracks().forEach(t=>t.stop());
-    $('s-cam-video').style.display = 'none';
+    clearInterval(scanTick); scanTick = null;
+    stopCamera();
     applyAnswer(code.data.slice(4));
   }
 }
 
+function stopCamera() {
+  if (scanTick) { clearInterval(scanTick); scanTick = null; }
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+}
+
 async function applyAnswer(encoded) {
-  showCol('s-connecting');
-  $('s-conn-txt').textContent = 'applying answer...';
+  showPanel('s4');
+  $('s4-txt').textContent = 'applying answer...';
   try {
     const pkg = dec(encoded);
     await pc.setRemoteDescription({ type: pkg.type, sdp: pkg.sdp });
     for (const c of (pkg.cands||[])) {
-      try { await pc.addIceCandidate({candidate:c, sdpMid:'0', sdpMLineIndex:0}); } catch(_){}
+      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(_){}
     }
-    $('s-conn-txt').textContent = 'connecting...';
+    $('s4-txt').textContent = 'connecting...';
   } catch(e) {
     console.error('applyAnswer:', e);
-    $('s-conn-txt').textContent = 'error: ' + e.message;
+    $('s4-txt').textContent = 'error: ' + e.message;
   }
 }
 
-// ════════════════════════════════════════
-//  DISPLAY — process offer, show answer QR
-// ════════════════════════════════════════
+// ════════════════════════════════
+//  DISPLAY
+// ════════════════════════════════
 async function processOffer(encoded) {
-  $('d-proc-txt').textContent = 'processing offer...';
+  $('d2-txt').textContent = 'processing offer...';
   try {
     const pkg = dec(encoded);
+
     pc = new RTCPeerConnection(ICE);
     pc.ondatachannel = e => {
       dc = e.channel;
-      dc.onopen    = () => showCol('d-live');
+      dc.onopen    = () => showPanel('d4');
       dc.onclose   = () => {};
       dc.onmessage = e => { try { updateDisplay(JSON.parse(e.data)); } catch(_){} };
     };
     pc.onconnectionstatechange = () => {
-      console.log('Display PC:', pc.connectionState);
-      if (pc.connectionState==='connected') showCol('d-live');
-      if (pc.connectionState==='failed')    $('d-proc-txt').textContent='failed — retry';
+      console.log('Display:', pc.connectionState);
+      if (pc.connectionState === 'connected') showPanel('d4');
+      if (pc.connectionState === 'failed') $('d2-txt').textContent = 'failed — retry';
     };
 
     await pc.setRemoteDescription({ type: pkg.type, sdp: pkg.sdp });
     for (const c of (pkg.cands||[])) {
-      try { await pc.addIceCandidate({candidate:c, sdpMid:'0', sdpMLineIndex:0}); } catch(_){}
+      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(_){}
     }
 
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
+    await gatherICE();
 
-    const cands = [];
-    pc.onicecandidate = e => { if(e.candidate) cands.push(e.candidate.candidate); };
-    await new Promise(resolve => {
-      if (pc.iceGatheringState==='complete') { resolve(); return; }
-      pc.onicegatheringstatechange = () => { if(pc.iceGatheringState==='complete') resolve(); };
-      setTimeout(resolve, 3000);
-    });
+    const answerPkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands: [] };
+    // Collect any trickled candidates
+    pc.onicecandidate = e => { if (e.candidate) answerPkg.cands.push(e.candidate.candidate); };
 
-    const answerPkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands };
-    const answerEncoded = enc(answerPkg);
-    const qrData = 'LVA:' + answerEncoded;
-    console.log('Answer QR data length:', qrData.length);
+    const qrData = 'LVA:' + enc(answerPkg);
+    console.log('Answer QR length:', qrData.length);
 
-    // Show QR code for sensor to scan
-    showCol('d-show-qr');
-    // Wait for QRCode lib
-    const makeQR = () => {
-      if (!window.QRCode) { setTimeout(makeQR, 300); return; }
-      const target = $('d-qr-target');
-      target.innerHTML = '';
-      new QRCode(target, {
-        text: qrData,
-        width: 220, height: 220,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.L  // lowest = fewest dots = most scannable
-      });
-      console.log('QR rendered');
-    };
-    makeQR();
+    // Render QR
+    showPanel('d3');
+    renderQR('d-qr', qrData);
 
   } catch(e) {
     console.error('processOffer:', e);
-    $('d-proc-txt').textContent = 'error: ' + e.message;
+    $('d2-txt').textContent = 'error: ' + e.message;
+    showPanel('d2');
   }
 }
 
-// ════════════════════════════════════════
-//  SHARE HELPER
-// ════════════════════════════════════════
+function renderQR(targetId, text) {
+  const target = $(targetId);
+  target.innerHTML = '';
+  const tryRender = () => {
+    if (!window.QRCode) { setTimeout(tryRender, 200); return; }
+    new QRCode(target, {
+      text,
+      width: 220, height: 220,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.L  // fewest dots = most scannable
+    });
+    console.log('QR rendered');
+  };
+  tryRender();
+}
+
+// ════════════════════════════════
+//  SHARE
+// ════════════════════════════════
 async function doShare(url, title, text) {
   if (navigator.share) {
-    try { await navigator.share({title, text, url}); return true; }
-    catch(e) { if(e.name==='AbortError') return false; }
+    try { await navigator.share({ title, text, url }); return true; }
+    catch(e) { if (e.name === 'AbortError') return false; }
   }
   try {
     await navigator.clipboard.writeText(url);
-    alert('Link copied!\n\nPaste and send to the other device.');
+    alert('Link copied! Paste and send to the other device.');
     return true;
   } catch(_) {
     prompt('Copy and send this link:', url);
@@ -593,13 +550,13 @@ async function doShare(url, title, text) {
   }
 }
 
-// ════════════════════════════════════════
+// ════════════════════════════════
 //  MOTION
-// ════════════════════════════════════════
+// ════════════════════════════════
 function setupMotion() {
-  if (typeof DeviceOrientationEvent==='undefined') return;
-  if (typeof DeviceOrientationEvent.requestPermission==='function') {
-    Object.assign($('perm-wrap').style, {display:'flex',flexDirection:'column',width:'100%',maxWidth:'300px'});
+  if (typeof DeviceOrientationEvent === 'undefined') return;
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    $('perm-wrap').style.display = 'block';
   } else {
     window.addEventListener('deviceorientation', onOrient, true);
     motionOn = true;
@@ -608,121 +565,88 @@ function setupMotion() {
 window.askMotion = async () => {
   try {
     const r = await DeviceOrientationEvent.requestPermission();
-    if (r==='granted') {
+    if (r === 'granted') {
       window.addEventListener('deviceorientation', onOrient, true);
-      motionOn = true; $('perm-wrap').style.display='none';
+      motionOn = true;
+      $('perm-wrap').style.display = 'none';
     }
   } catch(e) { console.error(e); }
 };
 function onOrient(ev) {
-  if (mode!=='sensor') return;
-  const roll  = Math.max(-90,Math.min(90,ev.gamma||0));
-  const pitch = Math.max(-90,Math.min(90,ev.beta||0));
-  updateSensor(roll, pitch);
-  if (dc?.readyState==='open') {
-    try { dc.send(JSON.stringify({roll:+roll.toFixed(2),pitch:+pitch.toFixed(2)})); } catch(_){}
+  if (mode !== 'sensor') return;
+  const r = Math.max(-90, Math.min(90, ev.gamma||0));
+  const p = Math.max(-90, Math.min(90, ev.beta||0));
+  updateSensor(r, p);
+  if (dc?.readyState === 'open') {
+    try { dc.send(JSON.stringify({ roll:+r.toFixed(2), pitch:+p.toFixed(2) })); } catch(_){}
   }
 }
 
-// ════════════════════════════════════════
+// ════════════════════════════════
 //  SENSOR UI
-// ════════════════════════════════════════
+// ════════════════════════════════
 function updateSensor(r, p) {
-  const ar=Math.abs(r),ap=Math.abs(p),mx=Math.max(ar,ap);
-  const lv=mx<=LT,cl=mx<=CT;
+  const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
+  const lv=mx<=LT, cl=mx<=CT;
   $('s-bubble').style.left = clamp(50+(r/30)*50)+'%';
   $('s-bubble').style.top  = clamp(50+(p/30)*50)+'%';
   $('s-bubble').className  = 'bubble'+(lv?' lv':'');
-  $('s-roll').textContent  = r.toFixed(1)+'°'; $('s-roll').className  = 'aval '+(ar<=LT?'c-ok':ar<=CT?'c-wn':'c-bd');
-  $('s-pitch').textContent = p.toFixed(1)+'°'; $('s-pitch').className = 'aval '+(ap<=LT?'c-ok':ap<=CT?'c-wn':'c-bd');
+  $('s-roll').textContent  = r.toFixed(1)+'°'; $('s-roll').className  = 'aval '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
+  $('s-pitch').textContent = p.toFixed(1)+'°'; $('s-pitch').className = 'aval '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
   $('s-badge').className   = 'badge '+(lv?'LV':cl?'CL':'AD');
   $('s-badge').textContent = lv?'✓ LEVEL':cl?'≈ CLOSE':'✗ ADJUST';
   setBar('s-rb','s-rd',r); setBar('s-pb','s-pd',p);
 }
 
-// ════════════════════════════════════════
+// ════════════════════════════════
 //  DISPLAY UI
-// ════════════════════════════════════════
+// ════════════════════════════════
 function updateDisplay(d) {
-  const r=d.roll,p=d.pitch;
-  const ar=Math.abs(r),ap=Math.abs(p),mx=Math.max(ar,ap);
-  const lv=mx<=LT,cl=mx<=CT;
-  ['up','down','left','right'].forEach(a=>$('d-'+a).className='arr');
+  const r=d.roll, p=d.pitch;
+  const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
+  const lv=mx<=LT, cl=mx<=CT;
+  ['up','down','left','right'].forEach(a => $('d-'+a).className='arr');
   if (!lv) {
-    const c=mx>CT?'ad':'cl';
-    if(p> LT) $('d-up').className='arr '+c;
-    if(p<-LT) $('d-down').className='arr '+c;
-    if(r> LT) $('d-right').className='arr '+c;
-    if(r<-LT) $('d-left').className='arr '+c;
-  } else ['up','down','left','right'].forEach(a=>$('d-'+a).className='arr ok');
-  $('d-van').className='van'+(lv?' lv':'');
-  const ins=$('d-instr');
-  ins.className='instr '+(lv?'LV':cl?'CL':'AD');
-  if(lv)      ins.textContent='✓ PERFECTLY LEVEL';
-  else if(cl) ins.textContent='≈ ALMOST — FINE ADJUST';
+    const c = mx>CT?'ad':'cl';
+    if(p> LT) $('d-up').className    = 'arr '+c;
+    if(p<-LT) $('d-down').className  = 'arr '+c;
+    if(r> LT) $('d-right').className = 'arr '+c;
+    if(r<-LT) $('d-left').className  = 'arr '+c;
+  } else ['up','down','left','right'].forEach(a => $('d-'+a).className='arr ok');
+  $('d-van').className = 'van'+(lv?' lv':'');
+  const ins = $('d-instr');
+  ins.className = 'instr '+(lv?'LV':cl?'CL':'AD');
+  if (lv)      ins.textContent = '✓ PERFECTLY LEVEL';
+  else if (cl) ins.textContent = '≈ ALMOST — FINE ADJUST';
   else {
     const pts=[];
     if(ap>LT) pts.push(p>0?'LIFT FRONT':'LIFT REAR');
     if(ar>LT) pts.push(r>0?'LIFT RIGHT':'LIFT LEFT');
-    ins.textContent=pts.join(' + ');
+    ins.textContent = pts.join(' + ');
   }
-  $('d-roll').textContent=r.toFixed(1)+'°';   $('d-roll').className='aval '+(ar<=LT?'c-ok':ar<=CT?'c-wn':'c-bd');
-  $('d-pitch').textContent=p.toFixed(1)+'°';  $('d-pitch').className='aval '+(ap<=LT?'c-ok':ap<=CT?'c-wn':'c-bd');
+  $('d-roll').textContent  = r.toFixed(1)+'°'; $('d-roll').className  = 'aval '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
+  $('d-pitch').textContent = p.toFixed(1)+'°'; $('d-pitch').className = 'aval '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
   setBar('d-rb','d-rd',r); setBar('d-pb','d-pd',p);
 }
 
-function setBar(fid,lid,angle) {
-  const pct=Math.min(Math.abs(angle)/MD*50,48);
-  const col=Math.abs(angle)<=LT?'var(--accent2)':Math.abs(angle)<=CT?'var(--warn)':'var(--danger)';
+function setBar(fid, lid, angle) {
+  const pct = Math.min(Math.abs(angle)/MD*50, 48);
+  const col = Math.abs(angle)<=LT?'var(--accent2)':Math.abs(angle)<=CT?'var(--warn)':'var(--danger)';
   const f=$(fid);
   if(angle>=0){f.style.left='50%';f.style.width=pct+'%';}else{f.style.left=(50-pct)+'%';f.style.width=pct+'%';}
   f.style.background=col;
-  $(lid).textContent=Math.abs(angle)<=LT?'✓':(angle>0?'+':'')+angle.toFixed(1)+'°';
-  $(lid).style.color=col;
+  $(lid).textContent = Math.abs(angle)<=LT?'✓':(angle>0?'+':'')+angle.toFixed(1)+'°';
+  $(lid).style.color = col;
 }
 function clamp(v){return Math.max(10,Math.min(90,v));}
 
 function cleanup() {
-  clearInterval(scanInterval); scanInterval=null;
-  camStream?.getTracks().forEach(t=>t.stop()); camStream=null;
+  stopCamera();
   if(dc){try{dc.close();}catch(_){}} dc=null;
   if(pc){try{pc.close();}catch(_){}} pc=null;
   if(motionOn){window.removeEventListener('deviceorientation',onOrient,true);motionOn=false;}
   mode=null; window._offerURL=null;
 }
-</script>
-
-<!-- SENSOR extra states (injected here to keep HTML readable) -->
-
-<script>
-// Add the scan-answer and show-qr cols dynamically so we can reference them above
-document.addEventListener('DOMContentLoaded', () => {
-  // Add scan-answer state to sensor screen
-  const sScreen = document.getElementById('sensor-screen');
-  const scanCol = document.createElement('div');
-  scanCol.className = 'col hidden';
-  scanCol.id = 's-scan-answer';
-  scanCol.innerHTML = `
-    <div class="srow"><div class="dot busy"></div><span>scan the QR from the display</span></div>
-    <div style="position:relative;width:100%;max-width:300px;border-radius:12px;overflow:hidden;background:#000">
-      <video id="s-cam-video" autoplay playsinline muted style="width:100%;display:none;border-radius:12px"></video>
-      <div style="position:absolute;left:10%;right:10%;height:2px;background:var(--accent);box-shadow:var(--glow);animation:scan 2s ease-in-out infinite;top:20%"></div>
-      <canvas id="s-scan-canvas" style="display:none"></canvas>
-    </div>
-    <div class="hint" id="s-scan-hint">Point camera at the QR code on the Display device</div>
-    <style>@keyframes scan{0%,100%{top:15%}50%{top:80%}}</style>
-
-`;
-sScreen.appendChild(scanCol);
-
-// Add show-qr state to display screen
-const dScreen = document.getElementById(‘display-screen’);
-const qrCol = document.createElement(‘div’);
-qrCol.className = ‘col hidden’;
-qrCol.id = ‘d-show-qr’;
-qrCol.innerHTML = `<div class="srow"><div class="dot busy"></div><span>sensor scans this QR</span></div> <div style="background:#fff;padding:10px;border-radius:12px;display:inline-block"> <div id="d-qr-target" style="width:220px;height:220px"></div> </div> <div class="hint">Point the Sensor device's camera at this QR code</div>`;
-dScreen.appendChild(qrCol);
-});
 </script>
 
 </body>
