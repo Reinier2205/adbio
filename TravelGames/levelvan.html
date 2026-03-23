@@ -272,7 +272,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
           <line x1="132" y1="224" x2="100" y2="298" stroke="#5ab0cc" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
           <line x1="72" y1="248" x2="128" y2="248" stroke="#5ab0cc" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
           <circle cx="100" cy="300" r="7" fill="#3a7a9a" stroke="#8ad8ee" stroke-width="2" opacity="0.95"/>
-          <circle cx="100" cy="126" r="16" fill="none" stroke="#8ad8ee" stroke-width="1" opacity="0.35"/>
+          <circle cx="100" cy="126" r="58" fill="none" stroke="#8ad8ee" stroke-width="1" stroke-dasharray="4 4" opacity="0.25"/>
+          <circle cx="100" cy="126" r="8" fill="none" stroke="#8ad8ee" stroke-width="1" opacity="0.4"/>
           <circle cx="100" cy="126" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5" id="s-van-bubble" opacity="0.95" filter="url(#s-fg)"/>
         </svg>
       </div>
@@ -409,8 +410,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
           <circle cx="100" cy="300" r="7" fill="#3a7a9a" stroke="#8ad8ee" stroke-width="2" opacity="0.95"/>
 
           <!-- ══ LEVEL BUBBLE — centre of body ══ -->
-          <circle cx="100" cy="126" r="16" fill="none" stroke="#8ad8ee" stroke-width="1" opacity="0.35"/>
-          <circle cx="100" cy="126" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5"
+          <circle cx="100" cy="126" r="58" fill="none" stroke="#8ad8ee" stroke-width="1" stroke-dasharray="4 4" opacity="0.25"/>
+          <circle cx="100" cy="126" r="8" fill="none" stroke="#8ad8ee" stroke-width="1" opacity="0.4"/>
+          <circle cx="100" cy="126" r="6" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5"
                   id="van-bubble" opacity="0.95" filter="url(#fg)"/>
         </svg>
       </div>
@@ -721,8 +723,8 @@ function updateSensor(r, p) {
   $('s-van3d').style.transform = `rotateZ(180deg) rotateX(${rx}deg) rotateY(${ry}deg)`;
 
   // Bubble inside sensor SVG
-  const sbx = 100 + Math.max(-11, Math.min(11, r / 90 * 22)) * -1;
-  const sby = 126 + Math.max(-11, Math.min(11, p / 90 * 22));
+  const sbx = 100 + Math.max(-55, Math.min(55, r / 15 * 55)) * -1;
+  const sby = 126 + Math.max(-70, Math.min(70, p / 15 * 70));
   const sb = $('s-van-bubble');
   if (sb) {
     sb.setAttribute('cx', sbx.toFixed(1));
@@ -757,8 +759,8 @@ function updateDisplay(d) {
   $('van3d').style.transform = `rotateZ(180deg) rotateX(${rx}deg) rotateY(${ry}deg)`;
 
   // ── Bubble dot — x inverted due to 180° rotation
-  const bx = 100 + Math.max(-11, Math.min(11, r / 90 * 22)) * -1;
-  const by = 126 + Math.max(-11, Math.min(11, p / 90 * 22));
+  const bx = 100 + Math.max(-55, Math.min(55, r / 15 * 55)) * -1;
+  const by = 126 + Math.max(-70, Math.min(70, p / 15 * 70));
   const bubble = $('van-bubble');
   if (bubble) {
     bubble.setAttribute('cx', bx.toFixed(1));
