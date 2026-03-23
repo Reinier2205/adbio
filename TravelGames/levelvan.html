@@ -148,6 +148,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .instr.wt{color:var(--dim)}
 .conn-count{font-size:.65rem;color:var(--dim);text-align:center}
 .conn-count span{color:var(--accent2)}
+/* 3D caravan scene */
+.van3d-scene{width:100%;display:flex;justify-content:center;align-items:center;
+  perspective:600px;perspective-origin:50% 40%}
+.van3d-stage{transition:transform 0.15s ease-out;transform-style:preserve-3d;
+  transform:rotateX(0deg) rotateZ(0deg)}
+.van3d-svg{width:220px;height:auto;display:block;filter:drop-shadow(0 8px 24px rgba(0,212,255,0.18))}
 /* Sticky PIN bar at top of sensor screen */
 .pin-bar{position:fixed;top:0;left:0;right:0;z-index:10;
   display:flex;align-items:center;
@@ -284,13 +290,155 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   <!-- d3: live display -->
   <div class="panel" id="d3">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected ✓</span></div>
-    <div class="agrid">
-      <div class="ac"></div><div class="ac"><div class="arr" id="d-up">⬆️</div></div><div class="ac"></div>
-      <div class="ac"><div class="arr" id="d-left">⬅️</div></div>
-      <div class="ac"><div class="van" id="d-van">🚐</div></div>
-      <div class="ac"><div class="arr" id="d-right">➡️</div></div>
-      <div class="ac"></div><div class="ac"><div class="arr" id="d-down">⬇️</div></div><div class="ac"></div>
+
+    <!-- 3D caravan view -->
+    <div class="van3d-scene">
+      <div class="van3d-stage" id="van3d">
+        <svg class="van3d-svg" viewBox="0 0 260 340" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Body gradient — semi-transparent blue-grey -->
+            <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1a3a6e" stop-opacity="0.85"/>
+              <stop offset="100%" stop-color="#0d2040" stop-opacity="0.75"/>
+            </linearGradient>
+            <!-- Roof gradient -->
+            <linearGradient id="roofGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2a5090" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#1a3060" stop-opacity="0.8"/>
+            </linearGradient>
+            <!-- Wheel gradient -->
+            <radialGradient id="wheelGrad" cx="40%" cy="35%">
+              <stop offset="0%" stop-color="#3a3a4a"/>
+              <stop offset="70%" stop-color="#1a1a24"/>
+              <stop offset="100%" stop-color="#0a0a12"/>
+            </radialGradient>
+            <!-- Tyre highlight -->
+            <radialGradient id="tyreHL" cx="35%" cy="30%">
+              <stop offset="0%" stop-color="#555566" stop-opacity="0.8"/>
+              <stop offset="100%" stop-color="#1a1a24" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="glow-g">
+              <feGaussianBlur stdDeviation="2" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow-r">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- ── HITCH (front, top of image) ── -->
+          <rect x="122" y="2" width="16" height="28" rx="4" fill="#1e3a6e" stroke="#00d4ff" stroke-width="1" opacity="0.9"/>
+          <rect x="118" y="26" width="24" height="8" rx="3" fill="#1a3060" stroke="#00d4ff" stroke-width="1"/>
+          <!-- hitch ball -->
+          <circle cx="130" cy="10" r="5" fill="#2a4a80" stroke="#00d4ff" stroke-width="1.5"/>
+
+          <!-- ── MAIN BODY ── -->
+          <!-- Body shadow/depth layer -->
+          <rect x="28" y="44" width="204" height="228" rx="14" fill="#050e1e" opacity="0.5"/>
+          <!-- Main body -->
+          <rect x="24" y="40" width="212" height="224" rx="14" fill="url(#bodyGrad)" stroke="#1e4a8e" stroke-width="1.5"/>
+          <!-- Roof panel -->
+          <rect x="30" y="46" width="200" height="212" rx="11" fill="url(#roofGrad)" stroke="#2a5aaa" stroke-width="1" opacity="0.6"/>
+
+          <!-- Body edge highlight (left) -->
+          <rect x="24" y="54" width="4" height="196" rx="2" fill="#00d4ff" opacity="0.15"/>
+          <!-- Body edge highlight (right) -->
+          <rect x="232" y="54" width="4" height="196" rx="2" fill="#00d4ff" opacity="0.15"/>
+
+          <!-- Window row (front) -->
+          <rect x="50" y="68" width="68" height="44" rx="6" fill="#0a1e3e" stroke="#2a6aaa" stroke-width="1.5" opacity="0.9"/>
+          <rect x="142" y="68" width="68" height="44" rx="6" fill="#0a1e3e" stroke="#2a6aaa" stroke-width="1.5" opacity="0.9"/>
+          <!-- Window glare -->
+          <rect x="54" y="72" width="24" height="8" rx="3" fill="#4a8acc" opacity="0.25"/>
+          <rect x="146" y="72" width="24" height="8" rx="3" fill="#4a8acc" opacity="0.25"/>
+
+          <!-- Door -->
+          <rect x="90" y="148" width="80" height="90" rx="6" fill="#0d2040" stroke="#1e4a8e" stroke-width="1.5"/>
+          <rect x="94" y="152" width="72" height="82" rx="4" fill="#0a1830" stroke="#1a3a6e" stroke-width="1"/>
+          <!-- Door handle -->
+          <rect x="158" y="192" width="14" height="5" rx="2.5" fill="#2a5aaa" stroke="#00d4ff" stroke-width="1"/>
+
+          <!-- Side vent strips -->
+          <rect x="34" y="160" width="48" height="4" rx="2" fill="#1a3a6e" opacity="0.7"/>
+          <rect x="34" y="170" width="48" height="4" rx="2" fill="#1a3a6e" opacity="0.7"/>
+          <rect x="178" y="160" width="48" height="4" rx="2" fill="#1a3a6e" opacity="0.7"/>
+          <rect x="178" y="170" width="48" height="4" rx="2" fill="#1a3a6e" opacity="0.7"/>
+
+          <!-- Chassis underline -->
+          <rect x="24" y="252" width="212" height="12" rx="4" fill="#0d1e3e" stroke="#1a3a6e" stroke-width="1"/>
+
+          <!-- ── REAR LIGHTS ── -->
+          <!-- Left tail light -->
+          <rect x="28" y="244" width="28" height="14" rx="4" fill="#3a0000" stroke="#ff4444" stroke-width="1.5" id="light-l"/>
+          <rect x="30" y="246" width="12" height="10" rx="2" fill="#ff2222" opacity="0.7" filter="url(#glow-r)" id="light-l-inner"/>
+          <!-- Right tail light -->
+          <rect x="204" y="244" width="28" height="14" rx="4" fill="#3a0000" stroke="#ff4444" stroke-width="1.5" id="light-r"/>
+          <rect x="218" y="246" width="12" height="10" rx="2" fill="#ff2222" opacity="0.7" filter="url(#glow-r)" id="light-r-inner"/>
+
+          <!-- ── AXLE BAR ── -->
+          <rect x="20" y="268" width="220" height="8" rx="4" fill="#0d1830" stroke="#1a3060" stroke-width="1"/>
+
+          <!-- ── WHEELS (left pair) ── -->
+          <!-- Left-front wheel -->
+          <ellipse cx="52" cy="290" rx="28" ry="14" fill="#111118" stroke="#2a2a3a" stroke-width="1.5"/>
+          <ellipse cx="52" cy="290" rx="28" ry="14" fill="url(#wheelGrad)"/>
+          <ellipse cx="52" cy="290" rx="28" ry="14" fill="url(#tyreHL)"/>
+          <!-- Rim -->
+          <ellipse cx="52" cy="290" rx="16" ry="8" fill="#1e1e2e" stroke="#3a3a5a" stroke-width="1.5"/>
+          <ellipse cx="52" cy="290" rx="7" ry="3.5" fill="#2a2a3e" stroke="#4a4a6a" stroke-width="1"/>
+          <!-- Wheel bolts -->
+          <circle cx="52" cy="283" r="1.5" fill="#4a4a6a"/>
+          <circle cx="52" cy="297" r="1.5" fill="#4a4a6a"/>
+          <circle cx="45" cy="287" r="1.5" fill="#4a4a6a"/>
+          <circle cx="59" cy="287" r="1.5" fill="#4a4a6a"/>
+          <circle cx="45" cy="293" r="1.5" fill="#4a4a6a"/>
+          <circle cx="59" cy="293" r="1.5" fill="#4a4a6a"/>
+
+          <!-- Left-rear wheel -->
+          <ellipse cx="52" cy="318" rx="28" ry="14" fill="url(#wheelGrad)"/>
+          <ellipse cx="52" cy="318" rx="28" ry="14" fill="url(#tyreHL)"/>
+          <ellipse cx="52" cy="318" rx="16" ry="8" fill="#1e1e2e" stroke="#3a3a5a" stroke-width="1.5"/>
+          <ellipse cx="52" cy="318" rx="7" ry="3.5" fill="#2a2a3e" stroke="#4a4a6a" stroke-width="1"/>
+          <circle cx="52" cy="311" r="1.5" fill="#4a4a6a"/>
+          <circle cx="52" cy="325" r="1.5" fill="#4a4a6a"/>
+          <circle cx="45" cy="315" r="1.5" fill="#4a4a6a"/>
+          <circle cx="59" cy="315" r="1.5" fill="#4a4a6a"/>
+          <circle cx="45" cy="321" r="1.5" fill="#4a4a6a"/>
+          <circle cx="59" cy="321" r="1.5" fill="#4a4a6a"/>
+
+          <!-- ── WHEELS (right pair) ── -->
+          <!-- Right-front wheel -->
+          <ellipse cx="208" cy="290" rx="28" ry="14" fill="url(#wheelGrad)"/>
+          <ellipse cx="208" cy="290" rx="28" ry="14" fill="url(#tyreHL)"/>
+          <ellipse cx="208" cy="290" rx="16" ry="8" fill="#1e1e2e" stroke="#3a3a5a" stroke-width="1.5"/>
+          <ellipse cx="208" cy="290" rx="7" ry="3.5" fill="#2a2a3e" stroke="#4a4a6a" stroke-width="1"/>
+          <circle cx="208" cy="283" r="1.5" fill="#4a4a6a"/>
+          <circle cx="208" cy="297" r="1.5" fill="#4a4a6a"/>
+          <circle cx="201" cy="287" r="1.5" fill="#4a4a6a"/>
+          <circle cx="215" cy="287" r="1.5" fill="#4a4a6a"/>
+          <circle cx="201" cy="293" r="1.5" fill="#4a4a6a"/>
+          <circle cx="215" cy="293" r="1.5" fill="#4a4a6a"/>
+
+          <!-- Right-rear wheel -->
+          <ellipse cx="208" cy="318" rx="28" ry="14" fill="url(#wheelGrad)"/>
+          <ellipse cx="208" cy="318" rx="28" ry="14" fill="url(#tyreHL)"/>
+          <ellipse cx="208" cy="318" rx="16" ry="8" fill="#1e1e2e" stroke="#3a3a5a" stroke-width="1.5"/>
+          <ellipse cx="208" cy="318" rx="7" ry="3.5" fill="#2a2a3e" stroke="#4a4a6a" stroke-width="1"/>
+          <circle cx="208" cy="311" r="1.5" fill="#4a4a6a"/>
+          <circle cx="208" cy="325" r="1.5" fill="#4a4a6a"/>
+          <circle cx="201" cy="315" r="1.5" fill="#4a4a6a"/>
+          <circle cx="215" cy="315" r="1.5" fill="#4a4a6a"/>
+          <circle cx="201" cy="321" r="1.5" fill="#4a4a6a"/>
+          <circle cx="215" cy="321" r="1.5" fill="#4a4a6a"/>
+
+          <!-- Level indicator ring (centre of body) -->
+          <circle cx="130" cy="152" r="22" fill="none" stroke="#1e3a6e" stroke-width="1.5" opacity="0.6"/>
+          <circle cx="130" cy="152" r="6" fill="#1e3a6e" stroke="#00d4ff" stroke-width="1.5" id="van-bubble" opacity="0.9"/>
+        </svg>
+      </div>
     </div>
+
     <div class="instr wt" id="d-instr">waiting for data...</div>
     <div class="bars">
       <div class="bw"><div class="blbl"><span>ROLL</span><span id="d-rd"></span></div>
@@ -606,15 +754,31 @@ function updateDisplay(d) {
   const r=d.roll, p=d.pitch;
   const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
   const lv=mx<=LT, cl=mx<=CT;
-  ['up','down','left','right'].forEach(a => $('d-'+a).className='arr');
-  if (!lv) {
-    const c = mx>CT?'ad':'cl';
-    if(p> LT) $('d-up').className    = 'arr '+c;
-    if(p<-LT) $('d-down').className  = 'arr '+c;
-    if(r> LT) $('d-right').className = 'arr '+c;
-    if(r<-LT) $('d-left').className  = 'arr '+c;
-  } else { ['up','down','left','right'].forEach(a => $('d-'+a).className='arr ok'); }
-  $('d-van').className = 'van'+(lv?' lv':'');
+
+  // ── 3D tilt: pitch = rotateX (front/back), roll = rotateZ (left/right)
+  // Clamp to ±25° for visual clarity — real tilt rarely exceeds this
+  const rx = Math.max(-25, Math.min(25, p)) * -1; // negative: front-down tilts top toward viewer
+  const rz = Math.max(-25, Math.min(25, r)) * -1; // negative: right-down tilts right side down
+  $('van3d').style.transform = `rotateX(${rx}deg) rotateZ(${rz}deg)`;
+
+  // ── Bubble dot inside the level ring on the SVG
+  const bx = 130 + Math.max(-18, Math.min(18, r / 90 * 36));
+  const by = 152 + Math.max(-18, Math.min(18, p / 90 * 36));
+  const bubble = $('van-bubble');
+  if (bubble) {
+    bubble.setAttribute('cx', bx.toFixed(1));
+    bubble.setAttribute('cy', by.toFixed(1));
+    bubble.setAttribute('fill', lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444');
+    bubble.setAttribute('stroke', lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444');
+  }
+
+  // ── Tail lights pulse red when tilted
+  const lightOpacity = lv ? '0.4' : cl ? '0.65' : '1';
+  ['light-l-inner','light-r-inner'].forEach(id => {
+    const el = $(id); if(el) el.setAttribute('opacity', lightOpacity);
+  });
+
+  // ── Instruction banner
   const ins = $('d-instr');
   ins.className = 'instr '+(lv?'LV':cl?'CL':'AD');
   if (lv)      ins.textContent = '✓ PERFECTLY LEVEL';
@@ -625,6 +789,7 @@ function updateDisplay(d) {
     if(ar>LT) pts.push(r>0?'LIFT RIGHT':'LIFT LEFT');
     ins.textContent = pts.join(' + ');
   }
+
   $('d-roll').textContent  = r.toFixed(1)+'°'; $('d-roll').className  = 'aval '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
   $('d-pitch').textContent = p.toFixed(1)+'°'; $('d-pitch').className = 'aval '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
   setBar('d-rb','d-rd',r); setBar('d-pb','d-pd',p);
