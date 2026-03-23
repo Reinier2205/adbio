@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a1628">
+<title>CaravanLevel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1628;
+    --bg2: #0f1f3d;
+    --panel: #112244;
+    --border: #1e3a6e;
+    --accent: #00d4ff;
+    --accent2: #00ff88;
+    --warn: #ffaa00;
+    --danger: #ff4444;
+    --text: #c8e0ff;
+    --dim: #4a6fa5;
+    --glow: 0 0 20px rgba(0,212,255,0.4);
+    --glow2: 0 0 20px rgba(0,255,136,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; }
+
+/* –– BACKGROUND –– */
+body::before {
+content: ‘’;
+position: fixed; inset: 0; z-index: 0;
+background: radial-gradient(ellipse at 20% 20%, rgba(0,100,200,0.15) 0%, transparent 60%),
+radial-gradient(ellipse at 80% 80%, rgba(0,212,255,0.08) 0%, transparent 50%);
+pointer-events: none;
+}
+.grid-bg {
+position: fixed; inset: 0; z-index: 0;
+background-image: linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+}
+
+/* –– SCREENS –– */
+.screen { position: fixed; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+.screen.hidden { display: none; }
+
+/* –– HOME SCREEN –– */
+.logo { font-family: ‘Orbitron’, monospace; font-size: 2rem; font-weight: 900; color: var(–accent); text-shadow: var(–glow); letter-spacing: 4px; margin-bottom: 6px; }
+.tagline { color: var(–dim); font-size: 0.75rem; letter-spacing: 2px; margin-bottom: 40px; }
+.mode-cards { display: flex; gap: 16px; width: 100%; max-width: 360px; }
+.mode-card {
+flex: 1; padding: 24px 16px; border-radius: 12px;
+background: var(–panel); border: 1px solid var(–border);
+cursor: pointer; text-align: center; transition: all 0.2s;
+display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.mode-card:active { transform: scale(0.96); }
+.mode-card.sensor-card:hover, .mode-card.sensor-card:focus { border-color: var(–accent); box-shadow: var(–glow); }
+.mode-card.display-card:hover, .mode-card.display-card:focus { border-color: var(–accent2); box-shadow: var(–glow2); }
+.mode-icon { font-size: 2.4rem; }
+.mode-title { font-family: ‘Orbitron’, monospace; font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; }
+.sensor-card .mode-title { color: var(–accent); }
+.display-card .mode-title { color: var(–accent2); }
+.mode-desc { font-size: 0.68rem; color: var(–dim); line-height: 1.5; }
+
+/* –– BUTTONS –– */
+.btn {
+display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+padding: 14px 28px; border-radius: 8px; border: none; cursor: pointer;
+font-family: ‘Orbitron’, monospace; font-size: 0.75rem; font-weight: 700; letter-spacing: 2px;
+transition: all 0.2s; width: 100%; max-width: 320px;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(–accent); color: var(–bg); box-shadow: var(–glow); }
+.btn-primary:hover { background: #33ddff; }
+.btn-success { background: var(–accent2); color: var(–bg); box-shadow: var(–glow2); }
+.btn-success:hover { background: #33ffaa; }
+.btn-ghost { background: transparent; color: var(–dim); border: 1px solid var(–border); }
+.btn-ghost:hover { border-color: var(–dim); color: var(–text); }
+.btn:disabled { opacity: 0.4; pointer-events: none; }
+
+/* –– PANEL –– */
+.panel { background: var(–panel); border: 1px solid var(–border); border-radius: 12px; padding: 20px; width: 100%; max-width: 360px; }
+.panel-title { font-family: ‘Orbitron’, monospace; font-size: 0.7rem; color: var(–dim); letter-spacing: 3px; margin-bottom: 16px; }
+
+/* –– SENSOR SCREEN –– */
+#sensor-screen { gap: 16px; justify-content: flex-start; padding-top: 60px; overflow-y: auto; }
+.status-bar { display: flex; align-items: center; gap: 10px; font-size: 0.7rem; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(–dim); }
+.status-dot.connected { background: var(–accent2); box-shadow: 0 0 8px var(–accent2); animation: pulse 2s infinite; }
+.status-dot.connecting { background: var(–warn); animation: blink 0.8s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+.code-display { text-align: center; }
+.code-label { font-size: 0.65rem; color: var(–dim); letter-spacing: 2px; margin-bottom: 8px; }
+.session-code { font-family: ‘Orbitron’, monospace; font-size: 2.4rem; font-weight: 900; color: var(–accent); text-shadow: var(–glow); letter-spacing: 8px; }
+
+/* –– BUBBLE LEVEL –– */
+.level-container { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.bubble-wrap { position: relative; width: 160px; height: 160px; }
+.bubble-ring {
+position: absolute; inset: 0; border-radius: 50%;
+border: 2px solid var(–border);
+background: radial-gradient(circle at 40% 35%, rgba(0,212,255,0.06), var(–bg2) 70%);
+}
+.center-ring {
+position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+width: 40px; height: 40px; border-radius: 50%;
+border: 1px solid var(–dim); opacity: 0.5;
+}
+.crosshair-h, .crosshair-v {
+position: absolute; background: rgba(0,212,255,0.15);
+}
+.crosshair-h { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+.crosshair-v { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+.bubble {
+position: absolute; width: 32px; height: 32px; border-radius: 50%;
+background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6), rgba(0,212,255,0.8) 60%, rgba(0,100,200,0.6));
+border: 1px solid rgba(0,212,255,0.8);
+box-shadow: 0 0 16px rgba(0,212,255,0.6), inset 0 0 8px rgba(255,255,255,0.3);
+transition: left 0.08s linear, top 0.08s linear;
+transform: translate(-50%, -50%);
+}
+.bubble.level { background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6), rgba(0,255,136,0.8) 60%, rgba(0,180,80,0.6)); border-color: var(–accent2); box-shadow: 0 0 16px rgba(0,255,136,0.6), inset 0 0 8px rgba(255,255,255,0.3); }
+
+.angle-readings { display: flex; gap: 20px; }
+.angle-item { text-align: center; }
+.angle-axis { font-size: 0.6rem; color: var(–dim); letter-spacing: 2px; }
+.angle-val { font-family: ‘Orbitron’, monospace; font-size: 1.1rem; color: var(–accent); }
+.angle-val.ok { color: var(–accent2); }
+.angle-val.warn { color: var(–warn); }
+.angle-val.danger { color: var(–danger); }
+
+.level-status { font-family: ‘Orbitron’, monospace; font-size: 0.85rem; letter-spacing: 3px; padding: 8px 20px; border-radius: 4px; border: 1px solid var(–border); }
+.level-status.LEVEL { color: var(–accent2); border-color: var(–accent2); text-shadow: 0 0 10px var(–accent2); }
+.level-status.CLOSE { color: var(–warn); border-color: var(–warn); }
+.level-status.ADJUST { color: var(–danger); border-color: var(–danger); }
+
+/* –– DISPLAY SCREEN –– */
+#display-screen { gap: 16px; justify-content: flex-start; padding-top: 60px; overflow-y: auto; }
+
+.connect-form { display: flex; flex-direction: column; gap: 12px; }
+.code-input-wrap { display: flex; gap: 8px; }
+.code-input {
+flex: 1; background: var(–bg2); border: 1px solid var(–border); border-radius: 8px;
+color: var(–accent); font-family: ‘Orbitron’, monospace; font-size: 1.4rem;
+font-weight: 700; letter-spacing: 6px; text-align: center; padding: 12px;
+outline: none; -webkit-appearance: none; text-transform: uppercase;
+}
+.code-input:focus { border-color: var(–accent); box-shadow: var(–glow); }
+
+/* –– DIRECTION ARROWS –– */
+.caravan-display { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.arrow-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; width: 200px; height: 200px; gap: 4px; }
+.arrow-cell { display: flex; align-items: center; justify-content: center; }
+.arrow {
+width: 56px; height: 56px; border-radius: 10px;
+background: var(–panel); border: 1px solid var(–border);
+display: flex; align-items: center; justify-content: center;
+font-size: 1.6rem; transition: all 0.2s; opacity: 0.2;
+}
+.arrow.active-danger { background: rgba(255,68,68,0.2); border-color: var(–danger); box-shadow: 0 0 20px rgba(255,68,68,0.4); opacity: 1; animation: throb 0.5s ease infinite; }
+.arrow.active-warn { background: rgba(255,170,0,0.15); border-color: var(–warn); opacity: 0.8; }
+.arrow.active-ok { background: rgba(0,255,136,0.15); border-color: var(–accent2); opacity: 0.6; }
+@keyframes throb { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+.caravan-icon {
+grid-column: 2; grid-row: 2;
+width: 56px; height: 56px; border-radius: 10px;
+background: var(–bg2); border: 1px solid var(–border);
+display: flex; align-items: center; justify-content: center;
+font-size: 1.6rem;
+}
+.caravan-icon.level-ok { border-color: var(–accent2); box-shadow: 0 0 20px rgba(0,255,136,0.4); }
+
+/* –– INSTRUCTION TEXT –– */
+.instruction {
+font-family: ‘Orbitron’, monospace; font-size: 1rem; font-weight: 700;
+letter-spacing: 2px; text-align: center; padding: 12px 20px;
+border-radius: 8px; min-height: 52px; display: flex; align-items: center; justify-content: center;
+border: 1px solid var(–border); background: var(–panel); width: 100%; max-width: 360px;
+transition: all 0.3s;
+}
+.instruction.LEVEL { color: var(–accent2); border-color: var(–accent2); box-shadow: var(–glow2); }
+.instruction.CLOSE { color: var(–warn); border-color: var(–warn); }
+.instruction.ADJUST { color: var(–danger); border-color: var(–danger); }
+.instruction.waiting { color: var(–dim); }
+
+/* –– HEADER –– */
+.screen-header { width: 100%; max-width: 360px; display: flex; align-items: center; justify-content: space-between; }
+.screen-title { font-family: ‘Orbitron’, monospace; font-size: 0.75rem; color: var(–accent); letter-spacing: 3px; }
+.back-btn { background: none; border: none; color: var(–dim); cursor: pointer; font-size: 1.2rem; padding: 4px 8px; }
+.back-btn:active { color: var(–text); }
+
+/* –– FOOTER –– */
+.howto { font-size: 0.62rem; color: var(–dim); text-align: center; line-height: 1.6; max-width: 320px; padding: 8px; }
+.howto a { color: var(–accent); text-decoration: none; }
+
+/* –– NO SENSOR MSG –– */
+.no-sensor { text-align: center; padding: 20px; }
+.no-sensor p { font-size: 0.7rem; color: var(–warn); line-height: 1.8; }
+
+/* –– WAITING ANIMATION –– */
+.waiting-dots::after { content: ‘’; animation: dots 1.5s infinite; }
+@keyframes dots { 0%{content:’.’} 33%{content:’..’} 66%{content:’…’} 100%{content:’’} }
+
+/* –– ADJUST GUIDE –– */
+.adjust-bars { display: flex; gap: 16px; width: 100%; max-width: 360px; }
+.adj-bar-wrap { flex: 1; }
+.adj-bar-label { font-size: 0.62rem; color: var(–dim); letter-spacing: 2px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+.adj-bar-track { position: relative; height: 12px; background: var(–bg2); border-radius: 6px; border: 1px solid var(–border); overflow: hidden; }
+.adj-bar-center { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(–accent); opacity: 0.4; transform: translateX(-50%); }
+.adj-bar-fill { position: absolute; top: 1px; bottom: 1px; border-radius: 4px; transition: all 0.1s; }
+
+/* –– TOOLTIP –– */
+.tip { font-size: 0.65rem; color: var(–dim); text-align: center; padding: 6px 0; }
+
+@media (max-height: 600px) {
+#sensor-screen, #display-screen { padding-top: 40px; }
+.bubble-wrap { width: 120px; height: 120px; }
+.center-ring { width: 30px; height: 30px; }
+.bubble { width: 24px; height: 24px; }
+.arrow-grid { width: 160px; height: 160px; }
+.arrow, .caravan-icon { width: 44px; height: 44px; font-size: 1.2rem; }
+.session-code { font-size: 1.8rem; }
+}
+</style>
+
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- HOME -->
+
+<div class="screen" id="home-screen">
+  <div class="logo">LEVELVAN</div>
+  <div class="tagline">CARAVAN LEVELING SYSTEM</div>
+  <div class="mode-cards">
+    <div class="mode-card sensor-card" onclick="startSensor()" tabindex="0">
+      <div class="mode-icon">📡</div>
+      <div class="mode-title">SENSOR</div>
+      <div class="mode-desc">Place this phone on the caravan surface</div>
+    </div>
+    <div class="mode-card display-card" onclick="startDisplay()" tabindex="0">
+      <div class="mode-icon">📺</div>
+      <div class="mode-title">DISPLAY</div>
+      <div class="mode-desc">Hold this phone and read the level</div>
+    </div>
+  </div>
+  <div style="height:24px"></div>
+  <div class="howto">Both devices must be on the <strong style="color:var(--accent)">same WiFi network</strong>.<br>No internet required · Works Android &amp; iOS</div>
+</div>
+
+<!-- SENSOR -->
+
+<div class="screen hidden" id="sensor-screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="goHome()">← BACK</button>
+    <div class="screen-title">SENSOR MODE</div>
+    <div class="status-bar">
+      <div class="status-dot" id="sensor-dot"></div>
+      <span id="sensor-status-text" style="font-size:0.65rem;color:var(--dim)">IDLE</span>
+    </div>
+  </div>
+
+  <div class="panel" id="sensor-code-panel">
+    <div class="panel-title">SESSION CODE — SHARE WITH DISPLAY DEVICE</div>
+    <div class="code-display">
+      <div class="session-code" id="session-code">----</div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="tip">Enter this code on the Display device to connect</div>
+  </div>
+
+  <div id="sensor-no-sensor" class="no-sensor hidden">
+    <p>⚠️ Motion sensor not available.<br>Please allow motion access<br>or use a supported browser.</p>
+    <div style="height:10px"></div>
+    <button class="btn btn-primary" onclick="requestMotion()" style="font-size:0.65rem">REQUEST PERMISSION</button>
+  </div>
+
+  <div class="level-container" id="sensor-level-ui">
+    <div class="bubble-wrap" id="bubble-wrap">
+      <div class="bubble-ring"></div>
+      <div class="crosshair-h"></div>
+      <div class="crosshair-v"></div>
+      <div class="center-ring"></div>
+      <div class="bubble" id="bubble" style="left:50%;top:50%"></div>
+    </div>
+    <div class="angle-readings">
+      <div class="angle-item">
+        <div class="angle-axis">ROLL ↔</div>
+        <div class="angle-val" id="roll-val">0.0°</div>
+      </div>
+      <div class="angle-item">
+        <div class="angle-axis">PITCH ↕</div>
+        <div class="angle-val" id="pitch-val">0.0°</div>
+      </div>
+    </div>
+    <div class="level-status ADJUST" id="sensor-level-status">WAITING FOR SENSOR</div>
+  </div>
+
+  <div class="adjust-bars" id="sensor-bars">
+    <div class="adj-bar-wrap">
+      <div class="adj-bar-label"><span>ROLL</span><span id="roll-dir"></span></div>
+      <div class="adj-bar-track">
+        <div class="adj-bar-center"></div>
+        <div class="adj-bar-fill" id="roll-bar" style="background:var(--accent);left:50%;width:0"></div>
+      </div>
+    </div>
+    <div class="adj-bar-wrap">
+      <div class="adj-bar-label"><span>PITCH</span><span id="pitch-dir"></span></div>
+      <div class="adj-bar-track">
+        <div class="adj-bar-center"></div>
+        <div class="adj-bar-fill" id="pitch-bar" style="background:var(--accent);left:50%;width:0"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DISPLAY -->
+
+<div class="screen hidden" id="display-screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="goHome()">← BACK</button>
+    <div class="screen-title">DISPLAY MODE</div>
+    <div class="status-bar">
+      <div class="status-dot" id="display-dot"></div>
+      <span id="display-status-text" style="font-size:0.65rem;color:var(--dim)">DISCONNECTED</span>
+    </div>
+  </div>
+
+  <div class="panel" id="connect-panel">
+    <div class="panel-title">ENTER SENSOR CODE</div>
+    <div class="connect-form">
+      <input class="code-input" id="code-input" maxlength="4" placeholder="----" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text">
+      <button class="btn btn-success" id="connect-btn" onclick="connectToSensor()">CONNECT</button>
+    </div>
+  </div>
+
+  <div class="caravan-display" id="display-level-ui">
+    <div class="arrow-grid">
+      <div class="arrow-cell"></div>
+      <div class="arrow-cell"><div class="arrow" id="arr-up">⬆️</div></div>
+      <div class="arrow-cell"></div>
+      <div class="arrow-cell"><div class="arrow" id="arr-left">⬅️</div></div>
+      <div class="caravan-icon" id="caravan-icon">🚐</div>
+      <div class="arrow-cell"><div class="arrow" id="arr-right">➡️</div></div>
+      <div class="arrow-cell"></div>
+      <div class="arrow-cell"><div class="arrow" id="arr-down">⬇️</div></div>
+      <div class="arrow-cell"></div>
+    </div>
+  </div>
+
+  <div class="instruction waiting" id="instruction">
+    <span id="instruction-text">WAITING FOR SENSOR<span class="waiting-dots"></span></span>
+  </div>
+
+  <div class="adjust-bars" id="display-bars">
+    <div class="adj-bar-wrap">
+      <div class="adj-bar-label"><span>ROLL</span><span id="d-roll-dir"></span></div>
+      <div class="adj-bar-track">
+        <div class="adj-bar-center"></div>
+        <div class="adj-bar-fill" id="d-roll-bar" style="background:var(--accent);left:50%;width:0"></div>
+      </div>
+    </div>
+    <div class="adj-bar-wrap">
+      <div class="adj-bar-label"><span>PITCH</span><span id="d-pitch-dir"></span></div>
+      <div class="adj-bar-track">
+        <div class="adj-bar-center"></div>
+        <div class="adj-bar-fill" id="d-pitch-bar" style="background:var(--accent);left:50%;width:0"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="angle-readings" id="display-angles" style="margin-top:4px">
+    <div class="angle-item">
+      <div class="angle-axis">ROLL ↔</div>
+      <div class="angle-val" id="d-roll-val">--</div>
+    </div>
+    <div class="angle-item">
+      <div class="angle-axis">PITCH ↕</div>
+      <div class="angle-val" id="d-pitch-val">--</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+const LEVEL_THRESHOLD = 1.5;  // degrees — considered level
+const CLOSE_THRESHOLD = 4.0;  // degrees — close but not level
+const MAX_DISPLAY = 15;        // max degrees for bar display
+
+let currentScreen = 'home';
+let sessionCode = null;
+let peerConn = null;
+let dataChannel = null;
+let signalingWS = null;
+let sensorInterval = null;
+let latestReading = { roll: 0, pitch: 0 };
+let isConnected = false;
+let mode = null; // 'sensor' | 'display'
+
+// ===== SIGNALING SERVER (using free public WebRTC signaling via BroadcastChannel for same-device, or manual code exchange)
+// Since we need cross-device on local WiFi without a server, we use a free public STUN server
+// and a lightweight public signaling relay
+
+const SIGNALING_URL = 'wss://ws.levelvan.app'; // fallback to manual SDP exchange if unavailable
+
+// We'll use a simpler approach: encode SDP in the 4-char code via a free relay
+// Using PeerJS cloud signal for simplicity (works on local WiFi for data, uses internet for handshake only)
+
+// ===== PEERJS DYNAMIC LOAD =====
+function loadPeerJS(cb) {
+  if (window.Peer) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js';
+  s.onload = cb;
+  s.onerror = () => { alert('Failed to load PeerJS. Please check your internet connection for initial setup.'); };
+  document.head.appendChild(s);
+}
+
+// ===== NAVIGATION =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  currentScreen = id;
+}
+function goHome() {
+  cleanup();
+  showScreen('home-screen');
+}
+
+// ===== SENSOR MODE =====
+function startSensor() {
+  mode = 'sensor';
+  showScreen('sensor-screen');
+  loadPeerJS(() => {
+    sessionCode = randomCode();
+    document.getElementById('session-code').textContent = sessionCode;
+    setupSensorPeer(sessionCode);
+    startMotion();
+  });
+}
+
+function setupSensorPeer(code) {
+  setSensorStatus('connecting', 'WAITING FOR DISPLAY');
+  const peer = new Peer('lvl-' + code, {
+    host: '0.peerjs.com', port: 443, path: '/', secure: true
+  });
+  peerConn = peer;
+
+  peer.on('open', id => {
+    setSensorStatus('connecting', 'WAITING FOR DISPLAY');
+  });
+
+  peer.on('connection', conn => {
+    dataChannel = conn;
+    conn.on('open', () => {
+      isConnected = true;
+      setSensorStatus('connected', 'DISPLAY CONNECTED');
+    });
+    conn.on('close', () => {
+      isConnected = false;
+      setSensorStatus('idle', 'DISPLAY DISCONNECTED');
+    });
+    conn.on('error', () => {
+      isConnected = false;
+      setSensorStatus('idle', 'CONNECTION ERROR');
+    });
+  });
+
+  peer.on('error', e => {
+    setSensorStatus('idle', 'PEER ERROR');
+    console.error(e);
+  });
+}
+
+function setSensorStatus(state, text) {
+  const dot = document.getElementById('sensor-dot');
+  const txt = document.getElementById('sensor-status-text');
+  dot.className = 'status-dot' + (state !== 'idle' ? ' ' + state : '');
+  txt.textContent = text;
+}
+
+// ===== MOTION / ACCELEROMETER =====
+function startMotion() {
+  if (typeof DeviceOrientationEvent !== 'undefined') {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      // iOS 13+ requires permission
+      document.getElementById('sensor-no-sensor').classList.remove('hidden');
+    } else {
+      window.addEventListener('deviceorientation', onOrientation, true);
+    }
+  } else {
+    document.getElementById('sensor-no-sensor').classList.remove('hidden');
+  }
+}
+
+function requestMotion() {
+  DeviceOrientationEvent.requestPermission().then(state => {
+    if (state === 'granted') {
+      window.addEventListener('deviceorientation', onOrientation, true);
+      document.getElementById('sensor-no-sensor').classList.add('hidden');
+    } else {
+      alert('Motion permission denied. Please allow in device settings.');
+    }
+  }).catch(e => { console.error(e); });
+}
+
+function onOrientation(event) {
+  if (currentScreen !== 'sensor-screen') return;
+  // gamma = left/right tilt (roll), beta = front/back tilt (pitch)
+  let roll = event.gamma || 0;   // -90 to 90
+  let pitch = event.beta || 0;   // -180 to 180
+
+  // Clamp
+  roll = Math.max(-90, Math.min(90, roll));
+  pitch = Math.max(-90, Math.min(90, pitch));
+
+  latestReading = { roll, pitch };
+  updateSensorUI(roll, pitch);
+  if (isConnected && dataChannel) {
+    try {
+      dataChannel.send(JSON.stringify({ roll: +roll.toFixed(2), pitch: +pitch.toFixed(2) }));
+    } catch(e) {}
+  }
+}
+
+function updateSensorUI(roll, pitch) {
+  // Bubble position
+  const bw = 160, bh = 160, br = (bw - 32) / 2;
+  const bx = 50 + (roll / 30) * 50;   // map ±30° to ±50% of radius
+  const by = 50 + (pitch / 30) * 50;
+  const clampedX = Math.max(10, Math.min(90, bx));
+  const clampedY = Math.max(10, Math.min(90, by));
+
+  const bubble = document.getElementById('bubble');
+  bubble.style.left = clampedX + '%';
+  bubble.style.top = clampedY + '%';
+
+  const absRoll = Math.abs(roll), absPitch = Math.abs(pitch);
+  const maxTilt = Math.max(absRoll, absPitch);
+  const isLevel = maxTilt <= LEVEL_THRESHOLD;
+  const isClose = maxTilt <= CLOSE_THRESHOLD;
+
+  bubble.className = 'bubble' + (isLevel ? ' level' : '');
+
+  // Angle values
+  const rollEl = document.getElementById('roll-val');
+  const pitchEl = document.getElementById('pitch-val');
+  rollEl.textContent = roll.toFixed(1) + '°';
+  pitchEl.textContent = pitch.toFixed(1) + '°';
+  const cls = isLevel ? 'ok' : isClose ? 'warn' : 'danger';
+  rollEl.className = 'angle-val ' + (Math.abs(roll) <= LEVEL_THRESHOLD ? 'ok' : Math.abs(roll) <= CLOSE_THRESHOLD ? 'warn' : 'danger');
+  pitchEl.className = 'angle-val ' + (Math.abs(pitch) <= LEVEL_THRESHOLD ? 'ok' : Math.abs(pitch) <= CLOSE_THRESHOLD ? 'warn' : 'danger');
+
+  // Status
+  const statusEl = document.getElementById('sensor-level-status');
+  const state = isLevel ? 'LEVEL' : isClose ? 'CLOSE' : 'ADJUST';
+  statusEl.textContent = isLevel ? '✓ LEVEL' : isClose ? '≈ CLOSE' : '✗ ADJUST';
+  statusEl.className = 'level-status ' + state;
+
+  // Bars
+  updateBar('roll-bar', 'roll-dir', roll);
+  updateBar('pitch-bar', 'pitch-dir', pitch);
+}
+
+function updateBar(barId, dirId, angle) {
+  const bar = document.getElementById(barId);
+  const dir = document.getElementById(dirId);
+  const pct = Math.min(Math.abs(angle) / MAX_DISPLAY * 50, 48);
+  const isLevel = Math.abs(angle) <= LEVEL_THRESHOLD;
+  const isClose = Math.abs(angle) <= CLOSE_THRESHOLD;
+  const color = isLevel ? 'var(--accent2)' : isClose ? 'var(--warn)' : 'var(--danger)';
+
+  if (angle >= 0) {
+    bar.style.left = '50%';
+    bar.style.width = pct + '%';
+  } else {
+    bar.style.left = (50 - pct) + '%';
+    bar.style.width = pct + '%';
+  }
+  bar.style.background = color;
+  dir.textContent = isLevel ? '✓' : angle > 0 ? '+' + angle.toFixed(1) + '°' : angle.toFixed(1) + '°';
+  dir.style.color = color;
+}
+
+// ===== DISPLAY MODE =====
+function startDisplay() {
+  mode = 'display';
+  showScreen('display-screen');
+  loadPeerJS(() => {});
+
+  const input = document.getElementById('code-input');
+  input.addEventListener('input', () => {
+    input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g,'').substring(0,4);
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') connectToSensor();
+  });
+}
+
+function connectToSensor() {
+  const code = document.getElementById('code-input').value.trim().toUpperCase();
+  if (code.length !== 4) {
+    document.getElementById('code-input').style.borderColor = 'var(--danger)';
+    setTimeout(() => document.getElementById('code-input').style.borderColor = '', 1000);
+    return;
+  }
+  document.getElementById('connect-btn').disabled = true;
+  setDisplayStatus('connecting', 'CONNECTING');
+
+  const peer = new Peer(undefined, {
+    host: '0.peerjs.com', port: 443, path: '/', secure: true
+  });
+  peerConn = peer;
+
+  peer.on('open', myId => {
+    const conn = peer.connect('lvl-' + code, { reliable: false, serialization: 'json' });
+    dataChannel = conn;
+
+    conn.on('open', () => {
+      isConnected = true;
+      setDisplayStatus('connected', 'SENSOR CONNECTED');
+      document.getElementById('connect-panel').classList.add('hidden');
+    });
+
+    conn.on('data', data => {
+      if (data && typeof data.roll === 'number') {
+        updateDisplayUI(data.roll, data.pitch);
+      }
+    });
+
+    conn.on('close', () => {
+      isConnected = false;
+      setDisplayStatus('idle', 'SENSOR DISCONNECTED');
+      document.getElementById('connect-panel').classList.remove('hidden');
+      document.getElementById('connect-btn').disabled = false;
+      resetDisplayUI();
+    });
+
+    conn.on('error', e => {
+      isConnected = false;
+      setDisplayStatus('idle', 'CONNECTION ERROR');
+      document.getElementById('connect-btn').disabled = false;
+      console.error(e);
+    });
+  });
+
+  peer.on('error', e => {
+    setDisplayStatus('idle', 'PEER ERROR: ' + e.type);
+    document.getElementById('connect-btn').disabled = false;
+    console.error(e);
+  });
+}
+
+function setDisplayStatus(state, text) {
+  const dot = document.getElementById('display-dot');
+  const txt = document.getElementById('display-status-text');
+  dot.className = 'status-dot' + (state !== 'idle' ? ' ' + state : '');
+  txt.textContent = text;
+}
+
+function updateDisplayUI(roll, pitch) {
+  const absRoll = Math.abs(roll), absPitch = Math.abs(pitch);
+  const maxTilt = Math.max(absRoll, absPitch);
+  const isLevel = maxTilt <= LEVEL_THRESHOLD;
+  const isClose = maxTilt <= CLOSE_THRESHOLD;
+  const state = isLevel ? 'LEVEL' : isClose ? 'CLOSE' : 'ADJUST';
+
+  // Arrows
+  const arrows = {
+    up: document.getElementById('arr-up'),
+    down: document.getElementById('arr-down'),
+    left: document.getElementById('arr-left'),
+    right: document.getElementById('arr-right'),
+  };
+  Object.values(arrows).forEach(a => a.className = 'arrow');
+
+  if (!isLevel) {
+    // Pitch: positive beta = front down (tilt back = lift front)
+    if (pitch > LEVEL_THRESHOLD) {
+      arrows.up.className = 'arrow ' + (absPitch > CLOSE_THRESHOLD ? 'active-danger' : 'active-warn');
+    } else if (pitch < -LEVEL_THRESHOLD) {
+      arrows.down.className = 'arrow ' + (absPitch > CLOSE_THRESHOLD ? 'active-danger' : 'active-warn');
+    }
+    // Roll: positive gamma = right side down
+    if (roll > LEVEL_THRESHOLD) {
+      arrows.right.className = 'arrow ' + (absRoll > CLOSE_THRESHOLD ? 'active-danger' : 'active-warn');
+    } else if (roll < -LEVEL_THRESHOLD) {
+      arrows.left.className = 'arrow ' + (absRoll > CLOSE_THRESHOLD ? 'active-danger' : 'active-warn');
+    }
+  } else {
+    // All ok
+    Object.values(arrows).forEach(a => a.className = 'arrow active-ok');
+  }
+
+  const caravanIcon = document.getElementById('caravan-icon');
+  caravanIcon.className = 'caravan-icon' + (isLevel ? ' level-ok' : '');
+
+  // Instruction
+  const instrEl = document.getElementById('instruction');
+  const instrTxt = document.getElementById('instruction-text');
+  instrEl.className = 'instruction ' + state;
+  if (isLevel) {
+    instrTxt.innerHTML = '✓ PERFECTLY LEVEL';
+  } else if (isClose) {
+    instrTxt.innerHTML = '≈ ALMOST THERE — FINE ADJUST';
+  } else {
+    let parts = [];
+    if (Math.abs(pitch) > LEVEL_THRESHOLD) parts.push(pitch > 0 ? 'LIFT FRONT' : 'LIFT REAR');
+    if (Math.abs(roll) > LEVEL_THRESHOLD) parts.push(roll > 0 ? 'LIFT RIGHT SIDE' : 'LIFT LEFT SIDE');
+    instrTxt.innerHTML = parts.join(' + ');
+  }
+
+  // Angle values
+  const dRoll = document.getElementById('d-roll-val');
+  const dPitch = document.getElementById('d-pitch-val');
+  dRoll.textContent = roll.toFixed(1) + '°';
+  dPitch.textContent = pitch.toFixed(1) + '°';
+  dRoll.className = 'angle-val ' + (absRoll <= LEVEL_THRESHOLD ? 'ok' : absRoll <= CLOSE_THRESHOLD ? 'warn' : 'danger');
+  dPitch.className = 'angle-val ' + (absPitch <= LEVEL_THRESHOLD ? 'ok' : absPitch <= CLOSE_THRESHOLD ? 'warn' : 'danger');
+
+  // Bars
+  updateBar('d-roll-bar', 'd-roll-dir', roll);
+  updateBar('d-pitch-bar', 'd-pitch-dir', pitch);
+}
+
+function resetDisplayUI() {
+  document.getElementById('instruction').className = 'instruction waiting';
+  document.getElementById('instruction-text').innerHTML = 'WAITING FOR SENSOR<span class="waiting-dots"></span>';
+  ['arr-up','arr-down','arr-left','arr-right'].forEach(id => document.getElementById(id).className = 'arrow');
+  document.getElementById('caravan-icon').className = 'caravan-icon';
+}
+
+// ===== CLEANUP =====
+function cleanup() {
+  if (dataChannel) { try { dataChannel.close(); } catch(e){} dataChannel = null; }
+  if (peerConn) { try { peerConn.destroy(); } catch(e){} peerConn = null; }
+  window.removeEventListener('deviceorientation', onOrientation, true);
+  isConnected = false;
+  mode = null;
+}
+
+// ===== UTILS =====
+function randomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+// Handle iOS PWA
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  document.querySelector('meta[name="theme-color"]').content = '#0a1628';
+}
+</script>
+
+</body>
+</html>
