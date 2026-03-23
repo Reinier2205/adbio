@@ -64,7 +64,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .pin-digit{width:56px;height:72px;border-radius:12px;background:var(--panel);
   border:2px solid var(--border);color:var(--accent);font-family:'Orbitron',monospace;
   font-size:2rem;font-weight:700;text-align:center;outline:none;
-  -webkit-appearance:none;caret-color:var(--accent)}
+  -webkit-appearance:none;appearance:none;caret-color:var(--accent)}
 .pin-digit:focus{border-color:var(--accent);box-shadow:var(--glow)}
 /* Buttons */
 .sbtn{display:flex;flex-direction:column;align-items:center;gap:8px;
@@ -169,6 +169,17 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 <div class="screen hidden" id="sensor-screen">
   <button class="back" onclick="goHome()">← back</button>
 
+  <!-- s0: motion permission gate (iOS) -->
+  <div class="panel" id="s0">
+    <div class="srow"><div class="dot busy"></div><span>motion access required</span></div>
+    <button class="sbtn warn" onclick="askMotion()">
+      <div class="sbtn-ico">📐</div>
+      <div class="sbtn-title">ALLOW MOTION</div>
+      <div class="sbtn-hint">Required to measure tilt — tap to enable</div>
+    </button>
+    <div class="hint">iOS requires permission to read the accelerometer.<br>Tap the button above, then Allow.</div>
+  </div>
+
   <!-- s1: creating / showing PIN -->
   <div class="panel" id="s1">
     <div class="srow"><div class="dot busy"></div><span id="s1-txt">creating session...</span></div>
@@ -186,13 +197,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="sbtn-hint">AirDrop · iMessage · WhatsApp</div>
     </button>
     <div class="conn-count" id="s-conn-count">waiting for display devices...</div>
-    <div id="perm-wrap" style="display:none;width:100%">
-      <button class="sbtn warn" onclick="askMotion()">
-        <div class="sbtn-ico">📐</div>
-        <div class="sbtn-title">ALLOW MOTION</div>
-        <div class="sbtn-hint">Required on iOS — tap to enable</div>
-      </button>
-    </div>
   </div>
 
   <!-- s3: live level (sensor) -->
@@ -214,7 +218,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="bw"><div class="blbl"><span>PITCH</span><span id="s-pd"></span></div>
         <div class="btrack"><div class="bmid"></div><div class="bfill" id="s-pb"></div></div></div>
     </div>
-    <div class="conn-count" id="s3-conn-count"></div>
+    <!-- PIN visible while live so more displays can join -->
+    <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div class="pin-label">PIN — tap to share</div>
+      <div class="pin-display" id="s3-pin" onclick="shareLink()" style="font-size:2.2rem;padding:12px 20px;cursor:pointer">----</div>
+      <div class="conn-count" id="s3-conn-count"></div>
+    </div>
   </div>
 </div>
 
@@ -337,14 +346,13 @@ window.addEventListener('load', () => {
 });
 
 window.goHome = () => { cleanup(); showScreen('home-screen'); };
-window.startSensor  = () => { mode='sensor';  showScreen('sensor-screen'); showPanel('s1'); initSensor(); };
+window.startSensor  = () => { mode='sensor'; showScreen('sensor-screen'); setupMotion(); };
 window.startDisplay = () => { mode='display'; showScreen('display-screen'); showPanel('d1'); setupPinInputs(); };
 
 // ════════════════════════════════
 //  SENSOR
 // ════════════════════════════════
 function initSensor() {
-  setupMotion();
   _pin = String(Math.floor(1000 + Math.random() * 9000)); // 1000–9999
   const peerId = 'levelvan-' + _pin + '-sensor';
   $('s1-txt').textContent = 'connecting to relay...';
@@ -358,6 +366,7 @@ function initSensor() {
   peer.on('open', id => {
     console.log('Sensor peer open:', id);
     $('s-pin').textContent = _pin;
+    $('s3-pin').textContent = _pin;
     showPanel('s2');
   });
 
@@ -503,12 +512,18 @@ window.connectWithPin = () => {
 //  MOTION (iOS permission)
 // ════════════════════════════════
 function setupMotion() {
-  if (typeof DeviceOrientationEvent === 'undefined') return;
+  if (typeof DeviceOrientationEvent === 'undefined') {
+    // No motion API at all — skip straight to sensor init
+    showPanel('s1'); initSensor(); return;
+  }
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    $('perm-wrap').style.display = 'block';
+    // iOS 13+ — must ask explicitly, show the permission gate panel
+    showPanel('s0');
   } else {
+    // Android / desktop — permission not needed, start immediately
     window.addEventListener('deviceorientation', onOrient, true);
     motionOn = true;
+    showPanel('s1'); initSensor();
   }
 }
 window.askMotion = async () => {
@@ -517,9 +532,15 @@ window.askMotion = async () => {
     if (r === 'granted') {
       window.addEventListener('deviceorientation', onOrient, true);
       motionOn = true;
-      $('perm-wrap').style.display = 'none';
+      showPanel('s1'); initSensor();
+    } else {
+      // Denied — show a message but still let them proceed (sensor data just won't work)
+      showPanel('s1'); initSensor();
     }
-  } catch(e) { console.error('Motion permission:', e); }
+  } catch(e) {
+    console.error('Motion permission:', e);
+    showPanel('s1'); initSensor();
+  }
 };
 
 function onOrient(ev) {
