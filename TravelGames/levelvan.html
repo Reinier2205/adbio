@@ -149,11 +149,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .conn-count{font-size:.65rem;color:var(--dim);text-align:center}
 .conn-count span{color:var(--accent2)}
 /* Sticky PIN bar at top of sensor screen */
-.pin-bar{position:fixed;top:52px;left:0;right:0;z-index:5;
-  display:none;align-items:center;justify-content:space-between;
+.pin-bar{position:fixed;top:0;left:0;right:0;z-index:10;
+  display:flex;align-items:center;
   padding:14px 20px;background:rgba(10,22,40,.95);
   border-bottom:2px solid var(--accent);backdrop-filter:blur(8px)}
-.pin-bar.visible{display:flex}
 .pin-bar-label{font-size:.6rem;color:var(--dim);letter-spacing:3px;margin-bottom:2px}
 .pin-bar-code{font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;
   color:var(--accent);letter-spacing:10px;text-shadow:var(--glow)}
@@ -394,7 +393,7 @@ function initSensor() {
   peer.on('open', id => {
     console.log('Sensor peer open:', id);
     $('pin-bar-code').textContent = _pin;
-    $('pin-bar').classList.add('visible');
+    $('pin-bar-share').style.display = '';
     showPanel('s2');
   });
 
@@ -647,7 +646,8 @@ function cleanup() {
   if(peer){try{peer.destroy();}catch(_){}} peer = null;
   if(motionOn){window.removeEventListener('deviceorientation',onOrient,true);motionOn=false;}
   mode=null; _pin=null; _lastSend=0;
-  $('pin-bar').classList.remove('visible');
+  $('pin-bar-code').textContent = '----';
+  $('pin-bar-share').style.display = 'none';
   kpadReset();
 }
 </script>
