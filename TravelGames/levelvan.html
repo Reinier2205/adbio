@@ -152,7 +152,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .van3d-scene{width:100%;display:flex;justify-content:center;align-items:center;
   perspective:500px;perspective-origin:50% 35%;min-height:260px}
 .van3d-stage{transition:transform 0.12s ease-out;transform-style:preserve-3d;
-  transform:rotateX(0deg) rotateZ(0deg)}
+  transform:rotateX(0deg) rotateY(0deg)}
 .van3d-svg{width:200px;height:auto;display:block;filter:drop-shadow(0 6px 20px rgba(0,212,255,0.22))}
 /* Sticky PIN bar at top of sensor screen */
 .pin-bar{position:fixed;top:0;left:0;right:0;z-index:10;
@@ -715,10 +715,10 @@ function updateSensor(r, p) {
   const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
   const lv=mx<=LT, cl=mx<=CT;
 
-  // 3D tilt — same logic as display
-  const rx = Math.max(-30, Math.min(30, p * 2)) * -1;
-  const rz = Math.max(-30, Math.min(30, r * 2)) * -1;
-  $('s-van3d').style.transform = `rotateX(${rx}deg) rotateZ(${rz}deg)`;
+  // 3D tilt — rotateY for roll (left/right), rotateX for pitch (front/back)
+  const rx = Math.max(-35, Math.min(35, p * 2.5)) * -1;
+  const ry = Math.max(-35, Math.min(35, r * 2.5));
+  $('s-van3d').style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
 
   // Bubble inside sensor SVG
   const sbx = 100 + Math.max(-11, Math.min(11, r / 90 * 22));
@@ -750,12 +750,11 @@ function updateDisplay(d) {
   const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
   const lv=mx<=LT, cl=mx<=CT;
 
-  // ── 3D tilt: pitch = rotateX (front/back), roll = rotateZ (left/right)
-  // Scale up for visual drama — real leveling is ±5° so amplify 2x for display
-  // SVG is rotated 180° so roll (rotateZ) and bubble-x must be inverted
-  const rx = Math.max(-30, Math.min(30, p * 2)) * -1;
-  const rz = Math.max(-30, Math.min(30, r * 2));      // inverted vs sensor (180° flip)
-  $('van3d').style.transform = `rotateZ(180deg) rotateX(${rx}deg) rotateZ(${rz}deg)`;
+  // ── 3D tilt: rotateY for roll (left/right), rotateX for pitch (front/back)
+  // Display is rotated 180° so roll direction inverts
+  const rx = Math.max(-35, Math.min(35, p * 2.5)) * -1;
+  const ry = Math.max(-35, Math.min(35, r * 2.5)) * -1; // inverted for 180° flip
+  $('van3d').style.transform = `rotateZ(180deg) rotateX(${rx}deg) rotateY(${ry}deg)`;
 
   // ── Bubble dot — x inverted due to 180° rotation
   const bx = 100 + Math.max(-11, Math.min(11, r / 90 * 22)) * -1;
