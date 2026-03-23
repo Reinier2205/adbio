@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,158 +8,131 @@
 <title>LevelVan</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#0a1628;--bg2:#0f1f3d;--panel:#112244;--border:#1e3a6e;
-    --accent:#00d4ff;--accent2:#00ff88;--warn:#ffaa00;--danger:#ff4444;
-    --text:#c8e0ff;--dim:#4a6fa5;
-    --glow:0 0 20px rgba(0,212,255,0.4);--glow2:0 0 20px rgba(0,255,136,0.4);
-  }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace}
-  body::before{content:'';position:fixed;inset:0;z-index:0;
-    background:radial-gradient(ellipse at 20% 20%,rgba(0,100,200,.15),transparent 60%),
-               radial-gradient(ellipse at 80% 80%,rgba(0,212,255,.08),transparent 50%);pointer-events:none}
-  .grid{position:fixed;inset:0;z-index:0;
-    background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);
-    background-size:40px 40px;pointer-events:none}
-
-/* Screens */
+:root{
+  --bg:#0a1628;--bg2:#0f1f3d;--panel:#112244;--border:#1e3a6e;
+  --accent:#00d4ff;--accent2:#00ff88;--warn:#ffaa00;--danger:#ff4444;
+  --text:#c8e0ff;--dim:#4a6fa5;
+  --glow:0 0 20px rgba(0,212,255,0.4);--glow2:0 0 20px rgba(0,255,136,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse at 20% 20%,rgba(0,100,200,.15),transparent 60%),
+             radial-gradient(ellipse at 80% 80%,rgba(0,212,255,.08),transparent 50%);pointer-events:none}
+.grid{position:fixed;inset:0;z-index:0;
+  background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none}
 .screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;
-align-items:center;padding:24px;overflow-y:auto}
+  align-items:center;padding:24px;overflow-y:auto}
 .screen.home{justify-content:center;gap:20px}
 .screen.hidden{display:none!important}
-.back{position:fixed;top:16px;left:16px;background:none;border:none;color:var(–dim);
-font-family:‘Share Tech Mono’,monospace;font-size:.8rem;cursor:pointer;z-index:10;padding:6px 10px}
-
-/* Panels — only one visible at a time per screen */
+.back{position:fixed;top:16px;left:16px;background:none;border:none;color:var(--dim);
+  font-family:'Share Tech Mono',monospace;font-size:.8rem;cursor:pointer;z-index:10;padding:6px 10px}
 .panel{display:none;flex-direction:column;align-items:center;
-gap:16px;width:100%;max-width:320px;padding-top:52px}
+  gap:16px;width:100%;max-width:320px;padding-top:52px}
 .panel.active{display:flex}
-
-/* HOME */
-.logo{font-family:‘Orbitron’,monospace;font-size:2rem;font-weight:900;
-color:var(–accent);text-shadow:var(–glow);letter-spacing:4px}
-.sub{color:var(–dim);font-size:.68rem;letter-spacing:2px;margin-top:-12px}
+.logo{font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;
+  color:var(--accent);text-shadow:var(--glow);letter-spacing:4px}
+.sub{color:var(--dim);font-size:.68rem;letter-spacing:2px;margin-top:-12px}
 .cards{display:flex;gap:16px;width:100%;max-width:320px}
-.card{flex:1;padding:28px 12px;border-radius:14px;background:var(–panel);
-border:2px solid var(–border);cursor:pointer;text-align:center;
-display:flex;flex-direction:column;align-items:center;gap:12px;transition:all .15s}
+.card{flex:1;padding:28px 12px;border-radius:14px;background:var(--panel);
+  border:2px solid var(--border);cursor:pointer;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:12px;transition:all .15s}
 .card:active{transform:scale(.95)}
 .card.s{border-color:rgba(0,212,255,.5)}.card.d{border-color:rgba(0,255,136,.5)}
 .card-ico{font-size:2.4rem}
-.card-title{font-family:‘Orbitron’,monospace;font-size:.82rem;font-weight:700;letter-spacing:2px}
-.card.s .card-title{color:var(–accent)}.card.d .card-title{color:var(–accent2)}
-.card-desc{font-size:.63rem;color:var(–dim);line-height:1.6}
-
-/* Status row */
-.srow{display:flex;align-items:center;gap:10px;font-size:.7rem;color:var(–dim)}
-.dot{width:9px;height:9px;border-radius:50%;background:var(–dim);flex-shrink:0}
-.dot.ok{background:var(–accent2);box-shadow:0 0 8px var(–accent2);animation:pulse 2s infinite}
-.dot.busy{background:var(–warn);animation:blink .7s infinite}
+.card-title{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;letter-spacing:2px}
+.card.s .card-title{color:var(--accent)}.card.d .card-title{color:var(--accent2)}
+.card-desc{font-size:.63rem;color:var(--dim);line-height:1.6}
+.srow{display:flex;align-items:center;gap:10px;font-size:.7rem;color:var(--dim)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.dot.ok{background:var(--accent2);box-shadow:0 0 8px var(--accent2);animation:pulse 2s infinite}
+.dot.busy{background:var(--warn);animation:blink .7s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-
-/* Share button */
 .sbtn{display:flex;flex-direction:column;align-items:center;gap:8px;
-padding:22px 24px;border-radius:16px;cursor:pointer;width:100%;
-font-family:‘Orbitron’,monospace;transition:all .2s}
+  padding:22px 24px;border-radius:16px;cursor:pointer;width:100%;
+  font-family:'Orbitron',monospace;transition:all .2s;border:2px solid}
 .sbtn:active{transform:scale(.96)}
-.sbtn.blue{border:2px solid var(–accent);background:rgba(0,212,255,.08);
-color:var(–accent);box-shadow:var(–glow)}
-.sbtn.green{border:2px solid var(–accent2);background:rgba(0,255,136,.08);
-color:var(–accent2);box-shadow:var(–glow2)}
-.sbtn.warn{border:2px solid var(–warn);background:rgba(255,170,0,.08);color:var(–warn)}
+.sbtn.blue{border-color:var(--accent);background:rgba(0,212,255,.08);color:var(--accent);box-shadow:var(--glow)}
+.sbtn.green{border-color:var(--accent2);background:rgba(0,255,136,.08);color:var(--accent2);box-shadow:var(--glow2)}
+.sbtn.warn{border-color:var(--warn);background:rgba(255,170,0,.08);color:var(--warn)}
 .sbtn-ico{font-size:2.2rem}
 .sbtn-title{font-size:.82rem;font-weight:700;letter-spacing:3px}
-.sbtn-hint{font-size:.6rem;opacity:.7;font-family:‘Share Tech Mono’,monospace}
-
-/* Hint text */
-.hint{font-size:.62rem;color:var(–dim);text-align:center;max-width:280px;line-height:1.8}
-
-/* Bubble level */
+.sbtn-hint{font-size:.6rem;opacity:.7;font-family:'Share Tech Mono',monospace}
+.hint{font-size:.62rem;color:var(--dim);text-align:center;max-width:280px;line-height:1.8}
 .bwrap{position:relative;width:150px;height:150px;flex-shrink:0}
-.bring{position:absolute;inset:0;border-radius:50%;border:2px solid var(–border);
-background:radial-gradient(circle at 40% 35%,rgba(0,212,255,.07),var(–bg2) 70%)}
+.bring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--border);
+  background:radial-gradient(circle at 40% 35%,rgba(0,212,255,.07),var(--bg2) 70%)}
 .ch{position:absolute;background:rgba(0,212,255,.15)}
 .ch.h{top:50%;left:0;right:0;height:1px;transform:translateY(-50%)}
 .ch.v{left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%)}
 .cring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-width:36px;height:36px;border-radius:50%;border:1px solid var(–dim);opacity:.4}
+  width:36px;height:36px;border-radius:50%;border:1px solid var(--dim);opacity:.4}
 .bubble{position:absolute;width:28px;height:28px;border-radius:50%;
-transform:translate(-50%,-50%);
-background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.6),rgba(0,212,255,.8) 60%,rgba(0,100,200,.6));
-border:1px solid rgba(0,212,255,.8);box-shadow:0 0 12px rgba(0,212,255,.6);
-transition:left .08s,top .08s}
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.6),rgba(0,212,255,.8) 60%,rgba(0,100,200,.6));
+  border:1px solid rgba(0,212,255,.8);box-shadow:0 0 12px rgba(0,212,255,.6);
+  transition:left .08s,top .08s}
 .bubble.lv{background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.6),rgba(0,255,136,.8) 60%,rgba(0,180,80,.6));
-border-color:var(–accent2);box-shadow:0 0 12px rgba(0,255,136,.6)}
-
-/* Angles */
+  border-color:var(--accent2);box-shadow:0 0 12px rgba(0,255,136,.6)}
 .angles{display:flex;gap:20px;align-items:center}
 .angle{text-align:center}
-.albl{font-size:.56rem;color:var(–dim);letter-spacing:2px}
-.aval{font-family:‘Orbitron’,monospace;font-size:1rem;margin-top:2px}
-.ok{color:var(–accent2)}.wn{color:var(–warn)}.bd{color:var(–danger)}
-.badge{font-family:‘Orbitron’,monospace;font-size:.75rem;letter-spacing:2px;
-padding:6px 14px;border-radius:6px;border:1px solid}
-.badge.LV{color:var(–accent2);border-color:var(–accent2)}
-.badge.CL{color:var(–warn);border-color:var(–warn)}
-.badge.AD{color:var(–danger);border-color:var(–danger)}
-
-/* Bars */
+.albl{font-size:.56rem;color:var(--dim);letter-spacing:2px}
+.aval{font-family:'Orbitron',monospace;font-size:1rem;margin-top:2px}
+.ok{color:var(--accent2)}.wn{color:var(--warn)}.bd{color:var(--danger)}
+.badge{font-family:'Orbitron',monospace;font-size:.75rem;letter-spacing:2px;
+  padding:6px 14px;border-radius:6px;border:1px solid}
+.badge.LV{color:var(--accent2);border-color:var(--accent2)}
+.badge.CL{color:var(--warn);border-color:var(--warn)}
+.badge.AD{color:var(--danger);border-color:var(--danger)}
 .bars{display:flex;gap:10px;width:100%}
 .bw{flex:1}
-.blbl{font-size:.55rem;color:var(–dim);letter-spacing:2px;margin-bottom:4px;
-display:flex;justify-content:space-between}
-.btrack{position:relative;height:9px;background:var(–bg2);border-radius:5px;
-border:1px solid var(–border);overflow:hidden}
-.bmid{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(–accent);
-opacity:.3;transform:translateX(-50%)}
+.blbl{font-size:.55rem;color:var(--dim);letter-spacing:2px;margin-bottom:4px;
+  display:flex;justify-content:space-between}
+.btrack{position:relative;height:9px;background:var(--bg2);border-radius:5px;
+  border:1px solid var(--border);overflow:hidden}
+.bmid{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--accent);
+  opacity:.3;transform:translateX(-50%)}
 .bfill{position:absolute;top:1px;bottom:1px;border-radius:4px;transition:all .1s}
-
-/* Arrow grid */
 .agrid{display:grid;grid-template-columns:1fr 1fr 1fr;
-grid-template-rows:1fr 1fr 1fr;width:180px;height:180px;gap:4px}
+  grid-template-rows:1fr 1fr 1fr;width:180px;height:180px;gap:4px}
 .ac{display:flex;align-items:center;justify-content:center}
-.arr{width:50px;height:50px;border-radius:10px;background:var(–panel);
-border:1px solid var(–border);display:flex;align-items:center;
-justify-content:center;font-size:1.3rem;opacity:.15;transition:all .2s}
-.arr.ad{background:rgba(255,68,68,.2);border-color:var(–danger);
-box-shadow:0 0 12px rgba(255,68,68,.4);opacity:1;animation:throb .5s infinite}
-.arr.cl{background:rgba(255,170,0,.15);border-color:var(–warn);opacity:.75}
-.arr.ok{background:rgba(0,255,136,.1);border-color:var(–accent2);opacity:.55}
+.arr{width:50px;height:50px;border-radius:10px;background:var(--panel);
+  border:1px solid var(--border);display:flex;align-items:center;
+  justify-content:center;font-size:1.3rem;opacity:.15;transition:all .2s}
+.arr.ad{background:rgba(255,68,68,.2);border-color:var(--danger);
+  box-shadow:0 0 12px rgba(255,68,68,.4);opacity:1;animation:throb .5s infinite}
+.arr.cl{background:rgba(255,170,0,.15);border-color:var(--warn);opacity:.75}
+.arr.ok{background:rgba(0,255,136,.1);border-color:var(--accent2);opacity:.55}
 @keyframes throb{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-.van{width:50px;height:50px;border-radius:10px;background:var(–bg2);
-border:1px solid var(–border);display:flex;align-items:center;
-justify-content:center;font-size:1.3rem}
-.van.lv{border-color:var(–accent2);box-shadow:0 0 12px rgba(0,255,136,.4)}
-.instr{font-family:‘Orbitron’,monospace;font-size:.85rem;font-weight:700;
-letter-spacing:2px;text-align:center;padding:11px 14px;border-radius:10px;
-display:flex;align-items:center;justify-content:center;
-border:1px solid var(–border);background:var(–panel);
-width:100%;transition:all .3s;min-height:46px}
-.instr.LV{color:var(–accent2);border-color:var(–accent2);box-shadow:var(–glow2)}
-.instr.CL{color:var(–warn);border-color:var(–warn)}
-.instr.AD{color:var(–danger);border-color:var(–danger)}
-.instr.wt{color:var(–dim)}
-
-/* Camera */
+.van{width:50px;height:50px;border-radius:10px;background:var(--bg2);
+  border:1px solid var(--border);display:flex;align-items:center;
+  justify-content:center;font-size:1.3rem}
+.van.lv{border-color:var(--accent2);box-shadow:0 0 12px rgba(0,255,136,.4)}
+.instr{font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;
+  letter-spacing:2px;text-align:center;padding:11px 14px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);background:var(--panel);
+  width:100%;transition:all .3s;min-height:46px}
+.instr.LV{color:var(--accent2);border-color:var(--accent2);box-shadow:var(--glow2)}
+.instr.CL{color:var(--warn);border-color:var(--warn)}
+.instr.AD{color:var(--danger);border-color:var(--danger)}
+.instr.wt{color:var(--dim)}
 .cam-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000}
 .cam-wrap video{width:100%;display:block}
-.scan-line{position:absolute;left:8%;right:8%;height:2px;background:var(–accent);
-box-shadow:var(–glow);animation:scanmove 2s ease-in-out infinite;pointer-events:none}
+.scan-line{position:absolute;left:8%;right:8%;height:2px;background:var(--accent);
+  box-shadow:var(--glow);animation:scanmove 2s ease-in-out infinite;pointer-events:none}
 @keyframes scanmove{0%,100%{top:15%}50%{top:80%}}
-
-/* QR */
 .qr-box{background:#fff;padding:10px;border-radius:12px;display:inline-block}
+.err{color:var(--danger);font-size:.65rem;text-align:center;max-width:280px;line-height:1.8}
 </style>
-
 </head>
 <body>
 <div class="grid"></div>
 
-<!-- ══ HOME ══ -->
-
+<!-- HOME -->
 <div class="screen home" id="home-screen">
   <div class="logo">LEVELVAN</div>
   <div class="sub">CARAVAN LEVELING SYSTEM</div>
@@ -178,28 +150,30 @@ box-shadow:var(–glow);animation:scanmove 2s ease-in-out infinite;pointer-event
   </div>
 </div>
 
-<!-- ══ SENSOR SCREEN ══ -->
-
+<!-- SENSOR SCREEN -->
 <div class="screen hidden" id="sensor-screen">
   <button class="back" onclick="goHome()">← back</button>
 
-  <!-- s1: generating offer -->
-
+  <!-- s1: creating offer -->
   <div class="panel" id="s1">
-    <div class="srow"><div class="dot busy"></div><span>creating offer...</span></div>
-    <div class="hint">Takes a couple of seconds</div>
+    <div class="srow"><div class="dot busy"></div><span>creating connection offer...</span></div>
+    <div class="hint">Takes a moment</div>
   </div>
 
-  <!-- s2: share offer to display -->
-
+  <!-- s2: share offer — show QR of offer + share button -->
   <div class="panel" id="s2">
-    <div class="srow"><div class="dot busy"></div><span>ready — share to display device</span></div>
+    <div class="srow"><div class="dot busy"></div><span>share to display device</span></div>
     <button class="sbtn blue" onclick="shareOffer()">
       <div class="sbtn-ico">📤</div>
       <div class="sbtn-title">SHARE TO DISPLAY</div>
       <div class="sbtn-hint">AirDrop · iMessage · WhatsApp</div>
     </button>
-    <div class="hint">Send to the Display device.<br>They'll show a QR code — come back here to scan it.</div>
+    <div class="hint">After sharing, tap SCAN ANSWER below when the Display shows a QR code.</div>
+    <button class="sbtn green" onclick="goToScan()" id="scan-btn" style="display:none">
+      <div class="sbtn-ico">📷</div>
+      <div class="sbtn-title">SCAN ANSWER QR</div>
+      <div class="sbtn-hint">Point at the QR on the Display screen</div>
+    </button>
     <div id="perm-wrap" style="display:none;width:100%">
       <button class="sbtn warn" onclick="askMotion()">
         <div class="sbtn-ico">📐</div>
@@ -209,11 +183,10 @@ box-shadow:var(–glow);animation:scanmove 2s ease-in-out infinite;pointer-event
     </div>
   </div>
 
-  <!-- s3: scan the QR shown on display -->
-
+  <!-- s3: scan answer QR -->
   <div class="panel" id="s3">
     <div class="srow"><div class="dot busy"></div><span>scan QR from display device</span></div>
-    <div class="cam-wrap" id="s-cam-wrap">
+    <div class="cam-wrap">
       <video id="s-video" autoplay playsinline muted></video>
       <div class="scan-line"></div>
       <canvas id="s-canvas" style="display:none"></canvas>
@@ -222,13 +195,11 @@ box-shadow:var(–glow);animation:scanmove 2s ease-in-out infinite;pointer-event
   </div>
 
   <!-- s4: connecting -->
-
   <div class="panel" id="s4">
     <div class="srow"><div class="dot busy"></div><span id="s4-txt">connecting...</span></div>
   </div>
 
   <!-- s5: live level -->
-
   <div class="panel" id="s5">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">display connected ✓</span></div>
     <div class="bwrap">
@@ -250,26 +221,22 @@ box-shadow:var(–glow);animation:scanmove 2s ease-in-out infinite;pointer-event
   </div>
 </div>
 
-<!-- ══ DISPLAY SCREEN ══ -->
-
+<!-- DISPLAY SCREEN -->
 <div class="screen hidden" id="display-screen">
   <button class="back" onclick="goHome()">← back</button>
 
-  <!-- d1: waiting (manual nav, no hash) -->
-
+  <!-- d1: waiting for link -->
   <div class="panel" id="d1">
     <div class="srow"><div class="dot busy"></div><span>open the link from sensor</span></div>
     <div class="hint">The Sensor device will share a link. Open it on this device.</div>
   </div>
 
   <!-- d2: processing offer -->
-
   <div class="panel" id="d2">
     <div class="srow"><div class="dot busy"></div><span id="d2-txt">processing offer...</span></div>
   </div>
 
-  <!-- d3: show answer QR for sensor to scan -->
-
+  <!-- d3: show answer QR -->
   <div class="panel" id="d3">
     <div class="srow"><div class="dot busy"></div><span>sensor scans this QR to connect</span></div>
     <div class="qr-box"><div id="d-qr" style="width:220px;height:220px"></div></div>
@@ -277,7 +244,6 @@ box-shadow:var(–glow);animation:scanmove 2s ease-in-out infinite;pointer-event
   </div>
 
   <!-- d4: live display -->
-
   <div class="panel" id="d4">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected ✓</span></div>
     <div class="agrid">
@@ -301,57 +267,54 @@ box-shadow:var(–glow);animation:scanmove 2s ease-in-out infinite;pointer-event
   </div>
 </div>
 
-<!-- Load QR libs up front while online -->
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  LevelVan — clean rebuild
+//  LevelVan — fixed rebuild
+//
+//  KEY FIXES vs previous version:
+//  1. CSS used en-dash (–) instead of double-hyphen (--) for CSS vars — all styles were broken
+//  2. ICE candidates were collected AFTER gatherICE() completed — answer had no candidates
+//  3. shareOffer() advanced to scan panel before user confirmed share — now explicit button
+//  4. Answer QR onicecandidate handler set after gathering was done — useless, now fixed
+//  5. gatherICE() on display side: candidates now collected BEFORE calling gatherICE()
 //
 //  PAIRING FLOW:
-//  1. Sensor creates offer → shares URL (AirDrop) to Display
-//  2. Display opens URL → processes offer → shows ANSWER QR on screen
-//  3. Sensor (never leaves page) scans QR with camera → applies answer
-//  4. Connected — P2P data flows over local WiFi
-//
-//  KEY: Sensor stays on page the whole time. No navigation = no
-//  fingerprint mismatch. Camera replaces the need for AirDrop back.
+//  1. Sensor creates offer + gathers ICE → shares URL via AirDrop/share sheet
+//  2. Sensor shows "SCAN ANSWER QR" button — user taps it after Display shows QR
+//  3. Display opens URL → processes offer → creates answer → gathers ICE → shows QR
+//  4. Sensor scans QR → applies answer → P2P connected
 // ═══════════════════════════════════════════════════════
 
 const LT=1.5, CT=4.0, MD=15;
 let pc=null, dc=null, motionOn=false, mode=null;
 let camStream=null, scanTick=null;
 
-const ICE = { iceServers: [] }; // local WiFi only, no internet needed
+const ICE = { iceServers: [] }; // local WiFi only — host candidates, no STUN/TURN needed
 
 const $   = id => document.getElementById(id);
 const enc = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 const dec = str => { str=str.replace(/-/g,'+').replace(/_/g,'/'); while(str.length%4)str+='='; return JSON.parse(decodeURIComponent(escape(atob(str)))); };
 
-// Show one panel within a screen, hide all others in that screen
 function showPanel(id) {
   const target = $(id);
   if (!target) { console.error('Panel not found:', id); return; }
-  const screen = target.closest('.screen');
-  screen.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  target.closest('.screen').querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   target.classList.add('active');
 }
-
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   $(id).classList.remove('hidden');
 }
 
-// ── Read hash BEFORE clearing it
+// Read hash before any navigation clears it
 const _hash = location.hash.slice(1);
 history.replaceState(null, '', location.pathname);
 
 window.addEventListener('load', () => {
   if (_hash.startsWith('LVO:')) {
-    // Display device: received offer
     mode = 'display';
     showScreen('display-screen');
     showPanel('d2');
@@ -370,51 +333,54 @@ window.startDisplay = () => { mode='display'; showScreen('display-screen'); show
 // ════════════════════════════════
 async function initSensor() {
   setupMotion();
-
   pc = new RTCPeerConnection(ICE);
   dc = pc.createDataChannel('lv', { ordered:false, maxRetransmits:0 });
-  dc.onopen  = () => { stopCamera(); showPanel('s5'); };
-  dc.onclose = () => {};
+  dc.onopen  = () => { stopCamera(); showPanel('s5'); startSendingData(); };
   pc.onconnectionstatechange = () => {
-    console.log('Sensor:', pc.connectionState);
-    if (pc.connectionState === 'connected') { stopCamera(); showPanel('s5'); }
-    if (pc.connectionState === 'failed') $('s4-txt').textContent = 'failed — go back and retry';
+    console.log('Sensor state:', pc.connectionState);
+    if (pc.connectionState === 'connected') { stopCamera(); showPanel('s5'); startSendingData(); }
+    if (pc.connectionState === 'failed') { $('s4-txt').textContent = 'connection failed — go back and retry'; }
   };
 
-  // Collect host candidates
+  // FIX: set up candidate collection BEFORE creating offer
   const cands = [];
   pc.onicecandidate = e => { if (e.candidate) cands.push(e.candidate.candidate); };
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
+  await gatherICE(pc);
 
-  // Wait for ICE — local network only, fast
-  await gatherICE();
-
+  // Use localDescription after gathering — SDP has embedded candidates
   const pkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands };
   window._offerURL = location.origin + location.pathname + '#LVO:' + enc(pkg);
-  console.log('Offer ready, URL length:', window._offerURL.length);
+  console.log('Offer ready, URL length:', window._offerURL.length, 'candidates:', cands.length);
   showPanel('s2');
 }
 
-function gatherICE() {
+// FIX: proper ICE gathering — wait for complete state or timeout
+function gatherICE(peerConn) {
   return new Promise(resolve => {
-    if (pc.iceGatheringState === 'complete') { resolve(); return; }
-    pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') resolve(); };
-    setTimeout(resolve, 3000);
+    if (peerConn.iceGatheringState === 'complete') { resolve(); return; }
+    const done = () => { if (peerConn.iceGatheringState === 'complete') { resolve(); } };
+    peerConn.addEventListener('icegatheringstatechange', done);
+    // Fallback: 4s timeout — on local WiFi host candidates appear in <500ms
+    setTimeout(resolve, 4000);
   });
 }
 
 window.shareOffer = async () => {
   if (!window._offerURL) { alert('Not ready yet'); return; }
-  const ok = await doShare(window._offerURL, 'LevelVan — open on Display', 'Open on the DISPLAY device');
-  if (ok) {
-    showPanel('s3');
-    startCamera();
-  }
+  await doShare(window._offerURL, 'LevelVan — open on Display device', 'Open on the DISPLAY device');
+  // Show scan button regardless — user taps it when Display shows QR
+  $('scan-btn').style.display = '';
 };
 
-// ── Camera: scan answer QR from display screen
+// Separate button so user explicitly triggers camera after Display is ready
+window.goToScan = () => {
+  showPanel('s3');
+  startCamera();
+};
+
 function startCamera() {
   navigator.mediaDevices.getUserMedia({
     video: { facingMode:'environment', width:{ideal:1280}, height:{ideal:720} },
@@ -422,10 +388,11 @@ function startCamera() {
   }).then(stream => {
     camStream = stream;
     $('s-video').srcObject = stream;
-    scanTick = setInterval(scanFrame, 250);
+    $('s-video').play().catch(()=>{});
+    scanTick = setInterval(scanFrame, 200);
   }).catch(e => {
-    console.error('Camera:', e);
-    $('s-cam-hint').textContent = '⚠️ Camera unavailable — ' + e.message;
+    console.error('Camera error:', e);
+    $('s-cam-hint').textContent = '⚠️ Camera unavailable: ' + e.message;
   });
 }
 
@@ -437,8 +404,9 @@ function scanFrame() {
   c.width = v.videoWidth; c.height = v.videoHeight;
   const ctx = c.getContext('2d');
   ctx.drawImage(v, 0, 0);
-  const img  = ctx.getImageData(0, 0, c.width, c.height);
-  const code = jsQR(img.data, img.width, img.height, { inversionAttempts:'dontInvert' });
+  const img = ctx.getImageData(0, 0, c.width, c.height);
+  // Try both normal and inverted (white-on-dark screens)
+  const code = jsQR(img.data, img.width, img.height, { inversionAttempts:'attemptBoth' });
   if (code && code.data.startsWith('LVA:')) {
     clearInterval(scanTick); scanTick = null;
     stopCamera();
@@ -456,14 +424,15 @@ async function applyAnswer(encoded) {
   $('s4-txt').textContent = 'applying answer...';
   try {
     const pkg = dec(encoded);
+    console.log('Answer candidates:', (pkg.cands||[]).length);
     await pc.setRemoteDescription({ type: pkg.type, sdp: pkg.sdp });
     for (const c of (pkg.cands||[])) {
-      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(_){}
+      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(e){ console.warn('ICE add:', e); }
     }
     $('s4-txt').textContent = 'connecting...';
   } catch(e) {
-    console.error('applyAnswer:', e);
-    $('s4-txt').textContent = 'error: ' + e.message;
+    console.error('applyAnswer error:', e);
+    $('s4-txt').textContent = '⚠️ ' + e.message;
   }
 }
 
@@ -471,46 +440,45 @@ async function applyAnswer(encoded) {
 //  DISPLAY
 // ════════════════════════════════
 async function processOffer(encoded) {
-  $('d2-txt').textContent = 'processing offer...';
   try {
     const pkg = dec(encoded);
-
     pc = new RTCPeerConnection(ICE);
+
     pc.ondatachannel = e => {
       dc = e.channel;
       dc.onopen    = () => showPanel('d4');
-      dc.onclose   = () => {};
-      dc.onmessage = e => { try { updateDisplay(JSON.parse(e.data)); } catch(_){} };
+      dc.onmessage = ev => { try { updateDisplay(JSON.parse(ev.data)); } catch(_){} };
     };
     pc.onconnectionstatechange = () => {
-      console.log('Display:', pc.connectionState);
+      console.log('Display state:', pc.connectionState);
       if (pc.connectionState === 'connected') showPanel('d4');
-      if (pc.connectionState === 'failed') $('d2-txt').textContent = 'failed — retry';
+      if (pc.connectionState === 'failed') { $('d2-txt').textContent = '⚠️ failed — go back and retry'; showPanel('d2'); }
     };
 
     await pc.setRemoteDescription({ type: pkg.type, sdp: pkg.sdp });
     for (const c of (pkg.cands||[])) {
-      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(_){}
+      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(e){ console.warn('ICE add:', e); }
     }
+
+    // FIX: collect answer candidates BEFORE calling createAnswer/setLocalDescription
+    const answerCands = [];
+    pc.onicecandidate = e => { if (e.candidate) answerCands.push(e.candidate.candidate); };
 
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
-    await gatherICE();
+    await gatherICE(pc);
 
-    const answerPkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands: [] };
-    // Collect any trickled candidates
-    pc.onicecandidate = e => { if (e.candidate) answerPkg.cands.push(e.candidate.candidate); };
-
+    // Build answer package with gathered candidates
+    const answerPkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands: answerCands };
     const qrData = 'LVA:' + enc(answerPkg);
-    console.log('Answer QR length:', qrData.length);
+    console.log('Answer QR length:', qrData.length, 'candidates:', answerCands.length);
 
-    // Render QR
     showPanel('d3');
     renderQR('d-qr', qrData);
 
   } catch(e) {
-    console.error('processOffer:', e);
-    $('d2-txt').textContent = 'error: ' + e.message;
+    console.error('processOffer error:', e);
+    $('d2-txt').textContent = '⚠️ ' + e.message;
     showPanel('d2');
   }
 }
@@ -525,9 +493,9 @@ function renderQR(targetId, text) {
       width: 220, height: 220,
       colorDark: '#000000',
       colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.L  // fewest dots = most scannable
+      correctLevel: QRCode.CorrectLevel.L  // lowest error correction = fewest dots = most scannable
     });
-    console.log('QR rendered');
+    console.log('QR rendered, data length:', text.length);
   };
   tryRender();
 }
@@ -537,26 +505,19 @@ function renderQR(targetId, text) {
 // ════════════════════════════════
 async function doShare(url, title, text) {
   if (navigator.share) {
-    try { await navigator.share({ title, text, url }); return true; }
-    catch(e) { if (e.name === 'AbortError') return false; }
+    try { await navigator.share({ title, text, url }); return; } catch(e) { if (e.name !== 'AbortError') console.warn('share:', e); }
   }
-  try {
-    await navigator.clipboard.writeText(url);
-    alert('Link copied! Paste and send to the other device.');
-    return true;
-  } catch(_) {
-    prompt('Copy and send this link:', url);
-    return true;
-  }
+  try { await navigator.clipboard.writeText(url); alert('Link copied to clipboard — paste and send to the Display device.'); return; } catch(_){}
+  prompt('Copy this link and send to the Display device:', url);
 }
 
 // ════════════════════════════════
-//  MOTION
+//  MOTION (iOS permission)
 // ════════════════════════════════
 function setupMotion() {
   if (typeof DeviceOrientationEvent === 'undefined') return;
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    $('perm-wrap').style.display = 'block';
+    $('perm-wrap').style.display = 'block'; // iOS 13+ needs explicit permission
   } else {
     window.addEventListener('deviceorientation', onOrient, true);
     motionOn = true;
@@ -570,16 +531,27 @@ window.askMotion = async () => {
       motionOn = true;
       $('perm-wrap').style.display = 'none';
     }
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error('Motion permission:', e); }
 };
+
+let _lastSend = 0;
 function onOrient(ev) {
   if (mode !== 'sensor') return;
   const r = Math.max(-90, Math.min(90, ev.gamma||0));
   const p = Math.max(-90, Math.min(90, ev.beta||0));
   updateSensor(r, p);
-  if (dc?.readyState === 'open') {
+  // Send at ~15Hz — don't flood the channel
+  const now = Date.now();
+  if (dc?.readyState === 'open' && now - _lastSend > 66) {
+    _lastSend = now;
     try { dc.send(JSON.stringify({ roll:+r.toFixed(2), pitch:+p.toFixed(2) })); } catch(_){}
   }
+}
+
+// Only start sending once connected — avoids sending before dc is open
+function startSendingData() {
+  // Motion listener already set up in setupMotion() — nothing extra needed
+  // onOrient() checks dc.readyState === 'open' before sending
 }
 
 // ════════════════════════════════
@@ -612,7 +584,7 @@ function updateDisplay(d) {
     if(p<-LT) $('d-down').className  = 'arr '+c;
     if(r> LT) $('d-right').className = 'arr '+c;
     if(r<-LT) $('d-left').className  = 'arr '+c;
-  } else ['up','down','left','right'].forEach(a => $('d-'+a).className='arr ok');
+  } else { ['up','down','left','right'].forEach(a => $('d-'+a).className='arr ok'); }
   $('d-van').className = 'van'+(lv?' lv':'');
   const ins = $('d-instr');
   ins.className = 'instr '+(lv?'LV':cl?'CL':'AD');
@@ -638,16 +610,17 @@ function setBar(fid, lid, angle) {
   $(lid).textContent = Math.abs(angle)<=LT?'✓':(angle>0?'+':'')+angle.toFixed(1)+'°';
   $(lid).style.color = col;
 }
-function clamp(v){return Math.max(10,Math.min(90,v));}
+function clamp(v){ return Math.max(10,Math.min(90,v)); }
 
 function cleanup() {
   stopCamera();
   if(dc){try{dc.close();}catch(_){}} dc=null;
   if(pc){try{pc.close();}catch(_){}} pc=null;
   if(motionOn){window.removeEventListener('deviceorientation',onOrient,true);motionOn=false;}
-  mode=null; window._offerURL=null;
+  mode=null; window._offerURL=null; _lastSend=0;
+  $('scan-btn').style.display='none';
+  $('perm-wrap').style.display='none';
 }
 </script>
-
 </body>
 </html>
