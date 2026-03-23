@@ -154,7 +154,52 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .van3d-stage{transition:transform 0.12s ease-out;transform-style:preserve-3d;
   transform:rotateX(0deg) rotateY(0deg)}
 .van3d-svg{width:200px;height:auto;display:block;filter:drop-shadow(0 6px 20px rgba(0,212,255,0.22))}
-/* Sticky PIN bar at top of sensor screen */
+/* Help screen */
+.help-screen{overflow-y:auto;justify-content:flex-start;padding:0}
+.help-hero{width:100%;background:linear-gradient(135deg,#0f1f3d,#112244);
+  border-bottom:2px solid var(--border);padding:32px 24px 24px;text-align:center}
+.help-hero .logo{font-size:1.4rem;margin-bottom:4px}
+.help-hero .sub{margin-top:4px}
+.help-tabs{display:flex;width:100%;border-bottom:2px solid var(--border);
+  position:sticky;top:0;z-index:5;background:var(--bg)}
+.help-tab{flex:1;padding:14px 8px;font-family:'Orbitron',monospace;font-size:.65rem;
+  font-weight:700;letter-spacing:1px;text-align:center;cursor:pointer;
+  color:var(--dim);border-bottom:3px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none}
+.help-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.help-body{padding:20px 20px 40px;width:100%;max-width:480px;margin:0 auto}
+.help-section{display:none}.help-section.active{display:block}
+.help-step{display:flex;gap:14px;margin-bottom:22px;align-items:flex-start}
+.help-step-num{width:32px;height:32px;border-radius:50%;background:rgba(0,212,255,.12);
+  border:2px solid var(--accent);color:var(--accent);font-family:'Orbitron',monospace;
+  font-size:.8rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.help-step-body{flex:1}
+.help-step-title{font-family:'Orbitron',monospace;font-size:.75rem;font-weight:700;
+  color:var(--text);letter-spacing:1px;margin-bottom:5px}
+.help-step-text{font-size:.68rem;color:var(--dim);line-height:1.9}
+.help-step-text b{color:var(--text)}
+.help-divider{height:1px;background:var(--border);margin:24px 0;opacity:.5}
+.help-tip{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);
+  border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.help-tip-title{font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;
+  color:var(--accent2);letter-spacing:2px;margin-bottom:6px}
+.help-tip-text{font-size:.67rem;color:var(--dim);line-height:1.9}
+.help-tip-text b{color:var(--text)}
+.help-warn{background:rgba(255,170,0,.06);border:1px solid rgba(255,170,0,.2);
+  border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.help-warn-title{font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;
+  color:var(--warn);letter-spacing:2px;margin-bottom:6px}
+.help-warn-text{font-size:.67rem;color:var(--dim);line-height:1.9}
+.help-warn-text b{color:var(--text)}
+.help-scenario{background:var(--panel);border:1px solid var(--border);
+  border-radius:12px;padding:16px;margin-bottom:14px}
+.help-scenario-title{font-family:'Orbitron',monospace;font-size:.7rem;font-weight:700;
+  color:var(--accent);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.help-scenario-text{font-size:.67rem;color:var(--dim);line-height:1.9}
+.help-scenario-text b{color:var(--text)}
+.help-scenario-text ol{padding-left:16px;margin-top:6px}
+.help-scenario-text li{margin-bottom:4px}
+.help-section-title{font-family:'Orbitron',monospace;font-size:.7rem;font-weight:700;
+  color:var(--dim);letter-spacing:3px;margin:0 0 16px;text-transform:uppercase}
 .pin-bar{position:fixed;top:0;left:0;right:0;z-index:10;
   display:flex;align-items:center;
   padding:14px 20px;background:rgba(10,22,40,.95);
@@ -186,6 +231,157 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="card-desc">Hold this phone. Shows leveling guide.</div>
     </div>
   </div>
+  <button class="sbtn blue" style="max-width:320px;margin-top:4px" onclick="showHelp()">
+    <div style="display:flex;align-items:center;gap:10px;justify-content:center">
+      <span style="font-size:1.2rem">❓</span>
+      <span class="sbtn-title" style="letter-spacing:2px">HOW TO USE</span>
+    </div>
+  </button>
+</div>
+
+<!-- HELP SCREEN -->
+<div class="screen help-screen hidden" id="help-screen">
+  <div class="help-hero">
+    <div class="logo">LEVELVAN</div>
+    <div class="sub">HOW TO USE</div>
+  </div>
+
+  <div class="help-tabs">
+    <button class="help-tab active" onclick="helpTab('easy')">🏕️ QUICK GUIDE</button>
+    <button class="help-tab" onclick="helpTab('tech')">📡 CONNECTIVITY</button>
+  </div>
+
+  <!-- ── EASY TAB ── -->
+  <div class="help-body">
+    <div class="help-section active" id="help-easy">
+
+      <p class="help-section-title">Getting set up</p>
+
+      <div class="help-step">
+        <div class="help-step-num">1</div>
+        <div class="help-step-body">
+          <div class="help-step-title">SHARE THE APP LINK</div>
+          <div class="help-step-text">Before you arrive at the campsite, send the LevelVan link to everyone who needs it — via <b>AirDrop, WhatsApp or iMessage</b>. Both the caravan phone and the driver's phone need the page open in their browser. No app download needed.</div>
+        </div>
+      </div>
+
+      <div class="help-step">
+        <div class="help-step-num">2</div>
+        <div class="help-step-body">
+          <div class="help-step-title">PLACE THE SENSOR PHONE</div>
+          <div class="help-step-text">Put one phone flat inside the caravan — on a table, bench or floor. <b>Point the top of the phone toward the hitch end</b> (the front of the caravan, where it connects to the car). This is important so pitch and roll read correctly.</div>
+        </div>
+      </div>
+
+      <div class="help-step">
+        <div class="help-step-num">3</div>
+        <div class="help-step-body">
+          <div class="help-step-title">TAP SENSOR</div>
+          <div class="help-step-text">On the caravan phone, tap <b>SENSOR</b>. On iOS, tap <b>Allow Motion</b> when prompted — this lets the phone read its tilt. A <b>4-digit PIN</b> will appear at the top of the screen.</div>
+        </div>
+      </div>
+
+      <div class="help-step">
+        <div class="help-step-num">4</div>
+        <div class="help-step-body">
+          <div class="help-step-title">CONNECT THE DISPLAY</div>
+          <div class="help-step-text">On the driver's phone, tap <b>DISPLAY</b> and type in the 4-digit PIN from the sensor phone. The connection happens automatically on the 4th digit. You can also tap <b>📤 SHARE</b> on the sensor to send a link that connects instantly.</div>
+        </div>
+      </div>
+
+      <div class="help-step">
+        <div class="help-step-num">5</div>
+        <div class="help-step-body">
+          <div class="help-step-title">LEVEL THE CARAVAN</div>
+          <div class="help-step-text">The display shows a top-down caravan that tilts in real time. The coloured dot shows where the high side is — <b>green means level, orange means close, red means adjust</b>.<br><br>
+          <b>Left / Right (Roll):</b> Drive the car forward or back onto leveling blocks under the low wheels until the dot centres left-right.<br><br>
+          <b>Front / Back (Pitch):</b> Once roll is sorted, use the <b>jockey wheel</b> to raise or lower the hitch until the dot centres front-to-back.</div>
+        </div>
+      </div>
+
+      <div class="help-divider"></div>
+      <p class="help-section-title">Good to know</p>
+
+      <div class="help-tip">
+        <div class="help-tip-title">📺 MULTIPLE DISPLAYS</div>
+        <div class="help-tip-text">Any number of phones can connect to the same sensor at once. Just share the PIN or the link. Useful if the driver and a helper both want to watch the level.</div>
+      </div>
+
+      <div class="help-tip">
+        <div class="help-tip-title">🔄 RECONNECTING</div>
+        <div class="help-tip-text">If a display disconnects, just tap <b>DISPLAY</b> again and re-enter the PIN. The sensor keeps running and the PIN stays the same until you go back to the home screen.</div>
+      </div>
+
+      <div class="help-warn">
+        <div class="help-warn-title">⚠️ PHONE PLACEMENT</div>
+        <div class="help-warn-text">Make sure the sensor phone is lying <b>completely flat</b> and won't slide around while you're moving the caravan. Even a small tilt in the phone's resting position will offset the readings.</div>
+      </div>
+
+    </div>
+
+    <!-- ── TECH TAB ── -->
+    <div class="help-section" id="help-tech">
+
+      <p class="help-section-title">How it connects</p>
+      <div class="help-step-text" style="margin-bottom:20px;font-size:.68rem;color:var(--dim);line-height:1.9">
+        LevelVan uses <b>WebRTC</b> — a direct peer-to-peer data channel between the two phones. Once connected, tilt data flows directly between devices over your local network at ~15 times per second. No server is involved in the data stream.
+      </div>
+
+      <div class="help-scenario">
+        <div class="help-scenario-title">📶 Same WiFi network</div>
+        <div class="help-scenario-text">
+          Both phones on the same home or campsite WiFi. This is the easiest setup — everything works automatically. The initial handshake uses the PeerJS relay server briefly, then data flows directly over your local network.
+        </div>
+      </div>
+
+      <div class="help-scenario">
+        <div class="help-scenario-title">🌐 Internet available (mobile data)</div>
+        <div class="help-scenario-text">
+          If both phones have mobile data (even on different networks), the WebRTC handshake completes via the internet and then the connection is established. Works well in most campgrounds with any signal.
+        </div>
+      </div>
+
+      <div class="help-scenario">
+        <div class="help-scenario-title">🏔️ No signal — remote location</div>
+        <div class="help-scenario-text">
+          No WiFi, no mobile data? Use a phone hotspot:<br>
+          <ol>
+            <li>On the <b>Display phone</b> (driver's phone), turn on a <b>Personal Hotspot</b>.</li>
+            <li>On the <b>Sensor phone</b> (caravan phone), connect to that hotspot via WiFi settings.</li>
+            <li>Now both phones are on the same local network — open LevelVan on both and connect as normal.</li>
+            <li>The display phone creates the hotspot <em>and</em> runs the display — this works fine.</li>
+          </ol>
+          <br>Note: The very first connection still needs a brief internet handshake. If there is truly zero signal, try the hotspot approach — the hotspot phone itself often still has enough signal to complete the handshake even when the other phone doesn't.
+        </div>
+      </div>
+
+      <div class="help-divider"></div>
+      <p class="help-section-title">Technical details</p>
+
+      <div class="help-tip">
+        <div class="help-tip-title">🔢 PIN SYSTEM</div>
+        <div class="help-tip-text">The sensor generates a random <b>4-digit PIN</b> which maps to a unique PeerJS peer ID (<code>levelvan-XXXX-sensor</code>). The display connects directly to that peer ID. The PIN changes every session.</div>
+      </div>
+
+      <div class="help-tip">
+        <div class="help-tip-title">📺 MULTIPLE DISPLAYS</div>
+        <div class="help-tip-text">Each display gets its own unique peer ID (<code>levelvan-XXXX-display-[timestamp]</code>). The sensor accepts unlimited simultaneous connections. All displays receive the same live data stream.</div>
+      </div>
+
+      <div class="help-tip">
+        <div class="help-tip-title">📐 SENSOR DATA</div>
+        <div class="help-tip-text">Uses the <b>DeviceOrientation API</b> — <code>gamma</code> for roll (left/right) and <code>beta</code> for pitch (front/back). iOS requires explicit permission. Data is sent at ~15Hz (every 66ms) to balance responsiveness and battery.</div>
+      </div>
+
+      <div class="help-warn">
+        <div class="help-warn-title">⚡ RELAY SERVER</div>
+        <div class="help-warn-text">The initial WebRTC handshake uses <b>0.peerjs.com</b> (free public PeerJS server). This is only needed for the first few seconds to exchange connection details. After that, all data is peer-to-peer. The relay server never sees your tilt data.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <button class="back" onclick="goHome()">← back</button>
 </div>
 
 <!-- SENSOR SCREEN -->
@@ -502,6 +698,12 @@ window.addEventListener('load', () => {
 window.goHome = () => { cleanup(); showScreen('home-screen'); };
 window.startSensor  = () => { mode='sensor'; showScreen('sensor-screen'); setupMotion(); };
 window.startDisplay = () => { mode='display'; showScreen('display-screen'); kpadReset(); showPanel('d1'); };
+window.showHelp = () => { showScreen('help-screen'); helpTab('easy'); };
+window.helpTab = (tab) => {
+  document.querySelectorAll('.help-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='easy')||(i===1&&tab==='tech')));
+  $('help-easy').classList.toggle('active', tab==='easy');
+  $('help-tech').classList.toggle('active', tab==='tech');
+};
 
 // ════════════════════════════════
 //  SENSOR
