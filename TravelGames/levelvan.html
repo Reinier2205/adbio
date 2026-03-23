@@ -21,7 +21,8 @@
     background:radial-gradient(ellipse at 20% 20%,rgba(0,100,200,.15),transparent 60%),
                radial-gradient(ellipse at 80% 80%,rgba(0,212,255,.08),transparent 50%);pointer-events:none}
   .grid{position:fixed;inset:0;z-index:0;
-    background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);
+    background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);
     background-size:40px 40px;pointer-events:none}
   .screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;
     align-items:center;justify-content:center;padding:24px;gap:20px}
@@ -121,8 +122,9 @@ width:100%;max-width:340px;transition:all .3s;min-height:48px}
 .instr.wt{color:var(–dim)}
 
 #display-screen,#sensor-screen{overflow-y:auto;justify-content:flex-start;padding-top:56px}
-
 .hint{font-size:.62rem;color:var(–dim);text-align:center;max-width:280px;line-height:1.8}
+
+.col{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}
 </style>
 
 </head>
@@ -153,14 +155,22 @@ width:100%;max-width:340px;transition:all .3s;min-height:48px}
 <div class="screen hidden" id="sensor-screen">
   <button class="back" onclick="goHome()">← back</button>
 
-  <div id="s-step-share" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
-    <div class="srow" style="justify-content:center"><div class="dot busy"></div><span>ready to connect</span></div>
-    <button class="share-btn" onclick="doShare('offer')">
+  <!-- State: generating offer -->
+
+  <div class="col hidden" id="s-generating">
+    <div class="srow"><div class="dot busy"></div><span>creating offer...</span></div>
+  </div>
+
+  <!-- State: share offer to display -->
+
+  <div class="col hidden" id="s-share-offer">
+    <div class="srow"><div class="dot busy"></div><span>ready — share to display device</span></div>
+    <button class="share-btn" onclick="shareOffer()">
       <div class="share-ico">📤</div>
       <div class="share-title">SHARE TO DISPLAY</div>
       <div class="share-hint">AirDrop · iMessage · WhatsApp</div>
     </button>
-    <div class="hint">Tap Share and send the link to the Display device. They open it and share back.</div>
+    <div class="hint">Tap Share and send to the Display device.<br>They open it, then share back to you.</div>
     <div id="perm-wrap" style="display:none;width:100%;max-width:300px">
       <button class="share-btn warn" onclick="askMotion()">
         <div class="share-ico">📐</div>
@@ -170,13 +180,23 @@ width:100%;max-width:340px;transition:all .3s;min-height:48px}
     </div>
   </div>
 
-  <div id="s-step-wait" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
-    <div class="srow" style="justify-content:center"><div class="dot busy"></div><span>waiting for answer from display...</span></div>
-    <div class="hint">The Display device will share a link back.<br>Open that link on this device.</div>
+  <!-- State: waiting for answer (after sharing offer) -->
+
+  <div class="col hidden" id="s-wait-answer">
+    <div class="srow"><div class="dot busy"></div><span>waiting for answer...</span></div>
+    <div class="hint">The Display will share a link back.<br>Open that link on this device to connect.</div>
   </div>
 
-  <div id="s-live" style="display:none;flex-direction:column;align-items:center;gap:16px">
-    <div class="srow" style="justify-content:center"><div class="dot ok"></div><span style="color:var(--accent2)">display connected</span></div>
+  <!-- State: connecting (received answer, applying it) -->
+
+  <div class="col hidden" id="s-connecting">
+    <div class="srow"><div class="dot busy"></div><span id="s-conn-txt">connecting...</span></div>
+  </div>
+
+  <!-- State: live level display -->
+
+  <div class="col hidden" id="s-live">
+    <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">display connected</span></div>
     <div class="bwrap">
       <div class="bring"></div><div class="ch h"></div><div class="ch v"></div>
       <div class="cring"></div>
@@ -201,9 +221,24 @@ width:100%;max-width:340px;transition:all .3s;min-height:48px}
 <div class="screen hidden" id="display-screen">
   <button class="back" onclick="goHome()">← back</button>
 
-  <div id="d-step-share" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
-    <div class="srow" style="justify-content:center"><div class="dot busy"></div><span>offer received — share answer back</span></div>
-    <button class="share-btn green" onclick="doShare('answer')">
+  <!-- State: waiting for offer link -->
+
+  <div class="col hidden" id="d-wait-offer">
+    <div class="srow"><div class="dot busy"></div><span>open the link from the sensor device</span></div>
+    <div class="hint">The Sensor device will share a link with you.<br>Open it on this device.</div>
+  </div>
+
+  <!-- State: processing offer -->
+
+  <div class="col hidden" id="d-processing">
+    <div class="srow"><div class="dot busy"></div><span id="d-proc-txt">processing...</span></div>
+  </div>
+
+  <!-- State: share answer back -->
+
+  <div class="col hidden" id="d-share-answer">
+    <div class="srow"><div class="dot busy"></div><span>share answer back to sensor</span></div>
+    <button class="share-btn green" onclick="shareAnswer()">
       <div class="share-ico">📤</div>
       <div class="share-title">SHARE ANSWER BACK</div>
       <div class="share-hint">AirDrop back to the Sensor device</div>
@@ -211,13 +246,10 @@ width:100%;max-width:340px;transition:all .3s;min-height:48px}
     <div class="hint">Send this back to the Sensor device.<br>Once they open it, you're both connected.</div>
   </div>
 
-  <div id="d-step-wait" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
-    <div class="srow" style="justify-content:center"><div class="dot busy"></div><span id="d-wait-txt">processing...</span></div>
-    <div class="hint" id="d-wait-hint"></div>
-  </div>
+  <!-- State: live display -->
 
-  <div id="d-live" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:340px">
-    <div class="srow" style="justify-content:center"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected</span></div>
+  <div class="col hidden" id="d-live">
+    <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected</span></div>
     <div class="agrid">
       <div class="ac"></div><div class="ac"><div class="arr" id="d-up">⬆️</div></div><div class="ac"></div>
       <div class="ac"><div class="arr" id="d-left">⬅️</div></div>
@@ -241,317 +273,280 @@ width:100%;max-width:340px;transition:all .3s;min-height:48px}
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
-//  LevelVan — AirDrop pairing with sessionStorage state persistence
+//  LevelVan — AirDrop / Share Sheet WebRTC pairing
 //
-//  THE FIX: When the share link is opened, it's a fresh page load.
-//  We use sessionStorage to save the full RTCPeerConnection state
-//  (localDescription + all ICE candidates) before sharing.
-//  On the receiving end, we restore that state and complete the handshake.
+//  ROOT CAUSE OF FINGERPRINT ERROR (now fixed):
+//  Every new RTCPeerConnection generates a NEW DTLS certificate.
+//  When sensor opens the answer link (fresh page load = new PC),
+//  its new certificate fingerprint doesn't match the offer the
+//  display was responding to — so DTLS rejects it.
 //
-//  FLOW:
-//  Sensor:  creates offer → saves to sessionStorage → shares URL → waits
-//  Display: opens URL → reads offer from hash → creates PC + answer
-//           → saves answer to sessionStorage → shares URL back
-//  Sensor:  opens URL → reads answer from hash → restores its own PC
-//           from sessionStorage → applies answer → CONNECTED ✓
+//  THE FIX:
+//  The answer URL carries BOTH the answer AND the original offer.
+//  When sensor opens the answer link:
+//  1. Creates a fresh PC (new cert, new fingerprint — that's fine)
+//  2. Creates a NEW offer from this fresh PC
+//  3. Sets it as localDescription (fingerprint now matches PC)
+//  4. Sets the display's answer as remoteDescription
+//  BUT — the display answered the OLD offer fingerprint, not the new one.
 //
-//  The hash just carries a tiny token. All SDP lives in sessionStorage.
-//  sessionStorage persists within the same browser tab session,
-//  and also when the page is reloaded via a link on the same device.
+//  ACTUAL CORRECT FIX:
+//  The answer URL carries the original offer inside it.
+//  When sensor opens the answer link:
+//  1. Creates fresh PC
+//  2. Re-generates an offer (gets new cert)
+//  3. Sends that offer's fingerprint to display in a second round
+//  ...this is circular.
+//
+//  THE ONLY CORRECT SOLUTION:
+//  Use a single RTCPeerConnection that persists. Since a fresh page
+//  load kills it, we must do the entire handshake WITHOUT a page reload.
+//
+//  APPROACH: Both share steps happen WITHOUT navigating away.
+//  - Sensor shares offer URL → Display opens in same tab (no reload needed
+//    if display is already on the page) OR display opens fresh
+//  - Display processes offer, generates answer, shares answer URL
+//  - Sensor receives answer URL — but sensor MUST still have its original PC
+//
+//  Since AirDrop OPENS a new tab/window, the sensor's original tab is
+//  still open with the original PC intact. The answer URL just needs
+//  to pass data to that existing tab.
+//
+//  SOLUTION: Use window.opener or BroadcastChannel.
+//  When sensor shares the offer URL, it opens a new tab on the display.
+//  When display shares the answer URL back, it triggers the SENSOR'S
+//  EXISTING TAB via BroadcastChannel (works same-origin, same device
+//  is NOT required — but cross-device BroadcastChannel doesn't work).
+//
+//  REAL FINAL SOLUTION:
+//  Don't use page navigation at all for the answer.
+//  1. Sensor creates offer, shows it as a URL to SHARE (AirDrop)
+//  2. Display opens that URL (fresh page, display mode, processes offer)
+//  3. Display shows answer as a URL to share back
+//  4. Sensor opens the answer URL in a NEW TAB — the new tab reads the
+//     answer from the hash and posts it to the OPENER tab via postMessage
+//  5. Opener tab (original sensor tab) receives the answer and applies it
+//     to the ORIGINAL PC — fingerprints match!
+//
+//  This works because window.opener is available when opening a link
+//  from the same origin in a new tab.
 // ═══════════════════════════════════════════════════════════════════
 
 const LT=1.5, CT=4.0, MD=15;
 let pc=null, dc=null, motionOn=false, mode=null;
+let _offerURL=null, _answerURL=null;
 
-// No STUN — local WiFi host candidates only, instant, no internet
-const ICE = { iceServers:[] };
+const ICE = { iceServers:[] }; // local WiFi only — no internet needed
 
-const $    = id => document.getElementById(id);
-const show = (id) => { const e=$(id); e.style.display='flex'; e.style.flexDirection='column'; e.style.alignItems='center'; }
-const hide = id  => $(id).style.display='none';
-function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden')); $(id).classList.remove('hidden'); }
+const $   = id => document.getElementById(id);
+const enc = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+const dec = str => { str=str.replace(/-/g,'+').replace(/_/g,'/'); while(str.length%4)str+='='; return JSON.parse(decodeURIComponent(escape(atob(str)))); };
 
-// ── Encode / decode for URL hash
-function enc(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''); }
-function dec(str) { str=str.replace(/-/g,'+').replace(/_/g,'/'); while(str.length%4)str+='='; return JSON.parse(decodeURIComponent(escape(atob(str)))); }
+function show(id){ const e=$(id); e.classList.remove('hidden'); e.style.display='flex'; e.style.flexDirection='column'; e.style.alignItems='center'; e.style.gap='16px'; e.style.width='100%'; }
+function hide(id){ $(id).classList.add('hidden'); $(id).style.display='none'; }
+function showOnly(ids){ ['s-generating','s-share-offer','s-wait-answer','s-connecting','s-live','d-wait-offer','d-processing','d-share-answer','d-live'].forEach(hide); ids.forEach(show); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden')); $(id).classList.remove('hidden'); }
 
-// ── sessionStorage helpers
-const SS = {
-  save: (k,v) => sessionStorage.setItem('lv_'+k, JSON.stringify(v)),
-  load: (k)   => { try { return JSON.parse(sessionStorage.getItem('lv_'+k)); } catch(_){return null;} },
-  clear:()    => ['offer_sdp','offer_cands','answer_sdp','answer_cands'].forEach(k=>sessionStorage.removeItem('lv_'+k))
-};
-
-// ══════════════════════════════════════════════════════
-//  STARTUP — check hash on every page load
-// ══════════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', async () => {
+// ── On load: check hash and route accordingly
+window.addEventListener('DOMContentLoaded', () => {
   const hash = location.hash.slice(1);
-  history.replaceState(null,'',location.pathname); // clear hash right away
-
-  if (hash === 'LVO') {
-    // Display device received the offer share — offer SDP is in sessionStorage
-    // (was saved by sensor before sharing, then the link token just triggers this branch)
-    // BUT: this is a DIFFERENT device — sessionStorage doesn't cross devices.
-    // The offer data must travel in the URL itself (compact form).
-    // See comment below — we embed compact offer in the hash directly.
-  }
+  history.replaceState(null,'',location.pathname);
 
   if (hash.startsWith('LVO:')) {
-    // Offer data embedded in hash — Display device opening sensor's share link
+    // Display device: received offer from sensor
     mode = 'display';
     showScreen('display-screen');
-    await receiveOffer(hash.slice(4));
+    showOnly(['d-processing']);
+    processOffer(hash.slice(4));
 
   } else if (hash.startsWith('LVA:')) {
-    // Answer data embedded in hash — Sensor device opening display's share link
-    mode = 'sensor';
-    showScreen('sensor-screen');
-    await receiveAnswer(hash.slice(4));
+    // This tab was opened to deliver an answer back to the sensor's original tab
+    // Post the answer to window.opener and close this tab
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage({ type:'LVA', data: hash.slice(4) }, '*');
+      // Show a brief confirmation then close
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#0a1628;color:#00ff88;font-family:monospace;font-size:1rem;text-align:center;padding:20px">✓ Connected!<br><br>You can close this tab.<br>Check the Sensor device.</div>';
+      setTimeout(() => window.close(), 2000);
+    } else {
+      // Opener is gone — sensor refreshed or closed. Show the answer for manual use.
+      document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:#0a1628;color:#c8e0ff;font-family:monospace;font-size:.8rem;text-align:center;padding:20px;gap:12px"><div style="color:#ffaa00">Sensor tab was closed.</div><div>Go back to the Sensor device,<br>tap SENSOR again, and reshare.</div></div>';
+    }
 
   } else {
-    // Normal home screen
+    // Normal home
     showScreen('home-screen');
+    // Listen for answer posted from a child tab
+    window.addEventListener('message', onAnswerMessage);
   }
 });
 
-window.goHome    = () => { cleanup(); SS.clear(); showScreen('home-screen'); };
-window.startSensor  = () => { mode='sensor';  showScreen('sensor-screen');  initSensor(); };
-window.startDisplay = () => { mode='display'; showScreen('display-screen'); show('d-step-wait'); $('d-wait-txt').textContent='open the link from the sensor device'; $('d-wait-hint').textContent=''; };
+// ── Receive answer from child tab via postMessage
+function onAnswerMessage(e) {
+  if (e.data?.type === 'LVA' && mode === 'sensor' && pc) {
+    console.log('Received answer via postMessage');
+    applyAnswer(e.data.data);
+  }
+}
 
-// ══════════════════════════════════════════════════════
-//  SENSOR — Step 1: create offer and share it
-// ══════════════════════════════════════════════════════
+window.goHome    = () => { cleanup(); showScreen('home-screen'); };
+window.startSensor  = () => { mode='sensor';  showScreen('sensor-screen');  initSensor(); window.addEventListener('message', onAnswerMessage); };
+window.startDisplay = () => { mode='display'; showScreen('display-screen'); showOnly(['d-wait-offer']); };
+
+// ════════════════════════════════════════
+//  SENSOR — create offer, share it
+// ════════════════════════════════════════
 async function initSensor() {
+  showOnly(['s-generating']);
   setupMotion();
-  show('s-step-wait');
-  $('s-step-wait').querySelector('span').textContent = 'creating connection offer...';
-  $('s-step-wait').querySelector('.hint').textContent = '';
 
   pc = new RTCPeerConnection(ICE);
   dc = pc.createDataChannel('lv', {ordered:false, maxRetransmits:0});
-  dc.onopen  = () => { hide('s-step-wait'); hide('s-step-share'); show('s-live'); };
+  dc.onopen  = () => { showScreen('sensor-screen'); showOnly(['s-live']); };
   dc.onclose = () => {};
   pc.onconnectionstatechange = () => {
     console.log('Sensor PC:', pc.connectionState);
-    if (pc.connectionState==='connected') { hide('s-step-wait'); hide('s-step-share'); show('s-live'); }
-    if (pc.connectionState==='failed')    alert('Connection failed — go back and try again.');
+    if (pc.connectionState === 'connected') showOnly(['s-live']);
+    if (pc.connectionState === 'failed')    $('s-conn-txt').textContent = 'connection failed — go back and retry';
   };
 
-  // Collect all ICE candidates
   const cands = [];
   pc.onicecandidate = e => { if (e.candidate) cands.push(e.candidate.candidate); };
 
-  // Wait for ICE gathering to finish (or timeout after 3s)
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  // Wait for ICE (local candidates only — fast, no internet)
   await new Promise(resolve => {
-    pc.onicegatheringstatechange = () => { if (pc.iceGatheringState==='complete') resolve(); };
-    setTimeout(resolve, 3000);
-    const offer = pc.createOffer().then(o => pc.setLocalDescription(o));
+    if (pc.iceGatheringState === 'complete') { resolve(); return; }
+    pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') resolve(); };
+    setTimeout(resolve, 3000); // max 3s
   });
 
-  // Build compact offer package — FULL SDP so reconstruction is reliable
-  const offerPkg = {
-    sdp:   pc.localDescription.sdp,
-    type:  pc.localDescription.type,
-    cands: cands
-  };
+  const pkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands };
+  _offerURL = location.origin + location.pathname + '#LVO:' + enc(pkg);
+  console.log('Offer URL length:', _offerURL.length);
 
-  const encoded = enc(offerPkg);
-  console.log('Offer encoded length:', encoded.length);
-
-  // Store offer locally so we can restore PC after the share round-trip
-  SS.save('my_offer_sdp',  pc.localDescription.sdp);
-  SS.save('my_offer_type', pc.localDescription.type);
-  SS.save('my_cands',      cands);
-
-  hide('s-step-wait');
-  show('s-step-share');
-
-  // Store encoded offer for sharing
-  window._offerEncoded = encoded;
+  showOnly(['s-share-offer']);
 }
 
-window.doShare = async (type) => {
-  let encoded, prefix, title, text;
-  if (type === 'offer') {
-    encoded = window._offerEncoded;
-    prefix  = 'LVO';
-    title   = 'LevelVan — open on Display device';
-    text    = 'Open this link on the Display device to connect to LevelVan';
-  } else {
-    encoded = window._answerEncoded;
-    prefix  = 'LVA';
-    title   = 'LevelVan — open on Sensor device';
-    text    = 'Open this link on the Sensor device to complete the connection';
-  }
-
-  if (!encoded) { alert('Not ready yet — wait a moment and try again.'); return; }
-
-  const url = location.origin + location.pathname + '#' + prefix + ':' + encoded;
-  console.log('Sharing URL length:', url.length);
-
-  if (navigator.share) {
-    try {
-      await navigator.share({ title, text, url });
-      // After sharing offer, sensor waits for answer
-      if (type === 'offer') {
-        hide('s-step-share');
-        show('s-step-wait');
-        $('s-step-wait').querySelector('span').textContent = 'waiting for answer from display...';
-        $('s-step-wait').querySelector('.hint').textContent = 'The Display device will share a link back. Open that link here.';
-      }
-    } catch(e) {
-      if (e.name !== 'AbortError') fallbackShare(url);
-    }
-  } else {
-    fallbackShare(url);
-  }
+window.shareOffer = async () => {
+  if (!_offerURL) return;
+  const shared = await doShare(_offerURL, 'LevelVan — open on Display device', 'Open on the DISPLAY device');
+  if (shared) showOnly(['s-wait-answer']);
 };
 
-function fallbackShare(url) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(() =>
-      alert('Link copied!\n\nPaste and send it to the other device.')
-    ).catch(() => prompt('Copy and send this link:', url));
-  } else {
-    prompt('Copy and send this link:', url);
+// ════════════════════════════════════════
+//  SENSOR — receive answer, apply it
+//  Called via postMessage from child tab
+// ════════════════════════════════════════
+async function applyAnswer(encoded) {
+  showOnly(['s-connecting']);
+  $('s-conn-txt').textContent = 'applying answer...';
+  try {
+    const pkg = dec(encoded);
+    await pc.setRemoteDescription({ type: pkg.type, sdp: pkg.sdp });
+    for (const c of (pkg.cands||[])) {
+      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(_){}
+    }
+    $('s-conn-txt').textContent = 'connecting...';
+    console.log('Answer applied successfully');
+  } catch(e) {
+    console.error('applyAnswer error:', e);
+    $('s-conn-txt').textContent = 'error: ' + e.message;
   }
 }
 
-// ══════════════════════════════════════════════════════
-//  DISPLAY — receives offer, generates answer, shares back
-// ══════════════════════════════════════════════════════
-async function receiveOffer(encoded) {
-  show('d-step-wait');
-  $('d-wait-txt').textContent = 'processing offer...';
-  $('d-wait-hint').textContent = '';
-
+// ════════════════════════════════════════
+//  DISPLAY — process offer, share answer
+// ════════════════════════════════════════
+async function processOffer(encoded) {
+  $('d-proc-txt').textContent = 'processing offer...';
   try {
     const pkg = dec(encoded);
-    console.log('Received offer, type:', pkg.type);
+    console.log('Processing offer, type:', pkg.type);
 
     pc = new RTCPeerConnection(ICE);
     pc.ondatachannel = e => {
       dc = e.channel;
-      dc.onopen  = () => { hide('d-step-share'); hide('d-step-wait'); show('d-live'); };
+      dc.onopen  = () => showOnly(['d-live']);
       dc.onclose = () => {};
-      dc.onmessage = e => { try { const d=JSON.parse(e.data); updateDisplayUI(d.roll,d.pitch); } catch(_){} };
+      dc.onmessage = e => { try { updateDisplayUI(JSON.parse(e.data)); } catch(_){} };
     };
     pc.onconnectionstatechange = () => {
       console.log('Display PC:', pc.connectionState);
-      if (pc.connectionState==='connected') { hide('d-step-share'); hide('d-step-wait'); show('d-live'); }
-      if (pc.connectionState==='failed')    alert('Connection failed — go back and try again.');
+      if (pc.connectionState === 'connected') showOnly(['d-live']);
+      if (pc.connectionState === 'failed')    $('d-proc-txt').textContent = 'connection failed — retry';
     };
 
-    // Set remote offer
     await pc.setRemoteDescription({ type: pkg.type, sdp: pkg.sdp });
-
-    // Add sensor's ICE candidates
     for (const c of (pkg.cands||[])) {
       try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(_){}
     }
 
-    // Collect our own candidates
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
     const cands = [];
     pc.onicecandidate = e => { if (e.candidate) cands.push(e.candidate.candidate); };
-
     await new Promise(resolve => {
-      pc.onicegatheringstatechange = () => { if (pc.iceGatheringState==='complete') resolve(); };
+      if (pc.iceGatheringState === 'complete') { resolve(); return; }
+      pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') resolve(); };
       setTimeout(resolve, 3000);
-      pc.createAnswer().then(a => pc.setLocalDescription(a));
     });
 
-    const answerPkg = {
-      sdp:   pc.localDescription.sdp,
-      type:  pc.localDescription.type,
-      cands: cands
-    };
+    const answerPkg = { sdp: pc.localDescription.sdp, type: pc.localDescription.type, cands };
+    _answerURL = location.origin + location.pathname + '#LVA:' + enc(answerPkg);
+    console.log('Answer URL length:', _answerURL.length);
 
-    const encoded2 = enc(answerPkg);
-    console.log('Answer encoded length:', encoded2.length);
-    window._answerEncoded = encoded2;
-
-    $('d-wait-txt').textContent = 'answer ready';
-    hide('d-step-wait');
-    show('d-step-share');
+    showOnly(['d-share-answer']);
 
   } catch(e) {
-    console.error('receiveOffer error:', e);
-    $('d-wait-txt').textContent = 'error: ' + e.message;
+    console.error('processOffer error:', e);
+    $('d-proc-txt').textContent = 'error: ' + e.message;
   }
 }
 
-// ══════════════════════════════════════════════════════
-//  SENSOR — receives answer, completes connection
-// ══════════════════════════════════════════════════════
-async function receiveAnswer(encoded) {
-  setupMotion();
-  show('s-step-wait');
-  $('s-step-wait').querySelector('span').textContent = 'applying answer...';
+window.shareAnswer = async () => {
+  if (!_answerURL) return;
+  // The answer URL, when opened on the SENSOR device, will open in a new tab.
+  // That new tab posts the answer back to the original sensor tab via postMessage.
+  await doShare(_answerURL, 'LevelVan — open on Sensor device', 'Open on the SENSOR device to complete connection');
+};
 
+// ════════════════════════════════════════
+//  SHARE HELPER
+// ════════════════════════════════════════
+async function doShare(url, title, text) {
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text, url });
+      return true;
+    } catch(e) {
+      if (e.name === 'AbortError') return false;
+      // Fall through to clipboard
+    }
+  }
+  // Fallback: copy to clipboard
   try {
-    const pkg = dec(encoded);
-    console.log('Received answer, type:', pkg.type);
-
-    // Re-create the RTCPeerConnection and restore our original offer
-    // We need to recreate PC fresh and re-do the offer, because the old PC
-    // is gone (fresh page load). We'll use the exact same local SDP.
-    pc = new RTCPeerConnection(ICE);
-    dc = pc.createDataChannel('lv', {ordered:false, maxRetransmits:0});
-    dc.onopen  = () => { hide('s-step-wait'); show('s-live'); };
-    dc.onclose = () => {};
-    pc.onconnectionstatechange = () => {
-      console.log('Sensor PC (answer):', pc.connectionState);
-      if (pc.connectionState==='connected') { hide('s-step-wait'); show('s-live'); }
-      if (pc.connectionState==='failed')    alert('Connection failed — go back and try again.');
-    };
-
-    // Restore our original offer from sessionStorage
-    const savedSdp  = SS.load('my_offer_sdp');
-    const savedType = SS.load('my_offer_type');
-    const savedCands = SS.load('my_cands') || [];
-
-    if (!savedSdp) {
-      // sessionStorage was lost (different browser, too long ago, etc.)
-      alert('Session expired. Please go back and start again from SENSOR.');
-      showScreen('home-screen');
-      return;
-    }
-
-    // Re-apply our own offer as localDescription
-    await pc.setLocalDescription({ type: savedType, sdp: savedSdp });
-
-    // Re-add our own ICE candidates
-    // (they're already embedded in the SDP, but re-add for trickle)
-    for (const c of savedCands) {
-      try { pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(_){}
-    }
-
-    // Apply the answer
-    await pc.setRemoteDescription({ type: pkg.type, sdp: pkg.sdp });
-
-    // Add display's ICE candidates
-    for (const c of (pkg.cands||[])) {
-      try { await pc.addIceCandidate({ candidate:c, sdpMid:'0', sdpMLineIndex:0 }); } catch(_){}
-    }
-
-    console.log('Answer applied — waiting for connection...');
-    $('s-step-wait').querySelector('span').textContent = 'connecting...';
-
-  } catch(e) {
-    console.error('receiveAnswer error:', e);
-    alert('Error applying answer: ' + e.message + '\n\nPlease go back and try again.');
-    showScreen('home-screen');
+    await navigator.clipboard.writeText(url);
+    alert('Link copied!\n\nPaste and send it to the other device.');
+    return true;
+  } catch(_) {
+    prompt('Copy and send this link:', url);
+    return true;
   }
 }
 
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════
 //  MOTION SENSOR
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════
 function setupMotion() {
   if (typeof DeviceOrientationEvent === 'undefined') return;
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
     $('perm-wrap').style.display = 'flex';
+    $('perm-wrap').style.flexDirection = 'column';
+    $('perm-wrap').style.width = '100%';
+    $('perm-wrap').style.maxWidth = '300px';
   } else {
     window.addEventListener('deviceorientation', onOrient, true);
     motionOn = true;
@@ -560,10 +555,10 @@ function setupMotion() {
 window.askMotion = async () => {
   try {
     const r = await DeviceOrientationEvent.requestPermission();
-    if (r==='granted') {
+    if (r === 'granted') {
       window.addEventListener('deviceorientation', onOrient, true);
       motionOn = true;
-      hide('perm-wrap');
+      $('perm-wrap').style.display = 'none';
     }
   } catch(e) { console.error(e); }
 };
@@ -577,9 +572,9 @@ function onOrient(ev) {
   }
 }
 
-// ══════════════════════════════════════════════════════
-//  UI UPDATES
-// ══════════════════════════════════════════════════════
+// ════════════════════════════════════════
+//  SENSOR UI
+// ════════════════════════════════════════
 function updateSensorUI(r, p) {
   const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
   const lv=mx<=LT, cl=mx<=CT;
@@ -593,7 +588,11 @@ function updateSensorUI(r, p) {
   setBar('s-rb','s-rd',r); setBar('s-pb','s-pd',p);
 }
 
-function updateDisplayUI(r, p) {
+// ════════════════════════════════════════
+//  DISPLAY UI
+// ════════════════════════════════════════
+function updateDisplayUI(d) {
+  const r=d.roll, p=d.pitch;
   const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
   const lv=mx<=LT, cl=mx<=CT;
   ['up','down','left','right'].forEach(a=>$('d-'+a).className='arr');
@@ -615,8 +614,8 @@ function updateDisplayUI(r, p) {
     if(ar>LT) pts.push(r>0?'LIFT RIGHT':'LIFT LEFT');
     ins.textContent=pts.join(' + ');
   }
-  $('d-roll').textContent=r.toFixed(1)+'°';  $('d-roll').className='aval '+(ar<=LT?'c-ok':ar<=CT?'c-wn':'c-bd');
-  $('d-pitch').textContent=p.toFixed(1)+'°'; $('d-pitch').className='aval '+(ap<=LT?'c-ok':ap<=CT?'c-wn':'c-bd');
+  $('d-roll').textContent=r.toFixed(1)+'°';   $('d-roll').className='aval '+(ar<=LT?'c-ok':ar<=CT?'c-wn':'c-bd');
+  $('d-pitch').textContent=p.toFixed(1)+'°';  $('d-pitch').className='aval '+(ap<=LT?'c-ok':ap<=CT?'c-wn':'c-bd');
   setBar('d-rb','d-rd',r); setBar('d-pb','d-pd',p);
 }
 
@@ -629,14 +628,14 @@ function setBar(fid, lid, angle) {
   $(lid).textContent=Math.abs(angle)<=LT?'✓':(angle>0?'+':'')+angle.toFixed(1)+'°';
   $(lid).style.color=col;
 }
-
 function clamp(v){return Math.max(10,Math.min(90,v));}
 
 function cleanup() {
   if(dc){try{dc.close();}catch(_){}} dc=null;
   if(pc){try{pc.close();}catch(_){}} pc=null;
   if(motionOn){window.removeEventListener('deviceorientation',onOrient,true);motionOn=false;}
-  mode=null; window._offerEncoded=null; window._answerEncoded=null;
+  window.removeEventListener('message',onAnswerMessage);
+  mode=null; _offerURL=null; _answerURL=null;
 }
 </script>
 
