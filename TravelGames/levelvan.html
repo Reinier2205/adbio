@@ -294,131 +294,88 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <!-- 3D caravan view -->
     <div class="van3d-scene">
       <div class="van3d-stage" id="van3d">
-        <svg class="van3d-svg" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+        <svg class="van3d-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="bodyFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#4a9abb" stop-opacity="0.55"/>
-              <stop offset="100%" stop-color="#2a6a8a" stop-opacity="0.45"/>
+              <stop offset="0%" stop-color="#5ab8d4" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#3a8aaa" stop-opacity="0.4"/>
             </linearGradient>
-            <linearGradient id="bodyEdge" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#5ab0cc" stop-opacity="0.9"/>
-              <stop offset="50%" stop-color="#3a8aaa" stop-opacity="0.6"/>
-              <stop offset="100%" stop-color="#5ab0cc" stop-opacity="0.9"/>
+            <linearGradient id="wheelFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4a8aaa" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#2a5a7a" stop-opacity="0.85"/>
             </linearGradient>
-            <linearGradient id="wheelFill" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#3a7a9a" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="#2a5a7a" stop-opacity="0.8"/>
-            </linearGradient>
-            <filter id="fr" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id="fg" x="-80%" y="-80%" width="260%" height="260%">
               <feGaussianBlur stdDeviation="2.5" result="b"/>
               <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
-            <filter id="fg" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="b"/>
+            <filter id="fl" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="b"/>
               <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
           </defs>
 
-          <!-- ── BACKGROUND CIRCLE (like the reference) ── -->
-          <circle cx="100" cy="155" r="118" fill="#0d2a3a" opacity="0.35"/>
+          <!-- ══ BODY — main transparent shell ══ -->
+          <!-- Shadow offset -->
+          <rect x="36" y="32" width="130" height="196" rx="12" fill="#1a3a4e" opacity="0.45"/>
+          <!-- Main body -->
+          <rect x="32" y="28" width="136" height="196" rx="12"
+                fill="url(#bodyFill)" stroke="#6ac8e0" stroke-width="2.5" opacity="0.92"/>
+          <!-- Inner frame outline -->
+          <rect x="46" y="42" width="108" height="168" rx="7"
+                fill="none" stroke="#8ad8ee" stroke-width="1.5" opacity="0.45"/>
 
-          <!-- ══════════════════════════════════
-               A-FRAME HITCH — top of image
-               Two angled arms meeting at a point
-          ══════════════════════════════════ -->
+          <!-- ══ TAIL LIGHTS — top of body (front of caravan) ══ -->
+          <rect x="32" y="28" width="22" height="12" rx="4"
+                fill="#2a0808" stroke="#ff5555" stroke-width="1.5" id="light-l"/>
+          <rect x="35" y="31" width="13" height="6" rx="2"
+                fill="#ff3333" opacity="0.55" filter="url(#fl)" id="light-l-inner"/>
+          <rect x="146" y="28" width="22" height="12" rx="4"
+                fill="#2a0808" stroke="#ff5555" stroke-width="1.5" id="light-r"/>
+          <rect x="152" y="31" width="13" height="6" rx="2"
+                fill="#ff3333" opacity="0.55" filter="url(#fl)" id="light-r-inner"/>
+
+          <!-- ══ AXLE BAR ══ -->
+          <rect x="16" y="148" width="168" height="8" rx="4"
+                fill="#3a7a9a" stroke="#6ac8e0" stroke-width="1" opacity="0.75"/>
+
+          <!-- ══ WHEELS — large rounded rects protruding from sides ══ -->
+          <!-- Left wheel -->
+          <rect x="4" y="130" width="30" height="44" rx="7"
+                fill="url(#wheelFill)" stroke="#8ad8ee" stroke-width="2" opacity="0.92"/>
+          <!-- Left wheel hub -->
+          <circle cx="19" cy="152" r="7" fill="#1a3a5a" stroke="#6ac8e0" stroke-width="1.5" opacity="0.8"/>
+          <circle cx="19" cy="152" r="3" fill="#3a7a9a" opacity="0.9"/>
+
+          <!-- Right wheel -->
+          <rect x="166" y="130" width="30" height="44" rx="7"
+                fill="url(#wheelFill)" stroke="#8ad8ee" stroke-width="2" opacity="0.92"/>
+          <!-- Right wheel hub -->
+          <circle cx="181" cy="152" r="7" fill="#1a3a5a" stroke="#6ac8e0" stroke-width="1.5" opacity="0.8"/>
+          <circle cx="181" cy="152" r="3" fill="#3a7a9a" opacity="0.9"/>
+
+          <!-- ══ A-FRAME HITCH — bottom, V converging to tow point ══ -->
           <!-- Left arm -->
-          <line x1="100" y1="18" x2="72" y2="58" stroke="#5ab0cc" stroke-width="3.5" stroke-linecap="round" opacity="0.85"/>
+          <line x1="68" y1="224" x2="100" y2="298"
+                stroke="#5ab0cc" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
           <!-- Right arm -->
-          <line x1="100" y1="18" x2="128" y2="58" stroke="#5ab0cc" stroke-width="3.5" stroke-linecap="round" opacity="0.85"/>
+          <line x1="132" y1="224" x2="100" y2="298"
+                stroke="#5ab0cc" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
           <!-- Cross brace -->
-          <line x1="76" y1="46" x2="124" y2="46" stroke="#5ab0cc" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-          <!-- Hitch tip circle -->
-          <circle cx="100" cy="16" r="6" fill="#2a5a7a" stroke="#7ad0ee" stroke-width="2" opacity="0.95"/>
-          <!-- Hitch base plate -->
-          <rect x="72" y="56" width="56" height="8" rx="3" fill="#3a7a9a" stroke="#5ab0cc" stroke-width="1.5" opacity="0.85"/>
+          <line x1="72" y1="248" x2="128" y2="248"
+                stroke="#5ab0cc" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+          <!-- Tow ball -->
+          <circle cx="100" cy="300" r="7" fill="#3a7a9a" stroke="#8ad8ee" stroke-width="2" opacity="0.95"/>
 
-          <!-- ══════════════════════════════════
-               OUTER BODY SHELL — shadow layer
-          ══════════════════════════════════ -->
-          <rect x="34" y="62" width="132" height="188" rx="10" fill="#1a3a4e" opacity="0.6"/>
+          <!-- ══ GAS BOTTLES — two circles on the hitch cross-brace ══ -->
+          <circle cx="86" cy="248" r="10" fill="#2a5a7a" stroke="#6ac8e0" stroke-width="2" opacity="0.9"/>
+          <circle cx="86" cy="248" r="5" fill="#3a8aaa" stroke="#8ad8ee" stroke-width="1" opacity="0.7"/>
+          <circle cx="114" cy="248" r="10" fill="#2a5a7a" stroke="#6ac8e0" stroke-width="2" opacity="0.9"/>
+          <circle cx="114" cy="248" r="5" fill="#3a8aaa" stroke="#8ad8ee" stroke-width="1" opacity="0.7"/>
 
-          <!-- ══════════════════════════════════
-               OUTER BODY SHELL — main transparent body
-          ══════════════════════════════════ -->
-          <rect x="30" y="58" width="140" height="188" rx="10" fill="url(#bodyFill)" stroke="#5ab0cc" stroke-width="2" opacity="0.9"/>
-
-          <!-- ══════════════════════════════════
-               INNER FRAME — visible through transparent body
-               (the inner rectangle lines from the reference)
-          ══════════════════════════════════ -->
-          <rect x="44" y="72" width="112" height="160" rx="6" fill="none" stroke="#7ad0ee" stroke-width="1.5" opacity="0.5"/>
-          <!-- Inner frame cross supports -->
-          <line x1="44" y1="130" x2="156" y2="130" stroke="#7ad0ee" stroke-width="1" opacity="0.3"/>
-          <line x1="44" y1="172" x2="156" y2="172" stroke="#7ad0ee" stroke-width="1" opacity="0.3"/>
-
-          <!-- ══════════════════════════════════
-               WINDOWS — front (top of body)
-          ══════════════════════════════════ -->
-          <rect x="50" y="78" width="42" height="30" rx="4" fill="#1a4a6a" stroke="#7ad0ee" stroke-width="1.5" opacity="0.85"/>
-          <rect x="108" y="78" width="42" height="30" rx="4" fill="#1a4a6a" stroke="#7ad0ee" stroke-width="1.5" opacity="0.85"/>
-          <!-- Window glare -->
-          <rect x="53" y="81" width="16" height="6" rx="2" fill="#aae0f0" opacity="0.2"/>
-          <rect x="111" y="81" width="16" height="6" rx="2" fill="#aae0f0" opacity="0.2"/>
-
-          <!-- ══════════════════════════════════
-               DOOR — centre of body
-          ══════════════════════════════════ -->
-          <rect x="68" y="148" width="64" height="56" rx="5" fill="#1a3a5a" stroke="#5ab0cc" stroke-width="1.5" opacity="0.8"/>
-          <!-- Door window -->
-          <rect x="76" y="155" width="48" height="22" rx="3" fill="#1a4a6a" stroke="#7ad0ee" stroke-width="1" opacity="0.7"/>
-          <!-- Door handle -->
-          <rect x="122" y="178" width="10" height="4" rx="2" fill="#7ad0ee" opacity="0.8"/>
-
-          <!-- ══════════════════════════════════
-               REAR LIGHTS — bottom of body
-          ══════════════════════════════════ -->
-          <rect x="30" y="232" width="26" height="14" rx="4" fill="#3a0a0a" stroke="#ff5555" stroke-width="1.5" id="light-l"/>
-          <rect x="33" y="235" width="14" height="8" rx="2" fill="#ff3333" opacity="0.5" filter="url(#fr)" id="light-l-inner"/>
-          <rect x="144" y="232" width="26" height="14" rx="4" fill="#3a0a0a" stroke="#ff5555" stroke-width="1.5" id="light-r"/>
-          <rect x="153" y="235" width="14" height="8" rx="2" fill="#ff3333" opacity="0.5" filter="url(#fr)" id="light-r-inner"/>
-
-          <!-- Rear bumper bar -->
-          <rect x="30" y="244" width="140" height="6" rx="3" fill="#2a5a7a" stroke="#5ab0cc" stroke-width="1" opacity="0.7"/>
-
-          <!-- ══════════════════════════════════
-               AXLE — horizontal bar across middle
-          ══════════════════════════════════ -->
-          <rect x="14" y="188" width="172" height="7" rx="3.5" fill="#2a5a7a" stroke="#5ab0cc" stroke-width="1" opacity="0.8"/>
-
-          <!-- ══════════════════════════════════
-               WHEELS — 4 total, protruding from sides
-               Styled as rounded rectangles like the reference
-          ══════════════════════════════════ -->
-          <!-- Left front wheel -->
-          <rect x="4" y="168" width="28" height="18" rx="5" fill="url(#wheelFill)" stroke="#7ad0ee" stroke-width="1.5" opacity="0.9"/>
-          <rect x="8" y="172" width="20" height="10" rx="3" fill="#1a3a5a" stroke="#5ab0cc" stroke-width="1" opacity="0.7"/>
-          <!-- Left rear wheel -->
-          <rect x="4" y="198" width="28" height="18" rx="5" fill="url(#wheelFill)" stroke="#7ad0ee" stroke-width="1.5" opacity="0.9"/>
-          <rect x="8" y="202" width="20" height="10" rx="3" fill="#1a3a5a" stroke="#5ab0cc" stroke-width="1" opacity="0.7"/>
-
-          <!-- Right front wheel -->
-          <rect x="168" y="168" width="28" height="18" rx="5" fill="url(#wheelFill)" stroke="#7ad0ee" stroke-width="1.5" opacity="0.9"/>
-          <rect x="172" y="172" width="20" height="10" rx="3" fill="#1a3a5a" stroke="#5ab0cc" stroke-width="1" opacity="0.7"/>
-          <!-- Right rear wheel -->
-          <rect x="168" y="198" width="28" height="18" rx="5" fill="url(#wheelFill)" stroke="#7ad0ee" stroke-width="1.5" opacity="0.9"/>
-          <rect x="172" y="202" width="20" height="10" rx="3" fill="#1a3a5a" stroke="#5ab0cc" stroke-width="1" opacity="0.7"/>
-
-          <!-- ══════════════════════════════════
-               JOCKEY WHEEL — bottom centre (rear)
-          ══════════════════════════════════ -->
-          <ellipse cx="100" cy="272" rx="12" ry="7" fill="#2a5a7a" stroke="#5ab0cc" stroke-width="1.5" opacity="0.85"/>
-          <ellipse cx="100" cy="272" rx="6" ry="3.5" fill="#1a3a5a" stroke="#7ad0ee" stroke-width="1" opacity="0.7"/>
-
-          <!-- ══════════════════════════════════
-               LEVEL BUBBLE — centre indicator
-          ══════════════════════════════════ -->
-          <circle cx="100" cy="152" r="18" fill="none" stroke="#7ad0ee" stroke-width="1" opacity="0.4"/>
-          <circle cx="100" cy="152" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5" id="van-bubble" opacity="0.95" filter="url(#fg)"/>
+          <!-- ══ LEVEL BUBBLE — centre of body ══ -->
+          <circle cx="100" cy="130" r="16" fill="none" stroke="#8ad8ee" stroke-width="1" opacity="0.35"/>
+          <circle cx="100" cy="130" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5"
+                  id="van-bubble" opacity="0.95" filter="url(#fg)"/>
         </svg>
       </div>
     </div>
@@ -746,8 +703,8 @@ function updateDisplay(d) {
   $('van3d').style.transform = `rotateX(${rx}deg) rotateZ(${rz}deg)`;
 
   // ── Bubble dot inside the level ring on the SVG
-  const bx = 100 + Math.max(-13, Math.min(13, r / 90 * 26));
-  const by = 152 + Math.max(-13, Math.min(13, p / 90 * 26));
+  const bx = 100 + Math.max(-11, Math.min(11, r / 90 * 22));
+  const by = 130 + Math.max(-11, Math.min(11, p / 90 * 22));
   const bubble = $('van-bubble');
   if (bubble) {
     bubble.setAttribute('cx', bx.toFixed(1));
