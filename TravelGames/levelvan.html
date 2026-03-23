@@ -59,13 +59,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   background:var(--panel);border:2px solid var(--accent);border-radius:16px;
   padding:20px 28px;text-align:center;width:100%}
 .pin-label{font-size:.6rem;color:var(--dim);letter-spacing:3px;text-align:center}
-/* PIN entry */
-.pin-entry{display:flex;gap:10px;justify-content:center;width:100%}
-.pin-digit{width:56px;height:72px;border-radius:12px;background:var(--panel);
-  border:2px solid var(--border);color:var(--accent);font-family:'Orbitron',monospace;
-  font-size:2rem;font-weight:700;text-align:center;outline:none;
-  -webkit-appearance:none;appearance:none;caret-color:var(--accent)}
-.pin-digit:focus{border-color:var(--accent);box-shadow:var(--glow)}
+/* PIN entry keypad */
+.pin-dots{display:flex;gap:14px;justify-content:center;align-items:center;padding:4px 0}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--dim);
+  background:transparent;transition:all .15s}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px var(--accent)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
+.kbtn{height:64px;border-radius:14px;background:var(--panel);border:2px solid var(--border);
+  color:var(--text);font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .12s;-webkit-tap-highlight-color:transparent;user-select:none}
+.kbtn:active{transform:scale(.92);background:rgba(0,212,255,.15);border-color:var(--accent)}
+.kbtn.del{font-size:1rem;color:var(--dim)}
+.kbtn.empty{pointer-events:none;opacity:0}
 /* Buttons */
 .sbtn{display:flex;flex-direction:column;align-items:center;gap:8px;
   padding:18px 24px;border-radius:16px;cursor:pointer;width:100%;
@@ -142,6 +148,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .instr.wt{color:var(--dim)}
 .conn-count{font-size:.65rem;color:var(--dim);text-align:center}
 .conn-count span{color:var(--accent2)}
+/* Sticky PIN bar at top of sensor screen */
+.pin-bar{position:fixed;top:0;left:0;right:0;z-index:5;
+  display:none;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:rgba(10,22,40,.92);
+  border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
+.pin-bar.visible{display:flex}
+.pin-bar-label{font-size:.55rem;color:var(--dim);letter-spacing:2px}
+.pin-bar-code{font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;
+  color:var(--accent);letter-spacing:8px;text-shadow:var(--glow)}
+.pin-bar-share{background:none;border:1px solid var(--accent);border-radius:8px;
+  color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.65rem;
+  padding:5px 10px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -168,6 +186,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 <!-- SENSOR SCREEN -->
 <div class="screen hidden" id="sensor-screen">
   <button class="back" onclick="goHome()">← back</button>
+  <!-- Sticky PIN bar — visible once PIN is ready -->
+  <div class="pin-bar" id="pin-bar">
+    <div>
+      <div class="pin-bar-label">SESSION PIN</div>
+      <div class="pin-bar-code" id="pin-bar-code">----</div>
+    </div>
+    <button class="pin-bar-share" onclick="shareLink()">📤 SHARE</button>
+  </div>
 
   <!-- s0: motion permission gate (iOS) -->
   <div class="panel" id="s0">
@@ -180,17 +206,15 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="hint">iOS requires permission to read the accelerometer.<br>Tap the button above, then Allow.</div>
   </div>
 
-  <!-- s1: creating / showing PIN -->
+  <!-- s1: creating session -->
   <div class="panel" id="s1">
     <div class="srow"><div class="dot busy"></div><span id="s1-txt">creating session...</span></div>
     <div class="hint">Takes a moment</div>
   </div>
 
   <!-- s2: PIN ready, waiting for displays -->
-  <div class="panel" id="s2">
-    <div class="pin-label">SESSION PIN — enter on Display device</div>
-    <div class="pin-display" id="s-pin">----</div>
-    <div class="hint">Any device can join. Share the PIN or send the link below.</div>
+  <div class="panel" id="s2" style="padding-top:80px">
+    <div class="hint">Any device can join using the PIN above.</div>
     <button class="sbtn blue" onclick="shareLink()">
       <div class="sbtn-ico">📤</div>
       <div class="sbtn-title">SHARE LINK</div>
@@ -200,7 +224,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- s3: live level (sensor) -->
-  <div class="panel" id="s3">
+  <div class="panel" id="s3" style="padding-top:80px">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)" id="s3-status">connected ✓</span></div>
     <div class="bwrap">
       <div class="bring"></div><div class="ch h"></div><div class="ch v"></div>
@@ -218,12 +242,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="bw"><div class="blbl"><span>PITCH</span><span id="s-pd"></span></div>
         <div class="btrack"><div class="bmid"></div><div class="bfill" id="s-pb"></div></div></div>
     </div>
-    <!-- PIN visible while live so more displays can join -->
-    <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:6px">
-      <div class="pin-label">PIN — tap to share</div>
-      <div class="pin-display" id="s3-pin" onclick="shareLink()" style="font-size:2.2rem;padding:12px 20px;cursor:pointer">----</div>
-      <div class="conn-count" id="s3-conn-count"></div>
-    </div>
+    <div class="conn-count" id="s3-conn-count"></div>
   </div>
 </div>
 
@@ -231,20 +250,30 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 <div class="screen hidden" id="display-screen">
   <button class="back" onclick="goHome()">← back</button>
 
-  <!-- d1: enter PIN -->
+  <!-- d1: keypad PIN entry -->
   <div class="panel" id="d1">
     <div class="srow"><div class="dot busy"></div><span>enter sensor PIN</span></div>
-    <div class="pin-label">4-DIGIT PIN FROM SENSOR DEVICE</div>
-    <div class="pin-entry">
-      <input class="pin-digit" id="p0" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-      <input class="pin-digit" id="p1" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-      <input class="pin-digit" id="p2" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
-      <input class="pin-digit" id="p3" type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+    <div class="pin-label">TAP THE 4-DIGIT PIN FROM SENSOR</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
     </div>
-    <button class="sbtn green" onclick="connectWithPin()">
-      <div class="sbtn-ico">🔗</div>
-      <div class="sbtn-title">CONNECT</div>
-    </button>
+    <div class="keypad">
+      <div class="kbtn" onclick="kpadPress('1')">1</div>
+      <div class="kbtn" onclick="kpadPress('2')">2</div>
+      <div class="kbtn" onclick="kpadPress('3')">3</div>
+      <div class="kbtn" onclick="kpadPress('4')">4</div>
+      <div class="kbtn" onclick="kpadPress('5')">5</div>
+      <div class="kbtn" onclick="kpadPress('6')">6</div>
+      <div class="kbtn" onclick="kpadPress('7')">7</div>
+      <div class="kbtn" onclick="kpadPress('8')">8</div>
+      <div class="kbtn" onclick="kpadPress('9')">9</div>
+      <div class="kbtn empty"></div>
+      <div class="kbtn" onclick="kpadPress('0')">0</div>
+      <div class="kbtn del" onclick="kpadDel()">⌫</div>
+    </div>
     <div class="hint" id="d1-hint">Enter the 4-digit PIN shown on the Sensor device</div>
   </div>
 
@@ -337,9 +366,8 @@ window.addEventListener('load', () => {
     mode = 'display';
     showScreen('display-screen');
     showPanel('d1');
-    fillPin(pin);
-    // Auto-connect after a short delay so user sees what's happening
-    setTimeout(() => connectWithPin(), 600);
+    // fillPin triggers connectWithPin automatically on 4th digit
+    setTimeout(() => fillPin(pin), 300);
   } else {
     showScreen('home-screen');
   }
@@ -347,7 +375,7 @@ window.addEventListener('load', () => {
 
 window.goHome = () => { cleanup(); showScreen('home-screen'); };
 window.startSensor  = () => { mode='sensor'; showScreen('sensor-screen'); setupMotion(); };
-window.startDisplay = () => { mode='display'; showScreen('display-screen'); showPanel('d1'); setupPinInputs(); };
+window.startDisplay = () => { mode='display'; showScreen('display-screen'); kpadReset(); showPanel('d1'); };
 
 // ════════════════════════════════
 //  SENSOR
@@ -365,8 +393,8 @@ function initSensor() {
 
   peer.on('open', id => {
     console.log('Sensor peer open:', id);
-    $('s-pin').textContent = _pin;
-    $('s3-pin').textContent = _pin;
+    $('pin-bar-code').textContent = _pin;
+    $('pin-bar').classList.add('visible');
     showPanel('s2');
   });
 
@@ -423,37 +451,37 @@ window.shareLink = async () => {
 };
 
 // ════════════════════════════════
-//  DISPLAY
+//  DISPLAY — keypad PIN entry
 // ════════════════════════════════
-function setupPinInputs() {
-  for (let i = 0; i < 4; i++) {
-    const el = $('p' + i);
-    el.value = '';
-    el.addEventListener('input', () => {
-      el.value = el.value.replace(/\D/g,'').slice(-1);
-      if (el.value && i < 3) $('p' + (i+1)).focus();
-      if (i === 3 && getPinValue().length === 4) connectWithPin();
-    });
-    el.addEventListener('keydown', e => {
-      if (e.key === 'Backspace' && !el.value && i > 0) $('p' + (i-1)).focus();
-    });
-    el.addEventListener('paste', e => {
-      e.preventDefault();
-      const txt = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,4);
-      for (let j = 0; j < txt.length; j++) { const d = $('p'+j); if(d) d.value = txt[j]; }
-      if (txt.length === 4) connectWithPin();
-    });
+let _kpad = []; // digits entered so far
+
+window.kpadPress = function(digit) {
+  if (_kpad.length >= 4) return;
+  _kpad.push(digit);
+  $('pd' + (_kpad.length - 1)).classList.add('filled');
+  if (_kpad.length === 4) {
+    setTimeout(() => connectWithPin(), 120); // brief pause so last dot animates
   }
-  setTimeout(() => $('p0').focus(), 300);
+}
+
+window.kpadDel = function() {
+  if (_kpad.length === 0) return;
+  _kpad.pop();
+  $('pd' + _kpad.length).classList.remove('filled');
+  $('d1-hint').textContent = 'Enter the 4-digit PIN shown on the Sensor device';
+}
+
+function kpadReset() {
+  _kpad = [];
+  for (let i = 0; i < 4; i++) $('pd'+i).classList.remove('filled');
 }
 
 function fillPin(pin) {
-  for (let i = 0; i < 4; i++) { const d = $('p'+i); if(d) d.value = pin[i]||''; }
+  kpadReset();
+  for (const ch of pin) { if (_kpad.length < 4) kpadPress(ch); }
 }
 
-function getPinValue() {
-  return [0,1,2,3].map(i => ($('p'+i)||{value:''}).value).join('');
-}
+function getPinValue() { return _kpad.join(''); }
 
 window.connectWithPin = () => {
   const pin = getPinValue();
@@ -504,7 +532,7 @@ window.connectWithPin = () => {
     $('d2-txt').textContent = '⚠️ ' + msg;
     showPanel('d2');
     // Go back to PIN entry after a moment
-    setTimeout(() => { showPanel('d1'); $('d1-hint').textContent = '⚠️ ' + msg; }, 2000);
+    setTimeout(() => { showPanel('d1'); kpadReset(); $('d1-hint').textContent = '⚠️ ' + msg; }, 2000);
   });
 };
 
@@ -619,6 +647,8 @@ function cleanup() {
   if(peer){try{peer.destroy();}catch(_){}} peer = null;
   if(motionOn){window.removeEventListener('deviceorientation',onOrient,true);motionOn=false;}
   mode=null; _pin=null; _lastSend=0;
+  $('pin-bar').classList.remove('visible');
+  kpadReset();
 }
 </script>
 
