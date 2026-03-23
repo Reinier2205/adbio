@@ -231,11 +231,53 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   <!-- s3: live level (sensor) -->
   <div class="panel" id="s3" style="padding-top:148px">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)" id="s3-status">connected ✓</span></div>
-    <div class="bwrap">
-      <div class="bring"></div><div class="ch h"></div><div class="ch v"></div>
-      <div class="cring"></div>
-      <div class="bubble" id="s-bubble" style="left:50%;top:50%"></div>
+
+    <!-- 3D caravan view (sensor) -->
+    <div class="van3d-scene">
+      <div class="van3d-stage" id="s-van3d">
+        <svg class="van3d-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="s-bodyFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#5ab8d4" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#3a8aaa" stop-opacity="0.4"/>
+            </linearGradient>
+            <linearGradient id="s-wheelFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4a8aaa" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#2a5a7a" stop-opacity="0.85"/>
+            </linearGradient>
+            <filter id="s-fg" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="2.5" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="s-fl" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <rect x="36" y="32" width="130" height="196" rx="12" fill="#1a3a4e" opacity="0.45"/>
+          <rect x="32" y="28" width="136" height="196" rx="12" fill="url(#s-bodyFill)" stroke="#6ac8e0" stroke-width="2.5" opacity="0.92"/>
+          <rect x="46" y="42" width="108" height="168" rx="7" fill="none" stroke="#8ad8ee" stroke-width="1.5" opacity="0.45"/>
+          <rect x="32" y="28" width="22" height="12" rx="4" fill="#2a0808" stroke="#ff5555" stroke-width="1.5" id="s-light-l"/>
+          <rect x="35" y="31" width="13" height="6" rx="2" fill="#ff3333" opacity="0.55" filter="url(#s-fl)" id="s-light-l-inner"/>
+          <rect x="146" y="28" width="22" height="12" rx="4" fill="#2a0808" stroke="#ff5555" stroke-width="1.5" id="s-light-r"/>
+          <rect x="152" y="31" width="13" height="6" rx="2" fill="#ff3333" opacity="0.55" filter="url(#s-fl)" id="s-light-r-inner"/>
+          <rect x="16" y="122" width="168" height="8" rx="4" fill="#3a7a9a" stroke="#6ac8e0" stroke-width="1" opacity="0.75"/>
+          <rect x="4" y="104" width="18" height="44" rx="5" fill="url(#s-wheelFill)" stroke="#8ad8ee" stroke-width="2" opacity="0.92"/>
+          <circle cx="13" cy="126" r="6" fill="#1a3a5a" stroke="#6ac8e0" stroke-width="1.5" opacity="0.8"/>
+          <circle cx="13" cy="126" r="2.5" fill="#3a7a9a" opacity="0.9"/>
+          <rect x="178" y="104" width="18" height="44" rx="5" fill="url(#s-wheelFill)" stroke="#8ad8ee" stroke-width="2" opacity="0.92"/>
+          <circle cx="187" cy="126" r="6" fill="#1a3a5a" stroke="#6ac8e0" stroke-width="1.5" opacity="0.8"/>
+          <circle cx="187" cy="126" r="2.5" fill="#3a7a9a" opacity="0.9"/>
+          <line x1="68" y1="224" x2="100" y2="298" stroke="#5ab0cc" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+          <line x1="132" y1="224" x2="100" y2="298" stroke="#5ab0cc" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+          <line x1="72" y1="248" x2="128" y2="248" stroke="#5ab0cc" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+          <circle cx="100" cy="300" r="7" fill="#3a7a9a" stroke="#8ad8ee" stroke-width="2" opacity="0.95"/>
+          <circle cx="100" cy="126" r="16" fill="none" stroke="#8ad8ee" stroke-width="1" opacity="0.35"/>
+          <circle cx="100" cy="126" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5" id="s-van-bubble" opacity="0.95" filter="url(#s-fg)"/>
+        </svg>
+      </div>
     </div>
+
     <div class="angles">
       <div class="angle"><div class="albl">ROLL ↔</div><div class="aval bd" id="s-roll">0.0°</div></div>
       <div class="badge AD" id="s-badge">--</div>
@@ -293,7 +335,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
     <!-- 3D caravan view -->
     <div class="van3d-scene">
-      <div class="van3d-stage" id="van3d">
+      <div class="van3d-stage" id="van3d" style="transform:rotateZ(180deg)">
         <svg class="van3d-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="bodyFill" x1="0" y1="0" x2="0" y2="1">
@@ -672,9 +714,27 @@ function onOrient(ev) {
 function updateSensor(r, p) {
   const ar=Math.abs(r), ap=Math.abs(p), mx=Math.max(ar,ap);
   const lv=mx<=LT, cl=mx<=CT;
-  $('s-bubble').style.left = clamp(50+(r/30)*50)+'%';
-  $('s-bubble').style.top  = clamp(50+(p/30)*50)+'%';
-  $('s-bubble').className  = 'bubble'+(lv?' lv':'');
+
+  // 3D tilt — same logic as display
+  const rx = Math.max(-30, Math.min(30, p * 2)) * -1;
+  const rz = Math.max(-30, Math.min(30, r * 2)) * -1;
+  $('s-van3d').style.transform = `rotateX(${rx}deg) rotateZ(${rz}deg)`;
+
+  // Bubble inside sensor SVG
+  const sbx = 100 + Math.max(-11, Math.min(11, r / 90 * 22));
+  const sby = 126 + Math.max(-11, Math.min(11, p / 90 * 22));
+  const sb = $('s-van-bubble');
+  if (sb) {
+    sb.setAttribute('cx', sbx.toFixed(1));
+    sb.setAttribute('cy', sby.toFixed(1));
+    sb.setAttribute('fill', lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444');
+    sb.setAttribute('stroke', lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444');
+  }
+
+  // Tail lights
+  const lo = lv ? '0.4' : cl ? '0.65' : '1';
+  ['s-light-l-inner','s-light-r-inner'].forEach(id => { const el=$(id); if(el) el.setAttribute('opacity',lo); });
+
   $('s-roll').textContent  = r.toFixed(1)+'°'; $('s-roll').className  = 'aval '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
   $('s-pitch').textContent = p.toFixed(1)+'°'; $('s-pitch').className = 'aval '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
   $('s-badge').className   = 'badge '+(lv?'LV':cl?'CL':'AD');
@@ -692,12 +752,13 @@ function updateDisplay(d) {
 
   // ── 3D tilt: pitch = rotateX (front/back), roll = rotateZ (left/right)
   // Scale up for visual drama — real leveling is ±5° so amplify 2x for display
-  const rx = Math.max(-30, Math.min(30, p * 2)) * -1; // negative: front-down tilts top toward viewer
-  const rz = Math.max(-30, Math.min(30, r * 2)) * -1; // negative: right-down tilts right side down
-  $('van3d').style.transform = `rotateX(${rx}deg) rotateZ(${rz}deg)`;
+  // SVG is rotated 180° so roll (rotateZ) and bubble-x must be inverted
+  const rx = Math.max(-30, Math.min(30, p * 2)) * -1;
+  const rz = Math.max(-30, Math.min(30, r * 2));      // inverted vs sensor (180° flip)
+  $('van3d').style.transform = `rotateZ(180deg) rotateX(${rx}deg) rotateZ(${rz}deg)`;
 
-  // ── Bubble dot inside the level ring on the SVG
-  const bx = 100 + Math.max(-11, Math.min(11, r / 90 * 22));
+  // ── Bubble dot — x inverted due to 180° rotation
+  const bx = 100 + Math.max(-11, Math.min(11, r / 90 * 22)) * -1;
   const by = 126 + Math.max(-11, Math.min(11, p / 90 * 22));
   const bubble = $('van-bubble');
   if (bubble) {
