@@ -85,7 +85,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .sbtn.warn{border-color:var(--warn);background:rgba(255,170,0,.08);color:var(--warn)}
 .sbtn-ico{font-size:2rem}
 .sbtn-title{font-size:.92rem;font-weight:700;letter-spacing:3px}
-.sbtn-hint{font-size:.72rem;opacity:.8;font-family:'Share Tech Mono',monospace}
+.sbtn-hint{font-size:.72rem;color:var(--dim);font-family:'Share Tech Mono',monospace;margin-top:3px}
 .hint{font-size:.74rem;color:var(--dim);text-align:center;max-width:280px;line-height:1.8}
 /* Bubble level */
 .bwrap{position:relative;width:150px;height:150px;flex-shrink:0}
@@ -239,11 +239,15 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="card-desc">Hold this phone. Shows leveling guide.</div>
     </div>
   </div>
+  <button class="sbtn blue" style="max-width:320px;margin-top:4px" onclick="startSolo()">
+    <div class="sbtn-ico">🫧</div>
+    <div class="sbtn-title">SOLO MODE</div>
+    <div class="sbtn-hint">One phone — level the caravan yourself</div>
+  </button>
   <button class="sbtn blue" style="max-width:320px;margin-top:4px" onclick="showHelp()">
-    <div style="display:flex;align-items:center;gap:10px;justify-content:center">
-      <span style="font-size:1.2rem">💡</span>
-      <span class="sbtn-title" style="letter-spacing:2px">HOW TO USE</span>
-    </div>
+    <div class="sbtn-ico">💡</div>
+    <div class="sbtn-title">HOW TO USE</div>
+    <div class="sbtn-hint">Quick guide &amp; connectivity help</div>
   </button>
   <a href="../TravelGames/index.html"
      style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:10px 20px;
@@ -715,6 +719,7 @@ window.addEventListener('load', () => {
 window.goHome = () => { cleanup(); showScreen('home-screen'); };
 window.startSensor  = () => { mode='sensor'; showScreen('sensor-screen'); setupMotion(); };
 window.startDisplay = () => { mode='display'; showScreen('display-screen'); kpadReset(); showPanel('d1'); };
+window.startSolo    = () => { mode='solo'; showScreen('sensor-screen'); setupMotion(); };
 window.showHelp = () => { showScreen('help-screen'); helpTab('easy'); };
 window.helpTab = (tab) => {
   document.querySelectorAll('.help-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='easy')||(i===1&&tab==='tech')));
@@ -758,6 +763,15 @@ function initSensor() {
       $('s1-txt').textContent = '⚠️ ' + e.message;
     }
   });
+}
+
+function initSolo() {
+  // Solo mode — no PeerJS, no PIN, just live sensor UI on this device
+  $('pin-bar-code').textContent = 'SOLO';
+  $('pin-bar-share').style.display = 'none';
+  $('s3-status').textContent = 'solo mode — place phone in caravan';
+  $('s3-conn-count').textContent = '';
+  showPanel('s3');
 }
 
 function setupSensorConn(conn) {
@@ -886,17 +900,14 @@ window.connectWithPin = () => {
 // ════════════════════════════════
 function setupMotion() {
   if (typeof DeviceOrientationEvent === 'undefined') {
-    // No motion API at all — skip straight to sensor init
     showPanel('s1'); initSensor(); return;
   }
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    // iOS 13+ — must ask explicitly, show the permission gate panel
     showPanel('s0');
   } else {
-    // Android / desktop — permission not needed, start immediately
     window.addEventListener('deviceorientation', onOrient, true);
     motionOn = true;
-    showPanel('s1'); initSensor();
+    if (mode === 'solo') { initSolo(); } else { showPanel('s1'); initSensor(); }
   }
 }
 window.askMotion = async () => {
@@ -905,19 +916,13 @@ window.askMotion = async () => {
     if (r === 'granted') {
       window.addEventListener('deviceorientation', onOrient, true);
       motionOn = true;
-      showPanel('s1'); initSensor();
-    } else {
-      // Denied — show a message but still let them proceed (sensor data just won't work)
-      showPanel('s1'); initSensor();
     }
-  } catch(e) {
-    console.error('Motion permission:', e);
-    showPanel('s1'); initSensor();
-  }
+  } catch(e) { console.error('Motion permission:', e); }
+  if (mode === 'solo') { initSolo(); } else { showPanel('s1'); initSensor(); }
 };
 
 function onOrient(ev) {
-  if (mode !== 'sensor') return;
+  if (mode !== 'sensor' && mode !== 'solo') return;
   const r = Math.max(-90, Math.min(90, ev.gamma||0));
   const p = Math.max(-90, Math.min(90, ev.beta||0));
   updateSensor(r, p);
