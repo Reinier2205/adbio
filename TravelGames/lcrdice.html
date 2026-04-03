@@ -212,6 +212,19 @@
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .character-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--gold);
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .character-card:hover { background: var(--gold); color: black; }
+        .character-card.selected { border-color: #4ade80; opacity: 0.4; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -242,16 +255,23 @@
         <div id="setup-screen" class="modal">
             <h2 class="bungee text-3xl text-yellow-500 mb-6 text-center">HOW MANY PLAYERS?</h2>
             <div class="flex flex-wrap justify-center gap-3 max-w-[300px]">
-                <button onclick="startGame(3)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">3</button>
-                <button onclick="startGame(4)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">4</button>
-                <button onclick="startGame(5)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">5</button>
-                <button onclick="startGame(6)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">6</button>
-                <button onclick="startGame(7)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">7</button>
-                <button onclick="startGame(8)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">8</button>
-                <button onclick="startGame(9)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">9</button>
-                <button onclick="startGame(10)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">10</button>
+                <button onclick="selectPlayerCount(3)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">3</button>
+                <button onclick="selectPlayerCount(4)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">4</button>
+                <button onclick="selectPlayerCount(5)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">5</button>
+                <button onclick="selectPlayerCount(6)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">6</button>
+                <button onclick="selectPlayerCount(7)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">7</button>
+                <button onclick="selectPlayerCount(8)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">8</button>
+                <button onclick="selectPlayerCount(9)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">9</button>
+                <button onclick="selectPlayerCount(10)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">10</button>
             </div>
-            <p class="mt-8 text-xs text-zinc-500 uppercase tracking-widest">3 Chips Each • Last one left wins the pot</p>
+        </div>
+
+        <!-- Character Selection Modal -->
+        <div id="selection-screen" class="modal hidden">
+            <h2 id="selection-title" class="bungee text-xl text-yellow-500 mb-4 text-center">PLAYER 1: CHOOSE</h2>
+            <div id="character-list" class="grid grid-cols-3 gap-2 overflow-y-auto max-h-[60%] w-full px-4 mb-4">
+                <!-- Dynamically filled -->
+            </div>
         </div>
 
         <!-- Help Modal -->
@@ -262,6 +282,7 @@
                 <p><b>R:</b> Pass chip Right (Prev Player)</p>
                 <p><b>C:</b> Pass chip to Center Pot</p>
                 <p><b>•:</b> Keep chip</p>
+                <p class="pt-4 text-yellow-500">The last player with chips wins the pot and their remaining hand!</p>
             </div>
             <button onclick="toggleHelp()" class="btn-gold mt-6 py-2 px-8 text-sm">CLOSE</button>
         </div>
@@ -290,7 +311,7 @@
     </div>
 
     <script>
-        const DISNEY_NAMES = ["Simba", "Elsa", "Maui", "Mulan", "Aladdin", "Belle", "Hercules", "Moana", "Stitch", "Tiana", "Buzz", "Woody", "Olaf", "Merida", "Genie", "Tarzan", "Ariel", "Pocahontas", "Jafar", "Maleficent", "Mickey", "Donald", "Goofy", "Ursula", "Hades"];
+        const DISNEY_POOL = ["Simba", "Elsa", "Maui", "Mulan", "Aladdin", "Belle", "Hercules", "Moana", "Stitch", "Tiana", "Buzz", "Woody", "Olaf", "Merida", "Genie", "Tarzan", "Ariel", "Pocahontas", "Jafar", "Maleficent", "Mickey", "Donald", "Goofy", "Ursula", "Hades", "Simba", "Nala", "Lilo", "Rapunzel", "Flynn", "Kristoff", "Aurora"];
         const DICE_VALUES = ['L', 'R', 'C', '•', '•', '•'];
         
         let players = [];
@@ -298,6 +319,9 @@
         let turnIndex = 0;
         let isRolling = false;
         let gameActive = false;
+        let selectedCount = 0;
+        let choosingForPlayer = 0;
+        let shuffledCharacters = [];
 
         let scene, camera, renderer, diceGroup;
         const diceObjects = [];
@@ -354,10 +378,6 @@
                 else ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, 128, 128);
                 
-                ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-                ctx.lineWidth = 10;
-                ctx.strokeRect(0, 0, 128, 128);
-                
                 ctx.font = 'bold 80px Bungee, Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -382,16 +402,52 @@
             return { mesh, isRolling: false, rotVel: { x: 0, y: 0, z: 0 } };
         }
 
-        function startGame(count) {
-            const shuffledNames = [...DISNEY_NAMES].sort(() => Math.random() - 0.5);
-            players = Array.from({ length: count }, (_, i) => ({
-                id: i, name: shuffledNames[i], chips: 3
-            }));
+        function selectPlayerCount(count) {
+            selectedCount = count;
+            choosingForPlayer = 0;
+            players = [];
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('selection-screen').classList.remove('hidden');
+            
+            // Prepare unique random characters for selection
+            shuffledCharacters = [...new Set(DISNEY_POOL)].sort(() => Math.random() - 0.5).slice(0, 24);
+            renderCharacterList();
+            updateSelectionTitle();
+        }
+
+        function renderCharacterList() {
+            const list = document.getElementById('character-list');
+            list.innerHTML = '';
+            shuffledCharacters.forEach(name => {
+                const div = document.createElement('div');
+                div.className = 'character-card';
+                div.innerText = name;
+                div.onclick = () => selectCharacter(name, div);
+                list.appendChild(div);
+            });
+        }
+
+        function updateSelectionTitle() {
+            document.getElementById('selection-title').innerText = `PLAYER ${choosingForPlayer + 1}: CHOOSE CHARACTER`;
+        }
+
+        function selectCharacter(name, element) {
+            players.push({ id: choosingForPlayer, name: name, chips: 3 });
+            element.classList.add('selected');
+            
+            choosingForPlayer++;
+            if (choosingForPlayer < selectedCount) {
+                updateSelectionTitle();
+            } else {
+                startActualGame();
+            }
+        }
+
+        function startActualGame() {
+            document.getElementById('selection-screen').classList.add('hidden');
             centerPot = 0;
             turnIndex = 0;
             gameActive = true;
-            document.getElementById('setup-screen').classList.add('hidden');
-            document.getElementById('win-screen').classList.add('hidden');
             document.getElementById('roll-btn').disabled = false;
             renderTable();
             updateUI();
@@ -502,7 +558,7 @@
                 if (targetId) {
                     await animateChip(`player-seat-${turnIndex}`, targetId);
                     updateUI();
-                    checkWinState(); // Check after every chip movement
+                    checkWinState(); 
                 }
             }
         }
@@ -533,7 +589,7 @@
             
             if (players[turnIndex].chips === 0) {
                 document.getElementById('action-msg').innerText = "SKIP: " + players[turnIndex].name + " HAS NO CHIPS";
-                setTimeout(nextTurn, 800);
+                setTimeout(nextTurn, 1000);
             } else {
                 document.getElementById('action-msg').innerText = "";
             }
@@ -542,23 +598,24 @@
         function checkWinState() {
             if (!gameActive) return;
             
-            const pWithChips = players.filter(p => p.chips > 0);
-            // Game ends only when exactly ONE player has chips
-            if (pWithChips.length === 1) {
-                gameActive = false;
-                const winner = pWithChips[0];
-                const totalWinnings = centerPot + winner.chips;
+            const playersWithChips = players.filter(p => p.chips > 0);
+            
+            // Game only ends when exactly one player is holding chips
+            if (playersWithChips.length === 1) {
+                const winner = playersWithChips[0];
+                const finalWinnings = centerPot + winner.chips;
                 
+                gameActive = false;
                 document.getElementById('winner-name').innerText = winner.name;
-                document.getElementById('win-pot').innerText = `${totalWinnings} CHIPS`;
+                document.getElementById('win-pot').innerText = `${finalWinnings} CHIPS`;
                 document.getElementById('win-screen').classList.remove('hidden');
                 document.getElementById('roll-btn').disabled = true;
-                document.getElementById('action-msg').innerText = "WE HAVE A WINNER!";
+                document.getElementById('action-msg').innerText = "GAME OVER!";
             }
         }
 
         function playAgain() {
-            // Reset state properly
+            players = [];
             centerPot = 0;
             turnIndex = 0;
             isRolling = false;
@@ -575,3 +632,4 @@
     </script>
 </body>
 </html>
+
