@@ -187,6 +187,9 @@
             cursor: pointer;
             font-size: 1.2rem;
             flex-shrink: 0;
+            position: relative;
+            z-index: 10;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #big-hit-banner {
@@ -206,11 +209,11 @@
     <div class="flex-shrink-0 py-2 text-center">
         <div class="flex items-center justify-between w-full px-4 max-w-[600px] mx-auto">
             <div class="nav-btn-circle" onclick="confirmHome()">🏠</div>
-            <div>
+            <div class="text-center">
                 <h1 class="bungee text-2xl text-yellow-500 tracking-tighter leading-none">ROGUE LCR</h1>
                 <p id="action-msg" class="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mt-1">High Stakes Magic</p>
             </div>
-            <div style="width:44px"></div>
+            <div class="nav-btn-circle" onclick="toggleHelp()">❓</div>
         </div>
     </div>
 
@@ -240,6 +243,21 @@
             <h2 class="bungee text-4xl text-yellow-500 mb-4">JACKPOT</h2>
             <p id="winner-name" class="text-2xl font-black uppercase mb-6"></p>
             <button onclick="resetToMenu()" class="btn-gold">New Game</button>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="help-screen" class="modal hidden">
+            <h2 class="bungee text-2xl text-yellow-500 mb-4 text-center">RULES</h2>
+            <div class="text-xs text-zinc-300 px-6 text-center space-y-2">
+                <p><b class="text-green-400">P:</b> Pass one chip to any player</p>
+                <p><b class="text-yellow-400">S:</b> Steal one chip from any player</p>
+                <p><b class="text-blue-400">C:</b> Send one chip to the Center Pot</p>
+                <p><b class="text-white">●:</b> Keep chip</p>
+                <p class="pt-2 text-yellow-400">2× C: Banish ALL your chips to the pot!</p>
+                <p class="text-yellow-400">2× S: Steal an entire pile from one player!</p>
+                <p class="pt-3 text-yellow-500">Last player with chips wins the pot!</p>
+            </div>
+            <button onclick="toggleHelp()" class="btn-gold mt-5 py-2 px-8 text-sm">CLOSE</button>
         </div>
     </div>
 
@@ -577,6 +595,8 @@
 
         function confirmHome() { if(confirm("Quit game?")) window.location.href = './index.html'; }
         function toggleHelp() { document.getElementById('help-screen')?.classList.toggle('hidden'); }
+
+        function checkWinner() {
             const active = players.filter(p => p.chips > 0);
             if(active.length === 1 && centerPot > 0) {
                 document.getElementById('winner-name').innerText = active[0].n;
