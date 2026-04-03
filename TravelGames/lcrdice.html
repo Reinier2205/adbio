@@ -391,6 +391,7 @@
             turnIndex = 0;
             gameActive = true;
             document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('win-screen').classList.add('hidden');
             document.getElementById('roll-btn').disabled = false;
             renderTable();
             updateUI();
@@ -475,17 +476,21 @@
                 
                 await processRollAnimate(rollResults);
                 isRolling = false;
-                setTimeout(nextTurn, 1000);
+
+                if (gameActive) {
+                    setTimeout(nextTurn, 1000);
+                }
             }, 800);
         }
 
         async function processRollAnimate(indices) {
-            // L passes to Next index, R passes to Prev index
             const leftIdx = (turnIndex + 1) % players.length; 
             const rightIdx = (turnIndex - 1 + players.length) % players.length;
             
             for(const idx of indices) {
+                if (!gameActive) break;
                 if (players[turnIndex].chips <= 0) break;
+                
                 const res = DICE_VALUES[idx];
                 if (res === '•') continue;
                 
@@ -497,9 +502,9 @@
                 if (targetId) {
                     await animateChip(`player-seat-${turnIndex}`, targetId);
                     updateUI();
+                    checkWinState(); // Check after every chip movement
                 }
             }
-            checkWinState();
         }
 
         async function animateChip(fromId, toId) {
@@ -525,6 +530,7 @@
             turnIndex = (turnIndex + 1) % players.length;
             document.getElementById('roll-btn').disabled = false;
             updateUI();
+            
             if (players[turnIndex].chips === 0) {
                 document.getElementById('action-msg').innerText = "SKIP: " + players[turnIndex].name + " HAS NO CHIPS";
                 setTimeout(nextTurn, 800);
@@ -534,17 +540,36 @@
         }
 
         function checkWinState() {
+            if (!gameActive) return;
+            
             const pWithChips = players.filter(p => p.chips > 0);
-            if (pWithChips.length === 1 && centerPot > 0) {
+            // Game ends only when exactly ONE player has chips
+            if (pWithChips.length === 1) {
                 gameActive = false;
-                document.getElementById('winner-name').innerText = pWithChips[0].name;
-                document.getElementById('win-pot').innerText = `${centerPot + pWithChips[0].chips} CHIPS`;
+                const winner = pWithChips[0];
+                const totalWinnings = centerPot + winner.chips;
+                
+                document.getElementById('winner-name').innerText = winner.name;
+                document.getElementById('win-pot').innerText = `${totalWinnings} CHIPS`;
                 document.getElementById('win-screen').classList.remove('hidden');
                 document.getElementById('roll-btn').disabled = true;
+                document.getElementById('action-msg').innerText = "WE HAVE A WINNER!";
             }
         }
 
-        function playAgain() { location.reload(); }
+        function playAgain() {
+            // Reset state properly
+            centerPot = 0;
+            turnIndex = 0;
+            isRolling = false;
+            gameActive = false;
+            document.getElementById('win-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+            document.getElementById('roll-result-banner').innerHTML = '';
+            document.getElementById('action-msg').innerText = '';
+            diceGroup.clear();
+        }
+
         function toggleHelp() { document.getElementById('help-screen').classList.toggle('hidden'); }
         function confirmHome() { if(confirm("Quit game?")) location.reload(); }
     </script>
