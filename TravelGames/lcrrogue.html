@@ -175,6 +175,20 @@
         }
         .character-btn.selected { background: var(--gold); color: #000; }
 
+        .nav-btn-circle {
+            background: rgba(0,0,0,0.5);
+            border: 2px solid var(--gold);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
         #big-hit-banner {
             position: fixed;
             top: 20%;
@@ -190,8 +204,14 @@
 <body>
 
     <div class="flex-shrink-0 py-2 text-center">
-        <h1 class="bungee text-2xl text-yellow-500 tracking-tighter leading-none">ROGUE LCR</h1>
-        <p id="action-msg" class="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mt-1">High Stakes Magic</p>
+        <div class="flex items-center justify-between w-full px-4 max-w-[600px] mx-auto">
+            <div class="nav-btn-circle" onclick="confirmHome()">🏠</div>
+            <div>
+                <h1 class="bungee text-2xl text-yellow-500 tracking-tighter leading-none">ROGUE LCR</h1>
+                <p id="action-msg" class="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mt-1">High Stakes Magic</p>
+            </div>
+            <div style="width:44px"></div>
+        </div>
     </div>
 
     <div id="big-hit-banner">
@@ -555,7 +575,8 @@
             startTurn();
         }
 
-        function checkWinner() {
+        function confirmHome() { if(confirm("Quit game?")) window.location.href = './index.html'; }
+        function toggleHelp() { document.getElementById('help-screen')?.classList.toggle('hidden'); }
             const active = players.filter(p => p.chips > 0);
             if(active.length === 1 && centerPot > 0) {
                 document.getElementById('winner-name').innerText = active[0].n;
