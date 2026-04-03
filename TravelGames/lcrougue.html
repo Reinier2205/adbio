@@ -23,7 +23,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            min-height: 100dvh;
+            height: 100dvh;
             margin: 0;
             color: #fff8e1;
             overflow: hidden;
@@ -38,14 +39,16 @@
             border: 14px solid #3d2522;
             box-shadow: 0 0 0 4px var(--gold), 0 20px 50px rgba(0,0,0,0.9), inset 0 0 120px rgba(0,0,0,0.8);
             border-radius: 50%;
-            width: 95vw;
-            height: 95vw;
-            max-width: 600px;
-            max-height: 600px;
+            /* fit viewport: minus header (~60px), banner (~36px), button area (~80px) */
+            width: min(92vw, calc(100dvh - 180px));
+            height: min(92vw, calc(100dvh - 180px));
+            max-width: 580px;
+            max-height: 580px;
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .bungee { font-family: 'Bungee', cursive; }
@@ -186,9 +189,9 @@
 </head>
 <body>
 
-    <div class="mb-4 text-center">
-        <h1 class="bungee text-3xl text-yellow-500 tracking-tighter">ROGUE LCR</h1>
-        <p id="action-msg" class="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">High Stakes Magic</p>
+    <div class="flex-shrink-0 py-2 text-center">
+        <h1 class="bungee text-2xl text-yellow-500 tracking-tighter leading-none">ROGUE LCR</h1>
+        <p id="action-msg" class="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mt-1">High Stakes Magic</p>
     </div>
 
     <div id="big-hit-banner">
@@ -220,7 +223,7 @@
         </div>
     </div>
 
-    <div class="mt-6 flex flex-col items-center gap-4">
+    <div class="flex-shrink-0 py-2 flex flex-col items-center gap-2">
         <div id="dice-results-banner" class="flex gap-2 h-8"></div>
         <button id="roll-btn" onclick="handleRoll()" class="btn-gold hidden">Roll Dice</button>
     </div>

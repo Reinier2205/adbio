@@ -24,11 +24,13 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            min-height: 100dvh;
+            height: 100dvh;
             margin: 0;
             color: var(--light-gold);
             overflow: hidden;
             touch-action: manipulation;
+            gap: 0;
         }
 
         .top-nav {
@@ -37,7 +39,8 @@
             max-width: 500px;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            flex-shrink: 0;
+            padding: 6px 0;
             z-index: 50;
         }
 
@@ -49,16 +52,17 @@
             border: 14px solid #3d2522;
             box-shadow: 0 0 0 4px var(--gold), 0 20px 50px rgba(0,0,0,0.9), inset 0 0 120px rgba(0,0,0,0.8);
             border-radius: 50%;
-            width: 92vw;
-            height: 92vw;
-            max-width: 500px;
-            max-height: 500px;
+            /* Scale to fit available height: viewport minus nav (~60px), banner (~40px), button area (~90px) */
+            width: min(88vw, calc(100dvh - 200px));
+            height: min(88vw, calc(100dvh - 200px));
+            max-width: 520px;
+            max-height: 520px;
             position: relative;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            margin-bottom: 15px;
+            flex-shrink: 0;
         }
 
         .bungee { font-family: 'Bungee', cursive; }
@@ -195,11 +199,11 @@
         }
 
         #roll-result-banner {
-            height: 34px;
+            height: 30px;
             display: flex;
             justify-content: center;
             gap: 8px;
-            margin-bottom: 5px;
+            flex-shrink: 0;
         }
         .roll-badge {
             background: #000;
@@ -283,10 +287,10 @@
         </div>
     </div>
 
-    <div class="flex flex-col items-center gap-4">
+    <div class="flex flex-col items-center gap-2 flex-shrink-0 py-2">
         <button id="roll-btn" onclick="handleRoll()" class="btn-gold" disabled>ROLL DICE</button>
         
-        <div class="flex gap-8 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] pt-2">
+        <div class="flex gap-6 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
             <div class="flex flex-col items-center"><span class="text-blue-400 text-sm bungee">L</span><span>Left</span></div>
             <div class="flex flex-col items-center"><span class="text-red-400 text-sm bungee">R</span><span>Right</span></div>
             <div class="flex flex-col items-center"><span class="text-yellow-400 text-sm bungee">C</span><span>Pot</span></div>
