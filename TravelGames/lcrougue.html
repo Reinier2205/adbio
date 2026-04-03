@@ -76,22 +76,22 @@
         @keyframes target-pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
 
         .chip-stack {
-            height: 25px;
             display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            margin-bottom: 2px;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2px;
+            max-width: 76px;
+            margin-bottom: 3px;
             pointer-events: none;
         }
 
         .mini-chip {
-            width: 20px;
-            height: 5px;
-            background: radial-gradient(circle at 30% 30%, #ff4d4d, #b30000);
-            border: 1px dashed rgba(255,255,255,0.3);
-            border-radius: 20px;
-            margin-bottom: -3px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.5);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.3);
+            flex-shrink: 0;
         }
 
         .player-name {
@@ -340,6 +340,18 @@
             });
         }
 
+        const CHIP_COLORS = [
+            'radial-gradient(circle at 35% 35%, #f87171, #b91c1c)',
+            'radial-gradient(circle at 35% 35%, #60a5fa, #1d4ed8)',
+            'radial-gradient(circle at 35% 35%, #4ade80, #15803d)',
+            'radial-gradient(circle at 35% 35%, #facc15, #a16207)',
+            'radial-gradient(circle at 35% 35%, #e879f9, #7e22ce)',
+            'radial-gradient(circle at 35% 35%, #fb923c, #c2410c)',
+            'radial-gradient(circle at 35% 35%, #2dd4bf, #0f766e)',
+            'radial-gradient(circle at 35% 35%, #f472b6, #be185d)',
+            'radial-gradient(circle at 35% 35%, #a3e635, #4d7c0f)',
+        ];
+
         function updateUI() {
             players.forEach((p, i) => {
                 const seat = document.getElementById(`seat-${i}`);
@@ -349,11 +361,13 @@
                 if (i === turnIndex) seat.classList.add('active');
                 if (targetingMode && i !== turnIndex) seat.classList.add('targetable');
 
-                const stacks = Array(Math.min(p.chips, 8)).fill('<div class="mini-chip"></div>').join('');
-                seat.innerHTML = `<div class="chip-stack">${stacks}</div><span class="player-name">${p.i} ${p.n}${p.chips > 8 ? ' ('+p.chips+')' : ''}</span>`;
+                const color = CHIP_COLORS[i % CHIP_COLORS.length];
+                const chips = Array(Math.min(p.chips, 10)).fill(`<div class="mini-chip" style="background:${color}"></div>`).join('');
+                const extra = p.chips > 10 ? `<span style="font-size:8px;color:#fff;font-weight:900">+${p.chips-10}</span>` : '';
+                seat.innerHTML = `<div class="chip-stack">${chips}${extra}</div><span class="player-name">${p.i} ${p.n}</span>`;
             });
             
-            document.getElementById('center-pot-chips').innerHTML = Array(Math.min(centerPot, 15)).fill('<div class="mini-chip" style="width:16px;height:4px"></div>').join('');
+            document.getElementById('center-pot-chips').innerHTML = Array(Math.min(centerPot, 15)).fill('<div class="mini-chip" style="background:radial-gradient(circle at 35% 35%,#fde68a,#d97706);width:12px;height:12px"></div>').join('');
             
             if (!targetingMode && !isProcessing) {
                 document.getElementById('action-msg').innerText = `${players[turnIndex].n}'s Turn`;
