@@ -216,14 +216,14 @@
         .character-card {
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--gold);
-            padding: 8px;
+            padding: 8px 4px;
             border-radius: 8px;
             cursor: pointer;
             text-align: center;
             font-size: 0.8rem;
             transition: all 0.2s;
         }
-        .character-card:hover { background: var(--gold); color: black; }
+        .character-card:hover { background: rgba(212,175,55,0.2); }
         .character-card.selected { background: var(--gold); color: #000; border-color: #4ade80; }
     </style>
 </head>
@@ -296,7 +296,19 @@
     </div>
 
     <script>
-        const DISNEY_POOL = ["Simba", "Elsa", "Maui", "Mulan", "Aladdin", "Belle", "Hercules", "Moana", "Stitch", "Tiana", "Buzz", "Woody", "Olaf", "Merida", "Genie", "Tarzan", "Ariel", "Pocahontas", "Jafar", "Maleficent", "Mickey", "Donald", "Goofy", "Ursula", "Hades", "Nala", "Lilo", "Rapunzel", "Flynn", "Kristoff", "Aurora"];
+        const DISNEY_POOL = [
+            {name:"Mickey",  i:"🐭"}, {name:"Elsa",       i:"❄️"}, {name:"Simba",     i:"🦁"},
+            {name:"Stitch",  i:"👽"}, {name:"Buzz",       i:"🚀"}, {name:"Moana",     i:"🌊"},
+            {name:"Woody",   i:"🤠"}, {name:"Mulan",      i:"⚔️"}, {name:"Ariel",     i:"🧜"},
+            {name:"Aladdin", i:"🪔"}, {name:"Belle",      i:"📚"}, {name:"Hercules",  i:"💪"},
+            {name:"Tiana",   i:"🐸"}, {name:"Olaf",       i:"⛄"}, {name:"Merida",    i:"🏹"},
+            {name:"Genie",   i:"🧞"}, {name:"Maui",       i:"🪝"}, {name:"Rapunzel",  i:"👸"},
+            {name:"Flynn",   i:"🗡️"}, {name:"Kristoff",   i:"🦌"}, {name:"Aurora",    i:"🌹"},
+            {name:"Donald",  i:"🦆"}, {name:"Goofy",      i:"🐶"}, {name:"Nala",      i:"🐆"},
+            {name:"Lilo",    i:"🌺"}, {name:"Pocahontas", i:"🍃"}, {name:"Tarzan",    i:"🌿"},
+            {name:"Jafar",   i:"🐍"}, {name:"Maleficent", i:"🖤"}, {name:"Ursula",    i:"🐙"},
+            {name:"Hades",   i:"🔥"},
+        ];
         const DICE_VALUES = ['L', 'R', 'C', '•', '•', '•'];
         
         let players = [];
@@ -318,17 +330,17 @@
             const grid = document.getElementById('character-grid');
             grid.innerHTML = '';
             selectedNames = [];
-            DISNEY_POOL.forEach(name => {
+            DISNEY_POOL.forEach(char => {
                 const div = document.createElement('div');
                 div.className = 'character-card';
-                div.innerText = name;
+                div.innerHTML = `<span class="text-2xl">${char.i}</span><span class="block text-[9px] mt-1 uppercase font-bold tracking-wide">${char.name}</span>`;
                 div.onclick = () => {
-                    const idx = selectedNames.indexOf(name);
+                    const idx = selectedNames.indexOf(char.name);
                     if (idx > -1) {
                         selectedNames.splice(idx, 1);
                         div.classList.remove('selected');
                     } else if (selectedNames.length < 10) {
-                        selectedNames.push(name);
+                        selectedNames.push(char.name);
                         div.classList.add('selected');
                     }
                     document.getElementById('start-btn').disabled = selectedNames.length < 3;
@@ -412,7 +424,10 @@
         function startActualGame() {
             if (selectedNames.length < 3) return;
             
-            players = selectedNames.map((name, i) => ({ id: i, name: name, chips: 3 }));
+            players = selectedNames.map((name, i) => {
+                const char = DISNEY_POOL.find(c => c.name === name);
+                return { id: i, name: name, icon: char ? char.i : '🎲', chips: 3 };
+            });
             document.getElementById('setup-screen').classList.add('hidden');
             centerPot = 0;
             turnIndex = 0;
@@ -447,7 +462,7 @@
                 const isActive = i === turnIndex;
                 seat.className = `player-seat ${isActive ? 'active' : ''}`;
                 let stacks = Array(p.chips).fill('<div class="mini-chip"></div>').join('');
-                seat.innerHTML = `<div class="chip-stack-container">${stacks}</div><span class="player-name">${p.name}</span>`;
+                seat.innerHTML = `<div class="chip-stack-container">${stacks}</div><span class="player-name">${p.icon} ${p.name}</span>`;
             });
             
             const potContainer = document.getElementById('center-chips');
@@ -575,7 +590,7 @@
                 const finalWinnings = centerPot + winner.chips;
                 
                 gameActive = false;
-                document.getElementById('winner-name').innerText = winner.name;
+                document.getElementById('winner-name').innerText = `${winner.icon} ${winner.name}`;
                 document.getElementById('win-pot').innerText = `${finalWinnings} CHIPS`;
                 document.getElementById('win-screen').classList.remove('hidden');
                 document.getElementById('roll-btn').disabled = true;
