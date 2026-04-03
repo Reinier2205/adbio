@@ -224,7 +224,7 @@
             transition: all 0.2s;
         }
         .character-card:hover { background: var(--gold); color: black; }
-        .character-card.selected { border-color: #4ade80; opacity: 0.4; pointer-events: none; }
+        .character-card.selected { background: var(--gold); color: #000; border-color: #4ade80; }
     </style>
 </head>
 <body>
@@ -253,25 +253,10 @@
 
         <!-- Setup Modal -->
         <div id="setup-screen" class="modal">
-            <h2 class="bungee text-3xl text-yellow-500 mb-6 text-center">HOW MANY PLAYERS?</h2>
-            <div class="flex flex-wrap justify-center gap-3 max-w-[300px]">
-                <button onclick="selectPlayerCount(3)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">3</button>
-                <button onclick="selectPlayerCount(4)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">4</button>
-                <button onclick="selectPlayerCount(5)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">5</button>
-                <button onclick="selectPlayerCount(6)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">6</button>
-                <button onclick="selectPlayerCount(7)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">7</button>
-                <button onclick="selectPlayerCount(8)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">8</button>
-                <button onclick="selectPlayerCount(9)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">9</button>
-                <button onclick="selectPlayerCount(10)" class="w-12 h-12 rounded-full border-2 border-gold font-bold hover:bg-gold/20">10</button>
-            </div>
-        </div>
-
-        <!-- Character Selection Modal -->
-        <div id="selection-screen" class="modal hidden">
-            <h2 id="selection-title" class="bungee text-xl text-yellow-500 mb-4 text-center">PLAYER 1: CHOOSE</h2>
-            <div id="character-list" class="grid grid-cols-3 gap-2 overflow-y-auto max-h-[60%] w-full px-4 mb-4">
-                <!-- Dynamically filled -->
-            </div>
+            <h2 class="bungee text-xl text-yellow-500 mb-2 text-center">CHOOSE PLAYERS (3-10)</h2>
+            <p class="text-[9px] text-white/40 uppercase tracking-widest mb-3">Tap to select your character</p>
+            <div id="character-grid" class="grid grid-cols-4 gap-2 overflow-y-auto max-h-[55%] w-full px-3 mb-4"></div>
+            <button id="start-btn" onclick="startActualGame()" class="btn-gold py-2 px-8 text-sm" disabled>DEAL IN</button>
         </div>
 
         <!-- Help Modal -->
@@ -311,7 +296,7 @@
     </div>
 
     <script>
-        const DISNEY_POOL = ["Simba", "Elsa", "Maui", "Mulan", "Aladdin", "Belle", "Hercules", "Moana", "Stitch", "Tiana", "Buzz", "Woody", "Olaf", "Merida", "Genie", "Tarzan", "Ariel", "Pocahontas", "Jafar", "Maleficent", "Mickey", "Donald", "Goofy", "Ursula", "Hades", "Simba", "Nala", "Lilo", "Rapunzel", "Flynn", "Kristoff", "Aurora"];
+        const DISNEY_POOL = ["Simba", "Elsa", "Maui", "Mulan", "Aladdin", "Belle", "Hercules", "Moana", "Stitch", "Tiana", "Buzz", "Woody", "Olaf", "Merida", "Genie", "Tarzan", "Ariel", "Pocahontas", "Jafar", "Maleficent", "Mickey", "Donald", "Goofy", "Ursula", "Hades", "Nala", "Lilo", "Rapunzel", "Flynn", "Kristoff", "Aurora"];
         const DICE_VALUES = ['L', 'R', 'C', '•', '•', '•'];
         
         let players = [];
@@ -319,16 +304,38 @@
         let turnIndex = 0;
         let isRolling = false;
         let gameActive = false;
-        let selectedCount = 0;
-        let choosingForPlayer = 0;
-        let shuffledCharacters = [];
+        let selectedNames = [];
 
         let scene, camera, renderer, diceGroup;
         const diceObjects = [];
 
         window.onload = () => {
             init3D();
+            initCharacterGrid();
         };
+
+        function initCharacterGrid() {
+            const grid = document.getElementById('character-grid');
+            grid.innerHTML = '';
+            selectedNames = [];
+            DISNEY_POOL.forEach(name => {
+                const div = document.createElement('div');
+                div.className = 'character-card';
+                div.innerText = name;
+                div.onclick = () => {
+                    const idx = selectedNames.indexOf(name);
+                    if (idx > -1) {
+                        selectedNames.splice(idx, 1);
+                        div.classList.remove('selected');
+                    } else if (selectedNames.length < 10) {
+                        selectedNames.push(name);
+                        div.classList.add('selected');
+                    }
+                    document.getElementById('start-btn').disabled = selectedNames.length < 3;
+                };
+                grid.appendChild(div);
+            });
+        }
 
         function init3D() {
             const container = document.getElementById('dice-canvas-container');
@@ -402,49 +409,11 @@
             return { mesh, isRolling: false, rotVel: { x: 0, y: 0, z: 0 } };
         }
 
-        function selectPlayerCount(count) {
-            selectedCount = count;
-            choosingForPlayer = 0;
-            players = [];
-            document.getElementById('setup-screen').classList.add('hidden');
-            document.getElementById('selection-screen').classList.remove('hidden');
-            
-            // Prepare unique random characters for selection
-            shuffledCharacters = [...new Set(DISNEY_POOL)].sort(() => Math.random() - 0.5).slice(0, 24);
-            renderCharacterList();
-            updateSelectionTitle();
-        }
-
-        function renderCharacterList() {
-            const list = document.getElementById('character-list');
-            list.innerHTML = '';
-            shuffledCharacters.forEach(name => {
-                const div = document.createElement('div');
-                div.className = 'character-card';
-                div.innerText = name;
-                div.onclick = () => selectCharacter(name, div);
-                list.appendChild(div);
-            });
-        }
-
-        function updateSelectionTitle() {
-            document.getElementById('selection-title').innerText = `PLAYER ${choosingForPlayer + 1}: CHOOSE CHARACTER`;
-        }
-
-        function selectCharacter(name, element) {
-            players.push({ id: choosingForPlayer, name: name, chips: 3 });
-            element.classList.add('selected');
-            
-            choosingForPlayer++;
-            if (choosingForPlayer < selectedCount) {
-                updateSelectionTitle();
-            } else {
-                startActualGame();
-            }
-        }
-
         function startActualGame() {
-            document.getElementById('selection-screen').classList.add('hidden');
+            if (selectedNames.length < 3) return;
+            
+            players = selectedNames.map((name, i) => ({ id: i, name: name, chips: 3 }));
+            document.getElementById('setup-screen').classList.add('hidden');
             centerPot = 0;
             turnIndex = 0;
             gameActive = true;
@@ -625,6 +594,7 @@
             document.getElementById('roll-result-banner').innerHTML = '';
             document.getElementById('action-msg').innerText = '';
             diceGroup.clear();
+            initCharacterGrid();
         }
 
         function toggleHelp() { document.getElementById('help-screen').classList.toggle('hidden'); }

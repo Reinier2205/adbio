@@ -1,25 +1,25 @@
 export default {
-  async fetch(request, env) {
+  async fetch(request) {
     const url = new URL(request.url);
-    // Security check for your QR code link
     if (url.searchParams.get("key") !== "gate2026") {
-      return new Response("<h1>Access Denied</h1>", { 
-        headers: { "Content-Type": "text/html" }, 
-        status: 403 
+      return new Response("<h1>Access Denied</h1>", {
+        headers: { "Content-Type": "text/html" },
+        status: 403
       });
     }
 
-    // ntfy.sh - free push notifications, no account needed
-    const NTFY_TOPIC = "reinier-doorbell-2026"; // Change to your own unique topic name
+    const BOT_TOKEN = "8647448174:AAFy_ro6ytcTK5c67AaY7lOuUyeD_vKMot0";
+    const CHAT_ID = "5102293417";
+    const AUDIO_URL = "https://raw.githubusercontent.com/Reinier2205/adbio/main/doorbell/mega-horn.mp3";
 
-    const response = await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`, {
       method: "POST",
-      headers: {
-        "Title": "Doorbell",
-        "Priority": "high",
-        "Tags": "bell,door"
-      },
-      body: "Someone is at the door!"
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        audio: AUDIO_URL,
+        caption: "🔔 Someone is at the door!"
+      })
     });
 
     if (response.ok) {
@@ -28,7 +28,7 @@ export default {
       });
     } else {
       const errorText = await response.text();
-      return new Response("ntfy Error: " + errorText, { status: 500 });
+      return new Response("Telegram Error: " + errorText, { status: 500 });
     }
   }
 }
