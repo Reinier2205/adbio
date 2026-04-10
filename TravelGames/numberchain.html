@@ -156,9 +156,24 @@
             font-weight: 800;
             text-transform: uppercase;
             box-shadow: 0 4px 0 #111;
-            margin-top: 20px;
+            transition: all 0.1s;
         }
         .btn-gold:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
+
+        .btn-maroon {
+            background: var(--maroon);
+            color: var(--light-gold);
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #111;
+            border: 1px solid var(--gold);
+            font-size: 14px;
+            transition: all 0.1s;
+        }
+        .btn-maroon:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
 
     </style>
 </head>
@@ -178,8 +193,9 @@
 
         <div id="grid" class="grid-6x6"></div>
 
-        <div class="mt-6 text-center">
+        <div class="mt-6 flex flex-col items-center gap-4">
             <p id="action-hint" class="text-xs text-zinc-400 italic">Select one of your numbers to expand</p>
+            <button class="btn-maroon" onclick="confirmReset()">New Game</button>
         </div>
 
         <!-- Help Modal -->
@@ -197,27 +213,45 @@
             </div>
         </div>
 
+        <!-- Reset Confirmation Modal -->
+        <div id="reset-modal" class="modal">
+            <div class="bg-[#3e1e24] border-2 border-gold p-8 rounded-xl max-w-xs">
+                <h2 class="cinzel text-xl text-gold mb-4">Start Over?</h2>
+                <p class="text-sm text-zinc-300 mb-6">Current progress will be lost.</p>
+                <div class="flex gap-4 justify-center">
+                    <button class="btn-gold px-6" onclick="init()">Yes</button>
+                    <button class="btn-maroon px-6" onclick="toggleModal('reset-modal', false)">No</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Win Modal -->
         <div id="win-modal" class="modal">
             <div class="bg-[#3e1e24] border-2 border-gold p-8 rounded-xl">
                 <h2 class="cinzel text-3xl text-gold mb-2" id="win-title">VICTORY</h2>
                 <p class="text-white mb-6" id="win-msg"></p>
-                <button class="btn-gold" onclick="location.reload()">Rematch</button>
+                <button class="btn-gold" onclick="init()">Rematch</button>
             </div>
         </div>
     </div>
 
     <script>
         const SIZE = 6;
-        let grid = Array(SIZE).fill().map(() => Array(SIZE).fill(null));
+        let grid = [];
         let currentPlayer = 1; 
         let p1Max = 3;
         let p2Max = 3;
         let selectedSource = null;
 
         function init() {
-            const container = document.getElementById('grid');
-            container.innerHTML = '';
+            toggleModal('win-modal', false);
+            toggleModal('reset-modal', false);
+            
+            grid = Array(SIZE).fill().map(() => Array(SIZE).fill(null));
+            currentPlayer = 1;
+            p1Max = 3;
+            p2Max = 3;
+            selectedSource = null;
 
             // Setup P1 Diagonal (Top Left Corner Start)
             setCell(0, 0, 1, 1);
@@ -231,6 +265,7 @@
 
             render();
             updateStatus();
+            document.getElementById('action-hint').innerText = "Select one of your numbers to expand";
         }
 
         function setCell(r, c, val, p) {
@@ -303,16 +338,13 @@
             }
         }
 
-        // Checks for neighbors within 1 step (including diagonals)
         function isAdjacent(r1, c1, r2, c2) {
             const dr = Math.abs(r1 - r2);
             const dc = Math.abs(c1 - c2);
-            // Must be within 1 unit in both directions, and NOT the same cell
             return (dr <= 1 && dc <= 1) && !(dr === 0 && dc === 0);
         }
 
         function hasAdjacentEmpty(r, c) {
-            // Check all 8 directions
             for (let dr = -1; dr <= 1; dr++) {
                 for (let dc = -1; dc <= 1; dc++) {
                     if (dr === 0 && dc === 0) continue;
@@ -358,7 +390,6 @@
                 }
             }
 
-            // End game if the current player has no moves left
             if ((currentPlayer === 1 && !canP1Move) || (currentPlayer === 2 && !canP2Move)) {
                 const title = document.getElementById('win-title');
                 const msg = document.getElementById('win-msg');
@@ -377,11 +408,15 @@
             }
         }
 
-        function toggleModal(id, show) {
-            document.getElementById(id).classList.toggle('show', show);
+        function confirmReset() {
+            toggleModal('reset-modal', true);
         }
 
-        init();
+        function toggleModal(id, show) {
+            document.getElementById(id).style.display = show ? 'flex' : 'none';
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
