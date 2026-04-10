@@ -453,6 +453,710 @@ class MultiplayerGuest {
 }
 
 // ---------------------------------------------------------------------------
+// 2. UI Overlay Module — LCRMultiplayerUI
+// ---------------------------------------------------------------------------
+
+/**
+ * Shared UI panels for LCR multiplayer mode.
+ * All panels inject into the casino container (.casino-container or #game-table).
+ * Styling matches the casino aesthetic: dark wood, felt green, gold, Bungee/Lato fonts.
+ */
+const LCRMultiplayerUI = (() => {
+
+  // -------------------------------------------------------------------------
+  // Internal helpers
+  // -------------------------------------------------------------------------
+
+  /** Find the casino container element (works for both games). */
+  function _getContainer() {
+    return document.querySelector('.casino-container') ||
+           document.getElementById('game-table') ||
+           document.body;
+  }
+
+  /** Create a full-screen overlay div styled like the existing .modal class. */
+  function _createOverlay(zIndex = 200) {
+    const el = document.createElement('div');
+    el.style.cssText = [
+      'position:absolute',
+      'inset:0',
+      'background:rgba(0,0,0,0.95)',
+      'backdrop-filter:blur(8px)',
+      `z-index:${zIndex}`,
+      'display:flex',
+      'flex-direction:column',
+      'justify-content:center',
+      'align-items:center',
+      'border-radius:50%',
+      'padding:1.5rem',
+      'gap:0.75rem',
+    ].join(';');
+    return el;
+  }
+
+  /** Shared CSS injected once. */
+  function _injectStyles() {
+    if (document.getElementById('lcr-mp-ui-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'lcr-mp-ui-styles';
+    style.textContent = `
+      .lcr-mp-title {
+        font-family: 'Bungee', cursive;
+        color: #d4af37;
+        text-align: center;
+        margin: 0;
+        line-height: 1.1;
+      }
+      .lcr-mp-subtitle {
+        font-family: 'Lato', sans-serif;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        text-align: center;
+        margin: 0;
+      }
+      .lcr-mp-btn {
+        background: linear-gradient(145deg, #d4af37, #b8860b);
+        color: #fff;
+        font-family: 'Bungee', cursive;
+        padding: 10px 24px;
+        border-radius: 50px;
+        border: 3px solid #222;
+        box-shadow: 0 4px 0 #111;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.9rem;
+        transition: all 0.1s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .lcr-mp-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
+      .lcr-mp-btn:disabled { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #111; }
+      .lcr-mp-btn-lg {
+        padding: 14px 28px;
+        font-size: 1rem;
+        min-width: 130px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .lcr-mp-btn-sub {
+        font-family: 'Lato', sans-serif;
+        font-size: 0.55rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(255,255,255,0.7);
+        display: block;
+      }
+      .lcr-mp-pin-display {
+        font-family: 'Bungee', cursive;
+        font-size: 2.2rem;
+        color: #ffd700;
+        text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        letter-spacing: 0.15em;
+        text-align: center;
+      }
+      .lcr-mp-count {
+        font-family: 'Lato', sans-serif;
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.7);
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .lcr-mp-pin-dots {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin: 4px 0;
+      }
+      .lcr-mp-pin-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid #d4af37;
+        background: transparent;
+        transition: background 0.15s;
+      }
+      .lcr-mp-pin-dot.filled { background: #ffd700; }
+      .lcr-mp-keypad {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        width: 180px;
+      }
+      .lcr-mp-key {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(212,175,55,0.4);
+        color: #fff8e1;
+        font-family: 'Bungee', cursive;
+        font-size: 1.1rem;
+        padding: 10px 0;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: center;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.1s;
+      }
+      .lcr-mp-key:active { background: rgba(212,175,55,0.3); }
+      .lcr-mp-error {
+        font-family: 'Lato', sans-serif;
+        font-size: 0.7rem;
+        color: #f87171;
+        text-align: center;
+        min-height: 1em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .lcr-mp-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(212,175,55,0.3);
+        border-top-color: #d4af37;
+        border-radius: 50%;
+        animation: lcr-spin 0.8s linear infinite;
+      }
+      @keyframes lcr-spin { to { transform: rotate(360deg); } }
+      .lcr-mp-banner {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.88);
+        border: 1px solid rgba(212,175,55,0.5);
+        border-radius: 50px;
+        padding: 8px 20px;
+        font-family: 'Lato', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: rgba(255,255,255,0.85);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        z-index: 300;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      .lcr-mp-banner-active {
+        color: #ffd700;
+        border-color: #ffd700;
+        text-shadow: 0 0 8px rgba(255,215,0,0.6);
+      }
+      .lcr-mp-toast {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-60px);
+        background: rgba(10,72,33,0.95);
+        border: 1px solid #d4af37;
+        border-radius: 50px;
+        padding: 8px 20px;
+        font-family: 'Lato', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #fff8e1;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        z-index: 9999;
+        white-space: nowrap;
+        pointer-events: none;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .lcr-mp-toast.show { transform: translateX(-50%) translateY(0); }
+      .lcr-mp-host-dc {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.97);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+      .lcr-mp-targeting-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        max-width: 200px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .lcr-mp-target-btn {
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(74,222,128,0.5);
+        color: #fff8e1;
+        font-family: 'Lato', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-align: left;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.1s;
+      }
+      .lcr-mp-target-btn:active { background: rgba(74,222,128,0.2); }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // -------------------------------------------------------------------------
+  // 2.1  showModeSelection
+  // -------------------------------------------------------------------------
+
+  /**
+   * Shows a full-screen mode selection overlay inside the casino container.
+   *
+   * @param {Function} onSingleDevice — called when "ONE DEVICE" is tapped
+   * @param {Function} onMultiDevice  — called when "MULTI DEVICE" is tapped
+   */
+  function showModeSelection(onSingleDevice, onMultiDevice) {
+    _injectStyles();
+    const container = _getContainer();
+    const overlay = _createOverlay(200);
+    overlay.id = 'lcr-mp-mode-overlay';
+
+    const title = document.createElement('h2');
+    title.className = 'lcr-mp-title';
+    title.style.fontSize = '1.4rem';
+    title.textContent = 'HOW TO PLAY?';
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px';
+
+    function makeBtn(emoji, label, sub, handler) {
+      const btn = document.createElement('button');
+      btn.className = 'lcr-mp-btn lcr-mp-btn-lg';
+      btn.innerHTML = `${emoji} ${label}<span class="lcr-mp-btn-sub">${sub}</span>`;
+      btn.addEventListener('click', () => {
+        overlay.remove();
+        handler();
+      });
+      return btn;
+    }
+
+    row.appendChild(makeBtn('📱', 'ONE DEVICE', 'Pass the phone', onSingleDevice));
+    row.appendChild(makeBtn('📡', 'MULTI DEVICE', "Each player's own phone", onMultiDevice));
+
+    overlay.appendChild(title);
+    overlay.appendChild(row);
+    container.appendChild(overlay);
+
+    return overlay;
+  }
+
+  // -------------------------------------------------------------------------
+  // 2.2  showHostLobby
+  // -------------------------------------------------------------------------
+
+  /**
+   * Shows the host lobby panel with PIN, share button, guest count, and Deal In.
+   *
+   * @param {object} opts
+   * @param {string}   opts.pin          — 4-digit PIN string
+   * @param {Function} opts.onShareLink  — called when Share Link is tapped
+   * @param {Function} opts.onDealIn     — called when Deal In is tapped
+   * @param {string}   [opts.gameType]   — 'lcrdice' | 'lcrrogue'
+   * @returns {{ updateCount(n: number): void, remove(): void }}
+   */
+  function showHostLobby({ pin, onShareLink, onDealIn, gameType }) {
+    _injectStyles();
+    const container = _getContainer();
+    const overlay = _createOverlay(200);
+    overlay.id = 'lcr-mp-host-lobby';
+
+    const title = document.createElement('h2');
+    title.className = 'lcr-mp-title';
+    title.style.fontSize = '1rem';
+    title.textContent = 'WAITING FOR PLAYERS';
+
+    const pinLabel = document.createElement('p');
+    pinLabel.className = 'lcr-mp-subtitle';
+    pinLabel.textContent = 'GAME PIN';
+
+    const pinDisplay = document.createElement('div');
+    pinDisplay.className = 'lcr-mp-pin-display';
+    pinDisplay.textContent = pin;
+
+    const shareBtn = document.createElement('button');
+    shareBtn.className = 'lcr-mp-btn';
+    shareBtn.style.fontSize = '0.75rem';
+    shareBtn.style.padding = '7px 18px';
+    shareBtn.textContent = '📤 Share Link';
+    shareBtn.addEventListener('click', onShareLink);
+
+    const countEl = document.createElement('p');
+    countEl.className = 'lcr-mp-count';
+    countEl.textContent = 'Players connected: 1';
+
+    const dealBtn = document.createElement('button');
+    dealBtn.className = 'lcr-mp-btn';
+    dealBtn.disabled = true;
+    dealBtn.textContent = 'DEAL IN';
+    dealBtn.addEventListener('click', () => {
+      overlay.remove();
+      onDealIn();
+    });
+
+    overlay.appendChild(title);
+    overlay.appendChild(pinLabel);
+    overlay.appendChild(pinDisplay);
+    overlay.appendChild(shareBtn);
+    overlay.appendChild(countEl);
+    overlay.appendChild(dealBtn);
+    container.appendChild(overlay);
+
+    return {
+      /** Update the displayed player count. Enables Deal In when total >= 3. */
+      updateCount(n) {
+        countEl.textContent = `Players connected: ${n}`;
+        // n includes the host; need at least host + 2 guests = 3 total
+        dealBtn.disabled = n < 3;
+      },
+      remove() {
+        overlay.remove();
+      },
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // 2.3  showGuestPinEntry
+  // -------------------------------------------------------------------------
+
+  /**
+   * Shows the guest PIN entry panel with a numeric keypad.
+   *
+   * @param {object} opts
+   * @param {string}   [opts.prefillPin] — pre-fill digits (e.g. from URL hash)
+   * @param {Function} opts.onConnect    — called with the 4-digit PIN string when complete
+   * @param {Function} opts.onBack       — called when Back is tapped
+   * @returns {{ remove(): void, showError(msg: string): void }}
+   */
+  function showGuestPinEntry({ prefillPin = '', onConnect, onBack }) {
+    _injectStyles();
+    const container = _getContainer();
+    const overlay = _createOverlay(200);
+    overlay.id = 'lcr-mp-guest-pin';
+
+    const title = document.createElement('h2');
+    title.className = 'lcr-mp-title';
+    title.style.fontSize = '1.1rem';
+    title.textContent = 'ENTER PIN';
+
+    // PIN dots
+    const dotsRow = document.createElement('div');
+    dotsRow.className = 'lcr-mp-pin-dots';
+    const dots = [];
+    for (let i = 0; i < 4; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'lcr-mp-pin-dot';
+      dotsRow.appendChild(dot);
+      dots.push(dot);
+    }
+
+    // Error message
+    const errorEl = document.createElement('p');
+    errorEl.className = 'lcr-mp-error';
+    errorEl.textContent = '';
+
+    // Keypad
+    const keypad = document.createElement('div');
+    keypad.className = 'lcr-mp-keypad';
+
+    let digits = prefillPin.slice(0, 4).split('');
+
+    function refreshDots() {
+      dots.forEach((d, i) => {
+        d.classList.toggle('filled', i < digits.length);
+      });
+    }
+
+    function pressKey(val) {
+      errorEl.textContent = '';
+      if (val === '⌫') {
+        digits.pop();
+        refreshDots();
+        return;
+      }
+      if (val === '*') return; // unused key
+      if (digits.length >= 4) return;
+      digits.push(val);
+      refreshDots();
+      if (digits.length === 4) {
+        const pin = digits.join('');
+        onConnect(pin);
+      }
+    }
+
+    const keys = ['1','2','3','4','5','6','7','8','9','*','0','⌫'];
+    keys.forEach(k => {
+      const btn = document.createElement('button');
+      btn.className = 'lcr-mp-key';
+      btn.textContent = k;
+      if (k === '*') btn.style.opacity = '0'; // placeholder key
+      btn.addEventListener('click', () => pressKey(k));
+      keypad.appendChild(btn);
+    });
+
+    // Back button
+    const backBtn = document.createElement('button');
+    backBtn.className = 'lcr-mp-btn';
+    backBtn.style.fontSize = '0.75rem';
+    backBtn.style.padding = '7px 18px';
+    backBtn.textContent = '← Back';
+    backBtn.addEventListener('click', () => {
+      overlay.remove();
+      onBack();
+    });
+
+    overlay.appendChild(title);
+    overlay.appendChild(dotsRow);
+    overlay.appendChild(errorEl);
+    overlay.appendChild(keypad);
+    overlay.appendChild(backBtn);
+    container.appendChild(overlay);
+
+    // Pre-fill and auto-connect if 4 digits provided
+    refreshDots();
+    if (digits.length === 4) {
+      setTimeout(() => onConnect(digits.join('')), 50);
+    }
+
+    return {
+      remove() {
+        overlay.remove();
+      },
+      showError(msg) {
+        errorEl.textContent = msg;
+        // Reset digits so user can retry
+        digits = [];
+        refreshDots();
+      },
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // 2.4  showGuestWaiting / showSpectatorBanner / showActiveTurnBanner / showTargetingPanel
+  // -------------------------------------------------------------------------
+
+  /**
+   * Shows a "Waiting for host to start…" overlay.
+   * @returns {{ remove(): void }}
+   */
+  function showGuestWaiting() {
+    _injectStyles();
+    const container = _getContainer();
+    const overlay = _createOverlay(200);
+    overlay.id = 'lcr-mp-guest-waiting';
+
+    const spinner = document.createElement('div');
+    spinner.className = 'lcr-mp-spinner';
+
+    const msg = document.createElement('p');
+    msg.className = 'lcr-mp-title';
+    msg.style.fontSize = '0.9rem';
+    msg.textContent = 'Waiting for host to start…';
+
+    overlay.appendChild(spinner);
+    overlay.appendChild(msg);
+    container.appendChild(overlay);
+
+    return {
+      remove() {
+        overlay.remove();
+      },
+    };
+  }
+
+  /**
+   * Shows a small spectator banner at the bottom of the screen.
+   *
+   * @param {string} playerName — name of the player whose turn it is
+   * @returns {{ updateMessage(msg: string): void, remove(): void }}
+   */
+  function showSpectatorBanner(playerName) {
+    _injectStyles();
+    const banner = document.createElement('div');
+    banner.className = 'lcr-mp-banner';
+    banner.id = 'lcr-mp-spectator-banner';
+    banner.textContent = `⏳ Waiting for ${playerName}…`;
+    document.body.appendChild(banner);
+
+    return {
+      updateMessage(msg) {
+        banner.textContent = msg;
+      },
+      remove() {
+        banner.remove();
+      },
+    };
+  }
+
+  /**
+   * Shows a small "YOUR TURN!" banner at the bottom of the screen.
+   * @returns {{ remove(): void }}
+   */
+  function showActiveTurnBanner() {
+    _injectStyles();
+    const banner = document.createElement('div');
+    banner.className = 'lcr-mp-banner lcr-mp-banner-active';
+    banner.id = 'lcr-mp-active-banner';
+    banner.textContent = '🎲 YOUR TURN!';
+    document.body.appendChild(banner);
+
+    return {
+      remove() {
+        banner.remove();
+      },
+    };
+  }
+
+  /**
+   * Shows a targeting panel for Rogue LCR (vertical list of eligible players).
+   *
+   * @param {object} opts
+   * @param {Array}    opts.players   — full players array from game state
+   * @param {number}   opts.myIndex   — index of the active player (excluded from list)
+   * @param {string}   opts.mode      — 'PASS' | 'STEAL' | 'SHINE_ALL'
+   * @param {Function} opts.onSelect  — called with targetIndex when a player is tapped
+   * @returns {{ remove(): void }}
+   */
+  function showTargetingPanel({ players, myIndex, mode, onSelect }) {
+    _injectStyles();
+    const container = _getContainer();
+    const overlay = _createOverlay(210);
+    overlay.id = 'lcr-mp-targeting';
+
+    const modeLabel = mode === 'PASS' ? 'GIVE A CHIP TO' :
+                      mode === 'STEAL' ? 'STEAL A CHIP FROM' :
+                      'STEAL ENTIRE PILE FROM';
+
+    const title = document.createElement('h2');
+    title.className = 'lcr-mp-title';
+    title.style.fontSize = '0.85rem';
+    title.textContent = `Choose a player to ${modeLabel}`;
+
+    const list = document.createElement('div');
+    list.className = 'lcr-mp-targeting-list';
+
+    players.forEach((p, i) => {
+      if (i === myIndex) return; // exclude active player
+      if (mode === 'STEAL' && p.chips <= 0) return; // STEAL: only players with chips
+
+      const btn = document.createElement('button');
+      btn.className = 'lcr-mp-target-btn';
+      btn.innerHTML = `<span style="font-size:1.2rem">${p.icon || p.i || '🎲'}</span>
+        <span style="flex:1">${p.name || p.n}</span>
+        <span style="color:#d4af37;font-size:0.7rem">${p.chips} chip${p.chips !== 1 ? 's' : ''}</span>`;
+      btn.addEventListener('click', () => {
+        overlay.remove();
+        onSelect(i);
+      });
+      list.appendChild(btn);
+    });
+
+    overlay.appendChild(title);
+    overlay.appendChild(list);
+    container.appendChild(overlay);
+
+    return {
+      remove() {
+        overlay.remove();
+      },
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // 2.5  showHostDisconnected / showToast
+  // -------------------------------------------------------------------------
+
+  /**
+   * Shows a full-screen fixed overlay indicating the host has disconnected.
+   * [New Game] button reloads the page.
+   */
+  function showHostDisconnected() {
+    _injectStyles();
+    const overlay = document.createElement('div');
+    overlay.className = 'lcr-mp-host-dc';
+    overlay.id = 'lcr-mp-host-dc';
+
+    const emoji = document.createElement('div');
+    emoji.style.fontSize = '3rem';
+    emoji.textContent = '😔';
+
+    const title = document.createElement('h2');
+    title.className = 'lcr-mp-title';
+    title.style.fontSize = '1.4rem';
+    title.textContent = 'Host Disconnected';
+
+    const sub = document.createElement('p');
+    sub.className = 'lcr-mp-subtitle';
+    sub.style.fontSize = '0.8rem';
+    sub.textContent = 'The game has ended.';
+
+    const btn = document.createElement('button');
+    btn.className = 'lcr-mp-btn';
+    btn.textContent = 'New Game';
+    btn.addEventListener('click', () => location.reload());
+
+    overlay.appendChild(emoji);
+    overlay.appendChild(title);
+    overlay.appendChild(sub);
+    overlay.appendChild(btn);
+    document.body.appendChild(overlay);
+  }
+
+  /**
+   * Shows a small toast notification at the top of the screen.
+   * Auto-dismisses after 3 seconds.
+   *
+   * @param {string} message — the message to display
+   */
+  function showToast(message) {
+    _injectStyles();
+    const toast = document.createElement('div');
+    toast.className = 'lcr-mp-toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // Trigger slide-in
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => toast.classList.add('show'));
+    });
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 350);
+    }, 3000);
+  }
+
+  // -------------------------------------------------------------------------
+  // Public API
+  // -------------------------------------------------------------------------
+
+  return {
+    showModeSelection,
+    showHostLobby,
+    showGuestPinEntry,
+    showGuestWaiting,
+    showSpectatorBanner,
+    showActiveTurnBanner,
+    showTargetingPanel,
+    showHostDisconnected,
+    showToast,
+  };
+
+})();
+
+// ---------------------------------------------------------------------------
 // Exports — attach to window as a single namespace
 // ---------------------------------------------------------------------------
 
@@ -460,4 +1164,5 @@ window.LCRMultiplayer = {
   loadPeerJS,
   MultiplayerHost,
   MultiplayerGuest,
+  UI: LCRMultiplayerUI,
 };
