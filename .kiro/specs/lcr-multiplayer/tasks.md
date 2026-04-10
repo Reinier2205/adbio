@@ -30,24 +30,24 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - Test: error message shown, cleared after 2 s, returns to PIN entry
     - _Requirements: 3.5_
 
-- [-] 2. Implement UI overlay panels in `lcr-multiplayer.js`
-  - [-] 2.1 Mode Selection Panel
+- [x] 2. Implement UI overlay panels in `lcr-multiplayer.js`
+  - [x] 2.1 Mode Selection Panel
     - Two buttons: "Single Device" / "Multi Device"; default selection is Single Device
     - Inject before character-select step in setup modal for both games
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
-  - [~] 2.2 Host Lobby Panel
+  - [x] 2.2 Host Lobby Panel
     - Display PIN prominently; "Share Link" button (Web Share API → clipboard fallback)
     - Live guest-connected counter; character-select grid placeholder; "Deal In" button (enabled ≥ 3 players)
     - _Requirements: 2.3, 2.4, 2.6, 2.7, 2.8_
-  - [~] 2.3 Guest PIN Entry Panel
+  - [x] 2.3 Guest PIN Entry Panel
     - Numeric keypad; auto-connect on 4th digit; pre-fill from `#LCP:XXXX` hash on load
     - _Requirements: 3.1, 3.2, 3.3_
-  - [~] 2.4 Guest Waiting Panel, Spectator Banner, Active Turn Banner
+  - [x] 2.4 Guest Waiting Panel, Spectator Banner, Active Turn Banner
     - Waiting: "Waiting for host to start…"
     - Spectator: "Waiting for [PlayerName]…" / "Waiting for [PlayerName] to choose a target…"
     - Active: "Your turn!"
     - _Requirements: 3.4, 5.1, 5.2, 6.4_
-  - [~] 2.5 Disconnection Overlay
+  - [x] 2.5 Disconnection Overlay
     - Full-screen "Host disconnected — game ended" with [New Game] reload button
     - In-game toast: "[PlayerName] disconnected — chips added to pot"
     - _Requirements: 8.1, 8.2_
@@ -56,7 +56,7 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - _Requirements: 3.1_
 
 - [ ] 3. Implement `GameAdapter` for `lcrdice.html`
-  - [~] 3.1 Add `LcrDiceAdapter` object inside `lcrdice.html`
+  - [-] 3.1 Add `LcrDiceAdapter` object inside `lcrdice.html`
     - `gameType: 'lcrdice'`
     - `applyState(state)`: set `players`, `centerPot`, `turnIndex` from broadcast; call existing `updateUI()` / render function
     - `executeRoll(state)`: call existing dice-roll logic, return `{ results, newState }`
@@ -67,7 +67,7 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - **Validates: Requirements 4.1, 4.2, 8.2, 8.4**
 
 - [ ] 4. Implement `GameAdapter` for `lcrrogue.html`
-  - [~] 4.1 Add `LcrRogueAdapter` object inside `lcrrogue.html`
+  - [ ] 4.1 Add `LcrRogueAdapter` object inside `lcrrogue.html`
     - `gameType: 'lcrrogue'`
     - `applyState(state)`: set `players`, `centerPot`, `turnIndex`, `pendingTargeting`; call existing render
     - `executeRoll(state)`: call existing Rogue dice logic, set `pendingTargeting` if P/S result, return `{ results, newState }`
