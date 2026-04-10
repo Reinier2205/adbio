@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Chain - Travel Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --felt-green: #0a4821;
+            --dark-wood: #2a1a1f;
+            --gold: #d4af37;
+            --gold-light: #ffd700;
+            --light-gold: #fff8e1;
+            --teal: #008080;
+            --maroon: #800000;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--dark-wood);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            color: var(--light-gold);
+        }
+
+        .casino-table {
+            background: var(--felt-green);
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 2px, transparent 2px);
+            background-size: 30px 30px;
+            border: 10px solid #4a2c2a;
+            box-shadow: 0 0 0 5px var(--gold), 0 20px 50px rgba(0,0,0,0.8);
+            border-radius: 20px;
+            width: 95vw;
+            height: 85vh;
+            max-width: 500px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 60px 20px 20px 20px;
+        }
+
+        .cinzel { font-family: 'Cinzel', serif; }
+        .inter { font-family: 'Inter', sans-serif; }
+
+        /* Navigation Buttons */
+        .nav-btn {
+            position: absolute;
+            top: 12px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid #111;
+            box-shadow: 0 4px 0 #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            font-size: 20px;
+            transition: all 0.1s;
+        }
+        .nav-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #111;
+        }
+        .home-btn {
+            left: 12px;
+            background: radial-gradient(circle, var(--gold-light), var(--gold));
+        }
+        .help-btn {
+            right: 12px;
+            background: radial-gradient(circle, var(--gold-light), var(--gold));
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Game Elements */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .number-tile {
+            aspect-ratio: 1/1;
+            background: linear-gradient(145deg, #1a1a1a, #000);
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--light-gold);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #000;
+            user-select: none;
+        }
+
+        .number-tile:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #000;
+        }
+
+        .number-tile.active {
+            border-color: var(--teal);
+            box-shadow: 0 0 15px var(--teal);
+            transform: scale(1.05);
+            background: var(--teal);
+            color: white;
+        }
+
+        .number-tile.chained {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #444;
+            background: #222;
+        }
+
+        .chain-display {
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--gold);
+            padding: 10px;
+            border-radius: 10px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .chain-link {
+            background: var(--teal);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .operator-badge {
+            color: var(--gold-light);
+            font-weight: bold;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            border-radius: 10px;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-panel {
+            background: linear-gradient(#3e1e24, #2a1a1f);
+            border: 3px solid var(--gold);
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 400px;
+            transform: scale(0.7);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.show .modal-panel {
+            transform: scale(1);
+        }
+
+        .btn-action {
+            background: var(--teal);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #004d4d;
+            transition: all 0.1s;
+        }
+
+        .btn-action:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #004d4d;
+        }
+
+        .score-box {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .target-box {
+            background: var(--maroon);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            border: 1px solid var(--gold);
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="casino-table">
+        <!-- Navigation -->
+        <div class="nav-btn home-btn" onclick="location.reload()">🏠</div>
+        <div class="nav-btn help-btn" onclick="toggleHelp(true)">?</div>
+
+        <div class="text-center mb-4">
+            <h1 class="cinzel text-3xl text-yellow-500 uppercase">Number Chain</h1>
+            <div class="target-box inter uppercase tracking-widest mt-1">Traveler's Strategy</div>
+        </div>
+
+        <!-- Game State -->
+        <div class="score-box">
+            <div class="text-[10px] uppercase tracking-widest text-zinc-400">Current Chain Value</div>
+            <div id="chain-total" class="text-3xl font-bold text-white">0</div>
+        </div>
+
+        <div id="chain-visual" class="chain-display">
+            <span class="text-zinc-500 text-sm">Select a starting number...</span>
+        </div>
+
+        <!-- Number Grid -->
+        <div id="number-grid" class="grid-container">
+            <!-- Tiles generated by JS -->
+        </div>
+
+        <div class="mt-auto flex justify-between gap-4">
+            <button onclick="resetChain()" class="btn-action w-full bg-maroon shadow-[#4d0000]" style="background: var(--maroon);">Clear</button>
+            <button id="submit-btn" onclick="submitChain()" class="btn-action w-full" disabled>Submit Chain</button>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="help-modal" class="modal-overlay">
+            <div class="modal-panel">
+                <h2 class="cinzel text-2xl text-yellow-500 mb-4 border-b border-gold/30 pb-2">How to Play</h2>
+                <div class="text-sm space-y-3 leading-relaxed">
+                    <p><strong class="text-white">Goal:</strong> Create a chain where each number connects to the next via basic math.</p>
+                    <p><strong class="text-teal-400">Connections:</strong> A link is valid if the next number is 
+                        <span class="text-gold-light">+1, -1, +2, or -2</span> of the previous number, 
+                        OR if it follows a <span class="text-gold-light">Fibonacci sequence</span> sum logic.</p>
+                    <p><strong class="text-white">Strategy:</strong> Think ahead! Once a tile is used, it’s locked for that chain. Longer chains yield exponential points.</p>
+                </div>
+                <button onclick="toggleHelp(false)" class="btn-action w-full mt-6">Got it</button>
+            </div>
+        </div>
+
+        <!-- Win/Game Over Modal -->
+        <div id="result-modal" class="modal-overlay">
+            <div class="modal-panel text-center">
+                <h2 id="result-title" class="cinzel text-3xl text-yellow-500 mb-2">CHAIN COMPLETE!</h2>
+                <p id="result-msg" class="mb-6">Fantastic logic, Traveler.</p>
+                <div id="final-score" class="text-4xl font-bold mb-8">150 PTS</div>
+                <button onclick="initGame()" class="btn-action w-full">Next Level</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentChain = [];
+        let score = 0;
+        let gridNumbers = [];
+
+        function initGame() {
+            document.getElementById('result-modal').classList.remove('show');
+            resetChain();
+            generateGrid();
+        }
+
+        function generateGrid() {
+            const grid = document.getElementById('number-grid');
+            grid.innerHTML = '';
+            gridNumbers = [];
+            
+            // Generate numbers with a mix of small differences to ensure multiple paths
+            for(let i = 0; i < 16; i++) {
+                const num = Math.floor(Math.random() * 20) + 1;
+                gridNumbers.push({ val: num, used: false, id: i });
+                
+                const tile = document.createElement('div');
+                tile.className = 'number-tile';
+                tile.id = `tile-${i}`;
+                tile.innerText = num;
+                tile.onclick = () => handleTileClick(i);
+                grid.appendChild(tile);
+            }
+        }
+
+        function handleTileClick(index) {
+            const tileData = gridNumbers[index];
+            if (tileData.used) return;
+
+            const tileElement = document.getElementById(`tile-${index}`);
+
+            if (currentChain.length === 0) {
+                // First selection
+                addToChain(tileData, tileElement);
+            } else {
+                const lastNum = currentChain[currentChain.length - 1].val;
+                const nextNum = tileData.val;
+
+                if (isValidMove(lastNum, nextNum)) {
+                    addToChain(tileData, tileElement);
+                } else {
+                    // Visual feedback for invalid move
+                    tileElement.style.borderColor = 'var(--maroon)';
+                    setTimeout(() => tileElement.style.borderColor = 'var(--gold)', 300);
+                }
+            }
+        }
+
+        function isValidMove(last, next) {
+            const diff = Math.abs(last - next);
+            // Rule 1: Step within 2
+            if (diff >= 1 && diff <= 3) return true;
+            // Rule 2: Fibonacci-like Sum Logic (Reference to user strategy prompt)
+            // If the next number is exactly the sum of the last two in the chain
+            if (currentChain.length >= 2) {
+                const secondLast = currentChain[currentChain.length - 2].val;
+                if (next === last + secondLast) return true;
+            }
+            // Rule 3: Common Multiples
+            if (next === last * 2 || next === last / 2) return true;
+            
+            return false;
+        }
+
+        function addToChain(data, el) {
+            data.used = true;
+            currentChain.push(data);
+            el.classList.add('active');
+            updateUI();
+        }
+
+        function resetChain() {
+            currentChain = [];
+            gridNumbers.forEach(n => n.used = false);
+            const tiles = document.querySelectorAll('.number-tile');
+            tiles.forEach(t => t.classList.remove('active', 'chained'));
+            updateUI();
+        }
+
+        function updateUI() {
+            const visual = document.getElementById('chain-visual');
+            const totalDisplay = document.getElementById('chain-total');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (currentChain.length === 0) {
+                visual.innerHTML = `<span class="text-zinc-500 text-sm italic">Select a starting number...</span>`;
+                totalDisplay.innerText = "0";
+                submitBtn.disabled = true;
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+            currentChain.forEach((link, idx) => {
+                total += link.val;
+                html += `<span class="chain-link">${link.val}</span>`;
+                if (idx < currentChain.length - 1) {
+                    html += `<span class="operator-badge">→</span>`;
+                }
+            });
+
+            visual.innerHTML = html;
+            totalDisplay.innerText = total;
+            submitBtn.disabled = currentChain.length < 3;
+        }
+
+        function submitChain() {
+            const points = calculateScore();
+            score += points;
+            
+            const resultModal = document.getElementById('result-modal');
+            const resultMsg = document.getElementById('result-msg');
+            const finalScore = document.getElementById('final-score');
+
+            resultMsg.innerText = `Chain of ${currentChain.length} connected successfully!`;
+            finalScore.innerText = `${points} PTS`;
+            resultModal.classList.add('show');
+        }
+
+        function calculateScore() {
+            // Base score is the sum
+            const sum = currentChain.reduce((a, b) => a + b.val, 0);
+            // Multiplier based on length
+            const multiplier = currentChain.length * 10;
+            return sum + multiplier;
+        }
+
+        function toggleHelp(show) {
+            document.getElementById('help-modal').classList.toggle('show', show);
+        }
+
+        // Initialize on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
