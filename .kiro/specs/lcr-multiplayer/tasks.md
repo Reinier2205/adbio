@@ -6,18 +6,18 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
 
 ## Tasks
 
-- [-] 1. Create shared multiplayer module (`TravelGames/lcr-multiplayer.js`)
-  - [-] 1.1 Implement `loadPeerJS()` lazy loader
+- [x] 1. Create shared multiplayer module (`TravelGames/lcr-multiplayer.js`)
+  - [x] 1.1 Implement `loadPeerJS()` lazy loader
     - Dynamically inject PeerJS 1.5.4 script tag; resolve when loaded, reject on error
     - _Requirements: 9.2_
-  - [~] 1.2 Implement `MultiplayerHost` class
+  - [x] 1.2 Implement `MultiplayerHost` class
     - PIN generation (1000–9999), retry on collision (`lcr-XXXX-host` already taken)
     - `open()`: register PeerJS peer, accept connections, assign player slots, reject when full
     - `receiveAction(msg, senderPeerConn)`: validate `senderIndex === turnIndex`, call `GameAdapter.executeRoll()` or `executeTarget()`, broadcast result
     - `kickPlayer(playerIndex)`: close conn, chips → pot, advance turn if needed, broadcast
     - `broadcastState(state)`: send `game_state` to all open connections
     - _Requirements: 2.1, 2.2, 2.5, 2.7, 2.8, 7.1, 7.2, 7.4, 8.2, 8.3, 8.4, 8.5_
-  - [~] 1.3 Implement `MultiplayerGuest` class
+  - [x] 1.3 Implement `MultiplayerGuest` class
     - `connect(pin)`: connect to `lcr-XXXX-host`, handle `assigned`, `game_state`, `error`, `host_disconnecting`
     - On `game_state`: call `GameAdapter.applyState(state)`
     - On host disconnect: show disconnection overlay
@@ -30,8 +30,8 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - Test: error message shown, cleared after 2 s, returns to PIN entry
     - _Requirements: 3.5_
 
-- [ ] 2. Implement UI overlay panels in `lcr-multiplayer.js`
-  - [~] 2.1 Mode Selection Panel
+- [-] 2. Implement UI overlay panels in `lcr-multiplayer.js`
+  - [-] 2.1 Mode Selection Panel
     - Two buttons: "Single Device" / "Multi Device"; default selection is Single Device
     - Inject before character-select step in setup modal for both games
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
