@@ -685,23 +685,21 @@ const LCRMultiplayerUI = (() => {
       }
       @keyframes lcr-spin { to { transform: rotate(360deg); } }
       .lcr-mp-banner {
-        position: fixed;
-        bottom: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0,0,0,0.88);
+        display: block;
+        text-align: center;
+        background: rgba(0,0,0,0.75);
         border: 1px solid rgba(212,175,55,0.5);
         border-radius: 50px;
-        padding: 8px 20px;
+        padding: 6px 16px;
         font-family: 'Lato', sans-serif;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 700;
         color: rgba(255,255,255,0.85);
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        z-index: 300;
         white-space: nowrap;
         pointer-events: none;
+        margin-bottom: 6px;
       }
       .lcr-mp-banner-active {
         color: #ffd700;
@@ -1042,18 +1040,29 @@ const LCRMultiplayerUI = (() => {
   }
 
   /**
-   * Shows a small spectator banner at the bottom of the screen.
+   * Shows a small spectator banner between the table and roll button.
    *
    * @param {string} playerName — name of the player whose turn it is
    * @returns {{ updateMessage(msg: string): void, remove(): void }}
    */
   function showSpectatorBanner(playerName) {
     _injectStyles();
+    // Remove any existing banner first
+    document.getElementById('lcr-mp-spectator-banner')?.remove();
+    document.getElementById('lcr-mp-active-banner')?.remove();
+
     const banner = document.createElement('div');
     banner.className = 'lcr-mp-banner';
     banner.id = 'lcr-mp-spectator-banner';
     banner.textContent = `⏳ Waiting for ${playerName}…`;
-    document.body.appendChild(banner);
+
+    // Insert before roll button if possible, else append to body
+    const rollBtn = document.getElementById('roll-btn');
+    if (rollBtn && rollBtn.parentNode) {
+      rollBtn.parentNode.insertBefore(banner, rollBtn);
+    } else {
+      document.body.appendChild(banner);
+    }
 
     return {
       updateMessage(msg) {
@@ -1066,16 +1075,26 @@ const LCRMultiplayerUI = (() => {
   }
 
   /**
-   * Shows a small "YOUR TURN!" banner at the bottom of the screen.
+   * Shows a small "YOUR TURN!" banner between the table and roll button.
    * @returns {{ remove(): void }}
    */
   function showActiveTurnBanner() {
     _injectStyles();
+    // Remove any existing banner first
+    document.getElementById('lcr-mp-spectator-banner')?.remove();
+    document.getElementById('lcr-mp-active-banner')?.remove();
+
     const banner = document.createElement('div');
     banner.className = 'lcr-mp-banner lcr-mp-banner-active';
     banner.id = 'lcr-mp-active-banner';
     banner.textContent = '🎲 YOUR TURN!';
-    document.body.appendChild(banner);
+
+    const rollBtn = document.getElementById('roll-btn');
+    if (rollBtn && rollBtn.parentNode) {
+      rollBtn.parentNode.insertBefore(banner, rollBtn);
+    } else {
+      document.body.appendChild(banner);
+    }
 
     return {
       remove() {

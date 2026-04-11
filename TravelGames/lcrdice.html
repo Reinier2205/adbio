@@ -423,14 +423,18 @@
 
         function _dealIn() {
             const picks = mpHost.buildPlayersFromPicks();
-            selectedNames = picks.map(p => p.name);
-            // Inject icons into DISNEY_POOL lookup so startActualGame finds them
-            picks.forEach(p => {
-                if (!DISNEY_POOL.find(c => c.name === p.name)) {
-                    DISNEY_POOL.push({ name: p.name, i: p.icon });
-                }
-            });
-            startActualGame();
+            // Build players directly from picks — no DISNEY_POOL lookup needed
+            players = picks.map((p, i) => ({ id: i, name: p.name, icon: p.icon, chips: 3 }));
+            centerPot = 0;
+            turnIndex = 0;
+            gameActive = true;
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('roll-btn').disabled = false;
+            renderTable();
+            updateUI();
+            if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
+            _updateTurnUI();
         }
 
         async function _startGuestFlow(pin) {
