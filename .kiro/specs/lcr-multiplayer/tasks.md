@@ -55,8 +55,8 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - Test: `#LCP:1234` pre-fills PIN field and triggers connect attempt
     - _Requirements: 3.1_
 
-- [ ] 3. Implement `GameAdapter` for `lcrdice.html`
-  - [-] 3.1 Add `LcrDiceAdapter` object inside `lcrdice.html`
+- [x] 3. Implement `GameAdapter` for `lcrdice.html`
+  - [x] 3.1 Add `LcrDiceAdapter` object inside `lcrdice.html`
     - `gameType: 'lcrdice'`
     - `applyState(state)`: set `players`, `centerPot`, `turnIndex` from broadcast; call existing `updateUI()` / render function
     - `executeRoll(state)`: call existing dice-roll logic, return `{ results, newState }`
@@ -66,8 +66,8 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - **Property 3: Chip conservation**
     - **Validates: Requirements 4.1, 4.2, 8.2, 8.4**
 
-- [ ] 4. Implement `GameAdapter` for `lcrrogue.html`
-  - [ ] 4.1 Add `LcrRogueAdapter` object inside `lcrrogue.html`
+- [x] 4. Implement `GameAdapter` for `lcrrogue.html`
+  - [x] 4.1 Add `LcrRogueAdapter` object inside `lcrrogue.html`
     - `gameType: 'lcrrogue'`
     - `applyState(state)`: set `players`, `centerPot`, `turnIndex`, `pendingTargeting`; call existing render
     - `executeRoll(state)`: call existing Rogue dice logic, set `pendingTargeting` if P/S result, return `{ results, newState }`
@@ -81,14 +81,14 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - **Property 3: Chip conservation** (Rogue variant including STEAL/SHINE_ALL)
     - **Validates: Requirements 4.1, 4.2, 8.2, 8.4**
 
-- [ ] 5. Integrate multiplayer module into `lcrdice.html`
-  - [~] 5.1 Add `<script src="lcr-multiplayer.js"></script>` tag (loaded unconditionally; PeerJS itself stays lazy)
+- [x] 5. Integrate multiplayer module into `lcrdice.html`
+  - [x] 5.1 Add `<script src="lcr-multiplayer.js"></script>` tag (loaded unconditionally; PeerJS itself stays lazy)
     - _Requirements: 9.2_
-  - [~] 5.2 Prepend Mode Selection Panel to existing setup modal
+  - [x] 5.2 Prepend Mode Selection Panel to existing setup modal
     - Single Device path calls existing `startGame()` unchanged
     - Multi Device path calls `MultiplayerHost.open()` or `MultiplayerGuest.connect()`
     - _Requirements: 1.1, 1.2, 1.3, 9.1, 9.3_
-  - [~] 5.3 Wrap `handleRoll()` in `lcrdice.html`
+  - [x] 5.3 Wrap `handleRoll()` in `lcrdice.html`
     - If Multi Device + guest: send `{ type: "roll" }` to host instead of executing locally
     - If Multi Device + host: handled internally by `MultiplayerHost.receiveAction()`
     - If Single Device: execute as before
@@ -100,17 +100,17 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - **Property 2: PeerJS is not loaded in Single Device mode**
     - **Validates: Requirements 9.2**
 
-- [ ] 6. Integrate multiplayer module into `lcrrogue.html`
-  - [~] 6.1 Add `<script src="lcr-multiplayer.js"></script>` tag
+- [x] 6. Integrate multiplayer module into `lcrrogue.html`
+  - [x] 6.1 Add `<script src="lcr-multiplayer.js"></script>` tag
     - _Requirements: 9.2_
-  - [~] 6.2 Prepend Mode Selection Panel to existing setup modal
+  - [x] 6.2 Prepend Mode Selection Panel to existing setup modal
     - Single Device path calls existing `startGame()` unchanged
     - Multi Device path calls `MultiplayerHost.open()` or `MultiplayerGuest.connect()`
     - _Requirements: 1.1, 1.2, 1.3, 9.1, 9.3_
-  - [~] 6.3 Wrap `handleRoll()` in `lcrrogue.html`
+  - [x] 6.3 Wrap `handleRoll()` in `lcrrogue.html`
     - Guest: send `{ type: "roll" }`; host: delegate to `MultiplayerHost`; single device: unchanged
     - _Requirements: 5.3, 5.4, 9.3_
-  - [~] 6.4 Wrap `handleSeatClick()` / target selection in `lcrrogue.html`
+  - [x] 6.4 Wrap `handleSeatClick()` / target selection in `lcrrogue.html`
     - Guest on active turn: send `{ type: "target", targetIndex: N }` to host
     - Host: handled by `MultiplayerHost.receiveAction()`
     - Single Device: unchanged
@@ -119,15 +119,15 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - **Property 1: Single Device mode is unaffected by multiplayer code**
     - **Validates: Requirements 9.1, 9.3**
 
-- [ ] 7. Checkpoint — core integration complete
+- [x] 7. Checkpoint — core integration complete
   - Ensure all unit tests pass; manually verify Single Device path in both games is unaffected; ask the user if questions arise.
 
-- [ ] 8. Guest PIN entry and URL hash auto-connect
-  - [~] 8.1 Parse `#LCP:XXXX` on page load; if present, auto-select Multi Device, pre-fill PIN, trigger connect
+- [x] 8. Guest PIN entry and URL hash auto-connect
+  - [x] 8.1 Parse `#LCP:XXXX` on page load; if present, auto-select Multi Device, pre-fill PIN, trigger connect
     - _Requirements: 3.1_
-  - [~] 8.2 Implement numeric keypad PIN entry; auto-connect on 4th digit without extra confirm tap
+  - [x] 8.2 Implement numeric keypad PIN entry; auto-connect on 4th digit without extra confirm tap
     - _Requirements: 3.2, 3.3_
-  - [~] 8.3 Implement "Host not found" error path: show message, clear after 2 s, return to PIN entry
+  - [x] 8.3 Implement "Host not found" error path: show message, clear after 2 s, return to PIN entry
     - _Requirements: 3.5_
   - [ ]* 8.4 Write property test — turn enforcement
     - **Property 5: Turn enforcement**
@@ -139,14 +139,14 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - **Property 9: PIN uniqueness retry**
     - **Validates: Requirements 2.1, 2.5**
 
-- [ ] 9. Disconnection and kick handling
-  - [~] 9.1 Handle guest disconnect on host: chips → pot, toast notification, advance turn if disconnected player was active
+- [x] 9. Disconnection and kick handling
+  - [x] 9.1 Handle guest disconnect on host: chips → pot, toast notification, advance turn if disconnected player was active
     - _Requirements: 8.2, 8.3_
-  - [~] 9.2 Handle host disconnect on guest: show full-screen overlay with [New Game] button
+  - [x] 9.2 Handle host disconnect on guest: show full-screen overlay with [New Game] button
     - _Requirements: 8.1_
-  - [~] 9.3 Implement kick button in host game panel: close conn, chips → pot, advance turn if needed, broadcast
+  - [x] 9.3 Implement kick button in host game panel: close conn, chips → pot, advance turn if needed, broadcast
     - _Requirements: 8.4, 8.5_
-  - [~] 9.4 Handle guest reconnect: guest sends `{ type: "reconnect" }`, host replies with current `game_state`
+  - [x] 9.4 Handle guest reconnect: guest sends `{ type: "reconnect" }`, host replies with current `game_state`
     - _Requirements: 4.5_
   - [ ]* 9.5 Write property test — disconnection chip conservation
     - **Property 7: Disconnection chip conservation**
@@ -155,7 +155,7 @@ Additive multiplayer layer for `lcrdice.html` and `lcrrogue.html`. Shared module
     - **Property 4: Guest state matches host state**
     - **Validates: Requirements 4.1, 4.2, 4.4**
 
-- [ ] 10. Final checkpoint — Ensure all tests pass
+- [x] 10. Final checkpoint — Ensure all tests pass
   - Ensure all property tests and unit tests pass; verify chip conservation invariant holds across both game adapters; ask the user if questions arise.
 
 ## Notes

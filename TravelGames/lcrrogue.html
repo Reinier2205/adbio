@@ -266,6 +266,7 @@
         <button id="roll-btn" onclick="handleRoll()" class="btn-gold hidden">Roll Dice</button>
     </div>
 
+    <script src="lcr-multiplayer.js"></script>
     <script>
         const CHARS = [
             {n:'Mickey', i:'🐭'}, {n:'Elsa', i:'❄️'}, {n:'Simba', i:'🦁'}, 
@@ -285,10 +286,211 @@
         let scene, camera, renderer, diceGroup;
         const diceObjects = [];
 
+        // --- Multiplayer state ---
+        let mpMode = 'single'; // 'single' | 'host' | 'guest'
+        let mpHost = null;
+        let mpGuest = null;
+        let mpLobbyUI = null;
+        let myPlayerIndex = null;
+
         window.onload = () => {
             init3D();
-            initCharacterGrid();
+            const hashPin = _parseHashPin();
+            if (hashPin) { _startGuestFlow(hashPin); return; }
+            LCRMultiplayer.UI.showModeSelection(
+                () => { mpMode = 'single'; initCharacterGrid(); },
+                () => _startHostFlow()
+            );
         };
+
+        function _parseHashPin() {
+            const m = window.location.hash.match(/^#LCP:(\d{4})$/);
+            return m ? m[1] : null;
+        }
+
+        async function _startHostFlow() {
+            mpMode = 'host';
+            myPlayerIndex = 0;
+            const adapter = _buildLcrRogueAdapter();
+            mpHost = new LCRMultiplayer.MultiplayerHost(adapter, 9);
+            try { await mpHost.open(); } catch(e) {
+                LCRMultiplayer.UI.showToast('Could not connect — check your internet');
+                mpMode = 'single'; initCharacterGrid(); return;
+            }
+            initCharacterGrid();
+            mpLobbyUI = LCRMultiplayer.UI.showHostLobby({
+                pin: mpHost.pin,
+                onShareLink: () => _shareLink(mpHost.pin),
+                onDealIn: () => startGame(),
+                gameType: 'lcrrogue'
+            });
+            document.getElementById('start-btn').style.display = 'none';
+            const countInterval = setInterval(() => {
+                if (!mpLobbyUI) { clearInterval(countInterval); return; }
+                mpLobbyUI.updateCount(mpHost.connections.length + 1);
+            }, 500);
+        }
+
+        async function _startGuestFlow(pin) {
+            mpMode = 'guest';
+            init3D();
+            const adapter = _buildLcrRogueAdapter();
+            mpGuest = new LCRMultiplayer.MultiplayerGuest(adapter);
+            const pinUI = LCRMultiplayer.UI.showGuestPinEntry({
+                prefillPin: pin || '',
+                onConnect: async (enteredPin) => {
+                    try {
+                        await mpGuest.connect(enteredPin);
+                        pinUI.remove();
+                        LCRMultiplayer.UI.showGuestWaiting();
+                    } catch(e) {
+                        pinUI.showError('Host not found — check PIN');
+                    }
+                },
+                onBack: () => {
+                    pinUI.remove();
+                    mpMode = 'single';
+                    LCRMultiplayer.UI.showModeSelection(
+                        () => { mpMode = 'single'; initCharacterGrid(); },
+                        () => _startHostFlow()
+                    );
+                }
+            });
+        }
+
+        function _shareLink(pin) {
+            const url = window.location.href.split('#')[0] + '#LCP:' + pin;
+            if (navigator.share) { navigator.share({ title: 'Join my Rogue LCR game!', url }); }
+            else { navigator.clipboard.writeText(url).then(() => LCRMultiplayer.UI.showToast('Link copied!')); }
+        }
+
+        function _buildLcrRogueAdapter() {
+            return {
+                gameType: 'lcrrogue',
+                getState() {
+                    return {
+                        players: players.map(p => ({ n: p.n, i: p.i, chips: p.chips, connected: true })),
+                        centerPot, turnIndex, lastDiceResults: [],
+                        pendingTargeting: (pendingDice.length > 0 && targetingMode)
+                            ? { mode: targetingMode, activePlayerIndex: turnIndex } : null
+                    };
+                },
+                applyState(state) {
+                    if (state.players) players = state.players.map((p, idx) => ({ ...p, id: idx }));
+                    if (state.centerPot !== undefined) centerPot = state.centerPot;
+                    if (state.turnIndex !== undefined) turnIndex = state.turnIndex;
+                    // Show game if not yet visible
+                    if (players.length > 0 && !document.getElementById('roll-btn').classList.contains('hidden') === false) {
+                        document.getElementById('setup-screen').classList.add('hidden');
+                        document.getElementById('roll-btn').classList.remove('hidden');
+                        renderTable();
+                    } else if (players.length > 0) {
+                        document.getElementById('setup-screen').classList.add('hidden');
+                        document.getElementById('roll-btn').classList.remove('hidden');
+                        renderTable();
+                    }
+                    if (state.pendingTargeting) {
+                        targetingMode = state.pendingTargeting.mode;
+                        const isMine = (mpMode === 'host' && turnIndex === 0) ||
+                                       (mpMode === 'guest' && myPlayerIndex === turnIndex);
+                        if (isMine) {
+                            LCRMultiplayer.UI.showTargetingPanel({
+                                players, myIndex: turnIndex, mode: targetingMode,
+                                onSelect: (idx) => {
+                                    if (mpMode === 'guest') {
+                                        mpGuest.sendAction({ type: 'target', targetIndex: idx, mode: targetingMode });
+                                    } else if (mpMode === 'host') {
+                                        const newState = _buildLcrRogueAdapter().executeTarget(idx, targetingMode);
+                                        updateUI(); _updateTurnUI();
+                                        mpHost.broadcastState(newState);
+                                    }
+                                }
+                            });
+                        } else {
+                            const ap = players[state.pendingTargeting.activePlayerIndex];
+                            document.getElementById('action-msg').innerText = `Waiting for ${ap ? ap.n : '?'} to choose...`;
+                        }
+                    } else {
+                        targetingMode = null;
+                    }
+                    updateUI();
+                    _updateTurnUI();
+                    const active = players.filter(p => p.chips > 0);
+                    if (active.length === 1 && centerPot > 0) {
+                        document.getElementById('winner-name').innerText = active[0].n;
+                        document.getElementById('win-screen').classList.remove('hidden');
+                        document.getElementById('roll-btn').classList.add('hidden');
+                    }
+                },
+                executeRoll() {
+                    const count = Math.min(players[turnIndex].chips, 3);
+                    const results = [];
+                    for (let i = 0; i < count; i++) results.push(SYMBOLS[Math.floor(Math.random() * 6)]);
+                    const counts = results.reduce((a, b) => { a[b] = (a[b] || 0) + 1; return a; }, {});
+                    if (counts['C'] >= 2) {
+                        centerPot += players[turnIndex].chips;
+                        players[turnIndex].chips = 0;
+                        pendingDice = []; targetingMode = null;
+                        turnIndex = (turnIndex + 1) % players.length;
+                        const s = this.getState(); s.lastDiceResults = results; return s;
+                    }
+                    if (counts['S'] >= 2) {
+                        pendingDice = ['SHINE_ALL']; targetingMode = 'SHINE_ALL';
+                        const s = this.getState(); s.lastDiceResults = results; return s;
+                    }
+                    pendingDice = results.filter(r => r !== '•');
+                    if (pendingDice.length === 0) {
+                        targetingMode = null;
+                        turnIndex = (turnIndex + 1) % players.length;
+                    } else {
+                        const first = pendingDice[0];
+                        if (first === 'C') {
+                            players[turnIndex].chips--; centerPot++;
+                            pendingDice.shift();
+                            if (pendingDice.length === 0) { targetingMode = null; turnIndex = (turnIndex + 1) % players.length; }
+                            else targetingMode = pendingDice[0] === 'P' ? 'PASS' : 'STEAL';
+                        } else {
+                            targetingMode = first === 'P' ? 'PASS' : 'STEAL';
+                        }
+                    }
+                    const s = this.getState(); s.lastDiceResults = results; return s;
+                },
+                executeTarget(targetIndex, mode) {
+                    if (mode === 'PASS') { players[turnIndex].chips--; players[targetIndex].chips++; }
+                    else if (mode === 'STEAL') { if (players[targetIndex].chips > 0) { players[targetIndex].chips--; players[turnIndex].chips++; } }
+                    else if (mode === 'SHINE_ALL') { players[turnIndex].chips += players[targetIndex].chips; players[targetIndex].chips = 0; }
+                    pendingDice.shift();
+                    if (pendingDice.length === 0) { targetingMode = null; turnIndex = (turnIndex + 1) % players.length; }
+                    else targetingMode = pendingDice[0] === 'P' ? 'PASS' : 'STEAL';
+                    return this.getState();
+                },
+                requiresTargeting(dice) { return dice.some(d => d === 'P' || d === 'S'); },
+                handleDisconnect(playerIndex) {
+                    if (players[playerIndex]) {
+                        centerPot += players[playerIndex].chips;
+                        players[playerIndex].chips = 0;
+                        players[playerIndex].connected = false;
+                        LCRMultiplayer.UI.showToast(`${players[playerIndex].n} disconnected — chips added to pot`);
+                        if (turnIndex === playerIndex) turnIndex = (turnIndex + 1) % players.length;
+                    }
+                    updateUI();
+                    return this.getState();
+                },
+                onAssigned(idx) { myPlayerIndex = idx; },
+                onHostDisconnected() { LCRMultiplayer.UI.showHostDisconnected(); }
+            };
+        }
+
+        function _updateTurnUI() {
+            if (mpMode === 'single') return;
+            document.getElementById('lcr-mp-spectator-banner')?.remove();
+            document.getElementById('lcr-mp-active-banner')?.remove();
+            const isMine = (mpMode === 'host' && turnIndex === 0) ||
+                           (mpMode === 'guest' && myPlayerIndex === turnIndex);
+            document.getElementById('roll-btn').disabled = !isMine;
+            if (isMine) { LCRMultiplayer.UI.showActiveTurnBanner(); }
+            else if (players[turnIndex]) { LCRMultiplayer.UI.showSpectatorBanner(players[turnIndex].n); }
+        }
 
         function initCharacterGrid() {
             const grid = document.getElementById('character-grid');
@@ -347,6 +549,12 @@
             document.getElementById('roll-btn').classList.remove('hidden');
             renderTable();
             startTurn();
+            // Multi Device: broadcast initial state to guests
+            if (mpMode === 'host' && mpHost) {
+                if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
+                mpHost.broadcastState(_buildLcrRogueAdapter().getState());
+                _updateTurnUI();
+            }
         }
 
         function resetToMenu() {
@@ -405,7 +613,9 @@
                 const color = CHIP_COLORS[i % CHIP_COLORS.length];
                 const chips = Array(Math.min(p.chips, 10)).fill(`<div class="mini-chip" style="background:${color}"></div>`).join('');
                 const extra = p.chips > 10 ? `<span style="font-size:8px;color:#fff;font-weight:900">+${p.chips-10}</span>` : '';
-                seat.innerHTML = `<div class="chip-stack">${chips}${extra}</div><span class="player-name">${p.i} ${p.n}</span>`;
+                const kickBtn = (mpMode === 'host' && i !== 0 && p.connected === false)
+                    ? `<button onclick="event.stopPropagation();mpHost.kickPlayer(${i})" style="font-size:9px;background:rgba(239,68,68,0.8);border:none;border-radius:4px;color:#fff;padding:1px 4px;cursor:pointer;margin-top:2px">⚡kick</button>` : '';
+                seat.innerHTML = `<div class="chip-stack">${chips}${extra}</div><span class="player-name">${p.i} ${p.n}</span>${kickBtn}`;
             });
             
             document.getElementById('center-pot-chips').innerHTML = Array(Math.min(centerPot, 15)).fill('<div class="mini-chip" style="background:radial-gradient(circle at 35% 35%,#fde68a,#d97706);width:12px;height:12px"></div>').join('');
@@ -429,6 +639,15 @@
 
         async function handleRoll() {
             if(isProcessing) return;
+            // Multi Device: guest sends roll to host
+            if (mpMode === 'guest' && mpGuest) { mpGuest.sendAction({ type: 'roll' }); return; }
+            // Multi Device: host processes roll via adapter and broadcasts
+            if (mpMode === 'host' && mpHost) {
+                const newState = _buildLcrRogueAdapter().executeRoll();
+                updateUI(); _updateTurnUI();
+                mpHost.broadcastState(newState);
+                return;
+            }
             const p = players[turnIndex];
             
             isProcessing = true;
@@ -524,6 +743,19 @@
         }
 
         function handleSeatClick(idx) {
+            // Multi Device: guest sends target to host
+            if (mpMode === 'guest' && mpGuest && targetingMode) {
+                mpGuest.sendAction({ type: 'target', targetIndex: idx, mode: targetingMode });
+                targetingMode = null;
+                return;
+            }
+            // Multi Device: host resolves target via adapter and broadcasts
+            if (mpMode === 'host' && mpHost && targetingMode) {
+                const newState = _buildLcrRogueAdapter().executeTarget(idx, targetingMode);
+                updateUI(); _updateTurnUI();
+                mpHost.broadcastState(newState);
+                return;
+            }
             if(!targetingMode || idx === turnIndex) return;
             const mode = targetingMode;
             targetingMode = null;

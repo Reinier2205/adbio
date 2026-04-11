@@ -302,6 +302,8 @@
         </div>
     </div>
 
+    <script src="lcr-multiplayer.js"></script>
+    <script src="lcr-multiplayer.js"></script>
     <script>
         const DISNEY_POOL = [
             {name:"Mickey",  i:"🐭"}, {name:"Elsa",       i:"❄️"}, {name:"Simba",     i:"🦁"},
@@ -328,10 +330,222 @@
         let scene, camera, renderer, diceGroup;
         const diceObjects = [];
 
+        // Multiplayer state
+        let mpMode = 'single'; // 'single' | 'host' | 'guest'
+        let mpHost = null;
+        let mpGuest = null;
+        let mpLobbyUI = null;
+        let mpSpectatorBanner = null;
+        let mpActiveBanner = null;
+        let myPlayerIndex = null; // null = host (index 0) or assigned index for guests
+
         window.onload = () => {
             init3D();
-            initCharacterGrid();
+            // Check for auto-join hash before showing mode selection
+            const hashPin = _parseHashPin();
+            if (hashPin) {
+                _startGuestFlow(hashPin);
+                return;
+            }
+            // Show mode selection overlay on top of setup screen
+            LCRMultiplayer.UI.showModeSelection(
+                () => { mpMode = 'single'; initCharacterGrid(); },
+                () => _startHostFlow()
+            );
         };
+
+        function _parseHashPin() {
+            const m = window.location.hash.match(/^#LCP:(\d{4})$/);
+            return m ? m[1] : null;
+        }
+
+        async function _startHostFlow() {
+            mpMode = 'host';
+            myPlayerIndex = 0;
+            // Build the GameAdapter for the host
+            const adapter = _buildLcrDiceAdapter();
+            mpHost = new LCRMultiplayer.MultiplayerHost(adapter, 10);
+            try {
+                await mpHost.open();
+            } catch(e) {
+                LCRMultiplayer.UI.showToast('Could not connect — check your internet');
+                mpMode = 'single';
+                initCharacterGrid();
+                return;
+            }
+            // Show host lobby — character selection happens inside the existing setup screen
+            // but we replace the setup screen content with the lobby
+            document.getElementById('setup-screen').classList.remove('hidden');
+            initCharacterGrid();
+            mpLobbyUI = LCRMultiplayer.UI.showHostLobby({
+                pin: mpHost.pin,
+                onShareLink: () => _shareLink(mpHost.pin),
+                onDealIn: () => startActualGame(),
+                gameType: 'lcrdice'
+            });
+            // Override the existing start-btn to go through lobby
+            document.getElementById('start-btn').style.display = 'none';
+            // Update guest count as guests connect
+            const origOpen = mpHost._listenForConnections.bind(mpHost);
+            // Poll connection count every second
+            const countInterval = setInterval(() => {
+                if (!mpLobbyUI) { clearInterval(countInterval); return; }
+                mpLobbyUI.updateCount(mpHost.connections.length + 1); // +1 for host
+            }, 500);
+        }
+
+        async function _startGuestFlow(pin) {
+            mpMode = 'guest';
+            init3D();
+            const adapter = _buildLcrDiceAdapter();
+            mpGuest = new LCRMultiplayer.MultiplayerGuest(adapter);
+            // Show PIN entry (pre-filled if from hash)
+            const pinUI = LCRMultiplayer.UI.showGuestPinEntry({
+                prefillPin: pin || '',
+                onConnect: async (enteredPin) => {
+                    try {
+                        await mpGuest.connect(enteredPin);
+                        pinUI.remove();
+                        LCRMultiplayer.UI.showGuestWaiting();
+                    } catch(e) {
+                        pinUI.showError('Host not found — check PIN');
+                        setTimeout(() => {}, 2000);
+                    }
+                },
+                onBack: () => {
+                    pinUI.remove();
+                    mpMode = 'single';
+                    LCRMultiplayer.UI.showModeSelection(
+                        () => { mpMode = 'single'; initCharacterGrid(); },
+                        () => _startHostFlow()
+                    );
+                }
+            });
+        }
+
+        function _shareLink(pin) {
+            const url = window.location.href.split('#')[0] + '#LCP:' + pin;
+            if (navigator.share) {
+                navigator.share({ title: 'Join my LCR Casino game!', url });
+            } else {
+                navigator.clipboard.writeText(url).then(() => LCRMultiplayer.UI.showToast('Link copied!'));
+            }
+        }
+
+        function _buildLcrDiceAdapter() {
+            return {
+                gameType: 'lcrdice',
+
+                getState() {
+                    return {
+                        players: players.map(p => ({ name: p.name, icon: p.icon, chips: p.chips, connected: true })),
+                        centerPot,
+                        turnIndex,
+                        lastDiceResults: [],
+                        pendingTargeting: null
+                    };
+                },
+
+                applyState(state) {
+                    // Sync authoritative state from host broadcast
+                    if (state.players) {
+                        players = state.players.map((p, i) => ({
+                            id: i, name: p.name, icon: p.icon, chips: p.chips
+                        }));
+                    }
+                    if (state.centerPot !== undefined) centerPot = state.centerPot;
+                    if (state.turnIndex !== undefined) turnIndex = state.turnIndex;
+                    if (!gameActive && players.length > 0) {
+                        gameActive = true;
+                        document.getElementById('setup-screen').classList.add('hidden');
+                        document.getElementById('win-screen').classList.add('hidden');
+                        document.getElementById('roll-btn').disabled = false;
+                        renderTable();
+                    }
+                    updateUI();
+                    _updateTurnUI();
+                    // Check win
+                    const active = players.filter(p => p.chips > 0);
+                    if (active.length === 1) {
+                        const winner = active[0];
+                        gameActive = false;
+                        document.getElementById('winner-name').innerText = `${winner.icon} ${winner.name}`;
+                        document.getElementById('win-pot').innerText = `${centerPot + winner.chips} CHIPS`;
+                        document.getElementById('win-screen').classList.remove('hidden');
+                        document.getElementById('roll-btn').disabled = true;
+                    }
+                },
+
+                executeRoll() {
+                    // Run the dice logic synchronously and return new state
+                    const diceCount = Math.min(players[turnIndex].chips, 3);
+                    const results = [];
+                    for (let i = 0; i < diceCount; i++) {
+                        results.push(DICE_VALUES[Math.floor(Math.random() * 6)]);
+                    }
+                    const leftIdx = (turnIndex + 1) % players.length;
+                    const rightIdx = (turnIndex - 1 + players.length) % players.length;
+                    for (const res of results) {
+                        if (players[turnIndex].chips <= 0) break;
+                        if (res === 'L') { players[turnIndex].chips--; players[leftIdx].chips++; }
+                        else if (res === 'R') { players[turnIndex].chips--; players[rightIdx].chips++; }
+                        else if (res === 'C') { players[turnIndex].chips--; centerPot++; }
+                    }
+                    // Advance turn
+                    let next = (turnIndex + 1) % players.length;
+                    let safety = 0;
+                    while (players[next].chips === 0 && safety++ < players.length) {
+                        next = (next + 1) % players.length;
+                    }
+                    turnIndex = next;
+                    const newState = this.getState();
+                    newState.lastDiceResults = results;
+                    return newState;
+                },
+
+                executeTarget() { return this.getState(); }, // no-op for lcrdice
+                requiresTargeting() { return false; },
+
+                handleDisconnect(playerIndex) {
+                    if (players[playerIndex]) {
+                        centerPot += players[playerIndex].chips;
+                        players[playerIndex].chips = 0;
+                        players[playerIndex].connected = false;
+                        LCRMultiplayer.UI.showToast(`${players[playerIndex].name} disconnected — chips added to pot`);
+                        // Advance turn if it was their turn
+                        if (turnIndex === playerIndex) {
+                            turnIndex = (turnIndex + 1) % players.length;
+                        }
+                    }
+                    updateUI();
+                    return this.getState();
+                },
+
+                onAssigned(idx) {
+                    myPlayerIndex = idx;
+                    document.getElementById('win-screen').classList.add('hidden');
+                },
+
+                onHostDisconnected() {
+                    LCRMultiplayer.UI.showHostDisconnected();
+                }
+            };
+        }
+
+        function _updateTurnUI() {
+            if (mpMode === 'single') return;
+            // Remove existing banners
+            document.getElementById('lcr-mp-spectator-banner')?.remove();
+            document.getElementById('lcr-mp-active-banner')?.remove();
+            const isMine = (mpMode === 'host' && turnIndex === 0) ||
+                           (mpMode === 'guest' && myPlayerIndex === turnIndex);
+            document.getElementById('roll-btn').disabled = !isMine;
+            if (isMine) {
+                LCRMultiplayer.UI.showActiveTurnBanner();
+            } else if (players[turnIndex]) {
+                LCRMultiplayer.UI.showSpectatorBanner(players[turnIndex].name || players[turnIndex].n);
+            }
+        }
 
         function initCharacterGrid() {
             const grid = document.getElementById('character-grid');
@@ -442,6 +656,12 @@
             document.getElementById('roll-btn').disabled = false;
             renderTable();
             updateUI();
+            // Multi Device: broadcast initial state to guests
+            if (mpMode === 'host' && mpHost) {
+                if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
+                mpHost.broadcastState(_buildLcrDiceAdapter().getState());
+                _updateTurnUI();
+            }
         }
 
         function renderTable() {
@@ -485,7 +705,9 @@
                 const color = CHIP_COLORS[i % CHIP_COLORS.length];
                 const chips = Array(Math.min(p.chips, 10)).fill(`<div class="mini-chip" style="background:${color}"></div>`).join('');
                 const extra = p.chips > 10 ? `<span style="font-size:8px;color:#fff;font-weight:900">+${p.chips-10}</span>` : '';
-                seat.innerHTML = `<div class="chip-stack-container">${chips}${extra}</div><span class="player-name">${p.icon} ${p.name}</span>`;
+                const kickBtn = (mpMode === 'host' && i !== 0 && p.connected === false)
+                    ? `<button onclick="event.stopPropagation();mpHost.kickPlayer(${i})" style="font-size:9px;background:rgba(239,68,68,0.8);border:none;border-radius:4px;color:#fff;padding:1px 4px;cursor:pointer;margin-top:2px">⚡kick</button>` : '';
+                seat.innerHTML = `<div class="chip-stack-container">${chips}${extra}</div><span class="player-name">${p.icon} ${p.name}</span>${kickBtn}`;
             });
             
             const potContainer = document.getElementById('center-chips');
@@ -494,6 +716,16 @@
 
         async function handleRoll() {
             if (isRolling || !gameActive) return;
+            // Multi Device: guest sends roll request to host
+            if (mpMode === 'guest' && mpGuest) { mpGuest.sendAction({ type: 'roll' }); return; }
+            // Multi Device: host processes roll via adapter and broadcasts
+            if (mpMode === 'host' && mpHost) {
+                const newState = _buildLcrDiceAdapter().executeRoll();
+                updateUI(); _updateTurnUI();
+                mpHost.broadcastState(newState);
+                checkWinState();
+                return;
+            }
             const currentPlayer = players[turnIndex];
             if (currentPlayer.chips === 0) { nextTurn(); return; }
 
