@@ -514,7 +514,14 @@
 
                 getState() {
                     return {
-                        players: players.map(p => ({ name: p.name, icon: p.icon, chips: p.chips, connected: true })),
+                        players: players.map(p => ({
+                            name: p.name || p.n || '?',
+                            icon: p.icon || p.i || '🎲',
+                            n: p.name || p.n || '?',
+                            i: p.icon || p.i || '🎲',
+                            chips: p.chips,
+                            connected: p.connected !== false
+                        })),
                         centerPot,
                         turnIndex,
                         lastDiceResults: [],
@@ -527,7 +534,10 @@
 
                     if (state.players) {
                         players = state.players.map((p, i) => ({
-                            id: i, name: p.name, icon: p.icon, chips: p.chips
+                            id: i,
+                            name: p.name || p.n || '?',
+                            icon: p.icon || p.i || '🎲',
+                            chips: p.chips
                         }));
                     }
                     if (state.centerPot !== undefined) centerPot = state.centerPot;
@@ -543,19 +553,39 @@
                     // Always re-render table so seats stay in sync
                     renderTable();
 
-                    // Show dice results if included
+                    // Show dice results with animation if included
                     if (state.lastDiceResults && state.lastDiceResults.length > 0) {
-                        const banner = document.getElementById('roll-result-banner');
-                        if (banner) {
-                            banner.innerHTML = '';
-                            state.lastDiceResults.forEach(val => {
-                                const badge = document.createElement('div');
-                                badge.className = 'roll-badge';
-                                badge.style.color = val === 'L' ? '#60a5fa' : val === 'R' ? '#f87171' : val === 'C' ? '#facc15' : '#fff';
-                                badge.innerText = val === '•' ? 'KEEP' : val;
-                                banner.appendChild(badge);
-                            });
+                        const results = state.lastDiceResults;
+                        diceGroup.clear();
+                        diceObjects.length = 0;
+                        const count = results.length;
+                        for (let i = 0; i < count; i++) {
+                            const die = create3DDie(i, count);
+                            die.isRolling = true;
+                            die.rotVel = { x: 0.4, y: 0.3, z: 0.2 };
+                            diceGroup.add(die.mesh);
+                            diceObjects.push(die);
                         }
+                        const banner = document.getElementById('roll-result-banner');
+                        if (banner) banner.innerHTML = '';
+                        setTimeout(() => {
+                            const rotations = [[0,0,Math.PI/2],[0,0,-Math.PI/2],[0,0,0],[Math.PI,0,0],[-Math.PI/2,0,0],[Math.PI/2,0,0]];
+                            results.forEach((val, idx) => {
+                                if (diceObjects[idx]) {
+                                    diceObjects[idx].isRolling = false;
+                                    const symIdx = DICE_VALUES.indexOf(val);
+                                    const ri = symIdx >= 0 ? symIdx : 3;
+                                    diceObjects[idx].mesh.rotation.set(...rotations[ri]);
+                                }
+                                if (banner) {
+                                    const badge = document.createElement('div');
+                                    badge.className = 'roll-badge';
+                                    badge.style.color = val === 'L' ? '#60a5fa' : val === 'R' ? '#f87171' : val === 'C' ? '#facc15' : '#fff';
+                                    badge.innerText = val === '•' ? 'KEEP' : val;
+                                    banner.appendChild(badge);
+                                }
+                            });
+                        }, 600);
                     }
 
                     updateUI();

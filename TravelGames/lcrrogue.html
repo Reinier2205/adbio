@@ -443,7 +443,14 @@
                 gameType: 'lcrrogue',
                 getState() {
                     return {
-                        players: players.map(p => ({ n: p.n, i: p.i, chips: p.chips, connected: true })),
+                        players: players.map(p => ({
+                            n: p.n || p.name || '?',
+                            i: p.i || p.icon || '🎲',
+                            name: p.n || p.name || '?',
+                            icon: p.i || p.icon || '🎲',
+                            chips: p.chips,
+                            connected: p.connected !== false
+                        })),
                         centerPot, turnIndex, lastDiceResults: [],
                         pendingTargeting: (pendingDice.length > 0 && targetingMode)
                             ? { mode: targetingMode, activePlayerIndex: turnIndex } : null
@@ -451,7 +458,16 @@
                 },
                 applyState(state) {
                     const isFirstState = players.length === 0 && state.players && state.players.length > 0;
-                    if (state.players) players = state.players.map((p, idx) => ({ ...p, id: idx }));
+                    if (state.players) players = state.players.map((p, idx) => {
+                        // Normalise: accept both {n,i} and {name,icon} field names
+                        return {
+                            n: p.n || p.name || '?',
+                            i: p.i || p.icon || '🎲',
+                            chips: p.chips,
+                            connected: p.connected,
+                            id: idx
+                        };
+                    });
                     if (state.centerPot !== undefined) centerPot = state.centerPot;
                     if (state.turnIndex !== undefined) turnIndex = state.turnIndex;
 
@@ -463,18 +479,48 @@
                     // Always re-render table so seats stay in sync
                     renderTable();
 
-                    // Show dice results if included
+                    // Show dice results with animation if included
                     if (state.lastDiceResults && state.lastDiceResults.length > 0) {
-                        const banner = document.getElementById('dice-results-banner');
-                        if (banner) {
-                            banner.innerHTML = '';
-                            state.lastDiceResults.forEach(val => {
-                                const badge = document.createElement('div');
-                                badge.className = 'bg-black/80 px-3 rounded font-bold text-lg border border-white/20';
-                                badge.innerText = val === '•' ? '●' : val;
-                                banner.appendChild(badge);
+                        const results = state.lastDiceResults;
+                        // Spin 3D dice then show result
+                        diceGroup.clear();
+                        diceObjects.length = 0;
+                        const count = results.length;
+                        for (let i = 0; i < count; i++) {
+                            const geometry = new THREE.BoxGeometry(1, 1, 1);
+                            const mats = SYMBOLS.map(s => {
+                                const can = document.createElement('canvas'); can.width=128; can.height=128;
+                                const ctx = can.getContext('2d');
+                                ctx.fillStyle = s==='P'?'#4ade80':s==='S'?'#facc15':s==='C'?'#3b82f6':'#fff';
+                                ctx.fillRect(0,0,128,128);
+                                ctx.font = 'bold 80px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                                ctx.fillStyle = '#000'; ctx.fillText(s==='•'?'●':s, 64, 64);
+                                return new THREE.MeshPhongMaterial({ map: new THREE.CanvasTexture(can) });
                             });
+                            const mesh = new THREE.Mesh(geometry, mats);
+                            mesh.position.x = (i - (count-1)/2) * 1.3;
+                            diceGroup.add(mesh);
+                            diceObjects.push({ mesh, rolling: true, v: { x:0.4, y:0.3, z:0.2 }});
                         }
+                        const banner = document.getElementById('dice-results-banner');
+                        if (banner) banner.innerHTML = '';
+                        setTimeout(() => {
+                            const rotations = [[0,0,Math.PI/2],[0,0,-Math.PI/2],[0,0,0],[Math.PI,0,0],[-Math.PI/2,0,0],[Math.PI/2,0,0]];
+                            results.forEach((val, idx) => {
+                                if (diceObjects[idx]) {
+                                    diceObjects[idx].rolling = false;
+                                    const symIdx = SYMBOLS.indexOf(val);
+                                    const ri = symIdx >= 0 ? symIdx : 3;
+                                    diceObjects[idx].mesh.rotation.set(...rotations[ri]);
+                                }
+                                if (banner) {
+                                    const badge = document.createElement('div');
+                                    badge.className = 'bg-black/80 px-3 rounded font-bold text-lg border border-white/20';
+                                    badge.innerText = val === '•' ? '●' : val;
+                                    banner.appendChild(badge);
+                                }
+                            });
+                        }, 600);
                     }
 
                     if (state.pendingTargeting) {
@@ -772,6 +818,12 @@
                     document.getElementById('dice-results-banner').appendChild(badge);
                     return SYMBOLS[idx];
                 });
+                // Broadcast dice results to guests immediately so they see the animation
+                if (mpMode === 'host' && mpHost) {
+                    const preState = mpHost.gameAdapter.getState();
+                    preState.lastDiceResults = results;
+                    mpHost.broadcastState(preState);
+                }
                 processRules(results);
             }, 800);
         }
