@@ -80,8 +80,8 @@ class MultiplayerHost {
     /** @type {object|null} The PeerJS Peer instance */
     this._peer = null;
 
-    /** Tracks how many player slots have been assigned so far */
-    this._nextPlayerIndex = 0;
+    /** Tracks how many player slots have been assigned so far (host = 0, guests start at 1) */
+    this._nextPlayerIndex = 1;
   }
 
   // -------------------------------------------------------------------------

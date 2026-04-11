@@ -542,8 +542,7 @@
             if (mpMode === 'single') return;
             document.getElementById('lcr-mp-spectator-banner')?.remove();
             document.getElementById('lcr-mp-active-banner')?.remove();
-            const isMine = (mpMode === 'host' && turnIndex === 0) ||
-                           (mpMode === 'guest' && myPlayerIndex === turnIndex);
+            const isMine = myPlayerIndex === turnIndex;
             document.getElementById('roll-btn').disabled = !isMine;
             if (isMine) { LCRMultiplayer.UI.showActiveTurnBanner(); }
             else if (players[turnIndex]) { LCRMultiplayer.UI.showSpectatorBanner(players[turnIndex].n); }
@@ -672,7 +671,9 @@
                 const extra = p.chips > 10 ? `<span style="font-size:8px;color:#fff;font-weight:900">+${p.chips-10}</span>` : '';
                 const kickBtn = (mpMode === 'host' && i !== 0 && p.connected === false)
                     ? `<button onclick="event.stopPropagation();mpHost.kickPlayer(${i})" style="font-size:9px;background:rgba(239,68,68,0.8);border:none;border-radius:4px;color:#fff;padding:1px 4px;cursor:pointer;margin-top:2px">⚡kick</button>` : '';
-                seat.innerHTML = `<div class="chip-stack">${chips}${extra}</div><span class="player-name">${p.i} ${p.n}</span>${kickBtn}`;
+                const youTag = (mpMode !== 'single' && i === myPlayerIndex)
+                    ? `<span style="font-size:8px;background:#d4af37;color:#000;border-radius:4px;padding:0 3px;font-weight:900;display:block;margin-bottom:1px">YOU</span>` : '';
+                seat.innerHTML = `${youTag}<div class="chip-stack">${chips}${extra}</div><span class="player-name">${p.i} ${p.n}</span>${kickBtn}`;
             });
             
             document.getElementById('center-pot-chips').innerHTML = Array(Math.min(centerPot, 15)).fill('<div class="mini-chip" style="background:radial-gradient(circle at 35% 35%,#fde68a,#d97706);width:12px;height:12px"></div>').join('');
@@ -689,8 +690,10 @@
                 document.getElementById('action-msg').innerText = `${players[turnIndex].n} has no chips! Skipping...`;
                 setTimeout(nextTurn, 1500);
             } else {
-                document.getElementById('roll-btn').disabled = false;
-                document.getElementById('roll-btn').classList.remove('opacity-0');
+                if (mpMode === 'single') {
+                    document.getElementById('roll-btn').disabled = false;
+                    document.getElementById('roll-btn').classList.remove('opacity-0');
+                }
             }
         }
 
@@ -700,8 +703,10 @@
             if (mpMode === 'guest' && mpGuest) { mpGuest.sendAction({ type: 'roll' }); return; }
             // Multi Device: host processes roll via adapter and broadcasts
             if (mpMode === 'host' && mpHost) {
+                document.getElementById('roll-btn').disabled = true;
                 const newState = mpHost.gameAdapter.executeRoll();
-                updateUI(); _updateTurnUI();
+                updateUI();
+                _updateTurnUI();
                 mpHost.broadcastState(newState);
                 return;
             }
@@ -870,13 +875,14 @@
             isProcessing = false;
             checkWinner();
             if (!document.getElementById('win-screen').classList.contains('hidden')) return;
-            
+            if (mpMode !== 'single') return; // multi-device: turn advance handled by host adapter
             const nextP = players[(turnIndex + 1) % players.length];
             document.getElementById('action-msg').innerText = `Next Up: ${nextP.n}...`;
             setTimeout(nextTurn, 1500);
         }
 
         function nextTurn() {
+            if (mpMode !== 'single') return; // multi-device: turn is managed by host adapter
             turnIndex = (turnIndex + 1) % players.length;
             document.getElementById('dice-results-banner').innerHTML = '';
             startTurn();
