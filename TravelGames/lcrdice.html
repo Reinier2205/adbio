@@ -361,7 +361,6 @@
         async function _startHostFlow() {
             mpMode = 'host';
             myPlayerIndex = 0;
-            // Build the GameAdapter for the host
             const adapter = _buildLcrDiceAdapter();
             mpHost = new LCRMultiplayer.MultiplayerHost(adapter, 10);
             try {
@@ -372,25 +371,66 @@
                 initCharacterGrid();
                 return;
             }
-            // Show host lobby — character selection happens inside the existing setup screen
-            // but we replace the setup screen content with the lobby
+
+            // Host picks their own character first
+            _showHostCharacterPicker();
+        }
+
+        function _showHostCharacterPicker(takenNames = []) {
+            // Reuse the existing character grid but limit to single selection
             document.getElementById('setup-screen').classList.remove('hidden');
-            initCharacterGrid();
+            // Show a simple overlay on top prompting host to pick their character
+            const pickerUI = LCRMultiplayer.UI.showGuestCharacterPicker({
+                pool: DISNEY_POOL,
+                takenNames,
+                onPick: ({ name, icon }) => {
+                    mpHost.hostPick(name, icon);
+                    selectedNames = [name]; // host's pick
+                    _showHostLobby();
+                }
+            });
+            // Override title
+            const titleEl = document.querySelector('#lcr-mp-guest-picker h2');
+            if (titleEl) titleEl.textContent = 'PICK YOUR CHARACTER';
+        }
+
+        function _showHostLobby() {
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('start-btn').style.display = 'none';
+
             mpLobbyUI = LCRMultiplayer.UI.showHostLobby({
                 pin: mpHost.pin,
                 onShareLink: () => _shareLink(mpHost.pin),
-                onDealIn: () => startActualGame(),
+                onDealIn: () => _dealIn(),
                 gameType: 'lcrdice'
             });
-            // Override the existing start-btn to go through lobby
-            document.getElementById('start-btn').style.display = 'none';
-            // Update guest count as guests connect
-            const origOpen = mpHost._listenForConnections.bind(mpHost);
-            // Poll connection count every second
-            const countInterval = setInterval(() => {
-                if (!mpLobbyUI) { clearInterval(countInterval); return; }
-                mpLobbyUI.updateCount(mpHost.connections.length + 1); // +1 for host
-            }, 500);
+
+            // Wire up guest pick + connection callbacks
+            mpHost.onGuestConnected = (count) => {
+                if (mpLobbyUI) mpLobbyUI.updateCount(count + 1);
+            };
+            mpHost.onGuestPicked = (connections) => {
+                const total = connections.length + 1; // +1 host
+                if (mpLobbyUI) {
+                    mpLobbyUI.updateCount(total);
+                    if (mpHost.allPicked()) mpLobbyUI.enableDealIn();
+                }
+            };
+
+            // Initial count
+            mpLobbyUI.updateCount(mpHost.connections.length + 1);
+        }
+
+        function _dealIn() {
+            const picks = mpHost.buildPlayersFromPicks();
+            selectedNames = picks.map(p => p.name);
+            // Inject icons into DISNEY_POOL lookup so startActualGame finds them
+            picks.forEach(p => {
+                if (!DISNEY_POOL.find(c => c.name === p.name)) {
+                    DISNEY_POOL.push({ name: p.name, i: p.icon });
+                }
+            });
+            startActualGame();
         }
 
         async function _startGuestFlow(pin) {
@@ -398,14 +438,14 @@
             init3D();
             const adapter = _buildLcrDiceAdapter();
             mpGuest = new LCRMultiplayer.MultiplayerGuest(adapter);
-            // Show PIN entry (pre-filled if from hash)
             const pinUI = LCRMultiplayer.UI.showGuestPinEntry({
                 prefillPin: pin || '',
                 onConnect: async (enteredPin) => {
                     try {
                         await mpGuest.connect(enteredPin);
                         pinUI.remove();
-                        LCRMultiplayer.UI.showGuestWaiting();
+                        // Guest now picks their character (waiting overlay shown after pick)
+                        _showGuestCharacterPicker();
                     } catch(e) {
                         pinUI.showError('Host not found — check PIN');
                         setTimeout(() => {}, 2000);
@@ -420,6 +460,25 @@
                     );
                 }
             });
+        }
+
+        let _guestPickerUI = null;
+
+        function _showGuestCharacterPicker() {
+            const takenNames = mpGuest._lobbyTakenNames || [];
+            _guestPickerUI = LCRMultiplayer.UI.showGuestCharacterPicker({
+                pool: DISNEY_POOL,
+                takenNames,
+                onPick: ({ name, icon }) => {
+                    _guestPickerUI = null;
+                    mpGuest.sendAction({ type: 'pick', name, icon });
+                    LCRMultiplayer.UI.showGuestWaiting();
+                }
+            });
+            // Live updates as others pick
+            mpGuest.onLobbyState = (takenNames) => {
+                if (_guestPickerUI) _guestPickerUI.updateTaken(takenNames);
+            };
         }
 
         function _shareLink(pin) {

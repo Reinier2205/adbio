@@ -317,18 +317,51 @@
                 LCRMultiplayer.UI.showToast('Could not connect — check your internet');
                 mpMode = 'single'; initCharacterGrid(); return;
             }
-            initCharacterGrid();
+            // Host picks their character first
+            _showHostCharacterPicker();
+        }
+
+        function _showHostCharacterPicker() {
+            const pickerUI = LCRMultiplayer.UI.showGuestCharacterPicker({
+                pool: CHARS.map(c => ({ name: c.n, icon: c.i })),
+                takenNames: [],
+                onPick: ({ name, icon }) => {
+                    mpHost.hostPick(name, icon);
+                    selectedChars = [CHARS.findIndex(c => c.n === name)];
+                    _showHostLobby();
+                }
+            });
+            const titleEl = document.querySelector('#lcr-mp-guest-picker h2');
+            if (titleEl) titleEl.textContent = 'PICK YOUR CHARACTER';
+        }
+
+        function _showHostLobby() {
+            document.getElementById('start-btn').style.display = 'none';
             mpLobbyUI = LCRMultiplayer.UI.showHostLobby({
                 pin: mpHost.pin,
                 onShareLink: () => _shareLink(mpHost.pin),
-                onDealIn: () => startGame(),
+                onDealIn: () => _dealIn(),
                 gameType: 'lcrrogue'
             });
-            document.getElementById('start-btn').style.display = 'none';
-            const countInterval = setInterval(() => {
-                if (!mpLobbyUI) { clearInterval(countInterval); return; }
-                mpLobbyUI.updateCount(mpHost.connections.length + 1);
-            }, 500);
+            mpHost.onGuestConnected = (count) => {
+                if (mpLobbyUI) mpLobbyUI.updateCount(count + 1);
+            };
+            mpHost.onGuestPicked = (connections) => {
+                if (mpLobbyUI) {
+                    mpLobbyUI.updateCount(connections.length + 1);
+                    if (mpHost.allPicked()) mpLobbyUI.enableDealIn();
+                }
+            };
+            mpLobbyUI.updateCount(mpHost.connections.length + 1);
+        }
+
+        function _dealIn() {
+            const picks = mpHost.buildPlayersFromPicks();
+            selectedChars = picks.map(p => {
+                const idx = CHARS.findIndex(c => c.n === p.name);
+                return idx >= 0 ? idx : (() => { CHARS.push({ n: p.name, i: p.icon }); return CHARS.length - 1; })();
+            });
+            startGame();
         }
 
         async function _startGuestFlow(pin) {
@@ -342,7 +375,7 @@
                     try {
                         await mpGuest.connect(enteredPin);
                         pinUI.remove();
-                        LCRMultiplayer.UI.showGuestWaiting();
+                        _showGuestCharacterPicker();
                     } catch(e) {
                         pinUI.showError('Host not found — check PIN');
                     }
@@ -356,6 +389,23 @@
                     );
                 }
             });
+        }
+
+        let _guestPickerUI = null;
+
+        function _showGuestCharacterPicker() {
+            _guestPickerUI = LCRMultiplayer.UI.showGuestCharacterPicker({
+                pool: CHARS.map(c => ({ name: c.n, icon: c.i })),
+                takenNames: mpGuest._lobbyTakenNames || [],
+                onPick: ({ name, icon }) => {
+                    _guestPickerUI = null;
+                    mpGuest.sendAction({ type: 'pick', name, icon });
+                    LCRMultiplayer.UI.showGuestWaiting();
+                }
+            });
+            mpGuest.onLobbyState = (takenNames) => {
+                if (_guestPickerUI) _guestPickerUI.updateTaken(takenNames);
+            };
         }
 
         function _shareLink(pin) {

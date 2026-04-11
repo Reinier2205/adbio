@@ -144,17 +144,20 @@ class MultiplayerHost {
     this._peer.on('connection', (conn) => {
       conn.on('open', () => {
         if (this._nextPlayerIndex >= this.maxPlayers) {
-          // Game is full — reject the connection
           conn.send({ type: 'error', message: 'Game is full' });
           conn.close();
           return;
         }
 
         const playerIndex = this._nextPlayerIndex++;
-        this.connections.push({ conn, playerIndex });
+        this.connections.push({ conn, playerIndex, picked: false });
 
-        // Tell the guest which slot they own
+        // Tell the guest which slot they own + current taken list
         conn.send({ type: 'assigned', playerIndex });
+        conn.send({ type: 'lobby_state', takenNames: this._takenNames() });
+
+        // Notify host of new connection
+        if (this.onGuestConnected) this.onGuestConnected(this.connections.length);
 
         // Listen for actions from this guest
         conn.on('data', (data) => {
@@ -206,7 +209,60 @@ class MultiplayerHost {
       // Send current state only to the reconnecting guest
       const currentState = this.gameAdapter.getState();
       conn.send({ type: 'game_state', ...currentState });
+
+    } else if (msg.type === 'pick') {
+      // Guest picked a character during lobby
+      const entry = this.connections.find((e) => e.conn === conn);
+      if (entry) {
+        entry.picked = true;
+        entry.pickedName = msg.name;
+        entry.pickedIcon = msg.icon;
+      }
+      // Broadcast updated taken list to all guests
+      const taken = this._takenNames();
+      for (const { conn: c } of this.connections) {
+        if (c.open) c.send({ type: 'lobby_state', takenNames: taken });
+      }
+      // Notify host
+      if (this.onGuestPicked) this.onGuestPicked(this.connections);
     }
+  }
+
+  /** Returns array of character names already picked (host + guests). */
+  _takenNames() {
+    const taken = [];
+    if (this._hostPickedName) taken.push(this._hostPickedName);
+    for (const e of this.connections) {
+      if (e.pickedName) taken.push(e.pickedName);
+    }
+    return taken;
+  }
+
+  /** Call this when the host picks their character. */
+  hostPick(name, icon) {
+    this._hostPickedName = name;
+    this._hostPickedIcon = icon;
+    const taken = this._takenNames();
+    for (const { conn } of this.connections) {
+      if (conn.open) conn.send({ type: 'lobby_state', takenNames: taken });
+    }
+  }
+
+  /** Returns true when all connected guests have picked AND there are at least 2 guests (3 total). */
+  allPicked() {
+    return this.connections.length >= 2 &&
+           this.connections.every(e => e.picked) &&
+           !!this._hostPickedName;
+  }
+
+  /** Build the ordered players array from picks (host first, then guests by slot). */
+  buildPlayersFromPicks() {
+    const result = [{ name: this._hostPickedName, icon: this._hostPickedIcon }];
+    const sorted = [...this.connections].sort((a, b) => a.playerIndex - b.playerIndex);
+    for (const e of sorted) {
+      if (e.pickedName) result.push({ name: e.pickedName, icon: e.pickedIcon });
+    }
+    return result;
   }
 
   // -------------------------------------------------------------------------
@@ -311,6 +367,9 @@ class MultiplayerGuest {
 
     /** @type {object|null} The DataConnection to the host */
     this._conn = null;
+
+    /** @type {string[]} Character names already taken in the lobby */
+    this._lobbyTakenNames = [];
   }
 
   // -------------------------------------------------------------------------
@@ -362,6 +421,10 @@ class MultiplayerGuest {
             this.myPlayerIndex = data.playerIndex;
             this.gameAdapter.onAssigned(data.playerIndex);
             resolve();
+
+          } else if (data.type === 'lobby_state') {
+            this._lobbyTakenNames = data.takenNames || [];
+            if (this.onLobbyState) this.onLobbyState(this._lobbyTakenNames);
 
           } else if (data.type === 'game_state') {
             this.gameAdapter.applyState(data);
@@ -818,8 +881,10 @@ const LCRMultiplayerUI = (() => {
       /** Update the displayed player count. Enables Deal In when total >= 3. */
       updateCount(n) {
         countEl.textContent = `Players connected: ${n}`;
-        // n includes the host; need at least host + 2 guests = 3 total
-        dealBtn.disabled = n < 3;
+        // Deal In is enabled via enableDealIn() once all players have picked
+      },
+      enableDealIn() {
+        dealBtn.disabled = false;
       },
       remove() {
         overlay.remove();
@@ -1139,6 +1204,86 @@ const LCRMultiplayerUI = (() => {
   }
 
   // -------------------------------------------------------------------------
+  // showGuestCharacterPicker — guest picks their character during lobby
+  // -------------------------------------------------------------------------
+
+  /**
+   * Shows a character picker for guests during the lobby phase.
+   *
+   * @param {object} opts
+   * @param {Array}    opts.pool        — array of { name, icon } or { n, i }
+   * @param {Array}    opts.takenNames  — names already picked (shown greyed out)
+   * @param {Function} opts.onPick      — called with { name, icon } when picked
+   * @returns {{ updateTaken(names: string[]): void, remove(): void }}
+   */
+  function showGuestCharacterPicker({ pool, takenNames = [], onPick }) {
+    _injectStyles();
+    const container = _getContainer();
+    const overlay = _createOverlay(200);
+    overlay.id = 'lcr-mp-guest-picker';
+    overlay.style.borderRadius = '12px';
+    overlay.style.overflowY = 'auto';
+
+    const title = document.createElement('h2');
+    title.className = 'lcr-mp-title';
+    title.style.fontSize = '1rem';
+    title.textContent = 'CHOOSE YOUR CHARACTER';
+
+    const sub = document.createElement('p');
+    sub.className = 'lcr-mp-subtitle';
+    sub.textContent = 'Greyed out = already taken';
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;max-width:280px;margin-top:4px';
+
+    let currentTaken = [...takenNames];
+
+    function renderGrid() {
+      grid.innerHTML = '';
+      pool.forEach(char => {
+        const name = char.name || char.n;
+        const icon = char.icon || char.i;
+        const taken = currentTaken.includes(name);
+        const btn = document.createElement('button');
+        btn.style.cssText = [
+          'display:flex', 'flex-direction:column', 'align-items:center',
+          'gap:2px', 'padding:6px 4px', 'border-radius:8px', 'border:1px solid',
+          taken ? 'border-color:rgba(255,255,255,0.1);opacity:0.3;cursor:not-allowed'
+                : 'border-color:rgba(212,175,55,0.5);cursor:pointer',
+          'background:rgba(255,255,255,0.05)',
+          'color:#fff8e1', 'font-family:Lato,sans-serif',
+          '-webkit-tap-highlight-color:transparent',
+        ].join(';');
+        btn.innerHTML = `<span style="font-size:1.4rem">${icon}</span><span style="font-size:0.5rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">${name}</span>`;
+        if (!taken) {
+          btn.addEventListener('click', () => {
+            overlay.remove();
+            onPick({ name, icon });
+          });
+        }
+        grid.appendChild(btn);
+      });
+    }
+
+    renderGrid();
+
+    overlay.appendChild(title);
+    overlay.appendChild(sub);
+    overlay.appendChild(grid);
+    container.appendChild(overlay);
+
+    return {
+      updateTaken(names) {
+        currentTaken = names;
+        renderGrid();
+      },
+      remove() {
+        overlay.remove();
+      },
+    };
+  }
+
+  // -------------------------------------------------------------------------
   // Public API
   // -------------------------------------------------------------------------
 
@@ -1147,6 +1292,7 @@ const LCRMultiplayerUI = (() => {
     showHostLobby,
     showGuestPinEntry,
     showGuestWaiting,
+    showGuestCharacterPicker,
     showSpectatorBanner,
     showActiveTurnBanner,
     showTargetingPanel,
