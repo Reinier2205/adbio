@@ -281,7 +281,8 @@
         let selectedChars = [];
         let isProcessing = false;
         let pendingDice = [];
-        let targetingMode = null; 
+        let targetingMode = null;
+        let _chipMoves = []; // tracks chip moves for broadcast to guests
 
         let scene, camera, renderer, diceGroup;
         const diceObjects = [];
@@ -372,8 +373,67 @@
             if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
             // Show PIN persistently for reconnects
             _showGamePin(mpHost.pin);
-            // When a guest rolls or targets, update host UI too
-            mpHost.onStateChange = () => { updateUI(); _updateTurnUI(); checkWinner(); };
+            // When a guest rolls or targets, update host UI too with animation
+            mpHost.onStateChange = (newState) => {
+                updateUI();
+                _updateTurnUI();
+                checkWinner();
+                if (newState && newState.lastDiceResults && newState.lastDiceResults.length > 0) {
+                    _showDiceAnimation(newState.lastDiceResults, newState.lastDiceIndices);
+                }
+            };
+
+        function _animateChipMovesRogue(moves, onDone) {
+            let i = 0;
+            function next() {
+                if (i >= moves.length) { if (onDone) onDone(); return; }
+                const move = moves[i++];
+                const fromId = `seat-${move.from}`;
+                const toId = move.to === -1 ? 'dice-canvas-container' : `seat-${move.to}`;
+                animateChip(fromId, toId, next);
+            }
+            next();
+        }
+
+        function _showDiceAnimation(results, indices) {
+            diceGroup.clear();
+            diceObjects.length = 0;
+            const count = results.length;
+            const banner = document.getElementById('dice-results-banner');
+            if (banner) banner.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const geometry = new THREE.BoxGeometry(1, 1, 1);
+                const mats = SYMBOLS.map(s => {
+                    const can = document.createElement('canvas'); can.width=128; can.height=128;
+                    const ctx = can.getContext('2d');
+                    ctx.fillStyle = s==='P'?'#4ade80':s==='S'?'#facc15':s==='C'?'#3b82f6':'#fff';
+                    ctx.fillRect(0,0,128,128);
+                    ctx.font = 'bold 80px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                    ctx.fillStyle = '#000'; ctx.fillText(s==='•'?'●':s, 64, 64);
+                    return new THREE.MeshPhongMaterial({ map: new THREE.CanvasTexture(can) });
+                });
+                const mesh = new THREE.Mesh(geometry, mats);
+                mesh.position.x = (i - (count-1)/2) * 1.3;
+                diceGroup.add(mesh);
+                diceObjects.push({ mesh, rolling: true, v: { x:0.4, y:0.3, z:0.2 }});
+            }
+            setTimeout(() => {
+                const rotations = [[0,0,Math.PI/2],[0,0,-Math.PI/2],[0,0,0],[Math.PI,0,0],[-Math.PI/2,0,0],[Math.PI/2,0,0]];
+                results.forEach((val, idx) => {
+                    if (diceObjects[idx]) {
+                        diceObjects[idx].rolling = false;
+                        const ri = (indices && indices[idx] !== undefined) ? indices[idx] : Math.max(0, SYMBOLS.indexOf(val));
+                        diceObjects[idx].mesh.rotation.set(...rotations[ri]);
+                    }
+                    if (banner) {
+                        const badge = document.createElement('div');
+                        badge.className = 'bg-black/80 px-3 rounded font-bold text-lg border border-white/20';
+                        badge.innerText = val === '•' ? '●' : val;
+                        banner.appendChild(badge);
+                    }
+                });
+            }, 600);
+        }
             mpHost.broadcastState(mpHost.gameAdapter.getState());
             _updateTurnUI();
         }
@@ -479,10 +539,16 @@
                     // Always re-render table so seats stay in sync
                     renderTable();
 
-                    // Show dice results with animation if included
+                    // Animate chip moves if included, then update UI
+                    if (state.lastChipMoves && state.lastChipMoves.length > 0) {
+                        _animateChipMovesRogue(state.lastChipMoves, () => { updateUI(); _updateTurnUI(); });
+                    } else {
+                        updateUI();
+                        _updateTurnUI();
+                    }
                     if (state.lastDiceResults && state.lastDiceResults.length > 0) {
                         const results = state.lastDiceResults;
-                        // Spin 3D dice then show result
+                        const indices = state.lastDiceIndices;
                         diceGroup.clear();
                         diceObjects.length = 0;
                         const count = results.length;
@@ -509,8 +575,7 @@
                             results.forEach((val, idx) => {
                                 if (diceObjects[idx]) {
                                     diceObjects[idx].rolling = false;
-                                    const symIdx = SYMBOLS.indexOf(val);
-                                    const ri = symIdx >= 0 ? symIdx : 3;
+                                    const ri = (indices && indices[idx] !== undefined) ? indices[idx] : Math.max(0, SYMBOLS.indexOf(val));
                                     diceObjects[idx].mesh.rotation.set(...rotations[ri]);
                                 }
                                 if (banner) {
@@ -542,9 +607,6 @@
                         targetingMode = null;
                         document.getElementById('lcr-mp-targeting')?.remove();
                     }
-
-                    updateUI();
-                    _updateTurnUI();
 
                     const active = players.filter(p => p.chips > 0);
                     if (active.length === 1 && centerPot > 0) {
@@ -784,6 +846,7 @@
             isProcessing = true;
             document.getElementById('roll-btn').disabled = true;
             document.getElementById('dice-results-banner').innerHTML = '';
+            _chipMoves = []; // reset chip move tracker for this turn
             
             diceGroup.clear();
             diceObjects.length = 0;
@@ -806,9 +869,11 @@
             }
 
             setTimeout(() => {
+                const resultIndices = [];
                 const results = diceObjects.map(d => {
                     d.rolling = false;
                     const idx = Math.floor(Math.random()*6);
+                    resultIndices.push(idx);
                     const rotations = [[0,0,Math.PI/2],[0,0,-Math.PI/2],[0,0,0],[Math.PI,0,0],[-Math.PI/2,0,0],[Math.PI/2,0,0]];
                     d.mesh.rotation.set(...rotations[idx]);
                     
@@ -818,10 +883,11 @@
                     document.getElementById('dice-results-banner').appendChild(badge);
                     return SYMBOLS[idx];
                 });
-                // Broadcast dice results to guests immediately so they see the animation
+                // Broadcast dice results + indices to guests so they see the exact same faces
                 if (mpMode === 'host' && mpHost) {
                     const preState = mpHost.gameAdapter.getState();
                     preState.lastDiceResults = results;
+                    preState.lastDiceIndices = resultIndices;
                     mpHost.broadcastState(preState);
                 }
                 processRules(results);
@@ -833,8 +899,13 @@
             
             if(counts['C'] >= 2) {
                 await showBanner('CHUCKLE', "Olaf's Giggles: Banish your chips!");
-                centerPot += players[turnIndex].chips;
+                const chipsToMove = players[turnIndex].chips;
+                const rollerForMove = turnIndex;
+                centerPot += chipsToMove;
                 players[turnIndex].chips = 0;
+                if (mpMode === 'host') {
+                    for (let k = 0; k < chipsToMove; k++) _chipMoves.push({ from: rollerForMove, to: -1 });
+                }
                 updateUI();
                 finishTurn();
                 return;
@@ -858,6 +929,7 @@
                 animateChip(`seat-${turnIndex}`, 'dice-canvas-container', () => {
                     players[turnIndex].chips--;
                     centerPot++;
+                    if (mpMode === 'host') _chipMoves.push({ from: turnIndex, to: -1 });
                     pendingDice.shift();
                     updateUI();
                     resolveNextDie();
@@ -902,12 +974,14 @@
             if(mode === 'PASS') {
                 animateChip(`seat-${turnIndex}`, `seat-${idx}`, () => {
                     players[turnIndex].chips--; players[idx].chips++;
+                    if (mpMode === 'host') _chipMoves.push({ from: turnIndex, to: idx });
                     pendingDice.shift(); updateUI(); resolveNextDie();
                 });
             } else if(mode === 'STEAL') {
                 if (players[idx].chips > 0) {
                     animateChip(`seat-${idx}`, `seat-${turnIndex}`, () => {
                         players[idx].chips--; players[turnIndex].chips++;
+                        if (mpMode === 'host') _chipMoves.push({ from: idx, to: turnIndex });
                         pendingDice.shift(); updateUI(); resolveNextDie();
                     });
                 } else {
@@ -917,6 +991,7 @@
                 animateChip(`seat-${idx}`, `seat-${turnIndex}`, () => {
                     players[turnIndex].chips += players[idx].chips;
                     players[idx].chips = 0;
+                    if (mpMode === 'host') _chipMoves.push({ from: idx, to: turnIndex });
                     updateUI(); finishTurn();
                 });
             }
@@ -960,6 +1035,8 @@
                     turnIndex = (turnIndex + 1) % players.length;
                 }
                 const newState = mpHost.gameAdapter.getState();
+                newState.lastChipMoves = _chipMoves.slice();
+                _chipMoves = [];
                 mpHost.broadcastState(newState);
                 _updateTurnUI();
                 return;
