@@ -197,6 +197,7 @@ class MultiplayerHost {
 
       const newState = this.gameAdapter.executeRoll();
       this.broadcastState(newState);
+      if (this.onStateChange) this.onStateChange(newState);
 
     } else if (msg.type === 'target') {
       // Only the current turn player may select a target
@@ -204,6 +205,7 @@ class MultiplayerHost {
 
       const newState = this.gameAdapter.executeTarget(msg.targetIndex, msg.mode);
       this.broadcastState(newState);
+      if (this.onStateChange) this.onStateChange(newState);
 
     } else if (msg.type === 'reconnect') {
       // Send current state only to the reconnecting guest

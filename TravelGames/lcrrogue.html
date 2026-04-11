@@ -370,6 +370,8 @@
             renderTable();
             startTurn();
             if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
+            // When a guest rolls or targets, update host UI too
+            mpHost.onStateChange = () => { updateUI(); _updateTurnUI(); checkWinner(); };
             mpHost.broadcastState(mpHost.gameAdapter.getState());
             _updateTurnUI();
         }
