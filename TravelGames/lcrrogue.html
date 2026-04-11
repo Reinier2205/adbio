@@ -379,12 +379,9 @@
                     if (state.players) players = state.players.map((p, idx) => ({ ...p, id: idx }));
                     if (state.centerPot !== undefined) centerPot = state.centerPot;
                     if (state.turnIndex !== undefined) turnIndex = state.turnIndex;
-                    // Show game if not yet visible
-                    if (players.length > 0 && !document.getElementById('roll-btn').classList.contains('hidden') === false) {
-                        document.getElementById('setup-screen').classList.add('hidden');
-                        document.getElementById('roll-btn').classList.remove('hidden');
-                        renderTable();
-                    } else if (players.length > 0) {
+                    if (players.length > 0) {
+                        // Remove waiting overlay and show game
+                        document.getElementById('lcr-mp-guest-waiting')?.remove();
                         document.getElementById('setup-screen').classList.add('hidden');
                         document.getElementById('roll-btn').classList.remove('hidden');
                         renderTable();
@@ -400,7 +397,7 @@
                                     if (mpMode === 'guest') {
                                         mpGuest.sendAction({ type: 'target', targetIndex: idx, mode: targetingMode });
                                     } else if (mpMode === 'host') {
-                                        const newState = _buildLcrRogueAdapter().executeTarget(idx, targetingMode);
+                                        const newState = mpHost.gameAdapter.executeTarget(idx, targetingMode);
                                         updateUI(); _updateTurnUI();
                                         mpHost.broadcastState(newState);
                                     }
@@ -552,7 +549,7 @@
             // Multi Device: broadcast initial state to guests
             if (mpMode === 'host' && mpHost) {
                 if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
-                mpHost.broadcastState(_buildLcrRogueAdapter().getState());
+                mpHost.broadcastState(mpHost.gameAdapter.getState());
                 _updateTurnUI();
             }
         }
@@ -643,7 +640,7 @@
             if (mpMode === 'guest' && mpGuest) { mpGuest.sendAction({ type: 'roll' }); return; }
             // Multi Device: host processes roll via adapter and broadcasts
             if (mpMode === 'host' && mpHost) {
-                const newState = _buildLcrRogueAdapter().executeRoll();
+                const newState = mpHost.gameAdapter.executeRoll();
                 updateUI(); _updateTurnUI();
                 mpHost.broadcastState(newState);
                 return;
@@ -751,7 +748,7 @@
             }
             // Multi Device: host resolves target via adapter and broadcasts
             if (mpMode === 'host' && mpHost && targetingMode) {
-                const newState = _buildLcrRogueAdapter().executeTarget(idx, targetingMode);
+                const newState = mpHost.gameAdapter.executeTarget(idx, targetingMode);
                 updateUI(); _updateTurnUI();
                 mpHost.broadcastState(newState);
                 return;

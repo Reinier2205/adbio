@@ -303,7 +303,6 @@
     </div>
 
     <script src="lcr-multiplayer.js"></script>
-    <script src="lcr-multiplayer.js"></script>
     <script>
         const DISNEY_POOL = [
             {name:"Mickey",  i:"🐭"}, {name:"Elsa",       i:"❄️"}, {name:"Simba",     i:"🦁"},
@@ -457,6 +456,8 @@
                     if (state.turnIndex !== undefined) turnIndex = state.turnIndex;
                     if (!gameActive && players.length > 0) {
                         gameActive = true;
+                        // Remove waiting overlay
+                        document.getElementById('lcr-mp-guest-waiting')?.remove();
                         document.getElementById('setup-screen').classList.add('hidden');
                         document.getElementById('win-screen').classList.add('hidden');
                         document.getElementById('roll-btn').disabled = false;
@@ -659,7 +660,7 @@
             // Multi Device: broadcast initial state to guests
             if (mpMode === 'host' && mpHost) {
                 if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
-                mpHost.broadcastState(_buildLcrDiceAdapter().getState());
+                mpHost.broadcastState(mpHost.gameAdapter.getState());
                 _updateTurnUI();
             }
         }
@@ -720,7 +721,7 @@
             if (mpMode === 'guest' && mpGuest) { mpGuest.sendAction({ type: 'roll' }); return; }
             // Multi Device: host processes roll via adapter and broadcasts
             if (mpMode === 'host' && mpHost) {
-                const newState = _buildLcrDiceAdapter().executeRoll();
+                const newState = mpHost.gameAdapter.executeRoll();
                 updateUI(); _updateTurnUI();
                 mpHost.broadcastState(newState);
                 checkWinState();
