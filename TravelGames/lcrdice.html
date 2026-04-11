@@ -433,10 +433,22 @@
             renderTable();
             updateUI();
             if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
+            // Show PIN persistently for reconnects
+            _showGamePin(mpHost.pin);
             // When a guest rolls, update host UI too
             mpHost.onStateChange = () => { updateUI(); _updateTurnUI(); checkWinState(); };
             mpHost.broadcastState(mpHost.gameAdapter.getState());
             _updateTurnUI();
+        }
+
+        function _showGamePin(pin) {
+            const existing = document.getElementById('lcr-game-pin');
+            if (existing) existing.remove();
+            const el = document.createElement('div');
+            el.id = 'lcr-game-pin';
+            el.style.cssText = 'position:fixed;top:8px;right:8px;background:rgba(0,0,0,0.75);border:1px solid #d4af37;border-radius:8px;padding:4px 10px;font-family:Bungee,cursive;font-size:0.65rem;color:#ffd700;z-index:500;pointer-events:none;letter-spacing:0.1em';
+            el.textContent = `PIN: ${pin}`;
+            document.body.appendChild(el);
         }
 
         async function _startGuestFlow(pin) {
@@ -513,7 +525,6 @@
                 applyState(state) {
                     const isFirstState = !gameActive && state.players && state.players.length > 0;
 
-                    // Sync authoritative state from host broadcast
                     if (state.players) {
                         players = state.players.map((p, i) => ({
                             id: i, name: p.name, icon: p.icon, chips: p.chips
@@ -528,11 +539,9 @@
                         document.getElementById('setup-screen').classList.add('hidden');
                         document.getElementById('win-screen').classList.add('hidden');
                         document.getElementById('roll-btn').disabled = false;
-                        renderTable();
-                        updateUI();
-                        _updateTurnUI();
-                        return;
                     }
+                    // Always re-render table so seats stay in sync
+                    renderTable();
 
                     // Show dice results if included
                     if (state.lastDiceResults && state.lastDiceResults.length > 0) {
@@ -552,7 +561,6 @@
                     updateUI();
                     _updateTurnUI();
 
-                    // Check win
                     const active = players.filter(p => p.chips > 0);
                     if (active.length === 1) {
                         const winner = active[0];

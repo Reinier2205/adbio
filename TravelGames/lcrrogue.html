@@ -370,10 +370,22 @@
             renderTable();
             startTurn();
             if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
+            // Show PIN persistently for reconnects
+            _showGamePin(mpHost.pin);
             // When a guest rolls or targets, update host UI too
             mpHost.onStateChange = () => { updateUI(); _updateTurnUI(); checkWinner(); };
             mpHost.broadcastState(mpHost.gameAdapter.getState());
             _updateTurnUI();
+        }
+
+        function _showGamePin(pin) {
+            const existing = document.getElementById('lcr-game-pin');
+            if (existing) existing.remove();
+            const el = document.createElement('div');
+            el.id = 'lcr-game-pin';
+            el.style.cssText = 'position:fixed;top:8px;right:8px;background:rgba(0,0,0,0.75);border:1px solid #d4af37;border-radius:8px;padding:4px 10px;font-family:Bungee,cursive;font-size:0.65rem;color:#ffd700;z-index:500;pointer-events:none;letter-spacing:0.1em';
+            el.textContent = `PIN: ${pin}`;
+            document.body.appendChild(el);
         }
 
         async function _startGuestFlow(pin) {
@@ -447,11 +459,9 @@
                         document.getElementById('lcr-mp-guest-waiting')?.remove();
                         document.getElementById('setup-screen').classList.add('hidden');
                         document.getElementById('roll-btn').classList.remove('hidden');
-                        renderTable();
-                        updateUI();
-                        _updateTurnUI();
-                        return;
                     }
+                    // Always re-render table so seats stay in sync
+                    renderTable();
 
                     // Show dice results if included
                     if (state.lastDiceResults && state.lastDiceResults.length > 0) {
@@ -470,6 +480,7 @@
                     if (state.pendingTargeting) {
                         targetingMode = state.pendingTargeting.mode;
                         const isMine = myPlayerIndex === turnIndex;
+                        document.getElementById('lcr-mp-targeting')?.remove();
                         if (isMine) {
                             LCRMultiplayer.UI.showTargetingPanel({
                                 players, myIndex: turnIndex, mode: targetingMode,
