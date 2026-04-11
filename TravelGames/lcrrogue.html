@@ -502,7 +502,10 @@
 
                     const active = players.filter(p => p.chips > 0);
                     if (active.length === 1 && centerPot > 0) {
-                        document.getElementById('winner-name').innerText = active[0].n;
+                        const winner = active[0];
+                        const winName = winner.n || winner.name || '?';
+                        const winIcon = winner.i || winner.icon || '🏆';
+                        document.getElementById('winner-name').innerText = `${winIcon} ${winName}`;
                         document.getElementById('win-screen').classList.remove('hidden');
                         document.getElementById('roll-btn').classList.add('hidden');
                     }
@@ -929,9 +932,16 @@
         function checkWinner() {
             const active = players.filter(p => p.chips > 0);
             if(active.length === 1 && centerPot > 0) {
-                document.getElementById('winner-name').innerText = active[0].n;
+                const winner = active[0];
+                const winName = winner.n || winner.name || '?';
+                const winIcon = winner.i || winner.icon || '🏆';
+                document.getElementById('winner-name').innerText = `${winIcon} ${winName}`;
                 document.getElementById('win-screen').classList.remove('hidden');
                 document.getElementById('roll-btn').classList.add('hidden');
+                // Broadcast final state so guests see the win screen
+                if (mpMode === 'host' && mpHost) {
+                    mpHost.broadcastState(mpHost.gameAdapter.getState());
+                }
             }
         }
     </script>

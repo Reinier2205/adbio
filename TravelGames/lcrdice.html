@@ -565,7 +565,9 @@
                     if (active.length === 1) {
                         const winner = active[0];
                         gameActive = false;
-                        document.getElementById('winner-name').innerText = `${winner.icon} ${winner.name}`;
+                        const winName = winner.name || winner.n || '?';
+                        const winIcon = winner.icon || winner.i || '🏆';
+                        document.getElementById('winner-name').innerText = `${winIcon} ${winName}`;
                         document.getElementById('win-pot').innerText = `${centerPot + winner.chips} CHIPS`;
                         document.getElementById('win-screen').classList.remove('hidden');
                         document.getElementById('roll-btn').disabled = true;
@@ -950,13 +952,18 @@
             if (playersWithChips.length === 1) {
                 const winner = playersWithChips[0];
                 const finalWinnings = centerPot + winner.chips;
-                
+                const winName = winner.name || winner.n || '?';
+                const winIcon = winner.icon || winner.i || '🏆';
                 gameActive = false;
-                document.getElementById('winner-name').innerText = `${winner.icon} ${winner.name}`;
+                document.getElementById('winner-name').innerText = `${winIcon} ${winName}`;
                 document.getElementById('win-pot').innerText = `${finalWinnings} CHIPS`;
                 document.getElementById('win-screen').classList.remove('hidden');
                 document.getElementById('roll-btn').disabled = true;
                 document.getElementById('action-msg').innerText = "GAME OVER!";
+                // Broadcast final state so guests see the win screen
+                if (mpMode === 'host' && mpHost) {
+                    mpHost.broadcastState(mpHost.gameAdapter.getState());
+                }
             }
         }
 
