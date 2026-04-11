@@ -438,31 +438,43 @@
                     };
                 },
                 applyState(state) {
+                    const isFirstState = players.length === 0 && state.players && state.players.length > 0;
                     if (state.players) players = state.players.map((p, idx) => ({ ...p, id: idx }));
                     if (state.centerPot !== undefined) centerPot = state.centerPot;
                     if (state.turnIndex !== undefined) turnIndex = state.turnIndex;
-                    if (players.length > 0) {
-                        // Remove waiting overlay and show game
+
+                    if (isFirstState) {
                         document.getElementById('lcr-mp-guest-waiting')?.remove();
                         document.getElementById('setup-screen').classList.add('hidden');
                         document.getElementById('roll-btn').classList.remove('hidden');
                         renderTable();
+                        updateUI();
+                        _updateTurnUI();
+                        return;
                     }
+
+                    // Show dice results if included
+                    if (state.lastDiceResults && state.lastDiceResults.length > 0) {
+                        const banner = document.getElementById('dice-results-banner');
+                        if (banner) {
+                            banner.innerHTML = '';
+                            state.lastDiceResults.forEach(val => {
+                                const badge = document.createElement('div');
+                                badge.className = 'bg-black/80 px-3 rounded font-bold text-lg border border-white/20';
+                                badge.innerText = val === '•' ? '●' : val;
+                                banner.appendChild(badge);
+                            });
+                        }
+                    }
+
                     if (state.pendingTargeting) {
                         targetingMode = state.pendingTargeting.mode;
-                        const isMine = (mpMode === 'host' && turnIndex === 0) ||
-                                       (mpMode === 'guest' && myPlayerIndex === turnIndex);
+                        const isMine = myPlayerIndex === turnIndex;
                         if (isMine) {
                             LCRMultiplayer.UI.showTargetingPanel({
                                 players, myIndex: turnIndex, mode: targetingMode,
                                 onSelect: (idx) => {
-                                    if (mpMode === 'guest') {
-                                        mpGuest.sendAction({ type: 'target', targetIndex: idx, mode: targetingMode });
-                                    } else if (mpMode === 'host') {
-                                        const newState = mpHost.gameAdapter.executeTarget(idx, targetingMode);
-                                        updateUI(); _updateTurnUI();
-                                        mpHost.broadcastState(newState);
-                                    }
+                                    mpGuest.sendAction({ type: 'target', targetIndex: idx, mode: targetingMode });
                                 }
                             });
                         } else {
@@ -471,9 +483,12 @@
                         }
                     } else {
                         targetingMode = null;
+                        document.getElementById('lcr-mp-targeting')?.remove();
                     }
+
                     updateUI();
                     _updateTurnUI();
+
                     const active = players.filter(p => p.chips > 0);
                     if (active.length === 1 && centerPot > 0) {
                         document.getElementById('winner-name').innerText = active[0].n;
@@ -703,15 +718,7 @@
             if(isProcessing) return;
             // Multi Device: guest sends roll to host
             if (mpMode === 'guest' && mpGuest) { mpGuest.sendAction({ type: 'roll' }); return; }
-            // Multi Device: host processes roll via adapter and broadcasts
-            if (mpMode === 'host' && mpHost) {
-                document.getElementById('roll-btn').disabled = true;
-                const newState = mpHost.gameAdapter.executeRoll();
-                updateUI();
-                _updateTurnUI();
-                mpHost.broadcastState(newState);
-                return;
-            }
+
             const p = players[turnIndex];
             
             isProcessing = true;
@@ -804,6 +811,14 @@
                            "TAP PLAYER TO STEAL ENTIRE PILE";
             msg.classList.add('text-green-400');
             updateUI();
+            // Multi-device: broadcast pending targeting state to guests
+            if (mpMode === 'host' && mpHost) {
+                const state = mpHost.gameAdapter.getState();
+                // Manually set pendingTargeting since adapter reads pendingDice
+                state.pendingTargeting = { mode, activePlayerIndex: turnIndex };
+                mpHost.broadcastState(state);
+                _updateTurnUI();
+            }
         }
 
         function handleSeatClick(idx) {
@@ -811,13 +826,7 @@
             if (mpMode === 'guest' && mpGuest && targetingMode) {
                 mpGuest.sendAction({ type: 'target', targetIndex: idx, mode: targetingMode });
                 targetingMode = null;
-                return;
-            }
-            // Multi Device: host resolves target via adapter and broadcasts
-            if (mpMode === 'host' && mpHost && targetingMode) {
-                const newState = mpHost.gameAdapter.executeTarget(idx, targetingMode);
-                updateUI(); _updateTurnUI();
-                mpHost.broadcastState(newState);
+                document.getElementById('lcr-mp-targeting')?.remove();
                 return;
             }
             if(!targetingMode || idx === turnIndex) return;
@@ -877,7 +886,20 @@
             isProcessing = false;
             checkWinner();
             if (!document.getElementById('win-screen').classList.contains('hidden')) return;
-            if (mpMode !== 'single') return; // multi-device: turn advance handled by host adapter
+
+            if (mpMode === 'host' && mpHost) {
+                // Advance turn on host, broadcast new state
+                turnIndex = (turnIndex + 1) % players.length;
+                while (players[turnIndex].chips === 0) {
+                    turnIndex = (turnIndex + 1) % players.length;
+                }
+                const newState = mpHost.gameAdapter.getState();
+                mpHost.broadcastState(newState);
+                _updateTurnUI();
+                return;
+            }
+
+            // Single device
             const nextP = players[(turnIndex + 1) % players.length];
             document.getElementById('action-msg').innerText = `Next Up: ${nextP.n}...`;
             setTimeout(nextTurn, 1500);

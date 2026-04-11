@@ -511,6 +511,8 @@
                 },
 
                 applyState(state) {
+                    const isFirstState = !gameActive && state.players && state.players.length > 0;
+
                     // Sync authoritative state from host broadcast
                     if (state.players) {
                         players = state.players.map((p, i) => ({
@@ -519,17 +521,37 @@
                     }
                     if (state.centerPot !== undefined) centerPot = state.centerPot;
                     if (state.turnIndex !== undefined) turnIndex = state.turnIndex;
-                    if (!gameActive && players.length > 0) {
+
+                    if (isFirstState) {
                         gameActive = true;
-                        // Remove waiting overlay
                         document.getElementById('lcr-mp-guest-waiting')?.remove();
                         document.getElementById('setup-screen').classList.add('hidden');
                         document.getElementById('win-screen').classList.add('hidden');
                         document.getElementById('roll-btn').disabled = false;
                         renderTable();
+                        updateUI();
+                        _updateTurnUI();
+                        return;
                     }
+
+                    // Show dice results if included
+                    if (state.lastDiceResults && state.lastDiceResults.length > 0) {
+                        const banner = document.getElementById('roll-result-banner');
+                        if (banner) {
+                            banner.innerHTML = '';
+                            state.lastDiceResults.forEach(val => {
+                                const badge = document.createElement('div');
+                                badge.className = 'roll-badge';
+                                badge.style.color = val === 'L' ? '#60a5fa' : val === 'R' ? '#f87171' : val === 'C' ? '#facc15' : '#fff';
+                                badge.innerText = val === '•' ? 'KEEP' : val;
+                                banner.appendChild(badge);
+                            });
+                        }
+                    }
+
                     updateUI();
                     _updateTurnUI();
+
                     // Check win
                     const active = players.filter(p => p.chips > 0);
                     if (active.length === 1) {
@@ -784,16 +806,7 @@
             if (isRolling || !gameActive) return;
             // Multi Device: guest sends roll request to host
             if (mpMode === 'guest' && mpGuest) { mpGuest.sendAction({ type: 'roll' }); return; }
-            // Multi Device: host processes roll via adapter and broadcasts
-            if (mpMode === 'host' && mpHost) {
-                document.getElementById('roll-btn').disabled = true;
-                const newState = mpHost.gameAdapter.executeRoll();
-                updateUI();
-                _updateTurnUI();
-                mpHost.broadcastState(newState);
-                checkWinState();
-                return;
-            }
+
             const currentPlayer = players[turnIndex];
             if (currentPlayer.chips === 0) { nextTurn(); return; }
 
@@ -839,6 +852,23 @@
                 
                 await processRollAnimate(rollResults);
                 isRolling = false;
+
+                // Multi Device host: advance turn via adapter then broadcast
+                if (mpMode === 'host' && mpHost) {
+                    // State already mutated by processRollAnimate; advance turn
+                    let next = (turnIndex + 1) % players.length;
+                    let safety = 0;
+                    while (players[next].chips === 0 && safety++ < players.length) {
+                        next = (next + 1) % players.length;
+                    }
+                    turnIndex = next;
+                    const newState = mpHost.gameAdapter.getState();
+                    newState.lastDiceResults = rollResults.map(i => DICE_VALUES[i]);
+                    mpHost.broadcastState(newState);
+                    _updateTurnUI();
+                    checkWinState();
+                    return;
+                }
 
                 if (gameActive) {
                     setTimeout(nextTurn, 1000);
