@@ -298,9 +298,10 @@
             init3D();
             const hashPin = _parseHashPin();
             if (hashPin) { _startGuestFlow(hashPin); return; }
-            LCRMultiplayer.UI.showModeSelection(
+            LCRMultiplayer.UI.showModeSelectionThree(
                 () => { mpMode = 'single'; initCharacterGrid(); },
-                () => _startHostFlow()
+                () => _startHostFlow(),
+                () => _startGuestFlow(null)
             );
         };
 
@@ -382,6 +383,9 @@
                     _showDiceAnimation(newState.lastDiceResults, newState.lastDiceIndices);
                 }
             };
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
+            _updateTurnUI();
+        }
 
         function _animateChipMovesRogue(moves, onDone) {
             let i = 0;
@@ -434,9 +438,6 @@
                 });
             }, 600);
         }
-            mpHost.broadcastState(mpHost.gameAdapter.getState());
-            _updateTurnUI();
-        }
 
         function _showGamePin(pin) {
             const existing = document.getElementById('lcr-game-pin');
@@ -467,9 +468,10 @@
                 onBack: () => {
                     pinUI.remove();
                     mpMode = 'single';
-                    LCRMultiplayer.UI.showModeSelection(
+                    LCRMultiplayer.UI.showModeSelectionThree(
                         () => { mpMode = 'single'; initCharacterGrid(); },
-                        () => _startHostFlow()
+                        () => _startHostFlow(),
+                        () => _startGuestFlow(null)
                     );
                 }
             });

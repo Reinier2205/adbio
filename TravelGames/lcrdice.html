@@ -444,37 +444,39 @@
                     _showDiceAnimation(newState.lastDiceResults, newState.lastDiceIndices);
                 }
             };
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
+            _updateTurnUI();
+        }
 
         async function _animateChipMoves(moves, onDone) {
             for (const move of moves) {
                 const fromId = `player-seat-${move.from}`;
                 const toId = move.to === -1 ? 'pot-area' : `player-seat-${move.to}`;
-                const fromEl = document.getElementById(fromId);
-                const toEl = document.getElementById(toId);
-                if (!fromEl || !toEl) continue;
+                if (!document.getElementById(fromId) || !document.getElementById(toId)) continue;
                 await animateChip(fromId, toId);
             }
             if (onDone) onDone();
         }
 
-        function _buildChipMoves(diceIndices, rollerIdx) {
+        function _buildChipMoves(diceIndices, rollerIdx, chipsAtRoll) {
             const moves = [];
             const n = players.length;
             const leftIdx = (rollerIdx + 1) % n;
             const rightIdx = (rollerIdx - 1 + n) % n;
-            let chips = players[rollerIdx].chips; // chips at time of roll (already mutated, use original)
-            // Reconstruct from dice
+            let chips = chipsAtRoll;
             for (const di of diceIndices) {
                 const res = DICE_VALUES[di];
                 if (res === '•') continue;
                 if (chips <= 0) break;
                 if (res === 'L') moves.push({ from: rollerIdx, to: leftIdx });
                 else if (res === 'R') moves.push({ from: rollerIdx, to: rightIdx });
-                else if (res === 'C') moves.push({ from: rollerIdx, to: -1 }); // -1 = pot
+                else if (res === 'C') moves.push({ from: rollerIdx, to: -1 });
                 chips--;
             }
             return moves;
         }
+
+        function _showDiceAnimation(results, indices) {
             diceGroup.clear();
             diceObjects.length = 0;
             const count = results.length;
@@ -504,9 +506,6 @@
                     }
                 });
             }, 600);
-        }
-            mpHost.broadcastState(mpHost.gameAdapter.getState());
-            _updateTurnUI();
         }
 
         function _showGamePin(pin) {
@@ -920,6 +919,7 @@
 
             const currentPlayer = players[turnIndex];
             const rollerIdx = turnIndex; // capture before animation mutates turnIndex
+            const chipsAtRoll = currentPlayer.chips; // capture before animation mutates chips
             if (currentPlayer.chips === 0) { nextTurn(); return; }
 
             isRolling = true;
@@ -977,7 +977,7 @@
                     newState.lastDiceResults = rollResults.map(i => DICE_VALUES[i]);
                     newState.lastDiceIndices = rollResults;
                     // Include chip moves for guest animation
-                    newState.lastChipMoves = _buildChipMoves(rollResults, rollerIdx);
+                    newState.lastChipMoves = _buildChipMoves(rollResults, rollerIdx, chipsAtRoll);
                     mpHost.broadcastState(newState);
                     _updateTurnUI();
                     checkWinState();

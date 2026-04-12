@@ -816,6 +816,50 @@ const LCRMultiplayerUI = (() => {
     return overlay;
   }
 
+  /**
+   * Three-button variant: Single Device / Host Game / Join Game.
+   * Used by lcrrogue so players can choose host or guest without an extra step.
+   *
+   * @param {Function} onSingleDevice — "ONE DEVICE"
+   * @param {Function} onHost         — "HOST GAME"
+   * @param {Function} onJoin         — "JOIN GAME"
+   */
+  function showModeSelectionThree(onSingleDevice, onHost, onJoin) {
+    _injectStyles();
+    const container = _getContainer();
+    const overlay = _createOverlay(200);
+    overlay.id = 'lcr-mp-mode-overlay';
+
+    const title = document.createElement('h2');
+    title.className = 'lcr-mp-title';
+    title.style.fontSize = '1.4rem';
+    title.textContent = 'HOW TO PLAY?';
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px';
+
+    function makeBtn(emoji, label, sub, handler) {
+      const btn = document.createElement('button');
+      btn.className = 'lcr-mp-btn lcr-mp-btn-lg';
+      btn.innerHTML = `${emoji} ${label}<span class="lcr-mp-btn-sub">${sub}</span>`;
+      btn.addEventListener('click', () => {
+        overlay.remove();
+        handler();
+      });
+      return btn;
+    }
+
+    row.appendChild(makeBtn('📱', 'ONE DEVICE', 'Pass the phone', onSingleDevice));
+    row.appendChild(makeBtn('👑', 'HOST GAME', 'Start & share PIN', onHost));
+    row.appendChild(makeBtn('🎮', 'JOIN GAME', 'Enter PIN to join', onJoin));
+
+    overlay.appendChild(title);
+    overlay.appendChild(row);
+    container.appendChild(overlay);
+
+    return overlay;
+  }
+
   // -------------------------------------------------------------------------
   // 2.2  showHostLobby
   // -------------------------------------------------------------------------
@@ -1310,6 +1354,7 @@ const LCRMultiplayerUI = (() => {
 
   return {
     showModeSelection,
+    showModeSelectionThree,
     showHostLobby,
     showGuestPinEntry,
     showGuestWaiting,
