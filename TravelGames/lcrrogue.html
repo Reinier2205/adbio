@@ -645,9 +645,9 @@
                         document.getElementById('lcr-mp-targeting')?.remove();
                     }
 
-                    // Win check
+                    // Win check — only when no targeting/dice still pending
                     const active = players.filter(p => p.chips > 0);
-                    if (active.length === 1 && centerPot > 0) {
+                    if (active.length === 1 && centerPot > 0 && !state.pendingTargeting && !(pendingDice.length > 0)) {
                         const winner = active[0];
                         document.getElementById('winner-name').innerText = `${winner.i || '🏆'} ${winner.n}`;
                         document.getElementById('win-screen').classList.remove('hidden');
@@ -1162,6 +1162,8 @@
         function toggleHelp() { document.getElementById('help-screen')?.classList.toggle('hidden'); }
 
         function checkWinner() {
+            // Don't declare a winner mid-turn while dice/targeting are still pending
+            if (pendingDice.length > 0 || targetingMode) return;
             const active = players.filter(p => p.chips > 0);
             if(active.length === 1 && centerPot > 0) {
                 const winner = active[0];
