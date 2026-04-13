@@ -394,12 +394,14 @@
                 const move = moves[i++];
                 const fromId = `seat-${move.from}`;
                 const toId = move.to === -1 ? 'dice-canvas-container' : `seat-${move.to}`;
-                animateChip(fromId, toId, next);
+                // Use requestAnimationFrame to ensure DOM is laid out before measuring
+                requestAnimationFrame(() => animateChip(fromId, toId, next));
             }
             next();
         }
 
         function _showDiceAnimation(results, indices) {
+            if (!diceGroup) return;
             diceGroup.clear();
             diceObjects.length = 0;
             const count = results.length;
@@ -451,7 +453,7 @@
 
         async function _startGuestFlow(pin) {
             mpMode = 'guest';
-            init3D();
+            // init3D is already called in window.onload — don't call again
             const adapter = _buildLcrRogueAdapter();
             mpGuest = new LCRMultiplayer.MultiplayerGuest(adapter);
             const pinUI = LCRMultiplayer.UI.showGuestPinEntry({
@@ -533,8 +535,10 @@
                     if (state.centerPot !== undefined) centerPot = state.centerPot;
                     if (state.turnIndex !== undefined) turnIndex = state.turnIndex;
 
-                    if (isFirstState) {
+                    // Always remove waiting/lobby overlays once game state arrives with players
+                    if (players.length > 0) {
                         document.getElementById('lcr-mp-guest-waiting')?.remove();
+                        document.getElementById('lcr-mp-mode-overlay')?.remove();
                         document.getElementById('setup-screen').classList.add('hidden');
                         document.getElementById('roll-btn').classList.remove('hidden');
                     }
@@ -551,7 +555,7 @@
                     if (state.lastDiceResults && state.lastDiceResults.length > 0) {
                         const results = state.lastDiceResults;
                         const indices = state.lastDiceIndices;
-                        diceGroup.clear();
+                        if (diceGroup) diceGroup.clear();
                         diceObjects.length = 0;
                         const count = results.length;
                         for (let i = 0; i < count; i++) {
@@ -658,6 +662,11 @@
                     else if (mode === 'STEAL') { if (players[targetIndex].chips > 0) { players[targetIndex].chips--; players[turnIndex].chips++; } }
                     else if (mode === 'SHINE_ALL') { players[turnIndex].chips += players[targetIndex].chips; players[targetIndex].chips = 0; }
                     pendingDice.shift();
+                    // Process any remaining C dice automatically before checking for more targeting
+                    while (pendingDice.length > 0 && pendingDice[0] === 'C') {
+                        players[turnIndex].chips--; centerPot++;
+                        pendingDice.shift();
+                    }
                     if (pendingDice.length === 0) { targetingMode = null; turnIndex = (turnIndex + 1) % players.length; }
                     else targetingMode = pendingDice[0] === 'P' ? 'PASS' : 'STEAL';
                     return this.getState();
@@ -834,6 +843,8 @@
                 if (mpMode === 'single') {
                     document.getElementById('roll-btn').disabled = false;
                     document.getElementById('roll-btn').classList.remove('opacity-0');
+                } else if (mpMode === 'host') {
+                    _updateTurnUI();
                 }
             }
         }
@@ -844,13 +855,14 @@
             if (mpMode === 'guest' && mpGuest) { mpGuest.sendAction({ type: 'roll' }); return; }
 
             const p = players[turnIndex];
+            if (!p || p.chips === 0) return;
             
             isProcessing = true;
             document.getElementById('roll-btn').disabled = true;
             document.getElementById('dice-results-banner').innerHTML = '';
             _chipMoves = []; // reset chip move tracker for this turn
             
-            diceGroup.clear();
+            if (diceGroup) diceGroup.clear();
             diceObjects.length = 0;
             const count = Math.min(p.chips, 3);
             for(let i=0; i<count; i++) {
@@ -866,7 +878,7 @@
                 });
                 const mesh = new THREE.Mesh(geometry, mats);
                 mesh.position.x = (i - (count-1)/2) * 1.3;
-                diceGroup.add(mesh);
+                if (diceGroup) diceGroup.add(mesh);
                 diceObjects.push({ mesh, rolling: true, v: { x:Math.random()*0.5, y:Math.random()*0.5, z:Math.random()*0.5 }});
             }
 
@@ -892,7 +904,11 @@
                     preState.lastDiceIndices = resultIndices;
                     mpHost.broadcastState(preState);
                 }
-                processRules(results);
+                processRules(results).catch(err => {
+                    console.error('processRules error:', err);
+                    isProcessing = false;
+                    document.getElementById('roll-btn').disabled = false;
+                });
             }, 800);
         }
 
@@ -1000,8 +1016,14 @@
         }
 
         function animateChip(fId, tId, cb) {
-            const f = document.getElementById(fId).getBoundingClientRect();
-            const t = document.getElementById(tId).getBoundingClientRect();
+            const fEl = document.getElementById(fId);
+            const tEl = document.getElementById(tId);
+            // If either element is missing, skip animation and just run callback
+            if (!fEl || !tEl) { if (cb) cb(); return; }
+            const f = fEl.getBoundingClientRect();
+            const t = tEl.getBoundingClientRect();
+            // If elements have no size (not rendered), skip animation
+            if (f.width === 0 && f.height === 0) { if (cb) cb(); return; }
             const c = document.createElement('div');
             c.className = 'flying-chip';
             c.style.left = `${f.left + f.width/2 - 10}px`;
@@ -1040,6 +1062,7 @@
                 newState.lastChipMoves = _chipMoves.slice();
                 _chipMoves = [];
                 mpHost.broadcastState(newState);
+                updateUI();
                 _updateTurnUI();
                 return;
             }
