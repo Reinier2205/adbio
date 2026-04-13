@@ -503,6 +503,14 @@
         }
 
         function _buildLcrRogueAdapter() {
+            // Shared helper: advance turnIndex skipping players with 0 chips
+            function _advanceTurn() {
+                let safety = 0;
+                do {
+                    turnIndex = (turnIndex + 1) % players.length;
+                    safety++;
+                } while (players[turnIndex].chips === 0 && safety < players.length);
+            }
             return {
                 gameType: 'lcrrogue',
                 getState() {
@@ -634,7 +642,7 @@
                         centerPot += players[turnIndex].chips;
                         players[turnIndex].chips = 0;
                         pendingDice = []; targetingMode = null;
-                        turnIndex = (turnIndex + 1) % players.length;
+                        _advanceTurn();
                         const s = this.getState(); s.lastDiceResults = results; return s;
                     }
                     if (counts['S'] >= 2) {
@@ -644,13 +652,13 @@
                     pendingDice = results.filter(r => r !== '•');
                     if (pendingDice.length === 0) {
                         targetingMode = null;
-                        turnIndex = (turnIndex + 1) % players.length;
+                        _advanceTurn();
                     } else {
                         const first = pendingDice[0];
                         if (first === 'C') {
                             players[turnIndex].chips--; centerPot++;
                             pendingDice.shift();
-                            if (pendingDice.length === 0) { targetingMode = null; turnIndex = (turnIndex + 1) % players.length; }
+                            if (pendingDice.length === 0) { targetingMode = null; _advanceTurn(); }
                             else targetingMode = pendingDice[0] === 'P' ? 'PASS' : 'STEAL';
                         } else {
                             targetingMode = first === 'P' ? 'PASS' : 'STEAL';
@@ -668,7 +676,7 @@
                         players[turnIndex].chips--; centerPot++;
                         pendingDice.shift();
                     }
-                    if (pendingDice.length === 0) { targetingMode = null; turnIndex = (turnIndex + 1) % players.length; }
+                    if (pendingDice.length === 0) { targetingMode = null; _advanceTurn(); }
                     else targetingMode = pendingDice[0] === 'P' ? 'PASS' : 'STEAL';
                     return this.getState();
                 },
@@ -856,7 +864,13 @@
             if (mpMode === 'guest' && mpGuest) { mpGuest.sendAction({ type: 'roll' }); return; }
 
             const p = players[turnIndex];
-            if (!p || p.chips === 0) return;
+            if (!p || p.chips === 0) {
+                // Host has no chips — skip their turn and broadcast
+                if (mpMode === 'host' && mpHost) {
+                    finishTurn();
+                }
+                return;
+            }
             
             isProcessing = true;
             document.getElementById('roll-btn').disabled = true;
