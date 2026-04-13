@@ -521,84 +521,82 @@
                     };
                 },
                 applyState(state) {
-                    const isFirstState = players.length === 0 && state.players && state.players.length > 0;
-                    if (state.players) players = state.players.map((p, idx) => {
-                        // Normalise: accept both {n,i} and {name,icon} field names
-                        return {
-                            n: p.n || p.name || '?',
-                            i: p.i || p.icon || '🎲',
-                            chips: p.chips,
-                            connected: p.connected,
-                            id: idx
-                        };
-                    });
+                    if (state.players) players = state.players.map((p, idx) => ({
+                        n: p.n || p.name || '?',
+                        i: p.i || p.icon || '🎲',
+                        chips: p.chips,
+                        connected: p.connected,
+                        id: idx
+                    }));
                     if (state.centerPot !== undefined) centerPot = state.centerPot;
                     if (state.turnIndex !== undefined) turnIndex = state.turnIndex;
 
-                    // Always remove waiting/lobby overlays once game state arrives with players
+                    // Remove waiting/lobby overlays once game state arrives
                     if (players.length > 0) {
                         document.getElementById('lcr-mp-guest-waiting')?.remove();
                         document.getElementById('lcr-mp-mode-overlay')?.remove();
                         document.getElementById('setup-screen').classList.add('hidden');
                         document.getElementById('roll-btn').classList.remove('hidden');
                     }
-                    // Always re-render table so seats stay in sync
+
                     renderTable();
+                    updateUI();
 
-                    // Animate chip moves if included, then update UI
-                    if (state.lastChipMoves && state.lastChipMoves.length > 0) {
-                        _animateChipMovesRogue(state.lastChipMoves, () => { updateUI(); _updateTurnUI(); });
-                    } else {
-                        updateUI();
-                        _updateTurnUI();
-                    }
+                    // Show dice animation if results included
                     if (state.lastDiceResults && state.lastDiceResults.length > 0) {
-                        const results = state.lastDiceResults;
-                        const indices = state.lastDiceIndices;
-                        if (diceGroup) diceGroup.clear();
-                        diceObjects.length = 0;
-                        const count = results.length;
-                        for (let i = 0; i < count; i++) {
-                            const geometry = new THREE.BoxGeometry(1, 1, 1);
-                            const mats = SYMBOLS.map(s => {
-                                const can = document.createElement('canvas'); can.width=128; can.height=128;
-                                const ctx = can.getContext('2d');
-                                ctx.fillStyle = s==='P'?'#4ade80':s==='S'?'#facc15':s==='C'?'#3b82f6':'#fff';
-                                ctx.fillRect(0,0,128,128);
-                                ctx.font = 'bold 80px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-                                ctx.fillStyle = '#000'; ctx.fillText(s==='•'?'●':s, 64, 64);
-                                return new THREE.MeshPhongMaterial({ map: new THREE.CanvasTexture(can) });
-                            });
-                            const mesh = new THREE.Mesh(geometry, mats);
-                            mesh.position.x = (i - (count-1)/2) * 1.3;
-                            diceGroup.add(mesh);
-                            diceObjects.push({ mesh, rolling: true, v: { x:0.4, y:0.3, z:0.2 }});
-                        }
-                        const banner = document.getElementById('dice-results-banner');
-                        if (banner) banner.innerHTML = '';
-                        setTimeout(() => {
-                            const rotations = [[0,0,Math.PI/2],[0,0,-Math.PI/2],[0,0,0],[Math.PI,0,0],[-Math.PI/2,0,0],[Math.PI/2,0,0]];
-                            results.forEach((val, idx) => {
-                                if (diceObjects[idx]) {
-                                    diceObjects[idx].rolling = false;
-                                    const ri = (indices && indices[idx] !== undefined) ? indices[idx] : Math.max(0, SYMBOLS.indexOf(val));
-                                    diceObjects[idx].mesh.rotation.set(...rotations[ri]);
-                                }
-                                if (banner) {
-                                    const badge = document.createElement('div');
-                                    badge.className = 'bg-black/80 px-3 rounded font-bold text-lg border border-white/20';
-                                    badge.innerText = val === '•' ? '●' : val;
-                                    banner.appendChild(badge);
-                                }
-                            });
-                        }, 600);
+                        try {
+                            const results = state.lastDiceResults;
+                            const indices = state.lastDiceIndices;
+                            if (diceGroup) diceGroup.clear();
+                            diceObjects.length = 0;
+                            const count = results.length;
+                            for (let i = 0; i < count; i++) {
+                                const geometry = new THREE.BoxGeometry(1, 1, 1);
+                                const mats = SYMBOLS.map(s => {
+                                    const can = document.createElement('canvas'); can.width=128; can.height=128;
+                                    const ctx = can.getContext('2d');
+                                    ctx.fillStyle = s==='P'?'#4ade80':s==='S'?'#facc15':s==='C'?'#3b82f6':'#fff';
+                                    ctx.fillRect(0,0,128,128);
+                                    ctx.font = 'bold 80px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                                    ctx.fillStyle = '#000'; ctx.fillText(s==='•'?'●':s, 64, 64);
+                                    return new THREE.MeshPhongMaterial({ map: new THREE.CanvasTexture(can) });
+                                });
+                                const mesh = new THREE.Mesh(geometry, mats);
+                                mesh.position.x = (i - (count-1)/2) * 1.3;
+                                if (diceGroup) diceGroup.add(mesh);
+                                diceObjects.push({ mesh, rolling: true, v: { x:0.4, y:0.3, z:0.2 }});
+                            }
+                            const banner = document.getElementById('dice-results-banner');
+                            if (banner) banner.innerHTML = '';
+                            setTimeout(() => {
+                                const rotations = [[0,0,Math.PI/2],[0,0,-Math.PI/2],[0,0,0],[Math.PI,0,0],[-Math.PI/2,0,0],[Math.PI/2,0,0]];
+                                results.forEach((val, idx) => {
+                                    if (diceObjects[idx]) {
+                                        diceObjects[idx].rolling = false;
+                                        const ri = (indices && indices[idx] !== undefined) ? indices[idx] : Math.max(0, SYMBOLS.indexOf(val));
+                                        diceObjects[idx].mesh.rotation.set(...rotations[ri]);
+                                    }
+                                    if (banner) {
+                                        const badge = document.createElement('div');
+                                        badge.className = 'bg-black/80 px-3 rounded font-bold text-lg border border-white/20';
+                                        badge.innerText = val === '•' ? '●' : val;
+                                        banner.appendChild(badge);
+                                    }
+                                });
+                            }, 600);
+                        } catch(e) { console.warn('dice anim error', e); }
                     }
 
+                    // Chip move animations (run after a short delay so DOM is laid out)
+                    if (state.lastChipMoves && state.lastChipMoves.length > 0) {
+                        setTimeout(() => _animateChipMovesRogue(state.lastChipMoves, () => {}), 100);
+                    }
+
+                    // Targeting panel
                     if (state.pendingTargeting) {
                         targetingMode = state.pendingTargeting.mode;
-                        const isMine = myPlayerIndex === turnIndex;
                         document.getElementById('lcr-mp-targeting')?.remove();
-                        if (isMine) {
+                        if (myPlayerIndex === turnIndex) {
                             LCRMultiplayer.UI.showTargetingPanel({
                                 players, myIndex: turnIndex, mode: targetingMode,
                                 onSelect: (idx) => {
@@ -614,15 +612,18 @@
                         document.getElementById('lcr-mp-targeting')?.remove();
                     }
 
+                    // Win check
                     const active = players.filter(p => p.chips > 0);
                     if (active.length === 1 && centerPot > 0) {
                         const winner = active[0];
-                        const winName = winner.n || winner.name || '?';
-                        const winIcon = winner.i || winner.icon || '🏆';
-                        document.getElementById('winner-name').innerText = `${winIcon} ${winName}`;
+                        document.getElementById('winner-name').innerText = `${winner.i || '🏆'} ${winner.n}`;
                         document.getElementById('win-screen').classList.remove('hidden');
                         document.getElementById('roll-btn').classList.add('hidden');
+                        return;
                     }
+
+                    // Always set button state last — this is the critical turn handoff
+                    _updateTurnUI();
                 },
                 executeRoll() {
                     const count = Math.min(players[turnIndex].chips, 3);
@@ -1053,13 +1054,16 @@
             if (!document.getElementById('win-screen').classList.contains('hidden')) return;
 
             if (mpMode === 'host' && mpHost) {
-                // Advance turn on host, broadcast new state
-                turnIndex = (turnIndex + 1) % players.length;
-                while (players[turnIndex].chips === 0) {
+                // Advance turn — skip players with no chips
+                let safety = 0;
+                do {
                     turnIndex = (turnIndex + 1) % players.length;
-                }
+                    safety++;
+                } while (players[turnIndex].chips === 0 && safety < players.length);
+
                 const newState = mpHost.gameAdapter.getState();
                 newState.lastChipMoves = _chipMoves.slice();
+                newState.lastDiceResults = []; // clear dice from previous turn
                 _chipMoves = [];
                 mpHost.broadcastState(newState);
                 updateUI();
