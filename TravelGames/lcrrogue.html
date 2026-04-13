@@ -532,6 +532,10 @@
                     };
                 },
                 applyState(state) {
+                    // Snapshot current chip counts BEFORE applying new state (needed for animation)
+                    const preMoveChips = players.map(p => p.chips);
+                    const preMovePot   = centerPot;
+
                     if (state.players) players = state.players.map((p, idx) => ({
                         n: p.n || p.name || '?',
                         i: p.i || p.icon || '🎲',
@@ -551,7 +555,6 @@
                     }
 
                     renderTable();
-                    updateUI();
 
                     // Show dice animation if results included
                     if (state.lastDiceResults && state.lastDiceResults.length > 0) {
@@ -598,9 +601,28 @@
                         } catch(e) { console.warn('dice anim error', e); }
                     }
 
-                    // Chip move animations (run after a short delay so DOM is laid out)
+                    // Chip move animations:
+                    // Show PRE-move counts first so the chip visibly travels from the right seat,
+                    // then snap to final counts once all animations complete.
                     if (state.lastChipMoves && state.lastChipMoves.length > 0) {
-                        setTimeout(() => _animateChipMovesRogue(state.lastChipMoves, () => {}), 100);
+                        const finalChips = players.map(p => p.chips);
+                        const finalPot   = centerPot;
+                        // Temporarily restore pre-move counts for the animation starting positions
+                        players.forEach((p, i) => { p.chips = preMoveChips[i] !== undefined ? preMoveChips[i] : p.chips; });
+                        centerPot = preMovePot;
+                        updateUI(); // render seats with pre-move chip counts
+                        setTimeout(() => {
+                            _animateChipMovesRogue(state.lastChipMoves, () => {
+                                // Animation done — apply final state and update turn
+                                players.forEach((p, i) => { p.chips = finalChips[i]; });
+                                centerPot = finalPot;
+                                updateUI();
+                                _updateTurnUI();
+                            });
+                        }, 50);
+                    } else {
+                        updateUI();
+                        _updateTurnUI();
                     }
 
                     // Targeting panel
@@ -633,8 +655,10 @@
                         return;
                     }
 
-                    // Always set button state last — this is the critical turn handoff
-                    _updateTurnUI();
+                    // Turn handoff only when not waiting for chip animation callback
+                    if (!(state.lastChipMoves && state.lastChipMoves.length > 0)) {
+                        _updateTurnUI();
+                    }
                 },
                 executeRoll() {
                     const count = Math.min(players[turnIndex].chips, 3);
