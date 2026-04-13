@@ -661,16 +661,20 @@
                     }
                 },
                 executeRoll() {
+                    _chipMoves = []; // reset for this turn
                     const count = Math.min(players[turnIndex].chips, 3);
                     const results = [];
                     for (let i = 0; i < count; i++) results.push(SYMBOLS[Math.floor(Math.random() * 6)]);
                     const counts = results.reduce((a, b) => { a[b] = (a[b] || 0) + 1; return a; }, {});
                     if (counts['C'] >= 2) {
-                        centerPot += players[turnIndex].chips;
-                        players[turnIndex].chips = 0;
+                        const roller = turnIndex;
+                        const chipsToMove = players[roller].chips;
+                        for (let k = 0; k < chipsToMove; k++) _chipMoves.push({ from: roller, to: -1 });
+                        centerPot += chipsToMove;
+                        players[roller].chips = 0;
                         pendingDice = []; targetingMode = null;
                         _advanceTurn();
-                        const s = this.getState(); s.lastDiceResults = results; return s;
+                        const s = this.getState(); s.lastDiceResults = results; s.lastChipMoves = _chipMoves.slice(); return s;
                     }
                     if (counts['S'] >= 2) {
                         pendingDice = ['SHINE_ALL']; targetingMode = 'SHINE_ALL';
@@ -683,6 +687,7 @@
                     } else {
                         const first = pendingDice[0];
                         if (first === 'C') {
+                            _chipMoves.push({ from: turnIndex, to: -1 });
                             players[turnIndex].chips--; centerPot++;
                             pendingDice.shift();
                             if (pendingDice.length === 0) { targetingMode = null; _advanceTurn(); }
@@ -691,21 +696,31 @@
                             targetingMode = first === 'P' ? 'PASS' : 'STEAL';
                         }
                     }
-                    const s = this.getState(); s.lastDiceResults = results; return s;
+                    const s = this.getState(); s.lastDiceResults = results; s.lastChipMoves = _chipMoves.slice(); return s;
                 },
                 executeTarget(targetIndex, mode) {
-                    if (mode === 'PASS') { players[turnIndex].chips--; players[targetIndex].chips++; }
-                    else if (mode === 'STEAL') { if (players[targetIndex].chips > 0) { players[targetIndex].chips--; players[turnIndex].chips++; } }
-                    else if (mode === 'SHINE_ALL') { players[turnIndex].chips += players[targetIndex].chips; players[targetIndex].chips = 0; }
+                    if (mode === 'PASS') {
+                        _chipMoves.push({ from: turnIndex, to: targetIndex });
+                        players[turnIndex].chips--; players[targetIndex].chips++;
+                    } else if (mode === 'STEAL') {
+                        if (players[targetIndex].chips > 0) {
+                            _chipMoves.push({ from: targetIndex, to: turnIndex });
+                            players[targetIndex].chips--; players[turnIndex].chips++;
+                        }
+                    } else if (mode === 'SHINE_ALL') {
+                        _chipMoves.push({ from: targetIndex, to: turnIndex });
+                        players[turnIndex].chips += players[targetIndex].chips; players[targetIndex].chips = 0;
+                    }
                     pendingDice.shift();
-                    // Process any remaining C dice automatically before checking for more targeting
+                    // Process any remaining C dice automatically
                     while (pendingDice.length > 0 && pendingDice[0] === 'C') {
+                        _chipMoves.push({ from: turnIndex, to: -1 });
                         players[turnIndex].chips--; centerPot++;
                         pendingDice.shift();
                     }
                     if (pendingDice.length === 0) { targetingMode = null; _advanceTurn(); }
                     else targetingMode = pendingDice[0] === 'P' ? 'PASS' : 'STEAL';
-                    return this.getState();
+                    const s = this.getState(); s.lastChipMoves = _chipMoves.slice(); return s;
                 },
                 requiresTargeting(dice) { return dice.some(d => d === 'P' || d === 'S'); },
                 handleDisconnect(playerIndex) {
