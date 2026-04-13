@@ -126,14 +126,17 @@
 
         .flying-chip {
             position: fixed;
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle at 30% 30%, #ff4d4d, #b30000);
-            border: 2px dashed rgba(255,255,255,0.4);
+            width: 28px;
+            height: 28px;
+            background: radial-gradient(circle at 30% 30%, #ff6b6b, #c0392b);
+            border: 3px solid rgba(255,255,255,0.7);
             border-radius: 50%;
-            z-index: 1000;
+            z-index: 9999;
             pointer-events: none;
-            transition: all 0.6s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+            box-shadow: 0 0 12px rgba(255,80,80,0.8), 0 4px 8px rgba(0,0,0,0.6);
+            transition: left 1.1s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        top 1.1s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        transform 1.1s ease;
         }
 
         .modal {
@@ -934,13 +937,26 @@
                 await showBanner('CHUCKLE', "Olaf's Giggles: Banish your chips!");
                 const chipsToMove = players[turnIndex].chips;
                 const rollerForMove = turnIndex;
-                centerPot += chipsToMove;
-                players[turnIndex].chips = 0;
-                if (mpMode === 'host') {
-                    for (let k = 0; k < chipsToMove; k++) _chipMoves.push({ from: rollerForMove, to: -1 });
+                // Animate all chips flying to center, then update state
+                let animated = 0;
+                const afterAll = () => {
+                    centerPot += chipsToMove;
+                    players[rollerForMove].chips = 0;
+                    if (mpMode === 'host') {
+                        for (let k = 0; k < chipsToMove; k++) _chipMoves.push({ from: rollerForMove, to: -1 });
+                    }
+                    updateUI();
+                    finishTurn();
+                };
+                if (chipsToMove === 0) { afterAll(); return; }
+                for (let k = 0; k < chipsToMove; k++) {
+                    setTimeout(() => {
+                        animateChip(`seat-${rollerForMove}`, 'dice-canvas-container', () => {
+                            animated++;
+                            if (animated === chipsToMove) afterAll();
+                        });
+                    }, k * 200);
                 }
-                updateUI();
-                finishTurn();
                 return;
             }
 
@@ -976,16 +992,27 @@
 
         function startTargeting(mode) {
             targetingMode = mode;
-            const msg = document.getElementById('action-msg');
-            msg.innerText = mode === 'PASS' ? "TAP A PLAYER TO GIVE CHIP" : 
-                           mode === 'STEAL' ? "TAP A PLAYER TO STEAL CHIP" : 
-                           "TAP PLAYER TO STEAL ENTIRE PILE";
-            msg.classList.add('text-green-400');
             updateUI();
+
+            // Always show the targeting modal (single, host, and guest)
+            document.getElementById('lcr-mp-targeting')?.remove();
+            LCRMultiplayer.UI.showTargetingPanel({
+                players,
+                myIndex: turnIndex,
+                mode,
+                onSelect: (idx) => {
+                    if (mpMode === 'guest' && mpGuest) {
+                        mpGuest.sendAction({ type: 'target', targetIndex: idx, mode });
+                        targetingMode = null;
+                    } else {
+                        handleSeatClick(idx);
+                    }
+                }
+            });
+
             // Multi-device: broadcast pending targeting state to guests
             if (mpMode === 'host' && mpHost) {
                 const state = mpHost.gameAdapter.getState();
-                // Manually set pendingTargeting since adapter reads pendingDice
                 state.pendingTargeting = { mode, activePlayerIndex: turnIndex };
                 mpHost.broadcastState(state);
                 _updateTurnUI();
@@ -993,7 +1020,7 @@
         }
 
         function handleSeatClick(idx) {
-            // Multi Device: guest sends target to host
+            // Multi Device: guest sends target to host (fallback — modal handles this now)
             if (mpMode === 'guest' && mpGuest && targetingMode) {
                 mpGuest.sendAction({ type: 'target', targetIndex: idx, mode: targetingMode });
                 targetingMode = null;
@@ -1003,6 +1030,7 @@
             if(!targetingMode || idx === turnIndex) return;
             const mode = targetingMode;
             targetingMode = null;
+            document.getElementById('lcr-mp-targeting')?.remove();
 
             if(mode === 'PASS') {
                 animateChip(`seat-${turnIndex}`, `seat-${idx}`, () => {
@@ -1033,25 +1061,25 @@
         function animateChip(fId, tId, cb) {
             const fEl = document.getElementById(fId);
             const tEl = document.getElementById(tId);
-            // If either element is missing, skip animation and just run callback
             if (!fEl || !tEl) { if (cb) cb(); return; }
             const f = fEl.getBoundingClientRect();
             const t = tEl.getBoundingClientRect();
-            // If elements have no size (not rendered), skip animation
             if (f.width === 0 && f.height === 0) { if (cb) cb(); return; }
             const c = document.createElement('div');
             c.className = 'flying-chip';
-            c.style.left = `${f.left + f.width/2 - 10}px`;
-            c.style.top = `${f.top + f.height/2 - 10}px`;
+            c.style.left = `${f.left + f.width/2 - 14}px`;
+            c.style.top  = `${f.top  + f.height/2 - 14}px`;
             document.body.appendChild(c);
-            
-            setTimeout(() => {
-                c.style.left = `${t.left + t.width/2 - 10}px`;
-                c.style.top = `${t.top + t.height/2 - 10}px`;
-                c.style.transform = 'scale(1.2) rotate(720deg)';
-            }, 50);
 
-            setTimeout(() => { c.remove(); if(cb) cb(); }, 650);
+            // Kick off movement on next frame so the initial position is painted first
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                c.style.left      = `${t.left + t.width/2 - 14}px`;
+                c.style.top       = `${t.top  + t.height/2 - 14}px`;
+                c.style.transform = 'scale(1.4) rotate(720deg)';
+            }));
+
+            // Remove after transition (1.1s) + small buffer
+            setTimeout(() => { c.remove(); if (cb) cb(); }, 1250);
         }
 
         async function showBanner(t, s) {
