@@ -143,8 +143,9 @@
             padding: 12px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 0;
+            overflow: hidden;
         }
 
         .die {
@@ -266,18 +267,19 @@
         <!-- DICE AREA -->
         <div class="dice-tray">
             <div id="dice-grid" class="grid grid-cols-5 gap-2 mb-4"></div>
-            
-            <div class="flex flex-col items-center gap-3">
-                <div class="bg-black/40 px-3 py-1 rounded-full border border-white/10">
-                    <span id="roll-count" class="text-[10px] font-bold text-zinc-400">ROLLS: 3/3</span>
-                </div>
-                <button id="roll-btn" class="btn-gold" onclick="handleRoll()">Roll Dice</button>
-                <button id="end-roll-btn" class="hidden text-[10px] text-white/50 underline uppercase" onclick="skipRolling()">Attack Now</button>
+        </div>
+
+        <!-- ROLL CONTROLS — always visible, never overlapped -->
+        <div class="flex flex-col items-center gap-2 flex-shrink-0">
+            <div class="bg-black/40 px-3 py-1 rounded-full border border-white/10">
+                <span id="roll-count" class="text-[10px] font-bold text-zinc-400">ROLLS: 3/3</span>
             </div>
+            <button id="roll-btn" class="btn-gold" onclick="handleRoll()">Roll Dice</button>
+            <button id="end-roll-btn" class="hidden text-[10px] text-white/50 underline uppercase" onclick="skipRolling()">Attack Now</button>
         </div>
 
         <!-- COMBAT MOVES -->
-        <div class="bg-black/30 p-4 rounded-xl border border-gold/10">
+        <div class="bg-black/30 p-4 rounded-xl border border-gold/10 flex-shrink-0">
             <p class="text-[10px] uppercase text-zinc-500 font-bold tracking-widest mb-3">Maneuvers</p>
             <div id="moves-list" class="moves-grid">
                 <button id="combo-straight" class="combo-btn" onclick="performAttack('Straight', 12)">
