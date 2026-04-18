@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Roller's Duel - Travel Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --felt-green: #0a4821;
+            --dark-wood: #2a1a1f;
+            --gold: #d4af37;
+            --gold-light: #ffd700;
+            --light-gold: #fff8e1;
+            --maroon: #800000;
+            --teal: #008080;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--dark-wood);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            color: var(--light-gold);
+        }
+
+        .casino-container {
+            background: var(--felt-green);
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 2px, transparent 2px);
+            background-size: 30px 30px;
+            border: 10px solid #4a2c2a;
+            box-shadow: 0 0 0 5px var(--gold), 0 20px 50px rgba(0,0,0,0.8);
+            border-radius: 24px;
+            width: 95vw;
+            height: 90vh;
+            max-width: 500px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 50px 15px 20px 15px;
+        }
+
+        .cinzel { font-family: 'Cinzel', serif; }
+
+        /* Navigation */
+        .nav-btn {
+            position: absolute;
+            top: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #111;
+            box-shadow: 0 4px 0 #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.1s;
+        }
+        .nav-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
+        .home-btn { left: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); }
+        .help-btn { right: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); color: #000; font-weight: bold; }
+
+        /* Stats Bar */
+        .health-bar-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--gold);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .health-fill {
+            height: 100%;
+            transition: width 0.5s ease-out;
+        }
+
+        /* Dice Tray */
+        .dice-tray {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            margin: 15px 0;
+            padding: 20px;
+            border: 2px dashed rgba(212, 175, 55, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dice-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .die {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: black;
+            font-size: 2rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #ccc, inset 0 0 8px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .die.held {
+            background: var(--gold-light);
+            box-shadow: 0 0 15px var(--gold-light), inset 0 0 8px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+        .die.rolling {
+            animation: shake 0.1s infinite;
+        }
+
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            75% { transform: rotate(-5deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* Modal styling */
+        .modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 500;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .modal.show { display: flex; }
+
+        .combo-btn {
+            width: 100%;
+            padding: 10px;
+            margin: 4px 0;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid transparent;
+            text-align: left;
+            font-size: 14px;
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+        .combo-btn.active {
+            opacity: 1;
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.2);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-gold {
+            background: radial-gradient(circle, var(--gold-light), var(--gold));
+            color: #2a1a1f;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #111;
+        }
+        .btn-gold:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
+        .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #111; }
+
+    </style>
+</head>
+<body>
+
+    <div class="casino-container">
+        <div class="nav-btn home-btn" onclick="location.reload()">🏠</div>
+        <div class="nav-btn help-btn" onclick="toggleModal('help-modal', true)">?</div>
+
+        <h1 class="cinzel text-center text-xl text-yellow-500">The High Roller's Duel</h1>
+
+        <!-- Opponent Area -->
+        <div class="mt-4 px-2">
+            <div class="flex justify-between items-end">
+                <span class="text-xs uppercase tracking-widest text-red-400">The Whale (Opponent)</span>
+                <span class="text-xs font-bold" id="p2-hp-text">50 / 50</span>
+            </div>
+            <div class="health-bar-container">
+                <div id="p2-hp-bar" class="health-fill bg-red-600" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <!-- Dice Tray -->
+        <div class="dice-tray">
+            <div id="dice-grid" class="dice-grid">
+                <!-- Dice generated here -->
+            </div>
+            
+            <div class="text-center">
+                <p id="roll-count" class="text-xs text-zinc-400 mb-2 uppercase tracking-tighter">Rolls Left: 3</p>
+                <button id="roll-btn" class="btn-gold" onclick="rollDice()">Roll Dice</button>
+            </div>
+        </div>
+
+        <!-- Combat Moves Area -->
+        <div id="moves-container" class="bg-black/30 p-3 rounded-xl border border-gold/30">
+            <p class="text-[10px] uppercase text-zinc-500 mb-2">Available Maneuvers (The Shark)</p>
+            <button id="combo-straight" class="combo-btn" onclick="triggerMove('straight', 8)">
+                <div class="flex justify-between">
+                    <span><b>Straight</b> (1-2-3-4-5)</span>
+                    <span class="text-gold">8 DMG</span>
+                </div>
+            </button>
+            <button id="combo-fullhouse" class="combo-btn" onclick="triggerMove('fullhouse', 6)">
+                <div class="flex justify-between">
+                    <span><b>Full House</b> (3+2)</span>
+                    <span class="text-gold">6 DMG</span>
+                </div>
+            </button>
+            <button id="combo-four" class="combo-btn" onclick="triggerMove('four', 5)">
+                <div class="flex justify-between">
+                    <span><b>Four of a Kind</b></span>
+                    <span class="text-gold">5 DMG</span>
+                </div>
+            </button>
+            <button id="combo-three" class="combo-btn" onclick="triggerMove('three', 3)">
+                <div class="flex justify-between">
+                    <span><b>Three of a Kind</b></span>
+                    <span class="text-gold">3 DMG</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Player Area -->
+        <div class="mt-4 px-2">
+            <div class="flex justify-between items-end">
+                <span class="text-xs uppercase tracking-widest text-teal-400">The Shark (You)</span>
+                <span class="text-xs font-bold" id="p1-hp-text">50 / 50</span>
+            </div>
+            <div class="health-bar-container">
+                <div id="p1-hp-bar" class="health-fill bg-teal-500" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="help-modal" class="modal show">
+            <div class="bg-[#3e1e24] border-2 border-gold p-6 rounded-xl max-w-sm">
+                <h2 class="cinzel text-xl text-gold mb-4">How to Play</h2>
+                <ul class="text-left text-xs space-y-3 leading-relaxed">
+                    <li>1. You get <strong>3 rolls</strong> per turn.</li>
+                    <li>2. Click dice to <strong>HOLD</strong> them before rolling again.</li>
+                    <li>3. Build combinations (Straights, Sets) to unlock maneuvers.</li>
+                    <li>4. Click an <strong>Active Maneuver</strong> (Glowing) to attack!</li>
+                    <li>5. After your turn, the Opponent will roll and attack you.</li>
+                </ul>
+                <button class="btn-gold mt-6" onclick="toggleModal('help-modal', false)">Start Duel</button>
+            </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal">
+            <div class="bg-[#3e1e24] border-2 border-gold p-8 rounded-xl">
+                <h2 class="cinzel text-3xl text-gold mb-2" id="result-title">VICTORY</h2>
+                <p class="text-white mb-6" id="result-msg">You out-rolled the house!</p>
+                <button class="btn-gold" onclick="location.reload()">New Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let p1Hp = 50;
+        let p2Hp = 50;
+        let rollsLeft = 3;
+        let dice = [1, 2, 3, 4, 5];
+        let held = [false, false, false, false, false];
+        let isRolling = false;
+        let turn = 'player'; // 'player' or 'opponent'
+
+        function initDice() {
+            const grid = document.getElementById('dice-grid');
+            grid.innerHTML = '';
+            dice.forEach((val, i) => {
+                const d = document.createElement('div');
+                d.className = `die ${held[i] ? 'held' : ''}`;
+                d.innerText = val;
+                d.onclick = () => toggleHold(i);
+                grid.appendChild(d);
+            });
+        }
+
+        function toggleHold(i) {
+            if (isRolling || rollsLeft === 3 || turn !== 'player') return;
+            held[i] = !held[i];
+            initDice();
+        }
+
+        function rollDice() {
+            if (rollsLeft <= 0 || isRolling || turn !== 'player') return;
+            
+            isRolling = true;
+            rollsLeft--;
+            document.getElementById('roll-count').innerText = `Rolls Left: ${rollsLeft}`;
+            
+            const diceEls = document.querySelectorAll('.die');
+            let frame = 0;
+            const interval = setInterval(() => {
+                diceEls.forEach((el, i) => {
+                    if (!held[i]) {
+                        dice[i] = Math.floor(Math.random() * 6) + 1;
+                        el.innerText = dice[i];
+                        el.classList.add('rolling');
+                    }
+                });
+                frame++;
+                if (frame > 10) {
+                    clearInterval(interval);
+                    diceEls.forEach(el => el.classList.remove('rolling'));
+                    isRolling = false;
+                    checkCombos();
+                    if (rollsLeft === 0) {
+                        document.getElementById('roll-btn').disabled = true;
+                    }
+                }
+            }, 80);
+        }
+
+        function checkCombos() {
+            const counts = {};
+            dice.forEach(v => counts[v] = (counts[v] || 0) + 1);
+            const vals = Object.values(counts);
+            const sorted = [...dice].sort();
+            
+            const hasThree = vals.some(v => v >= 3);
+            const hasFour = vals.some(v => v >= 4);
+            const hasFullHouse = vals.includes(3) && vals.includes(2);
+            const isStraight = /12345|23456/.test(sorted.join(''));
+
+            toggleCombo('combo-three', hasThree);
+            toggleCombo('combo-four', hasFour);
+            toggleCombo('combo-fullhouse', hasFullHouse);
+            toggleCombo('combo-straight', isStraight);
+        }
+
+        function toggleCombo(id, active) {
+            const btn = document.getElementById(id);
+            btn.classList.toggle('active', active);
+            btn.disabled = !active;
+        }
+
+        function triggerMove(type, dmg) {
+            if (turn !== 'player') return;
+            
+            p2Hp -= dmg;
+            updateHp();
+            
+            if (p2Hp <= 0) {
+                showResult(true);
+                return;
+            }
+
+            // End Turn
+            turn = 'opponent';
+            document.getElementById('roll-btn').disabled = true;
+            resetDice();
+            setTimeout(opponentTurn, 1000);
+        }
+
+        function updateHp() {
+            document.getElementById('p1-hp-text').innerText = `${Math.max(0, p1Hp)} / 50`;
+            document.getElementById('p2-hp-text').innerText = `${Math.max(0, p2Hp)} / 50`;
+            document.getElementById('p1-hp-bar').style.width = (p1Hp / 50 * 100) + '%';
+            document.getElementById('p2-hp-bar').style.width = (p2Hp / 50 * 100) + '%';
+        }
+
+        function opponentTurn() {
+            // Simplified AI logic: Rolls once and deals 2-8 dmg
+            const dmg = Math.floor(Math.random() * 7) + 2;
+            p1Hp -= dmg;
+            updateHp();
+
+            if (p1Hp <= 0) {
+                showResult(false);
+                return;
+            }
+
+            setTimeout(() => {
+                turn = 'player';
+                rollsLeft = 3;
+                document.getElementById('roll-count').innerText = `Rolls Left: ${rollsLeft}`;
+                document.getElementById('roll-btn').disabled = false;
+                resetDice();
+            }, 1000);
+        }
+
+        function resetDice() {
+            held = [false, false, false, false, false];
+            dice = [1, 2, 3, 4, 5];
+            initDice();
+            checkCombos();
+        }
+
+        function showResult(win) {
+            const modal = document.getElementById('result-modal');
+            document.getElementById('result-title').innerText = win ? "VICTORY" : "BUSTED";
+            document.getElementById('result-msg').innerText = win ? "You out-rolled the house!" : "The house always wins...";
+            modal.classList.add('show');
+        }
+
+        function toggleModal(id, show) {
+            document.getElementById(id).classList.toggle('show', show);
+        }
+
+        initDice();
+    </script>
+</body>
+</html>
