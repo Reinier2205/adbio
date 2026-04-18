@@ -226,12 +226,16 @@ function _parseHashPin() {
 
 ### Step 4: Implement Host Flow
 
+**IMPORTANT**: Set the correct maximum player count for your game in the MultiplayerHost constructor.
+
 ```javascript
 async function _startHostFlow() {
   mpMode = 'host';
   myPlayerIndex = 0;
   
   const adapter = _buildGameAdapter();
+  // ⚠️ CRITICAL: Set MAX_PLAYERS to your game's actual player count
+  // Examples: 2 for HRD, 3-10 for LCR, 4 for most card games
   mpHost = new LCRMultiplayer.MultiplayerHost(adapter, MAX_PLAYERS);
   
   try {
@@ -271,7 +275,25 @@ function _showHostLobby() {
   
   mpHost.onGuestPicked = (connections) => {
     lobbyUI.updateCount(connections.length + 1);
-    if (mpHost.allPicked()) lobbyUI.enableDealIn();
+    
+    // ⚠️ GAME-SPECIFIC: Customize this logic for your game's player requirements
+    // Default library logic: requires 3+ players (host + 2 guests)
+    // Override for games with different requirements:
+    
+    if (MAX_PLAYERS === 2) {
+      // 2-player games: enable when host + 1 guest picked
+      if (connections.length >= 1 && connections.every(e => e.picked) && mpHost._hostPickedName) {
+        lobbyUI.enableDealIn();
+      }
+    } else if (MAX_PLAYERS <= 4) {
+      // Small games: enable when all slots filled
+      if (connections.length >= (MAX_PLAYERS - 1) && connections.every(e => e.picked) && mpHost._hostPickedName) {
+        lobbyUI.enableDealIn();
+      }
+    } else {
+      // Large games: use default library logic (3+ players minimum)
+      if (mpHost.allPicked()) lobbyUI.enableDealIn();
+    }
   };
 }
 
