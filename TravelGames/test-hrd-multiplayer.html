@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRD Multiplayer Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>HRD Multiplayer Conversion Test</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        const results = document.getElementById('test-results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+        
+        function runTests() {
+            addResult('Starting HRD Multiplayer Tests...', 'info');
+            
+            // Test 1: Check if multiplayer library is available
+            try {
+                if (typeof LCRMultiplayer !== 'undefined') {
+                    addResult('✓ LCRMultiplayer library is available', 'pass');
+                } else {
+                    addResult('✗ LCRMultiplayer library not found', 'fail');
+                }
+            } catch (e) {
+                addResult('✗ Error checking LCRMultiplayer: ' + e.message, 'fail');
+            }
+            
+            // Test 2: Check if required UI methods exist
+            try {
+                const requiredMethods = [
+                    'showModeSelectionThree',
+                    'showHostLobby', 
+                    'showGuestPinEntry',
+                    'showGuestCharacterPicker',
+                    'showActiveTurnBanner',
+                    'showSpectatorBanner'
+                ];
+                
+                let allMethodsExist = true;
+                requiredMethods.forEach(method => {
+                    if (typeof LCRMultiplayer.UI[method] !== 'function') {
+                        addResult(`✗ Missing UI method: ${method}`, 'fail');
+                        allMethodsExist = false;
+                    }
+                });
+                
+                if (allMethodsExist) {
+                    addResult('✓ All required UI methods are available', 'pass');
+                }
+            } catch (e) {
+                addResult('✗ Error checking UI methods: ' + e.message, 'fail');
+            }
+            
+            // Test 3: Check if MultiplayerHost and MultiplayerGuest classes exist
+            try {
+                if (typeof LCRMultiplayer.MultiplayerHost === 'function') {
+                    addResult('✓ MultiplayerHost class is available', 'pass');
+                } else {
+                    addResult('✗ MultiplayerHost class not found', 'fail');
+                }
+                
+                if (typeof LCRMultiplayer.MultiplayerGuest === 'function') {
+                    addResult('✓ MultiplayerGuest class is available', 'pass');
+                } else {
+                    addResult('✗ MultiplayerGuest class not found', 'fail');
+                }
+            } catch (e) {
+                addResult('✗ Error checking multiplayer classes: ' + e.message, 'fail');
+            }
+            
+            addResult('Test completed! Check results above.', 'info');
+        }
+        
+        // Load the multiplayer library and run tests
+        const script = document.createElement('script');
+        script.src = 'lcr-multiplayer.js';
+        script.onload = runTests;
+        script.onerror = () => addResult('✗ Failed to load lcr-multiplayer.js', 'fail');
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

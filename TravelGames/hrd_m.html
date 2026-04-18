@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>High Roller's Duel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="lcr-multiplayer.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -303,6 +304,11 @@
         .home-btn { left: 12px;  background: radial-gradient(circle, var(--gold-light), var(--gold)); }
         .help-btn { right: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); }
 
+        /* CASINO CONTAINER - for multiplayer UI compatibility */
+        .casino-container { 
+            position: relative; 
+        }
+
         /* MODE MODAL — full style-guide treatment */
         .mode-screen {
             position: absolute; inset: 0; z-index: 150;
@@ -375,7 +381,7 @@
 </head>
 <body>
 <div class="shell">
-<div class="card">
+<div class="card casino-container">
 
     <!-- NAV BUTTONS (always visible over modals) -->
     <button class="nav-btn home-btn" onclick="confirmHome()" aria-label="Home">🏠</button>
@@ -393,7 +399,7 @@
             <div id="p2-cp-row" class="hidden p-cp">CR: <span id="p2-cp">0</span></div>
         </div>
         <div id="status-p1" class="player-panel">
-            <div class="p-name text-teal-400">The Shark</div>
+            <div class="p-name text-teal-400" id="p1-label">The Shark</div>
             <div class="orb" style="border-color:#2dd4bf">
                 <div id="p1-orb" class="orb-fill bg-teal-500" style="height:100%"><div class="orb-wave"></div></div>
             </div>
@@ -498,48 +504,452 @@
 </div>
 
 <script>
-    const MAX_HP = 50;
-    let gameMode = 'ai', activePlayer = 1;
-    let p1 = { hp: MAX_HP, cp: 0, name: 'The Shark' };
-    let p2 = { hp: MAX_HP, cp: 0, name: 'The House' };
-    let rollsLeft = 3, dice = [1,2,3,4,5], held = [false,false,false,false,false], isRolling = false;
+    // === MULTIPLAYER VARIABLES ===
+    let mpMode = 'single'; // 'single' | 'host' | 'guest'
+    let mpHost = null;
+    let mpGuest = null;
+    let mpLobbyUI = null;
+    let myPlayerIndex = null;
 
+    // === GAME VARIABLES ===
+    const MAX_HP = 50;
+    const CHARACTERS = [
+        {name:'The Shark', icon:'🦈'}, {name:'The House', icon:'🏠'}, {name:'The Whale', icon:'🐋'}, 
+        {name:'The Wolf', icon:'🐺'}, {name:'The Eagle', icon:'🦅'}, {name:'The Tiger', icon:'🐅'},
+        {name:'The Dragon', icon:'🐉'}, {name:'The Phoenix', icon:'🔥'}, {name:'The Viper', icon:'🐍'}
+    ];
+    
+    let players = [];
+    let activePlayer = 0;
+    let rollsLeft = 3;
+    let dice = [1,2,3,4,5];
+    let held = [false,false,false,false,false];
+    let isRolling = false;
+
+    // === UTILITY FUNCTIONS ===
     const $ = id => document.getElementById(id);
     const log = msg => $('log').innerText = msg;
     const toggleModal = (id, show) => $(id).classList.toggle('hidden', !show);
 
-    function startGame(mode) {
-        gameMode = mode;
+    // === MULTIPLAYER INITIALIZATION ===
+    window.onload = () => {
+        // Check for PIN in URL hash (e.g., #LCP:1234)
+        const hashPin = _parseHashPin();
+        if (hashPin) {
+            _startGuestFlow(hashPin);
+            return;
+        }
+
+        // Show mode selection
+        LCRMultiplayer.UI.showModeSelectionThree(
+            () => { mpMode = 'single'; _showSinglePlayerModes(); },
+            () => _startHostFlow(),
+            () => _startGuestFlow(null)
+        );
+    };
+
+    function _parseHashPin() {
+        const m = window.location.hash.match(/^#LCP:(\d{4})$/);
+        return m ? m[1] : null;
+    }
+
+    function _showSinglePlayerModes() {
+        // Show the original mode selection for single device
+        document.getElementById('mode-modal').classList.remove('hidden');
+    }
+
+    // === HOST FLOW ===
+    async function _startHostFlow() {
+        mpMode = 'host';
+        myPlayerIndex = 0;
+        
+        const adapter = _buildGameAdapter();
+        mpHost = new LCRMultiplayer.MultiplayerHost(adapter, 9);
+        
+        try {
+            await mpHost.open();
+        } catch(e) {
+            LCRMultiplayer.UI.showToast('Could not connect — check your internet');
+            mpMode = 'single';
+            _showSinglePlayerModes();
+            return;
+        }
+        
+        // Host picks character first
+        _showHostCharacterPicker();
+    }
+
+    function _showHostCharacterPicker() {
+        const pickerUI = LCRMultiplayer.UI.showGuestCharacterPicker({
+            pool: CHARACTERS.map(c => ({ name: c.name, icon: c.icon })),
+            takenNames: [],
+            onPick: ({ name, icon }) => {
+                mpHost.hostPick(name, icon);
+                _showHostLobby();
+            }
+        });
+        const titleEl = document.querySelector('#lcr-mp-guest-picker h2');
+        if (titleEl) titleEl.textContent = 'PICK YOUR CHARACTER';
+    }
+
+    function _showHostLobby() {
+        document.getElementById('mode-modal').style.display = 'none';
+        mpLobbyUI = LCRMultiplayer.UI.showHostLobby({
+            pin: mpHost.pin,
+            onShareLink: () => _shareLink(mpHost.pin),
+            onDealIn: () => _dealIn(),
+            gameType: 'hrd'
+        });
+        
+        mpHost.onGuestConnected = (count) => {
+            if (mpLobbyUI) mpLobbyUI.updateCount(count + 1);
+        };
+        
+        mpHost.onGuestPicked = (connections) => {
+            if (mpLobbyUI) {
+                mpLobbyUI.updateCount(connections.length + 1);
+                if (mpHost.allPicked()) mpLobbyUI.enableDealIn();
+            }
+        };
+        
+        mpLobbyUI.updateCount(mpHost.connections.length + 1);
+    }
+
+    function _dealIn() {
+        const picks = mpHost.buildPlayersFromPicks();
+        players = picks.map((p, i) => ({ 
+            name: p.name, 
+            icon: p.icon, 
+            hp: MAX_HP, 
+            cp: 0, 
+            id: i,
+            connected: true 
+        }));
+        
+        activePlayer = 0;
+        rollsLeft = 3;
+        held = [false,false,false,false,false];
+        isRolling = false;
+        
         document.getElementById('mode-modal').classList.add('hidden');
-        if (mode === 'pvp') {
-            p2.name = 'The Whale';
-            $('p2-label').innerText = 'The Whale';
+        startTurn();
+        
+        if (mpLobbyUI) { mpLobbyUI.remove(); mpLobbyUI = null; }
+        
+        // Show PIN persistently for reconnects
+        _showGamePin(mpHost.pin);
+        
+        // Listen for state changes from guest actions
+        mpHost.onStateChange = (newState) => {
+            updateUI();
+            _updateTurnUI();
+            checkWinner();
+        };
+        
+        mpHost.broadcastState(mpHost.gameAdapter.getState());
+        _updateTurnUI();
+    }
+
+    function _shareLink(pin) {
+        const url = window.location.href.split('#')[0] + '#LCP:' + pin;
+        if (navigator.share) {
+            navigator.share({ title: 'Join my High Roller Duel!', url });
+        } else {
+            navigator.clipboard.writeText(url).then(() => 
+                LCRMultiplayer.UI.showToast('Link copied!')
+            );
+        }
+    }
+
+    function _showGamePin(pin) {
+        const existing = document.getElementById('lcr-game-pin');
+        if (existing) existing.remove();
+        
+        const el = document.createElement('div');
+        el.id = 'lcr-game-pin';
+        el.style.cssText = 'position:fixed;top:8px;right:8px;background:rgba(0,0,0,0.75);border:1px solid #d4af37;border-radius:8px;padding:4px 10px;font-family:Cinzel,serif;font-size:0.65rem;color:#ffd700;z-index:500;pointer-events:none;letter-spacing:0.1em';
+        el.textContent = `PIN: ${pin}`;
+        document.body.appendChild(el);
+    }
+
+    // === GUEST FLOW ===
+    async function _startGuestFlow(pin) {
+        mpMode = 'guest';
+        
+        const adapter = _buildGameAdapter();
+        mpGuest = new LCRMultiplayer.MultiplayerGuest(adapter);
+        
+        const pinUI = LCRMultiplayer.UI.showGuestPinEntry({
+            prefillPin: pin || '',
+            onConnect: async (enteredPin) => {
+                try {
+                    await mpGuest.connect(enteredPin);
+                    pinUI.remove();
+                    _showGuestCharacterPicker();
+                } catch(e) {
+                    pinUI.showError('Host not found — check PIN');
+                }
+            },
+            onBack: () => {
+                pinUI.remove();
+                mpMode = 'single';
+                LCRMultiplayer.UI.showModeSelectionThree(
+                    () => { mpMode = 'single'; _showSinglePlayerModes(); },
+                    () => _startHostFlow(),
+                    () => _startGuestFlow(null)
+                );
+            }
+        });
+    }
+
+    let _guestPickerUI = null;
+
+    function _showGuestCharacterPicker() {
+        _guestPickerUI = LCRMultiplayer.UI.showGuestCharacterPicker({
+            pool: CHARACTERS.map(c => ({ name: c.name, icon: c.icon })),
+            takenNames: mpGuest._lobbyTakenNames || [],
+            onPick: ({ name, icon }) => {
+                _guestPickerUI = null;
+                mpGuest.sendAction({ type: 'pick', name, icon });
+                LCRMultiplayer.UI.showGuestWaiting();
+            }
+        });
+        
+        mpGuest.onLobbyState = (takenNames) => {
+            if (_guestPickerUI) _guestPickerUI.updateTaken(takenNames);
+        };
+    }
+
+    // === GAME ADAPTER ===
+    function _buildGameAdapter() {
+        function _advanceTurn() {
+            let safety = 0;
+            do {
+                activePlayer = (activePlayer + 1) % players.length;
+                safety++;
+            } while (players[activePlayer].hp <= 0 && safety < players.length);
+        }
+
+        return {
+            gameType: 'hrd',
+            getState() {
+                return {
+                    players: players.map(p => ({
+                        name: p.name,
+                        icon: p.icon,
+                        hp: p.hp,
+                        cp: p.cp,
+                        connected: p.connected !== false
+                    })),
+                    turnIndex: activePlayer, // Use turnIndex for multiplayer compatibility
+                    activePlayer,
+                    rollsLeft,
+                    dice: [...dice],
+                    held: [...held],
+                    isRolling,
+                    lastDiceResults: [],
+                    lastAttack: null
+                };
+            },
+            
+            applyState(state) {
+                if (state.players) {
+                    players = state.players.map((p, idx) => ({
+                        name: p.name,
+                        icon: p.icon,
+                        hp: p.hp,
+                        cp: p.cp,
+                        connected: p.connected,
+                        id: idx
+                    }));
+                }
+                
+                if (state.turnIndex !== undefined) activePlayer = state.turnIndex;
+                if (state.activePlayer !== undefined) activePlayer = state.activePlayer;
+                if (state.rollsLeft !== undefined) rollsLeft = state.rollsLeft;
+                if (state.dice) dice = [...state.dice];
+                if (state.held) held = [...state.held];
+                if (state.isRolling !== undefined) isRolling = state.isRolling;
+                
+                // Remove waiting/lobby overlays once game state arrives
+                if (players.length > 0) {
+                    document.getElementById('lcr-mp-guest-waiting')?.remove();
+                    document.getElementById('lcr-mp-mode-overlay')?.remove();
+                    document.getElementById('mode-modal').classList.add('hidden');
+                }
+                
+                updateUI();
+                _updateTurnUI();
+                checkWinner();
+            },
+            
+            executeRoll() {
+                if (rollsLeft <= 0 || isRolling) return this.getState();
+                
+                isRolling = true;
+                rollsLeft--;
+                
+                // Roll unheld dice
+                for (let i = 0; i < dice.length; i++) {
+                    if (!held[i]) {
+                        dice[i] = Math.floor(Math.random() * 6) + 1;
+                    }
+                }
+                
+                // Simulate rolling animation delay
+                setTimeout(() => {
+                    isRolling = false;
+                    if (mpMode === 'host' && mpHost) {
+                        mpHost.broadcastState(this.getState());
+                    }
+                }, 500);
+                
+                const s = this.getState();
+                s.lastDiceResults = [...dice];
+                return s;
+            },
+            
+            // Use executeTarget for attacks (overloading the interface)
+            executeTarget(attackData, mode) {
+                if (typeof attackData === 'object' && attackData.attackName) {
+                    // This is an attack action
+                    const { attackName, damage } = attackData;
+                    const target = activePlayer === 0 ? 1 : 0;
+                    if (players[target]) {
+                        players[target].hp = Math.max(0, players[target].hp - damage);
+                    }
+                    
+                    // Add credits to current player
+                    if (players[activePlayer]) {
+                        players[activePlayer].cp++;
+                    }
+                    
+                    // Reset for next turn
+                    rollsLeft = 3;
+                    held = [false,false,false,false,false];
+                    _advanceTurn();
+                    
+                    const s = this.getState();
+                    s.lastAttack = { player: activePlayer, name: attackName, damage };
+                    return s;
+                } else if (mode === 'heal') {
+                    // This is a heal action
+                    const player = players[activePlayer];
+                    if (player && player.cp >= 2 && player.hp < MAX_HP) {
+                        player.cp -= 2;
+                        player.hp = Math.min(MAX_HP, player.hp + 5);
+                    }
+                    return this.getState();
+                }
+                
+                // Fallback for other target actions
+                return this.getState();
+            },
+            
+            handleDisconnect(playerIndex) {
+                if (players[playerIndex]) {
+                    players[playerIndex].connected = false;
+                    players[playerIndex].hp = 0; // Eliminate disconnected player
+                    LCRMultiplayer.UI.showToast(`${players[playerIndex].name} disconnected`);
+                    if (activePlayer === playerIndex) _advanceTurn();
+                }
+                return this.getState();
+            },
+            
+            onAssigned(idx) { 
+                myPlayerIndex = idx; 
+            },
+            
+            onHostDisconnected() { 
+                LCRMultiplayer.UI.showHostDisconnected(); 
+            }
+        };
+    }
+
+    function _updateTurnUI() {
+        if (mpMode === 'single') return;
+        
+        // Remove old banners
+        document.getElementById('lcr-mp-spectator-banner')?.remove();
+        document.getElementById('lcr-mp-active-banner')?.remove();
+        
+        const isMine = myPlayerIndex === activePlayer;
+        
+        // Disable/enable controls
+        document.getElementById('roll-btn').disabled = !isMine || rollsLeft === 0 || isRolling;
+        
+        // Show appropriate banner
+        if (isMine) {
+            LCRMultiplayer.UI.showActiveTurnBanner();
+        } else if (players[activePlayer]) {
+            LCRMultiplayer.UI.showSpectatorBanner(players[activePlayer].name);
+        }
+    }
+
+    // === SINGLE DEVICE GAME FUNCTIONS ===
+    function startGame(mode) {
+        mpMode = 'single';
+        
+        if (mode === 'ai') {
+            players = [
+                { name: 'The Shark', icon: '🦈', hp: MAX_HP, cp: 0, id: 0 },
+                { name: 'The House', icon: '🏠', hp: MAX_HP, cp: 0, id: 1 }
+            ];
+        } else {
+            players = [
+                { name: 'The Shark', icon: '🦈', hp: MAX_HP, cp: 0, id: 0 },
+                { name: 'The Whale', icon: '🐋', hp: MAX_HP, cp: 0, id: 1 }
+            ];
             $('p2-cp-row').classList.remove('hidden');
         }
+        
+        activePlayer = 0;
+        document.getElementById('mode-modal').classList.add('hidden');
         startTurn();
     }
 
     function startTurn() {
         rollsLeft = 3;
         held = [false,false,false,false,false];
-        if (activePlayer === 1) { p1.cp++; log(`${p1.name}'s turn.`); }
-        else if (gameMode === 'pvp') { p2.cp++; log(`${p2.name}'s turn.`); }
+        
+        if (players[activePlayer]) {
+            players[activePlayer].cp++;
+            log(`${players[activePlayer].name}'s turn.`);
+        }
+        
         updateUI();
+        
+        if (mpMode === 'host') {
+            _updateTurnUI();
+        }
     }
 
     function updateUI() {
-        $('p1-hp').innerText = p1.hp;
-        $('p2-hp').innerText = p2.hp;
-        $('p1-orb').style.height = (p1.hp / MAX_HP * 100) + '%';
-        $('p2-orb').style.height = (p2.hp / MAX_HP * 100) + '%';
-        $('p1-cp').innerText = p1.cp;
-        $('p2-cp').innerText = p2.cp;
-        $('status-p1').classList.toggle('active', activePlayer === 1);
-        $('status-p2').classList.toggle('active', activePlayer === 2);
+        // Update player displays
+        if (players[0]) {
+            $('p1-label').innerText = players[0].name + (mpMode !== 'single' && 0 === myPlayerIndex ? ' (YOU)' : '');
+            $('p1-hp').innerText = players[0].hp;
+            $('p1-orb').style.height = (players[0].hp / MAX_HP * 100) + '%';
+            $('p1-cp').innerText = players[0].cp;
+        }
+        
+        if (players[1]) {
+            $('p2-label').innerText = players[1].name + (mpMode !== 'single' && 1 === myPlayerIndex ? ' (YOU)' : '');
+            $('p2-hp').innerText = players[1].hp;
+            $('p2-orb').style.height = (players[1].hp / MAX_HP * 100) + '%';
+            $('p2-cp').innerText = players[1].cp;
+        }
+        
+        // Update active player highlighting
+        $('status-p1').classList.toggle('active', activePlayer === 0);
+        $('status-p2').classList.toggle('active', activePlayer === 1);
+        
+        // Update roll controls
         $('roll-count').innerText = `ROLLS: ${rollsLeft} / 3`;
-        $('roll-btn').disabled = rollsLeft === 0 || isRolling || (gameMode === 'ai' && activePlayer === 2);
+        $('roll-btn').disabled = rollsLeft === 0 || isRolling || (mpMode === 'single' && players.length > 1 && players[1].name === 'The House' && activePlayer === 1);
         $('attack-now-btn').classList.toggle('hidden', !(rollsLeft < 3 && rollsLeft > 0));
 
+        // Update dice display
         const grid = $('dice-grid');
         grid.innerHTML = '';
         const preRoll = rollsLeft === 3;
@@ -550,31 +960,64 @@
             d.addEventListener('click', () => toggleHold(i));
             grid.appendChild(d);
         });
+        
         checkCombos();
     }
 
     function toggleHold(i) {
         if (isRolling || rollsLeft === 3) return;
+        if (mpMode !== 'single' && myPlayerIndex !== activePlayer) return;
+        
         held[i] = !held[i];
         updateUI();
     }
 
     async function handleRoll() {
         if (rollsLeft <= 0 || isRolling) return;
-        isRolling = true; rollsLeft--;
+        
+        // Guest sends action to host
+        if (mpMode === 'guest' && mpGuest) {
+            mpGuest.sendAction({ type: 'roll' });
+            return;
+        }
+        
+        // Host or single-device: execute locally
+        isRolling = true;
+        rollsLeft--;
+        
         const els = document.querySelectorAll('.die');
         for (let f = 0; f < 8; f++) {
             els.forEach((el, i) => {
-                if (!held[i]) { dice[i] = Math.floor(Math.random()*6)+1; el.innerText = dice[i]; el.classList.add('rolling'); }
+                if (!held[i]) {
+                    dice[i] = Math.floor(Math.random() * 6) + 1;
+                    el.innerText = dice[i];
+                    el.classList.add('rolling');
+                }
             });
             await new Promise(r => setTimeout(r, 60));
         }
+        
         els.forEach(el => el.classList.remove('rolling'));
         isRolling = false;
+        
+        // Host broadcasts new state
+        if (mpMode === 'host' && mpHost) {
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
+        }
+        
         updateUI();
+        
+        // AI opponent turn for single device
+        if (mpMode === 'single' && players[1] && players[1].name === 'The House' && activePlayer === 1) {
+            setTimeout(opponentTurn, 1000);
+        }
     }
 
-    function skipRolling() { rollsLeft = 0; updateUI(); }
+    function skipRolling() {
+        if (mpMode !== 'single' && myPlayerIndex !== activePlayer) return;
+        rollsLeft = 0;
+        updateUI();
+    }
 
     function checkCombos() {
         const counts = {};
@@ -586,61 +1029,147 @@
         const hasFullHouse = (vals.includes(3) && vals.includes(2)) || vals.filter(v=>v>=3).length > 1;
         const isStraight   = str.includes('12345') || str.includes('23456');
         const rolled = rollsLeft < 3;
-        const can    = (gameMode === 'pvp' || activePlayer === 1) && rolled;
-        setCombo('combo-straight',  isStraight   && can);
-        setCombo('combo-fullhouse', hasFullHouse  && can);
-        setCombo('combo-four',      hasFour       && can);
-        setCombo('combo-base',                       can);
+        const canAttack = rolled && (mpMode === 'single' || myPlayerIndex === activePlayer);
+        setCombo('combo-straight',  isStraight   && canAttack);
+        setCombo('combo-fullhouse', hasFullHouse && canAttack);
+        setCombo('combo-four',      hasFour      && canAttack);
+        setCombo('combo-base',                      canAttack);
     }
 
     function setCombo(id, active) { $(id).classList.toggle('active', active); }
 
     async function performAttack(name, dmg) {
-        if (activePlayer === 1) { p2.hp = Math.max(0, p2.hp-dmg); log(`${p1.name} uses ${name}! −${dmg} HP`); }
-        else                    { p1.hp = Math.max(0, p1.hp-dmg); log(`${p2.name} uses ${name}! −${dmg} HP`); }
+        if (mpMode === 'guest' && mpGuest) {
+            mpGuest.sendAction({ type: 'target', targetIndex: { attackName: name, damage: dmg }, mode: 'attack' });
+            return;
+        }
+        
+        // Host or single-device: execute locally
+        const target = activePlayer === 0 ? 1 : 0;
+        if (players[target]) {
+            players[target].hp = Math.max(0, players[target].hp - dmg);
+            log(`${players[activePlayer].name} uses ${name}! −${dmg} HP`);
+        }
+        
+        // Add credits to current player
+        if (players[activePlayer]) {
+            players[activePlayer].cp++;
+        }
+        
         updateUI();
-        if (p1.hp <= 0 || p2.hp <= 0) { gameOver(); return; }
-        activePlayer = activePlayer === 1 ? 2 : 1;
+        
+        // Check for winner
+        if (checkWinner()) return;
+        
+        // Reset for next turn
+        rollsLeft = 3;
+        held = [false,false,false,false,false];
+        activePlayer = (activePlayer + 1) % players.length;
+        
+        // Host broadcasts new state
+        if (mpMode === 'host' && mpHost) {
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
+        }
+        
         await new Promise(r => setTimeout(r, 700));
-        if (gameMode === 'ai' && activePlayer === 2) opponentTurn();
-        else startTurn();
+        
+        // AI opponent turn for single device
+        if (mpMode === 'single' && players[1] && players[1].name === 'The House' && activePlayer === 1) {
+            opponentTurn();
+        } else {
+            startTurn();
+        }
     }
 
     async function opponentTurn() {
-        log('Dealer is rolling…'); isRolling = true;
+        log('Dealer is rolling…'); 
+        isRolling = true;
         await new Promise(r => setTimeout(r, 900));
+        
         dice = dice.map(() => Math.floor(Math.random()*6)+1);
         isRolling = false;
+        
         const sum = dice.reduce((a,b)=>a+b,0);
         const dmg = sum > 18 ? 8 : sum > 10 ? 5 : 2;
-        p1.hp = Math.max(0, p1.hp-dmg);
-        log(`The House hits for ${dmg} damage!`);
+        
+        if (players[0]) {
+            players[0].hp = Math.max(0, players[0].hp - dmg);
+            log(`The House hits for ${dmg} damage!`);
+        }
+        
         updateUI();
-        if (p1.hp <= 0) { gameOver(); return; }
+        
+        if (checkWinner()) return;
+        
         await new Promise(r => setTimeout(r, 900));
-        activePlayer = 1; startTurn();
+        activePlayer = 0; 
+        startTurn();
     }
 
     function openShop() {
         if (isRolling || rollsLeft < 3) return;
+        if (mpMode !== 'single' && myPlayerIndex !== activePlayer) return;
         toggleModal('shop-modal', true);
     }
 
     function buyHeal() {
-        const p = activePlayer === 1 ? p1 : p2;
-        if (p.cp < 2 || p.hp >= MAX_HP) return;
-        p.cp -= 2; p.hp = Math.min(MAX_HP, p.hp+5);
-        updateUI(); toggleModal('shop-modal', false);
+        if (mpMode === 'guest' && mpGuest) {
+            mpGuest.sendAction({ type: 'target', targetIndex: 0, mode: 'heal' });
+            toggleModal('shop-modal', false);
+            return;
+        }
+        
+        const player = players[activePlayer];
+        if (!player || player.cp < 2 || player.hp >= MAX_HP) return;
+        
+        player.cp -= 2; 
+        player.hp = Math.min(MAX_HP, player.hp + 5);
+        
+        // Host broadcasts new state
+        if (mpMode === 'host' && mpHost) {
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
+        }
+        
+        updateUI(); 
+        toggleModal('shop-modal', false);
+    }
+
+    function checkWinner() {
+        const alivePlayers = players.filter(p => p.hp > 0);
+        if (alivePlayers.length <= 1) {
+            gameOver();
+            return true;
+        }
+        return false;
     }
 
     function gameOver() {
-        const win = p2.hp <= 0;
-        $('result-title').innerText = win ? 'VICTORY' : 'BUSTED';
-        $('result-msg').innerText   = win ? 'The Shark cleared the table.' : 'The House always wins.';
+        const winner = players.find(p => p.hp > 0);
+        const isWin = winner && (mpMode === 'single' ? winner.name !== 'The House' : winner.id === myPlayerIndex);
+        
+        $('result-title').innerText = isWin ? 'VICTORY' : 'DEFEAT';
+        $('result-msg').innerText = winner ? 
+            `${winner.name} cleared the table!` : 
+            'All players eliminated!';
+        
         toggleModal('result-modal', true);
     }
 
-    window.onload = () => {}; // mode-screen is visible by default
+    window.onload = () => {
+        // Check for PIN in URL hash (e.g., #LCP:1234)
+        const hashPin = _parseHashPin();
+        if (hashPin) {
+            _startGuestFlow(hashPin);
+            return;
+        }
+
+        // Show mode selection
+        LCRMultiplayer.UI.showModeSelectionThree(
+            () => { mpMode = 'single'; _showSinglePlayerModes(); },
+            () => _startHostFlow(),
+            () => _startGuestFlow(null)
+        );
+    };
 
     function confirmHome() {
         if (confirm('Leave the table?')) window.location.href = './index.html';
