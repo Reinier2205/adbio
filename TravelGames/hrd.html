@@ -133,34 +133,56 @@
             100% { transform: translate(-1px,1px)   rotate(0deg);  }
         }
 
-        /* ROLL CONTROLS */
+        /* ROLL CONTROLS — single row: badge | Roll Dice | Attack Now */
         .roll-controls {
             flex-shrink: 0;
-            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
         }
         .roll-badge {
-            background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 50px; padding: 4px 14px;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50px;
+            padding: 8px 12px;
             font-size: 11px; font-weight: 700;
-            color: rgba(255,255,255,0.5); letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+            flex: 1;
+            text-align: center;
         }
         .btn-roll {
             background: radial-gradient(circle at 40% 35%, var(--gold-light), var(--gold));
             color: var(--dark); font-family: 'Cinzel', serif;
-            font-size: 15px; font-weight: 700; letter-spacing: 0.08em;
-            padding: 14px 44px; border-radius: 50px; border: none;
+            font-size: 14px; font-weight: 700; letter-spacing: 0.06em;
+            padding: 14px 20px; border-radius: 50px; border: none;
             box-shadow: 0 5px 0 #5c430d, 0 8px 20px rgba(0,0,0,0.4);
             cursor: pointer; min-height: 52px;
+            flex: 2;
             transition: transform 0.1s, box-shadow 0.1s;
+            white-space: nowrap;
         }
         .btn-roll:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 #5c430d; }
         .btn-roll:disabled { opacity: 0.35; cursor: not-allowed; }
         .btn-attack-now {
-            font-size: 12px; color: rgba(255,255,255,0.4);
-            text-decoration: underline; text-transform: uppercase;
-            letter-spacing: 0.1em; background: none; border: none;
-            cursor: pointer; padding: 4px 8px; min-height: 36px;
+            font-size: 11px; font-weight: 700;
+            color: var(--ivory);
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50px;
+            cursor: pointer;
+            padding: 8px 12px; min-height: 52px;
+            flex: 1;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+            transition: background 0.15s;
         }
+        .btn-attack-now:active { background: rgba(255,255,255,0.12); }
 
         /* MANEUVERS */
         .maneuvers {
@@ -347,11 +369,11 @@
         <div id="dice-grid" class="dice-grid"></div>
     </div>
 
-    <!-- ROLL CONTROLS -->
+    <!-- ROLL CONTROLS: badge left · Roll Dice centre · Attack Now right -->
     <div class="roll-controls">
         <div class="roll-badge"><span id="roll-count">ROLLS: 3 / 3</span></div>
         <button id="roll-btn" class="btn-roll" onclick="handleRoll()">Roll Dice</button>
-        <button id="attack-now-btn" class="btn-attack-now hidden" onclick="skipRolling()">Attack Now ↓</button>
+        <button id="attack-now-btn" class="btn-attack-now hidden" onclick="skipRolling()">Attack Now</button>
     </div>
 
     <!-- MANEUVERS -->
