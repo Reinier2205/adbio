@@ -376,6 +376,8 @@ function _showGuestCharacterPicker() {
 
 **IMPORTANT**: Always check `mpMode` before executing game logic. Guests should send actions to host, while host/single-device execute locally.
 
+**CRITICAL**: Avoid duplicating game logic between local functions and game adapter methods. This can cause state conflicts and synchronization issues.
+
 ```javascript
 function handleRoll() {
   if (isProcessing) return;
@@ -386,16 +388,19 @@ function handleRoll() {
     return;
   }
   
-  // Host or single-device: execute locally
+  // ⚠️ IMPORTANT: For host mode, delegate to game adapter to avoid conflicts
+  if (mpMode === 'host') {
+    // Let the game adapter handle the logic and state management
+    const newState = mpHost.gameAdapter.executeRoll();
+    mpHost.broadcastState(newState);
+    if (mpHost.onStateChange) mpHost.onStateChange(newState);
+    return;
+  }
+  
+  // Single-device mode: execute locally with full control
   isProcessing = true;
   const results = _rollDice();
   _processResults(results);
-  
-  // Host broadcasts new state
-  if (mpMode === 'host' && mpHost) {
-    mpHost.broadcastState(mpHost.gameAdapter.getState());
-  }
-  
   isProcessing = false;
 }
 
@@ -411,13 +416,16 @@ function handleAttack(attackName, damage) {
     return;
   }
   
-  // Host or single-device: execute locally
-  _executeAttack(attackName, damage);
-  
-  // Host broadcasts new state
-  if (mpMode === 'host' && mpHost) {
-    mpHost.broadcastState(mpHost.gameAdapter.getState());
+  // ⚠️ IMPORTANT: For host mode, delegate to game adapter
+  if (mpMode === 'host') {
+    const newState = mpHost.gameAdapter.executeTarget({ attackName, damage }, 'attack');
+    mpHost.broadcastState(newState);
+    if (mpHost.onStateChange) mpHost.onStateChange(newState);
+    return;
   }
+  
+  // Single-device mode: execute locally
+  _executeAttack(attackName, damage);
 }
 
 function handleHeal() {
@@ -431,13 +439,16 @@ function handleHeal() {
     return;
   }
   
-  // Host or single-device: execute locally
-  _executeHeal();
-  
-  // Host broadcasts new state
-  if (mpMode === 'host' && mpHost) {
-    mpHost.broadcastState(mpHost.gameAdapter.getState());
+  // ⚠️ IMPORTANT: For host mode, delegate to game adapter
+  if (mpMode === 'host') {
+    const newState = mpHost.gameAdapter.executeTarget(0, 'heal');
+    mpHost.broadcastState(newState);
+    if (mpHost.onStateChange) mpHost.onStateChange(newState);
+    return;
   }
+  
+  // Single-device mode: execute locally
+  _executeHeal();
 }
 
 function handleTarget(targetIndex) {
@@ -456,6 +467,13 @@ function handleTarget(targetIndex) {
   }
 }
 ```
+
+**State Management Best Practices:**
+
+1. **Single Source of Truth**: Game adapter should be the authoritative source for game state
+2. **Avoid Duplication**: Don't implement the same logic in both local functions and game adapter
+3. **Delegate in Host Mode**: Host should use game adapter methods, not duplicate logic
+4. **Preserve Game State**: Be careful about when you reset/modify game state variables
 
 ### Step 7: Update Turn UI
 
@@ -577,7 +595,9 @@ function startTargeting(mode) {
 - [ ] PIN is generated and displayed
 - [ ] Share link copies to clipboard
 - [ ] Guest count updates when guests connect
-- [ ] "Deal In" enables when all players picked
+- [ ] **"Deal In" enables with correct player count for your game**
+- [ ] **2-player games: enables with host + 1 guest**
+- [ ] **3+ player games: enables with minimum required players**
 - [ ] Game starts correctly with all players
 - [ ] PIN persists during game
 
@@ -593,6 +613,10 @@ function startTargeting(mode) {
 - [ ] Only current turn player can roll/act
 - [ ] All action buttons properly disabled for non-turn players
 - [ ] Game-specific conditions (rolls left, resources, etc.) properly checked
+- [ ] **No conflicting logic between local functions and game adapter**
+- [ ] **Host mode delegates to game adapter methods**
+- [ ] **State variables (held dice, selections, etc.) persist correctly**
+- [ ] **State variables reset only at appropriate times (turn start, game end)**
 - [ ] Dice animations sync across devices
 - [ ] Chip animations sync across devices
 - [ ] Turn banners show correctly
@@ -729,15 +753,88 @@ mpGuest.sendAction({
 });
 ```
 
-### 8. **Not Handling Game-Specific Conditions**
-**NEW**: Consider game-specific conditions when enabling/disabling controls:
+### 9. **Conflicting Game Logic (State Corruption)**
+**NEW**: Avoid implementing the same logic in both local functions and game adapter:
 ```javascript
-// ❌ BAD - only checking turn
-document.getElementById('roll-btn').disabled = !isMine;
+// ❌ BAD - duplicated logic causes state conflicts
+function handleRoll() {
+  if (mpMode === 'guest') {
+    mpGuest.sendAction({ type: 'roll' });
+    return;
+  }
+  
+  // This logic is ALSO in executeRoll() - causes conflicts!
+  rollsLeft--;
+  for (let i = 0; i < dice.length; i++) {
+    if (!held[i]) dice[i] = Math.floor(Math.random() * 6) + 1;
+  }
+  
+  if (mpMode === 'host') {
+    mpHost.broadcastState(mpHost.gameAdapter.getState());
+  }
+}
 
-// ✅ GOOD - checking turn AND game conditions
-document.getElementById('roll-btn').disabled = !isMine || rollsLeft === 0 || isRolling;
-document.getElementById('attack-btn').disabled = !isMine || rollsLeft === 3; // can't attack before rolling
+// ✅ GOOD - single source of truth
+function handleRoll() {
+  if (mpMode === 'guest') {
+    mpGuest.sendAction({ type: 'roll' });
+    return;
+  }
+  
+  if (mpMode === 'host') {
+    // Delegate to game adapter - single source of truth
+    const newState = mpHost.gameAdapter.executeRoll();
+    mpHost.broadcastState(newState);
+    return;
+  }
+  
+  // Only single-device mode has local logic
+  _executeLocalRoll();
+}
+```
+
+### 10. **Incorrect Player Count Configuration**
+**NEW**: Set the correct maximum player count for your specific game:
+```javascript
+// ❌ BAD - using default or wrong player count
+mpHost = new LCRMultiplayer.MultiplayerHost(adapter, 10); // Wrong for 2-player game
+
+// ✅ GOOD - correct player count for your game
+const MAX_PLAYERS = 2; // HRD is 2-player
+const MAX_PLAYERS = 4; // Most card games
+const MAX_PLAYERS = 6; // Party games
+mpHost = new LCRMultiplayer.MultiplayerHost(adapter, MAX_PLAYERS);
+
+// And customize Deal In logic accordingly
+if (MAX_PLAYERS === 2) {
+  // Enable with host + 1 guest
+  if (connections.length >= 1 && connections.every(e => e.picked)) {
+    lobbyUI.enableDealIn();
+  }
+}
+```
+
+### 11. **State Variables Reset at Wrong Times**
+**NEW**: Be careful about when you reset game state variables:
+```javascript
+// ❌ BAD - resetting state during actions
+function executeRoll() {
+  rollsLeft--;
+  held = [false,false,false,false,false]; // Wrong! Resets held dice
+  // ... roll logic
+}
+
+// ✅ GOOD - reset state only at appropriate times
+function executeRoll() {
+  rollsLeft--;
+  // Don't reset held dice during rolls!
+  // ... roll logic
+}
+
+function startNewTurn() {
+  rollsLeft = 3;
+  held = [false,false,false,false,false]; // Correct! Reset at turn start
+}
 ```
 
 ---
@@ -1054,4 +1151,65 @@ function buyItem(itemId, cost) {
   updateUI();
   toggleModal('shop-modal', false);
 }
+```
+
+### Pattern 6: Games with Persistent State (Dice Holding, Card Selection)
+Handle state that should persist between actions:
+
+```javascript
+// ❌ COMMON MISTAKE: Resetting persistent state during actions
+function executeRoll() {
+  rollsLeft--;
+  held = [false,false,false,false,false]; // Wrong! Resets held dice
+  // ... roll dice logic
+}
+
+// ✅ CORRECT: Only reset persistent state at appropriate times
+function executeRoll() {
+  rollsLeft--;
+  // Keep held dice unchanged during rolls
+  for (let i = 0; i < dice.length; i++) {
+    if (!held[i]) {
+      dice[i] = Math.floor(Math.random() * 6) + 1;
+    }
+  }
+  return this.getState();
+}
+
+function startNewTurn() {
+  rollsLeft = 3;
+  held = [false,false,false,false,false]; // Correct! Reset at turn start
+  selectedCards = [];
+  // ... other turn initialization
+}
+```
+
+### Pattern 7: Games with Different Player Counts
+Configure lobby logic for your specific game:
+
+```javascript
+// Define your game's player requirements
+const MIN_PLAYERS = 2;  // Minimum to start
+const MAX_PLAYERS = 4;  // Maximum allowed
+
+function _showHostLobby() {
+  // ... lobby setup ...
+  
+  mpHost.onGuestPicked = (connections) => {
+    lobbyUI.updateCount(connections.length + 1);
+    
+    // Custom logic based on your game's requirements
+    const totalPlayers = connections.length + 1; // +1 for host
+    const allPicked = connections.every(e => e.picked) && mpHost._hostPickedName;
+    
+    if (totalPlayers >= MIN_PLAYERS && allPicked) {
+      lobbyUI.enableDealIn();
+    }
+  };
+}
+
+// Examples for different game types:
+// 2-player games (HRD, Chess): MIN_PLAYERS = 2, MAX_PLAYERS = 2
+// Small party games: MIN_PLAYERS = 3, MAX_PLAYERS = 6
+// Large party games: MIN_PLAYERS = 4, MAX_PLAYERS = 10
 ```

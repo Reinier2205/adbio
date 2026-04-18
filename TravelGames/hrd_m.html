@@ -789,48 +789,11 @@
             executeRoll() {
                 if (rollsLeft <= 0 || isRolling) return this.getState();
                 
-                isRolling = true;
-                rollsLeft--;
-                
-                // Roll unheld dice only
-                for (let i = 0; i < dice.length; i++) {
-                    if (!held[i]) {
-                        dice[i] = Math.floor(Math.random() * 6) + 1;
-                    }
-                }
-                
-                // For host mode, trigger animation
-                if (mpMode === 'host') {
-                    this._animateRoll();
-                }
-                
+                // The actual rolling and animation is handled by handleRoll()
+                // This method just returns the current state for synchronization
                 const s = this.getState();
                 s.lastDiceResults = [...dice];
                 return s;
-            },
-            
-            async _animateRoll() {
-                const els = document.querySelectorAll('.die');
-                for (let f = 0; f < 8; f++) {
-                    els.forEach((el, i) => {
-                        if (!held[i]) {
-                            el.innerText = dice[i];
-                            el.classList.add('rolling');
-                        }
-                    });
-                    await new Promise(r => setTimeout(r, 60));
-                }
-                
-                els.forEach(el => el.classList.remove('rolling'));
-                isRolling = false;
-                
-                // Update UI after animation
-                updateUI();
-                
-                // AI opponent turn for single device
-                if (mpMode === 'single' && players[1] && players[1].name === 'The House' && activePlayer === 1) {
-                    setTimeout(opponentTurn, 1000);
-                }
             },
             
             // Use executeTarget for attacks (overloading the interface)
@@ -896,17 +859,49 @@
         // Remove old banners
         document.getElementById('lcr-mp-spectator-banner')?.remove();
         document.getElementById('lcr-mp-active-banner')?.remove();
+        document.getElementById('hrd-turn-banner')?.remove();
         
         const isMine = myPlayerIndex === activePlayer;
         
         // Disable/enable controls
         document.getElementById('roll-btn').disabled = !isMine || rollsLeft === 0 || isRolling;
         
-        // Show appropriate banner
+        // Create custom turn banner that doesn't interfere with layout
+        const banner = document.createElement('div');
+        banner.id = 'hrd-turn-banner';
+        banner.style.cssText = [
+            'position:absolute',
+            'top:60px',
+            'left:50%',
+            'transform:translateX(-50%)',
+            'background:rgba(0,0,0,0.75)',
+            'border:1px solid rgba(212,175,55,0.5)',
+            'border-radius:50px',
+            'padding:6px 16px',
+            'font-family:Lato,sans-serif',
+            'font-size:0.7rem',
+            'font-weight:700',
+            'text-transform:uppercase',
+            'letter-spacing:0.1em',
+            'white-space:nowrap',
+            'pointer-events:none',
+            'z-index:100'
+        ].join(';');
+        
         if (isMine) {
-            LCRMultiplayer.UI.showActiveTurnBanner();
+            banner.textContent = '🎲 YOUR TURN!';
+            banner.style.color = '#ffd700';
+            banner.style.borderColor = '#ffd700';
+            banner.style.textShadow = '0 0 8px rgba(255,215,0,0.6)';
         } else if (players[activePlayer]) {
-            LCRMultiplayer.UI.showSpectatorBanner(players[activePlayer].name);
+            banner.textContent = `⏳ Waiting for ${players[activePlayer].name}...`;
+            banner.style.color = 'rgba(255,255,255,0.85)';
+        }
+        
+        // Insert banner into the card container, not the roll controls
+        const cardContainer = document.querySelector('.card');
+        if (cardContainer) {
+            cardContainer.appendChild(banner);
         }
     }
 
@@ -970,8 +965,14 @@
         
         // Update roll controls
         $('roll-count').innerText = `ROLLS: ${rollsLeft} / 3`;
-        $('roll-btn').disabled = rollsLeft === 0 || isRolling || (mpMode === 'single' && players.length > 1 && players[1].name === 'The House' && activePlayer === 1);
-        $('attack-now-btn').classList.toggle('hidden', !(rollsLeft < 3 && rollsLeft > 0));
+        
+        // Proper roll button state for multiplayer
+        const canRoll = rollsLeft > 0 && !isRolling;
+        const isMyTurn = mpMode === 'single' || myPlayerIndex === activePlayer;
+        const notAITurn = !(mpMode === 'single' && players.length > 1 && players[1].name === 'The House' && activePlayer === 1);
+        
+        $('roll-btn').disabled = !canRoll || !isMyTurn || !notAITurn;
+        $('attack-now-btn').classList.toggle('hidden', !(rollsLeft < 3 && rollsLeft > 0 && isMyTurn));
 
         // Update dice display
         const grid = $('dice-grid');
@@ -993,7 +994,14 @@
         if (mpMode !== 'single' && myPlayerIndex !== activePlayer) return;
         
         held[i] = !held[i];
+        
+        // Update UI immediately for responsive feedback
         updateUI();
+        
+        // Host broadcasts state change for held dice
+        if (mpMode === 'host' && mpHost) {
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
+        }
     }
 
     async function handleRoll() {
@@ -1005,25 +1013,22 @@
             return;
         }
         
-        // Host or single-device: execute locally
-        if (mpMode === 'host') {
-            // For host mode, let the game adapter handle the rolling
-            // This ensures proper state synchronization
-            const newState = mpHost.gameAdapter.executeRoll();
-            mpHost.broadcastState(newState);
-            if (mpHost.onStateChange) mpHost.onStateChange(newState);
-            return;
-        }
-        
-        // Single device mode - do local animation
+        // Host or single-device: execute locally with proper UI handling
         isRolling = true;
         rollsLeft--;
         
+        // Roll unheld dice only
+        for (let i = 0; i < dice.length; i++) {
+            if (!held[i]) {
+                dice[i] = Math.floor(Math.random() * 6) + 1;
+            }
+        }
+        
+        // Animate the roll
         const els = document.querySelectorAll('.die');
         for (let f = 0; f < 8; f++) {
             els.forEach((el, i) => {
                 if (!held[i]) {
-                    dice[i] = Math.floor(Math.random() * 6) + 1;
                     el.innerText = dice[i];
                     el.classList.add('rolling');
                 }
@@ -1034,7 +1039,13 @@
         els.forEach(el => el.classList.remove('rolling'));
         isRolling = false;
         
+        // Update UI after animation
         updateUI();
+        
+        // Host broadcasts new state
+        if (mpMode === 'host' && mpHost) {
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
+        }
         
         // AI opponent turn for single device
         if (mpMode === 'single' && players[1] && players[1].name === 'The House' && activePlayer === 1) {
