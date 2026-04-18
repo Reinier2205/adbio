@@ -743,9 +743,17 @@
                 // Don't apply state to host - host is authoritative
                 if (mpMode === 'host') return;
                 
-                // Preserve guest's held dice during rolls
-                const preserveHeld = isRolling || (rollsLeft < 3 && rollsLeft > 0);
-                const oldHeld = preserveHeld ? [...held] : null;
+                console.log('applyState called:', {
+                    myPlayerIndex,
+                    activePlayer: state.turnIndex || state.activePlayer,
+                    rollsLeft: state.rollsLeft,
+                    currentHeld: held,
+                    stateHeld: state.held
+                });
+                
+                // Save current held dice if it's my turn
+                const isMyTurn = myPlayerIndex === (state.turnIndex !== undefined ? state.turnIndex : state.activePlayer);
+                const currentHeld = isMyTurn ? [...held] : null;
                 
                 if (state.players) {
                     players = state.players.map((p, idx) => ({
@@ -763,12 +771,15 @@
                 if (state.rollsLeft !== undefined) rollsLeft = state.rollsLeft;
                 if (state.dice) dice = [...state.dice];
                 
-                // Only update held dice if we're not preserving guest's selections
-                if (state.held && !preserveHeld) {
+                // Handle held dice: preserve guest's selections during their turn
+                if (isMyTurn && currentHeld && rollsLeft > 0) {
+                    // Keep my held dice selections during my turn
+                    held = currentHeld;
+                    console.log('Preserved held dice:', held);
+                } else if (state.held) {
+                    // Apply state held dice for other situations
                     held = [...state.held];
-                } else if (oldHeld) {
-                    // Restore guest's held dice selections
-                    held = oldHeld;
+                    console.log('Applied state held dice:', held);
                 }
                 
                 if (state.isRolling !== undefined) isRolling = state.isRolling;
@@ -1000,6 +1011,7 @@
         if (mpMode !== 'single' && myPlayerIndex !== activePlayer) return;
         
         held[i] = !held[i];
+        console.log('toggleHold:', i, 'held array:', held);
         
         // Update UI immediately for responsive feedback
         updateUI();
