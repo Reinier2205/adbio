@@ -383,7 +383,7 @@
                 <div id="p2-orb" class="orb-fill bg-red-600" style="height:100%"><div class="orb-wave"></div></div>
             </div>
             <div id="p2-hp" class="p-hp">50</div>
-            <div id="p2-cp-row" class="hidden p-cp">CR: <span id="p2-cp">0</span></div>
+            <div id="p2-cp-row" class="p-cp">CR: <span id="p2-cp">0</span></div>
         </div>
         <div id="status-p1" class="player-panel">
             <div class="p-name text-teal-400" id="p1-label">The Shark</div>
@@ -391,7 +391,7 @@
                 <div id="p1-orb" class="orb-fill bg-teal-500" style="height:100%"><div class="orb-wave"></div></div>
             </div>
             <div id="p1-hp" class="p-hp">50</div>
-            <div class="p-cp" onclick="openShop()">CR: <span id="p1-cp">0</span> 🛒</div>
+            <div class="p-cp">CR: <span id="p1-cp">0</span></div>
         </div>
     </div>
 
@@ -940,7 +940,8 @@
                 { name: 'The Shark', icon: '🦈', hp: MAX_HP, cp: 0, id: 0 },
                 { name: 'The Whale', icon: '🐋', hp: MAX_HP, cp: 0, id: 1 }
             ];
-            $('p2-cp-row').classList.remove('hidden');
+            // Show p2 credits for PvP mode
+            $('p2-cp-row').style.display = 'block';
         }
         
         activePlayer = 0;
@@ -973,6 +974,26 @@
             $('p1-hp').innerText = players[0].hp;
             $('p1-orb').style.height = (players[0].hp / MAX_HP * 100) + '%';
             $('p1-cp').innerText = players[0].cp;
+            
+            // Add shop button for player 0 in multiplayer mode
+            const p1CpElement = document.querySelector('#status-p1 .p-cp');
+            if (mpMode !== 'single' && myPlayerIndex === 0) {
+                p1CpElement.onclick = openShop;
+                p1CpElement.style.cursor = 'pointer';
+                if (!p1CpElement.innerHTML.includes('🛒')) {
+                    p1CpElement.innerHTML = `CR: <span id="p1-cp">${players[0].cp}</span> 🛒`;
+                }
+            } else if (mpMode === 'single') {
+                p1CpElement.onclick = openShop;
+                p1CpElement.style.cursor = 'pointer';
+                if (!p1CpElement.innerHTML.includes('🛒')) {
+                    p1CpElement.innerHTML = `CR: <span id="p1-cp">${players[0].cp}</span> 🛒`;
+                }
+            } else {
+                p1CpElement.onclick = null;
+                p1CpElement.style.cursor = 'default';
+                p1CpElement.innerHTML = `CR: <span id="p1-cp">${players[0].cp}</span>`;
+            }
         }
         
         if (players[1]) {
@@ -980,6 +1001,20 @@
             $('p2-hp').innerText = players[1].hp;
             $('p2-orb').style.height = (players[1].hp / MAX_HP * 100) + '%';
             $('p2-cp').innerText = players[1].cp;
+            
+            // Add shop button for player 1 in multiplayer mode
+            const p2CpElement = document.querySelector('#status-p2 .p-cp');
+            if (mpMode !== 'single' && myPlayerIndex === 1) {
+                p2CpElement.onclick = openShop;
+                p2CpElement.style.cursor = 'pointer';
+                if (!p2CpElement.innerHTML.includes('🛒')) {
+                    p2CpElement.innerHTML = `CR: <span id="p2-cp">${players[1].cp}</span> 🛒`;
+                }
+            } else {
+                p2CpElement.onclick = null;
+                p2CpElement.style.cursor = 'default';
+                p2CpElement.innerHTML = `CR: <span id="p2-cp">${players[1].cp}</span>`;
+            }
         }
         
         // Update active player highlighting
