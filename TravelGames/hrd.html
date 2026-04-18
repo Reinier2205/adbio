@@ -1,508 +1,479 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>High Roller's Duel - Elite Edition</title>
+    <title>High Roller's Duel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --felt-green: #0a4821;
+            --felt: #0a4821;
             --gold: #d4af37;
             --gold-light: #ffd700;
-            --light-gold: #fff8e1;
-            --glass: rgba(0, 0, 0, 0.5);
+            --ivory: #fff8e1;
+            --dark: #1a0f12;
         }
-
-        body {
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body {
+            height: 100%; margin: 0; overflow: hidden;
             font-family: 'Lato', sans-serif;
-            background-color: #1a0f12;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            color: var(--light-gold);
+            background: var(--dark); color: var(--ivory);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .shell {
+            display: flex; justify-content: center; align-items: center;
+            height: 100dvh; padding: 8px;
+        }
+        .card {
+            background: var(--felt);
+            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 28px 28px;
+            border: 6px solid #3d2529;
+            box-shadow: 0 0 0 2px var(--gold), 0 24px 48px rgba(0,0,0,0.9);
+            border-radius: 28px;
+            width: 100%; max-width: 440px;
+            height: 100%; max-height: 820px;
+            display: flex; flex-direction: column;
+            padding: 14px; gap: 10px;
+            position: relative; overflow: hidden;
         }
 
-        .casino-container {
-            background: var(--felt-green);
-            background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px;
-            border: 8px solid #3d2529;
-            box-shadow: 0 0 0 2px var(--gold), 0 20px 40px rgba(0,0,0,0.8);
-            border-radius: 24px;
-            width: 98vw;
-            height: 98vh;
-            max-width: 420px;
-            max-height: 800px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            padding: 12px;
-            gap: 10px;
-        }
-
-        .cinzel { font-family: 'Cinzel', serif; }
-
-        /* Side-by-Side Vitality Dashboard */
-        .duel-dashboard {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(212, 175, 55, 0.2);
+        /* DASHBOARD */
+        .dashboard {
+            flex-shrink: 0;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212,175,55,0.25);
             border-radius: 20px;
-            padding: 12px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+            padding: 10px 16px;
+            display: flex; justify-content: space-around; align-items: center;
             position: relative;
         }
-
         .vs-badge {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            background: #3d2529;
-            border: 1px solid var(--gold);
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Cinzel', serif;
-            font-size: 10px;
-            color: var(--gold);
-            z-index: 10;
+            position: absolute; left: 50%; top: 50%;
+            transform: translate(-50%,-50%);
+            background: #3d2529; border: 1px solid var(--gold);
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Cinzel', serif; font-size: 9px; color: var(--gold); z-index: 2;
         }
-
-        .player-status {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            flex: 1;
-            transition: all 0.3s ease;
-            padding: 8px;
-            border-radius: 12px;
+        .player-panel {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 4px; flex: 1; padding: 8px 6px; border-radius: 14px;
+            transition: background 0.3s, box-shadow 0.3s;
         }
-
-        .player-status.active-turn {
-            background: rgba(212, 175, 55, 0.15);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+        .player-panel.active {
+            background: rgba(212,175,55,0.15);
+            box-shadow: 0 0 18px rgba(212,175,55,0.12);
         }
-
-        .orb-container {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            background: #111;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        .orb {
+            width: 52px; height: 52px; border-radius: 50%;
+            border: 2.5px solid var(--gold); background: #111;
+            position: relative; overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
         }
-
         .orb-fill {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: absolute; bottom: 0; width: 100%;
+            transition: height 0.6s cubic-bezier(0.34,1.56,0.64,1);
         }
-
         .orb-wave {
-            position: absolute;
-            top: -8px;
-            left: -50%;
-            width: 200%;
-            height: 16px;
-            background: rgba(255,255,255,0.25);
-            border-radius: 38%;
-            animation: wave 4s infinite linear;
+            position: absolute; top: -8px; left: -50%;
+            width: 200%; height: 16px;
+            background: rgba(255,255,255,0.22); border-radius: 38%;
+            animation: wave 4s linear infinite;
+        }
+        @keyframes wave { to { transform: rotate(360deg); } }
+        .p-name { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .p-hp   { font-family: 'Cinzel', serif; font-size: 18px; color: #fff; line-height: 1; }
+        .p-cp   { font-size: 11px; color: var(--gold); font-weight: 700; cursor: pointer; }
+
+        /* LOG */
+        .log {
+            flex-shrink: 0; text-align: center;
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.15em;
+            color: rgba(255,248,225,0.5); font-style: italic; min-height: 16px;
         }
 
-        @keyframes wave {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .hp-label { font-size: 7px; text-transform: uppercase; letter-spacing: 1px; font-weight: 900; margin-top: 2px; }
-        .hp-val { font-family: 'Cinzel', serif; font-size: 14px; color: white; line-height: 1; }
-        .cp-val { font-size: 10px; color: var(--gold); font-weight: bold; margin-top: 2px; }
-
-        /* Gameplay Areas */
+        /* DICE TRAY */
         .dice-tray {
-            flex: 1;
-            background: rgba(0,0,0,0.1);
-            border-radius: 16px;
+            flex: 1; min-height: 0;
+            background: rgba(0,0,0,0.12); border-radius: 18px;
             padding: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            min-height: 0;
-            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
         }
-
+        .dice-grid {
+            display: grid; grid-template-columns: repeat(5,1fr);
+            gap: 8px; width: 100%;
+        }
         .die {
-            aspect-ratio: 1/1;
-            background: #fff;
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #1a0f12;
-            font-size: 1.5rem;
-            font-weight: 900;
-            cursor: pointer;
+            aspect-ratio: 1/1; background: #fff; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--dark);
+            font-size: clamp(1rem, 5vw, 1.6rem);
+            font-weight: 900; cursor: pointer;
             box-shadow: 0 4px 0 #999;
-            transition: all 0.1s;
+            transition: transform 0.1s, box-shadow 0.1s;
+            user-select: none; -webkit-user-select: none;
         }
         .die.held {
             background: var(--gold-light);
-            box-shadow: 0 0 12px var(--gold-light), 0 2px 0 #b8860b;
-            transform: translateY(-4px);
+            box-shadow: 0 0 14px var(--gold-light), 0 2px 0 #b8860b;
+            transform: translateY(-5px);
         }
-        .die.rolling { animation: shake 0.1s infinite; }
-
+        .die.pre-roll { opacity: 0.35; }
+        .die.rolling  { animation: shake 0.08s infinite; }
         @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            25% { transform: translate(-1px, -1px) rotate(1deg); }
-            75% { transform: translate(1px, -1px) rotate(-1deg); }
-            100% { transform: translate(-1px, 1px) rotate(0deg); }
+            0%   { transform: translate(1px,1px)   rotate(0deg);  }
+            25%  { transform: translate(-1px,-1px)  rotate(1deg);  }
+            75%  { transform: translate(1px,-1px)   rotate(-1deg); }
+            100% { transform: translate(-1px,1px)   rotate(0deg);  }
         }
 
-        .moves-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+        /* ROLL CONTROLS */
+        .roll-controls {
+            flex-shrink: 0;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+        }
+        .roll-badge {
+            background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50px; padding: 4px 14px;
+            font-size: 11px; font-weight: 700;
+            color: rgba(255,255,255,0.5); letter-spacing: 0.1em;
+        }
+        .btn-roll {
+            background: radial-gradient(circle at 40% 35%, var(--gold-light), var(--gold));
+            color: var(--dark); font-family: 'Cinzel', serif;
+            font-size: 15px; font-weight: 700; letter-spacing: 0.08em;
+            padding: 14px 44px; border-radius: 50px; border: none;
+            box-shadow: 0 5px 0 #5c430d, 0 8px 20px rgba(0,0,0,0.4);
+            cursor: pointer; min-height: 52px;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-roll:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 #5c430d; }
+        .btn-roll:disabled { opacity: 0.35; cursor: not-allowed; }
+        .btn-attack-now {
+            font-size: 12px; color: rgba(255,255,255,0.4);
+            text-decoration: underline; text-transform: uppercase;
+            letter-spacing: 0.1em; background: none; border: none;
+            cursor: pointer; padding: 4px 8px; min-height: 36px;
         }
 
+        /* MANEUVERS */
+        .maneuvers {
+            flex-shrink: 0;
+            background: rgba(0,0,0,0.28);
+            border: 1px solid rgba(212,175,55,0.12);
+            border-radius: 18px; padding: 10px 12px 12px;
+        }
+        .maneuvers-label {
+            font-size: 10px; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 0.18em;
+            color: rgba(255,255,255,0.3); margin-bottom: 8px;
+        }
+        .maneuvers-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        }
         .combo-btn {
-            padding: 6px 4px;
-            border-radius: 8px;
+            min-height: 52px; padding: 10px 8px; border-radius: 12px;
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.08);
-            text-align: center;
-            opacity: 0.2;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            pointer-events: none;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 2px;
+            opacity: 0.22; pointer-events: none;
+            transition: opacity 0.2s, border-color 0.2s, background 0.2s, transform 0.1s;
         }
         .combo-btn.active {
-            opacity: 1;
-            border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.12);
-            cursor: pointer;
-            pointer-events: auto;
+            opacity: 1; border-color: var(--gold);
+            background: rgba(212,175,55,0.13);
+            pointer-events: auto; cursor: pointer;
         }
-        .combo-btn b { font-size: 10px; color: white; }
-        .combo-btn span { font-size: 9px; color: var(--gold); font-weight: bold; }
+        .combo-btn.active:active { transform: scale(0.96); }
+        .combo-btn .c-name { font-size: 13px; font-weight: 700; color: #fff; }
+        .combo-btn .c-dmg  { font-size: 11px; font-weight: 700; color: var(--gold); }
 
-        .btn-gold {
-            background: radial-gradient(circle, var(--gold-light), var(--gold));
-            color: #2a1a1f;
-            padding: 12px 32px;
-            border-radius: 40px;
-            font-weight: 800;
-            text-transform: uppercase;
-            box-shadow: 0 4px 0 #5c430d;
-            font-size: 14px;
-        }
-        .btn-gold:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #5c430d; }
-
+        /* MODALS */
         .modal {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.95);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.96); z-index: 100;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 24px; border-radius: 22px;
         }
+        .modal-card {
+            background: #2a1a1f; border: 2px solid var(--gold);
+            border-radius: 24px; padding: 28px 24px;
+            width: 100%; max-width: 320px; text-align: center;
+        }
+        .modal-btn {
+            width: 100%; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 14px; padding: 16px; text-align: left;
+            color: var(--ivory); cursor: pointer; min-height: 60px;
+            transition: background 0.15s;
+        }
+        .modal-btn:active { background: rgba(255,255,255,0.12); }
+        .modal-btn .mb-title { display: block; font-weight: 700; font-size: 15px; }
+        .modal-btn .mb-sub   { display: block; font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+        .btn-gold-sm {
+            background: radial-gradient(circle at 40% 35%, var(--gold-light), var(--gold));
+            color: var(--dark); font-weight: 800; font-size: 14px;
+            padding: 14px 32px; border-radius: 50px; border: none;
+            box-shadow: 0 4px 0 #5c430d; cursor: pointer; min-height: 52px;
+        }
+        .cinzel { font-family: 'Cinzel', serif; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
+<div class="shell">
+<div class="card">
 
-    <div class="casino-container">
-        <!-- SIDE BY SIDE DASHBOARD -->
-        <div class="duel-dashboard">
-            <div class="vs-badge">VS</div>
-            
-            <!-- House / P2 -->
-            <div id="status-p2" class="player-status">
-                <div class="hp-label text-red-400" id="p2-label">The House</div>
-                <div class="orb-container border-red-500">
-                    <div id="p2-orb-fill" class="orb-fill bg-red-600" style="height: 100%">
-                        <div class="orb-wave"></div>
-                    </div>
-                </div>
-                <div id="p2-hp-text" class="hp-val">50</div>
-                <div id="p2-cp-container" class="hidden cp-val">CREDITS: <span id="p2-cp">0</span></div>
+    <!-- DASHBOARD -->
+    <div class="dashboard">
+        <div class="vs-badge">VS</div>
+        <div id="status-p2" class="player-panel">
+            <div class="p-name text-red-400" id="p2-label">The House</div>
+            <div class="orb" style="border-color:#ef4444">
+                <div id="p2-orb" class="orb-fill bg-red-600" style="height:100%"><div class="orb-wave"></div></div>
             </div>
-
-            <!-- Shark / P1 -->
-            <div id="status-p1" class="player-status">
-                <div class="hp-label text-teal-400">The Shark</div>
-                <div class="orb-container border-teal-500">
-                    <div id="p1-orb-fill" class="orb-fill bg-teal-500" style="height: 100%">
-                        <div class="orb-wave"></div>
-                    </div>
-                </div>
-                <div id="p1-hp-text" class="hp-val">50</div>
-                <div class="cp-val cursor-pointer" onclick="openShop(1)">CREDITS: <span id="p1-cp">0</span></div>
+            <div id="p2-hp" class="p-hp">50</div>
+            <div id="p2-cp-row" class="hidden p-cp">CR: <span id="p2-cp">0</span></div>
+        </div>
+        <div id="status-p1" class="player-panel">
+            <div class="p-name text-teal-400">The Shark</div>
+            <div class="orb" style="border-color:#2dd4bf">
+                <div id="p1-orb" class="orb-fill bg-teal-500" style="height:100%"><div class="orb-wave"></div></div>
             </div>
-        </div>
-
-        <div id="game-log" class="text-center text-[10px] uppercase tracking-widest text-gold/60 italic">Waiting for table buy-in...</div>
-
-        <!-- DICE AREA -->
-        <div class="dice-tray">
-            <div id="dice-grid" class="grid grid-cols-5 gap-2 mb-4"></div>
-        </div>
-
-        <!-- ROLL CONTROLS — always visible, never overlapped -->
-        <div class="flex flex-col items-center gap-2 flex-shrink-0">
-            <div class="bg-black/40 px-3 py-1 rounded-full border border-white/10">
-                <span id="roll-count" class="text-[10px] font-bold text-zinc-400">ROLLS: 3/3</span>
-            </div>
-            <button id="roll-btn" class="btn-gold" onclick="handleRoll()">Roll Dice</button>
-            <button id="end-roll-btn" class="hidden text-[10px] text-white/50 underline uppercase" onclick="skipRolling()">Attack Now</button>
-        </div>
-
-        <!-- COMBAT MOVES -->
-        <div class="bg-black/30 px-3 py-2 rounded-xl border border-gold/10 flex-shrink-0">
-            <p class="text-[9px] uppercase text-zinc-500 font-bold tracking-widest mb-2">Maneuvers</p>
-            <div id="moves-list" class="grid grid-cols-4 gap-1">
-                <button id="combo-straight" class="combo-btn" onclick="performAttack('Straight', 12)">
-                    <b>Straight</b>
-                    <span>12 DMG</span>
-                </button>
-                <button id="combo-fullhouse" class="combo-btn" onclick="performAttack('Full House', 8)">
-                    <b>Full House</b>
-                    <span>8 DMG</span>
-                </button>
-                <button id="combo-four" class="combo-btn" onclick="performAttack('Four Kind', 6)">
-                    <b>Four Kind</b>
-                    <span>6 DMG</span>
-                </button>
-                <button id="combo-base" class="combo-btn" onclick="performAttack('Low Stakes', 2)">
-                    <b>Low Stakes</b>
-                    <span>2 DMG</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- MODALS -->
-        <div id="mode-modal" class="modal">
-            <div class="bg-[#2a1a1f] border-2 border-gold p-8 rounded-2xl w-full max-w-xs shadow-2xl text-center">
-                <h1 class="cinzel text-3xl text-gold mb-1">Elite Duel</h1>
-                <p class="text-[10px] text-zinc-500 mb-8 uppercase tracking-[0.2em]">Select Arena</p>
-                <div class="space-y-4">
-                    <button class="w-full bg-white/5 border border-white/10 p-5 rounded-xl text-left hover:bg-white/10" onclick="startGame('ai')">
-                        <span class="block font-bold">Solo vs House</span>
-                        <span class="text-[10px] text-zinc-500">Beat the dealer's hand.</span>
-                    </button>
-                    <button class="w-full bg-white/5 border border-white/10 p-5 rounded-xl text-left hover:bg-white/10" onclick="startGame('pvp')">
-                        <span class="block font-bold">Local Duel</span>
-                        <span class="text-[10px] text-zinc-500">Pass-and-play PvP.</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="shop-modal" class="modal hidden">
-            <div class="bg-[#1a0f12] border border-gold p-8 rounded-2xl w-full max-w-xs">
-                <h2 class="cinzel text-xl text-gold mb-6" id="shop-title">Shop</h2>
-                <button class="w-full bg-teal-900/20 border border-teal-500/50 p-4 rounded-xl flex justify-between items-center mb-6" onclick="buyHeal()">
-                    <div class="text-left">
-                        <p class="text-teal-400 font-bold">Heal Vitality</p>
-                        <p class="text-[10px] opacity-60">+5 Health</p>
-                    </div>
-                    <span class="bg-gold text-black font-bold px-3 py-1 rounded text-xs">2 CP</span>
-                </button>
-                <button class="w-full text-zinc-500 text-[10px] uppercase font-bold" onclick="toggleModal('shop-modal', false)">Close Shop</button>
-            </div>
-        </div>
-
-        <div id="result-modal" class="modal hidden">
-            <h2 class="cinzel text-5xl text-gold mb-4" id="result-title">VICTORY</h2>
-            <p class="text-white/60 mb-10" id="result-msg"></p>
-            <button class="btn-gold" onclick="location.reload()">New Game</button>
+            <div id="p1-hp" class="p-hp">50</div>
+            <div class="p-cp" onclick="openShop()">CR: <span id="p1-cp">0</span> 🛒</div>
         </div>
     </div>
 
-    <script>
-        const MAX_HP = 50;
-        let gameMode = 'ai';
-        let activePlayer = 1;
-        let p1 = { hp: MAX_HP, cp: 0, name: "The Shark" };
-        let p2 = { hp: MAX_HP, cp: 0, name: "The House" };
-        let rollsLeft = 3;
-        let dice = [1, 2, 3, 4, 5];
-        let held = [false, false, false, false, false];
-        let isRolling = false;
+    <!-- LOG -->
+    <div id="log" class="log">Waiting for table buy-in…</div>
 
-        function log(msg) { document.getElementById('game-log').innerText = msg; }
-        function toggleModal(id, show) { document.getElementById(id).classList.toggle('hidden', !show); }
+    <!-- DICE TRAY -->
+    <div class="dice-tray">
+        <div id="dice-grid" class="dice-grid"></div>
+    </div>
 
-        function startGame(mode) {
-            gameMode = mode;
-            toggleModal('mode-modal', false);
-            if (mode === 'pvp') {
-                p2.name = "The Whale";
-                document.getElementById('p2-label').innerText = "The Whale";
-                document.getElementById('p2-cp-container').classList.remove('hidden');
-            }
-            startTurn();
+    <!-- ROLL CONTROLS -->
+    <div class="roll-controls">
+        <div class="roll-badge"><span id="roll-count">ROLLS: 3 / 3</span></div>
+        <button id="roll-btn" class="btn-roll" onclick="handleRoll()">Roll Dice</button>
+        <button id="attack-now-btn" class="btn-attack-now hidden" onclick="skipRolling()">Attack Now ↓</button>
+    </div>
+
+    <!-- MANEUVERS -->
+    <div class="maneuvers">
+        <div class="maneuvers-label">Maneuvers</div>
+        <div class="maneuvers-grid">
+            <button id="combo-straight"  class="combo-btn" onclick="performAttack('Straight',12)">
+                <span class="c-name">Straight</span><span class="c-dmg">12 DMG</span>
+            </button>
+            <button id="combo-fullhouse" class="combo-btn" onclick="performAttack('Full House',8)">
+                <span class="c-name">Full House</span><span class="c-dmg">8 DMG</span>
+            </button>
+            <button id="combo-four"      class="combo-btn" onclick="performAttack('Four of a Kind',6)">
+                <span class="c-name">Four of a Kind</span><span class="c-dmg">6 DMG</span>
+            </button>
+            <button id="combo-base"      class="combo-btn" onclick="performAttack('Low Stakes',2)">
+                <span class="c-name">Low Stakes</span><span class="c-dmg">2 DMG</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MODE MODAL -->
+    <div id="mode-modal" class="modal">
+        <div class="modal-card">
+            <h1 class="cinzel text-3xl mb-1" style="color:var(--gold)">Elite Duel</h1>
+            <p style="font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:24px">Select Arena</p>
+            <div style="display:flex;flex-direction:column;gap:12px">
+                <button class="modal-btn" onclick="startGame('ai')">
+                    <span class="mb-title">Solo vs House</span>
+                    <span class="mb-sub">Beat the dealer's hand.</span>
+                </button>
+                <button class="modal-btn" onclick="startGame('pvp')">
+                    <span class="mb-title">Local Duel</span>
+                    <span class="mb-sub">Pass-and-play PvP.</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHOP MODAL -->
+    <div id="shop-modal" class="modal hidden">
+        <div class="modal-card">
+            <h2 class="cinzel text-xl mb-6" style="color:var(--gold)">Shop</h2>
+            <button onclick="buyHeal()" style="width:100%;background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.4);border-radius:14px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;cursor:pointer;min-height:60px">
+                <div style="text-align:left">
+                    <p style="color:#2dd4bf;font-weight:700;font-size:14px">Heal Vitality</p>
+                    <p style="font-size:11px;opacity:0.5;margin-top:2px">+5 Health</p>
+                </div>
+                <span style="background:var(--gold);color:#111;font-weight:800;font-size:12px;padding:6px 12px;border-radius:8px">2 CR</span>
+            </button>
+            <button onclick="toggleModal('shop-modal',false)" style="width:100%;background:none;border:none;color:rgba(255,255,255,0.35);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;min-height:44px">Close</button>
+        </div>
+    </div>
+
+    <!-- RESULT MODAL -->
+    <div id="result-modal" class="modal hidden">
+        <div class="modal-card">
+            <h2 class="cinzel" id="result-title" style="font-size:clamp(2rem,10vw,3.5rem);color:var(--gold);margin-bottom:8px">VICTORY</h2>
+            <p id="result-msg" style="color:rgba(255,255,255,0.55);margin-bottom:28px;font-size:14px"></p>
+            <button class="btn-gold-sm" onclick="location.reload()">New Game</button>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<script>
+    const MAX_HP = 50;
+    let gameMode = 'ai', activePlayer = 1;
+    let p1 = { hp: MAX_HP, cp: 0, name: 'The Shark' };
+    let p2 = { hp: MAX_HP, cp: 0, name: 'The House' };
+    let rollsLeft = 3, dice = [1,2,3,4,5], held = [false,false,false,false,false], isRolling = false;
+
+    const $ = id => document.getElementById(id);
+    const log = msg => $('log').innerText = msg;
+    const toggleModal = (id, show) => $(id).classList.toggle('hidden', !show);
+
+    function startGame(mode) {
+        gameMode = mode;
+        toggleModal('mode-modal', false);
+        if (mode === 'pvp') {
+            p2.name = 'The Whale';
+            $('p2-label').innerText = 'The Whale';
+            $('p2-cp-row').classList.remove('hidden');
         }
+        startTurn();
+    }
 
-        function startTurn() {
-            rollsLeft = 3;
-            held = [false, false, false, false, false];
-            if (activePlayer === 1) { p1.cp++; log(`${p1.name}'s turn.`); }
-            else if (gameMode === 'pvp') { p2.cp++; log(`${p2.name}'s turn.`); }
-            updateUI();
-        }
+    function startTurn() {
+        rollsLeft = 3;
+        held = [false,false,false,false,false];
+        if (activePlayer === 1) { p1.cp++; log(`${p1.name}'s turn.`); }
+        else if (gameMode === 'pvp') { p2.cp++; log(`${p2.name}'s turn.`); }
+        updateUI();
+    }
 
-        function updateUI() {
-            document.getElementById('p1-hp-text').innerText = p1.hp;
-            document.getElementById('p2-hp-text').innerText = p2.hp;
-            document.getElementById('p1-orb-fill').style.height = (p1.hp / MAX_HP * 100) + '%';
-            document.getElementById('p2-orb-fill').style.height = (p2.hp / MAX_HP * 100) + '%';
-            document.getElementById('p1-cp').innerText = p1.cp;
-            document.getElementById('p2-cp').innerText = p2.cp;
+    function updateUI() {
+        $('p1-hp').innerText = p1.hp;
+        $('p2-hp').innerText = p2.hp;
+        $('p1-orb').style.height = (p1.hp / MAX_HP * 100) + '%';
+        $('p2-orb').style.height = (p2.hp / MAX_HP * 100) + '%';
+        $('p1-cp').innerText = p1.cp;
+        $('p2-cp').innerText = p2.cp;
+        $('status-p1').classList.toggle('active', activePlayer === 1);
+        $('status-p2').classList.toggle('active', activePlayer === 2);
+        $('roll-count').innerText = `ROLLS: ${rollsLeft} / 3`;
+        $('roll-btn').disabled = rollsLeft === 0 || isRolling || (gameMode === 'ai' && activePlayer === 2);
+        $('attack-now-btn').classList.toggle('hidden', !(rollsLeft < 3 && rollsLeft > 0));
 
-            document.getElementById('status-p1').classList.toggle('active-turn', activePlayer === 1);
-            document.getElementById('status-p2').classList.toggle('active-turn', activePlayer === 2);
+        const grid = $('dice-grid');
+        grid.innerHTML = '';
+        const preRoll = rollsLeft === 3;
+        dice.forEach((val, i) => {
+            const d = document.createElement('div');
+            d.className = 'die' + (held[i] ? ' held' : '') + (preRoll ? ' pre-roll' : '');
+            d.innerText = val;
+            d.addEventListener('click', () => toggleHold(i));
+            grid.appendChild(d);
+        });
+        checkCombos();
+    }
 
-            document.getElementById('roll-count').innerText = `ROLLS: ${rollsLeft}/3`;
-            document.getElementById('roll-btn').disabled = (rollsLeft === 0 || isRolling || (gameMode === 'ai' && activePlayer === 2));
-            document.getElementById('end-roll-btn').classList.toggle('hidden', !(rollsLeft < 3 && rollsLeft > 0));
+    function toggleHold(i) {
+        if (isRolling || rollsLeft === 3) return;
+        held[i] = !held[i];
+        updateUI();
+    }
 
-            const grid = document.getElementById('dice-grid');
-            grid.innerHTML = '';
-            dice.forEach((val, i) => {
-                const d = document.createElement('div');
-                const isFirstRoll = rollsLeft === 3;
-                d.className = `die ${held[i] ? 'held' : ''} ${isFirstRoll ? 'pointer-events-none' : ''}`;
-                d.innerText = val;
-                d.onclick = () => toggleHold(i);
-                grid.appendChild(d);
+    async function handleRoll() {
+        if (rollsLeft <= 0 || isRolling) return;
+        isRolling = true; rollsLeft--;
+        const els = document.querySelectorAll('.die');
+        for (let f = 0; f < 8; f++) {
+            els.forEach((el, i) => {
+                if (!held[i]) { dice[i] = Math.floor(Math.random()*6)+1; el.innerText = dice[i]; el.classList.add('rolling'); }
             });
-            checkCombos();
+            await new Promise(r => setTimeout(r, 60));
         }
+        els.forEach(el => el.classList.remove('rolling'));
+        isRolling = false;
+        updateUI();
+    }
 
-        function toggleHold(i) {
-            if (isRolling || rollsLeft === 3) return;
-            held[i] = !held[i];
-            updateUI();
-        }
+    function skipRolling() { rollsLeft = 0; updateUI(); }
 
-        async function handleRoll() {
-            if (rollsLeft <= 0 || isRolling) return;
-            isRolling = true;
-            rollsLeft--;
-            const diceEls = document.querySelectorAll('.die');
-            for (let f = 0; f < 8; f++) {
-                diceEls.forEach((el, i) => {
-                    if (!held[i]) {
-                        dice[i] = Math.floor(Math.random() * 6) + 1;
-                        el.innerText = dice[i];
-                        el.classList.add('rolling');
-                    }
-                });
-                await new Promise(r => setTimeout(r, 60));
-            }
-            diceEls.forEach(el => el.classList.remove('rolling'));
-            isRolling = false;
-            updateUI();
-        }
+    function checkCombos() {
+        const counts = {};
+        dice.forEach(v => counts[v] = (counts[v]||0)+1);
+        const vals = Object.values(counts);
+        const sorted = [...new Set(dice)].sort((a,b)=>a-b);
+        const str = sorted.join('');
+        const hasFour      = vals.some(v => v >= 4);
+        const hasFullHouse = (vals.includes(3) && vals.includes(2)) || vals.filter(v=>v>=3).length > 1;
+        const isStraight   = str.includes('12345') || str.includes('23456');
+        const rolled = rollsLeft < 3;
+        const can    = (gameMode === 'pvp' || activePlayer === 1) && rolled;
+        setCombo('combo-straight',  isStraight   && can);
+        setCombo('combo-fullhouse', hasFullHouse  && can);
+        setCombo('combo-four',      hasFour       && can);
+        setCombo('combo-base',                       can);
+    }
 
-        function skipRolling() { rollsLeft = 0; updateUI(); }
+    function setCombo(id, active) { $(id).classList.toggle('active', active); }
 
-        function checkCombos() {
-            const counts = {};
-            dice.forEach(v => counts[v] = (counts[v] || 0) + 1);
-            const vals = Object.values(counts);
-            const sorted = [...new Set(dice)].sort((a, b) => a - b);
-            const str = sorted.join('');
-            
-            const hasFour = vals.some(v => v >= 4);
-            const hasFullHouse = (vals.includes(3) && vals.includes(2)) || vals.filter(v => v >= 3).length > 1;
-            const isStraight = str.includes("12345") || str.includes("23456");
+    async function performAttack(name, dmg) {
+        if (activePlayer === 1) { p2.hp = Math.max(0, p2.hp-dmg); log(`${p1.name} uses ${name}! −${dmg} HP`); }
+        else                    { p1.hp = Math.max(0, p1.hp-dmg); log(`${p2.name} uses ${name}! −${dmg} HP`); }
+        updateUI();
+        if (p1.hp <= 0 || p2.hp <= 0) { gameOver(); return; }
+        activePlayer = activePlayer === 1 ? 2 : 1;
+        await new Promise(r => setTimeout(r, 700));
+        if (gameMode === 'ai' && activePlayer === 2) opponentTurn();
+        else startTurn();
+    }
 
-            const rolled = rollsLeft < 3;
-            const canSelect = (gameMode === 'pvp' || activePlayer === 1) && rolled;
-            
-            setComboBtn('combo-four', hasFour && canSelect);
-            setComboBtn('combo-fullhouse', hasFullHouse && canSelect);
-            setComboBtn('combo-straight', isStraight && canSelect);
-            setComboBtn('combo-base', canSelect); 
-        }
+    async function opponentTurn() {
+        log('Dealer is rolling…'); isRolling = true;
+        await new Promise(r => setTimeout(r, 900));
+        dice = dice.map(() => Math.floor(Math.random()*6)+1);
+        isRolling = false;
+        const sum = dice.reduce((a,b)=>a+b,0);
+        const dmg = sum > 18 ? 8 : sum > 10 ? 5 : 2;
+        p1.hp = Math.max(0, p1.hp-dmg);
+        log(`The House hits for ${dmg} damage!`);
+        updateUI();
+        if (p1.hp <= 0) { gameOver(); return; }
+        await new Promise(r => setTimeout(r, 900));
+        activePlayer = 1; startTurn();
+    }
 
-        function setComboBtn(id, active) {
-            const btn = document.getElementById(id);
-            btn.classList.toggle('active', active);
-        }
+    function openShop() {
+        if (isRolling || rollsLeft < 3) return;
+        toggleModal('shop-modal', true);
+    }
 
-        async function performAttack(name, dmg) {
-            if (activePlayer === 1) { p2.hp = Math.max(0, p2.hp - dmg); log(`${p1.name} uses ${name}!`); }
-            else { p1.hp = Math.max(0, p1.hp - dmg); log(`${p2.name} uses ${name}!`); }
-            updateUI();
-            if (p1.hp <= 0 || p2.hp <= 0) { gameOver(); return; }
-            activePlayer = activePlayer === 1 ? 2 : 1;
-            await new Promise(r => setTimeout(r, 800));
-            if (gameMode === 'ai' && activePlayer === 2) opponentTurn();
-            else startTurn();
-        }
+    function buyHeal() {
+        const p = activePlayer === 1 ? p1 : p2;
+        if (p.cp < 2 || p.hp >= MAX_HP) return;
+        p.cp -= 2; p.hp = Math.min(MAX_HP, p.hp+5);
+        updateUI(); toggleModal('shop-modal', false);
+    }
 
-        async function opponentTurn() {
-            log("Dealer is rolling...");
-            isRolling = true;
-            await new Promise(r => setTimeout(r, 1000));
-            dice = dice.map(() => Math.floor(Math.random() * 6) + 1);
-            isRolling = false;
-            const sum = dice.reduce((a, b) => a + b, 0);
-            const dmg = sum > 18 ? 8 : (sum > 10 ? 5 : 2);
-            p1.hp = Math.max(0, p1.hp - dmg);
-            log(`The House hits for ${dmg}!`);
-            updateUI();
-            if (p1.hp <= 0) { gameOver(); return; }
-            await new Promise(r => setTimeout(r, 1000));
-            activePlayer = 1;
-            startTurn();
-        }
+    function gameOver() {
+        const win = p2.hp <= 0;
+        $('result-title').innerText = win ? 'VICTORY' : 'BUSTED';
+        $('result-msg').innerText   = win ? 'The Shark cleared the table.' : 'The House always wins.';
+        toggleModal('result-modal', true);
+    }
 
-        function openShop(pNum) {
-            if (isRolling || rollsLeft < 3) return;
-            toggleModal('shop-modal', true);
-        }
-
-        function buyHeal() {
-            let p = activePlayer === 1 ? p1 : p2;
-            if (p.cp < 2 || p.hp >= MAX_HP) return;
-            p.cp -= 2; p.hp = Math.min(MAX_HP, p.hp + 5);
-            updateUI(); toggleModal('shop-modal', false);
-        }
-
-        function gameOver() {
-            const win = p2.hp <= 0;
-            document.getElementById('result-title').innerText = win ? "VICTORY" : "BUSTED";
-            document.getElementById('result-msg').innerText = win ? "The Shark cleared the table." : "The House always wins.";
-            toggleModal('result-modal', true);
-        }
-
-        window.onload = () => toggleModal('mode-modal', true);
-    </script>
+    window.onload = () => toggleModal('mode-modal', true);
+</script>
 </body>
 </html>
