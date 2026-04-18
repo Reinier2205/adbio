@@ -756,6 +756,9 @@
             },
             
             applyState(state) {
+                // Don't apply state to host - host is authoritative
+                if (mpMode === 'host') return;
+                
                 if (state.players) {
                     players = state.players.map((p, idx) => ({
                         name: p.name,
@@ -862,9 +865,6 @@
         document.getElementById('hrd-turn-banner')?.remove();
         
         const isMine = myPlayerIndex === activePlayer;
-        
-        // Disable/enable controls
-        document.getElementById('roll-btn').disabled = !isMine || rollsLeft === 0 || isRolling;
         
         // Create custom turn banner that doesn't interfere with layout
         const banner = document.createElement('div');
