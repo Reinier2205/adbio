@@ -743,17 +743,9 @@
                 // Don't apply state to host - host is authoritative
                 if (mpMode === 'host') return;
                 
-                console.log('applyState called:', {
-                    myPlayerIndex,
-                    activePlayer: state.turnIndex || state.activePlayer,
-                    rollsLeft: state.rollsLeft,
-                    currentHeld: held,
-                    stateHeld: state.held
-                });
-                
-                // Save current held dice if it's my turn
-                const isMyTurn = myPlayerIndex === (state.turnIndex !== undefined ? state.turnIndex : state.activePlayer);
-                const currentHeld = isMyTurn ? [...held] : null;
+                // Check if turn is changing
+                const newActivePlayer = state.turnIndex !== undefined ? state.turnIndex : state.activePlayer;
+                const turnChanging = activePlayer !== newActivePlayer;
                 
                 if (state.players) {
                     players = state.players.map((p, idx) => ({
@@ -771,15 +763,19 @@
                 if (state.rollsLeft !== undefined) rollsLeft = state.rollsLeft;
                 if (state.dice) dice = [...state.dice];
                 
-                // Handle held dice: preserve guest's selections during their turn
-                if (isMyTurn && currentHeld && rollsLeft > 0) {
-                    // Keep my held dice selections during my turn
-                    held = currentHeld;
-                    console.log('Preserved held dice:', held);
+                // Handle held dice logic - CRITICAL FIX
+                if (turnChanging) {
+                    // Clear held dice when turn changes
+                    held = [false, false, false, false, false];
+                } else if (rollsLeft === 3) {
+                    // Clear held dice at start of new turn (3 rolls left)
+                    held = [false, false, false, false, false];
+                } else if (myPlayerIndex === activePlayer) {
+                    // It's my turn and I'm mid-turn - preserve my held dice
+                    // Don't change held array - keep my selections
                 } else if (state.held) {
-                    // Apply state held dice for other situations
+                    // Apply state held dice for other player's turn
                     held = [...state.held];
-                    console.log('Applied state held dice:', held);
                 }
                 
                 if (state.isRolling !== undefined) isRolling = state.isRolling;
@@ -803,7 +799,7 @@
                 isRolling = true;
                 rollsLeft--;
                 
-                // Roll unheld dice only
+                // Roll unheld dice only - this is critical!
                 for (let i = 0; i < dice.length; i++) {
                     if (!held[i]) {
                         dice[i] = Math.floor(Math.random() * 6) + 1;
@@ -847,6 +843,10 @@
                         player.cp -= 2;
                         player.hp = Math.min(MAX_HP, player.hp + 5);
                     }
+                    return this.getState();
+                } else if (mode === 'hold' && typeof attackData === 'object' && attackData.heldDice) {
+                    // This is a held dice update from guest
+                    held = [...attackData.heldDice];
                     return this.getState();
                 }
                 
@@ -1011,10 +1011,18 @@
         if (mpMode !== 'single' && myPlayerIndex !== activePlayer) return;
         
         held[i] = !held[i];
-        console.log('toggleHold:', i, 'held array:', held);
         
         // Update UI immediately for responsive feedback
         updateUI();
+        
+        // Send held dice state to host for guests using target action
+        if (mpMode === 'guest' && mpGuest) {
+            mpGuest.sendAction({ 
+                type: 'target', 
+                targetIndex: { heldDice: [...held] }, 
+                mode: 'hold' 
+            });
+        }
         
         // Host broadcasts state change for held dice
         if (mpMode === 'host' && mpHost) {
