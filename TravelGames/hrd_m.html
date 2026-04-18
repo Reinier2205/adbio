@@ -760,6 +760,10 @@
                 // Don't apply state to host - host is authoritative
                 if (mpMode === 'host') return;
                 
+                // Preserve guest's held dice during rolls
+                const preserveHeld = isRolling || (rollsLeft < 3 && rollsLeft > 0);
+                const oldHeld = preserveHeld ? [...held] : null;
+                
                 if (state.players) {
                     players = state.players.map((p, idx) => ({
                         name: p.name,
@@ -775,7 +779,15 @@
                 if (state.activePlayer !== undefined) activePlayer = state.activePlayer;
                 if (state.rollsLeft !== undefined) rollsLeft = state.rollsLeft;
                 if (state.dice) dice = [...state.dice];
-                if (state.held) held = [...state.held];
+                
+                // Only update held dice if we're not preserving guest's selections
+                if (state.held && !preserveHeld) {
+                    held = [...state.held];
+                } else if (oldHeld) {
+                    // Restore guest's held dice selections
+                    held = oldHeld;
+                }
+                
                 if (state.isRolling !== undefined) isRolling = state.isRolling;
                 
                 // Remove waiting/lobby overlays once game state arrives
@@ -1017,21 +1029,13 @@
     }
 
     async function handleRoll() {
-        console.log('handleRoll called:', { rollsLeft, isRolling, mpMode, myPlayerIndex, activePlayer });
-        
-        if (rollsLeft <= 0 || isRolling) {
-            console.log('handleRoll early return:', { rollsLeft, isRolling });
-            return;
-        }
+        if (rollsLeft <= 0 || isRolling) return;
         
         // Guest sends action to host
         if (mpMode === 'guest' && mpGuest) {
-            console.log('Guest sending roll action');
             mpGuest.sendAction({ type: 'roll' });
             return;
         }
-        
-        console.log('Executing roll locally');
         
         // For host and single-device, execute the roll with animation
         isRolling = true;
@@ -1048,11 +1052,8 @@
             }
         }
         
-        console.log('New dice values:', dice);
-        
         // Animate the roll
         const els = document.querySelectorAll('.die');
-        console.log('Found dice elements:', els.length);
         
         for (let f = 0; f < 8; f++) {
             els.forEach((el, i) => {
@@ -1067,14 +1068,11 @@
         els.forEach(el => el.classList.remove('rolling'));
         isRolling = false;
         
-        console.log('Animation complete, updating UI');
-        
         // Update UI after animation
         updateUI();
         
         // Host broadcasts new state
         if (mpMode === 'host' && mpHost) {
-            console.log('Broadcasting state');
             mpHost.broadcastState(mpHost.gameAdapter.getState());
         }
         
