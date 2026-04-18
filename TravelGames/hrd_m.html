@@ -171,7 +171,7 @@
             100% { transform: translate(-1px,1px)   rotate(0deg);  }
         }
 
-        /* ROLL CONTROLS — single row: badge | Roll Dice | Attack Now */
+        /* ROLL CONTROLS — single row: badge | Roll Dice */
         .roll-controls {
             flex-shrink: 0;
             display: flex;
@@ -207,22 +207,6 @@
         }
         .btn-roll:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 #5c430d; }
         .btn-roll:disabled { opacity: 0.35; cursor: not-allowed; }
-        .btn-attack-now {
-            font-size: 11px; font-weight: 700;
-            color: var(--ivory);
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 50px;
-            cursor: pointer;
-            padding: 8px 8px; min-height: 52px;
-            flex: 1;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            white-space: nowrap;
-            transition: background 0.15s;
-        }
-        .btn-attack-now:active { background: rgba(255,255,255,0.12); }
 
         /* MANEUVERS */
         .maneuvers {
@@ -414,11 +398,10 @@
         <div id="dice-grid" class="dice-grid"></div>
     </div>
 
-    <!-- ROLL CONTROLS: badge left · Roll Dice centre · Attack Now right -->
+    <!-- ROLL CONTROLS: badge left · Roll Dice centre -->
     <div class="roll-controls">
         <div class="roll-badge"><span id="roll-count">ROLLS: 3 / 3</span></div>
         <button id="roll-btn" class="btn-roll" onclick="handleRoll()">Roll Dice</button>
-        <button id="attack-now-btn" class="btn-attack-now hidden" onclick="skipRolling()">Attack Now</button>
     </div>
 
     <!-- MANEUVERS -->
@@ -890,14 +873,12 @@
         
         const isMine = myPlayerIndex === activePlayer;
         
-        // Create custom turn banner that doesn't interfere with layout
+        // Create custom turn banner positioned between dashboard and dice tray
         const banner = document.createElement('div');
         banner.id = 'hrd-turn-banner';
         banner.style.cssText = [
-            'position:absolute',
-            'top:60px',
-            'left:50%',
-            'transform:translateX(-50%)',
+            'display:block',
+            'text-align:center',
             'background:rgba(0,0,0,0.75)',
             'border:1px solid rgba(212,175,55,0.5)',
             'border-radius:50px',
@@ -909,7 +890,8 @@
             'letter-spacing:0.1em',
             'white-space:nowrap',
             'pointer-events:none',
-            'z-index:100'
+            'margin:6px 0',
+            'flex-shrink:0'
         ].join(';');
         
         if (isMine) {
@@ -922,10 +904,11 @@
             banner.style.color = 'rgba(255,255,255,0.85)';
         }
         
-        // Insert banner into the card container, not the roll controls
-        const cardContainer = document.querySelector('.card');
-        if (cardContainer) {
-            cardContainer.appendChild(banner);
+        // Insert banner between dashboard and dice tray
+        const dashboard = document.querySelector('.dashboard');
+        const diceTray = document.querySelector('.dice-tray');
+        if (dashboard && diceTray) {
+            dashboard.parentNode.insertBefore(banner, diceTray);
         }
     }
 
@@ -996,7 +979,6 @@
         const notAITurn = !(mpMode === 'single' && players.length > 1 && players[1].name === 'The House' && activePlayer === 1);
         
         $('roll-btn').disabled = !canRoll || !isMyTurn || !notAITurn;
-        $('attack-now-btn').classList.toggle('hidden', !(rollsLeft < 3 && rollsLeft > 0 && isMyTurn));
 
         // Update dice display
         const grid = $('dice-grid');
@@ -1080,12 +1062,6 @@
         if (mpMode === 'single' && players[1] && players[1].name === 'The House' && activePlayer === 1) {
             setTimeout(opponentTurn, 1000);
         }
-    }
-
-    function skipRolling() {
-        if (mpMode !== 'single' && myPlayerIndex !== activePlayer) return;
-        rollsLeft = 0;
-        updateUI();
     }
 
     function checkCombos() {
