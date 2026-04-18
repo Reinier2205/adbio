@@ -831,9 +831,9 @@
                         players[activePlayer].cp++;
                     }
                     
-                    // Reset for next turn (but don't reset held dice yet)
+                    // Reset for next turn and clear held dice
                     rollsLeft = 3;
-                    // held array will be reset in startTurn()
+                    held = [false,false,false,false,false]; // Clear held dice when turn advances
                     _advanceTurn();
                     
                     const s = this.getState();
@@ -959,7 +959,9 @@
         
         updateUI();
         
-        if (mpMode === 'host') {
+        // Host broadcasts the cleared state to ensure guests see the reset
+        if (mpMode === 'host' && mpHost) {
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
             _updateTurnUI();
         }
     }
@@ -1129,8 +1131,9 @@
         // Check for winner
         if (checkWinner()) return;
         
-        // Reset for next turn - this will be done in startTurn()
+        // Reset for next turn and advance player
         rollsLeft = 3;
+        held = [false,false,false,false,false]; // Clear held dice before advancing turn
         activePlayer = (activePlayer + 1) % players.length;
         
         // Host broadcasts new state
@@ -1144,7 +1147,7 @@
         if (mpMode === 'single' && players[1] && players[1].name === 'The House' && activePlayer === 1) {
             opponentTurn();
         } else {
-            startTurn(); // This will reset held dice
+            startTurn(); // This will also clear held dice and broadcast state
         }
     }
 
