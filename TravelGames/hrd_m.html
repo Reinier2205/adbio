@@ -564,7 +564,7 @@
         myPlayerIndex = 0;
         
         const adapter = _buildGameAdapter();
-        mpHost = new LCRMultiplayer.MultiplayerHost(adapter, 9);
+        mpHost = new LCRMultiplayer.MultiplayerHost(adapter, 2); // HRD is 2-player game
         
         try {
             await mpHost.open();
@@ -608,7 +608,10 @@
         mpHost.onGuestPicked = (connections) => {
             if (mpLobbyUI) {
                 mpLobbyUI.updateCount(connections.length + 1);
-                if (mpHost.allPicked()) mpLobbyUI.enableDealIn();
+                // HRD is 2-player: enable Deal In when host + 1 guest have picked
+                if (connections.length >= 1 && connections.every(e => e.picked) && mpHost._hostPickedName) {
+                    mpLobbyUI.enableDealIn();
+                }
             }
         };
         
@@ -789,24 +792,45 @@
                 isRolling = true;
                 rollsLeft--;
                 
-                // Roll unheld dice
+                // Roll unheld dice only
                 for (let i = 0; i < dice.length; i++) {
                     if (!held[i]) {
                         dice[i] = Math.floor(Math.random() * 6) + 1;
                     }
                 }
                 
-                // Simulate rolling animation delay
-                setTimeout(() => {
-                    isRolling = false;
-                    if (mpMode === 'host' && mpHost) {
-                        mpHost.broadcastState(this.getState());
-                    }
-                }, 500);
+                // For host mode, trigger animation
+                if (mpMode === 'host') {
+                    this._animateRoll();
+                }
                 
                 const s = this.getState();
                 s.lastDiceResults = [...dice];
                 return s;
+            },
+            
+            async _animateRoll() {
+                const els = document.querySelectorAll('.die');
+                for (let f = 0; f < 8; f++) {
+                    els.forEach((el, i) => {
+                        if (!held[i]) {
+                            el.innerText = dice[i];
+                            el.classList.add('rolling');
+                        }
+                    });
+                    await new Promise(r => setTimeout(r, 60));
+                }
+                
+                els.forEach(el => el.classList.remove('rolling'));
+                isRolling = false;
+                
+                // Update UI after animation
+                updateUI();
+                
+                // AI opponent turn for single device
+                if (mpMode === 'single' && players[1] && players[1].name === 'The House' && activePlayer === 1) {
+                    setTimeout(opponentTurn, 1000);
+                }
             },
             
             // Use executeTarget for attacks (overloading the interface)
@@ -824,9 +848,9 @@
                         players[activePlayer].cp++;
                     }
                     
-                    // Reset for next turn
+                    // Reset for next turn (but don't reset held dice yet)
                     rollsLeft = 3;
-                    held = [false,false,false,false,false];
+                    // held array will be reset in startTurn()
                     _advanceTurn();
                     
                     const s = this.getState();
@@ -910,7 +934,7 @@
 
     function startTurn() {
         rollsLeft = 3;
-        held = [false,false,false,false,false];
+        held = [false,false,false,false,false]; // Reset held dice at start of turn
         
         if (players[activePlayer]) {
             players[activePlayer].cp++;
@@ -982,6 +1006,16 @@
         }
         
         // Host or single-device: execute locally
+        if (mpMode === 'host') {
+            // For host mode, let the game adapter handle the rolling
+            // This ensures proper state synchronization
+            const newState = mpHost.gameAdapter.executeRoll();
+            mpHost.broadcastState(newState);
+            if (mpHost.onStateChange) mpHost.onStateChange(newState);
+            return;
+        }
+        
+        // Single device mode - do local animation
         isRolling = true;
         rollsLeft--;
         
@@ -999,11 +1033,6 @@
         
         els.forEach(el => el.classList.remove('rolling'));
         isRolling = false;
-        
-        // Host broadcasts new state
-        if (mpMode === 'host' && mpHost) {
-            mpHost.broadcastState(mpHost.gameAdapter.getState());
-        }
         
         updateUI();
         
@@ -1061,9 +1090,8 @@
         // Check for winner
         if (checkWinner()) return;
         
-        // Reset for next turn
+        // Reset for next turn - this will be done in startTurn()
         rollsLeft = 3;
-        held = [false,false,false,false,false];
         activePlayer = (activePlayer + 1) % players.length;
         
         // Host broadcasts new state
@@ -1077,7 +1105,7 @@
         if (mpMode === 'single' && players[1] && players[1].name === 'The House' && activePlayer === 1) {
             opponentTurn();
         } else {
-            startTurn();
+            startTurn(); // This will reset held dice
         }
     }
 

@@ -119,9 +119,12 @@ const gameAdapter = {
   },
 
   /**
-   * Executes a target selection (pass/steal chip).
+   * Executes a target selection (pass/steal chip) or other game actions.
    * Called by host only.
    * Returns updated state.
+   * 
+   * NOTE: This method can be overloaded for different action types.
+   * For games without targeting, use this for other actions like attacks or purchases.
    */
   executeTarget(targetIndex, mode) {
     if (mode === 'PASS') {
@@ -130,6 +133,18 @@ const gameAdapter = {
     } else if (mode === 'STEAL') {
       players[targetIndex].chips--;
       players[turnIndex].chips++;
+    } else if (mode === 'attack') {
+      // Example: targetIndex could be an object with attack data
+      const { attackName, damage } = targetIndex;
+      const target = turnIndex === 0 ? 1 : 0;
+      players[target].hp = Math.max(0, players[target].hp - damage);
+    } else if (mode === 'heal') {
+      // Example: heal current player
+      const player = players[turnIndex];
+      if (player.resources >= 2) {
+        player.resources -= 2;
+        player.hp = Math.min(player.maxHp, player.hp + 5);
+      }
     }
     _advanceTurn();
     return this.getState();
@@ -337,6 +352,8 @@ function _showGuestCharacterPicker() {
 
 ### Step 6: Modify Game Actions
 
+**IMPORTANT**: Always check `mpMode` before executing game logic. Guests should send actions to host, while host/single-device execute locally.
+
 ```javascript
 function handleRoll() {
   if (isProcessing) return;
@@ -360,6 +377,47 @@ function handleRoll() {
   isProcessing = false;
 }
 
+// For games without targeting, use executeTarget for other actions
+function handleAttack(attackName, damage) {
+  // Guest sends action to host using executeTarget interface
+  if (mpMode === 'guest' && mpGuest) {
+    mpGuest.sendAction({ 
+      type: 'target', 
+      targetIndex: { attackName, damage }, 
+      mode: 'attack' 
+    });
+    return;
+  }
+  
+  // Host or single-device: execute locally
+  _executeAttack(attackName, damage);
+  
+  // Host broadcasts new state
+  if (mpMode === 'host' && mpHost) {
+    mpHost.broadcastState(mpHost.gameAdapter.getState());
+  }
+}
+
+function handleHeal() {
+  // Guest sends heal action to host
+  if (mpMode === 'guest' && mpGuest) {
+    mpGuest.sendAction({ 
+      type: 'target', 
+      targetIndex: 0, 
+      mode: 'heal' 
+    });
+    return;
+  }
+  
+  // Host or single-device: execute locally
+  _executeHeal();
+  
+  // Host broadcasts new state
+  if (mpMode === 'host' && mpHost) {
+    mpHost.broadcastState(mpHost.gameAdapter.getState());
+  }
+}
+
 function handleTarget(targetIndex) {
   // Guest sends action to host
   if (mpMode === 'guest' && mpGuest) {
@@ -379,6 +437,8 @@ function handleTarget(targetIndex) {
 
 ### Step 7: Update Turn UI
 
+**CRITICAL**: Always call `_updateTurnUI()` after state changes to keep turn indicators in sync.
+
 ```javascript
 function _updateTurnUI() {
   if (mpMode === 'single') return;
@@ -389,14 +449,32 @@ function _updateTurnUI() {
   
   const isMine = myPlayerIndex === turnIndex;
   
-  // Disable/enable controls
-  document.getElementById('roll-btn').disabled = !isMine;
+  // Disable/enable controls based on turn
+  document.getElementById('roll-btn').disabled = !isMine || gameSpecificConditions;
+  
+  // Disable action buttons for non-turn players
+  document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.disabled = !isMine || otherConditions;
+  });
   
   // Show appropriate banner
   if (isMine) {
     LCRMultiplayer.UI.showActiveTurnBanner();
   } else if (players[turnIndex]) {
     LCRMultiplayer.UI.showSpectatorBanner(players[turnIndex].name);
+  }
+}
+
+// Call _updateTurnUI() in these places:
+// 1. After applyState() in game adapter
+// 2. After local state changes in host
+// 3. After turn advancement
+function updateUI() {
+  // ... existing UI updates ...
+  
+  // Always update turn UI for multiplayer
+  if (mpMode !== 'single') {
+    _updateTurnUI();
   }
 }
 ```
@@ -491,12 +569,16 @@ function startTargeting(mode) {
 
 ### Gameplay
 - [ ] Only current turn player can roll/act
+- [ ] All action buttons properly disabled for non-turn players
+- [ ] Game-specific conditions (rolls left, resources, etc.) properly checked
 - [ ] Dice animations sync across devices
 - [ ] Chip animations sync across devices
 - [ ] Turn banners show correctly
 - [ ] "YOU" tag appears on own player
 - [ ] Targeting panel works (if applicable)
+- [ ] Non-targeting actions (attacks, heals, purchases) work via executeTarget
 - [ ] Win screen appears for all players
+- [ ] State synchronization works after every action
 
 ### Disconnection Handling
 - [ ] Guest disconnect: chips go to pot, game continues
@@ -578,6 +660,62 @@ _handleAction(msg, conn) {
   
   // Execute action...
 }
+```
+
+### 5. **Inconsistent Variable Names**
+**NEW**: Use consistent variable names between single and multiplayer modes:
+```javascript
+// ❌ BAD - mixing variable names
+let activePlayer = 0;  // single mode
+let turnIndex = 0;     // multiplayer mode
+
+// ✅ GOOD - consistent naming
+let activePlayer = 0;  // use everywhere
+// In getState(): turnIndex: activePlayer  // map for multiplayer compatibility
+```
+
+### 6. **Missing Turn UI Updates**
+**NEW**: Always call `_updateTurnUI()` after state changes:
+```javascript
+// ❌ BAD
+function applyState(state) {
+  players = state.players;
+  activePlayer = state.turnIndex;
+  updateUI();  // Missing turn UI update
+}
+
+// ✅ GOOD
+function applyState(state) {
+  players = state.players;
+  activePlayer = state.turnIndex;
+  updateUI();
+  _updateTurnUI();  // Always update turn UI
+}
+```
+
+### 7. **Overloading executeTarget Incorrectly**
+**NEW**: When using executeTarget for non-targeting actions, structure data properly:
+```javascript
+// ❌ BAD - confusing parameter usage
+mpGuest.sendAction({ type: 'target', targetIndex: 'heal', mode: 'action' });
+
+// ✅ GOOD - clear data structure
+mpGuest.sendAction({ 
+  type: 'target', 
+  targetIndex: { actionType: 'heal', data: { amount: 5 } }, 
+  mode: 'heal' 
+});
+```
+
+### 8. **Not Handling Game-Specific Conditions**
+**NEW**: Consider game-specific conditions when enabling/disabling controls:
+```javascript
+// ❌ BAD - only checking turn
+document.getElementById('roll-btn').disabled = !isMine;
+
+// ✅ GOOD - checking turn AND game conditions
+document.getElementById('roll-btn').disabled = !isMine || rollsLeft === 0 || isRolling;
+document.getElementById('attack-btn').disabled = !isMine || rollsLeft === 3; // can't attack before rolling
 ```
 
 ---
@@ -713,4 +851,185 @@ To convert a game to multiplayer:
 7. **Update** UI to show turn indicators and player tags
 8. **Test** all flows and edge cases
 
+**Key Implementation Notes:**
+- Use `turnIndex` in game state for multiplayer compatibility, map from your game's turn variable
+- Always call `_updateTurnUI()` after state changes
+- Use `executeTarget` method for all guest actions, overload with different modes
+- Check both turn ownership AND game-specific conditions when enabling/disabling controls
+- Broadcast state after every host action that changes game state
+- Handle disconnections gracefully by updating player status
+
 The multiplayer library handles all networking, lobby management, and UI overlays. Your game only needs to implement the adapter interface and route actions correctly.
+
+---
+
+## Working with Existing Games
+
+When converting existing single-device games to multiplayer, you may encounter different architectures. Here are common patterns and how to handle them:
+
+### Pattern 1: Games with Different Turn Variables
+Many games use `activePlayer`, `currentPlayer`, or similar instead of `turnIndex`:
+
+```javascript
+// Existing game uses activePlayer
+let activePlayer = 0;
+
+// In game adapter, map to turnIndex for multiplayer compatibility
+getState() {
+  return {
+    players: [...],
+    turnIndex: activePlayer,  // ← Map your variable to turnIndex
+    activePlayer,             // ← Keep original for internal use
+    // ... other state
+  };
+}
+
+applyState(state) {
+  if (state.turnIndex !== undefined) activePlayer = state.turnIndex;
+  if (state.activePlayer !== undefined) activePlayer = state.activePlayer;
+  // ... rest of state
+}
+```
+
+### Pattern 2: Games with Complex Action Systems
+For games with multiple action types (attack, heal, shop, etc.), use the `executeTarget` method creatively:
+
+```javascript
+// Guest actions - all go through executeTarget
+function performAttack(name, damage) {
+  if (mpMode === 'guest') {
+    mpGuest.sendAction({ 
+      type: 'target', 
+      targetIndex: { actionType: 'attack', name, damage }, 
+      mode: 'combat' 
+    });
+    return;
+  }
+  // ... local execution
+}
+
+function buyItem(itemId, cost) {
+  if (mpMode === 'guest') {
+    mpGuest.sendAction({ 
+      type: 'target', 
+      targetIndex: { actionType: 'purchase', itemId, cost }, 
+      mode: 'shop' 
+    });
+    return;
+  }
+  // ... local execution
+}
+
+// Host adapter handles all action types
+executeTarget(actionData, mode) {
+  if (mode === 'combat') {
+    const { actionType, name, damage } = actionData;
+    if (actionType === 'attack') {
+      // Execute attack logic
+      const target = activePlayer === 0 ? 1 : 0;
+      players[target].hp -= damage;
+    }
+  } else if (mode === 'shop') {
+    const { actionType, itemId, cost } = actionData;
+    if (actionType === 'purchase') {
+      // Execute purchase logic
+      players[activePlayer].gold -= cost;
+      players[activePlayer].items.push(itemId);
+    }
+  }
+  // ... advance turn, return state
+}
+```
+
+### Pattern 3: Games with AI Opponents
+Handle AI turns carefully in multiplayer:
+
+```javascript
+// Original AI function
+function aiTurn() {
+  // AI logic here
+  activePlayer = (activePlayer + 1) % players.length;
+  if (players[activePlayer].isAI) {
+    setTimeout(aiTurn, 1000);  // Continue AI chain
+  }
+}
+
+// Multiplayer-aware version
+function aiTurn() {
+  // Only run AI on host or single-device
+  if (mpMode === 'guest') return;
+  
+  // AI logic here
+  activePlayer = (activePlayer + 1) % players.length;
+  
+  // Broadcast state after AI action
+  if (mpMode === 'host') {
+    mpHost.broadcastState(mpHost.gameAdapter.getState());
+  }
+  
+  // Continue AI chain if needed
+  if (players[activePlayer].isAI) {
+    setTimeout(aiTurn, 1000);
+  }
+}
+```
+
+### Pattern 4: Games with Resource Management
+Sync resources properly:
+
+```javascript
+getState() {
+  return {
+    players: players.map(p => ({
+      name: p.name,
+      icon: p.icon,
+      hp: p.hp,
+      mp: p.mp,
+      gold: p.gold,
+      items: [...p.items],  // Include all resources
+      connected: p.connected !== false
+    })),
+    turnIndex: activePlayer,
+    // ... other game state
+  };
+}
+```
+
+### Pattern 5: Games with Modal/Shop Systems
+Handle modals in multiplayer:
+
+```javascript
+function openShop() {
+  // Only current player can open shop
+  if (mpMode !== 'single' && myPlayerIndex !== activePlayer) return;
+  
+  // Rest of shop logic
+  toggleModal('shop-modal', true);
+}
+
+function buyItem(itemId, cost) {
+  if (mpMode === 'guest') {
+    mpGuest.sendAction({ 
+      type: 'target', 
+      targetIndex: { itemId, cost }, 
+      mode: 'purchase' 
+    });
+    toggleModal('shop-modal', false);  // Close modal immediately for guest
+    return;
+  }
+  
+  // Host/single execution
+  const player = players[activePlayer];
+  if (player.gold >= cost) {
+    player.gold -= cost;
+    player.items.push(itemId);
+  }
+  
+  if (mpMode === 'host') {
+    mpHost.broadcastState(mpHost.gameAdapter.getState());
+  }
+  
+  updateUI();
+  toggleModal('shop-modal', false);
+}
+```
