@@ -126,7 +126,7 @@
 
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
-            20% { transform: translate(-1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, -1px) rotate(1deg); }
             100% { transform: translate(0, 0) rotate(0deg); }
         }
 
@@ -197,6 +197,16 @@
         }
         .modal.show { display: flex; }
 
+        .cp-display {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--gold);
+            padding: 4px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -205,7 +215,7 @@
         <div class="nav-btn home-btn" onclick="location.reload()">🏠</div>
         <div class="nav-btn help-btn" onclick="toggleModal('help-modal', true)">?</div>
 
-        <div id="game-log">Waiting for the first roll...</div>
+        <div id="game-log">Tap 'Roll Dice' to start your turn.</div>
 
         <!-- Opponent Area -->
         <div class="px-2 mb-2">
@@ -235,7 +245,11 @@
         <div class="bg-black/30 p-3 rounded-xl border border-gold/20 mb-2">
             <div class="flex justify-between items-center mb-1">
                 <p class="text-[10px] uppercase text-zinc-500 font-bold tracking-widest">Select Your Attack</p>
-                <div class="bg-black/40 border border-gold px-2 py-0.5 rounded-lg text-[10px] text-gold-light">CP: <span id="p1-cp">0</span></div>
+                <div class="cp-display" onclick="toggleModal('shop-modal', true)">
+                    <span class="text-[10px] text-zinc-400">CP</span>
+                    <span id="p1-cp" class="text-gold font-bold">0</span>
+                    <span class="text-[9px] bg-gold/20 px-1 rounded text-gold">+</span>
+                </div>
             </div>
             
             <button id="combo-straight" class="combo-btn" onclick="performAttack('Straight Flush', 12)">
@@ -254,7 +268,6 @@
                 <span><b>Three of a Kind</b></span>
                 <span class="text-gold font-bold">4 DMG</span>
             </button>
-            <!-- New Default Attack -->
             <button id="combo-base" class="combo-btn" onclick="performAttack('Low Stakes', 2)">
                 <span><b>Any Roll</b> (Basic Attack)</span>
                 <span class="text-gold font-bold">2 DMG</span>
@@ -272,25 +285,46 @@
                     <p class="text-xs font-bold" id="p1-hp-text">50 / 50</p>
                 </div>
                 <div class="text-right">
-                    <button id="heal-btn" class="text-[9px] bg-teal-900/50 border border-teal-500 text-teal-300 px-3 py-1 rounded-full uppercase" onclick="buyHeal()">Heal (2 CP)</button>
+                    <p class="text-[9px] text-zinc-500 uppercase">HP Gauge</p>
                 </div>
             </div>
         </div>
 
-        <!-- Modals -->
+        <!-- Shop/CP Modal -->
+        <div id="shop-modal" class="modal">
+            <div class="bg-[#2a1a1f] border-2 border-gold p-6 rounded-2xl w-full max-w-xs">
+                <h2 class="cinzel text-xl text-gold mb-2">Main Phase</h2>
+                <p class="text-[10px] text-zinc-400 mb-4 uppercase">Spend Combat Points (CP)</p>
+                <div class="space-y-3">
+                    <button class="w-full bg-teal-900/40 border border-teal-500 p-3 rounded-xl flex justify-between items-center" onclick="buyHeal()">
+                        <div class="text-left">
+                            <p class="text-teal-400 font-bold text-sm">Recover HP</p>
+                            <p class="text-[10px] text-teal-500">+5 Health</p>
+                        </div>
+                        <span class="bg-gold text-black font-bold px-2 py-1 rounded text-xs">2 CP</span>
+                    </button>
+                    <button class="w-full bg-zinc-800 border border-zinc-600 p-3 rounded-xl text-zinc-400 text-xs uppercase" onclick="toggleModal('shop-modal', false)">
+                        Back to Table
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
         <div id="help-modal" class="modal">
             <div class="bg-[#2a1a1f] border-2 border-gold p-6 rounded-2xl max-w-sm">
-                <h2 class="cinzel text-xl text-gold mb-4">Phase Flow</h2>
+                <h2 class="cinzel text-xl text-gold mb-4">Duel Mechanics</h2>
                 <div class="text-left text-xs space-y-3 leading-relaxed text-zinc-300">
-                    <p>1. <b>Income:</b> Start turn with +1 CP.</p>
-                    <p>2. <b>Roll:</b> Up to 3 times. Click dice to HOLD them.</p>
-                    <p>3. <b>Attack:</b> Once finished rolling, click a glowing <b>Maneuver</b> button below to strike.</p>
-                    <p>4. <b>Defense:</b> The House will roll to hit you back.</p>
+                    <p><b>1. INCOME:</b> You get +1 CP every turn automatically.</p>
+                    <p><b>2. CP & HEALING:</b> Tap the <b>CP box</b> to spend points on Health. This is your "Main Phase."</p>
+                    <p><b>3. ROLLING:</b> You have 3 rolls. Click dice to "Hold" them between rolls.</p>
+                    <p><b>4. ATTACKING:</b> After rolling, tap a <b>Glowing Maneuver</b> to end your turn and strike.</p>
                 </div>
-                <button class="btn-gold mt-6 w-full" onclick="toggleModal('help-modal', false)">Start Duel</button>
+                <button class="btn-gold mt-6 w-full" onclick="toggleModal('help-modal', false)">Understood</button>
             </div>
         </div>
 
+        <!-- Result Modal -->
         <div id="result-modal" class="modal">
             <div class="bg-[#2a1a1f] border-2 border-gold p-8 rounded-2xl">
                 <h2 class="cinzel text-3xl text-gold mb-2" id="result-title">VICTORY</h2>
@@ -324,7 +358,7 @@
             p1.cp += 1;
             held = [false, false, false, false, false];
             updateUI();
-            log("Income phase: +1 CP. Roll to begin!");
+            log("New Turn: +1 CP awarded. Your roll!");
         }
 
         function updateUI() {
@@ -337,7 +371,6 @@
 
             document.getElementById('roll-btn').disabled = (rollsLeft === 0 || isRolling || currentPhase !== 'player_roll');
             document.getElementById('end-roll-btn').style.display = (rollsLeft < 3 && rollsLeft > 0 && currentPhase === 'player_roll') ? 'block' : 'none';
-            document.getElementById('heal-btn').disabled = (p1.cp < 2 || p1.hp === MAX_HP);
 
             const grid = document.getElementById('dice-grid');
             grid.innerHTML = '';
@@ -379,9 +412,9 @@
             
             if (rollsLeft === 0) {
                 currentPhase = 'player_attack';
-                log("Final roll! Choose your attack below.");
+                log("Out of rolls! Pick a glowing maneuver.");
             } else {
-                log(`Roll ${3 - rollsLeft} complete. Select an attack or roll again.`);
+                log(`Roll ${3 - rollsLeft} complete. Hold dice or roll again.`);
             }
             updateUI();
         }
@@ -389,7 +422,7 @@
         function skipRolling() {
             rollsLeft = 0;
             currentPhase = 'player_attack';
-            log("Choose your maneuver to strike!");
+            log("Manual stop. Select your attack.");
             updateUI();
         }
 
@@ -405,15 +438,13 @@
             const str = sorted.join('');
             const isStraight = str.includes("12345") || str.includes("23456");
 
-            // Attacks only activate if we have finished rolling or if we have a valid combo
-            // I've enabled the basic "Low Stakes" attack at all times after the first roll
             const rolledAtLeastOnce = rollsLeft < 3;
             
             setComboBtn('combo-three', hasThree && rolledAtLeastOnce);
             setComboBtn('combo-four', hasFour && rolledAtLeastOnce);
             setComboBtn('combo-fullhouse', hasFullHouse && rolledAtLeastOnce);
             setComboBtn('combo-straight', isStraight && rolledAtLeastOnce);
-            setComboBtn('combo-base', rolledAtLeastOnce); // Always available after first roll
+            setComboBtn('combo-base', rolledAtLeastOnce); 
         }
 
         function setComboBtn(id, active) {
@@ -425,7 +456,7 @@
         async function performAttack(name, dmg) {
             if (isRolling || currentPhase === 'opponent_turn') return;
             
-            log(`SHARK used ${name}! -${dmg} DMG to House.`);
+            log(`ATTACK: ${name} for ${dmg} DMG!`);
             p2.hp = Math.max(0, p2.hp - dmg);
             currentPhase = 'opponent_turn';
             updateUI();
@@ -454,7 +485,7 @@
             else if (sum > 17) { moveName = "Raise"; dmg = 6; }
             else if (sum > 11) { moveName = "Check"; dmg = 4; }
 
-            log(`HOUSE used ${moveName}! -${dmg} DMG to you.`);
+            log(`HOUSE: ${moveName} deals ${dmg} damage to you.`);
             p1.hp = Math.max(0, p1.hp - dmg);
             updateUI();
 
@@ -465,10 +496,18 @@
         }
 
         function buyHeal() {
-            if (p1.cp < 2 || p1.hp === MAX_HP) return;
+            if (p1.cp < 2) {
+                log("Not enough CP to heal!");
+                return;
+            }
+            if (p1.hp === MAX_HP) {
+                log("Health is already full!");
+                return;
+            }
             p1.cp -= 2;
             p1.hp = Math.min(MAX_HP, p1.hp + 5);
-            log("Used 2 CP to recover 5 HP.");
+            log("Spent 2 CP: Healed 5 HP.");
+            toggleModal('shop-modal', false);
             updateUI();
         }
 
