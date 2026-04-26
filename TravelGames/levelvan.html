@@ -195,12 +195,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .conn-count span{color:var(--accent2)}
 /* 3D caravan scene */
 .van3d-scene{width:100%;display:flex;justify-content:center;align-items:center;
-  perspective:500px;perspective-origin:50% 35%;min-height:260px}
+  perspective:500px;perspective-origin:50% 35%;min-height:260px;overflow:visible}
 .van3d-stage{transition:transform 0.12s ease-out;transform-style:preserve-3d;
-  transform:rotateX(0deg) rotateY(0deg)}
+  transform:rotateX(0deg) rotateY(0deg);overflow:visible}
 /* Glow wrapper sits outside preserve-3d so filter works on all browsers */
 .van3d-glow{filter:drop-shadow(0 6px 20px rgba(0,212,255,0.22))}
-.van3d-svg{width:200px;height:auto;display:block}
+.van3d-svg{width:200px;height:auto;display:block;overflow:visible}
 /* Help screen */
 .help-screen{overflow-y:auto;justify-content:flex-start;padding:0}
 .help-hero{width:100%;background:linear-gradient(135deg,#0f1f3d,#112244);
@@ -526,9 +526,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
     <!-- 3D caravan view (sensor) -->
     <div class="van3d-scene">
-      <div class="van3d-glow">
-      <div class="van3d-stage" id="s-van3d" style="transform:rotateZ(180deg)">
-        <svg class="van3d-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
+      <div class="van3d-stage" id="s-van3d" style="transform:rotateZ(180deg);transform-style:flat">
+        <svg class="van3d-svg" viewBox="-10 0 220 330" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
           <defs>
             <linearGradient id="s-bodyFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#5ab8d4" stop-opacity="0.5"/>
@@ -538,39 +537,41 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
               <stop offset="0%" stop-color="#4a8aaa" stop-opacity="0.95"/>
               <stop offset="100%" stop-color="#2a5a7a" stop-opacity="0.85"/>
             </linearGradient>
-            <filter id="s-fg" x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="2.5" result="b"/>
-              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <filter id="s-fl" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="b"/>
-              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
           </defs>
+          <!-- Shadow offset -->
           <rect x="36" y="32" width="130" height="196" rx="12" fill="#1a3a4e" opacity="0.45"/>
+          <!-- Main body -->
           <rect x="32" y="28" width="136" height="196" rx="12" fill="url(#s-bodyFill)" stroke="#6ac8e0" stroke-width="2.5" opacity="0.92"/>
+          <!-- Inner frame -->
           <rect x="46" y="42" width="108" height="168" rx="7" fill="none" stroke="#8ad8ee" stroke-width="1.5" opacity="0.45"/>
+          <!-- Tail lights — no filter, use brighter fill instead -->
           <rect x="32" y="28" width="22" height="12" rx="4" fill="#2a0808" stroke="#ff5555" stroke-width="1.5" id="s-light-l"/>
-          <rect x="35" y="31" width="13" height="6" rx="2" fill="#ff3333" opacity="0.55" filter="url(#s-fl)" id="s-light-l-inner"/>
+          <rect x="35" y="31" width="13" height="6" rx="2" fill="#ff4444" opacity="0.85" id="s-light-l-inner"/>
           <rect x="146" y="28" width="22" height="12" rx="4" fill="#2a0808" stroke="#ff5555" stroke-width="1.5" id="s-light-r"/>
-          <rect x="152" y="31" width="13" height="6" rx="2" fill="#ff3333" opacity="0.55" filter="url(#s-fl)" id="s-light-r-inner"/>
+          <rect x="152" y="31" width="13" height="6" rx="2" fill="#ff4444" opacity="0.85" id="s-light-r-inner"/>
+          <!-- Axle bar -->
           <rect x="16" y="122" width="168" height="8" rx="4" fill="#3a7a9a" stroke="#6ac8e0" stroke-width="1" opacity="0.75"/>
+          <!-- Left wheel -->
           <rect x="4" y="104" width="18" height="44" rx="5" fill="url(#s-wheelFill)" stroke="#8ad8ee" stroke-width="2" opacity="0.92"/>
           <circle cx="13" cy="126" r="6" fill="#1a3a5a" stroke="#6ac8e0" stroke-width="1.5" opacity="0.8"/>
           <circle cx="13" cy="126" r="2.5" fill="#3a7a9a" opacity="0.9"/>
+          <!-- Right wheel -->
           <rect x="178" y="104" width="18" height="44" rx="5" fill="url(#s-wheelFill)" stroke="#8ad8ee" stroke-width="2" opacity="0.92"/>
           <circle cx="187" cy="126" r="6" fill="#1a3a5a" stroke="#6ac8e0" stroke-width="1.5" opacity="0.8"/>
           <circle cx="187" cy="126" r="2.5" fill="#3a7a9a" opacity="0.9"/>
+          <!-- A-frame hitch -->
           <line x1="68" y1="224" x2="100" y2="298" stroke="#5ab0cc" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
           <line x1="132" y1="224" x2="100" y2="298" stroke="#5ab0cc" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
           <line x1="72" y1="248" x2="128" y2="248" stroke="#5ab0cc" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
           <circle cx="100" cy="300" r="7" fill="#3a7a9a" stroke="#8ad8ee" stroke-width="2" opacity="0.95"/>
+          <!-- Level bubble — outer glow ring replaces filter -->
           <circle cx="100" cy="126" r="58" fill="none" stroke="#8ad8ee" stroke-width="1" stroke-dasharray="4 4" opacity="0.25"/>
           <circle cx="100" cy="126" r="8" fill="none" stroke="#8ad8ee" stroke-width="1" opacity="0.4"/>
-          <circle cx="100" cy="126" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5" id="s-van-bubble" opacity="0.95" filter="url(#s-fg)"/>
+          <!-- Bubble glow: larger semi-transparent circle behind, no filter needed -->
+          <circle cx="100" cy="126" r="9" fill="#00d4ff" opacity="0.3" id="s-van-bubble-glow"/>
+          <circle cx="100" cy="126" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5" id="s-van-bubble" opacity="0.95"/>
         </svg>
       </div>
-      </div><!-- end van3d-glow -->
     </div>
 
     <div class="angles">
@@ -1447,18 +1448,25 @@ window.forceReconnectSensor = () => {
 window.forceReconnectDisplay = () => {
   const savedPin = localStorage.getItem('lv_pin');
   if (!savedPin) {
-    // No saved PIN — go back to keypad
     showPanel('d1');
     kpadReset();
     $('d1-hint').textContent = 'Enter the 4-digit PIN shown on the Sensor device';
     return;
   }
-  // Tear down existing peer and reconnect with saved PIN
+  // Cancel any pending auto-reconnect timers by setting a flag
+  window._forceReconnecting = true;
+  // Tear down existing peer cleanly
   if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
   conns = [];
-  showPanel('d2');
-  $('d2-txt').textContent = 'force reconnecting...';
-  fillPin(savedPin);
+  // Small delay to let the peer fully close before creating a new one
+  setTimeout(() => {
+    window._forceReconnecting = false;
+    showPanel('d2');
+    $('d2-txt').textContent = 'force reconnecting...';
+    // Directly call connectWithPin with the saved pin bypassing fillPin
+    _kpad = savedPin.split('');
+    connectWithPin();
+  }, 400);
 };
 
 // Show/hide force buttons based on whether a saved PIN exists
@@ -1543,25 +1551,62 @@ function initSolo() {
 }
 
 function setupSensorConn(conn) {
+  // Track last time we successfully sent data to this connection
+  conn._lastAck = Date.now();
+  conn._heartbeatTimer = null;
+
   conn.on('open', () => {
     conns.push(conn);
     updateSensorConnCount();
     if (conns.length === 1) showPanel('s3');
-    // Re-acquire wake lock whenever a display connects
     if (wakeLockManager) wakeLockManager.maintainWakeLock();
+
+    // Start heartbeat — if no data can be sent for 8s, treat as disconnected
+    conn._heartbeatTimer = setInterval(() => {
+      if (!conn.open) {
+        // Connection object says it's closed — clean up
+        clearInterval(conn._heartbeatTimer);
+        conns = conns.filter(c => c !== conn);
+        updateSensorConnCount();
+        if (conns.length === 0) {
+          setTimeout(() => {
+            if (conns.length === 0 && mode === 'sensor') showPanel('s2');
+          }, 3000);
+        }
+        return;
+      }
+      // Try sending a ping — if it throws, connection is dead
+      try {
+        conn.send({ ping: true });
+        conn._lastAck = Date.now();
+      } catch(e) {
+        console.warn('Heartbeat send failed — treating as disconnected:', e);
+        clearInterval(conn._heartbeatTimer);
+        conns = conns.filter(c => c !== conn);
+        updateSensorConnCount();
+        if (conns.length === 0) {
+          setTimeout(() => {
+            if (conns.length === 0 && mode === 'sensor') showPanel('s2');
+          }, 3000);
+        }
+      }
+    }, 4000);
   });
+
   conn.on('close', () => {
+    clearInterval(conn._heartbeatTimer);
     conns = conns.filter(c => c !== conn);
     updateSensorConnCount();
-    // Stay on s3 even with 0 connections — display will auto-reconnect
-    // Only fall back to s2 (waiting) if no connections after a grace period
     if (conns.length === 0) {
       setTimeout(() => {
         if (conns.length === 0 && mode === 'sensor') showPanel('s2');
       }, 3000);
     }
   });
-  conn.on('error', e => console.warn('conn error:', e));
+  conn.on('error', e => {
+    clearInterval(conn._heartbeatTimer);
+    console.warn('conn error:', e);
+  });
 }
 
 function updateSensorConnCount() {
@@ -1673,25 +1718,30 @@ window.connectWithPin = () => {
     });
 
     conn.on('data', data => {
-      try { updateDisplay(data); } catch(_){}
+      try {
+        if (data && data.ping) return; // ignore heartbeat pings from sensor
+        updateDisplay(data);
+      } catch(_){}
     });
 
     conn.on('close', () => {
       const savedPin = localStorage.getItem('lv_pin');
+      // If force reconnect is already in progress, don't start another attempt
+      if (window._forceReconnecting) return;
       if (savedPin && mode === 'display') {
         // Stay on d3 briefly — show subtle reconnecting hint without jarring screen flash
         const instrEl = $('d-instr');
         if (instrEl) { instrEl.className = 'instr wt'; instrEl.textContent = 'reconnecting...'; }
         setTimeout(() => {
-          if (mode !== 'display') return; // user navigated away
-          // Destroy old peer before creating a new one
+          if (mode !== 'display') return;
+          if (window._forceReconnecting) return; // force reconnect took over
           if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
           conns = [];
-          // Re-acquire wake lock — screen may have just come back on
           if (wakeLockManager) wakeLockManager.maintainWakeLock();
           showPanel('d2');
           $('d2-txt').textContent = 'reconnecting to sensor...';
-          fillPin(savedPin);
+          _kpad = savedPin.split('');
+          connectWithPin();
         }, 1500);
       } else {
         showPanel('d1');
@@ -1782,6 +1832,13 @@ function updateSensor(r, p) {
     sb.setAttribute('fill', lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444');
     sb.setAttribute('stroke', lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444');
   }
+  // Move glow ring with bubble
+  const sbg = $('s-van-bubble-glow');
+  if (sbg) {
+    sbg.setAttribute('cx', sbx.toFixed(1));
+    sbg.setAttribute('cy', sby.toFixed(1));
+    sbg.setAttribute('fill', lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444');
+  }
 
   // Tail lights
   const lo = lv ? '0.4' : cl ? '0.65' : '1';
@@ -1854,15 +1911,18 @@ function setBar(fid, lid, angle) {
 function clamp(v){ return Math.max(10,Math.min(90,v)); }
 
 function cleanup() {
-  conns.forEach(c => { try{c.close();}catch(_){} }); conns = [];
+  conns.forEach(c => {
+    try { if (c._heartbeatTimer) clearInterval(c._heartbeatTimer); } catch(_){}
+    try { c.close(); } catch(_){}
+  });
+  conns = [];
   if(peer){try{peer.destroy();}catch(_){}} peer = null;
   if(motionOn){window.removeEventListener('deviceorientation',onOrient,true);motionOn=false;}
   mode=null; _pin=null; _lastSend=0;
+  window._forceReconnecting = false;
   $('pin-bar-code').textContent = '----';
   $('pin-bar-share').style.display = 'none';
   kpadReset();
-  // Note: wake lock is NOT released here — goHome() handles that explicitly
-  // This allows cleanup to be called for reconnection without killing the wake lock
 }
 </script>
 
