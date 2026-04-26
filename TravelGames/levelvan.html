@@ -197,8 +197,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .van3d-scene{width:100%;display:flex;justify-content:center;align-items:center;
   perspective:500px;perspective-origin:50% 35%;min-height:260px}
 .van3d-stage{transition:transform 0.12s ease-out;transform-style:preserve-3d;
-  transform:rotateX(0deg) rotateY(0deg)}
-.van3d-svg{width:200px;height:auto;display:block;filter:drop-shadow(0 6px 20px rgba(0,212,255,0.22))}
+  transform:rotateX(0deg) rotateY(0deg);filter:drop-shadow(0 6px 20px rgba(0,212,255,0.22))}
+.van3d-svg{width:200px;height:auto;display:block}
 /* Help screen */
 .help-screen{overflow-y:auto;justify-content:flex-start;padding:0}
 .help-hero{width:100%;background:linear-gradient(135deg,#0f1f3d,#112244);
@@ -1005,16 +1005,49 @@ class FirebaseManager {
 // ════════════════════════════════
 //  WAKE LOCK MANAGER CLASS
 // ════════════════════════════════
+//  WAKE LOCK MANAGER CLASS
+// ════════════════════════════════
 class WakeLockManager {
   constructor() {
     this.wakeLock = null;
     this.monitoringInterval = null;
     this.isMonitoring = false;
     this.isActive = false;
+    this._videoEl = null; // silent video fallback for iOS/Android
     // Store bound handlers so add/remove use the same reference
     this._onVisibilityChange = this.handleVisibilityChange.bind(this);
     this._onFocus = this.handleWindowFocus.bind(this);
     this._onBlur = this.handleWindowBlur.bind(this);
+  }
+
+  // ── Silent video trick: keeps screen alive on browsers that ignore Wake Lock
+  _ensureSilentVideo() {
+    if (this._videoEl) return;
+    // 1x1 transparent looping video — no network request, inline data URI
+    this._videoEl = document.createElement('video');
+    this._videoEl.setAttribute('playsinline', '');
+    this._videoEl.setAttribute('muted', '');
+    this._videoEl.setAttribute('loop', '');
+    this._videoEl.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0.01;top:0;left:0;pointer-events:none;z-index:-1';
+    // Minimal valid MP4 (1×1 black frame, ~100 bytes) as data URI
+    this._videoEl.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAA2htZGF0AAACrgYF//+q3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE0MiByMjQ3OSBkZDc5YTYxIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNCAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTYgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTI1IHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAABZWxpYnJhcnkAAAAMYXZjMQMgAAAAAAAB';
+    document.body.appendChild(this._videoEl);
+    this._videoEl.play().catch(() => {}); // autoplay may be blocked — that's fine
+  }
+
+  _startSilentVideo() {
+    this._ensureSilentVideo();
+    if (this._videoEl && this._videoEl.paused) {
+      this._videoEl.play().catch(() => {});
+    }
+  }
+
+  _stopSilentVideo() {
+    if (this._videoEl) {
+      this._videoEl.pause();
+      this._videoEl.remove();
+      this._videoEl = null;
+    }
   }
 
   async requestWakeLock() {
@@ -1042,6 +1075,7 @@ class WakeLockManager {
   }
 
   async releaseWakeLock() {
+    this._stopSilentVideo();
     if (this.wakeLock) {
       try {
         await this.wakeLock.release();
@@ -1057,11 +1091,14 @@ class WakeLockManager {
   startWakeLockMonitoring() {
     if (this.isMonitoring) return;
     this.isMonitoring = true;
+    // Check every 5 seconds (more aggressive than before)
     this.monitoringInterval = setInterval(() => {
       if (!this.wakeLock || this.wakeLock.released) {
         this.requestWakeLock();
       }
-    }, 10000);
+      // Keep silent video alive
+      this._startSilentVideo();
+    }, 5000);
     document.addEventListener('visibilitychange', this._onVisibilityChange);
     window.addEventListener('focus', this._onFocus);
     window.addEventListener('blur', this._onBlur);
@@ -1080,8 +1117,12 @@ class WakeLockManager {
   }
 
   handleVisibilityChange() {
-    if (!document.hidden && (!this.wakeLock || this.wakeLock.released)) {
-      this.requestWakeLock();
+    if (!document.hidden) {
+      // Page became visible — re-acquire wake lock immediately
+      if (!this.wakeLock || this.wakeLock.released) {
+        this.requestWakeLock();
+      }
+      this._startSilentVideo();
     }
   }
 
@@ -1096,6 +1137,7 @@ class WakeLockManager {
   }
 
   handleWakeLockRelease() {
+    // Re-acquire immediately after release
     setTimeout(() => {
       if (this.isMonitoring && (!this.wakeLock || this.wakeLock.released)) {
         this.requestWakeLock();
@@ -1116,6 +1158,8 @@ class WakeLockManager {
   async maintainWakeLock() {
     if (!this.isMonitoring) this.startWakeLockMonitoring();
     if (!this.wakeLock || this.wakeLock.released) await this.requestWakeLock();
+    // Start silent video as backup — works even when Wake Lock API is blocked
+    this._startSilentVideo();
   }
 }
 
@@ -1411,11 +1455,19 @@ function setupSensorConn(conn) {
     conns.push(conn);
     updateSensorConnCount();
     if (conns.length === 1) showPanel('s3');
+    // Re-acquire wake lock whenever a display connects
+    if (wakeLockManager) wakeLockManager.maintainWakeLock();
   });
   conn.on('close', () => {
     conns = conns.filter(c => c !== conn);
     updateSensorConnCount();
-    if (conns.length === 0) showPanel('s2');
+    // Stay on s3 even with 0 connections — display will auto-reconnect
+    // Only fall back to s2 (waiting) if no connections after a grace period
+    if (conns.length === 0) {
+      setTimeout(() => {
+        if (conns.length === 0 && mode === 'sensor') showPanel('s2');
+      }, 3000);
+    }
   });
   conn.on('error', e => console.warn('conn error:', e));
 }
@@ -1524,22 +1576,26 @@ window.connectWithPin = () => {
     });
 
     conn.on('close', () => {
-      $('d2-txt').textContent = '⚠️ Sensor disconnected — reconnecting...';
-      showPanel('d2');
-      // Auto-retry with saved PIN after a short delay
-      setTimeout(() => {
-        const savedPin = localStorage.getItem('lv_pin');
-        if (savedPin && mode === 'display') {
-          $('d2-txt').textContent = 'reconnecting to sensor...';
+      const savedPin = localStorage.getItem('lv_pin');
+      if (savedPin && mode === 'display') {
+        // Stay on d3 briefly — show subtle reconnecting hint without jarring screen flash
+        const instrEl = $('d-instr');
+        if (instrEl) { instrEl.className = 'instr wt'; instrEl.textContent = 'reconnecting...'; }
+        setTimeout(() => {
+          if (mode !== 'display') return; // user navigated away
           // Destroy old peer before creating a new one
           if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
           conns = [];
+          // Re-acquire wake lock — screen may have just come back on
+          if (wakeLockManager) wakeLockManager.maintainWakeLock();
+          showPanel('d2');
+          $('d2-txt').textContent = 'reconnecting to sensor...';
           fillPin(savedPin);
-        } else {
-          showPanel('d1');
-          kpadReset();
-        }
-      }, 2000);
+        }, 1500);
+      } else {
+        showPanel('d1');
+        kpadReset();
+      }
     });
 
     conn.on('error', e => {
