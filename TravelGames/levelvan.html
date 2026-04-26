@@ -197,7 +197,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .van3d-scene{width:100%;display:flex;justify-content:center;align-items:center;
   perspective:500px;perspective-origin:50% 35%;min-height:260px}
 .van3d-stage{transition:transform 0.12s ease-out;transform-style:preserve-3d;
-  transform:rotateX(0deg) rotateY(0deg);filter:drop-shadow(0 6px 20px rgba(0,212,255,0.22))}
+  transform:rotateX(0deg) rotateY(0deg)}
+/* Glow wrapper sits outside preserve-3d so filter works on all browsers */
+.van3d-glow{filter:drop-shadow(0 6px 20px rgba(0,212,255,0.22))}
 .van3d-svg{width:200px;height:auto;display:block}
 /* Help screen */
 .help-screen{overflow-y:auto;justify-content:flex-start;padding:0}
@@ -495,6 +497,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   <div class="panel" id="s1" style="padding-top:148px">
     <div class="srow"><div class="dot busy"></div><span id="s1-txt">creating session...</span></div>
     <div class="hint">Takes a moment</div>
+    <button class="sbtn warn" id="s1-force-btn" style="display:none" onclick="forceReconnectSensor()">
+      <div class="sbtn-ico">🔄</div>
+      <div class="sbtn-title">FORCE RECONNECT</div>
+      <div class="sbtn-hint">Tap if stuck — restarts with saved PIN</div>
+    </button>
   </div>
 
   <!-- s2: PIN ready, waiting for displays -->
@@ -506,6 +513,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="sbtn-hint">AirDrop · iMessage · WhatsApp</div>
     </button>
     <div class="conn-count" id="s-conn-count">waiting for display devices...</div>
+    <button class="sbtn warn" id="s2-force-btn" style="display:none" onclick="forceReconnectSensor()">
+      <div class="sbtn-ico">🔄</div>
+      <div class="sbtn-title">FORCE RECONNECT</div>
+      <div class="sbtn-hint">Tap if display can't connect — resets session</div>
+    </button>
   </div>
 
   <!-- s3: live level (sensor) -->
@@ -514,6 +526,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
     <!-- 3D caravan view (sensor) -->
     <div class="van3d-scene">
+      <div class="van3d-glow">
       <div class="van3d-stage" id="s-van3d" style="transform:rotateZ(180deg)">
         <svg class="van3d-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -557,6 +570,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
           <circle cx="100" cy="126" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5" id="s-van-bubble" opacity="0.95" filter="url(#s-fg)"/>
         </svg>
       </div>
+      </div><!-- end van3d-glow -->
     </div>
 
     <div class="angles">
@@ -603,11 +617,21 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="kbtn del" onclick="kpadDel()">⌫</div>
     </div>
     <div class="hint" id="d1-hint">Enter the 4-digit PIN shown on the Sensor device</div>
+    <button class="sbtn warn" id="d1-force-btn" style="display:none;margin-top:4px" onclick="forceReconnectDisplay()">
+      <div class="sbtn-ico">🔄</div>
+      <div class="sbtn-title">FORCE RECONNECT</div>
+      <div class="sbtn-hint" id="d1-force-hint">Reconnect with saved PIN</div>
+    </button>
   </div>
 
   <!-- d2: connecting -->
   <div class="panel" id="d2">
     <div class="srow"><div class="dot busy"></div><span id="d2-txt">connecting...</span></div>
+    <button class="sbtn warn" id="d2-force-btn" style="display:none;margin-top:8px" onclick="forceReconnectDisplay()">
+      <div class="sbtn-ico">🔄</div>
+      <div class="sbtn-title">FORCE RECONNECT</div>
+      <div class="sbtn-hint">Tap if stuck — retries with saved PIN</div>
+    </button>
   </div>
 
   <!-- d3: live display -->
@@ -616,6 +640,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
     <!-- 3D caravan view -->
     <div class="van3d-scene">
+      <div class="van3d-glow">
       <div class="van3d-stage" id="van3d" style="transform:rotateZ(180deg)">
         <svg class="van3d-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -696,6 +721,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
                   id="van-bubble" opacity="0.95" filter="url(#fg)"/>
         </svg>
       </div>
+      </div><!-- end van3d-glow -->
     </div>
 
     <div class="instr wt" id="d-instr">waiting for data...</div>
@@ -1324,6 +1350,7 @@ window.addEventListener('load', async () => {
 
   // No saved state — show home screen
   showScreen('home-screen');
+  updateForceButtons();
 });
 
 // ════════════════════════════════
@@ -1346,6 +1373,7 @@ window.startSensor = () => {
   if (wakeLockManager) wakeLockManager.maintainWakeLock();
   if (firebaseManager) firebaseManager.updateDeviceType('sensor');
   setupMotion(false, null);
+  updateForceButtons();
 };
 
 window.startDisplay = () => {
@@ -1356,6 +1384,7 @@ window.startDisplay = () => {
   if (firebaseManager) firebaseManager.updateDeviceType('display');
   kpadReset();
   showPanel('d1');
+  updateForceButtons();
 };
 
 window.startSolo = () => {
@@ -1395,8 +1424,62 @@ window.resetPairing = async () => {
 };
 
 // ════════════════════════════════
-//  SENSOR
+//  FORCE RECONNECT
 // ════════════════════════════════
+window.forceReconnectSensor = () => {
+  const savedPin = localStorage.getItem('lv_pin');
+  if (!savedPin) {
+    // No saved PIN — do a full fresh restart
+    if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+    conns = [];
+    showPanel('s1');
+    initSensor(null);
+    return;
+  }
+  // Tear down existing peer and restart with the same PIN
+  if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+  conns = [];
+  showPanel('s1');
+  $('s1-txt').textContent = 'force reconnecting...';
+  initSensor(savedPin);
+};
+
+window.forceReconnectDisplay = () => {
+  const savedPin = localStorage.getItem('lv_pin');
+  if (!savedPin) {
+    // No saved PIN — go back to keypad
+    showPanel('d1');
+    kpadReset();
+    $('d1-hint').textContent = 'Enter the 4-digit PIN shown on the Sensor device';
+    return;
+  }
+  // Tear down existing peer and reconnect with saved PIN
+  if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+  conns = [];
+  showPanel('d2');
+  $('d2-txt').textContent = 'force reconnecting...';
+  fillPin(savedPin);
+};
+
+// Show/hide force buttons based on whether a saved PIN exists
+function updateForceButtons() {
+  const savedPin = localStorage.getItem('lv_pin');
+  const savedMode = localStorage.getItem('lv_mode');
+  // Sensor force buttons — show after 8 seconds on s1/s2
+  const s1Btn = $('s1-force-btn');
+  const s2Btn = $('s2-force-btn');
+  if (s1Btn) s1Btn.style.display = (savedPin && savedMode === 'sensor') ? '' : 'none';
+  if (s2Btn) s2Btn.style.display = savedPin ? '' : 'none';
+  // Display force buttons
+  const d1Btn = $('d1-force-btn');
+  const d2Btn = $('d2-force-btn');
+  const d1Hint = $('d1-force-hint');
+  if (d1Btn) {
+    d1Btn.style.display = savedPin ? '' : 'none';
+    if (d1Hint && savedPin) d1Hint.textContent = 'Reconnect with PIN ' + savedPin;
+  }
+  if (d2Btn) d2Btn.style.display = savedPin ? '' : 'none';
+}
 function initSensor(resumePin) {
   // Use saved PIN on resume, generate new one otherwise
   if (resumePin) {
@@ -1409,6 +1492,12 @@ function initSensor(resumePin) {
   const peerId = 'levelvan-' + _pin + '-sensor';
   $('s1-txt').textContent = resumePin ? 'resuming session...' : 'connecting to relay...';
 
+  // Show force button after 8 seconds if still stuck on s1
+  const sForceTimer = setTimeout(() => {
+    const s1Btn = $('s1-force-btn');
+    if (s1Btn && mode === 'sensor') s1Btn.style.display = '';
+  }, 8000);
+
   peer = new Peer(peerId, {
     host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE,
     debug: 0,
@@ -1417,6 +1506,9 @@ function initSensor(resumePin) {
 
   peer.on('open', id => {
     console.log('Sensor peer open:', id);
+    clearTimeout(sForceTimer);
+    const s1Btn = $('s1-force-btn');
+    if (s1Btn) s1Btn.style.display = 'none';
     $('pin-bar-code').textContent = _pin;
     const pinLabel = document.querySelector('#pin-bar .pin-bar-label');
     if (pinLabel) pinLabel.textContent = resumePin ? 'PAIRED PIN' : 'SESSION PIN';
@@ -1537,6 +1629,12 @@ window.connectWithPin = () => {
   showPanel('d2');
   $('d2-txt').textContent = 'connecting to sensor...';
 
+  // Show force button after 8 seconds if still stuck
+  const forceTimer = setTimeout(() => {
+    const d2Btn = $('d2-force-btn');
+    if (d2Btn && mode === 'display') d2Btn.style.display = '';
+  }, 8000);
+
   // Each display gets a unique peer ID
   const myId = 'levelvan-' + pin + '-display-' + Date.now();
   const sensorId = 'levelvan-' + pin + '-sensor';
@@ -1554,6 +1652,9 @@ window.connectWithPin = () => {
     conn.on('open', () => {
       console.log('Connected to sensor');
       conns = [conn];
+      clearTimeout(forceTimer);
+      const d2Btn = $('d2-force-btn');
+      if (d2Btn) d2Btn.style.display = 'none';
       showPanel('d3');
       // Ensure wake lock is active when connected
       if (wakeLockManager) wakeLockManager.maintainWakeLock();
