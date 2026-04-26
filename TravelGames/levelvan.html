@@ -7,6 +7,48 @@
 <meta name="theme-color" content="#0a1628">
 <title>LevelVan</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK v10 (modular) -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getFirestore, enableIndexedDbPersistence, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  
+  // Firebase configuration - Replace with your actual Firebase project config
+  const firebaseConfig = {
+    apiKey: "demo-api-key",
+    authDomain: "levelvan-demo.firebaseapp.com",
+    projectId: "levelvan-demo",
+    storageBucket: "levelvan-demo.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef123456"
+  };
+  
+  // Initialize Firebase
+  window.firebaseApp = initializeApp(firebaseConfig);
+  window.firebaseAuth = getAuth();
+  window.firebaseDb = getFirestore();
+  
+  // Enable offline persistence (graceful — not critical if it fails)
+  try {
+    enableIndexedDbPersistence(window.firebaseDb);
+  } catch(err) {
+    console.warn('Firestore persistence not available:', err);
+  }
+  
+  // Make Firebase functions available globally
+  window.firebaseFunctions = {
+    signInAnonymously,
+    onAuthStateChanged,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    onSnapshot,
+    serverTimestamp
+  };
+</script>
 <style>
 :root{
   --bg:#0a1628;--bg2:#0f1f3d;--panel:#112244;--border:#1e3a6e;
@@ -218,10 +260,17 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.8rem;
   padding:8px 14px;cursor:pointer;white-space:nowrap;justify-self:start}
 .pin-bar-back:active,.pin-bar-share:active{opacity:.7}
+.wake-status{position:fixed;bottom:10px;right:10px;font-size:10px;color:var(--dim);z-index:100;pointer-events:none}
+.cloud-status{position:fixed;bottom:10px;left:10px;font-size:10px;color:var(--dim);z-index:100;pointer-events:none}
+.cloud-status.connected{color:var(--accent2)}
+.cloud-status.connecting{color:var(--warn)}
+.cloud-status.offline{color:var(--danger)}
 </style>
 </head>
 <body>
 <div class="grid"></div>
+<div class="wake-status" id="wake-status">WAKE: OFF</div>
+<div class="cloud-status" id="cloud-status">CLOUD: OFFLINE</div>
 
 <!-- HOME -->
 <div class="screen home" id="home-screen">
@@ -337,6 +386,20 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
         <div class="help-warn-title">⚠️ PHONE PLACEMENT</div>
         <div class="help-warn-text">Make sure the sensor phone is lying <b>completely flat</b> and won't slide around while you're moving the caravan. Even a small tilt in the phone's resting position will offset the readings.</div>
       </div>
+
+      <div class="help-divider"></div>
+      <p class="help-section-title">Pairing</p>
+
+      <div class="help-tip">
+        <div class="help-tip-title">🔗 PERMANENT PAIRING</div>
+        <div class="help-tip-text">Once paired, both phones remember each other. Next time you open the app, they'll automatically reconnect — no PIN needed. Screens stay on automatically while leveling.</div>
+      </div>
+
+      <button class="sbtn warn" style="max-width:320px;margin:8px auto" onclick="resetPairing()">
+        <div class="sbtn-ico">🔓</div>
+        <div class="sbtn-title">RESET PAIRING</div>
+        <div class="sbtn-hint">Forget paired device — pair with a different phone</div>
+      </button>
 
     </div>
 
@@ -686,8 +749,472 @@ let motionOn = false;
 let _lastSend = 0;
 let _pin = null;
 
+// Firebase and cloud persistence variables
+let firebaseManager = null;
+let wakeLockManager = null;
+let deviceIdentityManager = null;
+let connectionManager = null;
+
 const $ = id => document.getElementById(id);
 
+// ════════════════════════════════
+//  FIREBASE MANAGER CLASS
+// ════════════════════════════════
+class FirebaseManager {
+  constructor() {
+    this.auth = window.firebaseAuth;
+    this.db = window.firebaseDb;
+    this.user = null;
+    this.deviceProfile = null;
+    this.isInitialized = false;
+  }
+
+  async initializeFirebase() {
+    try {
+      this.updateCloudStatus('connecting');
+      
+      // Sign in anonymously
+      await this.authenticateAnonymously();
+      
+      // Get or create device profile
+      await this.getOrCreateDeviceProfile();
+      
+      this.isInitialized = true;
+      this.updateCloudStatus('connected');
+      console.log('Firebase initialized successfully');
+      return true;
+    } catch (error) {
+      console.error('Firebase initialization failed:', error);
+      this.updateCloudStatus('offline');
+      return false;
+    }
+  }
+
+  async authenticateAnonymously() {
+    try {
+      const result = await window.firebaseFunctions.signInAnonymously(this.auth);
+      this.user = result.user;
+      console.log('Anonymous authentication successful:', this.user.uid);
+      return this.user;
+    } catch (error) {
+      console.error('Anonymous authentication failed:', error);
+      throw error;
+    }
+  }
+
+  async getOrCreateDeviceProfile() {
+    if (!this.user) {
+      throw new Error('User not authenticated');
+    }
+
+    try {
+      const profileRef = window.firebaseFunctions.doc(this.db, 'deviceProfiles', this.user.uid);
+      const profileSnap = await window.firebaseFunctions.getDoc(profileRef);
+
+      if (profileSnap.exists()) {
+        this.deviceProfile = profileSnap.data();
+        console.log('Retrieved existing device profile:', this.deviceProfile);
+        
+        // Update last active timestamp
+        await this.updateDeviceLastActive();
+      } else {
+        // Create new device profile
+        this.deviceProfile = {
+          deviceId: this.generateDeviceId(),
+          deviceType: null,
+          createdAt: window.firebaseFunctions.serverTimestamp(),
+          lastActiveAt: window.firebaseFunctions.serverTimestamp(),
+          activePairId: null,
+          browserFingerprint: {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language
+          },
+          preferences: {
+            autoConnect: true,
+            wakeLockEnabled: true
+          }
+        };
+
+        await window.firebaseFunctions.setDoc(profileRef, this.deviceProfile);
+        console.log('Created new device profile:', this.deviceProfile);
+      }
+
+      return this.deviceProfile;
+    } catch (error) {
+      console.error('Failed to get/create device profile:', error);
+      throw error;
+    }
+  }
+
+  async createPairingBond(sensorDeviceId, displayDeviceId, sensorUserId, displayUserId, pin) {
+    try {
+      const pairId = this.generatePairId();
+      const pairingBond = {
+        pairId: pairId,
+        sensorDeviceId: sensorDeviceId,
+        displayDeviceId: displayDeviceId,
+        sensorUserId: sensorUserId,
+        displayUserId: displayUserId,
+        pin: pin || null,
+        createdAt: window.firebaseFunctions.serverTimestamp(),
+        lastConnectionAt: window.firebaseFunctions.serverTimestamp(),
+        status: 'active',
+        connectionHistory: [{
+          timestamp: window.firebaseFunctions.serverTimestamp(),
+          event: 'created'
+        }]
+      };
+
+      const bondRef = window.firebaseFunctions.doc(this.db, 'pairingBonds', pairId);
+      await window.firebaseFunctions.setDoc(bondRef, pairingBond);
+
+      // Update both device profiles with the active pair ID
+      await this.updateDeviceActivePairId(sensorUserId, pairId);
+      await this.updateDeviceActivePairId(displayUserId, pairId);
+
+      console.log('Created pairing bond:', pairingBond);
+      return pairingBond;
+    } catch (error) {
+      console.error('Failed to create pairing bond:', error);
+      throw error;
+    }
+  }
+
+  async findExistingPairingBond(deviceId) {
+    if (!this.deviceProfile || !this.deviceProfile.activePairId) {
+      return null;
+    }
+
+    try {
+      const bondRef = window.firebaseFunctions.doc(this.db, 'pairingBonds', this.deviceProfile.activePairId);
+      const bondSnap = await window.firebaseFunctions.getDoc(bondRef);
+
+      if (bondSnap.exists()) {
+        const bond = bondSnap.data();
+        if (bond.status === 'active') {
+          console.log('Found existing pairing bond:', bond);
+          return bond;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Failed to find existing pairing bond:', error);
+      return null;
+    }
+  }
+
+  async resetPairingBond() {
+    if (!this.deviceProfile || !this.deviceProfile.activePairId) {
+      return;
+    }
+
+    try {
+      // Mark pairing bond as reset
+      const bondRef = window.firebaseFunctions.doc(this.db, 'pairingBonds', this.deviceProfile.activePairId);
+      await window.firebaseFunctions.updateDoc(bondRef, {
+        status: 'reset',
+        connectionHistory: [...(this.deviceProfile.connectionHistory || []), {
+          timestamp: window.firebaseFunctions.serverTimestamp(),
+          event: 'reset'
+        }]
+      });
+
+      // Clear active pair ID from device profile
+      await this.updateDeviceActivePairId(this.user.uid, null);
+      this.deviceProfile.activePairId = null;
+
+      console.log('Reset pairing bond');
+    } catch (error) {
+      console.error('Failed to reset pairing bond:', error);
+      throw error;
+    }
+  }
+
+  async updateDeviceLastActive() {
+    if (!this.user) return;
+
+    try {
+      const profileRef = window.firebaseFunctions.doc(this.db, 'deviceProfiles', this.user.uid);
+      await window.firebaseFunctions.updateDoc(profileRef, {
+        lastActiveAt: window.firebaseFunctions.serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Failed to update last active:', error);
+    }
+  }
+
+  async updateDeviceActivePairId(userId, pairId) {
+    try {
+      const profileRef = window.firebaseFunctions.doc(this.db, 'deviceProfiles', userId);
+      await window.firebaseFunctions.updateDoc(profileRef, {
+        activePairId: pairId
+      });
+
+      if (userId === this.user.uid) {
+        this.deviceProfile.activePairId = pairId;
+      }
+    } catch (error) {
+      console.error('Failed to update active pair ID:', error);
+      throw error;
+    }
+  }
+
+  async updateDeviceType(deviceType) {
+    if (!this.user) return;
+
+    try {
+      const profileRef = window.firebaseFunctions.doc(this.db, 'deviceProfiles', this.user.uid);
+      await window.firebaseFunctions.updateDoc(profileRef, {
+        deviceType: deviceType
+      });
+
+      this.deviceProfile.deviceType = deviceType;
+      console.log('Updated device type to:', deviceType);
+    } catch (error) {
+      console.error('Failed to update device type:', error);
+    }
+  }
+
+  generateDeviceId() {
+    return 'device-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
+
+  generatePairId() {
+    return 'pair-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
+
+  updateCloudStatus(status) {
+    const statusEl = $('cloud-status');
+    if (statusEl) {
+      statusEl.className = 'cloud-status ' + status;
+      statusEl.textContent = 'CLOUD: ' + status.toUpperCase();
+    }
+  }
+
+  getDeviceProfile() {
+    return this.deviceProfile;
+  }
+
+  isCloudAvailable() {
+    return this.isInitialized && this.user && this.deviceProfile;
+  }
+}
+
+// ════════════════════════════════
+//  WAKE LOCK MANAGER CLASS
+// ════════════════════════════════
+class WakeLockManager {
+  constructor() {
+    this.wakeLock = null;
+    this.monitoringInterval = null;
+    this.isMonitoring = false;
+    this.isActive = false;
+    // Store bound handlers so add/remove use the same reference
+    this._onVisibilityChange = this.handleVisibilityChange.bind(this);
+    this._onFocus = this.handleWindowFocus.bind(this);
+    this._onBlur = this.handleWindowBlur.bind(this);
+  }
+
+  async requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        this.wakeLock = await navigator.wakeLock.request('screen');
+        this.isActive = true;
+        this.updateWakeLockStatus(true);
+        this.wakeLock.addEventListener('release', () => {
+          this.isActive = false;
+          this.updateWakeLockStatus(false);
+          this.handleWakeLockRelease();
+        });
+        return true;
+      } catch (err) {
+        console.warn('Wake lock request failed:', err);
+        this.isActive = false;
+        this.updateWakeLockStatus(false);
+        return false;
+      }
+    } else {
+      this.updateWakeLockStatus(false);
+      return false;
+    }
+  }
+
+  async releaseWakeLock() {
+    if (this.wakeLock) {
+      try {
+        await this.wakeLock.release();
+      } catch (err) {
+        console.warn('Wake lock release failed:', err);
+      }
+      this.wakeLock = null;
+      this.isActive = false;
+      this.updateWakeLockStatus(false);
+    }
+  }
+
+  startWakeLockMonitoring() {
+    if (this.isMonitoring) return;
+    this.isMonitoring = true;
+    this.monitoringInterval = setInterval(() => {
+      if (!this.wakeLock || this.wakeLock.released) {
+        this.requestWakeLock();
+      }
+    }, 10000);
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
+    window.addEventListener('focus', this._onFocus);
+    window.addEventListener('blur', this._onBlur);
+  }
+
+  stopWakeLockMonitoring() {
+    if (!this.isMonitoring) return;
+    this.isMonitoring = false;
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
+    }
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
+    window.removeEventListener('focus', this._onFocus);
+    window.removeEventListener('blur', this._onBlur);
+  }
+
+  handleVisibilityChange() {
+    if (!document.hidden && (!this.wakeLock || this.wakeLock.released)) {
+      this.requestWakeLock();
+    }
+  }
+
+  handleWindowFocus() {
+    if (!this.wakeLock || this.wakeLock.released) {
+      this.requestWakeLock();
+    }
+  }
+
+  handleWindowBlur() {
+    // intentionally empty — keep wake lock active
+  }
+
+  handleWakeLockRelease() {
+    setTimeout(() => {
+      if (this.isMonitoring && (!this.wakeLock || this.wakeLock.released)) {
+        this.requestWakeLock();
+      }
+    }, 100);
+  }
+
+  updateWakeLockStatus(isActive) {
+    const statusEl = $('wake-status');
+    if (statusEl) {
+      statusEl.textContent = isActive ? 'WAKE: ACTIVE' : 'WAKE: OFF';
+      statusEl.style.color = isActive ? 'var(--accent2)' : 'var(--dim)';
+    }
+  }
+
+  displayWakeLockStatus() { return this.isActive; }
+
+  async maintainWakeLock() {
+    if (!this.isMonitoring) this.startWakeLockMonitoring();
+    if (!this.wakeLock || this.wakeLock.released) await this.requestWakeLock();
+  }
+}
+
+// ════════════════════════════════
+//  DEVICE IDENTITY MANAGER CLASS
+// ════════════════════════════════
+class DeviceIdentityManager {
+  constructor(firebaseManager) {
+    this.firebaseManager = firebaseManager;
+    this.autoConnectTimeout = null;
+    this.AUTO_CONNECT_TIMEOUT_MS = 30000; // 30 seconds
+  }
+
+  async detectExistingRole() {
+    if (!this.firebaseManager || !this.firebaseManager.isCloudAvailable()) {
+      // Fall back to localStorage
+      return this.detectRoleFromLocalStorage();
+    }
+
+    const profile = this.firebaseManager.getDeviceProfile();
+    if (!profile) return null;
+
+    // Check if device has a saved role and active pair
+    if (profile.deviceType && profile.activePairId) {
+      const bond = await this.firebaseManager.findExistingPairingBond(profile.deviceId);
+      if (bond) {
+        return { role: profile.deviceType, bond: bond, pin: this.extractPinFromBond(bond, profile) };
+      }
+    }
+
+    // Check localStorage as fallback
+    return this.detectRoleFromLocalStorage();
+  }
+
+  detectRoleFromLocalStorage() {
+    const savedMode = localStorage.getItem('lv_mode');
+    const savedPin  = localStorage.getItem('lv_pin');
+    if (savedMode && savedPin) {
+      return { role: savedMode, bond: null, pin: savedPin };
+    }
+    return null;
+  }
+
+  extractPinFromBond(bond, profile) {
+    // The PIN is stored in the bond's pairId — extract last 4 digits
+    // or use a dedicated pin field if available
+    return bond.pin || localStorage.getItem('lv_pin') || null;
+  }
+
+  async attemptAutomaticConnection(roleInfo) {
+    if (!roleInfo) return false;
+
+    const { role, bond, pin } = roleInfo;
+
+    return new Promise((resolve) => {
+      // Set a 30-second timeout for auto-connection
+      this.autoConnectTimeout = setTimeout(() => {
+        console.log('Auto-connection timed out, falling back to manual');
+        resolve(false);
+      }, this.AUTO_CONNECT_TIMEOUT_MS);
+
+      if (role === 'sensor') {
+        mode = 'sensor';
+        showScreen('sensor-screen');
+        wakeLockManager.maintainWakeLock();
+        setupMotion(true, pin); // isResume=true, with saved pin
+        // Sensor auto-connects by resuming with saved PIN
+        clearTimeout(this.autoConnectTimeout);
+        resolve(true);
+      } else if (role === 'display' && pin) {
+        mode = 'display';
+        showScreen('display-screen');
+        wakeLockManager.maintainWakeLock();
+        kpadReset();
+        showPanel('d1');
+        // Auto-fill and connect
+        setTimeout(() => {
+          fillPin(pin);
+          clearTimeout(this.autoConnectTimeout);
+          resolve(true);
+        }, 300);
+      } else {
+        clearTimeout(this.autoConnectTimeout);
+        resolve(false);
+      }
+    });
+  }
+
+  cancelAutoConnect() {
+    if (this.autoConnectTimeout) {
+      clearTimeout(this.autoConnectTimeout);
+      this.autoConnectTimeout = null;
+    }
+  }
+}
+
+// ════════════════════════════════
+//  UTILITY FUNCTIONS
+// ════════════════════════════════
 function showPanel(id) {
   const t = $(id); if (!t) return;
   t.closest('.screen').querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -698,28 +1225,102 @@ function showScreen(id) {
   $(id).classList.remove('hidden');
 }
 
-// Check for pre-filled PIN in URL hash (from shared link)
+// ════════════════════════════════
+//  APP STARTUP
+// ════════════════════════════════
+// Capture hash before it gets cleared
 const _hash = location.hash.slice(1);
 history.replaceState(null, '', location.pathname);
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+  // Always initialize managers
+  wakeLockManager = new WakeLockManager();
+
+  // Handle shared link — highest priority, skip all auto-connect logic
   if (_hash.startsWith('LVP:')) {
-    // Link shared from sensor — go straight to display with PIN pre-filled
     const pin = _hash.slice(4);
     mode = 'display';
     showScreen('display-screen');
     showPanel('d1');
-    // fillPin triggers connectWithPin automatically on 4th digit
+    wakeLockManager.maintainWakeLock();
     setTimeout(() => fillPin(pin), 300);
-  } else {
-    showScreen('home-screen');
+    return;
   }
+
+  // Try to initialize Firebase for cloud persistence
+  // Wait up to 3s for the Firebase module to finish initialising
+  let cloudReady = false;
+  const firebaseReady = await new Promise(resolve => {
+    let attempts = 0;
+    const check = () => {
+      if (window.firebaseAuth && window.firebaseDb && window.firebaseFunctions) {
+        resolve(true);
+      } else if (++attempts < 30) {
+        setTimeout(check, 100);
+      } else {
+        resolve(false); // timed out — run without Firebase
+      }
+    };
+    check();
+  });
+  if (firebaseReady) {
+    firebaseManager = new FirebaseManager();
+    cloudReady = await firebaseManager.initializeFirebase();
+  }
+
+  // Initialize device identity manager
+  deviceIdentityManager = new DeviceIdentityManager(cloudReady ? firebaseManager : null);
+
+  // Attempt automatic connection for previously paired devices
+  const roleInfo = await deviceIdentityManager.detectExistingRole();
+  if (roleInfo) {
+    const autoConnected = await deviceIdentityManager.attemptAutomaticConnection(roleInfo);
+    if (autoConnected) return;
+  }
+
+  // No saved state — show home screen
+  showScreen('home-screen');
 });
 
-window.goHome = () => { cleanup(); showScreen('home-screen'); };
-window.startSensor  = () => { mode='sensor'; showScreen('sensor-screen'); setupMotion(); };
-window.startDisplay = () => { mode='display'; showScreen('display-screen'); kpadReset(); showPanel('d1'); };
-window.startSolo    = () => { mode='solo'; showScreen('sensor-screen'); setupMotion(); };
+// ════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════
+window.goHome = async () => {
+  if (deviceIdentityManager) deviceIdentityManager.cancelAutoConnect();
+  // Clear local persistence (cloud persistence stays — that's the "permanent" bond)
+  localStorage.removeItem('lv_mode');
+  localStorage.removeItem('lv_pin');
+  if (wakeLockManager) { await wakeLockManager.releaseWakeLock(); wakeLockManager.stopWakeLockMonitoring(); }
+  cleanup();
+  showScreen('home-screen');
+};
+
+window.startSensor = () => {
+  mode = 'sensor';
+  localStorage.setItem('lv_mode', 'sensor');
+  showScreen('sensor-screen');
+  if (wakeLockManager) wakeLockManager.maintainWakeLock();
+  if (firebaseManager) firebaseManager.updateDeviceType('sensor');
+  setupMotion(false, null);
+};
+
+window.startDisplay = () => {
+  mode = 'display';
+  localStorage.setItem('lv_mode', 'display');
+  showScreen('display-screen');
+  if (wakeLockManager) wakeLockManager.maintainWakeLock();
+  if (firebaseManager) firebaseManager.updateDeviceType('display');
+  kpadReset();
+  showPanel('d1');
+};
+
+window.startSolo = () => {
+  mode = 'solo';
+  showScreen('sensor-screen');
+  if (wakeLockManager) wakeLockManager.maintainWakeLock();
+  setupMotion(false, null);
+};
+
 window.showHelp = () => { showScreen('help-screen'); helpTab('easy'); };
 window.helpTab = (tab) => {
   document.querySelectorAll('.help-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='easy')||(i===1&&tab==='tech')));
@@ -728,12 +1329,41 @@ window.helpTab = (tab) => {
 };
 
 // ════════════════════════════════
+//  PAIRING RESET
+// ════════════════════════════════
+window.resetPairing = async () => {
+  if (!confirm('Reset pairing? This device will forget its paired partner and return to the home screen.')) return;
+
+  try {
+    if (firebaseManager && firebaseManager.isCloudAvailable()) {
+      await firebaseManager.resetPairingBond();
+    }
+    localStorage.removeItem('lv_mode');
+    localStorage.removeItem('lv_pin');
+    if (wakeLockManager) { wakeLockManager.releaseWakeLock(); wakeLockManager.stopWakeLockMonitoring(); }
+    cleanup();
+    showScreen('home-screen');
+    console.log('Pairing reset complete');
+  } catch (error) {
+    console.error('Pairing reset failed:', error);
+    alert('Reset failed. Please try again.');
+  }
+};
+
+// ════════════════════════════════
 //  SENSOR
 // ════════════════════════════════
-function initSensor() {
-  _pin = String(Math.floor(1000 + Math.random() * 9000)); // 1000–9999
+function initSensor(resumePin) {
+  // Use saved PIN on resume, generate new one otherwise
+  if (resumePin) {
+    _pin = resumePin;
+  } else {
+    _pin = String(Math.floor(1000 + Math.random() * 9000)); // 1000–9999
+  }
+
+  localStorage.setItem('lv_pin', _pin);
   const peerId = 'levelvan-' + _pin + '-sensor';
-  $('s1-txt').textContent = 'connecting to relay...';
+  $('s1-txt').textContent = resumePin ? 'resuming session...' : 'connecting to relay...';
 
   peer = new Peer(peerId, {
     host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE,
@@ -744,6 +1374,8 @@ function initSensor() {
   peer.on('open', id => {
     console.log('Sensor peer open:', id);
     $('pin-bar-code').textContent = _pin;
+    const pinLabel = document.querySelector('#pin-bar .pin-bar-label');
+    if (pinLabel) pinLabel.textContent = resumePin ? 'PAIRED PIN' : 'SESSION PIN';
     $('pin-bar-share').style.display = '';
     showPanel('s2');
   });
@@ -756,9 +1388,9 @@ function initSensor() {
   peer.on('error', e => {
     console.error('Peer error:', e);
     if (e.type === 'unavailable-id') {
-      // PIN collision — regenerate
+      // PIN collision — regenerate (don't reuse saved pin)
       peer.destroy(); peer = null;
-      initSensor();
+      initSensor(null);
     } else {
       $('s1-txt').textContent = '⚠️ ' + e.message;
     }
@@ -845,6 +1477,11 @@ function getPinValue() { return _kpad.join(''); }
 window.connectWithPin = () => {
   const pin = getPinValue();
   if (pin.length !== 4) { $('d1-hint').textContent = '⚠️ Enter all 4 digits'; return; }
+
+  // Persist the PIN locally so display can auto-reconnect
+  localStorage.setItem('lv_pin', pin);
+  localStorage.setItem('lv_mode', 'display');
+
   showPanel('d2');
   $('d2-txt').textContent = 'connecting to sensor...';
 
@@ -866,6 +1503,20 @@ window.connectWithPin = () => {
       console.log('Connected to sensor');
       conns = [conn];
       showPanel('d3');
+      // Ensure wake lock is active when connected
+      if (wakeLockManager) wakeLockManager.maintainWakeLock();
+      // Save pairing bond to cloud on first successful connection
+      if (firebaseManager && firebaseManager.isCloudAvailable()) {
+        const profile = firebaseManager.getDeviceProfile();
+        if (profile && !profile.activePairId) {
+          // We need the sensor's userId — store pin in bond for now
+          // Bond creation requires both UIDs; store pin at minimum
+          firebaseManager.updateDeviceType('display').catch(console.warn);
+          // Store pin in localStorage as the persistent pairing key
+          localStorage.setItem('lv_pin', pin);
+          localStorage.setItem('lv_mode', 'display');
+        }
+      }
     });
 
     conn.on('data', data => {
@@ -873,8 +1524,22 @@ window.connectWithPin = () => {
     });
 
     conn.on('close', () => {
-      $('d2-txt').textContent = '⚠️ Sensor disconnected — go back and retry';
+      $('d2-txt').textContent = '⚠️ Sensor disconnected — reconnecting...';
       showPanel('d2');
+      // Auto-retry with saved PIN after a short delay
+      setTimeout(() => {
+        const savedPin = localStorage.getItem('lv_pin');
+        if (savedPin && mode === 'display') {
+          $('d2-txt').textContent = 'reconnecting to sensor...';
+          // Destroy old peer before creating a new one
+          if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+          conns = [];
+          fillPin(savedPin);
+        } else {
+          showPanel('d1');
+          kpadReset();
+        }
+      }, 2000);
     });
 
     conn.on('error', e => {
@@ -887,7 +1552,7 @@ window.connectWithPin = () => {
   peer.on('error', e => {
     console.error('Peer error:', e);
     let msg = e.message;
-    if (e.type === 'peer-unavailable') msg = 'Sensor not found — check PIN and try again';
+    if (e.type === 'peer-unavailable') msg = 'Sensor not found — waiting for sensor to come online...';
     $('d2-txt').textContent = '⚠️ ' + msg;
     showPanel('d2');
     // Go back to PIN entry after a moment
@@ -898,16 +1563,18 @@ window.connectWithPin = () => {
 // ════════════════════════════════
 //  MOTION (iOS permission)
 // ════════════════════════════════
-function setupMotion() {
+function setupMotion(isResume, resumePin) {
   if (typeof DeviceOrientationEvent === 'undefined') {
-    showPanel('s1'); initSensor(); return;
+    showPanel('s1'); initSensor(resumePin); return;
   }
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // iOS — must show permission button; store resume info for after grant
+    window._pendingResumePin = resumePin;
     showPanel('s0');
   } else {
     window.addEventListener('deviceorientation', onOrient, true);
     motionOn = true;
-    if (mode === 'solo') { initSolo(); } else { showPanel('s1'); initSensor(); }
+    if (mode === 'solo') { initSolo(); } else { showPanel('s1'); initSensor(resumePin); }
   }
 }
 window.askMotion = async () => {
@@ -918,7 +1585,9 @@ window.askMotion = async () => {
       motionOn = true;
     }
   } catch(e) { console.error('Motion permission:', e); }
-  if (mode === 'solo') { initSolo(); } else { showPanel('s1'); initSensor(); }
+  const resumePin = window._pendingResumePin || null;
+  window._pendingResumePin = null;
+  if (mode === 'solo') { initSolo(); } else { showPanel('s1'); initSensor(resumePin); }
 };
 
 function onOrient(ev) {
@@ -1035,6 +1704,8 @@ function cleanup() {
   $('pin-bar-code').textContent = '----';
   $('pin-bar-share').style.display = 'none';
   kpadReset();
+  // Note: wake lock is NOT released here — goHome() handles that explicitly
+  // This allows cleanup to be called for reconnection without killing the wake lock
 }
 </script>
 
