@@ -69,13 +69,15 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   align-items:center;padding:24px;overflow-y:auto}
 .screen.home{justify-content:center;gap:20px}
 .screen.hidden{display:none!important}
+/* Sensor and display live screens must never scroll */
+#sensor-screen,#display-screen{overflow:hidden}
 .back{position:fixed;top:12px;left:12px;background:none;
   border:2px solid var(--dim);border-radius:10px;color:var(--text);
   font-family:'Share Tech Mono',monospace;font-size:.85rem;cursor:pointer;
   z-index:20;padding:8px 14px;white-space:nowrap}
 .back:active{opacity:.7}
 .panel{display:none;flex-direction:column;align-items:center;
-  gap:16px;width:100%;max-width:420px;padding-top:52px}
+  gap:12px;width:100%;max-width:420px;padding-top:52px}
 .panel.active{display:flex}
 /* HOME */
 .logo{font-family:'Orbitron',monospace;font-size:2.2rem;font-weight:900;
@@ -213,12 +215,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .conn-count span{color:var(--accent2)}
 /* 3D caravan scene */
 .van3d-scene{width:100%;display:flex;justify-content:center;align-items:center;
-  perspective:500px;perspective-origin:50% 35%;min-height:300px;overflow:visible}
+  perspective:500px;perspective-origin:50% 35%;
+  flex:1;min-height:0;overflow:visible}
 .van3d-stage{transition:transform 0.12s ease-out;transform-style:preserve-3d;
   transform:rotateX(0deg) rotateY(0deg);overflow:visible}
 /* Glow wrapper sits outside preserve-3d so filter works on all browsers */
 .van3d-glow{filter:drop-shadow(0 6px 20px rgba(0,212,255,0.22))}
-.van3d-svg{width:260px;height:auto;display:block;overflow:visible}
+.van3d-svg{width:min(260px,55vw);height:auto;display:block;overflow:visible}
 /* Help screen */
 .help-screen{overflow-y:auto;justify-content:flex-start;padding:0}
 .help-hero{width:100%;background:linear-gradient(135deg,#0f1f3d,#112244);
@@ -539,7 +542,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- s3: live level (sensor) -->
-  <div class="panel" id="s3" style="padding-top:148px;padding-bottom:200px">
+  <div class="panel" id="s3" style="padding-top:80px;padding-bottom:180px;flex:1;justify-content:flex-start">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)" id="s3-status">connected ✓</span></div>
 
     <!-- 3D caravan view (sensor) -->
@@ -591,8 +594,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
         </svg>
       </div>
     </div>
-
-    <div class="conn-count" id="s3-conn-count"></div>
   </div>
 </div>
 
@@ -609,6 +610,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="badge AD" id="s-badge">--</div>
     <div class="angle"><span class="albl">PITCH ↕</span><span class="aval bd" id="s-pitch">0.0°</span></div>
   </div>
+  <div class="conn-count" id="s3-conn-count" style="font-size:.85rem;padding-top:2px"></div>
 </div>
 
 <!-- DISPLAY SCREEN -->
@@ -658,7 +660,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- d3: live display -->
-  <div class="panel" id="d3" style="padding-bottom:220px">
+  <div class="panel" id="d3" style="padding-bottom:220px;flex:1;justify-content:flex-start;padding-top:20px">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected ✓</span></div>
 
     <!-- 3D caravan view -->
