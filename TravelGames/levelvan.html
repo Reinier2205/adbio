@@ -1360,9 +1360,8 @@ window.addEventListener('load', async () => {
 // ════════════════════════════════
 window.goHome = async () => {
   if (deviceIdentityManager) deviceIdentityManager.cancelAutoConnect();
-  // Clear local persistence (cloud persistence stays — that's the "permanent" bond)
-  localStorage.removeItem('lv_mode');
-  localStorage.removeItem('lv_pin');
+  // Do NOT clear lv_pin or lv_mode — the PIN is the permanent pairing bond.
+  // Only resetPairing() should clear those.
   if (wakeLockManager) { await wakeLockManager.releaseWakeLock(); wakeLockManager.stopWakeLockMonitoring(); }
   cleanup();
   showScreen('home-screen');
@@ -1374,7 +1373,9 @@ window.startSensor = () => {
   showScreen('sensor-screen');
   if (wakeLockManager) wakeLockManager.maintainWakeLock();
   if (firebaseManager) firebaseManager.updateDeviceType('sensor');
-  setupMotion(false, null);
+  // Always resume with the saved PIN if one exists — this is the permanent bond
+  const savedPin = localStorage.getItem('lv_pin');
+  setupMotion(false, savedPin || null);
   updateForceButtons();
 };
 
@@ -1386,6 +1387,11 @@ window.startDisplay = () => {
   if (firebaseManager) firebaseManager.updateDeviceType('display');
   kpadReset();
   showPanel('d1');
+  // Auto-fill saved PIN immediately — skip keypad if we have a known pair
+  const savedPin = localStorage.getItem('lv_pin');
+  if (savedPin) {
+    setTimeout(() => fillPin(savedPin), 300);
+  }
   updateForceButtons();
 };
 
@@ -1537,9 +1543,15 @@ function initSensor(resumePin) {
   peer.on('error', e => {
     console.error('Peer error:', e);
     if (e.type === 'unavailable-id') {
-      // PIN collision — regenerate (don't reuse saved pin)
+      // PIN collision — only regenerate if this was a fresh PIN (not a saved pair)
+      // If resumePin was set, the sensor is already in use — just wait and retry
       peer.destroy(); peer = null;
-      initSensor(null);
+      if (resumePin) {
+        // Retry with same PIN after a short delay
+        setTimeout(() => initSensor(resumePin), 3000);
+      } else {
+        initSensor(null); // fresh session, try a new PIN
+      }
     } else {
       $('s1-txt').textContent = '⚠️ ' + e.message;
     }
