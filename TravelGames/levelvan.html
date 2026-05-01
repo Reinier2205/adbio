@@ -586,7 +586,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
           <line x1="72" y1="248" x2="128" y2="248" stroke="#5ab0cc" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
           <circle cx="100" cy="300" r="7" fill="#3a7a9a" stroke="#8ad8ee" stroke-width="2" opacity="0.95"/>
           <!-- Level bubble — outer glow ring replaces filter -->
-          <circle cx="100" cy="126" r="58" fill="none" stroke="#8ad8ee" stroke-width="1" stroke-dasharray="4 4" opacity="0.25"/>
+          <circle cx="100" cy="126" r="33" fill="none" stroke="#8ad8ee" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.5" id="s-level-ring"/>
           <circle cx="100" cy="126" r="8" fill="none" stroke="#8ad8ee" stroke-width="1" opacity="0.4"/>
           <!-- Bubble glow: larger semi-transparent circle behind, no filter needed -->
           <circle cx="100" cy="126" r="9" fill="#00d4ff" opacity="0.3" id="s-van-bubble-glow"/>
@@ -740,7 +740,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
           <circle cx="100" cy="300" r="7" fill="#3a7a9a" stroke="#8ad8ee" stroke-width="2" opacity="0.95"/>
 
           <!-- ══ LEVEL BUBBLE — centre of body ══ -->
-          <circle cx="100" cy="126" r="58" fill="none" stroke="#8ad8ee" stroke-width="1" stroke-dasharray="4 4" opacity="0.25"/>
+          <circle cx="100" cy="126" r="33" fill="none" stroke="#8ad8ee" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.5" id="d-level-ring"/>
           <circle cx="100" cy="126" r="8" fill="none" stroke="#8ad8ee" stroke-width="1" opacity="0.4"/>
           <circle cx="100" cy="126" r="6" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5"
                   id="van-bubble" opacity="0.95" filter="url(#fg)"/>
@@ -1900,9 +1900,17 @@ function updateSensor(r, p) {
     sbg.setAttribute('fill', lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444');
   }
 
-  // Tail lights
-  const lo = lv ? '0.4' : cl ? '0.65' : '1';
-  ['s-light-l-inner','s-light-r-inner'].forEach(id => { const el=$(id); if(el) el.setAttribute('opacity',lo); });
+  // Tail lights — colour matches level state
+  const lightCol = lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444';
+  const lightStroke = lv ? '#00ff88' : cl ? '#ffaa00' : '#ff5555';
+  ['s-light-l-inner','s-light-r-inner'].forEach(id => {
+    const el=$(id); if(el) { el.setAttribute('fill', lightCol); el.setAttribute('opacity','0.9'); }
+  });
+  ['s-light-l','s-light-r'].forEach(id => {
+    const el=$(id); if(el) el.setAttribute('stroke', lightStroke);
+  });
+  // Also tint the level ring to match
+  const lr = $('s-level-ring'); if(lr) lr.setAttribute('stroke', lightCol);
 
   $('s-roll').textContent  = r.toFixed(1)+'°'; $('s-roll').className  = 'aval '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
   $('s-pitch').textContent = p.toFixed(1)+'°'; $('s-pitch').className = 'aval '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
@@ -1937,11 +1945,17 @@ function updateDisplay(d) {
     bubble.setAttribute('stroke', lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444');
   }
 
-  // ── Tail lights pulse red when tilted
-  const lightOpacity = lv ? '0.4' : cl ? '0.65' : '1';
+  // ── Tail lights — colour matches level state
+  const lightCol = lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444';
+  const lightStroke = lv ? '#00ff88' : cl ? '#ffaa00' : '#ff5555';
   ['light-l-inner','light-r-inner'].forEach(id => {
-    const el = $(id); if(el) el.setAttribute('opacity', lightOpacity);
+    const el=$(id); if(el) { el.setAttribute('fill', lightCol); el.setAttribute('opacity','0.9'); }
   });
+  ['light-l','light-r'].forEach(id => {
+    const el=$(id); if(el) el.setAttribute('stroke', lightStroke);
+  });
+  // Tint the level ring to match
+  const dlr = $('d-level-ring'); if(dlr) dlr.setAttribute('stroke', lightCol);
 
   // ── Instruction banner
   const ins = $('d-instr');
