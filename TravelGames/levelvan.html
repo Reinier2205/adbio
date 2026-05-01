@@ -148,20 +148,35 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   transition:left .08s,top .08s}
 .bubble.lv{background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.6),rgba(0,255,136,.8) 60%,rgba(0,180,80,.6));
   border-color:var(--accent2);box-shadow:0 0 12px rgba(0,255,136,.6)}
-/* Angles */
-.angles{display:flex;gap:16px;align-items:center;width:100%}
-.angle{text-align:center;flex:1}
-.albl{font-size:.85rem;color:var(--dim);letter-spacing:2px}
-.aval{font-family:'Orbitron',monospace;font-size:2rem;font-weight:700;margin-top:4px}
+/* Fixed bottom data bar — sensor and display live screens */
+.data-footer{
+  position:fixed;bottom:0;left:0;right:0;z-index:15;
+  background:rgba(10,22,40,.97);border-top:2px solid var(--border);
+  padding:12px 16px 16px;
+  display:none;flex-direction:column;gap:10px;
+}
+.data-footer.active{display:flex}
+/* Instruction banner inside footer */
+.data-footer .instr{font-size:1.3rem;min-height:52px}
+/* Two-column angle row inside footer */
+.data-footer .angles{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;width:100%}
+.data-footer .angle{text-align:center}
+.data-footer .albl{font-size:.9rem;color:var(--dim);letter-spacing:2px;display:block}
+.data-footer .aval{font-family:'Orbitron',monospace;font-size:2.2rem;font-weight:700;display:block;margin-top:2px}
+.data-footer .badge{font-size:1rem;padding:8px 12px;text-align:center}
+/* Bars inside footer */
+.data-footer .bars{gap:12px}
+.data-footer .blbl{font-size:.85rem}
+.data-footer .btrack{height:14px}
+/* Bars */
+.bars{display:flex;gap:10px;width:100%}
+.bw{flex:1}
 .ok{color:var(--accent2)}.wn{color:var(--warn)}.bd{color:var(--danger)}
 .badge{font-family:'Orbitron',monospace;font-size:1.1rem;letter-spacing:2px;
   padding:10px 18px;border-radius:8px;border:2px solid;flex-shrink:0}
 .badge.LV{color:var(--accent2);border-color:var(--accent2)}
 .badge.CL{color:var(--warn);border-color:var(--warn)}
 .badge.AD{color:var(--danger);border-color:var(--danger)}
-/* Bars */
-.bars{display:flex;gap:10px;width:100%}
-.bw{flex:1}
 .blbl{font-size:.85rem;color:var(--dim);letter-spacing:2px;margin-bottom:6px;
   display:flex;justify-content:space-between;font-weight:700}
 .btrack{position:relative;height:14px;background:var(--bg2);border-radius:7px;
@@ -524,7 +539,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- s3: live level (sensor) -->
-  <div class="panel" id="s3" style="padding-top:148px">
+  <div class="panel" id="s3" style="padding-top:148px;padding-bottom:200px">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)" id="s3-status">connected ✓</span></div>
 
     <!-- 3D caravan view (sensor) -->
@@ -577,18 +592,22 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       </div>
     </div>
 
-    <div class="angles">
-      <div class="angle"><div class="albl">ROLL ↔</div><div class="aval bd" id="s-roll">0.0°</div></div>
-      <div class="badge AD" id="s-badge">--</div>
-      <div class="angle"><div class="albl">PITCH ↕</div><div class="aval bd" id="s-pitch">0.0°</div></div>
-    </div>
-    <div class="bars">
-      <div class="bw"><div class="blbl"><span>ROLL</span><span id="s-rd"></span></div>
-        <div class="btrack"><div class="bmid"></div><div class="bfill" id="s-rb"></div></div></div>
-      <div class="bw"><div class="blbl"><span>PITCH</span><span id="s-pd"></span></div>
-        <div class="btrack"><div class="bmid"></div><div class="bfill" id="s-pb"></div></div></div>
-    </div>
     <div class="conn-count" id="s3-conn-count"></div>
+  </div>
+</div>
+
+<!-- SENSOR fixed data footer -->
+<div class="data-footer" id="sensor-footer">
+  <div class="bars">
+    <div class="bw"><div class="blbl"><span>ROLL</span><span id="s-rd"></span></div>
+      <div class="btrack"><div class="bmid"></div><div class="bfill" id="s-rb"></div></div></div>
+    <div class="bw"><div class="blbl"><span>PITCH</span><span id="s-pd"></span></div>
+      <div class="btrack"><div class="bmid"></div><div class="bfill" id="s-pb"></div></div></div>
+  </div>
+  <div class="angles">
+    <div class="angle"><span class="albl">ROLL ↔</span><span class="aval bd" id="s-roll">0.0°</span></div>
+    <div class="badge AD" id="s-badge">--</div>
+    <div class="angle"><span class="albl">PITCH ↕</span><span class="aval bd" id="s-pitch">0.0°</span></div>
   </div>
 </div>
 
@@ -639,7 +658,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- d3: live display -->
-  <div class="panel" id="d3">
+  <div class="panel" id="d3" style="padding-bottom:220px">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected ✓</span></div>
 
     <!-- 3D caravan view -->
@@ -739,6 +758,21 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="angle"><div class="albl">ROLL ↔</div><div class="aval" id="d-roll">--</div></div>
       <div class="angle"><div class="albl">PITCH ↕</div><div class="aval" id="d-pitch">--</div></div>
     </div>
+  </div>
+</div>
+
+<!-- DISPLAY fixed data footer -->
+<div class="data-footer" id="display-footer">
+  <div class="instr wt" id="d-instr">waiting for data...</div>
+  <div class="bars">
+    <div class="bw"><div class="blbl"><span>ROLL</span><span id="d-rd"></span></div>
+      <div class="btrack"><div class="bmid"></div><div class="bfill" id="d-rb"></div></div></div>
+    <div class="bw"><div class="blbl"><span>PITCH</span><span id="d-pd"></span></div>
+      <div class="btrack"><div class="bmid"></div><div class="bfill" id="d-pb"></div></div></div>
+  </div>
+  <div class="angles">
+    <div class="angle"><span class="albl">ROLL ↔</span><span class="aval" id="d-roll">--</span></div>
+    <div class="angle"><span class="albl">PITCH ↕</span><span class="aval" id="d-pitch">--</span></div>
   </div>
 </div>
 
@@ -1293,10 +1327,18 @@ function showPanel(id) {
   const t = $(id); if (!t) return;
   t.closest('.screen').querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   t.classList.add('active');
+  // Show/hide fixed footers based on which panel is active
+  const sf = $('sensor-footer'), df = $('display-footer');
+  if (sf) sf.classList.toggle('active', id === 's3');
+  if (df) df.classList.toggle('active', id === 'd3');
 }
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   $(id).classList.remove('hidden');
+  // Hide both footers when switching screens
+  const sf = $('sensor-footer'), df = $('display-footer');
+  if (sf) sf.classList.remove('active');
+  if (df) df.classList.remove('active');
 }
 
 // ════════════════════════════════
