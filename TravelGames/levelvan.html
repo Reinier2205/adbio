@@ -105,10 +105,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   padding:20px 28px;text-align:center;width:100%}
 .pin-label{font-size:.72rem;color:var(--dim);letter-spacing:3px;text-align:center}
 /* PIN entry keypad */
-.pin-dots{display:flex;gap:14px;justify-content:center;align-items:center;padding:4px 0}
-.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--dim);
-  background:transparent;transition:all .15s}
-.pin-dot.filled{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px var(--accent)}
+.pin-dots{display:flex;gap:10px;justify-content:center;align-items:center;padding:4px 0}
+.pin-dot{width:52px;height:64px;border-radius:12px;border:2px solid var(--dim);
+  background:var(--panel);transition:all .15s;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:700;
+  color:var(--accent);letter-spacing:0}
+.pin-dot.filled{border-color:var(--accent);box-shadow:0 0 10px rgba(0,212,255,0.3);background:rgba(0,212,255,0.08)}
 .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
 .kbtn{height:64px;border-radius:14px;background:var(--panel);border:2px solid var(--border);
   color:var(--text);font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:700;
@@ -1655,22 +1658,29 @@ let _kpad = []; // digits entered so far
 window.kpadPress = function(digit) {
   if (_kpad.length >= 4) return;
   _kpad.push(digit);
-  $('pd' + (_kpad.length - 1)).classList.add('filled');
+  const dot = $('pd' + (_kpad.length - 1));
+  dot.classList.add('filled');
+  dot.textContent = digit;
   if (_kpad.length === 4) {
-    setTimeout(() => connectWithPin(), 120); // brief pause so last dot animates
+    setTimeout(() => connectWithPin(), 120); // brief pause so last digit animates
   }
 }
 
 window.kpadDel = function() {
   if (_kpad.length === 0) return;
   _kpad.pop();
-  $('pd' + _kpad.length).classList.remove('filled');
+  const dot = $('pd' + _kpad.length);
+  dot.classList.remove('filled');
+  dot.textContent = '';
   $('d1-hint').textContent = 'Enter the 4-digit PIN shown on the Sensor device';
 }
 
 function kpadReset() {
   _kpad = [];
-  for (let i = 0; i < 4; i++) $('pd'+i).classList.remove('filled');
+  for (let i = 0; i < 4; i++) {
+    $('pd'+i).classList.remove('filled');
+    $('pd'+i).textContent = '';
+  }
 }
 
 function fillPin(pin) {
@@ -1840,8 +1850,9 @@ function updateSensor(r, p) {
   $('s-van3d').style.transform = `rotateZ(180deg) rotateX(${rx}deg) rotateY(${ry}deg)`;
 
   // Bubble inside sensor SVG
-  const sbx = 100 + Math.max(-55, Math.min(55, r / 15 * 55));
-  const sby = 126 + Math.max(-70, Math.min(70, p / 15 * 70));
+  // Scale: ±5° = full bubble travel (edge of area). Clamped so >5° stays at edge.
+  const sbx = 100 + Math.max(-55, Math.min(55, r / 5 * 55));
+  const sby = 126 + Math.max(-70, Math.min(70, p / 5 * 70));
   const sb = $('s-van-bubble');
   if (sb) {
     sb.setAttribute('cx', sbx.toFixed(1));
@@ -1883,8 +1894,9 @@ function updateDisplay(d) {
   $('van3d').style.transform = `rotateZ(180deg) rotateX(${rx}deg) rotateY(${ry}deg)`;
 
   // ── Bubble dot — x inverted due to 180° rotation
-  const bx = 100 + Math.max(-55, Math.min(55, r / 15 * 55));
-  const by = 126 + Math.max(-70, Math.min(70, p / 15 * 70));
+  // Scale: ±5° = full bubble travel (edge of area). Clamped so >5° stays at edge.
+  const bx = 100 + Math.max(-55, Math.min(55, r / 5 * 55));
+  const by = 126 + Math.max(-70, Math.min(70, p / 5 * 70));
   const bubble = $('van-bubble');
   if (bubble) {
     bubble.setAttribute('cx', bx.toFixed(1));
