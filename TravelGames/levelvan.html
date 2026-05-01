@@ -1343,8 +1343,9 @@ window.addEventListener('load', async () => {
   deviceIdentityManager = new DeviceIdentityManager(cloudReady ? firebaseManager : null);
 
   // Attempt automatic connection for previously paired devices
+  // Skip if mode is solo (solo never saves lv_mode, but guard anyway)
   const roleInfo = await deviceIdentityManager.detectExistingRole();
-  if (roleInfo) {
+  if (roleInfo && roleInfo.role !== 'solo') {
     const autoConnected = await deviceIdentityManager.attemptAutomaticConnection(roleInfo);
     if (autoConnected) return;
   }
@@ -1389,6 +1390,10 @@ window.startDisplay = () => {
 };
 
 window.startSolo = () => {
+  // Solo mode bypasses all pairing — clear any saved pairing state
+  // so the auto-connect logic doesn't interfere on next load
+  localStorage.removeItem('lv_mode');
+  localStorage.removeItem('lv_pin');
   mode = 'solo';
   showScreen('sensor-screen');
   if (wakeLockManager) wakeLockManager.maintainWakeLock();
