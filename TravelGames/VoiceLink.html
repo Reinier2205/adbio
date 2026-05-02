@@ -3,216 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Voice P2P Tester (PeerJS)</title>
+    <title>Voice Link Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         .waveform { display: flex; align-items: center; gap: 4px; height: 30px; }
         .bar { width: 4px; border-radius: 2px; background: #22c55e; transition: height 0.1s ease; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .searching { animation: pulse 1.5s infinite; }
-        #logs { font-size: 10px; font-family: 'Courier New', monospace; background: #000; color: #0f0; border: 1px solid #333; height: 180px; overflow-y: auto; }
-        .log-entry { border-bottom: 1px solid #111; padding: 2px 4px; }
+        @keyframes pulse-ring { 0% { transform: scale(.33); opacity: 1; } 80%, 100% { opacity: 0; } }
+        .pulse-btn::before {
+            content: ''; position: absolute; width: 100%; height: 100%;
+            border: 4px solid #22c55e; border-radius: 9999px;
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        #logs { font-size: 10px; font-family: monospace; background: #000; color: #0f0; height: 150px; overflow-y: auto; border: 1px solid #333; }
     </style>
 </head>
 <body class="bg-black text-white font-sans overflow-hidden">
     <div class="flex flex-col h-screen max-w-md mx-auto p-4">
         
-        <header class="py-4 flex justify-between items-center border-b border-zinc-800">
-            <div>
-                <h1 class="text-xl font-black tracking-tighter text-green-500 underline decoration-2">VOICE TEST v5</h1>
-                <p id="status" class="text-zinc-500 text-[10px] font-mono uppercase">Initializing PeerJS...</p>
+        <header class="py-6 border-b border-zinc-800">
+            <h1 class="text-2xl font-black tracking-tighter text-green-500">VOICE LINK <span class="text-xs font-normal text-zinc-500 ml-2">V6</span></h1>
+            <div id="connectionStatus" class="flex items-center gap-2 mt-1">
+                <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
+                <p id="statusText" class="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">Disconnected</p>
             </div>
-            <button onclick="window.location.reload()" class="bg-red-900/30 text-red-500 text-[10px] font-bold px-3 py-1 rounded border border-red-900/50">RELOAD</button>
         </header>
 
-        <!-- Live Log Area -->
-        <div class="mt-4 mb-2">
-            <p class="text-[10px] font-bold text-zinc-500 mb-1 uppercase flex justify-between">
-                <span>Network Debug Console</span>
-                <span id="myIdDisplay">ID: ...</span>
-            </p>
-            <div id="logs" class="rounded shadow-inner"></div>
+        <!-- Debug Console (Always Visible) -->
+        <div class="mt-4">
+            <div id="logs" class="p-2 rounded-lg shadow-inner">
+                <div>> System initialized. Select a room below.</div>
+            </div>
         </div>
 
-        <!-- Setup View -->
+        <!-- Room Selector -->
         <div id="setup-view" class="flex-1 flex flex-col justify-center gap-4">
-            <div class="bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
-                <p class="text-[10px] text-zinc-500 uppercase mb-2 font-bold">1. Share your ID or Enter Peer ID</p>
-                <input id="peerIdInput" type="text" placeholder="PASTE PEER ID HERE" 
-                    class="w-full bg-black border border-zinc-700 rounded-lg p-4 text-sm font-mono focus:outline-none focus:border-green-500 mb-4 uppercase text-center">
-                
-                <button id="callBtn" class="w-full bg-green-600 text-white font-bold py-4 rounded-lg active:scale-95 transition-transform mb-2">
-                    START VOICE CALL
+            <p class="text-center text-zinc-500 text-xs uppercase font-bold tracking-widest mb-2">Select a testing room</p>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <button onclick="joinRoom('LEVELVAN-A')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-6 rounded-2xl flex justify-between items-center active:scale-95 transition-all">
+                    <span class="font-bold">ROOM ALPHA</span>
+                    <span class="text-[10px] bg-zinc-800 px-2 py-1 rounded">JOIN</span>
                 </button>
-                
-                <div class="text-center mt-2">
-                    <button id="copyIdBtn" class="text-[10px] text-zinc-400 underline uppercase tracking-widest">
-                        Copy My ID to Clipboard
-                    </button>
-                </div>
+                <button onclick="joinRoom('LEVELVAN-B')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-6 rounded-2xl flex justify-between items-center active:scale-95 transition-all">
+                    <span class="font-bold">ROOM BETA</span>
+                    <span class="text-[10px] bg-zinc-800 px-2 py-1 rounded">JOIN</span>
+                </button>
             </div>
-            <p class="text-[10px] text-center text-zinc-600 leading-relaxed italic px-4">
-                Open this on two phones. Copy the ID from Phone A, paste it into Phone B, and hit Start Voice Call.
-            </p>
+            
+            <p class="text-[10px] text-center text-zinc-600 mt-4">Tapping a room name on both devices will automatically link them via PeerJS.</p>
         </div>
 
         <!-- Calling View -->
-        <div id="call-view" class="hidden flex-1 flex flex-col items-center justify-around py-4">
+        <div id="call-view" class="hidden flex-1 flex flex-col items-center justify-around py-8">
             <div class="text-center">
-                <div id="statusCircle" class="w-24 h-24 bg-zinc-900 rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-zinc-800 transition-all duration-500">
-                    <svg id="connIcon" class="text-zinc-700" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div id="statusCircle" class="w-32 h-32 bg-zinc-900 rounded-full mx-auto mb-6 flex items-center justify-center border-2 border-zinc-800 transition-all">
+                    <svg id="connIcon" class="text-zinc-700" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path>
                     </svg>
                 </div>
-                <h2 id="peerIdentity" class="text-lg font-bold text-zinc-500 uppercase">Connecting Stream...</h2>
-                <div id="visualizer" class="waveform opacity-0 mt-2 justify-center">
-                    <div class="bar h-2"></div><div class="bar h-4"></div><div class="bar h-6"></div><div class="bar h-3"></div><div class="bar h-5"></div>
+                <h2 id="peerIdentity" class="text-xl font-black italic text-zinc-600 uppercase">Searching...</h2>
+                <div id="visualizer" class="waveform opacity-0 mt-4 justify-center">
+                    <div class="bar h-2"></div><div class="bar h-5"></div><div class="bar h-8"></div><div class="bar h-4"></div><div class="bar h-6"></div>
                 </div>
             </div>
 
-            <div class="flex gap-6">
-                <button id="muteBtn" class="w-14 h-14 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path></svg>
+            <div class="flex gap-8">
+                <button id="muteBtn" class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 active:bg-zinc-700">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path></svg>
                 </button>
-                <button id="hangupBtn" class="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button id="hangupBtn" class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center active:scale-90">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        let peer, localStream, currentCall;
+        let peer, localStream, currentCall, myRoomId;
         const logEl = document.getElementById('logs');
-        const myIdDisplay = document.getElementById('myIdDisplay');
-        const statusText = document.getElementById('status');
+        const statusText = document.getElementById('statusText');
+        const statusDot = document.getElementById('statusDot');
 
-        function addLog(msg, color = 'white') {
+        function addLog(msg, color = '#0f0') {
             const time = new Date().toLocaleTimeString().split(' ')[0];
             const div = document.createElement('div');
-            div.className = 'log-entry';
-            div.innerHTML = `<span style="color: #666">[${time}]</span> <span style="color: ${color}">${msg}</span>`;
+            div.innerHTML = `<span style="color: #444">[${time}]</span> <span style="color: ${color}">${msg}</span>`;
             logEl.appendChild(div);
             logEl.scrollTop = logEl.scrollHeight;
         }
 
-        // 1. Initialize PeerJS
-        // We use a clean initialization without explicit ID to let PeerJS generate one.
-        peer = new Peer({
-            debug: 2,
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
-                ]
-            }
-        });
-
-        peer.on('open', (id) => {
-            addLog("PeerJS Cloud Connected", "#0f0");
-            addLog("My ID: " + id, "cyan");
-            myIdDisplay.innerText = "ID: " + id;
-            statusText.innerText = "ONLINE & READY";
-        });
-
-        peer.on('error', (err) => {
-            addLog("NETWORK ERROR: " + err.type, "red");
-            statusText.innerText = "OFFLINE: " + err.type;
-        });
-
-        // 2. Handle Incoming Call
-        peer.on('call', async (call) => {
-            addLog("Incoming call from peer...", "yellow");
+        async function joinRoom(roomName) {
+            addLog(`Requesting Microphone...`, 'yellow');
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                addLog("Mic opened for answering", "#0f0");
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: { echoCancellation: true, noiseSuppression: true } 
+                });
+                addLog(`Mic active.`, '#0f0');
                 
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('call-view').classList.remove('hidden');
                 
-                call.answer(localStream);
-                setupCallHandlers(call);
+                initPeer(roomName);
             } catch (e) {
-                addLog("Answer Error: " + e.message, "red");
+                addLog(`MEDIA ERROR: ${e.message}`, 'red');
+                alert("Please enable microphone access and use HTTPS.");
             }
-        });
+        }
 
-        // 3. Initiate Call
-        document.getElementById('callBtn').onclick = async () => {
-            const remoteId = document.getElementById('peerIdInput').value.trim();
-            if (!remoteId) return alert("Please enter the Peer ID from the other phone");
-
-            addLog("Requesting local mic...", "yellow");
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                addLog("Mic active, calling: " + remoteId, "cyan");
-                
-                document.getElementById('setup-view').classList.add('hidden');
-                document.getElementById('call-view').classList.remove('hidden');
-                
-                const call = peer.call(remoteId, localStream);
-                setupCallHandlers(call);
-            } catch (e) {
-                addLog("Call Error: " + e.message, "red");
-            }
-        };
-
-        function setupCallHandlers(call) {
-            currentCall = call;
+        function initPeer(roomName) {
+            // We use a deterministic naming scheme: RoomName-1 and RoomName-2
+            // Since we don't know who is who, we try to "Connect to 1" then "Connect to 2"
             
+            peer = new Peer(null, {
+                debug: 2,
+                config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+            });
+
+            peer.on('open', (id) => {
+                addLog(`PeerID: ${id.substring(0,8)}...`, 'cyan');
+                statusDot.className = "w-2 h-2 rounded-full bg-green-500";
+                statusText.innerText = "Searching for peer...";
+                
+                // Now we need to find the other person. 
+                // We'll use a simple "discovery" logic:
+                // We broadcast our presence to a simple relay or just try to call the "Room"
+                // Actually, PeerJS doesn't support "rooms" directly.
+                // WORKAROUND: We use the room name to seed the Peer ID.
+                
+                // Let's try a different strategy: One phone is suffix '-A', other is '-B'
+                // But the user doesn't want to choose A or B.
+                // Let's use a small "collision" strategy.
+            });
+
+            // Handle incoming calls automatically
+            peer.on('call', (call) => {
+                addLog(`Incoming call! Answering...`, 'yellow');
+                call.answer(localStream);
+                handleCall(call);
+            });
+
+            // To make it "click and work", we'll attempt to call both variations
+            // of the room name every few seconds until someone answers.
+            const attemptCall = () => {
+                // This part is tricky without a coordinator. 
+                // Let's use the roomName as a "namespace" on a public signaling channel
+                // But for THIS test, let's keep it simple:
+                // We will register as a random ID, but we'll send our ID to a 
+                // simple public KV store (simulated here with a fetch)
+                
+                // Actually, let's use the PeerJS 'room' logic by hashing the room name
+                // into two possible IDs.
+                const idA = `${roomName}-A`;
+                const idB = `${roomName}-B`;
+                
+                // Try to register as A. If taken, register as B.
+                const tryRegister = (targetId, fallbackId) => {
+                    const p = new Peer(targetId, { debug: 1 });
+                    p.on('open', () => {
+                        addLog(`Registered as ${targetId}`, 'cyan');
+                        peer = p;
+                        peer.on('call', c => { c.answer(localStream); handleCall(c); });
+                        // Now wait. If the other person is already fallbackId, call them.
+                        setTimeout(() => {
+                            addLog(`Checking for peer ${fallbackId}...`, '#666');
+                            const call = peer.call(fallbackId, localStream);
+                            handleCall(call);
+                        }, 2000);
+                    });
+                    p.on('error', (err) => {
+                        if (err.type === 'unavailable-id') {
+                            addLog(`${targetId} taken, trying ${fallbackId}...`);
+                            tryRegister(fallbackId, targetId);
+                        } else {
+                            addLog(`Error: ${err.type}`, 'red');
+                        }
+                    });
+                };
+                
+                peer.destroy();
+                tryRegister(idA, idB);
+            };
+            
+            attemptCall();
+        }
+
+        function handleCall(call) {
+            currentCall = call;
             call.on('stream', (remoteStream) => {
-                addLog("REMOTE AUDIO RECEIVED", "#0f0");
+                addLog(`STREAM RECEIVED`, '#0f0');
                 const audio = new Audio();
                 audio.srcObject = remoteStream;
                 audio.play().then(() => {
-                    addLog("Audio playing through speakers", "#0f0");
                     onConnected();
-                }).catch(err => {
-                    addLog("Auto-play blocked: Tap screen!", "yellow");
-                    // Force play on first touch
-                    window.addEventListener('click', () => audio.play(), { once: true });
+                }).catch(e => {
+                    addLog(`Auto-play blocked. Tap screen.`, 'yellow');
+                    window.addEventListener('click', () => audio.play(), {once:true});
                 });
             });
-
-            call.on('close', () => {
-                addLog("Call ended by peer", "orange");
-                window.location.reload();
-            });
-
-            call.on('error', (err) => {
-                addLog("Call P2P Error: " + err, "red");
-            });
+            call.on('close', () => window.location.reload());
         }
 
         function onConnected() {
-            document.getElementById('peerIdentity').innerText = "LIVE CONNECTION";
-            document.getElementById('peerIdentity').className = "text-lg font-bold text-green-500 uppercase tracking-widest";
+            statusText.innerText = "Live Voice";
+            document.getElementById('peerIdentity').innerText = "PEER CONNECTED";
+            document.getElementById('peerIdentity').className = "text-xl font-black italic text-green-500 uppercase";
             document.getElementById('visualizer').classList.remove('opacity-0');
-            document.getElementById('statusCircle').className = "w-24 h-24 bg-green-900/20 rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-green-500 pulse";
-            document.getElementById('connIcon').className = "text-green-500 animate-pulse";
+            document.getElementById('statusCircle').classList.replace('bg-zinc-900', 'bg-green-900/20');
+            document.getElementById('statusCircle').classList.replace('border-zinc-800', 'border-green-500');
+            document.getElementById('statusCircle').classList.add('pulse-btn');
+            document.getElementById('connIcon').className = "text-green-500";
         }
 
-        document.getElementById('copyIdBtn').onclick = () => {
-            const idText = myIdDisplay.innerText.replace("ID: ", "");
-            const tempInput = document.createElement("input");
-            tempInput.value = idText;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            addLog("ID Copied to clipboard", "white");
-            alert("Your ID is copied. Paste it into the other phone.");
-        };
-
         document.getElementById('hangupBtn').onclick = () => window.location.reload();
-        
         document.getElementById('muteBtn').onclick = () => {
-            if (localStream) {
-                const track = localStream.getAudioTracks()[0];
-                track.enabled = !track.enabled;
-                document.getElementById('muteBtn').classList.toggle('bg-red-600');
-            }
+            const track = localStream.getAudioTracks()[0];
+            track.enabled = !track.enabled;
+            document.getElementById('muteBtn').classList.toggle('bg-red-600');
         };
     </script>
 </body>
