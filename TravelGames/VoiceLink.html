@@ -3,57 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Voice P2P Test</title>
+    <title>Voice P2P Test v3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .waveform { display: flex; align-items: center; gap: 4px; height: 40px; }
         .bar { width: 4px; border-radius: 2px; background: #22c55e; transition: height 0.1s ease; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .searching { animation: pulse 2s infinite; }
-        #logs { font-size: 10px; font-family: monospace; max-height: 60px; overflow-y: auto; }
+        #logs { font-size: 10px; font-family: monospace; height: 120px; overflow-y: auto; background: #000; border: 1px solid #333; }
     </style>
 </head>
 <body class="bg-black text-white font-sans overflow-hidden">
     <div class="flex flex-col h-screen max-w-md mx-auto p-6">
         
-        <header class="pt-8 pb-4">
-            <h1 class="text-3xl font-black tracking-tighter text-green-500">VOICE LINK v2</h1>
-            <p id="status" class="text-zinc-500 text-sm font-mono mt-1">LOADING SDK...</p>
+        <header class="pt-8 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-black tracking-tighter text-green-500">VOICE LINK v3</h1>
+                <p id="status" class="text-zinc-500 text-xs font-mono">OFFLINE</p>
+            </div>
+            <button onclick="window.location.reload()" class="text-[10px] bg-zinc-800 px-2 py-1 rounded">RESET</button>
         </header>
 
         <!-- Room Setup View -->
         <div id="setup-view" class="flex-1 flex flex-col justify-center">
-            <div class="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
-                <label class="block text-xs font-bold text-zinc-500 mb-2 uppercase">Test Room Name</label>
-                <input id="roomInput" type="text" placeholder="e.g. apple-banana" 
+            <div class="bg-zinc-900 p-6 rounded-3xl border border-zinc-800 shadow-2xl">
+                <label class="block text-[10px] font-bold text-zinc-500 mb-2 uppercase">Enter Room Name</label>
+                <input id="roomInput" type="text" placeholder="PEAR" 
                     class="w-full bg-black border border-zinc-700 rounded-xl p-4 text-xl font-mono focus:outline-none focus:border-green-500 transition-colors mb-4 uppercase">
-                <button id="joinBtn" class="w-full bg-white text-black font-bold py-4 rounded-xl active:scale-95 transition-transform">
-                    JOIN ROOM
+                <button id="joinBtn" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl active:scale-95 transition-transform shadow-lg shadow-green-900/20">
+                    CONNECT
                 </button>
-                <div id="logs" class="mt-4 text-zinc-600 bg-black/50 p-2 rounded"></div>
+                
+                <div class="mt-6">
+                    <p class="text-[10px] font-bold text-zinc-500 mb-2 uppercase">Debug Console</p>
+                    <div id="logs" class="p-2 rounded text-zinc-400"></div>
+                </div>
             </div>
         </div>
 
         <!-- Calling View -->
         <div id="call-view" class="hidden flex-1 flex flex-col items-center justify-between py-12">
             <div id="remoteStatus" class="text-center">
-                <div id="statusCircle" class="w-24 h-24 bg-zinc-800 rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-zinc-700 transition-all duration-500">
-                    <svg id="connIcon" class="text-zinc-500" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div id="statusCircle" class="w-32 h-32 bg-zinc-900 rounded-full mx-auto mb-6 flex items-center justify-center border-2 border-zinc-800 transition-all duration-700">
+                    <svg id="connIcon" class="text-zinc-700" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path>
+                    </svg>
                 </div>
-                <h2 id="peerIdentity" class="text-xl font-bold italic text-zinc-400">Waiting for peer...</h2>
-                <p id="callState" class="text-zinc-600 text-sm mt-2 searching">IDLE</p>
+                <h2 id="peerIdentity" class="text-xl font-bold italic text-zinc-500">Connecting...</h2>
+                <p id="callState" class="text-zinc-700 text-sm mt-2 searching uppercase tracking-widest">Negotiating</p>
             </div>
 
             <div id="visualizer" class="waveform opacity-0">
                 <div class="bar h-4"></div><div class="bar h-8"></div><div class="bar h-12"></div>
-                <div class="bar h-6"></div><div class="bar h-10"></div><div class="bar h-4"></div>
+                <div class="bar h-14"></div><div class="bar h-10"></div><div class="bar h-6"></div><div class="bar h-4"></div>
             </div>
 
-            <div class="flex gap-6">
-                <button id="muteBtn" class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center active:bg-zinc-700">
+            <div class="flex gap-8">
+                <button id="muteBtn" class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center active:scale-90 transition-all border border-zinc-700">
                     <svg id="micIcon" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path></svg>
                 </button>
-                <button id="hangupBtn" class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center active:scale-90 transition-transform">
+                <button id="hangupBtn" class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center active:scale-90 transition-all shadow-lg shadow-red-900/40">
                     <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
@@ -63,56 +72,71 @@
     <script src="https://cdn.scaledrone.com/scaledrone.min.js"></script>
     <script>
         let drone, room, pc, localStream;
-        const roomInput = document.getElementById('roomInput');
-        const status = document.getElementById('status');
-        const setupView = document.getElementById('setup-view');
-        const callView = document.getElementById('call-view');
         const logEl = document.getElementById('logs');
+        const status = document.getElementById('status');
 
         function addLog(msg) {
+            const time = new Date().toLocaleTimeString().split(' ')[0];
             const div = document.createElement('div');
-            div.innerText = `> ${msg}`;
+            div.innerHTML = `<span class="text-zinc-600">[${time}]</span> ${msg}`;
             logEl.prepend(div);
             console.log(msg);
         }
 
         const configuration = {
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
         };
 
-        status.innerText = "READY";
+        document.getElementById('joinBtn').onclick = async () => {
+            const roomName = document.getElementById('roomInput').value.trim().toLowerCase();
+            if (!roomName) return alert("Enter room name");
 
-        document.getElementById('joinBtn').onclick = () => {
-            const roomName = roomInput.value.trim().toLowerCase();
-            if (!roomName) return alert("Enter a room name");
-            
-            setupView.classList.add('hidden');
-            callView.classList.remove('hidden');
-            startSignaling(roomName);
+            addLog("Requesting Mic permissions...");
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+                });
+                addLog("Mic accessed.");
+                
+                document.getElementById('setup-view').classList.add('hidden');
+                document.getElementById('call-view').classList.remove('hidden');
+                
+                startSignaling(roomName);
+            } catch (e) {
+                addLog(`ERROR: ${e.message}`);
+                alert("Could not access microphone. Ensure you are on HTTPS.");
+            }
         };
 
-        async function startSignaling(roomName) {
-            addLog(`Connecting to Scaledrone...`);
+        function startSignaling(roomName) {
             drone = new Scaledrone('yS74bqV9v9YmS8uG'); 
             
             drone.on('open', error => {
-                if (error) return addLog(`Error: ${error}`);
-                addLog(`Connected as ${drone.clientId}`);
+                if (error) return addLog(`Drone Error: ${error}`);
+                addLog(`Drone connected: ${drone.clientId}`);
                 
                 room = drone.subscribe(`observable-${roomName}`);
                 
                 room.on('open', error => {
                     if (error) return addLog(`Room Error: ${error}`);
                     addLog(`Joined room: ${roomName}`);
-                    status.innerText = `ROOM: ${roomName.toUpperCase()}`;
+                    status.innerText = `CONNECTED TO SIGNALING`;
                 });
 
-                // Listen for members list
                 room.on('members', members => {
-                    addLog(`Users in room: ${members.length}`);
-                    // If we are the second person, we initiate the call
-                    const isOfferer = members.length >= 2;
-                    initWebRTC(isOfferer);
+                    addLog(`Active members: ${members.length}`);
+                    if (members.length >= 2) {
+                        // Deterministic Role: Alphabetically first clientId initiates
+                        const sortedIds = members.map(m => m.id).sort();
+                        const isInitiator = (drone.clientId === sortedIds[0]);
+                        addLog(isInitiator ? "Role: Initiator" : "Role: Receiver");
+                        initWebRTC(isInitiator);
+                    } else {
+                        addLog("Waiting for someone to join...");
+                    }
                 });
 
                 room.on('data', (message, client) => {
@@ -122,43 +146,52 @@
             });
         }
 
-        async function initWebRTC(isOfferer) {
-            addLog(isOfferer ? "Initiating handshake..." : "Waiting for peer handshake...");
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                addLog("Microphone accessed.");
-                
-                pc = new RTCPeerConnection(configuration);
+        function initWebRTC(isInitiator) {
+            if (pc) return; // Prevent double init
+            
+            pc = new RTCPeerConnection(configuration);
 
-                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-                pc.onicecandidate = event => {
-                    if (event.candidate) {
-                        sendMessage({ candidate: event.candidate });
-                    }
-                };
+            pc.onicecandidate = event => {
+                if (event.candidate) {
+                    sendMessage({ candidate: event.candidate });
+                }
+            };
 
-                pc.ontrack = event => {
-                    addLog("Remote audio track received!");
-                    const remoteAudio = new Audio();
-                    remoteAudio.srcObject = event.streams[0];
-                    remoteAudio.play();
-                    onConnected();
-                };
+            pc.onconnectionstatechange = () => {
+                addLog(`P2P State: ${pc.connectionState}`);
+                if (pc.connectionState === 'connected') onConnected();
+            };
 
-                if (isOfferer) {
+            pc.ontrack = event => {
+                addLog("Audio stream received!");
+                const remoteAudio = new Audio();
+                remoteAudio.srcObject = event.streams[0];
+                remoteAudio.play().catch(e => addLog("Auto-play failed, tap screen."));
+            };
+
+            if (isInitiator) {
+                pc.onnegotiationneeded = async () => {
+                    addLog("Negotiation needed, creating offer...");
                     const offer = await pc.createOffer();
                     await pc.setLocalDescription(offer);
                     sendMessage({ sdp: offer });
-                }
-            } catch (e) {
-                addLog(`Media Error: ${e.message}`);
-                alert("Please ensure HTTPS and Microphone permissions.");
+                };
             }
         }
 
         async function handleSignalingData(message) {
-            if (!pc) return;
+            if (!pc) {
+                // If we received an offer before pc was created, create it now as receiver
+                if (message.sdp && message.sdp.type === 'offer') {
+                    addLog("Received offer before local init, starting as receiver...");
+                    initWebRTC(false);
+                } else {
+                    return;
+                }
+            }
+
             if (message.sdp) {
                 addLog(`Received ${message.sdp.type}`);
                 await pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
@@ -170,7 +203,9 @@
             } else if (message.candidate) {
                 try {
                     await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
-                } catch(e) {}
+                } catch(e) {
+                    addLog("ICE Candidate Error");
+                }
             }
         }
 
@@ -179,21 +214,18 @@
         }
 
         function onConnected() {
-            document.getElementById('peerIdentity').innerText = "PEER CONNECTED";
-            document.getElementById('peerIdentity').classList.remove('text-zinc-400');
-            document.getElementById('peerIdentity').classList.add('text-white');
+            document.getElementById('peerIdentity').innerText = "PEER LIVE";
+            document.getElementById('peerIdentity').classList.replace('text-zinc-500', 'text-white');
             
             const state = document.getElementById('callState');
-            state.innerText = "LIVE";
+            state.innerText = "CRYSTAL CLEAR";
+            state.classList.replace('text-zinc-700', 'text-green-500');
             state.classList.remove('searching');
-            state.classList.remove('text-zinc-600');
-            state.classList.add('text-green-500');
             
             document.getElementById('visualizer').classList.remove('opacity-0');
-            document.getElementById('statusCircle').classList.remove('bg-zinc-800', 'border-zinc-700');
-            document.getElementById('statusCircle').classList.add('bg-green-900/30', 'border-green-500');
-            document.getElementById('connIcon').classList.remove('text-zinc-500');
-            document.getElementById('connIcon').classList.add('text-green-500');
+            document.getElementById('statusCircle').classList.replace('bg-zinc-900', 'bg-green-500/10');
+            document.getElementById('statusCircle').classList.replace('border-zinc-800', 'border-green-500');
+            document.getElementById('connIcon').classList.replace('text-zinc-700', 'text-green-500');
         }
 
         document.getElementById('hangupBtn').onclick = () => window.location.reload();
@@ -202,7 +234,7 @@
             const track = localStream.getAudioTracks()[0];
             track.enabled = !track.enabled;
             document.getElementById('muteBtn').classList.toggle('bg-red-600');
-            document.getElementById('muteBtn').classList.toggle('bg-zinc-800');
+            document.getElementById('muteBtn').classList.toggle('border-red-500');
         };
     </script>
 </body>
