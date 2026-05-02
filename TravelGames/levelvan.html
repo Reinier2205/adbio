@@ -946,6 +946,7 @@ class VoiceManager {
     this._echoTimer    = null;   // 6s echo warning auto-dismiss
     this._retryCount   = 0;
     this._retryTimer   = null;
+    this._audioCtx     = null;   // WebAudio context unlocked on first tap
   }
 
   // ── Computed getters — always query the active row ──────────
@@ -993,6 +994,10 @@ class VoiceManager {
     if (this._audioEl) {
       try { this._audioEl.pause(); this._audioEl.srcObject = null; this._audioEl.remove(); } catch(_){}
       this._audioEl = null;
+    }
+    if (this._audioCtx) {
+      try { this._audioCtx.close(); } catch(_){}
+      this._audioCtx = null;
     }
     this._localVoiceId = null;
     this._pin = null;
@@ -1052,10 +1057,14 @@ class VoiceManager {
   onTalkTap() {
     // Prime the audio element now while we're inside a user gesture tap.
     // This unlocks Android's autoplay policy before the stream arrives async.
+    // On iOS, this also unlocks the AudioContext for the audio element.
     this._primeAudioElement();
+
     if (this._callState === 'idle') {
       this._startOutgoingCall();
     } else if (this._callState === 'ringing') {
+      // Start getUserMedia immediately inside the gesture before any await breaks
+      // the user-gesture chain on iOS Safari.
       this._answerIncomingCall();
     }
   }
@@ -1187,17 +1196,32 @@ class VoiceManager {
     this._audioEl = audio;
   }
 
-  // Pre-unlock the audio element on a user gesture (TALK tap) so Android
-  // allows playback when the stream arrives asynchronously later.
+  // Pre-unlock the audio element on a user gesture (TALK tap) so both
+  // Android and iOS allow playback when the stream arrives asynchronously.
   _primeAudioElement() {
-    if (this._audioEl) return; // already exists
+    // Unlock Web Audio context (iOS Safari requires this)
+    try {
+      if (!this._audioCtx) {
+        this._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (this._audioCtx.state === 'suspended') {
+        this._audioCtx.resume().catch(() => {});
+      }
+    } catch(_) {}
+
+    if (this._audioEl) {
+      // Already exists — ensure it's unmuted and playing for the new call
+      this._audioEl.muted = false;
+      this._audioEl.play().catch(() => {});
+      return;
+    }
     const audio = document.createElement('audio');
     audio.setAttribute('playsinline', '');
     audio.setAttribute('autoplay', '');
     audio.muted = true; // muted so it can autoplay without a stream
     audio.style.cssText = 'position:fixed;width:0;height:0;opacity:0;pointer-events:none';
     document.body.appendChild(audio);
-    // Play silence to unlock the audio context
+    // Play silence to unlock the audio context on iOS and Android
     audio.play().catch(() => {});
     this._audioEl = audio;
   }
@@ -1230,6 +1254,7 @@ class VoiceManager {
     this._activeCall = call;
     call.on('stream', remoteStream => {
       this._clearCallTimeout();
+      // Reuse the already-unlocked audio element (_primeAudioElement ran on tap)
       this._playRemoteStream(remoteStream);
       this._setCallState('connected');
       this._showEchoWarning();
@@ -1269,32 +1294,39 @@ class VoiceManager {
 
   async _answerIncomingCall() {
     if (!this._pendingCall) return;
+    const call = this._pendingCall;
+    this._pendingCall = null;
+
+    // Wire close/error handlers immediately — before any async gap
+    call.on('close', () => {
+      if (this._activeCall === call) {
+        this._activeCall = null;
+        this._isMuted = false;
+        this._setCallState('idle');
+      }
+    });
+    call.on('error', e => {
+      console.warn('VoiceManager answer error:', e);
+      if (this._activeCall === call) {
+        this._activeCall = null;
+        this._setCallState('idle');
+      }
+    });
+    call.on('stream', remoteStream => {
+      // Reuse the already-unlocked audio element (_primeAudioElement ran on tap)
+      this._playRemoteStream(remoteStream);
+      this._setCallState('connected');
+      this._showEchoWarning();
+    });
+
+    // getUserMedia — start immediately (still within gesture microtask queue on iOS)
     try {
       const stream = await this._ensureLocalStream();
-      const call = this._pendingCall;
-      this._pendingCall = null;
+      // answer() sends our mic stream to the caller
       call.answer(stream);
       this._activeCall = call;
-      call.on('stream', remoteStream => {
-        this._playRemoteStream(remoteStream);
-        this._setCallState('connected');
-        this._showEchoWarning();
-      });
-      call.on('close', () => {
-        if (this._activeCall === call) {
-          this._activeCall = null;
-          this._isMuted = false;
-          this._setCallState('idle');
-        }
-      });
-      call.on('error', e => {
-        console.warn('VoiceManager answer error:', e);
-        if (this._activeCall === call) {
-          this._activeCall = null;
-          this._setCallState('idle');
-        }
-      });
     } catch(e) {
+      console.warn('Answer failed — mic denied:', e);
       this._setCallState('idle');
     }
   }
