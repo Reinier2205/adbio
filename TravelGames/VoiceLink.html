@@ -3,67 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Voice P2P Test v3</title>
+    <title>Voice P2P Debugger</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .waveform { display: flex; align-items: center; gap: 4px; height: 40px; }
+        .waveform { display: flex; align-items: center; gap: 4px; height: 30px; }
         .bar { width: 4px; border-radius: 2px; background: #22c55e; transition: height 0.1s ease; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .searching { animation: pulse 2s infinite; }
-        #logs { font-size: 10px; font-family: monospace; height: 120px; overflow-y: auto; background: #000; border: 1px solid #333; }
+        .searching { animation: pulse 1.5s infinite; }
+        #logs { font-size: 10px; font-family: 'Courier New', monospace; background: #000; color: #0f0; border: 1px solid #333; height: 200px; overflow-y: auto; }
+        .log-entry { border-bottom: 1px solid #111; padding: 2px 4px; }
     </style>
 </head>
 <body class="bg-black text-white font-sans overflow-hidden">
-    <div class="flex flex-col h-screen max-w-md mx-auto p-6">
+    <div class="flex flex-col h-screen max-w-md mx-auto p-4">
         
-        <header class="pt-8 pb-4 flex justify-between items-center">
+        <header class="py-4 flex justify-between items-center border-b border-zinc-800">
             <div>
-                <h1 class="text-2xl font-black tracking-tighter text-green-500">VOICE LINK v3</h1>
-                <p id="status" class="text-zinc-500 text-xs font-mono">OFFLINE</p>
+                <h1 class="text-xl font-black tracking-tighter text-green-500 underline decoration-2">DEBUG MODE v4</h1>
+                <p id="status" class="text-zinc-500 text-[10px] font-mono">OFFLINE</p>
             </div>
-            <button onclick="window.location.reload()" class="text-[10px] bg-zinc-800 px-2 py-1 rounded">RESET</button>
+            <button onclick="window.location.reload()" class="bg-red-900/30 text-red-500 text-[10px] font-bold px-3 py-1 rounded border border-red-900/50">RESET APP</button>
         </header>
 
-        <!-- Room Setup View -->
+        <!-- Persistent Logs -->
+        <div class="mt-4 mb-2">
+            <p class="text-[10px] font-bold text-zinc-500 mb-1 uppercase flex justify-between">
+                <span>Live Event Log</span>
+                <span id="memberCount">Members: 0</span>
+            </p>
+            <div id="logs" class="rounded shadow-inner"></div>
+        </div>
+
+        <!-- Setup View -->
         <div id="setup-view" class="flex-1 flex flex-col justify-center">
-            <div class="bg-zinc-900 p-6 rounded-3xl border border-zinc-800 shadow-2xl">
-                <label class="block text-[10px] font-bold text-zinc-500 mb-2 uppercase">Enter Room Name</label>
-                <input id="roomInput" type="text" placeholder="PEAR" 
-                    class="w-full bg-black border border-zinc-700 rounded-xl p-4 text-xl font-mono focus:outline-none focus:border-green-500 transition-colors mb-4 uppercase">
-                <button id="joinBtn" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl active:scale-95 transition-transform shadow-lg shadow-green-900/20">
-                    CONNECT
+            <div class="bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
+                <input id="roomInput" type="text" placeholder="ENTER ROOM NAME" 
+                    class="w-full bg-black border border-zinc-700 rounded-lg p-4 text-xl font-mono focus:outline-none focus:border-green-500 mb-4 uppercase text-center">
+                <button id="joinBtn" class="w-full bg-green-600 text-white font-bold py-4 rounded-lg active:scale-95 transition-transform">
+                    INITIALIZE SYSTEM
                 </button>
-                
-                <div class="mt-6">
-                    <p class="text-[10px] font-bold text-zinc-500 mb-2 uppercase">Debug Console</p>
-                    <div id="logs" class="p-2 rounded text-zinc-400"></div>
-                </div>
             </div>
         </div>
 
         <!-- Calling View -->
-        <div id="call-view" class="hidden flex-1 flex flex-col items-center justify-between py-12">
-            <div id="remoteStatus" class="text-center">
-                <div id="statusCircle" class="w-32 h-32 bg-zinc-900 rounded-full mx-auto mb-6 flex items-center justify-center border-2 border-zinc-800 transition-all duration-700">
-                    <svg id="connIcon" class="text-zinc-700" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path>
+        <div id="call-view" class="hidden flex-1 flex flex-col items-center justify-around py-4">
+            <div class="text-center">
+                <div id="statusCircle" class="w-24 h-24 bg-zinc-900 rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-zinc-800 transition-all duration-500">
+                    <svg id="connIcon" class="text-zinc-700" width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
                 </div>
-                <h2 id="peerIdentity" class="text-xl font-bold italic text-zinc-500">Connecting...</h2>
-                <p id="callState" class="text-zinc-700 text-sm mt-2 searching uppercase tracking-widest">Negotiating</p>
+                <h2 id="peerIdentity" class="text-lg font-bold text-zinc-500">NEGOTIATING...</h2>
+                <div id="visualizer" class="waveform opacity-0 mt-2 justify-center">
+                    <div class="bar h-2"></div><div class="bar h-4"></div><div class="bar h-6"></div><div class="bar h-3"></div><div class="bar h-5"></div>
+                </div>
             </div>
 
-            <div id="visualizer" class="waveform opacity-0">
-                <div class="bar h-4"></div><div class="bar h-8"></div><div class="bar h-12"></div>
-                <div class="bar h-14"></div><div class="bar h-10"></div><div class="bar h-6"></div><div class="bar h-4"></div>
-            </div>
-
-            <div class="flex gap-8">
-                <button id="muteBtn" class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center active:scale-90 transition-all border border-zinc-700">
-                    <svg id="micIcon" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path></svg>
+            <div class="flex gap-6">
+                <button id="muteBtn" class="w-14 h-14 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path></svg>
                 </button>
-                <button id="hangupBtn" class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center active:scale-90 transition-all shadow-lg shadow-red-900/40">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button id="hangupBtn" class="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
         </div>
@@ -74,68 +75,65 @@
         let drone, room, pc, localStream;
         const logEl = document.getElementById('logs');
         const status = document.getElementById('status');
+        const memberCountEl = document.getElementById('memberCount');
 
-        function addLog(msg) {
+        function addLog(msg, color = 'white') {
             const time = new Date().toLocaleTimeString().split(' ')[0];
             const div = document.createElement('div');
-            div.innerHTML = `<span class="text-zinc-600">[${time}]</span> ${msg}`;
-            logEl.prepend(div);
+            div.className = 'log-entry';
+            div.innerHTML = `<span style="color: #666">[${time}]</span> <span style="color: ${color}">${msg}</span>`;
+            logEl.appendChild(div);
+            logEl.scrollTop = logEl.scrollHeight;
             console.log(msg);
         }
 
         const configuration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ],
+            iceCandidatePoolSize: 10
         };
 
         document.getElementById('joinBtn').onclick = async () => {
             const roomName = document.getElementById('roomInput').value.trim().toLowerCase();
-            if (!roomName) return alert("Enter room name");
+            if (!roomName) return alert("Room name required");
 
-            addLog("Requesting Mic permissions...");
+            addLog("Requesting Media...", "yellow");
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
-                });
-                addLog("Mic accessed.");
-                
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                addLog("Mic Connected", "#0f0");
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('call-view').classList.remove('hidden');
-                
                 startSignaling(roomName);
             } catch (e) {
-                addLog(`ERROR: ${e.message}`);
-                alert("Could not access microphone. Ensure you are on HTTPS.");
+                addLog("MEDIA ERROR: " + e.message, "red");
             }
         };
 
         function startSignaling(roomName) {
-            drone = new Scaledrone('yS74bqV9v9YmS8uG'); 
+            drone = new Scaledrone('yS74bqV9v9YmS8uG');
             
             drone.on('open', error => {
-                if (error) return addLog(`Drone Error: ${error}`);
-                addLog(`Drone connected: ${drone.clientId}`);
+                if (error) return addLog("Drone Auth Error", "red");
+                addLog("Relay Connected: " + drone.clientId, "#0f0");
                 
                 room = drone.subscribe(`observable-${roomName}`);
                 
                 room.on('open', error => {
-                    if (error) return addLog(`Room Error: ${error}`);
-                    addLog(`Joined room: ${roomName}`);
-                    status.innerText = `CONNECTED TO SIGNALING`;
+                    if (error) return addLog("Room Join Fail", "red");
+                    addLog("Joined: " + roomName, "#0f0");
+                    status.innerText = "SIGNALING ACTIVE";
                 });
 
                 room.on('members', members => {
-                    addLog(`Active members: ${members.length}`);
+                    memberCountEl.innerText = `Members: ${members.length}`;
                     if (members.length >= 2) {
-                        // Deterministic Role: Alphabetically first clientId initiates
                         const sortedIds = members.map(m => m.id).sort();
                         const isInitiator = (drone.clientId === sortedIds[0]);
-                        addLog(isInitiator ? "Role: Initiator" : "Role: Receiver");
+                        addLog(isInitiator ? "ROLE: Initiator (Sending Offer)" : "ROLE: Receiver (Waiting for Offer)", "cyan");
                         initWebRTC(isInitiator);
-                    } else {
-                        addLog("Waiting for someone to join...");
                     }
                 });
 
@@ -147,7 +145,8 @@
         }
 
         function initWebRTC(isInitiator) {
-            if (pc) return; // Prevent double init
+            if (pc) return;
+            addLog("Creating PeerConnection...", "yellow");
             
             pc = new RTCPeerConnection(configuration);
 
@@ -155,25 +154,35 @@
 
             pc.onicecandidate = event => {
                 if (event.candidate) {
+                    addLog("ICE Candidate found", "#666");
                     sendMessage({ candidate: event.candidate });
                 }
             };
 
+            pc.oniceconnectionstatechange = () => {
+                addLog("ICE State: " + pc.iceConnectionState, "orange");
+                if (pc.iceConnectionState === 'failed') {
+                    addLog("ICE Failed. Retrying...", "red");
+                    pc.restartIce();
+                }
+            };
+
             pc.onconnectionstatechange = () => {
-                addLog(`P2P State: ${pc.connectionState}`);
+                addLog("PC State: " + pc.connectionState, "orange");
                 if (pc.connectionState === 'connected') onConnected();
             };
 
             pc.ontrack = event => {
-                addLog("Audio stream received!");
+                addLog("REMOTE TRACK RECEIVED", "#0f0");
                 const remoteAudio = new Audio();
                 remoteAudio.srcObject = event.streams[0];
-                remoteAudio.play().catch(e => addLog("Auto-play failed, tap screen."));
+                remoteAudio.play().then(() => addLog("Audio Playing", "#0f0"))
+                                .catch(e => addLog("Play Blocked: Tap Screen", "yellow"));
             };
 
             if (isInitiator) {
                 pc.onnegotiationneeded = async () => {
-                    addLog("Negotiation needed, creating offer...");
+                    addLog("Creating Offer...", "cyan");
                     const offer = await pc.createOffer();
                     await pc.setLocalDescription(offer);
                     sendMessage({ sdp: offer });
@@ -182,29 +191,21 @@
         }
 
         async function handleSignalingData(message) {
-            if (!pc) {
-                // If we received an offer before pc was created, create it now as receiver
-                if (message.sdp && message.sdp.type === 'offer') {
-                    addLog("Received offer before local init, starting as receiver...");
-                    initWebRTC(false);
-                } else {
-                    return;
-                }
-            }
-
             if (message.sdp) {
-                addLog(`Received ${message.sdp.type}`);
+                addLog("Received SDP: " + message.sdp.type, "cyan");
+                if (!pc) initWebRTC(false);
+                
                 await pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
+                
                 if (pc.remoteDescription.type === 'offer') {
+                    addLog("Creating Answer...", "cyan");
                     const answer = await pc.createAnswer();
                     await pc.setLocalDescription(answer);
                     sendMessage({ sdp: answer });
                 }
             } else if (message.candidate) {
-                try {
+                if (pc && pc.remoteDescription) {
                     await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
-                } catch(e) {
-                    addLog("ICE Candidate Error");
                 }
             }
         }
@@ -214,27 +215,18 @@
         }
 
         function onConnected() {
-            document.getElementById('peerIdentity').innerText = "PEER LIVE";
-            document.getElementById('peerIdentity').classList.replace('text-zinc-500', 'text-white');
-            
-            const state = document.getElementById('callState');
-            state.innerText = "CRYSTAL CLEAR";
-            state.classList.replace('text-zinc-700', 'text-green-500');
-            state.classList.remove('searching');
-            
+            document.getElementById('peerIdentity').innerText = "LIVE CONNECTION";
+            document.getElementById('peerIdentity').className = "text-lg font-bold text-green-500";
             document.getElementById('visualizer').classList.remove('opacity-0');
-            document.getElementById('statusCircle').classList.replace('bg-zinc-900', 'bg-green-500/10');
-            document.getElementById('statusCircle').classList.replace('border-zinc-800', 'border-green-500');
+            document.getElementById('statusCircle').className = "w-24 h-24 bg-green-900/20 rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-green-500";
             document.getElementById('connIcon').classList.replace('text-zinc-700', 'text-green-500');
         }
 
         document.getElementById('hangupBtn').onclick = () => window.location.reload();
-
         document.getElementById('muteBtn').onclick = () => {
             const track = localStream.getAudioTracks()[0];
             track.enabled = !track.enabled;
             document.getElementById('muteBtn').classList.toggle('bg-red-600');
-            document.getElementById('muteBtn').classList.toggle('border-red-500');
         };
     </script>
 </body>
