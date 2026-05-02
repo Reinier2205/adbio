@@ -10,15 +10,15 @@
         .bar { width: 4px; border-radius: 2px; background: #22c55e; transition: height 0.1s ease; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .searching { animation: pulse 2s infinite; }
+        #logs { font-size: 10px; font-family: monospace; max-height: 60px; overflow-y: auto; }
     </style>
 </head>
 <body class="bg-black text-white font-sans overflow-hidden">
     <div class="flex flex-col h-screen max-w-md mx-auto p-6">
         
-        <!-- Header -->
         <header class="pt-8 pb-4">
-            <h1 class="text-3xl font-black tracking-tighter">VOICE LINK</h1>
-            <p id="status" class="text-zinc-500 text-sm font-mono mt-1">INITIALIZING...</p>
+            <h1 class="text-3xl font-black tracking-tighter text-green-500">VOICE LINK v2</h1>
+            <p id="status" class="text-zinc-500 text-sm font-mono mt-1">LOADING SDK...</p>
         </header>
 
         <!-- Room Setup View -->
@@ -26,25 +26,22 @@
             <div class="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
                 <label class="block text-xs font-bold text-zinc-500 mb-2 uppercase">Test Room Name</label>
                 <input id="roomInput" type="text" placeholder="e.g. apple-banana" 
-                    class="w-full bg-black border border-zinc-700 rounded-xl p-4 text-xl font-mono focus:outline-none focus:border-green-500 transition-colors mb-4">
+                    class="w-full bg-black border border-zinc-700 rounded-xl p-4 text-xl font-mono focus:outline-none focus:border-green-500 transition-colors mb-4 uppercase">
                 <button id="joinBtn" class="w-full bg-white text-black font-bold py-4 rounded-xl active:scale-95 transition-transform">
                     JOIN ROOM
                 </button>
-                <p class="text-[10px] text-zinc-600 mt-4 leading-relaxed">
-                    Enter the same name on both devices. Requires HTTPS. 
-                    Works across iOS (Safari) and Android (Chrome).
-                </p>
+                <div id="logs" class="mt-4 text-zinc-600 bg-black/50 p-2 rounded"></div>
             </div>
         </div>
 
         <!-- Calling View -->
         <div id="call-view" class="hidden flex-1 flex flex-col items-center justify-between py-12">
             <div id="remoteStatus" class="text-center">
-                <div class="w-24 h-24 bg-zinc-800 rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-zinc-700">
+                <div id="statusCircle" class="w-24 h-24 bg-zinc-800 rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-zinc-700 transition-all duration-500">
                     <svg id="connIcon" class="text-zinc-500" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <h2 id="peerIdentity" class="text-xl font-bold italic">Searching for Peer...</h2>
-                <p id="callState" class="text-green-500 text-sm mt-2 searching">WAITING</p>
+                <h2 id="peerIdentity" class="text-xl font-bold italic text-zinc-400">Waiting for peer...</h2>
+                <p id="callState" class="text-zinc-600 text-sm mt-2 searching">IDLE</p>
             </div>
 
             <div id="visualizer" class="waveform opacity-0">
@@ -63,73 +60,86 @@
         </div>
     </div>
 
+    <script src="https://cdn.scaledrone.com/scaledrone.min.js"></script>
     <script>
-        // --- CONFIGURATION ---
-        // Using a public signaling demo key (Scaledrone is reliable for quick P2P testing)
-        // This is a public test ID for your demonstration.
-        const CLIENT_ID = 'ai_p2p_voice_test_123'; 
-        const script = document.createElement('script');
-        script.src = 'https://cdn.scaledrone.com/scaledrone.min.js';
-        document.head.appendChild(script);
-
         let drone, room, pc, localStream;
         const roomInput = document.getElementById('roomInput');
         const status = document.getElementById('status');
         const setupView = document.getElementById('setup-view');
         const callView = document.getElementById('call-view');
+        const logEl = document.getElementById('logs');
+
+        function addLog(msg) {
+            const div = document.createElement('div');
+            div.innerText = `> ${msg}`;
+            logEl.prepend(div);
+            console.log(msg);
+        }
 
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
 
-        script.onload = () => {
-            status.innerText = "READY TO JOIN";
-        };
+        status.innerText = "READY";
 
         document.getElementById('joinBtn').onclick = () => {
-            const roomName = roomInput.value.trim();
+            const roomName = roomInput.value.trim().toLowerCase();
             if (!roomName) return alert("Enter a room name");
             
-            startSignaling(roomName);
             setupView.classList.add('hidden');
             callView.classList.remove('hidden');
+            startSignaling(roomName);
         };
 
-        function startSignaling(roomName) {
-            drone = new Scaledrone('yS74bqV9v9YmS8uG'); // Demo Key
+        async function startSignaling(roomName) {
+            addLog(`Connecting to Scaledrone...`);
+            drone = new Scaledrone('yS74bqV9v9YmS8uG'); 
             
             drone.on('open', error => {
-                if (error) return console.error(error);
+                if (error) return addLog(`Error: ${error}`);
+                addLog(`Connected as ${drone.clientId}`);
+                
                 room = drone.subscribe(`observable-${roomName}`);
                 
                 room.on('open', error => {
-                    if (error) return console.error(error);
-                    status.innerText = `ROOM: ${roomName}`;
-                    initWebRTC(true); // Attempt to start as soon as room is joined
+                    if (error) return addLog(`Room Error: ${error}`);
+                    addLog(`Joined room: ${roomName}`);
+                    status.innerText = `ROOM: ${roomName.toUpperCase()}`;
+                });
+
+                // Listen for members list
+                room.on('members', members => {
+                    addLog(`Users in room: ${members.length}`);
+                    // If we are the second person, we initiate the call
+                    const isOfferer = members.length >= 2;
+                    initWebRTC(isOfferer);
                 });
 
                 room.on('data', (message, client) => {
-                    if (client.id === drone.clientId) return; // Ignore own messages
+                    if (client.id === drone.clientId) return;
                     handleSignalingData(message);
                 });
             });
         }
 
         async function initWebRTC(isOfferer) {
+            addLog(isOfferer ? "Initiating handshake..." : "Waiting for peer handshake...");
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: { echoCancellation: true, noiseSuppression: true } 
-                });
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                addLog("Microphone accessed.");
                 
                 pc = new RTCPeerConnection(configuration);
 
                 localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
                 pc.onicecandidate = event => {
-                    if (event.candidate) sendMessage({ candidate: event.candidate });
+                    if (event.candidate) {
+                        sendMessage({ candidate: event.candidate });
+                    }
                 };
 
                 pc.ontrack = event => {
+                    addLog("Remote audio track received!");
                     const remoteAudio = new Audio();
                     remoteAudio.srcObject = event.streams[0];
                     remoteAudio.play();
@@ -142,12 +152,15 @@
                     sendMessage({ sdp: offer });
                 }
             } catch (e) {
-                alert("Camera/Mic permission denied or not on HTTPS");
+                addLog(`Media Error: ${e.message}`);
+                alert("Please ensure HTTPS and Microphone permissions.");
             }
         }
 
         async function handleSignalingData(message) {
+            if (!pc) return;
             if (message.sdp) {
+                addLog(`Received ${message.sdp.type}`);
                 await pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
                 if (pc.remoteDescription.type === 'offer') {
                     const answer = await pc.createAnswer();
@@ -155,7 +168,9 @@
                     sendMessage({ sdp: answer });
                 }
             } else if (message.candidate) {
-                await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+                try {
+                    await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+                } catch(e) {}
             }
         }
 
@@ -165,10 +180,19 @@
 
         function onConnected() {
             document.getElementById('peerIdentity').innerText = "PEER CONNECTED";
+            document.getElementById('peerIdentity').classList.remove('text-zinc-400');
+            document.getElementById('peerIdentity').classList.add('text-white');
+            
             const state = document.getElementById('callState');
             state.innerText = "LIVE";
             state.classList.remove('searching');
+            state.classList.remove('text-zinc-600');
+            state.classList.add('text-green-500');
+            
             document.getElementById('visualizer').classList.remove('opacity-0');
+            document.getElementById('statusCircle').classList.remove('bg-zinc-800', 'border-zinc-700');
+            document.getElementById('statusCircle').classList.add('bg-green-900/30', 'border-green-500');
+            document.getElementById('connIcon').classList.remove('text-zinc-500');
             document.getElementById('connIcon').classList.add('text-green-500');
         }
 
@@ -177,7 +201,8 @@
         document.getElementById('muteBtn').onclick = () => {
             const track = localStream.getAudioTracks()[0];
             track.enabled = !track.enabled;
-            document.getElementById('muteBtn').classList.toggle('bg-red-500');
+            document.getElementById('muteBtn').classList.toggle('bg-red-600');
+            document.getElementById('muteBtn').classList.toggle('bg-zinc-800');
         };
     </script>
 </body>
