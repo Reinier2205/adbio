@@ -990,7 +990,10 @@ class VoiceManager {
       this._localStream.getTracks().forEach(t => { try { t.stop(); } catch(_){} });
       this._localStream = null;
     }
-    if (this._audioEl) { try { this._audioEl.pause(); this._audioEl.srcObject = null; } catch(_){} this._audioEl = null; }
+    if (this._audioEl) {
+      try { this._audioEl.pause(); this._audioEl.srcObject = null; this._audioEl.remove(); } catch(_){}
+      this._audioEl = null;
+    }
     this._localVoiceId = null;
     this._pin = null;
     this._isMuted = false;
@@ -1047,12 +1050,14 @@ class VoiceManager {
   // ── Button handlers ─────────────────────────────────────────
 
   onTalkTap() {
+    // Prime the audio element now while we're inside a user gesture tap.
+    // This unlocks Android's autoplay policy before the stream arrives async.
+    this._primeAudioElement();
     if (this._callState === 'idle') {
       this._startOutgoingCall();
     } else if (this._callState === 'ringing') {
       this._answerIncomingCall();
     }
-    // calling/connected: TALK button is not active in those states
   }
 
   onMuteTap() {
@@ -1143,19 +1148,57 @@ class VoiceManager {
 
   _playRemoteStream(stream) {
     if (this._audioEl) { try { this._audioEl.pause(); } catch(_){} }
-    const audio = new Audio();
+
+    // Reuse a pre-unlocked audio element if available, otherwise create one
+    let audio = this._audioEl;
+    if (!audio) {
+      audio = document.createElement('audio');
+      audio.setAttribute('playsinline', '');
+      audio.setAttribute('autoplay', '');
+      audio.muted = false;
+      // Keep it in the DOM so Android doesn't garbage-collect the audio context
+      audio.style.cssText = 'position:fixed;width:0;height:0;opacity:0;pointer-events:none';
+      document.body.appendChild(audio);
+    }
+
     audio.srcObject = stream;
-    audio.autoplay = true;
-    // Prefer loudspeaker
+    audio.muted = this._isMuted;
+
+    // Prefer loudspeaker on devices that support setSinkId
     if (typeof audio.setSinkId === 'function') {
       audio.setSinkId('speaker').catch(() => {});
     }
-    audio.play().catch(() => {
-      // Autoplay blocked — retry on first touch
-      const retry = () => { audio.play().catch(() => {}); };
-      window.addEventListener('touchstart', retry, { once: true });
-      window.addEventListener('click', retry, { once: true });
-    });
+
+    const tryPlay = () => {
+      audio.play().catch(err => {
+        console.warn('Audio play blocked:', err);
+        // Queue a retry on the next user interaction
+        const retry = () => {
+          audio.play().catch(() => {});
+          document.removeEventListener('touchstart', retry, true);
+          document.removeEventListener('click', retry, true);
+        };
+        document.addEventListener('touchstart', retry, { once: true, capture: true });
+        document.addEventListener('click', retry, { once: true, capture: true });
+      });
+    };
+
+    tryPlay();
+    this._audioEl = audio;
+  }
+
+  // Pre-unlock the audio element on a user gesture (TALK tap) so Android
+  // allows playback when the stream arrives asynchronously later.
+  _primeAudioElement() {
+    if (this._audioEl) return; // already exists
+    const audio = document.createElement('audio');
+    audio.setAttribute('playsinline', '');
+    audio.setAttribute('autoplay', '');
+    audio.muted = true; // muted so it can autoplay without a stream
+    audio.style.cssText = 'position:fixed;width:0;height:0;opacity:0;pointer-events:none';
+    document.body.appendChild(audio);
+    // Play silence to unlock the audio context
+    audio.play().catch(() => {});
     this._audioEl = audio;
   }
 
