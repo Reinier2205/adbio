@@ -15,24 +15,24 @@
             border: 4px solid #22c55e; border-radius: 9999px;
             animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
-        #logs { font-size: 10px; font-family: monospace; background: #000; color: #0f0; height: 150px; overflow-y: auto; border: 1px solid #333; }
+        #logs { font-size: 10px; font-family: monospace; background: #000; color: #0f0; height: 120px; overflow-y: auto; border: 1px solid #333; }
     </style>
 </head>
 <body class="bg-black text-white font-sans overflow-hidden">
     <div class="flex flex-col h-screen max-w-md mx-auto p-4">
         
         <header class="py-6 border-b border-zinc-800">
-            <h1 class="text-2xl font-black tracking-tighter text-green-500">VOICE LINK <span class="text-xs font-normal text-zinc-500 ml-2">V6</span></h1>
+            <h1 class="text-2xl font-black tracking-tighter text-green-500">VOICE LINK <span class="text-xs font-normal text-zinc-500 ml-2">V7</span></h1>
             <div id="connectionStatus" class="flex items-center gap-2 mt-1">
                 <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
                 <p id="statusText" class="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">Disconnected</p>
             </div>
         </header>
 
-        <!-- Debug Console (Always Visible) -->
+        <!-- Debug Console -->
         <div class="mt-4">
             <div id="logs" class="p-2 rounded-lg shadow-inner">
-                <div>> System initialized. Select a room below.</div>
+                <div>> System ready. Select a room to start.</div>
             </div>
         </div>
 
@@ -41,46 +41,59 @@
             <p class="text-center text-zinc-500 text-xs uppercase font-bold tracking-widest mb-2">Select a testing room</p>
             
             <div class="grid grid-cols-1 gap-3">
-                <button onclick="joinRoom('LEVELVAN-A')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-6 rounded-2xl flex justify-between items-center active:scale-95 transition-all">
-                    <span class="font-bold">ROOM ALPHA</span>
-                    <span class="text-[10px] bg-zinc-800 px-2 py-1 rounded">JOIN</span>
+                <button onclick="joinRoom('LEVELVAN-A')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-6 rounded-2xl flex justify-between items-center active:scale-95 transition-all group">
+                    <span class="font-bold group-hover:text-green-400">ROOM ALPHA</span>
+                    <span class="text-[10px] bg-zinc-800 px-3 py-1 rounded border border-zinc-700">JOIN</span>
                 </button>
-                <button onclick="joinRoom('LEVELVAN-B')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-6 rounded-2xl flex justify-between items-center active:scale-95 transition-all">
-                    <span class="font-bold">ROOM BETA</span>
-                    <span class="text-[10px] bg-zinc-800 px-2 py-1 rounded">JOIN</span>
+                <button onclick="joinRoom('LEVELVAN-B')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-6 rounded-2xl flex justify-between items-center active:scale-95 transition-all group">
+                    <span class="font-bold group-hover:text-green-400">ROOM BETA</span>
+                    <span class="text-[10px] bg-zinc-800 px-3 py-1 rounded border border-zinc-700">JOIN</span>
                 </button>
             </div>
-            
-            <p class="text-[10px] text-center text-zinc-600 mt-4">Tapping a room name on both devices will automatically link them via PeerJS.</p>
         </div>
 
         <!-- Calling View -->
         <div id="call-view" class="hidden flex-1 flex flex-col items-center justify-around py-8">
             <div class="text-center">
-                <div id="statusCircle" class="w-32 h-32 bg-zinc-900 rounded-full mx-auto mb-6 flex items-center justify-center border-2 border-zinc-800 transition-all">
+                <div id="statusCircle" class="w-32 h-32 bg-zinc-900 rounded-full mx-auto mb-6 flex items-center justify-center border-2 border-zinc-800 transition-all relative">
                     <svg id="connIcon" class="text-zinc-700" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path>
                     </svg>
                 </div>
                 <h2 id="peerIdentity" class="text-xl font-black italic text-zinc-600 uppercase">Searching...</h2>
                 <div id="visualizer" class="waveform opacity-0 mt-4 justify-center">
-                    <div class="bar h-2"></div><div class="bar h-5"></div><div class="bar h-8"></div><div class="bar h-4"></div><div class="bar h-6"></div>
+                    <div class="bar h-2 animate-bounce"></div>
+                    <div class="bar h-5 animate-bounce" style="animation-delay: 0.1s"></div>
+                    <div class="bar h-8 animate-bounce" style="animation-delay: 0.2s"></div>
+                    <div class="bar h-4 animate-bounce" style="animation-delay: 0.3s"></div>
+                    <div class="bar h-6 animate-bounce" style="animation-delay: 0.4s"></div>
                 </div>
             </div>
 
-            <div class="flex gap-8">
-                <button id="muteBtn" class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 active:bg-zinc-700">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path></svg>
-                </button>
-                <button id="hangupBtn" class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center active:scale-90">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+            <div class="flex flex-col items-center gap-6">
+                <div class="flex gap-8">
+                    <!-- Mute Button -->
+                    <div class="flex flex-col items-center gap-2">
+                        <button id="muteBtn" class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 active:bg-zinc-700 transition-colors">
+                            <svg id="micIcon" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path></svg>
+                        </button>
+                        <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">Mute</span>
+                    </div>
+
+                    <!-- Hangup Button -->
+                    <div class="flex flex-col items-center gap-2">
+                        <button id="hangupBtn" class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-lg shadow-red-900/40">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                        <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">End Call</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let peer, localStream, currentCall, myRoomId;
+        let peer, localStream, currentCall;
         const logEl = document.getElementById('logs');
         const statusText = document.getElementById('statusText');
         const statusDot = document.getElementById('statusDot');
@@ -94,132 +107,117 @@
         }
 
         async function joinRoom(roomName) {
-            addLog(`Requesting Microphone...`, 'yellow');
+            addLog(`Requesting Mic Access...`, 'yellow');
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: { echoCancellation: true, noiseSuppression: true } 
-                });
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 addLog(`Mic active.`, '#0f0');
                 
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('call-view').classList.remove('hidden');
                 
-                initPeer(roomName);
+                initHandshake(roomName);
             } catch (e) {
-                addLog(`MEDIA ERROR: ${e.message}`, 'red');
-                alert("Please enable microphone access and use HTTPS.");
+                addLog(`MIC ERROR: ${e.message}`, 'red');
             }
         }
 
-        function initPeer(roomName) {
-            // We use a deterministic naming scheme: RoomName-1 and RoomName-2
-            // Since we don't know who is who, we try to "Connect to 1" then "Connect to 2"
-            
-            peer = new Peer(null, {
-                debug: 2,
-                config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
-            });
+        function initHandshake(roomName) {
+            const idA = `${roomName}-A`;
+            const idB = `${roomName}-B`;
 
-            peer.on('open', (id) => {
-                addLog(`PeerID: ${id.substring(0,8)}...`, 'cyan');
-                statusDot.className = "w-2 h-2 rounded-full bg-green-500";
-                statusText.innerText = "Searching for peer...";
-                
-                // Now we need to find the other person. 
-                // We'll use a simple "discovery" logic:
-                // We broadcast our presence to a simple relay or just try to call the "Room"
-                // Actually, PeerJS doesn't support "rooms" directly.
-                // WORKAROUND: We use the room name to seed the Peer ID.
-                
-                // Let's try a different strategy: One phone is suffix '-A', other is '-B'
-                // But the user doesn't want to choose A or B.
-                // Let's use a small "collision" strategy.
-            });
+            const tryRegister = (targetId, partnerId) => {
+                const p = new Peer(targetId, { debug: 1 });
 
-            // Handle incoming calls automatically
-            peer.on('call', (call) => {
-                addLog(`Incoming call! Answering...`, 'yellow');
-                call.answer(localStream);
-                handleCall(call);
-            });
+                p.on('open', () => {
+                    addLog(`ID: ${targetId} (Ready)`, 'cyan');
+                    peer = p;
+                    statusText.innerText = `WAITING IN ${roomName}`;
+                    statusDot.className = "w-2 h-2 rounded-full bg-yellow-500";
 
-            // To make it "click and work", we'll attempt to call both variations
-            // of the room name every few seconds until someone answers.
-            const attemptCall = () => {
-                // This part is tricky without a coordinator. 
-                // Let's use the roomName as a "namespace" on a public signaling channel
-                // But for THIS test, let's keep it simple:
-                // We will register as a random ID, but we'll send our ID to a 
-                // simple public KV store (simulated here with a fetch)
-                
-                // Actually, let's use the PeerJS 'room' logic by hashing the room name
-                // into two possible IDs.
-                const idA = `${roomName}-A`;
-                const idB = `${roomName}-B`;
-                
-                // Try to register as A. If taken, register as B.
-                const tryRegister = (targetId, fallbackId) => {
-                    const p = new Peer(targetId, { debug: 1 });
-                    p.on('open', () => {
-                        addLog(`Registered as ${targetId}`, 'cyan');
-                        peer = p;
-                        peer.on('call', c => { c.answer(localStream); handleCall(c); });
-                        // Now wait. If the other person is already fallbackId, call them.
-                        setTimeout(() => {
-                            addLog(`Checking for peer ${fallbackId}...`, '#666');
-                            const call = peer.call(fallbackId, localStream);
-                            handleCall(call);
-                        }, 2000);
+                    peer.on('call', incoming => {
+                        addLog(`Call incoming...`, 'yellow');
+                        incoming.answer(localStream);
+                        handleStream(incoming);
                     });
-                    p.on('error', (err) => {
-                        if (err.type === 'unavailable-id') {
-                            addLog(`${targetId} taken, trying ${fallbackId}...`);
-                            tryRegister(fallbackId, targetId);
-                        } else {
-                            addLog(`Error: ${err.type}`, 'red');
-                        }
-                    });
-                };
-                
-                peer.destroy();
-                tryRegister(idA, idB);
+
+                    // Try to call the partner after a short delay
+                    setTimeout(() => {
+                        addLog(`Pinging peer...`, '#666');
+                        const call = peer.call(partnerId, localStream);
+                        if (call) handleStream(call);
+                    }, 1500);
+                });
+
+                p.on('error', (err) => {
+                    if (err.type === 'unavailable-id') {
+                        addLog(`ID busy, swapping role...`);
+                        tryRegister(partnerId, targetId);
+                    } else {
+                        addLog(`Connection Error: ${err.type}`, 'red');
+                    }
+                });
             };
-            
-            attemptCall();
+
+            tryRegister(idA, idB);
         }
 
-        function handleCall(call) {
+        function handleStream(call) {
             currentCall = call;
             call.on('stream', (remoteStream) => {
-                addLog(`STREAM RECEIVED`, '#0f0');
+                addLog(`LIVE STREAM ESTABLISHED`, '#0f0');
                 const audio = new Audio();
                 audio.srcObject = remoteStream;
-                audio.play().then(() => {
-                    onConnected();
-                }).catch(e => {
-                    addLog(`Auto-play blocked. Tap screen.`, 'yellow');
-                    window.addEventListener('click', () => audio.play(), {once:true});
+                audio.play().then(() => onConnected()).catch(e => {
+                    addLog(`Tap screen to hear audio!`, 'yellow');
+                    window.addEventListener('touchstart', () => audio.play(), {once:true});
                 });
             });
-            call.on('close', () => window.location.reload());
+            
+            call.on('close', () => {
+                addLog("Call ended by peer.", "orange");
+                exitSession();
+            });
         }
 
         function onConnected() {
-            statusText.innerText = "Live Voice";
-            document.getElementById('peerIdentity').innerText = "PEER CONNECTED";
+            statusText.innerText = "CONNECTED";
+            statusDot.className = "w-2 h-2 rounded-full bg-green-500";
+            document.getElementById('peerIdentity').innerText = "PEER ACTIVE";
             document.getElementById('peerIdentity').className = "text-xl font-black italic text-green-500 uppercase";
             document.getElementById('visualizer').classList.remove('opacity-0');
-            document.getElementById('statusCircle').classList.replace('bg-zinc-900', 'bg-green-900/20');
-            document.getElementById('statusCircle').classList.replace('border-zinc-800', 'border-green-500');
-            document.getElementById('statusCircle').classList.add('pulse-btn');
-            document.getElementById('connIcon').className = "text-green-500";
+            document.getElementById('statusCircle').classList.add('pulse-btn', 'border-green-500', 'bg-green-900/20');
+            document.getElementById('connIcon').classList.replace('text-zinc-700', 'text-green-500');
         }
 
-        document.getElementById('hangupBtn').onclick = () => window.location.reload();
+        function exitSession() {
+            if (currentCall) currentCall.close();
+            if (peer) {
+                peer.disconnect();
+                peer.destroy();
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            window.location.reload();
+        }
+
+        document.getElementById('hangupBtn').onclick = exitSession;
+
         document.getElementById('muteBtn').onclick = () => {
             const track = localStream.getAudioTracks()[0];
             track.enabled = !track.enabled;
-            document.getElementById('muteBtn').classList.toggle('bg-red-600');
+            
+            const btn = document.getElementById('muteBtn');
+            const icon = document.getElementById('micIcon');
+            
+            if (track.enabled) {
+                btn.className = "w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 active:bg-zinc-700 transition-colors";
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path>';
+            } else {
+                btn.className = "w-16 h-16 bg-red-900/50 rounded-full flex items-center justify-center border border-red-500 active:bg-red-900 transition-colors";
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"></path>';
+                addLog("Microphone Muted", "orange");
+            }
         };
     </script>
 </body>
