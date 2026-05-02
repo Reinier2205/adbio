@@ -288,6 +288,74 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .cloud-status.connected{color:var(--accent2)}
 .cloud-status.connecting{color:var(--warn)}
 .cloud-status.offline{color:var(--danger)}
+
+/* ── Voice Footer Row ─────────────────────────────────────── */
+.voice-footer-row{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--border)}
+.voice-btns{display:flex;gap:8px;height:56px}
+
+/* ── Voice Buttons ────────────────────────────────────────── */
+.vbtn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;border-radius:12px;border:2px solid;background:var(--panel);
+  font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700;letter-spacing:2px;
+  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  transition:opacity .15s,background .15s,border-color .15s;
+  position:relative;overflow:hidden;
+}
+.vbtn:disabled,.vbtn[disabled]{opacity:0.3;pointer-events:none}
+.vbtn:active:not(:disabled){transform:scale(0.94)}
+
+/* Default colour schemes */
+.vbtn--talk{border-color:var(--accent2);color:var(--accent2)}
+.vbtn--mute{border-color:var(--dim);color:var(--dim)}
+.vbtn--end {border-color:var(--danger);color:var(--danger)}
+
+/* ── State modifiers ──────────────────────────────────────── */
+.vbtn--talk.is-calling{
+  border-color:var(--warn);color:var(--warn);
+  animation:vbtn-amber-pulse 1s ease-in-out infinite;
+}
+.vbtn--talk.is-ringing{
+  border-color:var(--accent2);color:var(--accent2);
+  animation:vbtn-green-pulse .8s ease-in-out infinite;
+}
+.vbtn--talk.is-live{
+  border-color:var(--accent2);color:var(--accent2);
+  background:rgba(0,255,136,.08);
+}
+.vbtn--talk.is-live::before{
+  content:'';position:absolute;inset:-4px;border-radius:14px;
+  border:3px solid var(--accent2);
+  animation:vbtn-ring-pulse 1.5s cubic-bezier(.215,.61,.355,1) infinite;
+  pointer-events:none;
+}
+.vbtn--mute.is-muted{border-color:var(--danger);color:var(--danger);background:rgba(255,68,68,.08)}
+
+/* ── Keyframe animations ──────────────────────────────────── */
+@keyframes vbtn-amber-pulse{0%,100%{background:rgba(255,170,0,.05)}50%{background:rgba(255,170,0,.18)}}
+@keyframes vbtn-green-pulse{0%,100%{background:rgba(0,255,136,.05)}50%{background:rgba(0,255,136,.18)}}
+@keyframes vbtn-ring-pulse{0%{transform:scale(1);opacity:.8}80%,100%{transform:scale(1.4);opacity:0}}
+
+/* ── Waveform icon ────────────────────────────────────────── */
+.vbtn-wave{display:flex;align-items:center;gap:2px;height:12px}
+.vbtn-wave span{display:block;width:3px;border-radius:2px;background:var(--accent2);animation:vbtn-wave-bar .8s ease-in-out infinite}
+.vbtn-wave span:nth-child(1){height:4px;animation-delay:0s}
+.vbtn-wave span:nth-child(2){height:8px;animation-delay:.1s}
+.vbtn-wave span:nth-child(3){height:12px;animation-delay:.2s}
+.vbtn-wave span:nth-child(4){height:8px;animation-delay:.3s}
+.vbtn-wave span:nth-child(5){height:4px;animation-delay:.4s}
+@keyframes vbtn-wave-bar{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+
+/* ── Echo warning banner ──────────────────────────────────── */
+.voice-echo-warn{
+  font-size:.75rem;color:var(--warn);
+  background:rgba(255,170,0,.08);border:1px solid rgba(255,170,0,.3);
+  border-radius:8px;padding:6px 10px;text-align:center;cursor:pointer;
+  font-family:'Share Tech Mono',monospace;
+}
+
+/* ── Voice error label ────────────────────────────────────── */
+.voice-error{font-size:.72rem;color:var(--danger);text-align:center;font-family:'Share Tech Mono',monospace;min-height:1em}
 </style>
 </head>
 <body>
@@ -559,7 +627,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- s3: live level (sensor) -->
-  <div class="panel" id="s3" style="padding-top:80px;padding-bottom:180px;flex:1;justify-content:flex-start">
+  <div class="panel" id="s3" style="padding-top:80px;padding-bottom:240px;flex:1;justify-content:flex-start">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)" id="s3-status">connected ✓</span></div>
 
     <!-- 3D caravan view (sensor) -->
@@ -628,6 +696,25 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="angle"><span class="albl">PITCH ↕</span><span class="aval bd" id="s-pitch">0.0°</span></div>
   </div>
   <div class="conn-count" id="s3-conn-count" style="font-size:.85rem;padding-top:2px"></div>
+  <!-- Voice footer row (sensor) -->
+  <div class="voice-footer-row" id="sv-voice-row" style="display:none">
+    <div class="voice-echo-warn" id="sv-echo-warn" style="display:none" onclick="voiceMgr._dismissEchoWarning()">
+      📢 Echo? Mute when phones are close together.
+    </div>
+    <div class="voice-btns">
+      <button class="vbtn vbtn--talk" id="sv-talk" onclick="voiceMgr.onTalkTap()" disabled>
+        <span class="vbtn-wave" id="sv-wave" style="display:none"><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="vbtn-label">TALK</span>
+      </button>
+      <button class="vbtn vbtn--mute" id="sv-mute" onclick="voiceMgr.onMuteTap()" disabled>
+        <span class="vbtn-label">MUTE</span>
+      </button>
+      <button class="vbtn vbtn--end" id="sv-end" onclick="voiceMgr.onEndTap()" disabled>
+        <span class="vbtn-label">END</span>
+      </button>
+    </div>
+    <div class="voice-error" id="sv-voice-err" style="display:none"></div>
+  </div>
 </div>
 
 <!-- DISPLAY SCREEN -->
@@ -677,7 +764,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- d3: live display -->
-  <div class="panel" id="d3" style="padding-bottom:220px;flex:1;justify-content:flex-start;padding-top:20px">
+  <div class="panel" id="d3" style="padding-bottom:280px;flex:1;justify-content:flex-start;padding-top:20px">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected ✓</span></div>
 
     <!-- 3D caravan view -->
@@ -781,6 +868,25 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="angle"><span class="albl">ROLL ↔</span><span class="aval" id="d-roll">--</span></div>
     <div class="angle"><span class="albl">PITCH ↕</span><span class="aval" id="d-pitch">--</span></div>
   </div>
+  <!-- Voice footer row (display) -->
+  <div class="voice-footer-row" id="dv-voice-row" style="display:none">
+    <div class="voice-echo-warn" id="dv-echo-warn" style="display:none" onclick="voiceMgr._dismissEchoWarning()">
+      📢 Echo? Mute when phones are close together.
+    </div>
+    <div class="voice-btns">
+      <button class="vbtn vbtn--talk" id="dv-talk" onclick="voiceMgr.onTalkTap()" disabled>
+        <span class="vbtn-wave" id="dv-wave" style="display:none"><span></span><span></span><span></span><span></span><span></span></span>
+        <span class="vbtn-label">TALK</span>
+      </button>
+      <button class="vbtn vbtn--mute" id="dv-mute" onclick="voiceMgr.onMuteTap()" disabled>
+        <span class="vbtn-label">MUTE</span>
+      </button>
+      <button class="vbtn vbtn--end" id="dv-end" onclick="voiceMgr.onEndTap()" disabled>
+        <span class="vbtn-label">END</span>
+      </button>
+    </div>
+    <div class="voice-error" id="dv-voice-err" style="display:none"></div>
+  </div>
 </div>
 
 <script>
@@ -806,6 +912,443 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 //  - After connection, all data is P2P over local WiFi
 //  - PeerJS public server: 0.peerjs.com (free, no account needed)
 // ═══════════════════════════════════════════════════════
+
+// ════════════════════════════════
+//  VOICE MANAGER
+// ════════════════════════════════
+
+/**
+ * Pure helper — returns the partner voice peer ID.
+ * getPartnerVoiceId(getPartnerVoiceId(id)) === id  (involution)
+ */
+function getPartnerVoiceId(localId) {
+  if (!localId) return null;
+  if (localId.endsWith('-voice-A')) return localId.slice(0, -8) + '-voice-B';
+  if (localId.endsWith('-voice-B')) return localId.slice(0, -8) + '-voice-A';
+  return null;
+}
+
+class VoiceManager {
+  constructor() {
+    this._voicePeer    = null;   // PeerJS Peer for audio
+    this._localStream  = null;   // cached MediaStream
+    this._activeCall   = null;   // current PeerJS MediaConnection
+    this._pendingCall  = null;   // incoming call waiting to be answered
+    this._callState    = 'idle'; // 'idle'|'calling'|'ringing'|'connected'
+    this._localVoiceId = null;   // full voice peer ID e.g. 'levelvan-1234-voice-A'
+    this._pin          = null;
+    this._audioEl      = null;   // Audio element for remote stream
+    this._activeRow    = null;   // currently visible voice-footer-row element
+    this._isMuted      = false;
+    this._callTimeout  = null;   // 30s unanswered call timer
+    this._reconnectTimer = null; // 10s reconnect grace timer
+    this._echoTimer    = null;   // 6s echo warning auto-dismiss
+    this._retryCount   = 0;
+    this._retryTimer   = null;
+  }
+
+  // ── Computed getters — always query the active row ──────────
+  get _talkBtn() { return this._activeRow ? this._activeRow.querySelector('.vbtn--talk') : null; }
+  get _muteBtn() { return this._activeRow ? this._activeRow.querySelector('.vbtn--mute') : null; }
+  get _endBtn()  { return this._activeRow ? this._activeRow.querySelector('.vbtn--end')  : null; }
+  get _waveEl()  { return this._activeRow ? this._activeRow.querySelector('.vbtn-wave')  : null; }
+  get _echoEl()  { return this._activeRow ? this._activeRow.querySelector('.voice-echo-warn') : null; }
+  get _errEl()   { return this._activeRow ? this._activeRow.querySelector('.voice-error') : null; }
+
+  // ── Lifecycle ───────────────────────────────────────────────
+
+  /**
+   * Called when entering a live panel (s3 or d3).
+   * Creates the Voice_Peer. No-op in solo mode.
+   */
+  init(pin, role) {
+    if (typeof mode !== 'undefined' && mode === 'solo') return;
+    if (this._voicePeer) return; // already initialised
+    this._pin = pin;
+    this._retryCount = 0;
+    const idA = 'levelvan-' + pin + '-voice-A';
+    const idB = 'levelvan-' + pin + '-voice-B';
+    // Sensor always tries A (owns it). Display tries A first, falls back to B.
+    this._tryRegisterPeer(idA, role === 'display' ? idB : null);
+  }
+
+  /**
+   * Called by goHome() before cleanup().
+   */
+  destroy() {
+    this._clearTimers();
+    if (this._activeCall) { try { this._activeCall.close(); } catch(_){} this._activeCall = null; }
+    if (this._pendingCall) { try { this._pendingCall.close(); } catch(_){} this._pendingCall = null; }
+    if (this._voicePeer) { try { this._voicePeer.destroy(); } catch(_){} this._voicePeer = null; }
+    if (this._localStream) {
+      this._localStream.getTracks().forEach(t => { try { t.stop(); } catch(_){} });
+      this._localStream = null;
+    }
+    if (this._audioEl) { try { this._audioEl.pause(); this._audioEl.srcObject = null; } catch(_){} this._audioEl = null; }
+    this._localVoiceId = null;
+    this._pin = null;
+    this._isMuted = false;
+    this._callState = 'idle';
+    // Hide both voice rows
+    const sv = document.getElementById('sv-voice-row');
+    const dv = document.getElementById('dv-voice-row');
+    if (sv) sv.style.display = 'none';
+    if (dv) dv.style.display = 'none';
+    this._activeRow = null;
+  }
+
+  /**
+   * Called when the data connection re-establishes.
+   */
+  reconnect() {
+    if (this._callState === 'connected') return; // call survived
+    clearTimeout(this._reconnectTimer);
+    this._reconnectTimer = null;
+    if (this._localStream && this._voicePeer && this._localVoiceId) {
+      const partnerId = getPartnerVoiceId(this._localVoiceId);
+      if (!partnerId) return;
+      try {
+        const call = this._voicePeer.call(partnerId, this._localStream);
+        if (call) this._wireOutgoingCall(call);
+        this._setCallState('calling');
+      } catch(e) { console.warn('VoiceManager.reconnect failed:', e); }
+    }
+  }
+
+  /**
+   * Called by showPanel() whenever the active panel changes.
+   */
+  onPanelChange(panelId) {
+    const svRow = document.getElementById('sv-voice-row');
+    const dvRow = document.getElementById('dv-voice-row');
+    if (panelId === 's3') {
+      this._activeRow = svRow;
+      if (svRow) svRow.style.display = '';
+      if (dvRow) dvRow.style.display = 'none';
+    } else if (panelId === 'd3') {
+      this._activeRow = dvRow;
+      if (dvRow) dvRow.style.display = '';
+      if (svRow) svRow.style.display = 'none';
+    } else {
+      if (svRow) svRow.style.display = 'none';
+      if (dvRow) dvRow.style.display = 'none';
+      this._activeRow = null;
+    }
+    this._applyButtonStyles();
+  }
+
+  // ── Button handlers ─────────────────────────────────────────
+
+  onTalkTap() {
+    if (this._callState === 'idle') {
+      this._startOutgoingCall();
+    } else if (this._callState === 'ringing') {
+      this._answerIncomingCall();
+    }
+    // calling/connected: TALK button is not active in those states
+  }
+
+  onMuteTap() {
+    if (!this._localStream) return;
+    const track = this._localStream.getAudioTracks()[0];
+    if (!track) return;
+    track.enabled = !track.enabled;
+    this._isMuted = !track.enabled;
+    this._applyButtonStyles();
+  }
+
+  onEndTap() {
+    this._clearCallTimeout();
+    if (this._activeCall) { try { this._activeCall.close(); } catch(_){} this._activeCall = null; }
+    if (this._pendingCall) { try { this._pendingCall.close(); } catch(_){} this._pendingCall = null; }
+    // Re-enable mic so next call starts unmuted
+    if (this._localStream) {
+      const track = this._localStream.getAudioTracks()[0];
+      if (track) track.enabled = true;
+    }
+    this._isMuted = false;
+    this._setCallState('idle');
+  }
+
+  // ── Internal: peer registration ─────────────────────────────
+
+  _tryRegisterPeer(targetId, fallbackId) {
+    if (this._voicePeer) { try { this._voicePeer.destroy(); } catch(_){} this._voicePeer = null; }
+
+    const p = new Peer(targetId, {
+      host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE, debug: 0
+    });
+
+    p.on('open', () => {
+      this._voicePeer = p;
+      this._localVoiceId = targetId;
+      this._retryCount = 0;
+      // Enable TALK button
+      if (this._talkBtn) this._talkBtn.disabled = false;
+      this._showErr('');
+      // Wire incoming call handler
+      p.on('call', incomingCall => this._handleIncomingCall(incomingCall));
+    });
+
+    p.on('error', err => {
+      if (err.type === 'unavailable-id') {
+        if (fallbackId) {
+          // Display falls back to B
+          this._tryRegisterPeer(fallbackId, null);
+        } else {
+          // Sensor retries A after 3s (sensor always owns A)
+          this._retryTimer = setTimeout(() => this._tryRegisterPeer(targetId, null), 3000);
+        }
+      } else {
+        this._retryCount++;
+        if (this._retryCount <= 3) {
+          this._showErr('Voice connecting…');
+          this._retryTimer = setTimeout(() => this._tryRegisterPeer(targetId, fallbackId), 5000);
+        } else {
+          this._showErr('Voice unavailable');
+        }
+      }
+    });
+  }
+
+  // ── Internal: stream helpers ─────────────────────────────────
+
+  async _ensureLocalStream() {
+    if (this._localStream) return this._localStream;
+    try {
+      this._localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      return this._localStream;
+    } catch(e) {
+      let msg = 'Mic error — try again';
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        msg = 'Mic access required — check browser settings';
+      } else if (e.name === 'NotFoundError') {
+        msg = 'No microphone found on this device';
+      }
+      this._showErr(msg);
+      throw e;
+    }
+  }
+
+  _playRemoteStream(stream) {
+    if (this._audioEl) { try { this._audioEl.pause(); } catch(_){} }
+    const audio = new Audio();
+    audio.srcObject = stream;
+    audio.autoplay = true;
+    // Prefer loudspeaker
+    if (typeof audio.setSinkId === 'function') {
+      audio.setSinkId('speaker').catch(() => {});
+    }
+    audio.play().catch(() => {
+      // Autoplay blocked — retry on first touch
+      const retry = () => { audio.play().catch(() => {}); };
+      window.addEventListener('touchstart', retry, { once: true });
+      window.addEventListener('click', retry, { once: true });
+    });
+    this._audioEl = audio;
+  }
+
+  // ── Internal: call flow ──────────────────────────────────────
+
+  async _startOutgoingCall() {
+    if (!this._voicePeer || !this._localVoiceId) return;
+    const partnerId = getPartnerVoiceId(this._localVoiceId);
+    if (!partnerId) return;
+    try {
+      const stream = await this._ensureLocalStream();
+      this._setCallState('calling');
+      const call = this._voicePeer.call(partnerId, stream);
+      if (!call) { this._setCallState('idle'); return; }
+      this._wireOutgoingCall(call);
+      // 30s timeout if not answered
+      this._callTimeout = setTimeout(() => {
+        if (this._callState === 'calling') {
+          try { call.close(); } catch(_){}
+          this._setCallState('idle');
+        }
+      }, 30000);
+    } catch(e) {
+      this._setCallState('idle');
+    }
+  }
+
+  _wireOutgoingCall(call) {
+    this._activeCall = call;
+    call.on('stream', remoteStream => {
+      this._clearCallTimeout();
+      this._playRemoteStream(remoteStream);
+      this._setCallState('connected');
+      this._showEchoWarning();
+    });
+    call.on('close', () => {
+      if (this._activeCall === call) {
+        this._activeCall = null;
+        this._isMuted = false;
+        this._setCallState('idle');
+      }
+    });
+    call.on('error', e => {
+      console.warn('VoiceManager call error:', e);
+      if (this._activeCall === call) {
+        this._activeCall = null;
+        this._setCallState('idle');
+        this._showErr('Call error');
+      }
+    });
+  }
+
+  _handleIncomingCall(call) {
+    // If already in a call, close it first
+    if (this._activeCall) { try { this._activeCall.close(); } catch(_){} this._activeCall = null; }
+    if (this._pendingCall) { try { this._pendingCall.close(); } catch(_){} this._pendingCall = null; }
+    this._pendingCall = call;
+    this._setCallState('ringing');
+    call.on('close', () => {
+      if (this._pendingCall === call || this._activeCall === call) {
+        this._pendingCall = null;
+        this._activeCall = null;
+        this._isMuted = false;
+        this._setCallState('idle');
+      }
+    });
+  }
+
+  async _answerIncomingCall() {
+    if (!this._pendingCall) return;
+    try {
+      const stream = await this._ensureLocalStream();
+      const call = this._pendingCall;
+      this._pendingCall = null;
+      call.answer(stream);
+      this._activeCall = call;
+      call.on('stream', remoteStream => {
+        this._playRemoteStream(remoteStream);
+        this._setCallState('connected');
+        this._showEchoWarning();
+      });
+      call.on('close', () => {
+        if (this._activeCall === call) {
+          this._activeCall = null;
+          this._isMuted = false;
+          this._setCallState('idle');
+        }
+      });
+      call.on('error', e => {
+        console.warn('VoiceManager answer error:', e);
+        if (this._activeCall === call) {
+          this._activeCall = null;
+          this._setCallState('idle');
+        }
+      });
+    } catch(e) {
+      this._setCallState('idle');
+    }
+  }
+
+  // ── Internal: UI state ───────────────────────────────────────
+
+  _setCallState(newState) {
+    this._callState = newState;
+    this._applyButtonStyles();
+  }
+
+  _applyButtonStyles() {
+    const talk = this._talkBtn;
+    const mute = this._muteBtn;
+    const end  = this._endBtn;
+    const wave = this._waveEl;
+    if (!talk) return;
+
+    const s = this._callState;
+
+    // Remove all state classes
+    talk.classList.remove('is-calling', 'is-ringing', 'is-live');
+    if (mute) mute.classList.remove('is-muted');
+
+    // TALK button
+    const talkLabel = talk.querySelector('.vbtn-label');
+    if (s === 'idle') {
+      if (talkLabel) talkLabel.textContent = 'TALK';
+      talk.disabled = !this._voicePeer; // disabled until peer ready
+    } else if (s === 'calling') {
+      if (talkLabel) talkLabel.textContent = 'CALLING…';
+      talk.classList.add('is-calling');
+      talk.disabled = true;
+    } else if (s === 'ringing') {
+      if (talkLabel) talkLabel.textContent = 'ANSWER';
+      talk.classList.add('is-ringing');
+      talk.disabled = false;
+    } else if (s === 'connected') {
+      if (talkLabel) talkLabel.textContent = 'LIVE';
+      talk.classList.add('is-live');
+      talk.disabled = true;
+    }
+
+    // Waveform — visible only when connected
+    if (wave) wave.style.display = (s === 'connected') ? '' : 'none';
+
+    // MUTE button — enabled only when connected
+    if (mute) {
+      mute.disabled = (s !== 'connected');
+      if (this._isMuted) mute.classList.add('is-muted');
+      const muteLabel = mute.querySelector('.vbtn-label');
+      if (muteLabel) muteLabel.textContent = this._isMuted ? 'UNMUTE' : 'MUTE';
+    }
+
+    // END button — enabled when calling, ringing, or connected
+    if (end) {
+      end.disabled = (s === 'idle');
+    }
+  }
+
+  // ── Internal: echo warning ───────────────────────────────────
+
+  _showEchoWarning() {
+    if (sessionStorage.getItem('lv_echo_shown')) return;
+    sessionStorage.setItem('lv_echo_shown', '1');
+    const el = this._echoEl;
+    if (!el) return;
+    el.style.display = '';
+    this._echoTimer = setTimeout(() => this._dismissEchoWarning(), 6000);
+  }
+
+  _dismissEchoWarning() {
+    clearTimeout(this._echoTimer);
+    this._echoTimer = null;
+    const sv = document.getElementById('sv-echo-warn');
+    const dv = document.getElementById('dv-echo-warn');
+    if (sv) sv.style.display = 'none';
+    if (dv) dv.style.display = 'none';
+  }
+
+  // ── Internal: error label ────────────────────────────────────
+
+  _showErr(msg) {
+    // Update both rows so whichever becomes active shows the right state
+    const svErr = document.getElementById('sv-voice-err');
+    const dvErr = document.getElementById('dv-voice-err');
+    if (svErr) { svErr.textContent = msg; svErr.style.display = msg ? '' : 'none'; }
+    if (dvErr) { dvErr.textContent = msg; dvErr.style.display = msg ? '' : 'none'; }
+  }
+
+  // ── Internal: timer cleanup ──────────────────────────────────
+
+  _clearCallTimeout() {
+    clearTimeout(this._callTimeout);
+    this._callTimeout = null;
+  }
+
+  _clearTimers() {
+    this._clearCallTimeout();
+    clearTimeout(this._reconnectTimer); this._reconnectTimer = null;
+    clearTimeout(this._echoTimer);      this._echoTimer = null;
+    clearTimeout(this._retryTimer);     this._retryTimer = null;
+  }
+}
+
+// Global singleton
+const voiceMgr = new VoiceManager();
+window.voiceMgr = voiceMgr;
 
 const LT=1.0, CT=3.0, MD=15;
 const PEER_HOST = '0.peerjs.com';
@@ -1338,6 +1881,8 @@ function showPanel(id) {
   const sf = $('sensor-footer'), df = $('display-footer');
   if (sf) sf.classList.toggle('active', id === 's3');
   if (df) df.classList.toggle('active', id === 'd3');
+  // Notify VoiceManager so it shows/hides the correct voice row
+  if (window.voiceMgr) voiceMgr.onPanelChange(id);
 }
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -1414,6 +1959,7 @@ window.goHome = async () => {
   if (deviceIdentityManager) deviceIdentityManager.cancelAutoConnect();
   // Do NOT clear lv_pin or lv_mode — the PIN is the permanent pairing bond.
   // Only resetPairing() should clear those.
+  if (window.voiceMgr) voiceMgr.destroy();
   if (wakeLockManager) { await wakeLockManager.releaseWakeLock(); wakeLockManager.stopWakeLockMonitoring(); }
   cleanup();
   showScreen('home-screen');
@@ -1629,6 +2175,11 @@ function setupSensorConn(conn) {
     updateSensorConnCount();
     if (conns.length === 1) showPanel('s3');
     if (wakeLockManager) wakeLockManager.maintainWakeLock();
+    // Initialise voice on first display connection; reconnect on subsequent ones
+    if (window.voiceMgr && mode === 'sensor' && _pin) {
+      if (conns.length === 1) voiceMgr.init(_pin, 'sensor');
+      else voiceMgr.reconnect();
+    }
 
     // Start heartbeat — if no data can be sent for 8s, treat as disconnected
     conn._heartbeatTimer = setInterval(() => {
@@ -1779,6 +2330,11 @@ window.connectWithPin = () => {
       showPanel('d3');
       // Ensure wake lock is active when connected
       if (wakeLockManager) wakeLockManager.maintainWakeLock();
+      // Initialise voice on first connection; reconnect on subsequent ones
+      if (window.voiceMgr && mode === 'display' && pin) {
+        if (!voiceMgr._voicePeer) voiceMgr.init(pin, 'display');
+        else voiceMgr.reconnect();
+      }
       // Save pairing bond to cloud on first successful connection
       if (firebaseManager && firebaseManager.isCloudAvailable()) {
         const profile = firebaseManager.getDeviceProfile();
