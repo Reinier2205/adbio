@@ -940,6 +940,7 @@ class VoiceManager {
     this._audioEl      = null;   // Audio element for remote stream
     this._activeRow    = null;   // currently visible voice-footer-row element
     this._isMuted      = false;
+    this._peerReady    = false;  // true once voice peer has successfully registered
     this._callTimeout  = null;   // 30s unanswered call timer
     this._reconnectTimer = null; // 10s reconnect grace timer
     this._echoTimer    = null;   // 6s echo warning auto-dismiss
@@ -963,8 +964,13 @@ class VoiceManager {
    */
   init(pin, role) {
     if (typeof mode !== 'undefined' && mode === 'solo') return;
-    if (this._voicePeer) return; // already initialised
+    if (this._voicePeer) {
+      // Peer already registered — just refresh button state for the new panel
+      this._applyButtonStyles();
+      return;
+    }
     this._pin = pin;
+    this._peerReady = false;
     this._retryCount = 0;
     const idA = 'levelvan-' + pin + '-voice-A';
     const idB = 'levelvan-' + pin + '-voice-B';
@@ -988,6 +994,7 @@ class VoiceManager {
     this._localVoiceId = null;
     this._pin = null;
     this._isMuted = false;
+    this._peerReady = false;
     this._callState = 'idle';
     // Hide both voice rows
     const sv = document.getElementById('sv-voice-row');
@@ -1085,14 +1092,16 @@ class VoiceManager {
       this._voicePeer = p;
       this._localVoiceId = targetId;
       this._retryCount = 0;
-      // Enable TALK button
-      if (this._talkBtn) this._talkBtn.disabled = false;
+      this._peerReady = true;
+      // Refresh all button states now that peer is ready
+      this._applyButtonStyles();
       this._showErr('');
       // Wire incoming call handler
       p.on('call', incomingCall => this._handleIncomingCall(incomingCall));
     });
 
     p.on('error', err => {
+      this._peerReady = false;
       if (err.type === 'unavailable-id') {
         if (fallbackId) {
           // Display falls back to B
@@ -1271,7 +1280,7 @@ class VoiceManager {
     const talkLabel = talk.querySelector('.vbtn-label');
     if (s === 'idle') {
       if (talkLabel) talkLabel.textContent = 'TALK';
-      talk.disabled = !this._voicePeer; // disabled until peer ready
+      talk.disabled = !this._peerReady; // disabled until peer registered
     } else if (s === 'calling') {
       if (talkLabel) talkLabel.textContent = 'CALLING…';
       talk.classList.add('is-calling');
