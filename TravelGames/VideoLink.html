@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LevelVan Video Link</title>
+    <title>LevelVan Ultra-Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
@@ -15,7 +15,6 @@
             border: 4px solid #22c55e; border-radius: 9999px;
             animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
-        #logs { font-size: 10px; font-family: monospace; background: #000; color: #0f0; height: 80px; overflow-y: auto; border: 1px solid #333; }
         video { object-fit: cover; width: 100%; height: 100%; background: #000; display: block; }
         .video-container { position: relative; width: 100%; height: 100%; border-radius: 1.5rem; overflow: hidden; background: #111; border: 1px solid #333; }
         .local-preview { position: absolute; bottom: 1rem; right: 1rem; width: 80px; height: 120px; border-radius: 0.75rem; border: 2px solid #22c55e; overflow: hidden; z-index: 50; background: #000; }
@@ -27,13 +26,13 @@
         
         <header class="py-4 border-b border-zinc-800 flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-black tracking-tighter text-green-500">LEVELVAN <span class="text-xs font-normal text-zinc-500 ml-1">V9</span></h1>
+                <h1 class="text-xl font-black tracking-tighter text-green-500">LEVELVAN <span class="text-xs font-normal text-zinc-500 ml-1">V10</span></h1>
                 <div class="flex items-center gap-2 mt-0.5">
                     <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
                     <p id="statusText" class="text-zinc-500 text-[9px] uppercase font-bold tracking-widest">Offline</p>
                 </div>
             </div>
-            <div id="logs" class="hidden sm:block"></div>
+            <div id="logs" class="hidden"></div>
         </header>
 
         <!-- Room Selector -->
@@ -46,10 +45,9 @@
                 <span class="font-bold">HITCH ROOM B</span>
                 <span class="text-[10px] bg-green-900/20 text-green-500 px-3 py-1 rounded border border-green-900/30">JOIN</span>
             </button>
-            <p id="micWarning" class="text-[10px] text-zinc-500 text-center mt-2 hidden">⚠️ Tap Allow for Camera/Mic</p>
         </div>
 
-        <!-- Calling / Video View -->
+        <!-- Main Workspace -->
         <div id="call-view" class="hidden flex-1 flex flex-col pt-4 gap-4 overflow-hidden">
             <div class="flex-1 relative overflow-hidden">
                 
@@ -67,24 +65,19 @@
 
                 <!-- Video View -->
                 <div id="content-video" class="hidden h-full video-container">
-                    <!-- Remote Stream -->
                     <video id="remoteVideo" autoplay playsinline class="rounded-2xl"></video>
-                    
-                    <!-- Play Overlay (for iOS/Autoplay issues) -->
                     <div id="playOverlay" class="play-overlay hidden" onclick="forcePlay()">
                         <div class="bg-green-600 p-4 rounded-full shadow-lg">
                             <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20"><path d="M4.5 2.691l11 6.309-11 6.309V2.691z"/></svg>
                         </div>
                     </div>
-
-                    <!-- Local Preview -->
                     <div id="localPreviewContainer" class="local-preview hidden">
                         <video id="localVideo" autoplay playsinline muted></video>
                     </div>
                 </div>
             </div>
 
-            <!-- Controls Area -->
+            <!-- Controls -->
             <div class="pb-8 pt-4 flex justify-around items-center bg-black/50 backdrop-blur-lg rounded-t-3xl border-t border-zinc-800">
                 <div class="flex flex-col items-center gap-1">
                     <button id="viewToggleBtn" class="w-14 h-14 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800">
@@ -92,14 +85,12 @@
                     </button>
                     <span id="viewLabel" class="text-[10px] text-zinc-500 font-bold uppercase">Camera</span>
                 </div>
-
                 <div class="flex flex-col items-center gap-1">
                     <button id="muteBtn" class="w-14 h-14 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800">
                         <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m14 0a7 7 0 00-14 0m14 0v4m0 0H5m14 0h-4M5 11V5a3 3 0 016 0v6a3 3 0 01-6 0z"></path></svg>
                     </button>
                     <span class="text-[10px] text-zinc-500 font-bold uppercase">Mic</span>
                 </div>
-
                 <div class="flex flex-col items-center gap-1">
                     <button id="hangupBtn" class="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center">
                         <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -112,31 +103,37 @@
 
     <script>
         let peer, localStream, currentCall, isVideoMode = false;
-        
-        const statusText = document.getElementById('statusText');
-        const statusDot = document.getElementById('statusDot');
         const remoteVideo = document.getElementById('remoteVideo');
         const localVideo = document.getElementById('localVideo');
         const overlay = document.getElementById('playOverlay');
 
         async function joinRoom(roomName) {
-            document.getElementById('micWarning').classList.remove('hidden');
             try {
+                // Optimized constraints for Ultra-Low Latency over Mobile
                 localStream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: true, 
-                    video: { facingMode: "environment" } 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }, 
+                    video: { 
+                        facingMode: "environment",
+                        width: { ideal: 640 }, // Lower resolution = faster transmission
+                        height: { ideal: 480 },
+                        frameRate: { ideal: 20, max: 24 } // Lower framerate reduces "jitter buffer"
+                    } 
                 });
+
+                // Tag tracks for priority
+                if (localStream.getVideoTracks().length > 0) {
+                    localStream.getVideoTracks()[0].contentHint = 'motion';
+                }
                 
                 localVideo.srcObject = localStream;
-                localVideo.play().catch(() => {}); // Attempt preview play immediately
-                
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('call-view').classList.remove('hidden');
-                
                 initHandshake(roomName);
             } catch (e) {
-                console.error(e);
-                alert("Permission Denied: Camera & Mic are required for this app.");
+                alert("Please check permissions for camera/mic.");
             }
         }
 
@@ -144,13 +141,23 @@
             const idA = `${roomName}-A`;
             const idB = `${roomName}-B`;
 
-            const tryRegister = (targetId, partnerId) => {
-                const p = new Peer(targetId, { debug: 1 });
+            // Using Google's public STUN servers for faster NAT traversal
+            const config = {
+                debug: 1,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ],
+                    iceCandidatePoolSize: 10
+                }
+            };
 
+            const tryRegister = (targetId, partnerId) => {
+                const p = new Peer(targetId, config);
                 p.on('open', () => {
                     peer = p;
-                    statusText.innerText = `READY - ${roomName}`;
-                    statusDot.className = "w-2 h-2 rounded-full bg-yellow-500";
+                    updateStatus("READY", "bg-yellow-500");
                     peer.on('call', incoming => {
                         incoming.answer(localStream);
                         handleStream(incoming);
@@ -158,9 +165,8 @@
                     setTimeout(() => {
                         const call = peer.call(partnerId, localStream);
                         if (call) handleStream(call);
-                    }, 1500);
+                    }, 1000);
                 });
-
                 p.on('error', (err) => {
                     if (err.type === 'unavailable-id') tryRegister(partnerId, targetId);
                 });
@@ -172,11 +178,10 @@
             currentCall = call;
             call.on('stream', (stream) => {
                 remoteVideo.srcObject = stream;
-                // Attempt play. If it fails, show the overlay
-                remoteVideo.play().catch(() => {
-                    overlay.classList.remove('hidden');
-                });
-                onConnected();
+                remoteVideo.play().catch(() => overlay.classList.remove('hidden'));
+                updateStatus("CONNECTED", "bg-green-500");
+                document.getElementById('peerIdentity').innerText = "LIVE FEED";
+                document.getElementById('peerIdentity').classList.add('text-green-500');
             });
             call.on('close', () => window.location.reload());
         }
@@ -186,11 +191,9 @@
             overlay.classList.add('hidden');
         }
 
-        function onConnected() {
-            statusText.innerText = "CONNECTED";
-            statusDot.className = "w-2 h-2 rounded-full bg-green-500";
-            document.getElementById('peerIdentity').innerText = "PEER ACTIVE";
-            document.getElementById('statusCircle').classList.add('pulse-btn', 'border-green-500');
+        function updateStatus(txt, cls) {
+            document.getElementById('statusText').innerText = txt;
+            document.getElementById('statusDot').className = `w-2 h-2 rounded-full ${cls}`;
         }
 
         document.getElementById('viewToggleBtn').onclick = () => {
@@ -202,7 +205,6 @@
         };
 
         document.getElementById('hangupBtn').onclick = () => window.location.reload();
-        
         document.getElementById('muteBtn').onclick = () => {
             const track = localStream.getAudioTracks()[0];
             track.enabled = !track.enabled;
