@@ -307,9 +307,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .vbtn:active:not(:disabled){transform:scale(0.94)}
 
 /* Default colour schemes — solid fill, iOS Phone app style */
+/* All use dark text (#0a1628) on solid fills for maximum contrast */
 .vbtn--talk{border-color:var(--accent2);background:var(--accent2);color:#0a1628}
 .vbtn--mute{border-color:var(--dim);background:var(--dim);color:#0a1628}
 .vbtn--end {border-color:var(--danger);background:var(--danger);color:#fff}
+.vbtn--cam {border-color:var(--accent);background:var(--accent);color:#0a1628}
 
 /* ── State modifiers ──────────────────────────────────────── */
 .vbtn--talk.is-calling{
@@ -330,6 +332,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   pointer-events:none;
 }
 .vbtn--mute.is-muted{border-color:var(--danger);background:var(--danger);color:#fff}
+/* CAM active state */
+.vbtn--cam.is-cam-on{border-color:var(--warn);background:var(--warn);color:#0a1628}
 
 /* ── Keyframe animations ──────────────────────────────────── */
 @keyframes vbtn-amber-pulse{0%,100%{background:rgba(255,170,0,.05)}50%{background:rgba(255,170,0,.18)}}
@@ -356,6 +360,40 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
 /* ── Voice error label ────────────────────────────────────── */
 .voice-error{font-size:.72rem;color:var(--danger);text-align:center;font-family:'Share Tech Mono',monospace;min-height:1em}
+
+/* ── Video overlay ────────────────────────────────────────── */
+/* Full-screen video layer sits over the panel content, under the footer */
+.video-overlay{
+  position:fixed;top:0;left:0;right:0;z-index:8;
+  background:#000;display:none;
+  /* bottom is set dynamically via JS to sit above the footer */
+}
+.video-overlay.active{display:block}
+.video-overlay video{
+  width:100%;height:100%;object-fit:cover;display:block;
+  background:#000;
+}
+/* Small local preview pip — bottom-right of video overlay */
+.video-pip{
+  position:absolute;bottom:12px;right:12px;
+  width:80px;height:110px;border-radius:10px;
+  border:2px solid var(--accent2);overflow:hidden;
+  background:#000;z-index:9;display:none;
+}
+.video-pip.active{display:block}
+.video-pip video{width:100%;height:100%;object-fit:cover}
+/* iOS autoplay recovery overlay */
+.video-play-overlay{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.7);z-index:10;cursor:pointer;display:none;
+}
+.video-play-overlay.active{display:flex}
+.video-play-btn{
+  width:64px;height:64px;border-radius:50%;
+  background:var(--accent2);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 24px rgba(0,255,136,.5);
+}
+.video-play-btn svg{margin-left:4px}
 </style>
 </head>
 <body>
@@ -682,6 +720,29 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 </div>
 
+<!-- SENSOR video overlay (local camera preview) -->
+<div class="video-overlay" id="sensor-video-overlay">
+  <video id="sensor-local-video" autoplay playsinline muted></video>
+  <div class="video-play-overlay" id="sensor-play-overlay" onclick="videoMgr._forcePlaySensor()">
+    <div class="video-play-btn">
+      <svg width="28" height="28" fill="#0a1628" viewBox="0 0 20 20"><path d="M4.5 2.691l11 6.309-11 6.309V2.691z"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- DISPLAY video overlay (remote camera feed) -->
+<div class="video-overlay" id="display-video-overlay">
+  <video id="display-remote-video" autoplay playsinline></video>
+  <div class="video-pip" id="display-video-pip">
+    <video id="display-local-video" autoplay playsinline muted></video>
+  </div>
+  <div class="video-play-overlay" id="display-play-overlay" onclick="videoMgr._forcePlayDisplay()">
+    <div class="video-play-btn">
+      <svg width="28" height="28" fill="#0a1628" viewBox="0 0 20 20"><path d="M4.5 2.691l11 6.309-11 6.309V2.691z"/></svg>
+    </div>
+  </div>
+</div>
+
 <!-- SENSOR fixed data footer -->
 <div class="data-footer" id="sensor-footer">
   <div class="bars">
@@ -708,6 +769,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       </button>
       <button class="vbtn vbtn--mute" id="sv-mute" onclick="voiceMgr.onMuteTap()" disabled>
         <span class="vbtn-label">MUTE</span>
+      </button>
+      <button class="vbtn vbtn--cam" id="sv-cam" onclick="videoMgr.onCamTap()" disabled>
+        <span class="vbtn-label">CAM</span>
       </button>
       <button class="vbtn vbtn--end" id="sv-end" onclick="voiceMgr.onEndTap()" disabled>
         <span class="vbtn-label">END</span>
@@ -880,6 +944,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       </button>
       <button class="vbtn vbtn--mute" id="dv-mute" onclick="voiceMgr.onMuteTap()" disabled>
         <span class="vbtn-label">MUTE</span>
+      </button>
+      <button class="vbtn vbtn--cam" id="dv-cam" onclick="videoMgr.onCamTap()" disabled>
+        <span class="vbtn-label">CAM</span>
       </button>
       <button class="vbtn vbtn--end" id="dv-end" onclick="voiceMgr.onEndTap()" disabled>
         <span class="vbtn-label">END</span>
@@ -1436,6 +1503,344 @@ class VoiceManager {
 const voiceMgr = new VoiceManager();
 window.voiceMgr = voiceMgr;
 
+// ════════════════════════════════
+//  VIDEO MANAGER
+// ════════════════════════════════
+class VideoManager {
+  constructor() {
+    this._videoPeer    = null;   // PeerJS Peer for video
+    this._localStream  = null;   // camera+audio MediaStream
+    this._activeCall   = null;   // PeerJS MediaConnection
+    this._callState    = 'off';  // 'off' | 'on'
+    this._localVoiceId = null;   // mirrors VoiceManager role (A or B)
+    this._pin          = null;
+    this._isOn         = false;  // camera currently active
+    this._activeRow    = null;   // current voice-footer-row element
+    this._retryTimer   = null;
+    this._retryCount   = 0;
+    this._peerReady    = false;
+  }
+
+  // ── Getters ─────────────────────────────────────────────────
+  get _camBtn() { return this._activeRow ? this._activeRow.querySelector('.vbtn--cam') : null; }
+
+  // ── Lifecycle ───────────────────────────────────────────────
+
+  /** Called alongside voiceMgr.init() when entering s3/d3 */
+  init(pin, role) {
+    if (typeof mode !== 'undefined' && mode === 'solo') return;
+    this._pin = pin;
+    this._localVoiceId = 'levelvan-' + pin + '-video-' + (role === 'sensor' ? 'A' : 'B');
+    this._registerPeer();
+  }
+
+  _registerPeer() {
+    if (this._videoPeer) { try { this._videoPeer.destroy(); } catch(_){} this._videoPeer = null; }
+    this._peerReady = false;
+
+    const p = new Peer(this._localVoiceId, {
+      host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE, debug: 0,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ],
+        iceCandidatePoolSize: 10
+      }
+    });
+
+    p.on('open', () => {
+      this._videoPeer = p;
+      this._peerReady = true;
+      this._retryCount = 0;
+      this._applyCamButton();
+      // Listen for incoming video calls
+      p.on('call', incomingCall => this._handleIncomingCall(incomingCall));
+    });
+
+    p.on('error', err => {
+      this._peerReady = false;
+      if (err.type === 'unavailable-id') {
+        // Flip role on collision (shouldn't happen with deterministic IDs but guard anyway)
+        const flipped = this._localVoiceId.endsWith('-video-A')
+          ? this._localVoiceId.replace('-video-A', '-video-B')
+          : this._localVoiceId.replace('-video-B', '-video-A');
+        this._localVoiceId = flipped;
+        this._retryTimer = setTimeout(() => this._registerPeer(), 1000);
+      } else {
+        this._retryCount++;
+        if (this._retryCount <= 3) {
+          this._retryTimer = setTimeout(() => this._registerPeer(), 5000);
+        }
+      }
+    });
+  }
+
+  destroy() {
+    clearTimeout(this._retryTimer);
+    this._stopCamera();
+    if (this._activeCall) { try { this._activeCall.close(); } catch(_){} this._activeCall = null; }
+    if (this._videoPeer) { try { this._videoPeer.destroy(); } catch(_){} this._videoPeer = null; }
+    this._peerReady = false;
+    this._isOn = false;
+    this._pin = null;
+    this._localVoiceId = null;
+    this._activeRow = null;
+    this._hideOverlays();
+  }
+
+  onPanelChange(panelId) {
+    const svRow = document.getElementById('sv-voice-row');
+    const dvRow = document.getElementById('dv-voice-row');
+    if (panelId === 's3') this._activeRow = svRow;
+    else if (panelId === 'd3') this._activeRow = dvRow;
+    else this._activeRow = null;
+    this._applyCamButton();
+  }
+
+  // ── CAM button tap ──────────────────────────────────────────
+
+  onCamTap() {
+    if (this._isOn) {
+      this._disableCamera();
+      // Signal the other phone to also disable
+      this._sendCamSignal(false);
+    } else {
+      this._enableCamera();
+      // Signal the other phone to also enable
+      this._sendCamSignal(true);
+    }
+  }
+
+  // Called when a cam-signal arrives over the data channel
+  onCamSignal(enable) {
+    if (enable) this._enableCamera();
+    else this._disableCamera();
+  }
+
+  // ── Internal: camera enable/disable ─────────────────────────
+
+  async _enableCamera() {
+    if (this._isOn) return;
+    this._isOn = true;
+    this._applyCamButton();
+
+    try {
+      // Request camera (rear) + audio together
+      this._localStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true },
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 20, max: 24 }
+        }
+      });
+
+      // Tag video track for motion encoding
+      const vt = this._localStream.getVideoTracks()[0];
+      if (vt) vt.contentHint = 'motion';
+
+      // Show appropriate overlay
+      if (mode === 'sensor') {
+        this._showSensorPreview();
+        this._callPartner();
+      } else {
+        // Display: show remote feed overlay (will populate when stream arrives)
+        this._showDisplayOverlay();
+        this._callPartner();
+      }
+    } catch(e) {
+      console.warn('Camera access failed:', e);
+      this._isOn = false;
+      this._applyCamButton();
+    }
+  }
+
+  _disableCamera() {
+    this._isOn = false;
+    this._applyCamButton();
+    this._stopCamera();
+    if (this._activeCall) { try { this._activeCall.close(); } catch(_){} this._activeCall = null; }
+    this._hideOverlays();
+  }
+
+  _stopCamera() {
+    if (this._localStream) {
+      this._localStream.getTracks().forEach(t => { try { t.stop(); } catch(_){} });
+      this._localStream = null;
+    }
+    // Clear video elements
+    const sv = document.getElementById('sensor-local-video');
+    const dr = document.getElementById('display-remote-video');
+    const dl = document.getElementById('display-local-video');
+    if (sv) sv.srcObject = null;
+    if (dr) dr.srcObject = null;
+    if (dl) dl.srcObject = null;
+  }
+
+  // ── Internal: PeerJS video call ──────────────────────────────
+
+  _callPartner() {
+    if (!this._videoPeer || !this._localStream || !this._localVoiceId) return;
+    const partnerId = this._localVoiceId.endsWith('-video-A')
+      ? this._localVoiceId.replace('-video-A', '-video-B')
+      : this._localVoiceId.replace('-video-B', '-video-A');
+
+    const call = this._videoPeer.call(partnerId, this._localStream);
+    if (!call) return;
+    this._activeCall = call;
+
+    call.on('stream', remoteStream => {
+      if (mode === 'sensor') {
+        // Sensor receives display's stream — not used visually but keep connection alive
+      } else {
+        // Display receives sensor's camera feed
+        this._showRemoteFeed(remoteStream);
+      }
+    });
+    call.on('close', () => {
+      if (this._activeCall === call) {
+        this._activeCall = null;
+        if (this._isOn) { this._isOn = false; this._applyCamButton(); this._hideOverlays(); }
+      }
+    });
+    call.on('error', () => {
+      if (this._activeCall === call) {
+        this._activeCall = null;
+        if (this._isOn) { this._isOn = false; this._applyCamButton(); this._hideOverlays(); }
+      }
+    });
+  }
+
+  _handleIncomingCall(call) {
+    if (this._activeCall) { try { this._activeCall.close(); } catch(_){} }
+    this._activeCall = call;
+
+    // Answer with our stream if we have one, otherwise answer with null
+    call.answer(this._localStream || undefined);
+
+    call.on('stream', remoteStream => {
+      if (mode === 'display') {
+        this._showRemoteFeed(remoteStream);
+      }
+      // Sensor: incoming stream from display — not displayed
+    });
+    call.on('close', () => {
+      if (this._activeCall === call) {
+        this._activeCall = null;
+        if (this._isOn) { this._isOn = false; this._applyCamButton(); this._hideOverlays(); }
+      }
+    });
+  }
+
+  // ── Internal: overlay management ────────────────────────────
+
+  _showSensorPreview() {
+    const overlay = document.getElementById('sensor-video-overlay');
+    const vid = document.getElementById('sensor-local-video');
+    if (!overlay || !vid) return;
+    vid.srcObject = this._localStream;
+    // Size overlay to fill screen above footer
+    this._sizeOverlay(overlay);
+    overlay.classList.add('active');
+    vid.play().catch(() => {
+      document.getElementById('sensor-play-overlay').classList.add('active');
+    });
+  }
+
+  _showDisplayOverlay() {
+    const overlay = document.getElementById('display-video-overlay');
+    if (!overlay) return;
+    this._sizeOverlay(overlay);
+    overlay.classList.add('active');
+  }
+
+  _showRemoteFeed(stream) {
+    const overlay = document.getElementById('display-video-overlay');
+    const vid = document.getElementById('display-remote-video');
+    if (!overlay || !vid) return;
+    vid.srcObject = stream;
+    this._sizeOverlay(overlay);
+    overlay.classList.add('active');
+    vid.play().catch(() => {
+      document.getElementById('display-play-overlay').classList.add('active');
+    });
+    // Show local pip if we have a local stream
+    if (this._localStream) {
+      const pip = document.getElementById('display-video-pip');
+      const pipVid = document.getElementById('display-local-video');
+      if (pip && pipVid) {
+        pipVid.srcObject = this._localStream;
+        pip.classList.add('active');
+        pipVid.play().catch(() => {});
+      }
+    }
+  }
+
+  _sizeOverlay(overlay) {
+    // Fill from top of screen to top of footer
+    const footer = document.querySelector('.data-footer.active');
+    const footerH = footer ? footer.offsetHeight : 0;
+    overlay.style.bottom = footerH + 'px';
+    overlay.style.top = '0';
+  }
+
+  _hideOverlays() {
+    const so = document.getElementById('sensor-video-overlay');
+    const ddo = document.getElementById('display-video-overlay');
+    const pip = document.getElementById('display-video-pip');
+    const spo = document.getElementById('sensor-play-overlay');
+    const dpo = document.getElementById('display-play-overlay');
+    if (so) so.classList.remove('active');
+    if (ddo) ddo.classList.remove('active');
+    if (pip) pip.classList.remove('active');
+    if (spo) spo.classList.remove('active');
+    if (dpo) dpo.classList.remove('active');
+  }
+
+  // ── Internal: data channel signalling ───────────────────────
+
+  _sendCamSignal(enable) {
+    // Send over the existing data connections
+    if (typeof conns !== 'undefined') {
+      conns.forEach(c => {
+        try { if (c.open) c.send({ camSignal: enable }); } catch(_){}
+      });
+    }
+  }
+
+  // ── Internal: button state ───────────────────────────────────
+
+  _applyCamButton() {
+    const btn = this._camBtn;
+    if (!btn) return;
+    btn.disabled = !this._peerReady;
+    btn.classList.toggle('is-cam-on', this._isOn);
+    const lbl = btn.querySelector('.vbtn-label');
+    if (lbl) lbl.textContent = this._isOn ? 'CAM OFF' : 'CAM';
+  }
+
+  // ── iOS autoplay recovery ────────────────────────────────────
+
+  _forcePlaySensor() {
+    const vid = document.getElementById('sensor-local-video');
+    const overlay = document.getElementById('sensor-play-overlay');
+    if (vid) vid.play().catch(() => {});
+    if (overlay) overlay.classList.remove('active');
+  }
+
+  _forcePlayDisplay() {
+    const vid = document.getElementById('display-remote-video');
+    const overlay = document.getElementById('display-play-overlay');
+    if (vid) vid.play().catch(() => {});
+    if (overlay) overlay.classList.remove('active');
+  }
+}
+
+const videoMgr = new VideoManager();
+window.videoMgr = videoMgr;
+
 const LT=1.0, CT=3.0, MD=15;
 const PEER_HOST = '0.peerjs.com';
 const PEER_PORT = 443;
@@ -1969,6 +2374,7 @@ function showPanel(id) {
   if (df) df.classList.toggle('active', id === 'd3');
   // Notify VoiceManager so it shows/hides the correct voice row
   if (window.voiceMgr) voiceMgr.onPanelChange(id);
+  if (window.videoMgr) videoMgr.onPanelChange(id);
 }
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -2046,6 +2452,7 @@ window.goHome = async () => {
   // Do NOT clear lv_pin or lv_mode — the PIN is the permanent pairing bond.
   // Only resetPairing() should clear those.
   if (window.voiceMgr) voiceMgr.destroy();
+  if (window.videoMgr) videoMgr.destroy();
   if (wakeLockManager) { await wakeLockManager.releaseWakeLock(); wakeLockManager.stopWakeLockMonitoring(); }
   cleanup();
   showScreen('home-screen');
@@ -2266,6 +2673,10 @@ function setupSensorConn(conn) {
       if (conns.length === 1) voiceMgr.init(_pin, 'sensor');
       else voiceMgr.reconnect();
     }
+    // Initialise video manager
+    if (window.videoMgr && mode === 'sensor' && _pin && conns.length === 1) {
+      videoMgr.init(_pin, 'sensor');
+    }
 
     // Start heartbeat — if no data can be sent for 8s, treat as disconnected
     conn._heartbeatTimer = setInterval(() => {
@@ -2312,6 +2723,14 @@ function setupSensorConn(conn) {
   conn.on('error', e => {
     clearInterval(conn._heartbeatTimer);
     console.warn('conn error:', e);
+  });
+  // Sensor listens for signals from display (cam toggle, etc.)
+  conn.on('data', data => {
+    try {
+      if (data && data.camSignal !== undefined) {
+        if (window.videoMgr) videoMgr.onCamSignal(data.camSignal);
+      }
+    } catch(_){}
   });
 }
 
@@ -2421,6 +2840,10 @@ window.connectWithPin = () => {
         if (!voiceMgr._voicePeer) voiceMgr.init(pin, 'display');
         else voiceMgr.reconnect();
       }
+      // Initialise video manager
+      if (window.videoMgr && mode === 'display' && pin && !videoMgr._videoPeer) {
+        videoMgr.init(pin, 'display');
+      }
       // Save pairing bond to cloud on first successful connection
       if (firebaseManager && firebaseManager.isCloudAvailable()) {
         const profile = firebaseManager.getDeviceProfile();
@@ -2438,6 +2861,10 @@ window.connectWithPin = () => {
     conn.on('data', data => {
       try {
         if (data && data.ping) return; // ignore heartbeat pings from sensor
+        if (data && data.camSignal !== undefined) {
+          if (window.videoMgr) videoMgr.onCamSignal(data.camSignal);
+          return;
+        }
         updateDisplay(data);
       } catch(_){}
     });
