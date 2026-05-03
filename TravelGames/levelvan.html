@@ -307,33 +307,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .vbtn:active:not(:disabled){transform:scale(0.94)}
 
 /* Default colour schemes — solid fill, iOS Phone app style */
-/* All use dark text (#0a1628) on solid fills for maximum contrast */
-.vbtn--talk{border-color:var(--accent2);background:var(--accent2);color:#0a1628}
-.vbtn--mute{border-color:var(--dim);background:var(--dim);color:#0a1628}
+/* White text on all solid fills — readable at full and 30% disabled opacity */
+.vbtn--talk{border-color:var(--accent2);background:var(--accent2);color:#fff}
+.vbtn--mute{border-color:var(--dim);background:var(--dim);color:#fff}
 .vbtn--end {border-color:var(--danger);background:var(--danger);color:#fff}
-.vbtn--cam {border-color:var(--accent);background:var(--accent);color:#0a1628}
+.vbtn--cam {border-color:var(--accent);background:var(--accent);color:#fff}
 
 /* ── State modifiers ──────────────────────────────────────── */
-.vbtn--talk.is-calling{
-  border-color:var(--warn);background:var(--warn);color:#0a1628;
-  animation:vbtn-amber-pulse 1s ease-in-out infinite;
-}
-.vbtn--talk.is-ringing{
-  border-color:var(--accent2);background:var(--accent2);color:#0a1628;
-  animation:vbtn-green-pulse .8s ease-in-out infinite;
-}
-.vbtn--talk.is-live{
-  border-color:var(--accent2);background:var(--accent2);color:#0a1628;
-}
-.vbtn--talk.is-live::before{
-  content:'';position:absolute;inset:-4px;border-radius:14px;
-  border:3px solid var(--accent2);
-  animation:vbtn-ring-pulse 1.5s cubic-bezier(.215,.61,.355,1) infinite;
-  pointer-events:none;
-}
+.vbtn--talk.is-calling{border-color:var(--warn);background:var(--warn);color:#fff;animation:vbtn-amber-pulse 1s ease-in-out infinite}
+.vbtn--talk.is-ringing{border-color:var(--accent2);background:var(--accent2);color:#fff;animation:vbtn-green-pulse .8s ease-in-out infinite}
+.vbtn--talk.is-live{border-color:var(--accent2);background:var(--accent2);color:#fff}
+.vbtn--talk.is-live::before{content:'';position:absolute;inset:-4px;border-radius:14px;border:3px solid var(--accent2);animation:vbtn-ring-pulse 1.5s cubic-bezier(.215,.61,.355,1) infinite;pointer-events:none}
 .vbtn--mute.is-muted{border-color:var(--danger);background:var(--danger);color:#fff}
-/* CAM active state */
-.vbtn--cam.is-cam-on{border-color:var(--warn);background:var(--warn);color:#0a1628}
+.vbtn--cam.is-cam-on{border-color:var(--warn);background:var(--warn);color:#fff}
 
 /* ── Keyframe animations ──────────────────────────────────── */
 @keyframes vbtn-amber-pulse{0%,100%{background:rgba(255,170,0,.05)}50%{background:rgba(255,170,0,.18)}}
@@ -342,7 +328,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
 /* ── Waveform icon ────────────────────────────────────────── */
 .vbtn-wave{display:flex;align-items:center;gap:2px;height:12px}
-.vbtn-wave span{display:block;width:3px;border-radius:2px;background:#0a1628;animation:vbtn-wave-bar .8s ease-in-out infinite}
+.vbtn-wave span{display:block;width:3px;border-radius:2px;background:#fff;animation:vbtn-wave-bar .8s ease-in-out infinite}
 .vbtn-wave span:nth-child(1){height:4px;animation-delay:0s}
 .vbtn-wave span:nth-child(2){height:8px;animation-delay:.1s}
 .vbtn-wave span:nth-child(3){height:12px;animation-delay:.2s}
@@ -447,6 +433,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
   <div class="help-tabs">
     <button class="help-tab active" onclick="helpTab('easy')">🏕️ QUICK GUIDE</button>
+    <button class="help-tab" onclick="helpTab('comms')">🎙️ VOICE & CAM</button>
     <button class="help-tab" onclick="helpTab('tech')">📡 CONNECTIVITY</button>
   </div>
 
@@ -498,7 +485,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
           🔴 <b>Red</b> — needs adjusting (more than 3°)<br><br>
           <b>Left / Right (Roll):</b> Drive onto leveling blocks under the low wheels until the dot centres left-right.<br><br>
           <b>Front / Back (Pitch):</b> Use the <b>jockey wheel</b> to raise or lower the hitch until the dot centres front-to-back.<br><br>
-          The dashed circle on the caravan marks the 3° boundary — when the dot is inside the circle you're in the orange or green zone.</div>
+          The dashed circle on the caravan marks the 3° boundary — when the dot is inside the circle you're in the orange or green zone.<br><br>
+          Once connected, a row of buttons appears at the bottom of both screens: <b>TALK · MUTE · CAM · END</b> — for voice calls and live camera. See the <b>🎙️ VOICE & CAM</b> tab for details.</div>
         </div>
       </div>
 
@@ -544,12 +532,85 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
     </div>
 
+    <!-- ── VOICE & CAM TAB ── -->
+    <div class="help-section" id="help-comms">
+
+      <p class="help-section-title">Voice call</p>
+
+      <div class="help-step">
+        <div class="help-step-num">1</div>
+        <div class="help-step-body">
+          <div class="help-step-title">START A CALL</div>
+          <div class="help-step-text">Once both phones are connected and showing the leveling screen, a button row appears at the bottom: <b>TALK · MUTE · CAM · END</b>.<br><br>
+          Tap <b>TALK</b> on either phone to start a voice call. The other phone shows <b>ANSWER</b> — tap it to connect. Both phones will hear each other through the speaker.</div>
+        </div>
+      </div>
+
+      <div class="help-step">
+        <div class="help-step-num">2</div>
+        <div class="help-step-body">
+          <div class="help-step-title">MUTE</div>
+          <div class="help-step-text">Tap <b>MUTE</b> on either phone to silence both sides at once — useful when the phones are close together to prevent echo, or when you need quiet. Tap again to unmute both phones together.</div>
+        </div>
+      </div>
+
+      <div class="help-step">
+        <div class="help-step-num">3</div>
+        <div class="help-step-body">
+          <div class="help-step-title">END THE CALL</div>
+          <div class="help-step-text">Tap <b>END</b> to hang up. The leveling display stays active — you can start a new call any time by tapping TALK again.</div>
+        </div>
+      </div>
+
+      <div class="help-warn">
+        <div class="help-warn-title">📢 ECHO & FEEDBACK</div>
+        <div class="help-warn-text">If both phones are near each other when you first connect, you may hear echo. Tap <b>MUTE</b> immediately — this mutes both phones. Once the sensor phone is inside the caravan and the driver is outside, unmute and the echo will be gone.</div>
+      </div>
+
+      <div class="help-divider"></div>
+      <p class="help-section-title">Live camera</p>
+
+      <div class="help-step">
+        <div class="help-step-num">1</div>
+        <div class="help-step-body">
+          <div class="help-step-title">ENABLE THE CAMERA</div>
+          <div class="help-step-text">Tap <b>CAM</b> on either phone to activate the live camera feed. The sensor phone's <b>rear camera</b> turns on and broadcasts to the driver's phone.<br><br>
+          — The <b>Sensor phone</b> shows a full-screen preview of what its camera sees — useful for aiming at the hitch.<br>
+          — The <b>Display phone</b> shows the live feed full-screen, so the driver can see the hitch area while reversing or adjusting.</div>
+        </div>
+      </div>
+
+      <div class="help-step">
+        <div class="help-step-num">2</div>
+        <div class="help-step-body">
+          <div class="help-step-title">SWITCH BACK TO LEVELING</div>
+          <div class="help-step-text">Tap <b>CAM OFF</b> (the same button, now amber) on either phone to turn off the camera and return to the leveling view on both screens. Voice stays active in the background.</div>
+        </div>
+      </div>
+
+      <div class="help-tip">
+        <div class="help-tip-title">📍 SENSOR PHONE PLACEMENT FOR CAMERA</div>
+        <div class="help-tip-text">When using the camera, prop the sensor phone so its <b>rear camera faces the hitch</b>. A small stand, a cup, or leaning it against something works well. The leveling data is still being sent even while the camera is on.</div>
+      </div>
+
+      <div class="help-tip">
+        <div class="help-tip-title">🔋 BATTERY TIP</div>
+        <div class="help-tip-text">The camera uses more battery than leveling alone. Turn it off with <b>CAM OFF</b> once you've finished reversing — the leveling view uses much less power for the fine-adjustment phase.</div>
+      </div>
+
+      <div class="help-tip">
+        <div class="help-tip-title">🔊 VOICE + CAMERA TOGETHER</div>
+        <div class="help-tip-text">Voice and camera work independently. You can have a live call active while the camera is off, or turn the camera on mid-call. The <b>MUTE</b> and <b>END</b> buttons always control the voice call regardless of camera state.</div>
+      </div>
+
+    </div>
+
     <!-- ── TECH TAB ── -->
     <div class="help-section" id="help-tech">
 
       <p class="help-section-title">How it connects</p>
       <div class="help-step-text" style="margin-bottom:20px;font-size:.95rem;font-family:'Lato',sans-serif;color:var(--text);line-height:1.8">
-        LevelVan uses <b>WebRTC</b> — a direct peer-to-peer data channel between the two phones. Tilt data flows directly between devices at ~15 times per second. No server is involved in the data stream after the initial handshake.
+        LevelVan uses <b>WebRTC</b> — a direct peer-to-peer connection between the two phones. Tilt data, voice calls, and live camera all flow directly between devices with no server in the middle after the initial handshake.
       </div>
 
       <div class="help-scenario">
@@ -605,7 +666,17 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
       <div class="help-warn">
         <div class="help-warn-title">⚡ RELAY SERVER</div>
-        <div class="help-warn-text">The initial WebRTC handshake uses <b>0.peerjs.com</b> (free public server) for a few seconds to exchange connection details. After that, all data is peer-to-peer. The relay server never sees your tilt data.</div>
+        <div class="help-warn-text">The initial WebRTC handshake uses <b>0.peerjs.com</b> (free public server) for a few seconds to exchange connection details. After that, all data is peer-to-peer. The relay server never sees your tilt data, voice, or video.</div>
+      </div>
+
+      <div class="help-tip">
+        <div class="help-tip-title">🎙️ VOICE & VIDEO CHANNELS</div>
+        <div class="help-tip-text">Voice uses a dedicated WebRTC audio channel separate from the tilt data channel. Camera uses a third WebRTC media channel. All three run simultaneously over the same P2P connection. STUN servers (Google's public infrastructure) are used to establish connections across different mobile networks and hotspots.</div>
+      </div>
+
+      <div class="help-tip">
+        <div class="help-tip-title">📹 VIDEO SPECS</div>
+        <div class="help-tip-text">Camera streams at <b>640×480, 20fps</b> with the <code>motion</code> content hint — optimised for low latency over mobile data rather than image quality. This keeps latency under 200ms on a typical 4G connection.</div>
       </div>
 
     </div>
@@ -1142,9 +1213,31 @@ class VoiceManager {
     if (!track) return;
     track.enabled = !track.enabled;
     this._isMuted = !track.enabled;
-    // Also mute/unmute the remote audio output so the other side's voice is silenced locally
+    // Mute the remote audio output locally too
     if (this._audioEl) this._audioEl.muted = this._isMuted;
+    // Signal the other phone to mute/unmute as well
+    this._sendMuteSignal(this._isMuted);
     this._applyButtonStyles();
+  }
+
+  // Called when a muteSignal arrives over the data channel
+  onMuteSignal(muted) {
+    // Mute/unmute our own outgoing mic to match
+    if (this._localStream) {
+      const track = this._localStream.getAudioTracks()[0];
+      if (track) track.enabled = !muted;
+    }
+    this._isMuted = muted;
+    if (this._audioEl) this._audioEl.muted = muted;
+    this._applyButtonStyles();
+  }
+
+  _sendMuteSignal(muted) {
+    if (typeof conns !== 'undefined') {
+      conns.forEach(c => {
+        try { if (c.open) c.send({ muteSignal: muted }); } catch(_){}
+      });
+    }
   }
 
   onEndTap() {
@@ -1166,7 +1259,14 @@ class VoiceManager {
     if (this._voicePeer) { try { this._voicePeer.destroy(); } catch(_){} this._voicePeer = null; }
 
     const p = new Peer(targetId, {
-      host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE, debug: 0
+      host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE, debug: 0,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ],
+        iceCandidatePoolSize: 10
+      }
     });
 
     p.on('open', () => {
@@ -2499,8 +2599,10 @@ window.startSolo = () => {
 
 window.showHelp = () => { showScreen('help-screen'); helpTab('easy'); };
 window.helpTab = (tab) => {
-  document.querySelectorAll('.help-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='easy')||(i===1&&tab==='tech')));
+  document.querySelectorAll('.help-tab').forEach((t,i) => t.classList.toggle('active',
+    (i===0&&tab==='easy')||(i===1&&tab==='comms')||(i===2&&tab==='tech')));
   $('help-easy').classList.toggle('active', tab==='easy');
+  $('help-comms').classList.toggle('active', tab==='comms');
   $('help-tech').classList.toggle('active', tab==='tech');
 };
 
@@ -2724,11 +2826,14 @@ function setupSensorConn(conn) {
     clearInterval(conn._heartbeatTimer);
     console.warn('conn error:', e);
   });
-  // Sensor listens for signals from display (cam toggle, etc.)
+  // Sensor listens for signals from display (cam toggle, mute, etc.)
   conn.on('data', data => {
     try {
       if (data && data.camSignal !== undefined) {
         if (window.videoMgr) videoMgr.onCamSignal(data.camSignal);
+      }
+      if (data && data.muteSignal !== undefined) {
+        if (window.voiceMgr) voiceMgr.onMuteSignal(data.muteSignal);
       }
     } catch(_){}
   });
@@ -2863,6 +2968,10 @@ window.connectWithPin = () => {
         if (data && data.ping) return; // ignore heartbeat pings from sensor
         if (data && data.camSignal !== undefined) {
           if (window.videoMgr) videoMgr.onCamSignal(data.camSignal);
+          return;
+        }
+        if (data && data.muteSignal !== undefined) {
+          if (window.voiceMgr) voiceMgr.onMuteSignal(data.muteSignal);
           return;
         }
         updateDisplay(data);
