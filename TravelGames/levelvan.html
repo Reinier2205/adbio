@@ -300,26 +300,31 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   gap:3px;border-radius:12px;border:2px solid;background:var(--panel);
   font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:700;letter-spacing:2px;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-  transition:opacity .15s,background .15s,border-color .15s;
+  transition:opacity .15s,background .15s,border-color .15s,color .15s;
   position:relative;overflow:hidden;
 }
-.vbtn:disabled,.vbtn[disabled]{opacity:0.3;pointer-events:none}
+.vbtn:disabled,.vbtn[disabled]{opacity:0.35;pointer-events:none}
 .vbtn:active:not(:disabled){transform:scale(0.94)}
 
-/* Default colour schemes — solid fill, iOS Phone app style */
-/* White text on all solid fills — readable at full and 30% disabled opacity */
-.vbtn--talk{border-color:var(--accent2);background:var(--accent2);color:#fff}
-.vbtn--mute{border-color:var(--dim);background:var(--dim);color:#fff}
+/* ── Default: dark panel bg + coloured border + white text ── */
+/* Disabled state is just 35% opacity of this — still readable */
+.vbtn--talk{border-color:var(--accent2);background:var(--panel);color:#fff}
+.vbtn--mute{border-color:var(--dim);background:var(--panel);color:#fff}
 .vbtn--end {border-color:var(--danger);background:var(--danger);color:#fff}
-.vbtn--cam {border-color:var(--accent);background:var(--accent);color:#fff}
+.vbtn--cam {border-color:var(--accent);background:var(--panel);color:#fff}
 
 /* ── State modifiers ──────────────────────────────────────── */
-.vbtn--talk.is-calling{border-color:var(--warn);background:var(--warn);color:#fff;animation:vbtn-amber-pulse 1s ease-in-out infinite}
-.vbtn--talk.is-ringing{border-color:var(--accent2);background:var(--accent2);color:#fff;animation:vbtn-green-pulse .8s ease-in-out infinite}
-.vbtn--talk.is-live{border-color:var(--accent2);background:var(--accent2);color:#fff}
+/* CALLING — solid amber, white text */
+.vbtn--talk.is-calling{border-color:var(--warn);background:var(--warn);color:#0a1628;animation:vbtn-amber-pulse 1s ease-in-out infinite}
+/* ANSWER (ringing) — solid green, dark text for max contrast on bright green */
+.vbtn--talk.is-ringing{border-color:var(--accent2);background:var(--accent2);color:#0a1628;animation:vbtn-green-pulse .8s ease-in-out infinite}
+/* LIVE (connected) — dark bg, bright green border + text, pulsing ring */
+.vbtn--talk.is-live{border-color:var(--accent2);background:var(--panel);color:var(--accent2)}
 .vbtn--talk.is-live::before{content:'';position:absolute;inset:-4px;border-radius:14px;border:3px solid var(--accent2);animation:vbtn-ring-pulse 1.5s cubic-bezier(.215,.61,.355,1) infinite;pointer-events:none}
+/* MUTED — solid red, white text */
 .vbtn--mute.is-muted{border-color:var(--danger);background:var(--danger);color:#fff}
-.vbtn--cam.is-cam-on{border-color:var(--warn);background:var(--warn);color:#fff}
+/* CAM ON — solid amber, dark text */
+.vbtn--cam.is-cam-on{border-color:var(--warn);background:var(--warn);color:#0a1628}
 
 /* ── Keyframe animations ──────────────────────────────────── */
 @keyframes vbtn-amber-pulse{0%,100%{background:rgba(255,170,0,.05)}50%{background:rgba(255,170,0,.18)}}
@@ -328,7 +333,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
 /* ── Waveform icon ────────────────────────────────────────── */
 .vbtn-wave{display:flex;align-items:center;gap:2px;height:12px}
-.vbtn-wave span{display:block;width:3px;border-radius:2px;background:#fff;animation:vbtn-wave-bar .8s ease-in-out infinite}
+.vbtn-wave span{display:block;width:3px;border-radius:2px;background:var(--accent2);animation:vbtn-wave-bar .8s ease-in-out infinite}
 .vbtn-wave span:nth-child(1){height:4px;animation-delay:0s}
 .vbtn-wave span:nth-child(2){height:8px;animation-delay:.1s}
 .vbtn-wave span:nth-child(3){height:12px;animation-delay:.2s}
