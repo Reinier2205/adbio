@@ -314,21 +314,22 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .vbtn--cam {border-color:var(--accent);background:var(--panel);color:#fff}
 
 /* ── State modifiers ──────────────────────────────────────── */
-/* CALLING — solid amber, white text */
-.vbtn--talk.is-calling{border-color:var(--warn);background:var(--warn);color:#0a1628;animation:vbtn-amber-pulse 1s ease-in-out infinite}
-/* ANSWER (ringing) — solid green, dark text for max contrast on bright green */
-.vbtn--talk.is-ringing{border-color:var(--accent2);background:var(--accent2);color:#0a1628;animation:vbtn-green-pulse .8s ease-in-out infinite}
-/* LIVE (connected) — dark bg, bright green border + text, pulsing ring */
-.vbtn--talk.is-live{border-color:var(--accent2);background:var(--panel);color:var(--accent2)}
+/* CALLING — dark bg, amber border, white text, amber pulse on border */
+.vbtn--talk.is-calling{border-color:var(--warn);background:var(--panel);color:#fff;animation:vbtn-border-amber 1s ease-in-out infinite}
+/* ANSWER (ringing) — dark bg, bright green border, white text, green pulse */
+.vbtn--talk.is-ringing{border-color:var(--accent2);background:var(--panel);color:#fff;animation:vbtn-border-green .8s ease-in-out infinite}
+/* LIVE (connected) — dark bg, bright green border + white text, pulsing ring */
+.vbtn--talk.is-live{border-color:var(--accent2);background:var(--panel);color:#fff}
 .vbtn--talk.is-live::before{content:'';position:absolute;inset:-4px;border-radius:14px;border:3px solid var(--accent2);animation:vbtn-ring-pulse 1.5s cubic-bezier(.215,.61,.355,1) infinite;pointer-events:none}
 /* MUTED — solid red, white text */
 .vbtn--mute.is-muted{border-color:var(--danger);background:var(--danger);color:#fff}
-/* CAM ON — solid amber, dark text */
-.vbtn--cam.is-cam-on{border-color:var(--warn);background:var(--warn);color:#0a1628}
+/* CAM ON — solid amber, white text */
+.vbtn--cam.is-cam-on{border-color:var(--warn);background:var(--warn);color:#fff}
 
 /* ── Keyframe animations ──────────────────────────────────── */
-@keyframes vbtn-amber-pulse{0%,100%{background:rgba(255,170,0,.05)}50%{background:rgba(255,170,0,.18)}}
-@keyframes vbtn-green-pulse{0%,100%{background:rgba(0,255,136,.05)}50%{background:rgba(0,255,136,.18)}}
+/* Border glow pulses — background stays dark, only border brightness pulses */
+@keyframes vbtn-border-amber{0%,100%{border-color:var(--warn);box-shadow:0 0 6px rgba(255,170,0,.4)}50%{border-color:#ffd060;box-shadow:0 0 14px rgba(255,170,0,.8)}}
+@keyframes vbtn-border-green{0%,100%{border-color:var(--accent2);box-shadow:0 0 6px rgba(0,255,136,.4)}50%{border-color:#80ffbb;box-shadow:0 0 14px rgba(0,255,136,.8)}}
 @keyframes vbtn-ring-pulse{0%{transform:scale(1);opacity:.8}80%,100%{transform:scale(1.4);opacity:0}}
 
 /* ── Waveform icon ────────────────────────────────────────── */
