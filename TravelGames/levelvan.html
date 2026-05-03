@@ -1157,15 +1157,8 @@ class VoiceManager {
     if (this._callState === 'connected') return; // call survived
     clearTimeout(this._reconnectTimer);
     this._reconnectTimer = null;
-    if (this._localStream && this._voicePeer && this._localVoiceId) {
-      const partnerId = getPartnerVoiceId(this._localVoiceId);
-      if (!partnerId) return;
-      try {
-        const call = this._voicePeer.call(partnerId, this._localStream);
-        if (call) this._wireOutgoingCall(call);
-        this._setCallState('calling');
-      } catch(e) { console.warn('VoiceManager.reconnect failed:', e); }
-    }
+    // Do NOT auto-call on reconnect — user must tap TALK to start a call.
+    // Auto-calling would cause unexpected audio without user consent.
   }
 
   /**
@@ -1726,9 +1719,10 @@ class VideoManager {
     this._applyCamButton();
 
     try {
-      // Request camera (rear) + audio together
+      // Request VIDEO ONLY — audio is handled exclusively by VoiceManager
+      // Including audio here causes echo/feedback through the video channel
       this._localStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true },
+        audio: false,
         video: {
           facingMode: 'environment',
           width: { ideal: 640 },
@@ -1817,8 +1811,14 @@ class VideoManager {
     if (this._activeCall) { try { this._activeCall.close(); } catch(_){} }
     this._activeCall = call;
 
-    // Answer with our stream if we have one, otherwise answer with null
-    call.answer(this._localStream || undefined);
+    // Only answer with our video stream if camera is currently on.
+    // Never answer with audio — voice is handled by VoiceManager exclusively.
+    if (this._localStream && this._isOn) {
+      call.answer(this._localStream);
+    } else {
+      // Answer with an empty video-only stream to avoid audio leaking through
+      call.answer(new MediaStream());
+    }
 
     call.on('stream', remoteStream => {
       if (mode === 'display') {
