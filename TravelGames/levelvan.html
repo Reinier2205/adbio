@@ -1696,19 +1696,32 @@ class VideoManager {
   onCamTap() {
     if (this._isOn) {
       this._disableCamera();
-      // Signal the other phone to also disable
       this._sendCamSignal(false);
     } else {
-      this._enableCamera();
-      // Signal the other phone to also enable
+      // Only the sensor actually opens the camera.
+      // The display just signals the sensor to start/stop.
+      if (mode === 'sensor') {
+        this._enableCamera();
+      }
       this._sendCamSignal(true);
     }
   }
 
   // Called when a cam-signal arrives over the data channel
   onCamSignal(enable) {
-    if (enable) this._enableCamera();
-    else this._disableCamera();
+    if (enable) {
+      if (mode === 'sensor') {
+        // Sensor received a request from display — start camera
+        this._enableCamera();
+      } else {
+        // Display received confirmation from sensor — show overlay and wait for stream
+        this._isOn = true;
+        this._applyCamButton();
+        this._showDisplayOverlay();
+      }
+    } else {
+      this._disableCamera();
+    }
   }
 
   // ── Internal: camera enable/disable ─────────────────────────
@@ -1718,9 +1731,11 @@ class VideoManager {
     this._isOn = true;
     this._applyCamButton();
 
+    // Only the sensor opens the camera — display only receives
+    if (mode !== 'sensor') return;
+
     try {
       // Request VIDEO ONLY — audio is handled exclusively by VoiceManager
-      // Including audio here causes echo/feedback through the video channel
       this._localStream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
@@ -1735,27 +1750,28 @@ class VideoManager {
       const vt = this._localStream.getVideoTracks()[0];
       if (vt) vt.contentHint = 'motion';
 
-      // Show appropriate overlay
-      if (mode === 'sensor') {
-        this._showSensorPreview();
-        this._callPartner();
-      } else {
-        // Display: show remote feed overlay (will populate when stream arrives)
-        this._showDisplayOverlay();
-        this._callPartner();
-      }
+      // Show local preview on sensor
+      this._showSensorPreview();
+      // Call the display to send the video stream
+      this._callPartner();
     } catch(e) {
       console.warn('Camera access failed:', e);
       this._isOn = false;
       this._applyCamButton();
+      // Tell the other phone camera failed
+      this._sendCamSignal(false);
     }
   }
 
   _disableCamera() {
     this._isOn = false;
     this._applyCamButton();
-    this._stopCamera();
-    if (this._activeCall) { try { this._activeCall.close(); } catch(_){} this._activeCall = null; }
+    if (mode === 'sensor') {
+      // Sensor stops the camera and closes the call
+      this._stopCamera();
+      if (this._activeCall) { try { this._activeCall.close(); } catch(_){} this._activeCall = null; }
+    }
+    // Both sides hide their overlays
     this._hideOverlays();
   }
 
@@ -1811,25 +1827,24 @@ class VideoManager {
     if (this._activeCall) { try { this._activeCall.close(); } catch(_){} }
     this._activeCall = call;
 
-    // Only answer with our video stream if camera is currently on.
-    // Never answer with audio — voice is handled by VoiceManager exclusively.
-    if (this._localStream && this._isOn) {
-      call.answer(this._localStream);
-    } else {
-      // Answer with an empty video-only stream to avoid audio leaking through
-      call.answer(new MediaStream());
-    }
+    // Display answers with an empty stream (video-only, no audio)
+    // The sensor is the one sending video — display only receives
+    call.answer(new MediaStream());
 
     call.on('stream', remoteStream => {
       if (mode === 'display') {
+        // Mark as on and show the feed
+        this._isOn = true;
+        this._applyCamButton();
         this._showRemoteFeed(remoteStream);
       }
-      // Sensor: incoming stream from display — not displayed
     });
     call.on('close', () => {
       if (this._activeCall === call) {
         this._activeCall = null;
-        if (this._isOn) { this._isOn = false; this._applyCamButton(); this._hideOverlays(); }
+        this._isOn = false;
+        this._applyCamButton();
+        this._hideOverlays();
       }
     });
   }
