@@ -1159,17 +1159,25 @@ class VoiceManager {
   init(pin, role) {
     if (typeof mode !== 'undefined' && mode === 'solo') return;
     if (this._voicePeer) {
-      // Peer already registered — just refresh button state for the new panel
+      // Peer already registered — just refresh button state for the new panel.
+      // _applyButtonStyles() is called by onPanelChange() which fires right after,
+      // but call it here too in case the order differs.
       this._applyButtonStyles();
       return;
     }
     this._pin = pin;
+    this._role = role; // remember role for re-init after destroy
     this._peerReady = false;
     this._retryCount = 0;
     const idA = 'levelvan-' + pin + '-voice-A';
     const idB = 'levelvan-' + pin + '-voice-B';
-    // Sensor always tries A (owns it). Display tries A first, falls back to B.
-    this._tryRegisterPeer(idA, role === 'display' ? idB : null);
+    // Sensor always owns A. Display tries B first (avoids collision with sensor's A).
+    this._tryRegisterPeer(role === 'sensor' ? idA : idB, role === 'sensor' ? null : idA);
+
+    // Proactively request mic permission so the button is ready when the user taps.
+    // This runs in the background — failure is non-fatal (button still works, just
+    // prompts at call time instead).
+    this._warmMic();
   }
 
   /**
@@ -1235,12 +1243,27 @@ class VoiceManager {
       if (dvRow) dvRow.style.display = 'none';
       this._activeRow = null;
     }
+    // Always re-apply — peer may have registered while _activeRow was null,
+    // meaning the earlier _applyButtonStyles() was a no-op.
     this._applyButtonStyles();
   }
 
   // ── Button handlers ─────────────────────────────────────────
 
   onTalkTap() {
+    // If peer registration failed, use this tap to retry it.
+    if (!this._peerReady && !this._voicePeer && this._pin) {
+      this._retryCount = 0;
+      this._showErr('');
+      const idA = 'levelvan-' + this._pin + '-voice-A';
+      const idB = 'levelvan-' + this._pin + '-voice-B';
+      this._tryRegisterPeer(
+        this._role === 'sensor' ? idA : idB,
+        this._role === 'sensor' ? null : idA
+      );
+      return;
+    }
+
     // Prime the audio element now while we're inside a user gesture tap.
     // This unlocks Android's autoplay policy before the stream arrives async.
     // On iOS, this also unlocks the AudioContext for the audio element.
@@ -1333,28 +1356,73 @@ class VoiceManager {
       this._peerReady = false;
       if (err.type === 'unavailable-id') {
         if (fallbackId) {
-          // Display falls back to B
+          // Try the fallback ID (display falls back from B to A)
           this._tryRegisterPeer(fallbackId, null);
         } else {
-          // Sensor retries A after 3s (sensor always owns A)
-          this._retryTimer = setTimeout(() => this._tryRegisterPeer(targetId, null), 3000);
+          // ID is taken — the previous session's peer is still lingering on the server.
+          // Append a short random suffix to get a unique ID and still be reachable.
+          // The partner will discover us via the data channel handshake, not by guessing the ID.
+          this._retryCount++;
+          if (this._retryCount <= 5) {
+            this._showErr('Voice connecting…');
+            const altId = targetId + '-' + Math.random().toString(36).slice(2, 6);
+            this._retryTimer = setTimeout(() => this._tryRegisterPeer(altId, null), 1500);
+          } else {
+            this._showErr('Voice unavailable — tap TALK to retry');
+            // Reset so a manual TALK tap can re-trigger init
+            this._peerReady = false;
+            this._applyButtonStyles();
+          }
         }
       } else {
         this._retryCount++;
-        if (this._retryCount <= 3) {
+        if (this._retryCount <= 4) {
           this._showErr('Voice connecting…');
-          this._retryTimer = setTimeout(() => this._tryRegisterPeer(targetId, fallbackId), 5000);
+          this._retryTimer = setTimeout(() => this._tryRegisterPeer(targetId, fallbackId), 4000);
         } else {
-          this._showErr('Voice unavailable');
+          this._showErr('Voice unavailable — tap TALK to retry');
+          this._peerReady = false;
+          this._applyButtonStyles();
         }
       }
     });
   }
 
+  // ── Proactive mic warm-up ────────────────────────────────────
+
+  /**
+   * Request mic permission early (background, non-blocking) so it's already
+   * granted by the time the user taps TALK. On iOS this must still happen
+   * inside a user gesture for the actual call, but pre-requesting on Android
+   * and desktop means the permission dialog appears at a natural moment
+   * (entering the live screen) rather than mid-call.
+   */
+  async _warmMic() {
+    if (this._localStream) return; // already have it
+    try {
+      // Use a short timeout so it doesn't block anything
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this._localStream = stream;
+      // Immediately mute the track — we don't want to transmit yet
+      stream.getAudioTracks().forEach(t => { t.enabled = false; });
+    } catch(e) {
+      // Permission denied or no mic — _ensureLocalStream will show the proper
+      // error message when the user actually taps TALK.
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        this._showErr('Mic permission needed — tap TALK to allow');
+      }
+      // Don't set _localStream — let _ensureLocalStream handle it at call time
+    }
+  }
+
   // ── Internal: stream helpers ─────────────────────────────────
 
   async _ensureLocalStream() {
-    if (this._localStream) return this._localStream;
+    if (this._localStream) {
+      // Re-enable the track in case _warmMic left it muted
+      this._localStream.getAudioTracks().forEach(t => { t.enabled = true; });
+      return this._localStream;
+    }
     try {
       this._localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       return this._localStream;
@@ -1569,8 +1637,14 @@ class VoiceManager {
     // TALK button
     const talkLabel = talk.querySelector('.vbtn-label');
     if (s === 'idle') {
-      if (talkLabel) talkLabel.textContent = 'TALK';
-      talk.disabled = !this._peerReady; // disabled until peer registered
+      if (!this._peerReady && !this._voicePeer && this._pin) {
+        // Peer registration failed — show RETRY, keep button enabled so user can tap
+        if (talkLabel) talkLabel.textContent = 'RETRY';
+        talk.disabled = false;
+      } else {
+        if (talkLabel) talkLabel.textContent = 'TALK';
+        talk.disabled = !this._peerReady;
+      }
     } else if (s === 'calling') {
       if (talkLabel) talkLabel.textContent = 'CALLING…';
       talk.classList.add('is-calling');
