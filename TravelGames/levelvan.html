@@ -510,8 +510,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       </div>
 
       <div class="help-tip">
-        <div class="help-tip-title">🔄 FORCE RECONNECT</div>
-        <div class="help-tip-text">If a phone gets stuck connecting, a <b>FORCE RECONNECT</b> button appears after 8 seconds. Tap it to restart the connection using the saved PIN. No need to go back to the home screen.</div>
+        <div class="help-tip-title">🔄 RECONNECT</div>
+        <div class="help-tip-text">If a phone gets stuck connecting, a <b>RECONNECT</b> button appears after 8 seconds. Tap it to retry using the saved PIN. No need to go back to the home screen. If the display opens before the sensor is ready, it will automatically keep retrying every few seconds.</div>
       </div>
 
       <div class="help-divider"></div>
@@ -528,6 +528,22 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="help-warn">
         <div class="help-warn-title">⚠️ PHONE PLACEMENT</div>
         <div class="help-warn-text">The sensor phone must be <b>completely flat</b> and not move while leveling. Even a small tilt in the phone's resting position will offset all readings.</div>
+      </div>
+
+      <!-- Partner name input -->
+      <div id="partner-name-section" style="display:none;margin-bottom:12px">
+        <div style="font-family:'Orbitron',monospace;font-size:.68rem;color:var(--dim);letter-spacing:2px;margin-bottom:8px">PAIRED WITH</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="partner-name-input" type="text" maxlength="20" placeholder="e.g. Caravan / Dad's phone"
+            style="flex:1;background:var(--panel);border:2px solid var(--border);border-radius:10px;
+                   color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.85rem;
+                   padding:10px 12px;outline:none;-webkit-appearance:none"
+            oninput="savePartnerName(this.value)"
+          />
+        </div>
+        <div style="font-size:.7rem;color:var(--dim);margin-top:6px;font-family:'Share Tech Mono',monospace">
+          This name is saved on this phone only — helps you remember which device you're paired with.
+        </div>
       </div>
 
       <button class="sbtn warn" style="max-width:320px;margin:8px auto" onclick="resetPairing()">
@@ -720,7 +736,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="hint">Takes a moment</div>
     <button class="sbtn warn" id="s1-force-btn" style="display:none" onclick="forceReconnectSensor()">
       <div class="sbtn-ico">🔄</div>
-      <div class="sbtn-title">FORCE RECONNECT</div>
+      <div class="sbtn-title">RECONNECT</div>
       <div class="sbtn-hint">Tap if stuck — restarts with saved PIN</div>
     </button>
   </div>
@@ -736,7 +752,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="conn-count" id="s-conn-count">waiting for display devices...</div>
     <button class="sbtn warn" id="s2-force-btn" style="display:none" onclick="forceReconnectSensor()">
       <div class="sbtn-ico">🔄</div>
-      <div class="sbtn-title">FORCE RECONNECT</div>
+      <div class="sbtn-title">RECONNECT</div>
       <div class="sbtn-hint">Tap if display can't connect — resets session</div>
     </button>
   </div>
@@ -889,7 +905,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="hint" id="d1-hint">Enter the 4-digit PIN shown on the Sensor device</div>
     <button class="sbtn warn" id="d1-force-btn" style="display:none;margin-top:4px" onclick="forceReconnectDisplay()">
       <div class="sbtn-ico">🔄</div>
-      <div class="sbtn-title">FORCE RECONNECT</div>
+      <div class="sbtn-title">RECONNECT</div>
       <div class="sbtn-hint" id="d1-force-hint">Reconnect with saved PIN</div>
     </button>
   </div>
@@ -899,7 +915,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="srow"><div class="dot busy"></div><span id="d2-txt">connecting...</span></div>
     <button class="sbtn warn" id="d2-force-btn" style="display:none;margin-top:8px" onclick="forceReconnectDisplay()">
       <div class="sbtn-ico">🔄</div>
-      <div class="sbtn-title">FORCE RECONNECT</div>
+      <div class="sbtn-title">RECONNECT</div>
       <div class="sbtn-hint">Tap if stuck — retries with saved PIN</div>
     </button>
   </div>
@@ -2612,19 +2628,34 @@ window.startSolo = () => {
   // so the auto-connect logic doesn't interfere on next load
   localStorage.removeItem('lv_mode');
   localStorage.removeItem('lv_pin');
+  localStorage.removeItem('lv_partner_name');
   mode = 'solo';
   showScreen('sensor-screen');
   if (wakeLockManager) wakeLockManager.maintainWakeLock();
   setupMotion(false, null);
 };
 
-window.showHelp = () => { showScreen('help-screen'); helpTab('easy'); };
+window.showHelp = () => {
+  showScreen('help-screen');
+  helpTab('easy');
+  // Show partner name section if a PIN is saved
+  const savedPin = localStorage.getItem('lv_pin');
+  const nameSection = $('partner-name-section');
+  const nameInput = $('partner-name-input');
+  if (nameSection) nameSection.style.display = savedPin ? '' : 'none';
+  if (nameInput && savedPin) nameInput.value = localStorage.getItem('lv_partner_name') || '';
+};
 window.helpTab = (tab) => {
   document.querySelectorAll('.help-tab').forEach((t,i) => t.classList.toggle('active',
     (i===0&&tab==='easy')||(i===1&&tab==='comms')||(i===2&&tab==='tech')));
   $('help-easy').classList.toggle('active', tab==='easy');
   $('help-comms').classList.toggle('active', tab==='comms');
   $('help-tech').classList.toggle('active', tab==='tech');
+};
+
+window.savePartnerName = (name) => {
+  if (name.trim()) localStorage.setItem('lv_partner_name', name.trim());
+  else localStorage.removeItem('lv_partner_name');
 };
 
 // ════════════════════════════════
@@ -2639,6 +2670,7 @@ window.resetPairing = async () => {
     }
     localStorage.removeItem('lv_mode');
     localStorage.removeItem('lv_pin');
+    localStorage.removeItem('lv_partner_name');
     if (wakeLockManager) { wakeLockManager.releaseWakeLock(); wakeLockManager.stopWakeLockMonitoring(); }
     cleanup();
     showScreen('home-screen');
@@ -2650,7 +2682,7 @@ window.resetPairing = async () => {
 };
 
 // ════════════════════════════════
-//  FORCE RECONNECT
+//  RECONNECT
 // ════════════════════════════════
 window.forceReconnectSensor = () => {
   const savedPin = localStorage.getItem('lv_pin');
@@ -2666,7 +2698,7 @@ window.forceReconnectSensor = () => {
   if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
   conns = [];
   showPanel('s1');
-  $('s1-txt').textContent = 'force reconnecting...';
+  $('s1-txt').textContent = 'RECONNECTing...';
   initSensor(savedPin);
 };
 
@@ -2687,7 +2719,7 @@ window.forceReconnectDisplay = () => {
   setTimeout(() => {
     window._forceReconnecting = false;
     showPanel('d2');
-    $('d2-txt').textContent = 'force reconnecting...';
+    $('d2-txt').textContent = 'RECONNECTing...';
     // Directly call connectWithPin with the saved pin bypassing fillPin
     _kpad = savedPin.split('');
     connectWithPin();
@@ -2709,7 +2741,12 @@ function updateForceButtons() {
   const d1Hint = $('d1-force-hint');
   if (d1Btn) {
     d1Btn.style.display = savedPin ? '' : 'none';
-    if (d1Hint && savedPin) d1Hint.textContent = 'Reconnect with PIN ' + savedPin;
+    if (d1Hint && savedPin) {
+      const partnerName = localStorage.getItem('lv_partner_name');
+      d1Hint.textContent = partnerName
+        ? 'Reconnect with ' + partnerName + ' (PIN ' + savedPin + ')'
+        : 'Reconnect with PIN ' + savedPin;
+    }
   }
   if (d2Btn) d2Btn.style.display = savedPin ? '' : 'none';
 }
@@ -2734,7 +2771,13 @@ function initSensor(resumePin) {
   peer = new Peer(peerId, {
     host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE,
     debug: 0,
-    config: { iceServers: [] } // local WiFi only — no STUN/TURN
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ],
+      iceCandidatePoolSize: 10
+    }
   });
 
   peer.on('open', id => {
@@ -2945,7 +2988,13 @@ window.connectWithPin = () => {
   peer = new Peer(myId, {
     host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE,
     debug: 0,
-    config: { iceServers: [] }
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ],
+      iceCandidatePoolSize: 10
+    }
   });
 
   peer.on('open', () => {
@@ -3001,7 +3050,7 @@ window.connectWithPin = () => {
 
     conn.on('close', () => {
       const savedPin = localStorage.getItem('lv_pin');
-      // If force reconnect is already in progress, don't start another attempt
+      // If RECONNECT is already in progress, don't start another attempt
       if (window._forceReconnecting) return;
       if (savedPin && mode === 'display') {
         // Stay on d3 briefly — show subtle reconnecting hint without jarring screen flash
@@ -3009,7 +3058,7 @@ window.connectWithPin = () => {
         if (instrEl) { instrEl.className = 'instr wt'; instrEl.textContent = 'reconnecting...'; }
         setTimeout(() => {
           if (mode !== 'display') return;
-          if (window._forceReconnecting) return; // force reconnect took over
+          if (window._forceReconnecting) return; // RECONNECT took over
           if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
           conns = [];
           if (wakeLockManager) wakeLockManager.maintainWakeLock();
@@ -3034,10 +3083,25 @@ window.connectWithPin = () => {
   peer.on('error', e => {
     console.error('Peer error:', e);
     let msg = e.message;
-    if (e.type === 'peer-unavailable') msg = 'Sensor not found — waiting for sensor to come online...';
+    if (e.type === 'peer-unavailable') {
+      // Sensor not online yet — retry automatically every 4 seconds
+      msg = 'Waiting for sensor…';
+      $('d2-txt').textContent = '⏳ ' + msg;
+      showPanel('d2');
+      // Destroy this peer and retry after a delay
+      setTimeout(() => {
+        if (mode !== 'display' || window._forceReconnecting) return;
+        const retryPin = localStorage.getItem('lv_pin');
+        if (!retryPin) { showPanel('d1'); kpadReset(); return; }
+        if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+        conns = [];
+        _kpad = retryPin.split('');
+        connectWithPin();
+      }, 4000);
+      return;
+    }
     $('d2-txt').textContent = '⚠️ ' + msg;
     showPanel('d2');
-    // Go back to PIN entry after a moment
     setTimeout(() => { showPanel('d1'); kpadReset(); $('d1-hint').textContent = '⚠️ ' + msg; }, 2000);
   });
 };
