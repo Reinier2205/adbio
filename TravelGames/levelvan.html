@@ -778,9 +778,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
           <!-- Shadow offset -->
           <rect x="36" y="32" width="130" height="196" rx="12" fill="#1a3a4e" opacity="0.45"/>
           <!-- Main body -->
-          <rect x="32" y="28" width="136" height="196" rx="12" fill="url(#s-bodyFill)" stroke="#6ac8e0" stroke-width="2.5" opacity="0.92"/>
+          <rect x="32" y="28" width="136" height="196" rx="12" fill="url(#s-bodyFill)" stroke="#6ac8e0" stroke-width="2.5" opacity="0.92" id="s-body-frame"/>
           <!-- Inner frame -->
-          <rect x="46" y="42" width="108" height="168" rx="7" fill="none" stroke="#8ad8ee" stroke-width="1.5" opacity="0.45"/>
+          <rect x="46" y="42" width="108" height="168" rx="7" fill="none" stroke="#8ad8ee" stroke-width="1.5" opacity="0.45" id="s-inner-frame"/>
           <!-- Tail lights — no filter, use brighter fill instead -->
           <rect x="32" y="28" width="22" height="12" rx="4" fill="#2a0808" stroke="#ff5555" stroke-width="1.5" id="s-light-l"/>
           <rect x="35" y="31" width="13" height="6" rx="2" fill="#ff4444" opacity="0.85" id="s-light-l-inner"/>
@@ -968,10 +968,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
           <rect x="36" y="32" width="130" height="196" rx="12" fill="#1a3a4e" opacity="0.45"/>
           <!-- Main body -->
           <rect x="32" y="28" width="136" height="196" rx="12"
-                fill="url(#bodyFill)" stroke="#6ac8e0" stroke-width="2.5" opacity="0.92"/>
+                fill="url(#bodyFill)" stroke="#6ac8e0" stroke-width="2.5" opacity="0.92" id="d-body-frame"/>
           <!-- Inner frame outline -->
           <rect x="46" y="42" width="108" height="168" rx="7"
-                fill="none" stroke="#8ad8ee" stroke-width="1.5" opacity="0.45"/>
+                fill="none" stroke="#8ad8ee" stroke-width="1.5" opacity="0.45" id="d-inner-frame"/>
 
           <!-- ══ TAIL LIGHTS — top of body (front of caravan) ══ -->
           <rect x="32" y="28" width="22" height="12" rx="4"
@@ -3225,7 +3225,7 @@ function updateSensor(r, p) {
   const spbg = $('s-pitch-bubble-glow');
   if (spbg) { spbg.setAttribute('cx', '100'); spbg.setAttribute('cy', pitchY.toFixed(1)); spbg.setAttribute('fill', pitchCol); }
 
-  // Tail lights — colour matches overall level state
+  // Tail lights + frame — colour matches overall level state
   const lightCol = lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444';
   const lightStroke = lv ? '#00ff88' : cl ? '#ffaa00' : '#ff5555';
   ['s-light-l-inner','s-light-r-inner'].forEach(id => {
@@ -3234,6 +3234,9 @@ function updateSensor(r, p) {
   ['s-light-l','s-light-r'].forEach(id => {
     const el=$(id); if(el) el.setAttribute('stroke', lightStroke);
   });
+  // Frame stroke matches level state
+  const sf = $('s-body-frame');  if(sf) sf.setAttribute('stroke', lightCol);
+  const sif = $('s-inner-frame'); if(sif) sif.setAttribute('stroke', lv ? 'rgba(0,255,136,0.6)' : cl ? 'rgba(255,170,0,0.4)' : '#8ad8ee');
 
   $('s-roll').textContent  = r.toFixed(1)+'°'; $('s-roll').className  = 'aval '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
   $('s-pitch').textContent = p.toFixed(1)+'°'; $('s-pitch').className = 'aval '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
@@ -3286,7 +3289,7 @@ function updateDisplay(d) {
   const dpbg = $('d-pitch-bubble-glow');
   if (dpbg) { dpbg.setAttribute('cx', '100'); dpbg.setAttribute('cy', pitchY.toFixed(1)); dpbg.setAttribute('fill', pitchCol); }
 
-  // ── Tail lights — colour matches overall level state
+  // ── Tail lights + frame — colour matches overall level state
   const lightCol = lv ? '#00ff88' : cl ? '#ffaa00' : '#ff4444';
   const lightStroke = lv ? '#00ff88' : cl ? '#ffaa00' : '#ff5555';
   ['light-l-inner','light-r-inner'].forEach(id => {
@@ -3295,6 +3298,9 @@ function updateDisplay(d) {
   ['light-l','light-r'].forEach(id => {
     const el=$(id); if(el) el.setAttribute('stroke', lightStroke);
   });
+  // Frame stroke matches level state
+  const df = $('d-body-frame');  if(df) df.setAttribute('stroke', lightCol);
+  const dif = $('d-inner-frame'); if(dif) dif.setAttribute('stroke', lv ? 'rgba(0,255,136,0.6)' : cl ? 'rgba(255,170,0,0.4)' : '#8ad8ee');
 
   // ── Instruction banner
   const ins = $('d-instr');
