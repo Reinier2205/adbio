@@ -374,6 +374,24 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 }
 .video-pip.active{display:block}
 .video-pip video{width:100%;height:100%;object-fit:cover}
+/* Invert feed button — display overlay only */
+.video-invert-btn{
+  position:absolute;top:12px;right:12px;z-index:11;
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(10,22,40,.75);border:2px solid var(--accent);
+  color:var(--accent);font-size:1.3rem;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .15s,border-color .15s,color .15s;
+  backdrop-filter:blur(4px);
+}
+.video-invert-btn:active{transform:scale(.9)}
+.video-invert-btn.is-inverted{
+  background:var(--accent);color:#0a1628;border-color:var(--accent);
+  box-shadow:0 0 14px rgba(0,212,255,.6);
+}
+
 /* iOS autoplay recovery overlay */
 .video-play-overlay{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -844,6 +862,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   <div class="video-pip" id="display-video-pip">
     <video id="display-local-video" autoplay playsinline muted></video>
   </div>
+  <!-- Invert feed button — only visible on display when cam is active -->
+  <button class="video-invert-btn" id="display-invert-btn" onclick="videoMgr.toggleInvert()" title="Invert feed">⟳</button>
   <div class="video-play-overlay" id="display-play-overlay" onclick="videoMgr._forcePlayDisplay()">
     <div class="video-play-btn">
       <svg width="28" height="28" fill="#0a1628" viewBox="0 0 20 20"><path d="M4.5 2.691l11 6.309-11 6.309V2.691z"/></svg>
@@ -1740,6 +1760,7 @@ class VideoManager {
     this._activeRow    = null;   // current voice-footer-row element
     this._retryTimer   = null;
     this._retryCount   = 0;
+    this._inverted     = false;  // display feed invert state
     this._peerReady    = false;
   }
 
@@ -2030,6 +2051,26 @@ class VideoManager {
     overlay.style.top = '0';
   }
 
+  // ── Invert display feed ──────────────────────────────────────
+  toggleInvert() {
+    const vid = document.getElementById('display-remote-video');
+    const btn = document.getElementById('display-invert-btn');
+    if (!vid || !btn) return;
+    this._inverted = !this._inverted;
+    vid.style.transform = this._inverted ? 'scaleY(-1)' : '';
+    btn.classList.toggle('is-inverted', this._inverted);
+    btn.title = this._inverted ? 'Invert feed (on)' : 'Invert feed';
+  }
+
+  // Reset invert state when cam turns off
+  _resetInvert() {
+    this._inverted = false;
+    const vid = document.getElementById('display-remote-video');
+    const btn = document.getElementById('display-invert-btn');
+    if (vid) vid.style.transform = '';
+    if (btn) btn.classList.remove('is-inverted');
+  }
+
   _hideOverlays() {
     const so = document.getElementById('sensor-video-overlay');
     const ddo = document.getElementById('display-video-overlay');
@@ -2041,6 +2082,7 @@ class VideoManager {
     if (pip) pip.classList.remove('active');
     if (spo) spo.classList.remove('active');
     if (dpo) dpo.classList.remove('active');
+    this._resetInvert();
   }
 
   // ── Internal: data channel signalling ───────────────────────
