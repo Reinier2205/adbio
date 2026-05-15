@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Captain's Table - High Roller Edition</title>
+    <title>The Captain's Table - Multiplayer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;900&display=swap" rel="stylesheet">
+    <!-- PeerJS for Multiplayer -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <!-- Multiplayer Library -->
+    <script src="https://travel-games.pages.dev/lcr-multiplayer.js"></script>
     <style>
         :root {
             --felt-green: #0a4821;
@@ -45,7 +49,6 @@
 
         .cinzel { font-family: 'Cinzel', serif; }
 
-        /* Vitality Orbs */
         .duel-dashboard {
             background: var(--glass);
             border: 1px solid rgba(212, 175, 55, 0.3);
@@ -71,14 +74,13 @@
         }
 
         .orb-outer {
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
             border: 2px solid var(--gold);
             background: #111;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
         }
 
         .orb-fill {
@@ -88,30 +90,16 @@
             transition: height 0.8s ease-out;
         }
 
-        .wave {
-            position: absolute;
-            top: -10px;
-            left: -50%;
-            width: 200%;
-            height: 20px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 40%;
-            animation: rotate 4s infinite linear;
-        }
-
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        /* Dice Styles */
         .die {
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             background: white;
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #1a0f12;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 900;
             box-shadow: 0 4px 0 #bbb;
             transition: all 0.2s;
@@ -119,8 +107,8 @@
 
         .die.locked {
             background: var(--gold-light);
-            box-shadow: 0 0 20px var(--gold-light), 0 2px 0 #b8860b;
-            transform: translateY(-5px);
+            box-shadow: 0 0 15px var(--gold-light), 0 2px 0 #b8860b;
+            transform: translateY(-4px);
             border: 2px solid white;
         }
 
@@ -131,25 +119,17 @@
             box-shadow: 0 4px 0 #000;
         }
 
-        .rolling { animation: jitter 0.1s infinite; }
-        @keyframes jitter {
-            0% { transform: translate(1px, 1px); }
-            50% { transform: translate(-1px, -1px); }
-            100% { transform: translate(0, 1px); }
-        }
-
         .manifest-hud {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            gap: 8px;
         }
 
         .req-box {
             background: rgba(0,0,0,0.4);
-            border-radius: 12px;
-            padding: 10px;
+            border-radius: 10px;
+            padding: 8px;
             text-align: center;
-            border: 1px solid transparent;
             opacity: 0.3;
             transition: 0.3s;
         }
@@ -165,34 +145,20 @@
             color: #2e1a05;
             font-weight: 900;
             text-transform: uppercase;
-            padding: 16px;
+            padding: 14px;
             border-radius: 50px;
             width: 100%;
-            box-shadow: 0 5px 0 #6e4e08;
-            font-size: 16px;
+            box-shadow: 0 4px 0 #6e4e08;
         }
 
         .btn-action:active:not(:disabled) {
-            transform: translateY(3px);
+            transform: translateY(2px);
             box-shadow: 0 2px 0 #6e4e08;
         }
 
         .btn-action:disabled {
             filter: grayscale(1);
-            opacity: 0.5;
-            box-shadow: none;
-        }
-
-        .overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            opacity: 0.4;
         }
     </style>
 </head>
@@ -200,249 +166,358 @@
 
     <div class="casino-container">
         <!-- Dashboard -->
-        <div class="duel-dashboard">
-            <div id="p1-ui" class="player-status active-turn">
-                <span id="p1-name-display" class="text-[10px] uppercase font-bold text-teal-400 mb-1">P1</span>
-                <div class="orb-outer border-teal-500">
-                    <div id="p1-fill" class="orb-fill bg-teal-500" style="height: 0%">
-                        <div class="wave"></div>
-                    </div>
-                </div>
-                <div id="p1-score-display" class="cinzel text-xl mt-1">--</div>
-            </div>
-
-            <div class="cinzel text-gold text-xs">VS</div>
-
-            <div id="p2-ui" class="player-status">
-                <span id="p2-name-display" class="text-[10px] uppercase font-bold text-red-400 mb-1">P2</span>
-                <div class="orb-outer border-red-500">
-                    <div id="p2-fill" class="orb-fill bg-red-600" style="height: 0%">
-                        <div class="wave"></div>
-                    </div>
-                </div>
-                <div id="p2-score-display" class="cinzel text-xl mt-1">--</div>
-            </div>
+        <div id="dashboard" class="duel-dashboard">
+            <!-- Seats generated dynamically -->
         </div>
 
-        <!-- Info Bar -->
-        <div id="log" class="text-center text-[10px] text-gold/60 tracking-widest uppercase py-2">Welcome to the table</div>
+        <div id="log" class="text-center text-[10px] text-gold/60 tracking-widest uppercase py-2">Waiting for Game Start</div>
 
         <!-- Table -->
-        <div class="flex-1 flex flex-direction: column justify-center items-center">
-            <div id="dice-container" class="flex flex-wrap justify-center gap-4">
-                <!-- Dice generated by JS -->
-            </div>
+        <div class="flex-1 flex flex-col justify-center items-center">
+            <div id="dice-container" class="flex flex-wrap justify-center gap-3"></div>
             
-            <div id="cargo-hud" class="mt-8 text-center hidden">
-                <p class="text-[10px] text-white/40 uppercase tracking-widest">Cargo Points</p>
+            <div id="cargo-hud" class="mt-6 text-center opacity-0 transition-opacity">
+                <p class="text-[10px] text-white/40 uppercase tracking-widest">Cargo Scored</p>
                 <h2 id="cargo-val" class="cinzel text-5xl text-white">0</h2>
             </div>
         </div>
 
         <!-- Requirements -->
         <div class="manifest-hud">
-            <div id="req-6" class="req-box">
-                <span class="block text-[8px] uppercase text-gold">Ship</span>
-                <span class="cinzel text-2xl">6</span>
-            </div>
-            <div id="req-5" class="req-box">
-                <span class="block text-[8px] uppercase text-gold">Captain</span>
-                <span class="cinzel text-2xl">5</span>
-            </div>
-            <div id="req-4" class="req-box">
-                <span class="block text-[8px] uppercase text-gold">Crew</span>
-                <span class="cinzel text-2xl">4</span>
-            </div>
+            <div id="req-6" class="req-box"><span class="block text-[8px] uppercase text-gold">Ship</span><span class="cinzel text-2xl">6</span></div>
+            <div id="req-5" class="req-box"><span class="block text-[8px] uppercase text-gold">Captain</span><span class="cinzel text-2xl">5</span></div>
+            <div id="req-4" class="req-box"><span class="block text-[8px] uppercase text-gold">Crew</span><span class="cinzel text-2xl">4</span></div>
         </div>
 
-        <!-- Control -->
-        <div class="space-y-3 pb-4">
+        <!-- Controls -->
+        <div class="space-y-2 pb-4">
             <div class="text-center">
-                <span id="roll-label" class="text-[10px] bg-black/40 px-3 py-1 rounded-full text-zinc-400 uppercase tracking-widest">Roll 1 / 3</span>
+                <span id="roll-label" class="text-[9px] bg-black/40 px-3 py-1 rounded-full text-zinc-400 uppercase tracking-widest">Roll 1 / 3</span>
             </div>
-            <button id="roll-btn" class="btn-action" onclick="roll()">Cast Dice</button>
-            <button id="bank-btn" class="hidden w-full text-xs text-white/40 underline uppercase tracking-tighter" onclick="bank()">Keep current cargo</button>
-        </div>
-
-        <!-- Start Modal -->
-        <div id="start-modal" class="overlay">
-            <div class="text-center max-w-xs w-full">
-                <h1 class="cinzel text-4xl text-gold mb-6">Ship, Captain, Crew</h1>
-                <input type="text" id="p1-in" placeholder="Player 1" class="w-full bg-white/5 border border-gold/30 p-4 rounded-xl text-white mb-3 outline-none">
-                <input type="text" id="p2-in" placeholder="Player 2" class="w-full bg-white/5 border border-gold/30 p-4 rounded-xl text-white mb-8 outline-none">
-                <button class="btn-action" onclick="initGame()">Start Duel</button>
-            </div>
-        </div>
-
-        <!-- Finish Modal -->
-        <div id="end-modal" class="overlay hidden">
-            <h2 id="winner-name" class="cinzel text-5xl text-white text-center">WINNER</h2>
-            <p id="winner-desc" class="text-gold mt-4 uppercase tracking-widest text-xs"></p>
-            <button class="btn-action mt-12 max-w-xs" onclick="location.reload()">New Voyage</button>
+            <button id="roll-btn" class="btn-action" onclick="handleRoll()">Cast Dice</button>
+            <button id="bank-btn" class="hidden w-full text-[10px] text-white/40 py-2 uppercase tracking-widest" onclick="handleBank()">Keep Cargo Early</button>
         </div>
     </div>
 
     <script>
-        let gameState = {
-            players: [{ name: "P1", score: 0 }, { name: "P2", score: 0 }],
-            activeIdx: 0,
-            rolls: 0,
-            dice: [0, 0, 0, 0, 0],
-            locked: [false, false, false, false, false], // Ship, Capt, Crew
-            found: { 6: false, 5: false, 4: false },
-            isRolling: false
+        // --- Multiplayer Config ---
+        let mpMode = 'single';
+        let mpHost = null;
+        let mpGuest = null;
+        let myPlayerIndex = null;
+        const MAX_PLAYERS = 2; 
+
+        // --- Game State ---
+        let players = [];
+        let turnIndex = 0;
+        let rollsCount = 0;
+        let dice = [1, 1, 1, 1, 1];
+        let locked = [false, false, false, false, false];
+        let found = { 6: false, 5: false, 4: false };
+        let isProcessing = false;
+
+        const CHARACTERS = [
+            { name: "Scurvy Sam", icon: "🏴‍☠️" },
+            { name: "Captain Goldbeard", icon: "🪙" },
+            { name: "Blind Betsy", icon: "⚓" },
+            { name: "Admiral Iron", icon: "⚔️" }
+        ];
+
+        window.onload = () => {
+            const hashPin = _parseHashPin();
+            if (hashPin) {
+                _startGuestFlow(hashPin);
+            } else {
+                LCRMultiplayer.UI.showModeSelectionThree(
+                    () => { mpMode = 'single'; _initSinglePlayer(); },
+                    () => _startHostFlow(),
+                    () => _startGuestFlow(null)
+                );
+            }
         };
 
-        function initGame() {
-            gameState.players[0].name = document.getElementById('p1-in').value || "Player 1";
-            gameState.players[1].name = document.getElementById('p2-in').value || "Player 2";
-            document.getElementById('p1-name-display').innerText = gameState.players[0].name;
-            document.getElementById('p2-name-display').innerText = gameState.players[1].name;
-            document.getElementById('start-modal').classList.add('hidden');
+        function _parseHashPin() {
+            const m = window.location.hash.match(/^#LCP:(\d{4})$/);
+            return m ? m[1] : null;
+        }
+
+        function _initSinglePlayer() {
+            players = [
+                { name: "Player 1", icon: "⚔️", score: 0 },
+                { name: "Player 2", icon: "🏴‍☠️", score: 0 }
+            ];
+            myPlayerIndex = 0;
             resetTurn();
+            updateUI();
         }
 
-        function resetTurn() {
-            gameState.rolls = 0;
-            gameState.dice = [1, 1, 1, 1, 1];
-            gameState.locked = [false, false, false, false, false];
-            gameState.found = { 6: false, 5: false, 4: false };
+        async function _startHostFlow() {
+            mpMode = 'host';
+            myPlayerIndex = 0;
+            const adapter = _buildGameAdapter();
+            mpHost = new LCRMultiplayer.MultiplayerHost(adapter, MAX_PLAYERS);
             
-            document.getElementById('p1-ui').classList.toggle('active-turn', gameState.activeIdx === 0);
-            document.getElementById('p2-ui').classList.toggle('active-turn', gameState.activeIdx === 1);
-            document.getElementById('roll-label').innerText = "Roll 1 / 3";
-            document.getElementById('cargo-hud').classList.add('hidden');
-            document.getElementById('bank-btn').classList.add('hidden');
-            document.getElementById('roll-btn').disabled = false;
+            try {
+                await mpHost.open();
+                LCRMultiplayer.UI.showGuestCharacterPicker({
+                    pool: CHARACTERS,
+                    takenNames: [],
+                    onPick: ({ name, icon }) => {
+                        mpHost.hostPick(name, icon);
+                        _showHostLobby();
+                    }
+                });
+            } catch(e) { location.reload(); }
+        }
+
+        function _showHostLobby() {
+            const lobbyUI = LCRMultiplayer.UI.showHostLobby({
+                pin: mpHost.pin,
+                onShareLink: () => _shareLink(mpHost.pin),
+                onDealIn: () => _dealIn()
+            });
+            mpHost.onGuestConnected = (count) => lobbyUI.updateCount(count + 1);
+            mpHost.onGuestPicked = (conns) => {
+                lobbyUI.updateCount(conns.length + 1);
+                if (conns.length >= 1 && conns.every(e => e.picked)) lobbyUI.enableDealIn();
+            };
+        }
+
+        function _dealIn() {
+            const picks = mpHost.buildPlayersFromPicks();
+            players = picks.map((p, i) => ({ ...p, score: 0 }));
+            resetTurn();
+            mpHost.broadcastState(mpHost.gameAdapter.getState());
+            _showGamePin(mpHost.pin);
+            updateUI();
+        }
+
+        async function _startGuestFlow(pin) {
+            mpMode = 'guest';
+            const adapter = _buildGameAdapter();
+            mpGuest = new LCRMultiplayer.MultiplayerGuest(adapter);
             
-            [6, 5, 4].forEach(n => document.getElementById(`req-${n}`).classList.remove('met'));
-            updateLog(`${gameState.players[gameState.activeIdx].name}'s Turn`);
-            drawDice();
-        }
-
-        function updateLog(msg) { document.getElementById('log').innerText = msg; }
-
-        async function roll() {
-            if (gameState.isRolling || gameState.rolls >= 3) return;
-            gameState.isRolling = true;
-            gameState.rolls++;
-            document.getElementById('roll-label').innerText = `Roll ${gameState.rolls} / 3`;
-
-            // Shuffle Animation
-            for (let i = 0; i < 10; i++) {
-                gameState.dice = gameState.dice.map((val, idx) => {
-                    return gameState.locked[idx] ? val : Math.floor(Math.random() * 6) + 1;
-                });
-                drawDice(true);
-                await new Promise(r => setTimeout(r, 50));
-            }
-
-            processDice();
-            drawDice(false);
-            gameState.isRolling = false;
-
-            if (gameState.rolls >= 3) {
-                document.getElementById('roll-btn').disabled = true;
-                setTimeout(bank, 1000);
-            }
-        }
-
-        function processDice() {
-            // Sequence Logic: Must find 6, then 5, then 4.
-            // Check for 6
-            if (!gameState.found[6]) {
-                const idx = gameState.dice.findIndex((v, i) => v === 6 && !gameState.locked[i]);
-                if (idx !== -1) {
-                    gameState.found[6] = true;
-                    gameState.locked[idx] = true;
-                    document.getElementById('req-6').classList.add('met');
-                }
-            }
-            // Check for 5 (only if 6 is found)
-            if (gameState.found[6] && !gameState.found[5]) {
-                const idx = gameState.dice.findIndex((v, i) => v === 5 && !gameState.locked[i]);
-                if (idx !== -1) {
-                    gameState.found[5] = true;
-                    gameState.locked[idx] = true;
-                    document.getElementById('req-5').classList.add('met');
-                }
-            }
-            // Check for 4 (only if 5 is found)
-            if (gameState.found[5] && !gameState.found[4]) {
-                const idx = gameState.dice.findIndex((v, i) => v === 4 && !gameState.locked[i]);
-                if (idx !== -1) {
-                    gameState.found[4] = true;
-                    gameState.locked[idx] = true;
-                    document.getElementById('req-4').classList.add('met');
-                }
-            }
-
-            if (gameState.found[4]) {
-                document.getElementById('cargo-hud').classList.remove('hidden');
-                if (gameState.rolls < 3) document.getElementById('bank-btn').classList.remove('hidden');
-                
-                let cargoTotal = 0;
-                gameState.dice.forEach((v, i) => {
-                    if (!gameState.locked[i]) cargoTotal += v;
-                });
-                document.getElementById('cargo-val').innerText = cargoTotal;
-            }
-        }
-
-        function drawDice(isShuffling) {
-            const container = document.getElementById('dice-container');
-            container.innerHTML = '';
-            gameState.dice.forEach((val, i) => {
-                const d = document.createElement('div');
-                let type = "";
-                if (gameState.locked[i]) type = "locked";
-                else if (gameState.found[4]) type = "cargo";
-                
-                d.className = `die ${type} ${isShuffling && !gameState.locked[i] ? 'rolling' : ''}`;
-                d.innerText = val;
-                container.appendChild(d);
+            const pinUI = LCRMultiplayer.UI.showGuestPinEntry({
+                prefillPin: pin || '',
+                onConnect: async (p) => {
+                    try {
+                        await mpGuest.connect(p);
+                        pinUI.remove();
+                        _showGuestCharacterPicker();
+                    } catch(e) { pinUI.showError('Host not found'); }
+                },
+                onBack: () => location.reload()
             });
         }
 
-        function bank() {
-            const score = gameState.found[4] ? parseInt(document.getElementById('cargo-val').innerText) : 0;
-            gameState.players[gameState.activeIdx].score = score;
-            
-            const fill = document.getElementById(`p${gameState.activeIdx + 1}-fill`);
-            const display = document.getElementById(`p${gameState.activeIdx + 1}-score-display`);
-            
-            display.innerText = score;
-            fill.style.height = `${(score / 12) * 100}%`;
+        function _showGuestCharacterPicker() {
+            const pickerUI = LCRMultiplayer.UI.showGuestCharacterPicker({
+                pool: CHARACTERS,
+                takenNames: mpGuest._lobbyTakenNames || [],
+                onPick: ({ name, icon }) => {
+                    mpGuest.sendAction({ type: 'pick', name, icon });
+                    LCRMultiplayer.UI.showGuestWaiting();
+                }
+            });
+            mpGuest.onLobbyState = (taken) => pickerUI.updateTaken(taken);
+        }
 
-            if (gameState.activeIdx === 0) {
-                gameState.activeIdx = 1;
-                setTimeout(resetTurn, 800);
+        function _buildGameAdapter() {
+            return {
+                getState() {
+                    return { players, turnIndex, rollsCount, dice, locked, found, isProcessing };
+                },
+                applyState(state) {
+                    players = state.players;
+                    turnIndex = state.turnIndex;
+                    rollsCount = state.rollsCount;
+                    dice = state.dice;
+                    locked = state.locked;
+                    found = state.found;
+                    isProcessing = state.isProcessing;
+                    updateUI();
+                    _updateTurnUI();
+                },
+                executeRoll() {
+                    _doRollLogic();
+                    return this.getState();
+                },
+                executeTarget(targetIndex, mode) {
+                    if (mode === 'bank') _doBankLogic();
+                    return this.getState();
+                },
+                handleDisconnect(idx) {
+                    players[idx].score = 0;
+                    players[idx].connected = false;
+                    return this.getState();
+                },
+                onAssigned(idx) { myPlayerIndex = idx; },
+                onHostDisconnected() { LCRMultiplayer.UI.showHostDisconnected(); }
+            };
+        }
+
+        function resetTurn() {
+            rollsCount = 0;
+            dice = [1, 1, 1, 1, 1];
+            locked = [false, false, false, false, false];
+            found = { 6: false, 5: false, 4: false };
+            isProcessing = false;
+        }
+
+        function _doRollLogic() {
+            if (rollsCount >= 3) return;
+            rollsCount++;
+            
+            dice = dice.map((v, i) => locked[i] ? v : Math.floor(Math.random() * 6) + 1);
+            
+            if (!found[6]) {
+                const idx = dice.findIndex((v, i) => v === 6 && !locked[i]);
+                if (idx !== -1) { found[6] = true; locked[idx] = true; }
+            }
+            if (found[6] && !found[5]) {
+                const idx = dice.findIndex((v, i) => v === 5 && !locked[i]);
+                if (idx !== -1) { found[5] = true; locked[idx] = true; }
+            }
+            if (found[6] && found[5] && !found[4]) {
+                const idx = dice.findIndex((v, i) => v === 4 && !locked[i]);
+                if (idx !== -1) { found[4] = true; locked[idx] = true; }
+            }
+
+            if (rollsCount >= 3) _doBankLogic();
+        }
+
+        function _doBankLogic() {
+            let cargo = 0;
+            if (found[4]) {
+                dice.forEach((v, i) => { if (!locked[i]) cargo += v; });
+            }
+            players[turnIndex].score = cargo;
+            
+            if (turnIndex === 0) {
+                turnIndex = 1;
+                resetTurn();
             } else {
-                showResults();
+                // Game finished logic handled by UI
             }
         }
 
-        function showResults() {
-            const p1 = gameState.players[0];
-            const p2 = gameState.players[1];
-            document.getElementById('end-modal').classList.remove('hidden');
-            
-            let winTitle = "";
-            let winDesc = "";
-            
-            if (p1.score > p2.score) {
-                winTitle = p1.name;
-                winDesc = `Victorious with ${p1.score} cargo points`;
-            } else if (p2.score > p1.score) {
-                winTitle = p2.name;
-                winDesc = `Victory claimed with ${p2.score} cargo points`;
-            } else {
-                winTitle = "STALEMATE";
-                winDesc = `Both captains hauled ${p1.score} points`;
+        async function handleRoll() {
+            if (isProcessing || rollsCount >= 3) return;
+            if (mpMode === 'guest') {
+                mpGuest.sendAction({ type: 'roll' });
+                return;
             }
+            if (mpMode === 'host') {
+                const newState = mpHost.gameAdapter.executeRoll();
+                mpHost.broadcastState(newState);
+                return;
+            }
+            _doRollLogic();
+            updateUI();
+        }
+
+        function handleBank() {
+            if (mpMode === 'guest') {
+                mpGuest.sendAction({ type: 'target', targetIndex: 0, mode: 'bank' });
+                return;
+            }
+            if (mpMode === 'host') {
+                const newState = mpHost.gameAdapter.executeTarget(0, 'bank');
+                mpHost.broadcastState(newState);
+                return;
+            }
+            _doBankLogic();
+            updateUI();
+        }
+
+        function updateUI() {
+            const dash = document.getElementById('dashboard');
+            dash.innerHTML = '';
+            players.forEach((p, i) => {
+                const active = turnIndex === i;
+                const you = (mpMode !== 'single' && i === myPlayerIndex) ? `<span style="font-size:7px;background:var(--gold);color:#000;padding:0 3px;border-radius:3px;font-weight:900">YOU</span>` : '';
+                const orbHeight = (p.score / 12) * 100;
+                
+                dash.innerHTML += `
+                    <div class="player-status ${active ? 'active-turn' : ''}">
+                        ${you}
+                        <span class="text-[9px] uppercase font-bold text-white/60 mb-1">${p.icon} ${p.name}</span>
+                        <div class="orb-outer">
+                            <div class="orb-fill bg-gold" style="height: ${orbHeight}%"></div>
+                        </div>
+                        <div class="cinzel text-xl mt-1">${p.score === undefined ? '--' : p.score}</div>
+                    </div>
+                `;
+            });
+
+            const container = document.getElementById('dice-container');
+            container.innerHTML = '';
+            dice.forEach((val, i) => {
+                let type = locked[i] ? "locked" : (found[4] ? "cargo" : "");
+                container.innerHTML += `<div class="die ${type}">${val}</div>`;
+            });
+
+            document.getElementById('roll-label').innerText = `Roll ${rollsCount} / 3`;
+            document.getElementById('req-6').className = `req-box ${found[6] ? 'met' : ''}`;
+            document.getElementById('req-5').className = `req-box ${found[5] ? 'met' : ''}`;
+            document.getElementById('req-4').className = `req-box ${found[4] ? 'met' : ''}`;
             
-            document.getElementById('winner-name').innerText = winTitle;
-            document.getElementById('winner-desc').innerText = winDesc;
+            const cargoVal = document.getElementById('cargo-val');
+            const cargoHud = document.getElementById('cargo-hud');
+            if (found[4]) {
+                let currentCargo = 0;
+                dice.forEach((v, i) => { if(!locked[i]) currentCargo += v; });
+                cargoVal.innerText = currentCargo;
+                cargoHud.classList.remove('opacity-0');
+            } else {
+                cargoHud.classList.add('opacity-0');
+            }
+
+            document.getElementById('bank-btn').classList.toggle('hidden', !found[4] || rollsCount >= 3 || rollsCount === 0);
+            
+            if (players[turnIndex]) {
+                document.getElementById('log').innerText = `${players[turnIndex].name}'s turn`;
+            }
+
+            _checkGameEnd();
+            _updateTurnUI();
+        }
+
+        function _updateTurnUI() {
+            if (mpMode === 'single') return;
+            document.getElementById('lcr-mp-active-banner')?.remove();
+            document.getElementById('lcr-mp-spectator-banner')?.remove();
+            
+            const isMine = myPlayerIndex === turnIndex;
+            document.getElementById('roll-btn').disabled = !isMine;
+            
+            if (isMine) LCRMultiplayer.UI.showActiveTurnBanner();
+            else if (players[turnIndex]) LCRMultiplayer.UI.showSpectatorBanner(players[turnIndex].name);
+        }
+
+        function _checkGameEnd() {
+            if (players.length === 2 && players[1].score > 0 && turnIndex === 0 && rollsCount === 0) {
+                const p1 = players[0];
+                const p2 = players[1];
+                let winMsg = p1.score > p2.score ? `${p1.name} Wins!` : (p2.score > p1.score ? `${p2.name} Wins!` : "Stalemate!");
+                document.getElementById('log').innerHTML = `<span class="text-gold font-bold">${winMsg}</span>`;
+                document.getElementById('roll-btn').disabled = true;
+            }
+        }
+
+        function _showGamePin(pin) {
+            const ex = document.getElementById('pin-disp');
+            if (ex) ex.remove();
+            const el = document.createElement('div');
+            el.id = 'pin-disp';
+            el.style.cssText = 'position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.8);color:var(--gold);padding:5px 10px;border-radius:5px;font-size:10px;border:1px solid var(--gold);z-index:100';
+            el.innerText = `PIN: ${pin}`;
+            document.body.appendChild(el);
+        }
+
+        function _shareLink(pin) {
+            const url = window.location.href.split('#')[0] + '#LCP:' + pin;
+            navigator.clipboard.writeText(url).then(() => LCRMultiplayer.UI.showToast('Invite Copied!'));
         }
     </script>
 </body>
