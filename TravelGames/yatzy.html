@@ -242,20 +242,20 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Standard scores 1–30 in 3-col grid */
+        /* Standard scores grid — 4 columns */
         .score-pick-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 7px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
             width: 100%;
             margin-bottom: 8px;
         }
 
-        /* Special scores row */
+        /* Special scores row — 2 columns */
         .score-pick-specials {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 7px;
+            gap: 6px;
             width: 100%;
             margin-bottom: 8px;
         }
@@ -267,10 +267,10 @@
             color: white;
             border-radius: 9px;
             font-family: 'Cinzel', serif;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             line-height: 1;
-            padding: 13px 4px;
+            padding: 12px 4px;
             text-align: center;
             box-shadow: 0 3px 0 #111;
             transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
@@ -290,11 +290,12 @@
             box-shadow: 0 0 0 2px var(--gold-light), 0 3px 0 #111;
         }
         .sp-btn.dimmed {
-            opacity: 0.22;
+            opacity: 0.18;
+            pointer-events: none;
         }
         /* Scratch / zero button */
         .sp-btn.scratch {
-            grid-column: span 3;
+            grid-column: span 4;
             background: #1a0808;
             border-color: rgba(239, 68, 68, 0.35);
             color: #ef4444;
@@ -303,7 +304,7 @@
             font-weight: 900;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            padding: 14px 4px;
+            padding: 13px 4px;
         }
         .sp-btn.scratch:active, .sp-btn.scratch.selected {
             background: #ef4444;
@@ -314,7 +315,7 @@
             background: #0d1f0d;
             border-color: rgba(212, 175, 55, 0.5);
             color: var(--gold-light);
-            font-size: 18px;
+            font-size: 17px;
         }
         .sp-btn.special .sp-label {
             display: block;
@@ -341,17 +342,6 @@
             text-transform: uppercase;
             color: rgba(255,255,255,0.25);
             margin: 4px 0 5px 2px;
-        }
-
-        /* Confirm bar */
-        .picker-confirm-bar {
-            width: 100%;
-            background: #000;
-            border-top: 2px solid var(--gold);
-            padding: 10px 12px;
-            display: flex;
-            gap: 10px;
-            flex-shrink: 0;
         }
 
         /* ── Setup Screen ── */
@@ -447,7 +437,10 @@
                 <div class="cinzel text-sm font-bold truncate" style="color:var(--gold-light)" id="np-player-name"></div>
                 <div class="text-white/40 uppercase text-[9px] tracking-widest" id="np-title"></div>
             </div>
-            <div class="cinzel text-3xl font-black" style="color:var(--gold)" id="np-display">—</div>
+            <div class="flex items-center gap-3">
+                <div class="cinzel text-3xl font-black" style="color:var(--gold)" id="np-display">—</div>
+                <button onclick="closeNumpad()" class="text-white/30 text-2xl leading-none px-1" style="font-family:Inter,sans-serif">✕</button>
+            </div>
         </div>
 
         <!-- Scrollable grid -->
@@ -456,7 +449,7 @@
             <div class="score-pick-grid" id="sp-main-grid">
                 <!-- Scratch row -->
                 <button class="sp-btn scratch" onclick="pickScore(0)">✕ Scratch / 0</button>
-                <!-- 1–30 filled by JS -->
+                <!-- numbers filled by JS -->
             </div>
 
             <div class="pick-section-label">Fixed Scores</div>
@@ -474,12 +467,6 @@
                     50 <span class="sp-label">Yatzy ⭐</span>
                 </button>
             </div>
-        </div>
-
-        <!-- Confirm bar -->
-        <div class="picker-confirm-bar">
-            <button onclick="closeNumpad()" class="flex-1 py-3 rounded-xl text-white font-bold uppercase text-xs" style="background:rgba(255,255,255,0.08)">Cancel</button>
-            <button onclick="confirmScore()" class="flex-1 py-3 rounded-xl text-white font-bold uppercase text-xs" style="background:#166534">Save Score</button>
         </div>
     </div>
 
@@ -736,43 +723,39 @@
     }
 
     // ── Valid scores per category ──
-    // null = any value 0–30 allowed (sum-based categories)
+    // Arrays = exact valid values. null = range-based (see buildPickerGrid).
     const CAT_VALID = {
-        '1':  [0,1,2,3,4,5],
-        '2':  [0,2,4,6,8,10],
-        '3':  [0,3,6,9,12,15],
-        '4':  [0,4,8,12,16,20],
-        '5':  [0,5,10,15,20,25],
-        '6':  [0,6,12,18,24,30],
-        '3x': null,   // 0 or 5–30
-        '4x': null,   // 0 or 5–30
-        'fh': [0,25],
-        'ss': [0,30],
-        'ls': [0,40],
-        'yz': [0,50],
-        'ch': null    // 0–30
+        '1':  [0,1,2,3,4,5],           // 1–5 ones
+        '2':  [0,2,4,6,8,10],          // 1–5 twos
+        '3':  [0,3,6,9,12,15],         // 1–5 threes
+        '4':  [0,4,8,12,16,20],        // 1–5 fours
+        '5':  [0,5,10,15,20,25],       // 1–5 fives
+        '6':  [0,6,12,18,24,30],       // 1–5 sixes
+        '3x': 'range_5_30',            // sum of all 5 dice, min 3×1+1+1=5
+        '4x': 'range_5_30',            // sum of all 5 dice, min 4×1+1=5
+        'fh': [0,25],                  // fixed
+        'ss': [0,30],                  // fixed
+        'ls': [0,40],                  // fixed
+        'yz': [0,50],                  // fixed
+        'ch': 'range_5_30'             // sum of all 5 dice, min 1+1+1+1+1=5
     };
 
-    let pickedScore = null; // currently highlighted score in picker
+    let pickedScore = null;
 
     function buildPickerGrid(catId) {
         const grid = document.getElementById('sp-main-grid');
-        // Keep the scratch button, rebuild number buttons
-        // Remove old number buttons
-        const existing = grid.querySelectorAll('.sp-num');
-        existing.forEach(b => b.remove());
+        grid.querySelectorAll('.sp-num').forEach(b => b.remove());
 
         const valid = CAT_VALID[catId];
         const specials = [25, 30, 40, 50];
 
-        // For sum-based (null): allow 0–30 except those covered by specials row
-        // For fixed: only show the allowed set
         const nums = [];
-        if (valid === null) {
-            for (let i = 1; i <= 30; i++) {
+        if (valid === 'range_5_30') {
+            // 5–30, excluding numbers handled by the specials row
+            for (let i = 5; i <= 30; i++) {
                 if (!specials.includes(i)) nums.push(i);
             }
-        } else {
+        } else if (Array.isArray(valid)) {
             valid.filter(v => v > 0 && !specials.includes(v)).forEach(v => nums.push(v));
         }
 
@@ -785,38 +768,80 @@
             grid.appendChild(btn);
         });
 
-        // Handle specials row dimming
-        const specialIds = { 25: 'sp-25', 30: 'sp-30', 40: 'sp-40', 50: 'sp-50' };
-        Object.entries(specialIds).forEach(([val, id]) => {
+        // Dim specials that don't apply to this category
+        const specialMap = { 25: 'sp-25', 30: 'sp-30', 40: 'sp-40', 50: 'sp-50' };
+        Object.entries(specialMap).forEach(([val, id]) => {
             const el = document.getElementById(id);
             if (!el) return;
-            const allowed = valid === null ? true : valid.includes(parseInt(val));
+            let allowed;
+            if (valid === 'range_5_30') {
+                allowed = parseInt(val) <= 30; // 25 & 30 yes, 40 & 50 no
+            } else if (Array.isArray(valid)) {
+                allowed = valid.includes(parseInt(val));
+            } else {
+                allowed = true;
+            }
             el.classList.toggle('dimmed', !allowed);
         });
-
-        // Scratch button: always available
-        const scratch = grid.querySelector('.scratch');
-        if (scratch) scratch.classList.remove('dimmed');
     }
 
     function pickScore(n) {
+        if (!activeSelection) return;
         pickedScore = n;
-        // Update display
-        document.getElementById('np-display').textContent = n === 0 ? '0' : n;
-        // Highlight selected button, clear others
+
+        // Flash highlight
         document.querySelectorAll('.sp-btn').forEach(b => b.classList.remove('selected'));
         const target = n === 0
             ? document.querySelector('.sp-btn.scratch')
             : document.getElementById(`sp-${n}`);
         if (target) target.classList.add('selected');
+
+        // Update header display
+        document.getElementById('np-display').textContent = n;
+
+        // Save immediately
+        saveScore(n);
+    }
+
+    function saveScore(score) {
+        const { pIdx, catId } = activeSelection;
+
+        if (score === 0) {
+            delete players[pIdx].scores[catId];
+        } else {
+            players[pIdx].scores[catId] = score;
+        }
+
+        // Recalculate totals
+        players.forEach(p => {
+            let upper = 0, lower = 0;
+            CATS.forEach(c => {
+                const val = p.scores[c.id] || 0;
+                if (c.type === 'upper') upper += val; else lower += val;
+            });
+            p.upperSum = upper;
+            p.bonus = upper >= 63 ? 35 : 0;
+            p.total = upper + p.bonus + lower;
+        });
+
+        // Advance turn only when the active player scored
+        if (pIdx === currentPlayer) {
+            currentPlayer = (currentPlayer + 1) % players.length;
+        }
+
+        // Brief visual feedback, then close
+        setTimeout(() => {
+            closeNumpad();
+            renderBoard();
+        }, 180);
     }
 
     function openNumpad(pIdx, catId) {
         activeSelection = { pIdx, catId };
+        pickedScore = null;
+
         const p = players[pIdx];
         const existingScore = p.scores[catId];
-
-        pickedScore = existingScore !== undefined ? existingScore : null;
 
         document.getElementById('np-icon').textContent = p.icon;
         document.getElementById('np-player-name').textContent = p.name;
@@ -835,54 +860,21 @@
             if (target) target.classList.add('selected');
         }
 
-        const overlay = document.getElementById('numpad');
-        overlay.style.display = 'flex';
+        document.getElementById('numpad').style.display = 'flex';
     }
 
     function closeNumpad() {
         document.getElementById('numpad').style.display = 'none';
+        activeSelection = null;
         pickedScore = null;
     }
 
-    // Legacy stubs (no longer used but kept to avoid reference errors)
+    // Stubs kept so no reference errors if called elsewhere
     function pressNum() {}
     function clearNum() {}
-
     function confirmScore() {
-        if (!activeSelection) return;
-        const { pIdx, catId } = activeSelection;
-
-        if (pickedScore === null) {
-            // Nothing selected — treat as cancel
-            closeNumpad();
-            return;
-        }
-
-        if (pickedScore === 0) {
-            delete players[pIdx].scores[catId];
-        } else {
-            players[pIdx].scores[catId] = pickedScore;
-        }
-        
-        // Recalculate totals
-        players.forEach(p => {
-            let upper = 0; let lower = 0;
-            CATS.forEach(c => {
-                const val = p.scores[c.id] || 0;
-                if (c.type === 'upper') upper += val; else lower += val;
-            });
-            p.upperSum = upper;
-            p.bonus = upper >= 63 ? 35 : 0;
-            p.total = upper + p.bonus + lower;
-        });
-
-        // Advance turn only when the active player entered their score
-        if (pIdx === currentPlayer) {
-            currentPlayer = (currentPlayer + 1) % players.length;
-        }
-
-        closeNumpad();
-        renderBoard();
+        if (pickedScore !== null) saveScore(pickedScore);
+        else closeNumpad();
     }
 
     renderSetup();
