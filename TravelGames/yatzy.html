@@ -1194,40 +1194,25 @@
         const p = players[pIdx];
         const existingScore = p.scores[catId];
 
-        // ── Single-value category: instant toggle ──
+        // ── Virtual mode: active player tapping an unfilled cell → auto-score from dice ──
+        if (gameMode === 'virtual' && pIdx === currentPlayer && existingScore === undefined) {
+            activeSelection = { pIdx, catId };
+            const validScores = validScoresForDice(catId);
+            // Use the first valid score, or 0 (scratch) if dice don't qualify
+            const autoScore = validScores.length > 0 ? validScores[0] : 0;
+            saveScore(autoScore);
+            return;
+        }
+
+        // ── Single-value category (real mode or correcting a filled cell): instant toggle ──
         if (CAT_SINGLE[catId] !== undefined) {
             activeSelection = { pIdx, catId };
-            // In virtual mode, only allow scoring the valid value (or scratch)
-            if (gameMode === 'virtual' && pIdx === currentPlayer && existingScore === undefined) {
-                const valid = validScoresForDice(catId);
-                const fixedVal = CAT_SINGLE[catId];
-                if (valid.includes(fixedVal)) {
-                    saveScore(fixedVal);
-                } else {
-                    // Not a valid combo — open picker to allow scratch only
-                    pickedScore = null;
-                    document.getElementById('np-icon').textContent = p.icon;
-                    document.getElementById('np-player-name').textContent = p.name;
-                    document.getElementById('np-title').textContent = CATS.find(c => c.id === catId).name;
-                    document.getElementById('np-display').textContent = '—';
-                    buildPickerGrid(catId);
-                    // Dim the valid fixed score since dice don't support it
-                    const specialMap = { 'fh': 'sp-25', 'ss': 'sp-30', 'ls': 'sp-40', 'yz': 'sp-50' };
-                    const spId = specialMap[catId];
-                    if (spId) {
-                        const el = document.getElementById(spId);
-                        if (el) el.classList.add('dimmed');
-                    }
-                    document.getElementById('numpad').style.display = 'flex';
-                }
-                return;
-            }
             const newScore = existingScore !== undefined ? 0 : CAT_SINGLE[catId];
             saveScore(newScore);
             return;
         }
 
-        // ── Multi-value: open picker ──
+        // ── Multi-value: open picker (real mode, or correcting a filled cell) ──
         activeSelection = { pIdx, catId };
         pickedScore = null;
 
@@ -1246,19 +1231,6 @@
                 ? document.querySelector('.sp-btn.scratch')
                 : document.getElementById(`sp-${existingScore}`);
             if (target) target.classList.add('selected');
-        }
-
-        // In virtual mode: highlight the dice-valid score(s) with a green tint
-        if (gameMode === 'virtual' && pIdx === currentPlayer) {
-            const validScores = validScoresForDice(catId);
-            document.querySelectorAll('.sp-btn.sp-num, .sp-btn.special').forEach(btn => {
-                const val = parseInt(btn.textContent);
-                if (!isNaN(val) && validScores.includes(val)) {
-                    btn.style.background = '#0d3a0d';
-                    btn.style.borderColor = 'rgba(100,255,100,0.5)';
-                    btn.style.color = '#aaffaa';
-                }
-            });
         }
 
         document.getElementById('numpad').style.display = 'flex';
