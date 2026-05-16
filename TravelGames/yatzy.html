@@ -408,6 +408,150 @@
             max-height: 80vh;
             overflow-y: auto;
         }
+
+        /* ── Virtual Dice Tray ── */
+        .dice-tray {
+            background: #020c06;
+            border-bottom: 2px solid rgba(212,175,55,0.3);
+            padding: 8px 6px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .dice-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+        /* 3D die wrapper */
+        .vdie-wrap {
+            width: 52px;
+            height: 52px;
+            perspective: 200px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .vdie {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.05s;
+            border-radius: 10px;
+        }
+        /* Rolling animation */
+        @keyframes dieRoll {
+            0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+            20%  { transform: rotateX(180deg) rotateY(90deg)  rotateZ(45deg); }
+            40%  { transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg); }
+            60%  { transform: rotateX(270deg) rotateY(270deg) rotateZ(180deg); }
+            80%  { transform: rotateX(90deg)  rotateY(360deg) rotateZ(270deg); }
+            100% { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+        }
+        .vdie.rolling {
+            animation: dieRoll 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        /* Die face SVG */
+        .vdie svg {
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
+            display: block;
+        }
+        /* Held state — gold ring */
+        .vdie-wrap.held .vdie svg rect:first-child {
+            stroke: var(--gold-light) !important;
+            stroke-width: 5 !important;
+        }
+        .vdie-wrap.held {
+            filter: drop-shadow(0 0 6px rgba(255,215,0,0.8));
+        }
+        /* Inactive (not current player's turn) */
+        .vdie-wrap.inactive {
+            opacity: 0.35;
+            cursor: default;
+            pointer-events: none;
+        }
+        /* Roll counter pills */
+        .roll-pips {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .roll-pip {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: background 0.2s;
+        }
+        .roll-pip.used {
+            background: var(--gold);
+            border-color: var(--gold-light);
+        }
+        /* Roll button hint */
+        .roll-hint {
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+        }
+        .roll-hint.active {
+            color: var(--gold);
+            animation: bonusPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        /* Must-score warning */
+        .must-score-badge {
+            background: #7a1a1a;
+            color: #ffaaaa;
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,100,100,0.4);
+            animation: bonusPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        /* Grid header — virtual mode: tappable to roll */
+        .grid-header.rollable {
+            cursor: pointer;
+        }
+        .grid-header.rollable:active {
+            background: #2a4a1a !important;
+        }
+        /* Setup footer two-button layout */
+        .setup-footer-2btn {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #1a1a3a, #0a0a4a);
+            color: var(--gold-light);
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            padding: 18px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border: 2px solid rgba(212,175,55,0.5);
+            box-shadow: 0 4px 0 #000, 0 0 12px rgba(100,100,255,0.15);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-secondary:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #000;
+        }
     </style>
 </head>
 <body>
@@ -504,7 +648,10 @@
         </div>
         
         <div class="setup-footer">
-            <button onclick="startGame()" class="btn-main">Start Game</button>
+            <div class="setup-footer-2btn">
+                <button onclick="startGame('real')" class="btn-main" style="font-size:15px;padding:14px">🎲 Real Dice</button>
+                <button onclick="startGame('virtual')" class="btn-secondary" style="font-size:15px;padding:14px">🖥️ Virtual</button>
+            </div>
         </div>
     </div>
 
@@ -513,6 +660,21 @@
         <a href="index.html" class="nav-btn home-btn" title="Home">🏠</a>
         <div class="cinzel text-xs tracking-widest" style="color:var(--gold)">Travel Yatzy</div>
         <button onclick="openHelp()" class="nav-btn help-btn" title="Help">?</button>
+    </div>
+
+    <!-- ── Virtual Dice Tray (hidden in real-dice mode) ── -->
+    <div id="dice-tray" class="dice-tray" style="display:none">
+        <div class="dice-row" id="dice-row">
+            <!-- 5 dice rendered by JS -->
+        </div>
+        <div class="flex items-center gap-8">
+            <div class="roll-pips" id="roll-pips">
+                <div class="roll-pip" id="pip0"></div>
+                <div class="roll-pip" id="pip1"></div>
+                <div class="roll-pip" id="pip2"></div>
+            </div>
+            <div class="roll-hint" id="roll-hint">Tap name to roll</div>
+        </div>
     </div>
 
     <!-- Board -->
@@ -526,6 +688,17 @@
 </div>
 
 <script>
+    // ── Game mode ──
+    let gameMode = 'real'; // 'real' | 'virtual'
+
+    // ── Virtual dice state ──
+    const vDice = {
+        values: [1, 1, 1, 1, 1],   // current face values
+        held:   [false, false, false, false, false],
+        rolls:  0,                  // rolls used this turn (0 = not started)
+        rolling: false              // animation in progress
+    };
+
     const ALL_DEFAULTS = [
         { name: 'Mickey', icon: '🐭', active: true },
         { name: 'Elsa', icon: '❄️', active: true },
@@ -581,57 +754,64 @@
         // 3X bold text badge
         '3x': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
-                 <text x="50" y="56" text-anchor="middle" font-size="42" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">3X</text>
+                 <text x="50" y="53" text-anchor="middle" font-size="36" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">3X</text>
                </svg>`,
         // 4X bold text badge
         '4x': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
-                 <text x="50" y="56" text-anchor="middle" font-size="42" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">4X</text>
+                 <text x="50" y="53" text-anchor="middle" font-size="36" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">4X</text>
                </svg>`,
         // Full House: house icon
         'fh': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
-                 <!-- roof -->
-                 <polygon points="50,18 78,36 22,36" fill="#1a1a1a"/>
-                 <!-- walls -->
-                 <rect x="28" y="36" width="44" height="26" fill="#1a1a1a"/>
-                 <!-- door -->
-                 <rect x="41" y="48" width="18" height="14" fill="white"/>
+                 <g transform="translate(50,40) scale(0.72) translate(-50,-38)">
+                   <!-- roof -->
+                   <polygon points="50,14 82,34 18,34" fill="#1a1a1a"/>
+                   <!-- walls -->
+                   <rect x="26" y="34" width="48" height="28" fill="#1a1a1a"/>
+                   <!-- door -->
+                   <rect x="39" y="47" width="22" height="15" fill="white"/>
+                 </g>
                </svg>`,
         // Small Straight: card fan with SMALL label
         'ss': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
-                 <rect x="14" y="12" width="26" height="34" rx="4" fill="#1a1a1a" transform="rotate(-15 27 29)"/>
-                 <rect x="22" y="10" width="26" height="34" rx="4" fill="#333"   transform="rotate(-5 35 27)"/>
-                 <rect x="32" y="10" width="26" height="34" rx="4" fill="#555"   transform="rotate(8 45 27)"/>
-                 <rect x="42" y="12" width="26" height="34" rx="4" fill="#777"   transform="rotate(20 55 29)"/>
-                 <text x="50" y="72" text-anchor="middle" font-size="13" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">SMALL</text>
+                 <g transform="translate(50,34) scale(0.72) translate(-50,-28)">
+                   <rect x="14" y="8"  width="26" height="34" rx="4" fill="#1a1a1a" transform="rotate(-15 27 25)"/>
+                   <rect x="22" y="6"  width="26" height="34" rx="4" fill="#333"   transform="rotate(-5 35 23)"/>
+                   <rect x="32" y="6"  width="26" height="34" rx="4" fill="#555"   transform="rotate(8 45 23)"/>
+                   <rect x="42" y="8"  width="26" height="34" rx="4" fill="#777"   transform="rotate(20 55 25)"/>
+                 </g>
+                 <text x="50" y="71" text-anchor="middle" font-size="12" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">SMALL</text>
                </svg>`,
         // Large Straight: card fan with LARGE label
         'ls': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
-                 <rect x="8"  y="12" width="24" height="32" rx="4" fill="#1a1a1a" transform="rotate(-20 20 28)"/>
-                 <rect x="16" y="10" width="24" height="32" rx="4" fill="#333"   transform="rotate(-10 28 26)"/>
-                 <rect x="26" y="9"  width="24" height="32" rx="4" fill="#555"   transform="rotate(0 38 25)"/>
-                 <rect x="36" y="10" width="24" height="32" rx="4" fill="#777"   transform="rotate(10 48 26)"/>
-                 <rect x="46" y="12" width="24" height="32" rx="4" fill="#999"   transform="rotate(20 58 28)"/>
-                 <text x="50" y="72" text-anchor="middle" font-size="13" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">LARGE</text>
+                 <g transform="translate(50,33) scale(0.72) translate(-50,-27)">
+                   <rect x="8"  y="8"  width="24" height="32" rx="4" fill="#1a1a1a" transform="rotate(-20 20 24)"/>
+                   <rect x="16" y="6"  width="24" height="32" rx="4" fill="#333"   transform="rotate(-10 28 22)"/>
+                   <rect x="26" y="5"  width="24" height="32" rx="4" fill="#555"   transform="rotate(0 38 21)"/>
+                   <rect x="36" y="6"  width="24" height="32" rx="4" fill="#777"   transform="rotate(10 48 22)"/>
+                   <rect x="46" y="8"  width="24" height="32" rx="4" fill="#999"   transform="rotate(20 58 24)"/>
+                 </g>
+                 <text x="50" y="71" text-anchor="middle" font-size="12" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">LARGE</text>
                </svg>`,
         // Yatzy: gold badge with YATZY text
         'yz': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="#1a1a1a" stroke="#6b21a8" stroke-width="4"/>
-                 <!-- card fan background -->
-                 <rect x="10" y="10" width="22" height="30" rx="4" fill="#444" transform="rotate(-18 21 25)"/>
-                 <rect x="18" y="8"  width="22" height="30" rx="4" fill="#555" transform="rotate(-8 29 23)"/>
-                 <rect x="28" y="7"  width="22" height="30" rx="4" fill="#666" transform="rotate(2 39 22)"/>
-                 <rect x="38" y="8"  width="22" height="30" rx="4" fill="#555" transform="rotate(12 49 23)"/>
-                 <rect x="48" y="10" width="22" height="30" rx="4" fill="#444" transform="rotate(22 59 25)"/>
-                 <text x="50" y="68" text-anchor="middle" font-size="20" font-weight="900" fill="#ffd700" font-family="Arial Black,sans-serif" letter-spacing="1">YATZY</text>
+                 <g transform="translate(50,32) scale(0.78) translate(-50,-28)">
+                   <rect x="10" y="10" width="22" height="30" rx="4" fill="#444" transform="rotate(-18 21 25)"/>
+                   <rect x="18" y="8"  width="22" height="30" rx="4" fill="#555" transform="rotate(-8 29 23)"/>
+                   <rect x="28" y="7"  width="22" height="30" rx="4" fill="#666" transform="rotate(2 39 22)"/>
+                   <rect x="38" y="8"  width="22" height="30" rx="4" fill="#555" transform="rotate(12 49 23)"/>
+                   <rect x="48" y="10" width="22" height="30" rx="4" fill="#444" transform="rotate(22 59 25)"/>
+                 </g>
+                 <text x="50" y="70" text-anchor="middle" font-size="18" font-weight="900" fill="#ffd700" font-family="Arial Black,sans-serif" letter-spacing="1">YATZY</text>
                </svg>`,
         // Chance: question mark
         'ch': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
-                 <text x="50" y="60" text-anchor="middle" font-size="52" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">?</text>
+                 <text x="50" y="57" text-anchor="middle" font-size="44" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">?</text>
                </svg>`
     };
 
@@ -681,12 +861,23 @@
         renderSetup();
     }
 
-    function startGame() {
+    function startGame(mode) {
+        gameMode = mode || 'real';
         players = ALL_DEFAULTS.filter(p => p.active).map(p => ({
             ...p, scores: {}, total: 0, upperSum: 0, bonus: 0
         }));
         currentPlayer = 0;
         document.getElementById('setup-screen').style.display = 'none';
+
+        // Show/hide dice tray
+        const tray = document.getElementById('dice-tray');
+        if (gameMode === 'virtual') {
+            tray.style.display = 'flex';
+            resetVirtualTurn();
+        } else {
+            tray.style.display = 'none';
+        }
+
         renderBoard();
     }
 
@@ -699,8 +890,11 @@
         players.forEach((p, pIdx) => {
             const bonusEarned = p.upperSum >= 63;
             const isActive = pIdx === currentPlayer;
+            // In virtual mode, active player header triggers a roll
+            const rollable = gameMode === 'virtual' && isActive && vDice.rolls < 3 && !vDice.rolling;
             html += `
-                <div class="grid-header ${isActive ? 'active-player' : ''}">
+                <div class="grid-header ${isActive ? 'active-player' : ''} ${rollable ? 'rollable' : ''}"
+                     ${rollable ? 'onclick="rollDice()"' : ''}>
                     ${isActive ? `<div class="turn-arrow" style="color:var(--gold-light)">▶</div>` : ''}
                     <div class="text-2xl leading-none">${p.icon}</div>
                     <div class="text-[9px] text-white/60 uppercase font-black truncate max-w-[60px]">${p.name}</div>
@@ -709,6 +903,7 @@
                         ? `<div class="bonus-badge mt-1">⭐ +35</div>`
                         : `<div style="font-size:8px;color:rgba(255,255,255,0.25);margin-top:2px">${p.upperSum}/63</div>`
                     }
+                    ${rollable && vDice.rolls === 0 ? `<div style="font-size:8px;color:var(--gold);margin-top:2px;font-family:Inter,sans-serif;font-weight:900">TAP TO ROLL</div>` : ''}
                 </div>
             `;
         });
@@ -721,8 +916,11 @@
                 const score = p.scores[cat.id];
                 const isActive = pIdx === currentPlayer;
                 const isFilled = score !== undefined;
-                // Tappable: active player's empty cells, OR any filled cell (any player)
-                const tappable = isActive || isFilled;
+                // In virtual mode, active player can only score after at least 1 roll
+                const canScore = gameMode === 'virtual'
+                    ? (isActive && vDice.rolls > 0) || isFilled
+                    : isActive || isFilled;
+                const tappable = canScore;
                 const cellClass = [
                     'score-cell',
                     isFilled  ? 'filled'        : '',
@@ -744,6 +942,11 @@
         const p = players[currentPlayer];
         document.getElementById('turn-indicator').textContent =
             `${p.icon}  ${p.name}'s turn`;
+
+        // Update dice tray if virtual
+        if (gameMode === 'virtual') {
+            renderDiceTray();
+        }
     }
 
     // ── Valid scores per category ──
@@ -853,6 +1056,8 @@
         // Advance turn only when the active player fills a previously empty cell
         if (pIdx === currentPlayer && wasEmpty && score !== 0) {
             currentPlayer = (currentPlayer + 1) % players.length;
+            // Reset virtual dice for the next player's turn
+            if (gameMode === 'virtual') resetVirtualTurn();
         }
 
         // 180ms flash for picker, instant for single-value toggle
@@ -873,6 +1078,31 @@
         // ── Single-value category: instant toggle ──
         if (CAT_SINGLE[catId] !== undefined) {
             activeSelection = { pIdx, catId };
+            // In virtual mode, only allow scoring the valid value (or scratch)
+            if (gameMode === 'virtual' && pIdx === currentPlayer && existingScore === undefined) {
+                const valid = validScoresForDice(catId);
+                const fixedVal = CAT_SINGLE[catId];
+                if (valid.includes(fixedVal)) {
+                    saveScore(fixedVal);
+                } else {
+                    // Not a valid combo — open picker to allow scratch only
+                    pickedScore = null;
+                    document.getElementById('np-icon').textContent = p.icon;
+                    document.getElementById('np-player-name').textContent = p.name;
+                    document.getElementById('np-title').textContent = CATS.find(c => c.id === catId).name;
+                    document.getElementById('np-display').textContent = '—';
+                    buildPickerGrid(catId);
+                    // Dim the valid fixed score since dice don't support it
+                    const specialMap = { 'fh': 'sp-25', 'ss': 'sp-30', 'ls': 'sp-40', 'yz': 'sp-50' };
+                    const spId = specialMap[catId];
+                    if (spId) {
+                        const el = document.getElementById(spId);
+                        if (el) el.classList.add('dimmed');
+                    }
+                    document.getElementById('numpad').style.display = 'flex';
+                }
+                return;
+            }
             const newScore = existingScore !== undefined ? 0 : CAT_SINGLE[catId];
             saveScore(newScore);
             return;
@@ -899,6 +1129,19 @@
             if (target) target.classList.add('selected');
         }
 
+        // In virtual mode: highlight the dice-valid score(s) with a green tint
+        if (gameMode === 'virtual' && pIdx === currentPlayer) {
+            const validScores = validScoresForDice(catId);
+            document.querySelectorAll('.sp-btn.sp-num, .sp-btn.special').forEach(btn => {
+                const val = parseInt(btn.textContent);
+                if (!isNaN(val) && validScores.includes(val)) {
+                    btn.style.background = '#0d3a0d';
+                    btn.style.borderColor = 'rgba(100,255,100,0.5)';
+                    btn.style.color = '#aaffaa';
+                }
+            });
+        }
+
         document.getElementById('numpad').style.display = 'flex';
     }
 
@@ -915,6 +1158,187 @@
         if (pickedScore !== null) saveScore(pickedScore);
         else closeNumpad();
     }
+
+    // ── Virtual Dice Engine ──────────────────────────────────────────────
+
+    // Build a die SVG inline (same style as DICE_SVGS but sized for the tray)
+    function dieSVG(val, held) {
+        const stroke = held ? '#ffd700' : '#6b21a8';
+        const sw     = held ? 6 : 4;
+        const pips = {
+            1: [[50,50]],
+            2: [[30,30],[70,70]],
+            3: [[28,28],[50,50],[72,72]],
+            4: [[30,30],[70,30],[30,70],[70,70]],
+            5: [[30,30],[70,30],[50,50],[30,70],[70,70]],
+            6: [[30,25],[70,25],[30,50],[70,50],[30,75],[70,75]]
+        };
+        const circles = (pips[val] || []).map(([cx,cy]) =>
+            `<circle cx="${cx}" cy="${cy}" r="9" fill="#1a1a1a"/>`
+        ).join('');
+        return `<svg viewBox="0 0 100 100" style="width:52px;height:52px;border-radius:10px;display:block">
+            <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="${stroke}" stroke-width="${sw}"/>
+            ${circles}
+        </svg>`;
+    }
+
+    function resetVirtualTurn() {
+        vDice.values  = [1,1,1,1,1];
+        vDice.held    = [false,false,false,false,false];
+        vDice.rolls   = 0;
+        vDice.rolling = false;
+    }
+
+    function renderDiceTray() {
+        const row  = document.getElementById('dice-row');
+        const hint = document.getElementById('roll-hint');
+        if (!row) return;
+
+        // Render 5 dice
+        row.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const wrap = document.createElement('div');
+            wrap.className = 'vdie-wrap' +
+                (vDice.held[i] ? ' held' : '') +
+                (vDice.rolls === 0 ? ' inactive' : '');
+            wrap.id = `vdie-${i}`;
+
+            const inner = document.createElement('div');
+            inner.className = 'vdie';
+            inner.id = `vdie-inner-${i}`;
+            inner.innerHTML = dieSVG(vDice.values[i], vDice.held[i]);
+
+            if (vDice.rolls > 0) {
+                wrap.onclick = () => toggleHold(i);
+            }
+            wrap.appendChild(inner);
+            row.appendChild(wrap);
+        }
+
+        // Roll pips
+        for (let p = 0; p < 3; p++) {
+            const pip = document.getElementById(`pip${p}`);
+            if (pip) pip.className = 'roll-pip' + (p < vDice.rolls ? ' used' : '');
+        }
+
+        // Hint text
+        if (vDice.rolls === 0) {
+            hint.textContent = 'Tap name to roll';
+            hint.className = 'roll-hint active';
+        } else if (vDice.rolls < 3) {
+            const heldCount = vDice.held.filter(Boolean).length;
+            hint.textContent = heldCount > 0
+                ? `${heldCount} held · tap name to roll again`
+                : 'Tap a die to hold · tap name to roll again';
+            hint.className = 'roll-hint';
+        } else {
+            hint.textContent = 'Roll 3 done — choose a score';
+            hint.className = 'roll-hint must-score-badge';
+        }
+    }
+
+    function toggleHold(i) {
+        if (vDice.rolls === 0 || vDice.rolls >= 3 || vDice.rolling) return;
+        vDice.held[i] = !vDice.held[i];
+        renderDiceTray();
+    }
+
+    function rollDice() {
+        if (vDice.rolls >= 3 || vDice.rolling) return;
+
+        vDice.rolling = true;
+        vDice.rolls++;
+
+        // Animate un-held dice
+        const toRoll = [];
+        for (let i = 0; i < 5; i++) {
+            if (!vDice.held[i]) toRoll.push(i);
+        }
+
+        // Start roll animation on each un-held die
+        toRoll.forEach(i => {
+            const inner = document.getElementById(`vdie-inner-${i}`);
+            if (inner) {
+                inner.classList.remove('rolling');
+                void inner.offsetWidth; // reflow to restart animation
+                inner.classList.add('rolling');
+            }
+        });
+
+        // Randomise values mid-animation
+        setTimeout(() => {
+            toRoll.forEach(i => {
+                vDice.values[i] = Math.ceil(Math.random() * 6);
+            });
+        }, 200);
+
+        // Finish after animation
+        setTimeout(() => {
+            vDice.rolling = false;
+            toRoll.forEach(i => {
+                const inner = document.getElementById(`vdie-inner-${i}`);
+                if (inner) {
+                    inner.classList.remove('rolling');
+                    inner.innerHTML = dieSVG(vDice.values[i], vDice.held[i]);
+                }
+            });
+            renderDiceTray();
+            renderBoard(); // refresh header roll-button state
+        }, 580);
+
+        renderDiceTray(); // update pips immediately
+    }
+
+    // ── Score picker: in virtual mode, pre-highlight valid scores ──
+    // Returns the set of valid scores for a category given the current dice
+    function validScoresForDice(catId) {
+        const vals = vDice.values.slice().sort((a,b) => a-b);
+        const counts = {};
+        vals.forEach(v => counts[v] = (counts[v]||0)+1);
+        const sum = vals.reduce((a,b) => a+b, 0);
+        const maxCount = Math.max(...Object.values(counts));
+
+        switch (catId) {
+            case '1': case '2': case '3': case '4': case '5': case '6': {
+                const n = parseInt(catId);
+                const s = (counts[n]||0) * n;
+                return s > 0 ? [s] : [];
+            }
+            case '3x':
+                return maxCount >= 3 ? [sum] : [];
+            case '4x':
+                return maxCount >= 4 ? [sum] : [];
+            case 'fh': {
+                const cv = Object.values(counts).sort();
+                return (cv.length === 2 && cv[0] === 2 && cv[1] === 3) ? [25] : [];
+            }
+            case 'ss': {
+                const uniq = [...new Set(vals)];
+                const hasSmall = (
+                    [1,2,3,4].every(v => uniq.includes(v)) ||
+                    [2,3,4,5].every(v => uniq.includes(v)) ||
+                    [3,4,5,6].every(v => uniq.includes(v))
+                );
+                return hasSmall ? [30] : [];
+            }
+            case 'ls': {
+                const uniq = [...new Set(vals)];
+                const hasLarge = (
+                    [1,2,3,4,5].every(v => uniq.includes(v)) ||
+                    [2,3,4,5,6].every(v => uniq.includes(v))
+                );
+                return hasLarge ? [40] : [];
+            }
+            case 'yz':
+                return maxCount === 5 ? [50] : [];
+            case 'ch':
+                return [sum];
+            default:
+                return [];
+        }
+    }
+
+    // ── End of virtual dice engine ────────────────────────────────────────
 
     renderSetup();
 
