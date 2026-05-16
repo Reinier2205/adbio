@@ -180,7 +180,30 @@
             white-space: nowrap;
         }
 
-        /* ── Numpad Overlay ── */
+        /* ── Active player column ── */
+        @keyframes turnPulse {
+            0%, 100% { box-shadow: inset 0 0 0 2px rgba(212,175,55,0.6); }
+            50%       { box-shadow: inset 0 0 0 2px rgba(255,215,0,1); }
+        }
+        .grid-header.active-player {
+            background: #1a3a0a;
+            border-bottom-color: var(--gold-light);
+        }
+        .score-cell.active-col {
+            background: #0c3018;
+        }
+        .score-cell.active-col.filled {
+            background: #071a0c;
+        }
+        .score-cell.active-col:not(.filled) {
+            animation: turnPulse 2s ease-in-out infinite;
+        }
+        .turn-arrow {
+            font-size: 14px;
+            line-height: 1;
+            animation: bonusPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        /* ── Score Picker Overlay ── */
         .numpad-overlay {
             position: absolute;
             inset: 0;
@@ -189,8 +212,8 @@
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            justify-content: flex-start;
+            padding: 0;
             animation: overlayIn 0.2s ease;
         }
         @keyframes overlayIn {
@@ -198,42 +221,137 @@
             to   { opacity: 1; transform: scale(1); }
         }
 
-        .num-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+        /* Picker header */
+        .picker-header {
             width: 100%;
-            max-width: 320px;
-        }
-
-        .num-btn {
-            background: #1a1a1a;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            color: white;
-            padding: 22px;
-            font-size: 32px;
-            border-radius: 10px;
-            font-family: 'Cinzel', serif;
-            line-height: 1;
-            box-shadow: 0 4px 0 #111;
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-        .num-btn:active {
-            background: var(--gold);
-            color: black;
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #111;
-        }
-        .num-btn.zero { grid-column: span 2; }
-        .num-btn.clear {
-            background: #331111;
-            color: #ef4444;
-            font-size: 16px;
+            background: #0a0a0a;
+            border-bottom: 2px solid var(--gold);
+            padding: 10px 16px 8px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        /* Scrollable score grid */
+        .picker-scroll {
+            flex: 1;
+            width: 100%;
+            overflow-y: auto;
+            padding: 10px 10px 6px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Standard scores 1–30 in 3-col grid */
+        .score-pick-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        /* Special scores row */
+        .score-pick-specials {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 7px;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        /* Individual score button */
+        .sp-btn {
+            background: #1a1a1a;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            color: white;
+            border-radius: 9px;
+            font-family: 'Cinzel', serif;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 13px 4px;
+            text-align: center;
+            box-shadow: 0 3px 0 #111;
+            transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
+            cursor: pointer;
+            position: relative;
+        }
+        .sp-btn:active {
+            background: var(--gold);
+            color: #111;
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #111;
+        }
+        .sp-btn.selected {
+            background: var(--gold);
+            color: #111;
+            border-color: var(--gold-light);
+            box-shadow: 0 0 0 2px var(--gold-light), 0 3px 0 #111;
+        }
+        .sp-btn.dimmed {
+            opacity: 0.22;
+        }
+        /* Scratch / zero button */
+        .sp-btn.scratch {
+            grid-column: span 3;
+            background: #1a0808;
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #ef4444;
             font-family: 'Inter', sans-serif;
+            font-size: 13px;
             font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 14px 4px;
+        }
+        .sp-btn.scratch:active, .sp-btn.scratch.selected {
+            background: #ef4444;
+            color: white;
+        }
+        /* Special high-value buttons */
+        .sp-btn.special {
+            background: #0d1f0d;
+            border-color: rgba(212, 175, 55, 0.5);
+            color: var(--gold-light);
+            font-size: 18px;
+        }
+        .sp-btn.special .sp-label {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
+            margin-top: 3px;
+        }
+        .sp-btn.special:active, .sp-btn.special.selected {
+            background: var(--gold);
+            color: #111;
+        }
+        .sp-btn.special.selected .sp-label { color: rgba(0,0,0,0.5); }
+
+        /* Section divider label */
+        .pick-section-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.25);
+            margin: 4px 0 5px 2px;
+        }
+
+        /* Confirm bar */
+        .picker-confirm-bar {
+            width: 100%;
+            background: #000;
+            border-top: 2px solid var(--gold);
+            padding: 10px 12px;
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
         }
 
         /* ── Setup Screen ── */
@@ -320,32 +438,48 @@
         </div>
     </div>
 
-    <!-- ── Numpad ── -->
+    <!-- ── Score Picker ── -->
     <div id="numpad" class="numpad-overlay">
-        <div class="flex items-center gap-3 mb-2">
-            <span id="np-icon" class="text-2xl"></span>
-            <span id="np-player-name" class="cinzel text-gold text-lg"></span>
+        <!-- Header -->
+        <div class="picker-header">
+            <span id="np-icon" class="text-2xl leading-none"></span>
+            <div class="flex-1 min-w-0">
+                <div class="cinzel text-sm font-bold truncate" style="color:var(--gold-light)" id="np-player-name"></div>
+                <div class="text-white/40 uppercase text-[9px] tracking-widest" id="np-title"></div>
+            </div>
+            <div class="cinzel text-3xl font-black" style="color:var(--gold)" id="np-display">—</div>
         </div>
-        <div class="text-white/60 uppercase text-[10px] tracking-widest mb-1" id="np-title">Category</div>
-        <div id="np-display" class="text-6xl text-gold-light font-black mb-6 h-16 flex items-center justify-center">0</div>
-        
-        <div class="num-grid">
-            <button class="num-btn" onclick="pressNum(1)">1</button>
-            <button class="num-btn" onclick="pressNum(2)">2</button>
-            <button class="num-btn" onclick="pressNum(3)">3</button>
-            <button class="num-btn" onclick="pressNum(4)">4</button>
-            <button class="num-btn" onclick="pressNum(5)">5</button>
-            <button class="num-btn" onclick="pressNum(6)">6</button>
-            <button class="num-btn" onclick="pressNum(7)">7</button>
-            <button class="num-btn" onclick="pressNum(8)">8</button>
-            <button class="num-btn" onclick="pressNum(9)">9</button>
-            <button class="num-btn clear" onclick="clearNum()">CLEAR</button>
-            <button class="num-btn zero" onclick="pressNum(0)">0</button>
+
+        <!-- Scrollable grid -->
+        <div class="picker-scroll">
+            <div class="pick-section-label">Score</div>
+            <div class="score-pick-grid" id="sp-main-grid">
+                <!-- Scratch row -->
+                <button class="sp-btn scratch" onclick="pickScore(0)">✕ Scratch / 0</button>
+                <!-- 1–30 filled by JS -->
+            </div>
+
+            <div class="pick-section-label">Fixed Scores</div>
+            <div class="score-pick-specials" id="sp-specials-grid">
+                <button class="sp-btn special" onclick="pickScore(25)" id="sp-25">
+                    25 <span class="sp-label">Full House</span>
+                </button>
+                <button class="sp-btn special" onclick="pickScore(30)" id="sp-30">
+                    30 <span class="sp-label">Sm. Straight</span>
+                </button>
+                <button class="sp-btn special" onclick="pickScore(40)" id="sp-40">
+                    40 <span class="sp-label">Lg. Straight</span>
+                </button>
+                <button class="sp-btn special" onclick="pickScore(50)" id="sp-50">
+                    50 <span class="sp-label">Yatzy ⭐</span>
+                </button>
+            </div>
         </div>
-        
-        <div class="flex w-full max-w-[320px] gap-4 mt-8">
-            <button onclick="closeNumpad()" class="flex-1 py-4 bg-white/10 rounded-xl text-white font-bold uppercase text-xs">Cancel</button>
-            <button onclick="confirmScore()" class="flex-1 py-4 bg-green-700 rounded-xl text-white font-bold uppercase text-xs">Save Score</button>
+
+        <!-- Confirm bar -->
+        <div class="picker-confirm-bar">
+            <button onclick="closeNumpad()" class="flex-1 py-3 rounded-xl text-white font-bold uppercase text-xs" style="background:rgba(255,255,255,0.08)">Cancel</button>
+            <button onclick="confirmScore()" class="flex-1 py-3 rounded-xl text-white font-bold uppercase text-xs" style="background:#166534">Save Score</button>
         </div>
     </div>
 
@@ -384,7 +518,7 @@
 
     <!-- ── Footer ── -->
     <div class="bg-black px-4 py-2 border-t flex justify-between items-center text-[10px]" style="border-color:var(--gold)">
-        <div class="uppercase" style="color:var(--gold);opacity:0.6">Tap cell to edit</div>
+        <div id="turn-indicator" class="uppercase font-black text-[11px]" style="color:var(--gold)">— —</div>
         <button onclick="location.reload()" class="inter font-black uppercase text-[9px] px-3 py-1 rounded" style="background:rgba(255,255,255,0.08);color:white">Reset</button>
     </div>
 </div>
@@ -456,32 +590,30 @@
         'fh': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
                  <!-- roof -->
-                 <polygon points="50,14 82,38 18,38" fill="#1a1a1a"/>
+                 <polygon points="50,18 78,36 22,36" fill="#1a1a1a"/>
                  <!-- walls -->
-                 <rect x="26" y="38" width="48" height="30" fill="#1a1a1a"/>
+                 <rect x="28" y="36" width="44" height="26" fill="#1a1a1a"/>
                  <!-- door -->
-                 <rect x="40" y="50" width="20" height="18" fill="white"/>
+                 <rect x="41" y="48" width="18" height="14" fill="white"/>
                </svg>`,
         // Small Straight: card fan with SMALL label
         'ss': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
-                 <!-- card fan -->
-                 <rect x="14" y="16" width="28" height="36" rx="4" fill="#1a1a1a" transform="rotate(-15 28 34)"/>
-                 <rect x="22" y="14" width="28" height="36" rx="4" fill="#333" transform="rotate(-5 36 32)"/>
-                 <rect x="32" y="14" width="28" height="36" rx="4" fill="#555" transform="rotate(8 46 32)"/>
-                 <rect x="42" y="16" width="28" height="36" rx="4" fill="#777" transform="rotate(20 56 34)"/>
-                 <text x="50" y="74" text-anchor="middle" font-size="14" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">SMALL</text>
+                 <rect x="14" y="12" width="26" height="34" rx="4" fill="#1a1a1a" transform="rotate(-15 27 29)"/>
+                 <rect x="22" y="10" width="26" height="34" rx="4" fill="#333"   transform="rotate(-5 35 27)"/>
+                 <rect x="32" y="10" width="26" height="34" rx="4" fill="#555"   transform="rotate(8 45 27)"/>
+                 <rect x="42" y="12" width="26" height="34" rx="4" fill="#777"   transform="rotate(20 55 29)"/>
+                 <text x="50" y="72" text-anchor="middle" font-size="13" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">SMALL</text>
                </svg>`,
         // Large Straight: card fan with LARGE label
         'ls': `<svg class="cat-badge" viewBox="0 0 100 80">
                  <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
-                 <!-- card fan (5 cards) -->
-                 <rect x="10" y="16" width="26" height="34" rx="4" fill="#1a1a1a" transform="rotate(-20 23 33)"/>
-                 <rect x="18" y="13" width="26" height="34" rx="4" fill="#333" transform="rotate(-10 31 30)"/>
-                 <rect x="28" y="12" width="26" height="34" rx="4" fill="#555" transform="rotate(0 41 29)"/>
-                 <rect x="38" y="13" width="26" height="34" rx="4" fill="#777" transform="rotate(10 51 30)"/>
-                 <rect x="48" y="16" width="26" height="34" rx="4" fill="#999" transform="rotate(20 61 33)"/>
-                 <text x="50" y="74" text-anchor="middle" font-size="14" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">LARGE</text>
+                 <rect x="8"  y="12" width="24" height="32" rx="4" fill="#1a1a1a" transform="rotate(-20 20 28)"/>
+                 <rect x="16" y="10" width="24" height="32" rx="4" fill="#333"   transform="rotate(-10 28 26)"/>
+                 <rect x="26" y="9"  width="24" height="32" rx="4" fill="#555"   transform="rotate(0 38 25)"/>
+                 <rect x="36" y="10" width="24" height="32" rx="4" fill="#777"   transform="rotate(10 48 26)"/>
+                 <rect x="46" y="12" width="24" height="32" rx="4" fill="#999"   transform="rotate(20 58 28)"/>
+                 <text x="50" y="72" text-anchor="middle" font-size="13" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">LARGE</text>
                </svg>`,
         // Yatzy: gold badge with YATZY text
         'yz': `<svg class="cat-badge" viewBox="0 0 100 80">
@@ -519,7 +651,7 @@
 
     let players = [];
     let activeSelection = null;
-    let currentInputStr = "";
+    let currentPlayer = 0; // index of whose turn it is
 
     function renderSetup() {
         const list = document.getElementById('player-setup-list');
@@ -551,6 +683,7 @@
         players = ALL_DEFAULTS.filter(p => p.active).map(p => ({
             ...p, scores: {}, total: 0, upperSum: 0, bonus: 0
         }));
+        currentPlayer = 0;
         document.getElementById('setup-screen').style.display = 'none';
         renderBoard();
     }
@@ -561,11 +694,13 @@
 
         // Header Row (Sticky)
         let html = `<div class="grid-header bg-black/50"></div>`;
-        players.forEach((p) => {
+        players.forEach((p, pIdx) => {
             const bonusEarned = p.upperSum >= 63;
+            const isActive = pIdx === currentPlayer;
             html += `
-                <div class="grid-header">
-                    <div class="text-2xl leading-none mb-1">${p.icon}</div>
+                <div class="grid-header ${isActive ? 'active-player' : ''}">
+                    ${isActive ? `<div class="turn-arrow" style="color:var(--gold-light)">▶</div>` : ''}
+                    <div class="text-2xl leading-none">${p.icon}</div>
                     <div class="text-[9px] text-white/60 uppercase font-black truncate max-w-[60px]">${p.name}</div>
                     <div class="text-[18px] font-black cinzel" style="color:var(--gold-light)">${p.total}</div>
                     ${bonusEarned
@@ -582,8 +717,9 @@
             html += `<div class="category-cell">${icon}</div>`;
             players.forEach((p, pIdx) => {
                 const score = p.scores[cat.id];
+                const isActive = pIdx === currentPlayer;
                 html += `
-                    <div class="score-cell ${score !== undefined ? 'filled' : ''}"
+                    <div class="score-cell ${score !== undefined ? 'filled' : ''} ${isActive ? 'active-col' : ''}"
                          onclick="openNumpad(${pIdx}, '${cat.id}')">
                         ${score !== undefined ? score : ''}
                     </div>
@@ -592,46 +728,140 @@
         });
 
         table.innerHTML = html;
+
+        // Update footer turn indicator
+        const p = players[currentPlayer];
+        document.getElementById('turn-indicator').textContent =
+            `${p.icon}  ${p.name}'s turn`;
+    }
+
+    // ── Valid scores per category ──
+    // null = any value 0–30 allowed (sum-based categories)
+    const CAT_VALID = {
+        '1':  [0,1,2,3,4,5],
+        '2':  [0,2,4,6,8,10],
+        '3':  [0,3,6,9,12,15],
+        '4':  [0,4,8,12,16,20],
+        '5':  [0,5,10,15,20,25],
+        '6':  [0,6,12,18,24,30],
+        '3x': null,   // 0 or 5–30
+        '4x': null,   // 0 or 5–30
+        'fh': [0,25],
+        'ss': [0,30],
+        'ls': [0,40],
+        'yz': [0,50],
+        'ch': null    // 0–30
+    };
+
+    let pickedScore = null; // currently highlighted score in picker
+
+    function buildPickerGrid(catId) {
+        const grid = document.getElementById('sp-main-grid');
+        // Keep the scratch button, rebuild number buttons
+        // Remove old number buttons
+        const existing = grid.querySelectorAll('.sp-num');
+        existing.forEach(b => b.remove());
+
+        const valid = CAT_VALID[catId];
+        const specials = [25, 30, 40, 50];
+
+        // For sum-based (null): allow 0–30 except those covered by specials row
+        // For fixed: only show the allowed set
+        const nums = [];
+        if (valid === null) {
+            for (let i = 1; i <= 30; i++) {
+                if (!specials.includes(i)) nums.push(i);
+            }
+        } else {
+            valid.filter(v => v > 0 && !specials.includes(v)).forEach(v => nums.push(v));
+        }
+
+        nums.forEach(n => {
+            const btn = document.createElement('button');
+            btn.className = 'sp-btn sp-num';
+            btn.textContent = n;
+            btn.onclick = () => pickScore(n);
+            btn.id = `sp-${n}`;
+            grid.appendChild(btn);
+        });
+
+        // Handle specials row dimming
+        const specialIds = { 25: 'sp-25', 30: 'sp-30', 40: 'sp-40', 50: 'sp-50' };
+        Object.entries(specialIds).forEach(([val, id]) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const allowed = valid === null ? true : valid.includes(parseInt(val));
+            el.classList.toggle('dimmed', !allowed);
+        });
+
+        // Scratch button: always available
+        const scratch = grid.querySelector('.scratch');
+        if (scratch) scratch.classList.remove('dimmed');
+    }
+
+    function pickScore(n) {
+        pickedScore = n;
+        // Update display
+        document.getElementById('np-display').textContent = n === 0 ? '0' : n;
+        // Highlight selected button, clear others
+        document.querySelectorAll('.sp-btn').forEach(b => b.classList.remove('selected'));
+        const target = n === 0
+            ? document.querySelector('.sp-btn.scratch')
+            : document.getElementById(`sp-${n}`);
+        if (target) target.classList.add('selected');
     }
 
     function openNumpad(pIdx, catId) {
         activeSelection = { pIdx, catId };
         const p = players[pIdx];
         const existingScore = p.scores[catId];
-        
-        currentInputStr = existingScore !== undefined ? existingScore.toString() : "";
-        
-        document.getElementById('np-icon').innerText = p.icon;
-        document.getElementById('np-player-name').innerText = p.name;
-        document.getElementById('np-title').innerText = CATS.find(c => c.id === catId).name;
-        document.getElementById('np-display').innerText = currentInputStr || "0";
-        document.getElementById('numpad').style.display = 'flex';
+
+        pickedScore = existingScore !== undefined ? existingScore : null;
+
+        document.getElementById('np-icon').textContent = p.icon;
+        document.getElementById('np-player-name').textContent = p.name;
+        document.getElementById('np-title').textContent = CATS.find(c => c.id === catId).name;
+        document.getElementById('np-display').textContent =
+            existingScore !== undefined ? existingScore : '—';
+
+        buildPickerGrid(catId);
+
+        // Pre-highlight existing score
+        document.querySelectorAll('.sp-btn').forEach(b => b.classList.remove('selected'));
+        if (existingScore !== undefined) {
+            const target = existingScore === 0
+                ? document.querySelector('.sp-btn.scratch')
+                : document.getElementById(`sp-${existingScore}`);
+            if (target) target.classList.add('selected');
+        }
+
+        const overlay = document.getElementById('numpad');
+        overlay.style.display = 'flex';
     }
 
     function closeNumpad() {
         document.getElementById('numpad').style.display = 'none';
+        pickedScore = null;
     }
 
-    function pressNum(n) {
-        if (currentInputStr.length >= 2) return;
-        currentInputStr += n;
-        document.getElementById('np-display').innerText = currentInputStr;
-    }
-
-    function clearNum() {
-        currentInputStr = "";
-        document.getElementById('np-display').innerText = "0";
-    }
+    // Legacy stubs (no longer used but kept to avoid reference errors)
+    function pressNum() {}
+    function clearNum() {}
 
     function confirmScore() {
         if (!activeSelection) return;
-        const score = currentInputStr === "" ? undefined : parseInt(currentInputStr);
         const { pIdx, catId } = activeSelection;
-        
-        if (score === undefined) {
+
+        if (pickedScore === null) {
+            // Nothing selected — treat as cancel
+            closeNumpad();
+            return;
+        }
+
+        if (pickedScore === 0) {
             delete players[pIdx].scores[catId];
         } else {
-            players[pIdx].scores[catId] = score;
+            players[pIdx].scores[catId] = pickedScore;
         }
         
         // Recalculate totals
@@ -645,6 +875,11 @@
             p.bonus = upper >= 63 ? 35 : 0;
             p.total = upper + p.bonus + lower;
         });
+
+        // Advance turn only when the active player entered their score
+        if (pIdx === currentPlayer) {
+            currentPlayer = (currentPlayer + 1) % players.length;
+        }
 
         closeNumpad();
         renderBoard();
