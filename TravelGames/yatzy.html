@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Disney Yatzy Scorecard</title>
+    <title>Disney Yatzy Duel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;900&display=swap" rel="stylesheet">
     <style>
@@ -11,7 +11,7 @@
             --felt: #073b1c;
             --gold: #d4af37;
             --gold-light: #ffd700;
-            --glass: rgba(0, 0, 0, 0.9);
+            --glass: rgba(0, 0, 0, 0.98);
         }
 
         body {
@@ -41,350 +41,405 @@
             position: relative;
         }
 
-        .setup-screen {
-            position: absolute;
-            inset: 0;
-            background: var(--glass);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        .setup-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 20px;
-        }
-
+        /* Scoreboard Grid */
         .score-grid {
             display: grid;
-            grid-template-columns: 100px repeat(var(--player-count, 1), 1fr);
+            grid-template-columns: 85px repeat(var(--player-count, 2), 1fr);
             gap: 1px;
-            background: var(--gold);
+            background: rgba(212, 175, 55, 0.2);
             overflow-y: auto;
             flex: 1;
         }
 
+        /* Sticky Headers */
         .grid-header {
-            background: #1a1a1a;
+            background: #111;
             position: sticky;
             top: 0;
-            z-index: 10;
-            padding: 8px 2px;
+            z-index: 20;
+            padding: 10px 2px;
             text-align: center;
             border-bottom: 2px solid var(--gold);
-            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 85px;
         }
 
-        .category-label {
-            background: #111;
-            padding: 10px 6px;
-            font-size: 10px;
+        .category-cell {
+            background: #0a2e18;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            font-size: 9px;
             font-weight: 900;
             text-transform: uppercase;
-            color: var(--gold-light);
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            color: var(--gold);
+            letter-spacing: 0.02em;
+            text-align: center;
+        }
+
+        .dice-svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
         }
 
         .score-cell {
-            background: #0a2e18;
-            min-height: 45px;
+            background: #051f0f;
+            min-height: 58px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'Cinzel', serif;
-            font-size: 16px;
+            font-size: 24px;
             transition: all 0.2s;
-        }
-
-        .score-cell.active-turn {
-            background: rgba(212, 175, 55, 0.2);
-            box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.4);
-            cursor: pointer;
+            position: relative;
         }
 
         .score-cell.filled {
             color: var(--gold-light);
-            background: #051a0d;
-        }
-
-        .total-row {
-            background: #000 !important;
+            background: #020c06;
             font-weight: bold;
-            color: var(--gold-light);
-            font-size: 18px;
         }
 
-        .char-btn {
-            background: rgba(255,255,255,0.05);
-            border: 2px solid transparent;
-            transition: 0.2s;
-            font-size: 20px;
-            padding: 4px;
-            border-radius: 6px;
-        }
-        .char-btn.selected {
-            border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.2);
+        .score-cell:active {
+            background: var(--gold);
+            color: black;
         }
 
-        .btn-gold {
-            background: linear-gradient(to bottom, var(--gold-light), var(--gold));
-            color: #222;
+        .progress-circle {
+            width: 46px;
+            height: 46px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
             font-weight: 900;
-            padding: 14px;
-            border-radius: 8px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 0 #6e4e08;
+            background: #000;
+        }
+
+        /* Numpad Overlay */
+        .numpad-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--glass);
+            z-index: 500;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .num-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
             width: 100%;
+            max-width: 320px;
+        }
+
+        .num-btn {
+            background: #1a1a1a;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: white;
+            padding: 22px;
+            font-size: 32px;
+            border-radius: 12px;
+            font-family: 'Cinzel', serif;
+            line-height: 1;
+        }
+        .num-btn:active { background: var(--gold); color: black; }
+        .num-btn.zero { grid-column: span 2; }
+        .num-btn.clear { background: #331111; color: #ef4444; font-size: 16px; display: flex; align-items: center; justify-content: center; font-family: 'Lato'; font-weight: 900; }
+
+        .setup-screen {
+            position: absolute;
+            inset: 0;
+            background: #041a0b;
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
         }
         
-        .btn-gold:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #6e4e08;
+        .setup-footer {
+            background: #000;
+            padding: 20px;
+            border-top: 2px solid var(--gold);
+        }
+
+        .btn-main {
+            background: #b91c1c;
+            color: white;
+            font-family: 'Cinzel', serif;
+            width: 100%;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #7f1d1d;
         }
     </style>
 </head>
 <body>
 
 <div class="casino-container">
+    <!-- Numpad -->
+    <div id="numpad" class="numpad-overlay">
+        <div class="flex items-center gap-3 mb-2">
+            <span id="np-icon" class="text-2xl"></span>
+            <span id="np-player-name" class="cinzel text-gold text-lg"></span>
+        </div>
+        <div class="text-white/60 uppercase text-[10px] tracking-widest mb-1" id="np-title">Category</div>
+        <div id="np-display" class="text-6xl text-gold-light font-black mb-6 h-16 flex items-center justify-center">0</div>
+        
+        <div class="num-grid">
+            <button class="num-btn" onclick="pressNum(1)">1</button>
+            <button class="num-btn" onclick="pressNum(2)">2</button>
+            <button class="num-btn" onclick="pressNum(3)">3</button>
+            <button class="num-btn" onclick="pressNum(4)">4</button>
+            <button class="num-btn" onclick="pressNum(5)">5</button>
+            <button class="num-btn" onclick="pressNum(6)">6</button>
+            <button class="num-btn" onclick="pressNum(7)">7</button>
+            <button class="num-btn" onclick="pressNum(8)">8</button>
+            <button class="num-btn" onclick="pressNum(9)">9</button>
+            <button class="num-btn clear" onclick="clearNum()">CLEAR</button>
+            <button class="num-btn zero" onclick="pressNum(0)">0</button>
+        </div>
+        
+        <div class="flex w-full max-w-[320px] gap-4 mt-8">
+            <button onclick="closeNumpad()" class="flex-1 py-4 bg-white/10 rounded-xl text-white font-bold uppercase text-xs">Cancel</button>
+            <button onclick="confirmScore()" class="flex-1 py-4 bg-green-700 rounded-xl text-white font-bold uppercase text-xs">Save Score</button>
+        </div>
+    </div>
+
     <!-- Setup Screen -->
     <div id="setup-screen" class="setup-screen">
-        <h2 class="cinzel text-2xl text-gold text-center mb-4">Duel Setup</h2>
-        
-        <div class="setup-scroll" id="player-config-container">
-            <div id="player-list" class="space-y-4">
-                <!-- Players injected here -->
-            </div>
+        <div class="flex-1 p-6 overflow-y-auto">
+            <h2 class="cinzel text-3xl text-gold text-center mt-6 mb-2">Yatzy Duel</h2>
+            <p class="text-gold/40 text-center text-[10px] uppercase tracking-widest mb-8">Multiplayer Scorecard</p>
             
-            <button id="add-player-btn" onclick="addPlayer()" class="w-full mt-4 border-2 border-dashed border-gold/40 py-4 rounded-xl text-gold/60 font-bold text-sm hover:bg-gold/10 transition-colors">
-                + ADD PLAYER (UP TO 4)
-            </button>
+            <div id="player-setup-list" class="space-y-3"></div>
+            
+            <div id="add-prompt" class="mt-6 space-y-3">
+                <button onclick="togglePlayer(2)" id="btn-p3" class="w-full py-4 border border-dashed border-gold/20 rounded-xl text-gold/40 text-xs font-bold uppercase">
+                    + Add Player 3 (Simba)
+                </button>
+                <button onclick="togglePlayer(3)" id="btn-p4" class="w-full py-4 border border-dashed border-gold/20 rounded-xl text-gold/40 text-xs font-bold uppercase">
+                    + Add Player 4 (Stitch)
+                </button>
+            </div>
         </div>
-
-        <div class="pt-4 border-t border-gold/20">
-            <button onclick="startGame()" class="btn-gold cinzel text-xl">Start Game</button>
-        </div>
-    </div>
-
-    <!-- Main Game UI -->
-    <div class="flex flex-col h-full">
-        <div class="p-3 flex justify-between items-center bg-black/80 border-b border-gold/30">
-            <h1 class="cinzel text-md text-gold tracking-widest">Yatzy Duel</h1>
-            <div id="turn-banner" class="text-[10px] uppercase text-white font-bold bg-red-600 px-3 py-1 rounded-full shadow-lg"></div>
-        </div>
-
-        <div id="game-table" class="score-grid">
-            <!-- Grid generated by JS -->
-        </div>
-
-        <div class="bg-black p-4 border-t-2 border-gold flex flex-col items-center">
-            <button id="extra-roll-btn" onclick="useExtraRoll()" class="hidden border-2 border-gold text-gold px-8 py-2 rounded-full text-xs font-black tracking-widest mb-2 active:bg-gold active:text-black transition-colors">
-                ✨ USE EXTRA ROLL
-            </button>
-            <p class="text-[9px] text-gold/60 uppercase tracking-tighter">Tap your scorecard to enter physical roll score</p>
+        
+        <div class="setup-footer">
+            <button onclick="startGame()" class="btn-main">Start Game</button>
         </div>
     </div>
-</div>
 
-<!-- Score Input Modal -->
-<div id="modal" class="fixed inset-0 bg-black/95 z-[200] hidden flex items-center justify-center p-6">
-    <div class="bg-neutral-900 border-2 border-gold p-6 rounded-2xl w-full max-w-xs shadow-[0_0_50px_rgba(212,175,55,0.3)]">
-        <h3 id="modal-title" class="cinzel text-gold text-center mb-2 text-xl">Score</h3>
-        <p id="modal-subtitle" class="text-white/40 text-[10px] text-center mb-4 uppercase">Enter points from your roll</p>
-        <input type="number" id="score-input" inputmode="numeric" class="w-full bg-black border-2 border-gold p-4 text-5xl text-center text-gold-light rounded-xl mb-6 font-black outline-none">
-        <div class="flex gap-3">
-            <button onclick="closeModal()" class="flex-1 py-3 text-white/40 uppercase font-bold text-xs tracking-widest">Cancel</button>
-            <button onclick="confirmScore()" class="flex-1 py-3 btn-gold text-xs">Confirm</button>
-        </div>
+    <!-- Header -->
+    <div class="p-3 bg-black flex justify-between items-center border-b border-gold/40">
+        <div class="cinzel text-gold text-xs tracking-widest">Disney Duel</div>
+        <button onclick="location.reload()" class="bg-white/10 text-[10px] px-3 py-1 rounded font-bold uppercase">Reset</button>
+    </div>
+
+    <!-- Board -->
+    <div id="game-table" class="score-grid"></div>
+
+    <!-- Footer -->
+    <div class="bg-black px-4 py-3 border-t border-gold flex justify-between items-center text-[10px]">
+        <div class="text-gold/60 uppercase">Tap score cell to edit</div>
+        <div class="text-green-500 font-black">BONUS: 63 pts -> +35</div>
     </div>
 </div>
 
 <script>
-    const CHARS = ["🐭", "❄️", "🦁", "👽", "🤠", "👿", "🧜‍♀️", "🍎", "🧞‍♂️", "🏹", "🏴‍☠️", "🏰", "🐰", "🥀", "🐾"];
+    const ALL_DEFAULTS = [
+        { name: 'Mickey', icon: '🐭', active: true },
+        { name: 'Elsa', icon: '❄️', active: true },
+        { name: 'Simba', icon: '🦁', active: false },
+        { name: 'Stitch', icon: '👽', active: false }
+    ];
+
+    const DICE_SVGS = {
+        1: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="50" cy="50" r="8" fill="black"/></svg>',
+        2: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="30" r="8" fill="black"/><circle cx="70" cy="70" r="8" fill="black"/></svg>',
+        3: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="30" r="8" fill="black"/><circle cx="50" cy="50" r="8" fill="black"/><circle cx="70" cy="70" r="8" fill="black"/></svg>',
+        4: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="30" r="8" fill="black"/><circle cx="70" cy="30" r="8" fill="black"/><circle cx="30" cy="70" r="8" fill="black"/><circle cx="70" cy="70" r="8" fill="black"/></svg>',
+        5: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="30" r="8" fill="black"/><circle cx="70" cy="30" r="8" fill="black"/><circle cx="50" cy="50" r="8" fill="black"/><circle cx="30" cy="70" r="8" fill="black"/><circle cx="70" cy="70" r="8" fill="black"/></svg>',
+        6: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="25" r="8" fill="black"/><circle cx="70" cy="25" r="8" fill="black"/><circle cx="30" cy="50" r="8" fill="black"/><circle cx="70" cy="50" r="8" fill="black"/><circle cx="30" cy="75" r="8" fill="black"/><circle cx="70" cy="75" r="8" fill="black"/></svg>'
+    };
+
     const CATS = [
-        { id: '1', name: 'Ones', icon: '1', type: 'upper' },
-        { id: '2', name: 'Twos', icon: '2', type: 'upper' },
-        { id: '3', name: 'Threes', icon: '3', type: 'upper' },
-        { id: '4', name: 'Fours', icon: '4', type: 'upper' },
-        { id: '5', name: 'Fives', icon: '5', type: 'upper' },
-        { id: '6', name: 'Sixes', icon: '6', type: 'upper' },
-        { id: '3x', name: '3 of a Kind', icon: '3X', type: 'lower' },
-        { id: '4x', name: '4 of a Kind', icon: '4X', type: 'lower' },
-        { id: 'fh', name: 'Full House', icon: '🏠', type: 'lower' },
-        { id: 'ss', name: 'Small Str.', icon: 'S', type: 'lower' },
-        { id: 'ls', name: 'Large Str.', icon: 'L', type: 'lower' },
-        { id: 'yz', name: 'Yatzy', icon: '⭐', type: 'lower' },
-        { id: 'ch', name: 'Chance', icon: '?', type: 'lower' }
+        { id: '1', name: 'Ones', type: 'upper', dice: 1 },
+        { id: '2', name: 'Twos', type: 'upper', dice: 2 },
+        { id: '3', name: 'Threes', type: 'upper', dice: 3 },
+        { id: '4', name: 'Fours', type: 'upper', dice: 4 },
+        { id: '5', name: 'Fives', type: 'upper', dice: 5 },
+        { id: '6', name: 'Sixes', type: 'upper', dice: 6 },
+        { id: '3x', name: '3 Kind', type: 'lower' },
+        { id: '4x', name: '4 Kind', type: 'lower' },
+        { id: 'fh', name: 'Full H.', type: 'lower' },
+        { id: 'ss', name: 'Sm Str.', type: 'lower' },
+        { id: 'ls', name: 'Lg Str.', type: 'lower' },
+        { id: 'yz', name: 'Yatzy', type: 'lower' },
+        { id: 'ch', name: 'Chance', type: 'lower' }
     ];
 
-    let players = [
-        { name: 'Mickey', icon: '🐭' },
-        { name: 'Elsa', icon: '❄️' }
-    ];
-    
-    let currentPlayerIndex = 0;
+    let players = [];
     let activeSelection = null;
+    let currentInputStr = "";
 
-    function init() {
-        renderPlayerSetup();
-    }
-
-    function renderPlayerSetup() {
-        const list = document.getElementById('player-list');
-        list.innerHTML = players.map((p, i) => `
-            <div class="bg-black/40 p-4 rounded-xl border border-gold/20">
-                <div class="flex justify-between items-center mb-3">
-                    <p class="text-[10px] text-gold/60 uppercase">Player ${i+1}</p>
-                    ${players.length > 2 ? `<button onclick="removePlayer(${i})" class="text-red-500 text-[10px] font-bold">REMOVE</button>` : ''}
+    function renderSetup() {
+        const list = document.getElementById('player-setup-list');
+        list.innerHTML = ALL_DEFAULTS.map((p, i) => {
+            if (!p.active) return '';
+            return `
+                <div class="bg-black/40 p-3 rounded-xl border border-gold/40 flex items-center gap-4">
+                    <div class="text-2xl">${p.icon}</div>
+                    <div class="flex-1">
+                        <input type="text" value="${p.name}" oninput="ALL_DEFAULTS[${i}].name=this.value" 
+                               class="bg-transparent border-b border-gold/20 w-full outline-none font-bold text-gold py-1">
+                    </div>
+                    ${i > 1 ? `<button onclick="togglePlayer(${i})" class="text-red-500/50 p-2 text-xs">✕</button>` : ''}
                 </div>
-                <div class="flex gap-3 mb-4">
-                    <input type="text" value="${p.name}" oninput="updateName(${i}, this.value)" class="bg-black/60 border border-gold/40 flex-1 p-2 rounded text-sm outline-none text-gold font-bold">
-                    <div class="text-2xl bg-black/60 w-12 h-12 flex items-center justify-center rounded border-2 border-gold shadow-inner">${p.icon}</div>
-                </div>
-                <div class="grid grid-cols-5 gap-2">
-                    ${CHARS.map(emoji => `
-                        <button onclick="updateIcon(${i}, '${emoji}')" 
-                                class="char-btn ${p.icon === emoji ? 'selected' : ''}">
-                            ${emoji}
-                        </button>
-                    `).join('')}
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
-        document.getElementById('add-player-btn').style.display = players.length >= 4 ? 'none' : 'block';
+        document.getElementById('btn-p3').style.display = ALL_DEFAULTS[2].active ? 'none' : 'block';
+        document.getElementById('btn-p4').style.display = (ALL_DEFAULTS[3].active || !ALL_DEFAULTS[2].active) ? 'none' : 'block';
     }
 
-    function addPlayer() {
-        if (players.length < 4) {
-            players.push({ name: `Player ${players.length + 1}`, icon: CHARS[players.length + 2] });
-            renderPlayerSetup();
-        }
+    function togglePlayer(idx) {
+        ALL_DEFAULTS[idx].active = !ALL_DEFAULTS[idx].active;
+        if (idx === 2 && !ALL_DEFAULTS[idx].active) ALL_DEFAULTS[3].active = false;
+        renderSetup();
     }
-
-    function removePlayer(idx) {
-        players.splice(idx, 1);
-        renderPlayerSetup();
-    }
-
-    function updateName(idx, val) { players[idx].name = val; }
-    function updateIcon(idx, icon) { players[idx].icon = icon; renderPlayerSetup(); }
 
     function startGame() {
-        players = players.map(p => ({
-            ...p,
-            scores: {},
-            extraRollUsed: false,
-            bonus: 0,
-            total: 0,
-            upperSum: 0
+        players = ALL_DEFAULTS.filter(p => p.active).map(p => ({
+            ...p, scores: {}, total: 0, upperSum: 0, bonus: 0
         }));
-        
         document.getElementById('setup-screen').style.display = 'none';
-        updateTurn();
+        renderBoard();
     }
 
     function renderBoard() {
         const table = document.getElementById('game-table');
         table.style.setProperty('--player-count', players.length);
         
-        let html = `<div class="grid-header category-label">Scorecard</div>`;
-        players.forEach((p, i) => {
+        // Header Row (Sticky)
+        let html = `<div class="grid-header bg-black/50"></div>`;
+        players.forEach((p) => {
             html += `
-                <div class="grid-header flex flex-col items-center justify-center ${currentPlayerIndex === i ? 'bg-gold/10' : ''}">
-                    <div class="text-2xl">${p.icon}</div>
-                    <div id="roll-tag-${i}" class="text-[8px] font-black tracking-tighter ${p.extraRollUsed ? 'text-white/20 line-through' : 'text-gold-light'}">✨ ROLL</div>
+                <div class="grid-header">
+                    <div class="text-2xl leading-none mb-1">${p.icon}</div>
+                    <div class="text-[9px] text-white/60 uppercase font-black truncate max-w-[60px] mb-1">${p.name}</div>
+                    <div class="text-[18px] text-gold-light font-black cinzel">${p.total}</div>
                 </div>
             `;
         });
 
+        // Category Rows
         CATS.forEach(cat => {
-            html += `<div class="category-label"><span>${cat.icon}</span> ${cat.name}</div>`;
+            html += `
+                <div class="category-cell">
+                    ${cat.dice ? DICE_SVGS[cat.dice] : ''}
+                    <span>${cat.name}</span>
+                </div>
+            `;
             players.forEach((p, pIdx) => {
                 const score = p.scores[cat.id];
-                const isFilled = score !== undefined;
-                const isMyTurn = currentPlayerIndex === pIdx;
-                
                 html += `
-                    <div class="score-cell ${isFilled ? 'filled' : ''} ${isMyTurn && !isFilled ? 'active-turn' : ''}" 
-                         onclick="openModal(${pIdx}, '${cat.id}')">
-                        ${isFilled ? score : ''}
+                    <div class="score-cell ${score !== undefined ? 'filled' : ''}" 
+                         onclick="openNumpad(${pIdx}, '${cat.id}')">
+                        ${score !== undefined ? score : ''}
                     </div>
                 `;
             });
         });
 
-        // Subtotals and Bonus
-        html += `<div class="category-label opacity-40">Upper (0/63)</div>`;
-        players.forEach(p => html += `<div class="score-cell text-[10px] opacity-40">${p.upperSum}</div>`);
-
-        html += `<div class="category-label text-green-400">Bonus (+35)</div>`;
-        players.forEach(p => html += `<div class="score-cell text-green-400 font-black">${p.bonus > 0 ? '35' : '0'}</div>`);
-
-        html += `<div class="category-label total-row">TOTAL</div>`;
-        players.forEach(p => html += `<div class="score-cell total-row">${p.total}</div>`);
+        // Bonus Row
+        html += `<div class="category-cell"><span class="mt-2">UPPER BONUS</span></div>`;
+        players.forEach(p => {
+            const isDone = p.upperSum >= 63;
+            html += `
+                <div class="score-cell">
+                    <div class="progress-circle ${isDone ? 'border-green-500 text-green-500' : 'border-white/10 text-white/30'}">
+                        <div class="text-[14px] leading-tight">${p.upperSum}</div>
+                        <div class="text-[7px] opacity-40">/63</div>
+                    </div>
+                </div>
+            `;
+        });
 
         table.innerHTML = html;
     }
 
-    function updateTurn() {
-        const p = players[currentPlayerIndex];
-        const banner = document.getElementById('turn-banner');
-        banner.innerText = `${p.icon} ${p.name.split(' ')[0]}'s turn`;
+    function openNumpad(pIdx, catId) {
+        activeSelection = { pIdx, catId };
+        const p = players[pIdx];
+        const existingScore = p.scores[catId];
         
-        const extraBtn = document.getElementById('extra-roll-btn');
-        extraBtn.style.display = p.extraRollUsed ? 'none' : 'block';
+        currentInputStr = existingScore !== undefined ? existingScore.toString() : "";
         
+        document.getElementById('np-icon').innerText = p.icon;
+        document.getElementById('np-player-name').innerText = p.name;
+        document.getElementById('np-title').innerText = CATS.find(c => c.id === catId).name;
+        document.getElementById('np-display').innerText = currentInputStr || "0";
+        document.getElementById('numpad').style.display = 'flex';
+    }
+
+    function closeNumpad() {
+        document.getElementById('numpad').style.display = 'none';
+    }
+
+    function pressNum(n) {
+        if (currentInputStr.length >= 2) return;
+        currentInputStr += n;
+        document.getElementById('np-display').innerText = currentInputStr;
+    }
+
+    function clearNum() {
+        currentInputStr = "";
+        document.getElementById('np-display').innerText = "0";
+    }
+
+    function confirmScore() {
+        if (!activeSelection) return;
+        const score = currentInputStr === "" ? undefined : parseInt(currentInputStr);
+        const { pIdx, catId } = activeSelection;
+        
+        if (score === undefined) {
+            delete players[pIdx].scores[catId];
+        } else {
+            players[pIdx].scores[catId] = score;
+        }
+        
+        // Recalculate totals
+        players.forEach(p => {
+            let upper = 0; let lower = 0;
+            CATS.forEach(c => {
+                const val = p.scores[c.id] || 0;
+                if (c.type === 'upper') upper += val; else lower += val;
+            });
+            p.upperSum = upper;
+            p.bonus = upper >= 63 ? 35 : 0;
+            p.total = upper + p.bonus + lower;
+        });
+
+        closeNumpad();
         renderBoard();
     }
 
-    function openModal(pIdx, catId) {
-        if (currentPlayerIndex !== pIdx || players[pIdx].scores[catId] !== undefined) return;
-        activeSelection = { pIdx, catId };
-        const cat = CATS.find(c => c.id === catId);
-        document.getElementById('modal-title').innerText = `${cat.name}`;
-        document.getElementById('score-input').value = "";
-        document.getElementById('modal').classList.remove('hidden');
-        setTimeout(() => document.getElementById('score-input').focus(), 100);
-    }
-
-    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
-
-    function confirmScore() {
-        const val = parseInt(document.getElementById('score-input').value);
-        if (isNaN(val)) return;
-        
-        const { pIdx, catId } = activeSelection;
-        players[pIdx].scores[catId] = val;
-        
-        // Calculation
-        const p = players[pIdx];
-        let upper = 0; let lower = 0;
-        CATS.forEach(c => {
-            const s = p.scores[c.id] || 0;
-            if (c.type === 'upper') upper += s; else lower += s;
-        });
-        p.upperSum = upper;
-        p.bonus = upper >= 63 ? 35 : 0;
-        p.total = upper + p.bonus + lower;
-
-        // Next
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-        closeModal();
-        updateTurn();
-    }
-
-    function useExtraRoll() {
-        players[currentPlayerIndex].extraRollUsed = true;
-        updateTurn();
-    }
-
-    init();
+    renderSetup();
 </script>
-
 </body>
 </html>
