@@ -443,9 +443,8 @@
             height: 52px;
             position: relative;
             transform-style: preserve-3d;
-            /* default resting orientation: face-1 forward */
             transform: rotateX(0deg) rotateY(0deg);
-            transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
         }
 
         /* ── Six faces ── */
@@ -453,75 +452,53 @@
             position: absolute;
             width: 52px;
             height: 52px;
-            background: #f8f8f0;
-            border: 3px solid #6b21a8;
+            background: #ffffff;
+            border: 3px solid #2a6049;
             border-radius: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-            gap: 0;
             box-sizing: border-box;
             backface-visibility: hidden;
-            /* subtle bevel shading per face */
+            /* 3×3 pip grid */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 6px;
+            gap: 0;
         }
         /* Face positions — half-size = 26px */
-        .vdie .face.f1 { transform: translateZ(26px); }
-        .vdie .face.f6 { transform: rotateY(180deg) translateZ(26px); }
-        .vdie .face.f2 { transform: rotateY(90deg)  translateZ(26px); }
-        .vdie .face.f5 { transform: rotateY(-90deg) translateZ(26px); }
-        .vdie .face.f3 { transform: rotateX(-90deg) translateZ(26px); }
-        .vdie .face.f4 { transform: rotateX(90deg)  translateZ(26px); }
+        .vdie .face.f1 { transform: translateZ(26px);  background: #ffffff; border-color: #2a6049; }
+        .vdie .face.f6 { transform: rotateY(180deg) translateZ(26px); background: #f8f8f0; border-color: #2a6049; }
+        .vdie .face.f2 { transform: rotateY(90deg)  translateZ(26px); background: #f8f8f0; border-color: #2a6049; }
+        .vdie .face.f5 { transform: rotateY(-90deg) translateZ(26px); background: #f8f8f0; border-color: #2a6049; }
+        .vdie .face.f3 { transform: rotateX(-90deg) translateZ(26px); background: #f0f0e8; border-color: #2a6049; }
+        .vdie .face.f4 { transform: rotateX(90deg)  translateZ(26px); background: #f0f0e8; border-color: #2a6049; }
 
-        /* Face shading */
-        .vdie .face.f1 { background: #ffffff; }
-        .vdie .face.f6 { background: #f0f0e8; }
-        .vdie .face.f2 { background: #f5f5ed; }
-        .vdie .face.f5 { background: #f5f5ed; }
-        .vdie .face.f3 { background: #ebebdf; }
-        .vdie .face.f4 { background: #ebebdf; }
-
-        /* Pip dots */
+        /* Pip dot */
         .pip {
             width: 9px;
             height: 9px;
             border-radius: 50%;
             background: #1a1a1a;
-            flex-shrink: 0;
+            /* centre within its grid cell */
+            justify-self: center;
+            align-self: center;
         }
-        /* Pip grid layouts per face value */
-        /* Face 1 — centre */
-        .face.f1 { align-items: center; justify-content: center; }
-        /* Face 2 — top-left, bottom-right */
-        .face.f2 { flex-direction: column; justify-content: space-between; padding: 8px; }
-        .face.f2 .pip:nth-child(1) { align-self: flex-start; }
-        .face.f2 .pip:nth-child(2) { align-self: flex-end; }
-        /* Face 3 — diagonal */
-        .face.f3 { flex-direction: column; justify-content: space-between; padding: 8px; }
-        .face.f3 .pip:nth-child(1) { align-self: flex-start; }
-        .face.f3 .pip:nth-child(2) { align-self: center; }
-        .face.f3 .pip:nth-child(3) { align-self: flex-end; }
-        /* Face 4 — 2×2 grid */
-        .face.f4 { flex-wrap: wrap; align-content: space-between; justify-content: space-between; padding: 8px; }
-        /* Face 5 — 2×2 + centre */
-        .face.f5 { flex-wrap: wrap; align-content: space-between; justify-content: space-between; padding: 8px; }
-        .face.f5 .pip-mid { width: 100%; display: flex; justify-content: center; order: 3; }
-        /* Face 6 — 2×3 grid */
-        .face.f6 { flex-wrap: wrap; align-content: space-between; justify-content: space-between; padding: 8px; }
+        /* Invisible spacer to occupy a grid cell */
+        .pip-x {
+            width: 9px;
+            height: 9px;
+        }
 
-        /* ── Roll animation — slow visible tumble ── */
+        /* ── Roll animation — snappy but visible 3D tumble ── */
         @keyframes dieRoll {
-            0%   { transform: rotateX(0deg)    rotateY(0deg)    rotateZ(0deg); }
-            15%  { transform: rotateX(120deg)  rotateY(60deg)   rotateZ(30deg); }
-            30%  { transform: rotateX(240deg)  rotateY(150deg)  rotateZ(-20deg); }
-            45%  { transform: rotateX(360deg)  rotateY(240deg)  rotateZ(50deg); }
-            60%  { transform: rotateX(480deg)  rotateY(300deg)  rotateZ(-40deg); }
-            75%  { transform: rotateX(560deg)  rotateY(380deg)  rotateZ(20deg); }
-            88%  { transform: rotateX(610deg)  rotateY(420deg)  rotateZ(5deg); }
-            100% { transform: rotateX(630deg)  rotateY(440deg)  rotateZ(0deg); }
+            0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+            20%  { transform: rotateX(200deg) rotateY(80deg)  rotateZ(25deg); }
+            40%  { transform: rotateX(380deg) rotateY(190deg) rotateZ(-15deg); }
+            60%  { transform: rotateX(520deg) rotateY(290deg) rotateZ(30deg); }
+            80%  { transform: rotateX(620deg) rotateY(370deg) rotateZ(8deg); }
+            100% { transform: rotateX(720deg) rotateY(440deg) rotateZ(0deg); }
         }
         .vdie.rolling {
-            animation: dieRoll 1.4s cubic-bezier(0.15, 0.5, 0.4, 1.0) forwards;
+            animation: dieRoll 0.85s cubic-bezier(0.2, 0.6, 0.4, 1.0) forwards;
         }
 
         /* Held state — gold border on all faces + glow */
@@ -772,29 +749,29 @@
     // Upper section: single large die per row
     const DICE_SVGS = {
         1: `<svg class="cat-die" viewBox="0 0 100 100">
-              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#2a6049" stroke-width="4"/>
               <circle cx="50" cy="50" r="9" fill="#1a1a1a"/>
             </svg>`,
         2: `<svg class="cat-die" viewBox="0 0 100 100">
-              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#2a6049" stroke-width="4"/>
               <circle cx="30" cy="30" r="9" fill="#1a1a1a"/>
               <circle cx="70" cy="70" r="9" fill="#1a1a1a"/>
             </svg>`,
         3: `<svg class="cat-die" viewBox="0 0 100 100">
-              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#2a6049" stroke-width="4"/>
               <circle cx="28" cy="28" r="9" fill="#1a1a1a"/>
               <circle cx="50" cy="50" r="9" fill="#1a1a1a"/>
               <circle cx="72" cy="72" r="9" fill="#1a1a1a"/>
             </svg>`,
         4: `<svg class="cat-die" viewBox="0 0 100 100">
-              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#2a6049" stroke-width="4"/>
               <circle cx="30" cy="30" r="9" fill="#1a1a1a"/>
               <circle cx="70" cy="30" r="9" fill="#1a1a1a"/>
               <circle cx="30" cy="70" r="9" fill="#1a1a1a"/>
               <circle cx="70" cy="70" r="9" fill="#1a1a1a"/>
             </svg>`,
         5: `<svg class="cat-die" viewBox="0 0 100 100">
-              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#2a6049" stroke-width="4"/>
               <circle cx="30" cy="30" r="9" fill="#1a1a1a"/>
               <circle cx="70" cy="30" r="9" fill="#1a1a1a"/>
               <circle cx="50" cy="50" r="9" fill="#1a1a1a"/>
@@ -802,7 +779,7 @@
               <circle cx="70" cy="70" r="9" fill="#1a1a1a"/>
             </svg>`,
         6: `<svg class="cat-die" viewBox="0 0 100 100">
-              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#2a6049" stroke-width="4"/>
               <circle cx="30" cy="25" r="9" fill="#1a1a1a"/>
               <circle cx="70" cy="25" r="9" fill="#1a1a1a"/>
               <circle cx="30" cy="50" r="9" fill="#1a1a1a"/>
@@ -816,17 +793,17 @@
     const CAT_ICONS = {
         // 3X bold text badge
         '3x': `<svg class="cat-badge" viewBox="0 0 100 80">
-                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#2a6049" stroke-width="4"/>
                  <text x="50" y="53" text-anchor="middle" font-size="36" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">3X</text>
                </svg>`,
         // 4X bold text badge
         '4x': `<svg class="cat-badge" viewBox="0 0 100 80">
-                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#2a6049" stroke-width="4"/>
                  <text x="50" y="53" text-anchor="middle" font-size="36" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">4X</text>
                </svg>`,
         // Full House: house icon
         'fh': `<svg class="cat-badge" viewBox="0 0 100 80">
-                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#2a6049" stroke-width="4"/>
                  <g transform="translate(50,40) scale(0.72) translate(-50,-38)">
                    <!-- roof -->
                    <polygon points="50,14 82,34 18,34" fill="#1a1a1a"/>
@@ -838,7 +815,7 @@
                </svg>`,
         // Small Straight: card fan with SMALL label
         'ss': `<svg class="cat-badge" viewBox="0 0 100 80">
-                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#2a6049" stroke-width="4"/>
                  <g transform="translate(50,34) scale(0.72) translate(-50,-28)">
                    <rect x="14" y="8"  width="26" height="34" rx="4" fill="#1a1a1a" transform="rotate(-15 27 25)"/>
                    <rect x="22" y="6"  width="26" height="34" rx="4" fill="#333"   transform="rotate(-5 35 23)"/>
@@ -849,7 +826,7 @@
                </svg>`,
         // Large Straight: card fan with LARGE label
         'ls': `<svg class="cat-badge" viewBox="0 0 100 80">
-                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#2a6049" stroke-width="4"/>
                  <g transform="translate(50,33) scale(0.72) translate(-50,-27)">
                    <rect x="8"  y="8"  width="24" height="32" rx="4" fill="#1a1a1a" transform="rotate(-20 20 24)"/>
                    <rect x="16" y="6"  width="24" height="32" rx="4" fill="#333"   transform="rotate(-10 28 22)"/>
@@ -861,7 +838,7 @@
                </svg>`,
         // Yatzy: gold badge with YATZY text
         'yz': `<svg class="cat-badge" viewBox="0 0 100 80">
-                 <rect x="5" y="5" width="90" height="70" rx="14" fill="#1a1a1a" stroke="#6b21a8" stroke-width="4"/>
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="#1a1a1a" stroke="#2a6049" stroke-width="4"/>
                  <g transform="translate(50,32) scale(0.78) translate(-50,-28)">
                    <rect x="10" y="10" width="22" height="30" rx="4" fill="#444" transform="rotate(-18 21 25)"/>
                    <rect x="18" y="8"  width="22" height="30" rx="4" fill="#555" transform="rotate(-8 29 23)"/>
@@ -873,7 +850,7 @@
                </svg>`,
         // Chance: question mark
         'ch': `<svg class="cat-badge" viewBox="0 0 100 80">
-                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#2a6049" stroke-width="4"/>
                  <text x="50" y="57" text-anchor="middle" font-size="44" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">?</text>
                </svg>`
     };
@@ -1236,16 +1213,19 @@
         6: 'rotateX(0deg)   rotateY(180deg)',  // f6 (back face) → front
     };
 
-    // Build pip HTML for a face value
+    // Build pip HTML for a face value using a strict 3×3 grid.
+    // Grid cells in reading order: TL, TC, TR, ML, MC, MR, BL, BC, BR
+    // p = pip, x = invisible spacer
     function pipHTML(val) {
         const p = `<div class="pip"></div>`;
+        const x = `<div class="pip-x"></div>`;
         switch (val) {
-            case 1: return p;
-            case 2: return p + p;
-            case 3: return p + p + p;
-            case 4: return p + p + p + p;
-            case 5: return p + p + `<div class="pip-mid">${p}</div>` + p + p;
-            case 6: return p + p + p + p + p + p;
+            case 1: return x+x+x + x+p+x + x+x+x;
+            case 2: return p+x+x + x+x+x + x+x+p;
+            case 3: return p+x+x + x+p+x + x+x+p;
+            case 4: return p+x+p + x+x+x + p+x+p;
+            case 5: return p+x+p + x+p+x + p+x+p;
+            case 6: return p+x+p + p+x+p + p+x+p;
             default: return '';
         }
     }
@@ -1354,7 +1334,7 @@
             toRoll.forEach(i => {
                 vDice.values[i] = Math.ceil(Math.random() * 6);
             });
-        }, 980);
+        }, 600);
 
         // Settle: remove animation class, apply correct face orientation
         setTimeout(() => {
@@ -1367,7 +1347,7 @@
             });
             renderDiceTray();
             renderBoard();
-        }, 1450);
+        }, 900);
 
         // Update pips immediately
         for (let p = 0; p < 3; p++) {
