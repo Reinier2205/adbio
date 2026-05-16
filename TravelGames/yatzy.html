@@ -1049,7 +1049,7 @@
                 html += `
                     <div class="${cellClass}"
                          onclick="${tappable ? `openNumpad(${pIdx}, '${cat.id}')` : ''}">
-                        ${isFilled ? score : ''}
+                        ${isFilled ? (score === 0 ? '<span style="color:rgba(255,255,255,0.35)">0</span>' : score) : ''}
                     </div>
                 `;
             });
@@ -1153,9 +1153,9 @@
         const { pIdx, catId } = activeSelection;
         const wasEmpty = players[pIdx].scores[catId] === undefined;
 
-        // 0 = scratch = clear the cell
+        // 0 = scratch = store as 0 (displays as 0, not blank)
         if (score === 0) {
-            delete players[pIdx].scores[catId];
+            players[pIdx].scores[catId] = 0;
         } else {
             players[pIdx].scores[catId] = score;
         }
@@ -1172,8 +1172,8 @@
             p.total = upper + p.bonus + lower;
         });
 
-        // Advance turn only when the active player fills a previously empty cell
-        if (pIdx === currentPlayer && wasEmpty && score !== 0) {
+        // Advance turn when the active player fills a previously empty cell (including scratch=0)
+        if (pIdx === currentPlayer && wasEmpty) {
             currentPlayer = (currentPlayer + 1) % players.length;
             // Reset virtual dice for the next player's turn
             if (gameMode === 'virtual') resetVirtualTurn();
