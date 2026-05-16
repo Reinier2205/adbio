@@ -413,20 +413,113 @@
         .dice-tray {
             background: #020c06;
             border-bottom: 2px solid rgba(212,175,55,0.3);
-            padding: 10px 6px 8px;
+            padding: 8px 10px 8px 8px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        /* Dice sit on the left, scrollable if needed */
+        .dice-row {
+            display: flex;
+            gap: 7px;
+            align-items: center;
+            justify-content: flex-start;
+            flex: 1;
+            min-height: 68px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .dice-row::-webkit-scrollbar { display: none; }
+
+        /* ── Roll sphere ── */
+        .roll-sphere-wrap {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             flex-shrink: 0;
         }
-        .dice-row {
+        .roll-sphere {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            /* 3D sphere illusion via layered radial gradients */
+            background:
+                radial-gradient(circle at 35% 32%, rgba(255,255,255,0.55) 0%, transparent 55%),
+                radial-gradient(circle at 68% 72%, rgba(0,0,0,0.35) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, #c8860a 0%, #7a4800 55%, #3a1f00 100%);
+            box-shadow:
+                0 6px 18px rgba(0,0,0,0.7),
+                inset 0 -4px 8px rgba(0,0,0,0.4),
+                inset 0 3px 6px rgba(255,200,80,0.25);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s, box-shadow 0.1s;
             display: flex;
-            gap: 10px;
             align-items: center;
             justify-content: center;
-            /* extra height so the 3D cube doesn't clip */
-            min-height: 68px;
+            flex-direction: column;
+            gap: 2px;
+            border: 2px solid rgba(212,175,55,0.4);
+        }
+        .roll-sphere:active {
+            transform: scale(0.92);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+        }
+        .roll-sphere.disabled {
+            opacity: 0.35;
+            cursor: default;
+            pointer-events: none;
+        }
+        /* Spin animation when rolling */
+        @keyframes sphereSpin {
+            0%   { filter: brightness(1)   hue-rotate(0deg); }
+            25%  { filter: brightness(1.3) hue-rotate(15deg); }
+            75%  { filter: brightness(0.8) hue-rotate(-10deg); }
+            100% { filter: brightness(1)   hue-rotate(0deg); }
+        }
+        .roll-sphere.spinning {
+            animation: sphereSpin 0.9s ease-in-out;
+        }
+        /* Label inside sphere */
+        .roll-sphere-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 8px;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(255,240,180,0.9);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            line-height: 1;
+        }
+        .roll-sphere-num {
+            font-family: 'Cinzel', serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff8e1;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            line-height: 1;
+        }
+        /* Roll pips below sphere */
+        .roll-pips {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .roll-pip {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: background 0.2s;
+        }
+        .roll-pip.used {
+            background: var(--gold);
+            border-color: var(--gold-light);
         }
         /* ── 3D Dice ── */
         .vdie-wrap {
@@ -539,37 +632,6 @@
             cursor: default;
             pointer-events: none;
         }
-        /* Roll counter pills */
-        .roll-pips {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .roll-pip {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: background 0.2s;
-        }
-        .roll-pip.used {
-            background: var(--gold);
-            border-color: var(--gold-light);
-        }
-        /* Roll button hint */
-        .roll-hint {
-            font-family: 'Inter', sans-serif;
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.3);
-        }
-        .roll-hint.active {
-            color: var(--gold);
-            animation: bonusPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
-        }
         /* Must-score warning */
         .must-score-badge {
             background: #7a1a1a;
@@ -583,13 +645,6 @@
             border-radius: 20px;
             border: 1px solid rgba(255,100,100,0.4);
             animation: bonusPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
-        }
-        /* Grid header — virtual mode: tappable to roll */
-        .grid-header.rollable {
-            cursor: pointer;
-        }
-        .grid-header.rollable:active {
-            background: #2a4a1a !important;
         }
         /* Setup footer two-button layout */
         .setup-footer-2btn {
@@ -728,16 +783,20 @@
 
     <!-- ── Virtual Dice Tray (hidden in real-dice mode) ── -->
     <div id="dice-tray" class="dice-tray" style="display:none">
-        <div class="dice-row" id="dice-row">
-            <!-- 5 dice rendered by JS -->
-        </div>
-        <div class="flex items-center gap-8">
-            <div class="roll-pips" id="roll-pips">
+        <!-- 5 dice on the left -->
+        <div class="dice-row" id="dice-row"></div>
+
+        <!-- Roll sphere on the right -->
+        <div class="roll-sphere-wrap">
+            <div id="roll-sphere" class="roll-sphere" onclick="rollDice()">
+                <span class="roll-sphere-num" id="sphere-rolls">3</span>
+                <span class="roll-sphere-label">rolls</span>
+            </div>
+            <div class="roll-pips">
                 <div class="roll-pip" id="pip0"></div>
                 <div class="roll-pip" id="pip1"></div>
                 <div class="roll-pip" id="pip2"></div>
             </div>
-            <div class="roll-hint" id="roll-hint">Tap name to roll</div>
         </div>
     </div>
 
@@ -954,11 +1013,8 @@
         players.forEach((p, pIdx) => {
             const bonusEarned = p.upperSum >= 63;
             const isActive = pIdx === currentPlayer;
-            // In virtual mode, active player header triggers a roll
-            const rollable = gameMode === 'virtual' && isActive && vDice.rolls < 3 && !vDice.rolling;
             html += `
-                <div class="grid-header ${isActive ? 'active-player' : ''} ${rollable ? 'rollable' : ''}"
-                     ${rollable ? 'onclick="rollDice()"' : ''}>
+                <div class="grid-header ${isActive ? 'active-player' : ''}">
                     ${isActive ? `<div class="turn-arrow" style="color:var(--gold-light)">▶</div>` : ''}
                     <div class="text-2xl leading-none">${p.icon}</div>
                     <div class="text-[9px] text-white/60 uppercase font-black truncate max-w-[60px]">${p.name}</div>
@@ -967,7 +1023,6 @@
                         ? `<div class="bonus-badge mt-1">⭐ +35</div>`
                         : `<div style="font-size:8px;color:rgba(255,255,255,0.25);margin-top:2px">${p.upperSum}/63</div>`
                     }
-                    ${rollable && vDice.rolls === 0 ? `<div style="font-size:8px;color:var(--gold);margin-top:2px;font-family:Inter,sans-serif;font-weight:900">TAP TO ROLL</div>` : ''}
                 </div>
             `;
         });
@@ -1289,7 +1344,8 @@
 
     function renderDiceTray() {
         const row  = document.getElementById('dice-row');
-        const hint = document.getElementById('roll-hint');
+        const sphere = document.getElementById('roll-sphere');
+        const sphereNum = document.getElementById('sphere-rolls');
         if (!row) return;
 
         row.innerHTML = '';
@@ -1307,19 +1363,16 @@
             if (pip) pip.className = 'roll-pip' + (p < vDice.rolls ? ' used' : '');
         }
 
-        // Hint text
-        if (vDice.rolls === 0) {
-            hint.textContent = 'Tap name to roll';
-            hint.className = 'roll-hint active';
-        } else if (vDice.rolls < 3) {
-            const heldCount = vDice.held.filter(Boolean).length;
-            hint.textContent = heldCount > 0
-                ? `${heldCount} held · tap name to roll again`
-                : 'Tap a die to hold · tap name to roll again';
-            hint.className = 'roll-hint';
-        } else {
-            hint.textContent = 'Roll 3 done — choose a score';
-            hint.className = 'roll-hint must-score-badge';
+        // Sphere state
+        const rollsLeft = 3 - vDice.rolls;
+        if (sphereNum) sphereNum.textContent = rollsLeft;
+
+        if (sphere) {
+            if (rollsLeft === 0 || vDice.rolling) {
+                sphere.classList.add('disabled');
+            } else {
+                sphere.classList.remove('disabled');
+            }
         }
     }
 
@@ -1353,6 +1406,15 @@
         // Rebuild tray so held dice show correctly
         renderDiceTray();
 
+        // Animate the sphere
+        const sphere = document.getElementById('roll-sphere');
+        if (sphere) {
+            sphere.classList.add('disabled', 'spinning');
+            sphere.addEventListener('animationend', () => {
+                sphere.classList.remove('spinning');
+            }, { once: true });
+        }
+
         // Kick off each die's unique animation via inline style
         toRoll.forEach(i => {
             const cube = document.getElementById(`vdie-inner-${i}`);
@@ -1360,7 +1422,6 @@
             const { anim, dur, delay } = ROLL_PARAMS[i];
             cube.style.transition = 'none';
             cube.style.transform  = '';
-            // Force reflow so the cleared transform takes effect before animating
             void cube.offsetWidth;
             cube.style.animation = `${anim} ${dur}ms ${delay}ms cubic-bezier(0.2, 0.55, 0.35, 1.0) forwards`;
         });
@@ -1396,6 +1457,9 @@
             const pip = document.getElementById(`pip${p}`);
             if (pip) pip.className = 'roll-pip' + (p < vDice.rolls ? ' used' : '');
         }
+        // Update sphere counter immediately
+        const sphereNum = document.getElementById('sphere-rolls');
+        if (sphereNum) sphereNum.textContent = 3 - vDice.rolls;
     }
 
     // ── Score picker: in virtual mode, pre-highlight valid scores ──
