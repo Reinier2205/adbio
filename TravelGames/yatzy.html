@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Disney Yatzy Duel</title>
+    <title>Travel Yatzy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -51,37 +51,33 @@
             overflow: hidden;
         }
 
-        /* ── Mandatory Nav Buttons ── */
+        /* ── Nav Buttons ── */
         .nav-btn {
-            position: absolute;
-            top: 12px;
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             border: 2px solid #111;
-            box-shadow: 0 4px 0 #111;
+            box-shadow: 0 3px 0 #111;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 17px;
             cursor: pointer;
-            z-index: 50;
+            flex-shrink: 0;
             transition: transform 0.1s, box-shadow 0.1s;
             font-family: 'Inter', sans-serif;
             font-weight: 900;
         }
         .nav-btn:active {
             transform: translateY(2px);
-            box-shadow: 0 2px 0 #111;
+            box-shadow: 0 1px 0 #111;
         }
         .home-btn {
-            left: 12px;
             background: radial-gradient(circle, var(--gold-light), var(--gold));
             color: #2a1a1f;
             text-decoration: none;
         }
         .help-btn {
-            right: 12px;
             background: radial-gradient(circle, var(--gold-light), var(--gold));
             color: #2a1a1f;
         }
@@ -412,15 +408,25 @@
         <div class="help-panel">
             <h3 class="cinzel text-xl mb-4" style="color:var(--gold)">How to Play Yatzy</h3>
             <div class="space-y-3 text-sm text-white/80 leading-relaxed">
-                <p><span style="color:var(--gold-light)" class="font-bold">Upper Section</span> — Score the sum of the matching dice (Ones through Sixes). Reach <strong>63 pts</strong> for a <strong>+35 bonus</strong>.</p>
-                <p><span style="color:var(--gold-light)" class="font-bold">3 of a Kind</span> — Three matching dice → sum of all dice.</p>
-                <p><span style="color:var(--gold-light)" class="font-bold">4 of a Kind</span> — Four matching dice → sum of all dice.</p>
-                <p><span style="color:var(--gold-light)" class="font-bold">Full House</span> — Three of one + two of another → <strong>25 pts</strong>.</p>
-                <p><span style="color:var(--gold-light)" class="font-bold">Small Straight</span> — 4 sequential dice → <strong>30 pts</strong>.</p>
-                <p><span style="color:var(--gold-light)" class="font-bold">Large Straight</span> — 5 sequential dice → <strong>40 pts</strong>.</p>
-                <p><span style="color:var(--gold-light)" class="font-bold">Yatzy</span> — All five dice match → <strong>50 pts</strong>.</p>
-                <p><span style="color:var(--gold-light)" class="font-bold">Chance</span> — Any dice → sum of all dice.</p>
-                <p class="text-white/40 text-xs pt-2">Tap your highlighted cell to enter a score. Full House, Straights and Yatzy toggle on/off with one tap. Any entered score can be changed at any time.</p>
+
+                <p class="text-white/50 text-xs uppercase tracking-widest font-bold">Turns</p>
+                <p>Players take turns. On your turn, tap any <strong>highlighted</strong> cell in your column to enter a score. The turn passes automatically once you score.</p>
+
+                <p class="text-white/50 text-xs uppercase tracking-widest font-bold pt-1">Upper Section (Ones – Sixes)</p>
+                <p>Score the <strong>sum of matching dice only</strong>. E.g. three 4s = 12. Reach <strong>63 pts</strong> in the upper section to earn a <strong>+35 bonus</strong>.</p>
+
+                <p class="text-white/50 text-xs uppercase tracking-widest font-bold pt-1">Lower Section</p>
+                <p><span style="color:var(--gold-light)" class="font-bold">3 of a Kind</span> — At least three matching dice → score the <strong>sum of all 5 dice</strong> (min 5, max 30).</p>
+                <p><span style="color:var(--gold-light)" class="font-bold">4 of a Kind</span> — At least four matching dice → score the <strong>sum of all 5 dice</strong> (min 5, max 30).</p>
+                <p><span style="color:var(--gold-light)" class="font-bold">Full House</span> — Three of one + two of another → <strong>25 pts</strong>. Tap to toggle on/off.</p>
+                <p><span style="color:var(--gold-light)" class="font-bold">Small Straight</span> — Any 4 sequential dice (e.g. 2-3-4-5) → <strong>30 pts</strong>. Tap to toggle.</p>
+                <p><span style="color:var(--gold-light)" class="font-bold">Large Straight</span> — All 5 sequential dice (1-2-3-4-5 or 2-3-4-5-6) → <strong>40 pts</strong>. Tap to toggle.</p>
+                <p><span style="color:var(--gold-light)" class="font-bold">Yatzy</span> — All five dice the same → <strong>50 pts</strong>. Tap to toggle.</p>
+                <p><span style="color:var(--gold-light)" class="font-bold">Chance</span> — Any dice → score the <strong>sum of all 5 dice</strong> (min 5, max 30).</p>
+
+                <p class="text-white/50 text-xs uppercase tracking-widest font-bold pt-1">Scoring Tips</p>
+                <p>You <strong>must</strong> score every category exactly once. If you can't make a combination, tap the cell and choose <strong>Scratch (0)</strong> to forfeit that category.</p>
+                <p>Any entered score can be corrected at any time by tapping it again.</p>
             </div>
             <button onclick="closeHelp()" class="btn-main mt-6" style="font-size:15px;padding:12px">Close</button>
         </div>
@@ -492,9 +498,9 @@
     </div>
 
     <!-- ── Header ── -->
-    <div class="p-3 bg-black flex justify-center items-center border-b border-gold/40 relative" style="min-height:56px">
-        <a href="../index.html" class="nav-btn home-btn" title="Home">🏠</a>
-        <div class="cinzel text-xs tracking-widest" style="color:var(--gold)">Disney Duel</div>
+    <div class="bg-black border-b flex items-center justify-between px-3" style="min-height:52px;border-color:rgba(212,175,55,0.4)">
+        <a href="index.html" class="nav-btn home-btn" title="Home">🏠</a>
+        <div class="cinzel text-xs tracking-widest" style="color:var(--gold)">Travel Yatzy</div>
         <button onclick="openHelp()" class="nav-btn help-btn" title="Help">?</button>
     </div>
 
