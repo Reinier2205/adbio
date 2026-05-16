@@ -179,18 +179,27 @@
         /* ── Active player column ── */
         .grid-header.active-player {
             background: #1a3a0a;
-            border-bottom-color: var(--gold);
+            border-bottom: 3px solid var(--gold-light);
+            box-shadow: inset 2px 0 0 var(--gold), inset -2px 0 0 var(--gold);
         }
         .score-cell.active-col {
-            background: #0c3018;
+            background: #0f3a1a;
+            box-shadow: inset 2px 0 0 rgba(212,175,55,0.25), inset -2px 0 0 rgba(212,175,55,0.25);
         }
         .score-cell.active-col.filled {
-            background: #071a0c;
+            background: #0a2812;
+        }
+        /* inactive columns — visibly darker/muted */
+        .score-cell:not(.active-col):not(.filled) {
+            background: #020c06;
+        }
+        .grid-header:not(.active-player):not(:first-child) {
+            background: #0a0a0a;
         }
         /* inactive unfilled cells — muted, not tappable */
         .score-cell.inactive-empty {
             cursor: default;
-            opacity: 0.45;
+            opacity: 0.35;
         }
         .turn-arrow {
             font-size: 14px;
@@ -290,9 +299,9 @@
         /* Scratch / zero button */
         .sp-btn.scratch {
             grid-column: span 4;
-            background: #1a0808;
-            border-color: rgba(239, 68, 68, 0.35);
-            color: #ef4444;
+            background: #2a1a1f;
+            border-color: rgba(212, 175, 55, 0.3);
+            color: rgba(255, 248, 225, 0.6);
             font-family: 'Inter', sans-serif;
             font-size: 13px;
             font-weight: 900;
@@ -301,8 +310,9 @@
             padding: 13px 4px;
         }
         .sp-btn.scratch:active, .sp-btn.scratch.selected {
-            background: #ef4444;
-            color: white;
+            background: var(--maroon);
+            color: var(--light-gold);
+            border-color: var(--gold);
         }
         /* Special high-value buttons */
         .sp-btn.special {
@@ -443,7 +453,7 @@
             </div>
             <div class="flex items-center gap-3">
                 <div class="cinzel text-3xl font-black" style="color:var(--gold)" id="np-display">—</div>
-                <button onclick="closeNumpad()" class="text-white/30 text-2xl leading-none px-1" style="font-family:Inter,sans-serif">✕</button>
+                <button onclick="closeNumpad()" class="text-white/25 text-2xl leading-none px-1" style="font-family:Inter,sans-serif">✕</button>
             </div>
         </div>
 
@@ -655,7 +665,7 @@
                         <input type="text" value="${p.name}" oninput="ALL_DEFAULTS[${i}].name=this.value" 
                                class="bg-transparent border-b border-gold/20 w-full outline-none font-bold text-gold py-1">
                     </div>
-                    ${i > 1 ? `<button onclick="togglePlayer(${i})" class="text-red-500/50 p-2 text-xs">✕</button>` : ''}
+                    ${i > 1 ? `<button onclick="togglePlayer(${i})" class="text-white/30 p-2 text-xs">✕</button>` : ''}
                 </div>
             `;
         }).join('');
