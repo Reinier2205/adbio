@@ -181,13 +181,9 @@
         }
 
         /* ── Active player column ── */
-        @keyframes turnPulse {
-            0%, 100% { box-shadow: inset 0 0 0 2px rgba(212,175,55,0.6); }
-            50%       { box-shadow: inset 0 0 0 2px rgba(255,215,0,1); }
-        }
         .grid-header.active-player {
             background: #1a3a0a;
-            border-bottom-color: var(--gold-light);
+            border-bottom-color: var(--gold);
         }
         .score-cell.active-col {
             background: #0c3018;
@@ -195,8 +191,10 @@
         .score-cell.active-col.filled {
             background: #071a0c;
         }
-        .score-cell.active-col:not(.filled) {
-            animation: turnPulse 2s ease-in-out infinite;
+        /* inactive unfilled cells — muted, not tappable */
+        .score-cell.inactive-empty {
+            cursor: default;
+            opacity: 0.45;
         }
         .turn-arrow {
             font-size: 14px;
@@ -422,7 +420,7 @@
                 <p><span style="color:var(--gold-light)" class="font-bold">Large Straight</span> — 5 sequential dice → <strong>40 pts</strong>.</p>
                 <p><span style="color:var(--gold-light)" class="font-bold">Yatzy</span> — All five dice match → <strong>50 pts</strong>.</p>
                 <p><span style="color:var(--gold-light)" class="font-bold">Chance</span> — Any dice → sum of all dice.</p>
-                <p class="text-white/40 text-xs pt-2">Tap any score cell to enter or edit a score. Tap Cancel to leave it blank (zero).</p>
+                <p class="text-white/40 text-xs pt-2">Tap your highlighted cell to enter a score. Full House, Straights and Yatzy toggle on/off with one tap. Any entered score can be changed at any time.</p>
             </div>
             <button onclick="closeHelp()" class="btn-main mt-6" style="font-size:15px;padding:12px">Close</button>
         </div>
@@ -705,10 +703,19 @@
             players.forEach((p, pIdx) => {
                 const score = p.scores[cat.id];
                 const isActive = pIdx === currentPlayer;
+                const isFilled = score !== undefined;
+                // Tappable: active player's empty cells, OR any filled cell (any player)
+                const tappable = isActive || isFilled;
+                const cellClass = [
+                    'score-cell',
+                    isFilled  ? 'filled'        : '',
+                    isActive  ? 'active-col'    : '',
+                    !tappable ? 'inactive-empty': ''
+                ].filter(Boolean).join(' ');
                 html += `
-                    <div class="score-cell ${score !== undefined ? 'filled' : ''} ${isActive ? 'active-col' : ''}"
-                         onclick="openNumpad(${pIdx}, '${cat.id}')">
-                        ${score !== undefined ? score : ''}
+                    <div class="${cellClass}"
+                         onclick="${tappable ? `openNumpad(${pIdx}, '${cat.id}')` : ''}">
+                        ${isFilled ? score : ''}
                     </div>
                 `;
             });
@@ -805,7 +812,9 @@
 
     function saveScore(score) {
         const { pIdx, catId } = activeSelection;
+        const wasEmpty = players[pIdx].scores[catId] === undefined;
 
+        // 0 = scratch = clear the cell
         if (score === 0) {
             delete players[pIdx].scores[catId];
         } else {
@@ -824,24 +833,37 @@
             p.total = upper + p.bonus + lower;
         });
 
-        // Advance turn only when the active player scored
-        if (pIdx === currentPlayer) {
+        // Advance turn only when the active player fills a previously empty cell
+        if (pIdx === currentPlayer && wasEmpty && score !== 0) {
             currentPlayer = (currentPlayer + 1) % players.length;
         }
 
-        // Brief visual feedback, then close
+        // 180ms flash for picker, instant for single-value toggle
+        const pickerOpen = document.getElementById('numpad').style.display === 'flex';
         setTimeout(() => {
             closeNumpad();
             renderBoard();
-        }, 180);
+        }, pickerOpen ? 180 : 0);
     }
 
-    function openNumpad(pIdx, catId) {
-        activeSelection = { pIdx, catId };
-        pickedScore = null;
+    // Categories with exactly one non-zero score value — tap toggles, no picker needed
+    const CAT_SINGLE = { 'fh': 25, 'ss': 30, 'ls': 40, 'yz': 50 };
 
+    function openNumpad(pIdx, catId) {
         const p = players[pIdx];
         const existingScore = p.scores[catId];
+
+        // ── Single-value category: instant toggle ──
+        if (CAT_SINGLE[catId] !== undefined) {
+            activeSelection = { pIdx, catId };
+            const newScore = existingScore !== undefined ? 0 : CAT_SINGLE[catId];
+            saveScore(newScore);
+            return;
+        }
+
+        // ── Multi-value: open picker ──
+        activeSelection = { pIdx, catId };
+        pickedScore = null;
 
         document.getElementById('np-icon').textContent = p.icon;
         document.getElementById('np-player-name').textContent = p.name;
