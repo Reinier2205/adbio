@@ -386,7 +386,122 @@
             box-shadow: 0 2px 0 #041a0b;
         }
 
-        /* ── Help Modal ── */
+        /* ── Winner Modal ── */
+        .winner-modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 700;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .winner-modal.show {
+            display: flex;
+            animation: overlayIn 0.4s ease;
+        }
+        .winner-panel {
+            background: linear-gradient(160deg, #1a3a0a, #0a2010, #1a1a00);
+            border: 3px solid var(--gold);
+            border-radius: 20px;
+            padding: 28px 24px 24px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(212,175,55,0.4), 0 20px 40px rgba(0,0,0,0.8);
+        }
+        /* Shimmer sweep across the panel */
+        .winner-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, transparent 30%, rgba(255,215,0,0.08) 50%, transparent 70%);
+            animation: shimmer 2.5s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+        /* Trophy bounce */
+        .winner-trophy {
+            font-size: 72px;
+            line-height: 1;
+            display: block;
+            animation: trophyBounce 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
+            filter: drop-shadow(0 0 20px rgba(255,215,0,0.7));
+        }
+        @keyframes trophyBounce {
+            0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+            60%  { transform: scale(1.25) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        /* Winner name pop */
+        .winner-name {
+            animation: namePop 0.5s 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        @keyframes namePop {
+            0%   { transform: scale(0.5) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        /* Score rows slide in */
+        .winner-scores {
+            animation: scoresSlide 0.5s 0.5s ease both;
+        }
+        @keyframes scoresSlide {
+            0%   { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        /* Confetti pieces */
+        .confetti-wrap {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .confetti-piece {
+            position: absolute;
+            top: -12px;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            opacity: 0;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            0%   { transform: translateY(0) rotate(0deg) scaleX(1);   opacity: 1; }
+            80%  { opacity: 1; }
+            100% { transform: translateY(520px) rotate(720deg) scaleX(-1); opacity: 0; }
+        }
+        /* Gold star burst ring */
+        .winner-stars {
+            position: absolute;
+            top: -10px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            animation: starSpin 1.2s 0.1s ease both;
+            white-space: nowrap;
+            letter-spacing: 4px;
+        }
+        @keyframes starSpin {
+            0%   { transform: translateX(-50%) scale(0) rotate(-180deg); opacity: 0; }
+            100% { transform: translateX(-50%) scale(1) rotate(0deg); opacity: 1; }
+        }
+        /* Podium score rows */
+        .podium-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+        }
+        .podium-row.first  { background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.4); }
+        .podium-row.second { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+        .podium-row.third  { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); }
+        .podium-row.fourth { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); }
         .help-modal {
             position: absolute;
             inset: 0;
@@ -676,6 +791,24 @@
 <body>
 
 <div class="casino-container">
+
+    <!-- ── Winner Modal ── -->
+    <div id="winner-modal" class="winner-modal" onclick="if(event.target===this)closeWinner()">
+        <div class="winner-panel">
+            <div class="confetti-wrap" id="confetti-wrap"></div>
+            <div class="winner-stars" id="winner-stars">⭐⭐⭐⭐⭐</div>
+            <span class="winner-trophy" id="winner-trophy">🏆</span>
+            <div class="winner-name mt-3">
+                <div class="text-4xl leading-none mt-2" id="winner-icon"></div>
+                <div class="cinzel text-2xl font-bold mt-2" style="color:var(--gold-light)" id="winner-name-text"></div>
+                <div class="inter text-xs uppercase tracking-widest mt-1" style="color:rgba(255,255,255,0.4)">Winner!</div>
+            </div>
+            <div class="winner-scores mt-5 space-y-1" id="winner-scores"></div>
+            <button onclick="location.reload()" class="btn-main mt-6" style="font-size:15px;padding:14px;position:relative;z-index:1">
+                🎲 Play Again
+            </button>
+        </div>
+    </div>
 
     <!-- ── Help Modal ── -->
     <div id="help-modal" class="help-modal" onclick="if(event.target===this)closeHelp()">
@@ -1184,6 +1317,7 @@
         setTimeout(() => {
             closeNumpad();
             renderBoard();
+            checkGameOver();
         }, pickerOpen ? 180 : 0);
     }
 
@@ -1483,7 +1617,93 @@
         }
     }
 
-    // ── End of virtual dice engine ────────────────────────────────────────
+    // ── Game Over ─────────────────────────────────────────────────────────
+
+    function checkGameOver() {
+        // All players must have all 13 categories filled
+        const done = players.every(p =>
+            CATS.every(c => p.scores[c.id] !== undefined)
+        );
+        if (!done) return;
+
+        // Sort by total descending
+        const ranked = [...players].sort((a, b) => b.total - a.total);
+        const winner = ranked[0];
+
+        // Populate modal
+        document.getElementById('winner-icon').textContent = winner.icon;
+        document.getElementById('winner-name-text').textContent = winner.name;
+
+        // Podium rows
+        const placeLabels = ['🥇', '🥈', '🥉', '  '];
+        const placeClasses = ['first', 'second', 'third', 'fourth'];
+        const scoresEl = document.getElementById('winner-scores');
+        scoresEl.innerHTML = ranked.map((p, i) => `
+            <div class="podium-row ${placeClasses[i] || 'fourth'}">
+                <span style="font-size:18px">${placeLabels[i] || ''}</span>
+                <span style="font-size:20px">${p.icon}</span>
+                <span class="inter font-black text-sm" style="color:rgba(255,255,255,0.7);flex:1;text-align:left;padding-left:8px">${p.name}</span>
+                <span class="cinzel font-black text-xl" style="color:${i === 0 ? 'var(--gold-light)' : 'rgba(255,255,255,0.6)'}">${p.total}</span>
+            </div>
+        `).join('');
+
+        // Show modal
+        const modal = document.getElementById('winner-modal');
+        modal.classList.add('show');
+
+        // Launch confetti
+        launchConfetti();
+    }
+
+    function launchConfetti() {
+        const wrap = document.getElementById('confetti-wrap');
+        wrap.innerHTML = '';
+        const colours = ['#ffd700','#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffeaa7','#dfe6e9','#fd79a8','#a29bfe'];
+        const count = 60;
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti-piece';
+            const colour = colours[Math.floor(Math.random() * colours.length)];
+            const left   = Math.random() * 100;
+            const delay  = Math.random() * 1.8;
+            const dur    = 1.6 + Math.random() * 1.4;
+            const size   = 5 + Math.random() * 7;
+            el.style.cssText = `
+                left:${left}%;
+                background:${colour};
+                width:${size}px;
+                height:${size}px;
+                border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+                animation-duration:${dur}s;
+                animation-delay:${delay}s;
+            `;
+            wrap.appendChild(el);
+        }
+        // Second wave
+        setTimeout(() => {
+            for (let i = 0; i < 40; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti-piece';
+                const colour = colours[Math.floor(Math.random() * colours.length)];
+                el.style.cssText = `
+                    left:${Math.random() * 100}%;
+                    background:${colour};
+                    width:${5 + Math.random() * 6}px;
+                    height:${5 + Math.random() * 6}px;
+                    border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+                    animation-duration:${1.4 + Math.random() * 1.2}s;
+                    animation-delay:${Math.random() * 0.6}s;
+                `;
+                wrap.appendChild(el);
+            }
+        }, 800);
+    }
+
+    function closeWinner() {
+        document.getElementById('winner-modal').classList.remove('show');
+    }
+
+    // ── End of game over ──────────────────────────────────────────────────
 
     renderSetup();
 
