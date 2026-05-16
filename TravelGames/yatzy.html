@@ -118,19 +118,19 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px 4px;
+            padding: 6px 4px;
             font-size: 9px;
             font-weight: 900;
             text-transform: uppercase;
             color: var(--gold);
             letter-spacing: 0.02em;
             text-align: center;
+            min-height: 52px;
         }
 
         .dice-svg {
-            width: 24px;
-            height: 24px;
-            margin-bottom: 4px;
+            width: 72px;
+            height: 22px;
         }
 
         .score-cell {
@@ -388,6 +388,7 @@
         { name: 'Stitch', icon: '👽', active: false }
     ];
 
+    // Upper section: standard pip dice
     const DICE_SVGS = {
         1: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="50" cy="50" r="8" fill="black"/></svg>',
         2: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="30" r="8" fill="black"/><circle cx="70" cy="70" r="8" fill="black"/></svg>',
@@ -397,20 +398,135 @@
         6: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="25" r="8" fill="black"/><circle cx="70" cy="25" r="8" fill="black"/><circle cx="30" cy="50" r="8" fill="black"/><circle cx="70" cy="50" r="8" fill="black"/><circle cx="30" cy="75" r="8" fill="black"/><circle cx="70" cy="75" r="8" fill="black"/></svg>'
     };
 
+    // Lower section: illustrative icons
+    // 3x = three dice showing same face (3×3-pip)
+    // 4x = four dice showing same face (4×2-pip)
+    // fh = two dice + three dice (full house)
+    // ss = four sequential dice (1-2-3-4)
+    // ls = five sequential dice (1-2-3-4-5)
+    // yz = five identical dice (all 5-pip)
+    // ch = five mixed dice
+    const CAT_ICONS = {
+        '3x': `<svg class="dice-svg" viewBox="0 0 140 50">
+            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="22" cy="25" r="5" fill="black"/>
+            <circle cx="12" cy="15" r="5" fill="black"/>
+            <circle cx="32" cy="35" r="5" fill="black"/>
+            <rect x="50" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="70" cy="25" r="5" fill="black"/>
+            <circle cx="60" cy="15" r="5" fill="black"/>
+            <circle cx="80" cy="35" r="5" fill="black"/>
+            <rect x="98" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="118" cy="25" r="5" fill="black"/>
+            <circle cx="108" cy="15" r="5" fill="black"/>
+            <circle cx="128" cy="35" r="5" fill="black"/>
+        </svg>`,
+        '4x': `<svg class="dice-svg" viewBox="0 0 185 50">
+            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="14" cy="17" r="5" fill="black"/><circle cx="30" cy="33" r="5" fill="black"/>
+            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
+            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
+            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
+        </svg>`,
+        'fh': `<svg class="dice-svg" viewBox="0 0 232 50">
+            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="22" cy="25" r="5" fill="black"/>
+            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="68" cy="25" r="5" fill="black"/>
+            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="115" cy="25" r="5" fill="black"/>
+            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
+            <rect x="189" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="201" cy="17" r="5" fill="black"/><circle cx="217" cy="33" r="5" fill="black"/>
+        </svg>`,
+        'ss': `<svg class="dice-svg" viewBox="0 0 185 50">
+            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="22" cy="25" r="5" fill="black"/>
+            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
+            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="115" cy="25" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
+            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="17" r="5" fill="black"/>
+            <circle cx="154" cy="33" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
+        </svg>`,
+        'ls': `<svg class="dice-svg" viewBox="0 0 232 50">
+            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="22" cy="25" r="5" fill="black"/>
+            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
+            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="115" cy="25" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
+            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="17" r="5" fill="black"/>
+            <circle cx="154" cy="33" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
+            <rect x="189" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="201" cy="17" r="5" fill="black"/><circle cx="217" cy="17" r="5" fill="black"/>
+            <circle cx="209" cy="25" r="5" fill="black"/>
+            <circle cx="201" cy="33" r="5" fill="black"/><circle cx="217" cy="33" r="5" fill="black"/>
+        </svg>`,
+        'yz': `<svg class="dice-svg" viewBox="0 0 232 50">
+            <rect x="2"  y="5" width="40" height="40" rx="7" fill="#d4af37"/>
+            <circle cx="14" cy="17" r="5" fill="black"/><circle cx="30" cy="17" r="5" fill="black"/>
+            <circle cx="22" cy="25" r="5" fill="black"/>
+            <circle cx="14" cy="33" r="5" fill="black"/><circle cx="30" cy="33" r="5" fill="black"/>
+            <rect x="48" y="5" width="40" height="40" rx="7" fill="#d4af37"/>
+            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="17" r="5" fill="black"/>
+            <circle cx="68" cy="25" r="5" fill="black"/>
+            <circle cx="60" cy="33" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
+            <rect x="95" y="5" width="40" height="40" rx="7" fill="#d4af37"/>
+            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="123" cy="17" r="5" fill="black"/>
+            <circle cx="115" cy="25" r="5" fill="black"/>
+            <circle cx="107" cy="33" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
+            <rect x="142" y="5" width="40" height="40" rx="7" fill="#d4af37"/>
+            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="17" r="5" fill="black"/>
+            <circle cx="162" cy="25" r="5" fill="black"/>
+            <circle cx="154" cy="33" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
+            <rect x="189" y="5" width="40" height="40" rx="7" fill="#d4af37"/>
+            <circle cx="201" cy="17" r="5" fill="black"/><circle cx="217" cy="17" r="5" fill="black"/>
+            <circle cx="209" cy="25" r="5" fill="black"/>
+            <circle cx="201" cy="33" r="5" fill="black"/><circle cx="217" cy="33" r="5" fill="black"/>
+        </svg>`,
+        'ch': `<svg class="dice-svg" viewBox="0 0 232 50">
+            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="22" cy="25" r="5" fill="black"/>
+            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
+            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="123" cy="17" r="5" fill="black"/>
+            <circle cx="107" cy="33" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
+            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="17" r="5" fill="black"/>
+            <circle cx="162" cy="25" r="5" fill="black"/>
+            <circle cx="154" cy="33" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
+            <rect x="189" y="5" width="40" height="40" rx="7" fill="white"/>
+            <circle cx="201" cy="17" r="5" fill="black"/><circle cx="217" cy="17" r="5" fill="black"/>
+            <circle cx="201" cy="33" r="5" fill="black"/><circle cx="217" cy="33" r="5" fill="black"/>
+        </svg>`,
+        'bonus': `<svg class="dice-svg" viewBox="0 0 50 50">
+            <rect x="5" y="5" width="40" height="40" rx="8" fill="none" stroke="#d4af37" stroke-width="3"/>
+            <text x="25" y="32" text-anchor="middle" font-size="22" font-weight="900" fill="#d4af37" font-family="serif">★</text>
+        </svg>`
+    };
+
     const CATS = [
-        { id: '1', name: 'Ones', type: 'upper', dice: 1 },
-        { id: '2', name: 'Twos', type: 'upper', dice: 2 },
-        { id: '3', name: 'Threes', type: 'upper', dice: 3 },
-        { id: '4', name: 'Fours', type: 'upper', dice: 4 },
-        { id: '5', name: 'Fives', type: 'upper', dice: 5 },
-        { id: '6', name: 'Sixes', type: 'upper', dice: 6 },
-        { id: '3x', name: '3 Kind', type: 'lower' },
-        { id: '4x', name: '4 Kind', type: 'lower' },
-        { id: 'fh', name: 'Full H.', type: 'lower' },
-        { id: 'ss', name: 'Sm Str.', type: 'lower' },
-        { id: 'ls', name: 'Lg Str.', type: 'lower' },
-        { id: 'yz', name: 'Yatzy', type: 'lower' },
-        { id: 'ch', name: 'Chance', type: 'lower' }
+        { id: '1',    name: 'Ones',    type: 'upper', dice: 1 },
+        { id: '2',    name: 'Twos',    type: 'upper', dice: 2 },
+        { id: '3',    name: 'Threes',  type: 'upper', dice: 3 },
+        { id: '4',    name: 'Fours',   type: 'upper', dice: 4 },
+        { id: '5',    name: 'Fives',   type: 'upper', dice: 5 },
+        { id: '6',    name: 'Sixes',   type: 'upper', dice: 6 },
+        { id: '3x',   name: '3 Kind',  type: 'lower' },
+        { id: '4x',   name: '4 Kind',  type: 'lower' },
+        { id: 'fh',   name: 'Full H.', type: 'lower' },
+        { id: 'ss',   name: 'Sm Str.', type: 'lower' },
+        { id: 'ls',   name: 'Lg Str.', type: 'lower' },
+        { id: 'yz',   name: 'Yatzy',   type: 'lower' },
+        { id: 'ch',   name: 'Chance',  type: 'lower' }
     ];
 
     let players = [];
@@ -469,10 +585,10 @@
 
         // Category Rows
         CATS.forEach(cat => {
+            const icon = cat.dice ? DICE_SVGS[cat.dice] : CAT_ICONS[cat.id] || '';
             html += `
                 <div class="category-cell">
-                    ${cat.dice ? DICE_SVGS[cat.dice] : ''}
-                    <span>${cat.name}</span>
+                    ${icon}
                 </div>
             `;
             players.forEach((p, pIdx) => {
@@ -487,7 +603,7 @@
         });
 
         // Bonus Row
-        html += `<div class="category-cell"><span class="mt-2">UPPER BONUS</span></div>`;
+        html += `<div class="category-cell">${CAT_ICONS['bonus']}</div>`;
         players.forEach(p => {
             const isDone = p.upperSum >= 63;
             html += `
