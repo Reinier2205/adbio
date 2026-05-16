@@ -118,24 +118,25 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 6px 4px;
-            font-size: 9px;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: var(--gold);
-            letter-spacing: 0.02em;
-            text-align: center;
+            padding: 4px;
             min-height: 52px;
         }
 
-        .dice-svg {
-            width: 72px;
-            height: 22px;
+        /* Single die fills the category cell */
+        .cat-die {
+            width: 44px;
+            height: 44px;
+        }
+
+        /* Badge-style icon for lower categories */
+        .cat-badge {
+            width: 52px;
+            height: 44px;
         }
 
         .score-cell {
             background: #051f0f;
-            min-height: 58px;
+            min-height: 52px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -156,18 +157,46 @@
             transform: translateY(1px);
         }
 
+        /* ── Bonus bar below the grid ── */
+        .bonus-bar {
+            display: grid;
+            grid-template-columns: 85px repeat(var(--player-count, 2), 1fr);
+            gap: 1px;
+            background: rgba(212, 175, 55, 0.3);
+            border-top: 2px solid var(--gold);
+            flex-shrink: 0;
+        }
+        .bonus-label-cell {
+            background: #0a2e18;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 4px;
+        }
+        .bonus-player-cell {
+            background: #051f0f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 2px;
+        }
         .progress-circle {
-            width: 46px;
-            height: 46px;
-            border: 2px solid #333;
+            width: 44px;
+            height: 44px;
+            border: 2px solid #444;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
             font-weight: 900;
             background: #000;
+            transition: border-color 0.3s, color 0.3s;
+        }
+        .progress-circle.done {
+            border-color: #22c55e;
+            color: #22c55e;
         }
 
         /* ── Numpad Overlay ── */
@@ -372,10 +401,19 @@
     <!-- Board -->
     <div id="game-table" class="score-grid"></div>
 
+    <!-- ── Bonus Bar ── -->
+    <div id="bonus-bar" class="bonus-bar" style="--player-count:2">
+        <div class="bonus-label-cell">
+            <div class="cinzel text-xs font-black" style="color:var(--gold)">BONUS</div>
+            <div class="cinzel text-lg font-black" style="color:var(--gold-light)">+35</div>
+            <div class="text-[8px] font-black uppercase" style="color:var(--gold);opacity:0.5">at 63</div>
+        </div>
+        <!-- player circles injected by JS -->
+    </div>
+
     <!-- ── Footer ── -->
-    <div class="bg-black px-4 py-3 border-t flex justify-between items-center text-[10px]" style="border-color:var(--gold)">
+    <div class="bg-black px-4 py-2 border-t flex justify-between items-center text-[10px]" style="border-color:var(--gold)">
         <div class="uppercase" style="color:var(--gold);opacity:0.6">Tap cell to edit</div>
-        <div class="font-black" style="color:var(--teal)">BONUS: 63 pts → +35</div>
         <button onclick="location.reload()" class="inter font-black uppercase text-[9px] px-3 py-1 rounded" style="background:rgba(255,255,255,0.08);color:white">Reset</button>
     </div>
 </div>
@@ -388,129 +426,108 @@
         { name: 'Stitch', icon: '👽', active: false }
     ];
 
-    // Upper section: standard pip dice
+    // Upper section: single large die per row
     const DICE_SVGS = {
-        1: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="50" cy="50" r="8" fill="black"/></svg>',
-        2: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="30" r="8" fill="black"/><circle cx="70" cy="70" r="8" fill="black"/></svg>',
-        3: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="30" r="8" fill="black"/><circle cx="50" cy="50" r="8" fill="black"/><circle cx="70" cy="70" r="8" fill="black"/></svg>',
-        4: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="30" r="8" fill="black"/><circle cx="70" cy="30" r="8" fill="black"/><circle cx="30" cy="70" r="8" fill="black"/><circle cx="70" cy="70" r="8" fill="black"/></svg>',
-        5: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="30" r="8" fill="black"/><circle cx="70" cy="30" r="8" fill="black"/><circle cx="50" cy="50" r="8" fill="black"/><circle cx="30" cy="70" r="8" fill="black"/><circle cx="70" cy="70" r="8" fill="black"/></svg>',
-        6: '<svg class="dice-svg" viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" rx="15" fill="white"/><circle cx="30" cy="25" r="8" fill="black"/><circle cx="70" cy="25" r="8" fill="black"/><circle cx="30" cy="50" r="8" fill="black"/><circle cx="70" cy="50" r="8" fill="black"/><circle cx="30" cy="75" r="8" fill="black"/><circle cx="70" cy="75" r="8" fill="black"/></svg>'
+        1: `<svg class="cat-die" viewBox="0 0 100 100">
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <circle cx="50" cy="50" r="9" fill="#1a1a1a"/>
+            </svg>`,
+        2: `<svg class="cat-die" viewBox="0 0 100 100">
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <circle cx="30" cy="30" r="9" fill="#1a1a1a"/>
+              <circle cx="70" cy="70" r="9" fill="#1a1a1a"/>
+            </svg>`,
+        3: `<svg class="cat-die" viewBox="0 0 100 100">
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <circle cx="28" cy="28" r="9" fill="#1a1a1a"/>
+              <circle cx="50" cy="50" r="9" fill="#1a1a1a"/>
+              <circle cx="72" cy="72" r="9" fill="#1a1a1a"/>
+            </svg>`,
+        4: `<svg class="cat-die" viewBox="0 0 100 100">
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <circle cx="30" cy="30" r="9" fill="#1a1a1a"/>
+              <circle cx="70" cy="30" r="9" fill="#1a1a1a"/>
+              <circle cx="30" cy="70" r="9" fill="#1a1a1a"/>
+              <circle cx="70" cy="70" r="9" fill="#1a1a1a"/>
+            </svg>`,
+        5: `<svg class="cat-die" viewBox="0 0 100 100">
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <circle cx="30" cy="30" r="9" fill="#1a1a1a"/>
+              <circle cx="70" cy="30" r="9" fill="#1a1a1a"/>
+              <circle cx="50" cy="50" r="9" fill="#1a1a1a"/>
+              <circle cx="30" cy="70" r="9" fill="#1a1a1a"/>
+              <circle cx="70" cy="70" r="9" fill="#1a1a1a"/>
+            </svg>`,
+        6: `<svg class="cat-die" viewBox="0 0 100 100">
+              <rect x="5" y="5" width="90" height="90" rx="18" fill="white" stroke="#6b21a8" stroke-width="4"/>
+              <circle cx="30" cy="25" r="9" fill="#1a1a1a"/>
+              <circle cx="70" cy="25" r="9" fill="#1a1a1a"/>
+              <circle cx="30" cy="50" r="9" fill="#1a1a1a"/>
+              <circle cx="70" cy="50" r="9" fill="#1a1a1a"/>
+              <circle cx="30" cy="75" r="9" fill="#1a1a1a"/>
+              <circle cx="70" cy="75" r="9" fill="#1a1a1a"/>
+            </svg>`
     };
 
-    // Lower section: illustrative icons
-    // 3x = three dice showing same face (3×3-pip)
-    // 4x = four dice showing same face (4×2-pip)
-    // fh = two dice + three dice (full house)
-    // ss = four sequential dice (1-2-3-4)
-    // ls = five sequential dice (1-2-3-4-5)
-    // yz = five identical dice (all 5-pip)
-    // ch = five mixed dice
+    // Lower section: badge icons matching reference image style
     const CAT_ICONS = {
-        '3x': `<svg class="dice-svg" viewBox="0 0 140 50">
-            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="22" cy="25" r="5" fill="black"/>
-            <circle cx="12" cy="15" r="5" fill="black"/>
-            <circle cx="32" cy="35" r="5" fill="black"/>
-            <rect x="50" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="70" cy="25" r="5" fill="black"/>
-            <circle cx="60" cy="15" r="5" fill="black"/>
-            <circle cx="80" cy="35" r="5" fill="black"/>
-            <rect x="98" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="118" cy="25" r="5" fill="black"/>
-            <circle cx="108" cy="15" r="5" fill="black"/>
-            <circle cx="128" cy="35" r="5" fill="black"/>
-        </svg>`,
-        '4x': `<svg class="dice-svg" viewBox="0 0 185 50">
-            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="14" cy="17" r="5" fill="black"/><circle cx="30" cy="33" r="5" fill="black"/>
-            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
-            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
-            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
-        </svg>`,
-        'fh': `<svg class="dice-svg" viewBox="0 0 232 50">
-            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="22" cy="25" r="5" fill="black"/>
-            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="68" cy="25" r="5" fill="black"/>
-            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="115" cy="25" r="5" fill="black"/>
-            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
-            <rect x="189" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="201" cy="17" r="5" fill="black"/><circle cx="217" cy="33" r="5" fill="black"/>
-        </svg>`,
-        'ss': `<svg class="dice-svg" viewBox="0 0 185 50">
-            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="22" cy="25" r="5" fill="black"/>
-            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
-            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="115" cy="25" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
-            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="17" r="5" fill="black"/>
-            <circle cx="154" cy="33" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
-        </svg>`,
-        'ls': `<svg class="dice-svg" viewBox="0 0 232 50">
-            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="22" cy="25" r="5" fill="black"/>
-            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
-            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="115" cy="25" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
-            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="17" r="5" fill="black"/>
-            <circle cx="154" cy="33" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
-            <rect x="189" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="201" cy="17" r="5" fill="black"/><circle cx="217" cy="17" r="5" fill="black"/>
-            <circle cx="209" cy="25" r="5" fill="black"/>
-            <circle cx="201" cy="33" r="5" fill="black"/><circle cx="217" cy="33" r="5" fill="black"/>
-        </svg>`,
-        'yz': `<svg class="dice-svg" viewBox="0 0 232 50">
-            <rect x="2"  y="5" width="40" height="40" rx="7" fill="#d4af37"/>
-            <circle cx="14" cy="17" r="5" fill="black"/><circle cx="30" cy="17" r="5" fill="black"/>
-            <circle cx="22" cy="25" r="5" fill="black"/>
-            <circle cx="14" cy="33" r="5" fill="black"/><circle cx="30" cy="33" r="5" fill="black"/>
-            <rect x="48" y="5" width="40" height="40" rx="7" fill="#d4af37"/>
-            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="17" r="5" fill="black"/>
-            <circle cx="68" cy="25" r="5" fill="black"/>
-            <circle cx="60" cy="33" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
-            <rect x="95" y="5" width="40" height="40" rx="7" fill="#d4af37"/>
-            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="123" cy="17" r="5" fill="black"/>
-            <circle cx="115" cy="25" r="5" fill="black"/>
-            <circle cx="107" cy="33" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
-            <rect x="142" y="5" width="40" height="40" rx="7" fill="#d4af37"/>
-            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="17" r="5" fill="black"/>
-            <circle cx="162" cy="25" r="5" fill="black"/>
-            <circle cx="154" cy="33" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
-            <rect x="189" y="5" width="40" height="40" rx="7" fill="#d4af37"/>
-            <circle cx="201" cy="17" r="5" fill="black"/><circle cx="217" cy="17" r="5" fill="black"/>
-            <circle cx="209" cy="25" r="5" fill="black"/>
-            <circle cx="201" cy="33" r="5" fill="black"/><circle cx="217" cy="33" r="5" fill="black"/>
-        </svg>`,
-        'ch': `<svg class="dice-svg" viewBox="0 0 232 50">
-            <rect x="2"  y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="22" cy="25" r="5" fill="black"/>
-            <rect x="48" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="60" cy="17" r="5" fill="black"/><circle cx="76" cy="33" r="5" fill="black"/>
-            <rect x="95" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="107" cy="17" r="5" fill="black"/><circle cx="123" cy="17" r="5" fill="black"/>
-            <circle cx="107" cy="33" r="5" fill="black"/><circle cx="123" cy="33" r="5" fill="black"/>
-            <rect x="142" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="154" cy="17" r="5" fill="black"/><circle cx="170" cy="17" r="5" fill="black"/>
-            <circle cx="162" cy="25" r="5" fill="black"/>
-            <circle cx="154" cy="33" r="5" fill="black"/><circle cx="170" cy="33" r="5" fill="black"/>
-            <rect x="189" y="5" width="40" height="40" rx="7" fill="white"/>
-            <circle cx="201" cy="17" r="5" fill="black"/><circle cx="217" cy="17" r="5" fill="black"/>
-            <circle cx="201" cy="33" r="5" fill="black"/><circle cx="217" cy="33" r="5" fill="black"/>
-        </svg>`,
-        'bonus': `<svg class="dice-svg" viewBox="0 0 50 50">
-            <rect x="5" y="5" width="40" height="40" rx="8" fill="none" stroke="#d4af37" stroke-width="3"/>
-            <text x="25" y="32" text-anchor="middle" font-size="22" font-weight="900" fill="#d4af37" font-family="serif">★</text>
-        </svg>`
+        // 3X bold text badge
+        '3x': `<svg class="cat-badge" viewBox="0 0 100 80">
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <text x="50" y="56" text-anchor="middle" font-size="42" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">3X</text>
+               </svg>`,
+        // 4X bold text badge
+        '4x': `<svg class="cat-badge" viewBox="0 0 100 80">
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <text x="50" y="56" text-anchor="middle" font-size="42" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">4X</text>
+               </svg>`,
+        // Full House: house icon
+        'fh': `<svg class="cat-badge" viewBox="0 0 100 80">
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <!-- roof -->
+                 <polygon points="50,14 82,38 18,38" fill="#1a1a1a"/>
+                 <!-- walls -->
+                 <rect x="26" y="38" width="48" height="30" fill="#1a1a1a"/>
+                 <!-- door -->
+                 <rect x="40" y="50" width="20" height="18" fill="white"/>
+               </svg>`,
+        // Small Straight: card fan with SMALL label
+        'ss': `<svg class="cat-badge" viewBox="0 0 100 80">
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <!-- card fan -->
+                 <rect x="14" y="16" width="28" height="36" rx="4" fill="#1a1a1a" transform="rotate(-15 28 34)"/>
+                 <rect x="22" y="14" width="28" height="36" rx="4" fill="#333" transform="rotate(-5 36 32)"/>
+                 <rect x="32" y="14" width="28" height="36" rx="4" fill="#555" transform="rotate(8 46 32)"/>
+                 <rect x="42" y="16" width="28" height="36" rx="4" fill="#777" transform="rotate(20 56 34)"/>
+                 <text x="50" y="74" text-anchor="middle" font-size="14" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">SMALL</text>
+               </svg>`,
+        // Large Straight: card fan with LARGE label
+        'ls': `<svg class="cat-badge" viewBox="0 0 100 80">
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <!-- card fan (5 cards) -->
+                 <rect x="10" y="16" width="26" height="34" rx="4" fill="#1a1a1a" transform="rotate(-20 23 33)"/>
+                 <rect x="18" y="13" width="26" height="34" rx="4" fill="#333" transform="rotate(-10 31 30)"/>
+                 <rect x="28" y="12" width="26" height="34" rx="4" fill="#555" transform="rotate(0 41 29)"/>
+                 <rect x="38" y="13" width="26" height="34" rx="4" fill="#777" transform="rotate(10 51 30)"/>
+                 <rect x="48" y="16" width="26" height="34" rx="4" fill="#999" transform="rotate(20 61 33)"/>
+                 <text x="50" y="74" text-anchor="middle" font-size="14" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">LARGE</text>
+               </svg>`,
+        // Yatzy: gold badge with YATZY text
+        'yz': `<svg class="cat-badge" viewBox="0 0 100 80">
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="#1a1a1a" stroke="#6b21a8" stroke-width="4"/>
+                 <!-- card fan background -->
+                 <rect x="10" y="10" width="22" height="30" rx="4" fill="#444" transform="rotate(-18 21 25)"/>
+                 <rect x="18" y="8"  width="22" height="30" rx="4" fill="#555" transform="rotate(-8 29 23)"/>
+                 <rect x="28" y="7"  width="22" height="30" rx="4" fill="#666" transform="rotate(2 39 22)"/>
+                 <rect x="38" y="8"  width="22" height="30" rx="4" fill="#555" transform="rotate(12 49 23)"/>
+                 <rect x="48" y="10" width="22" height="30" rx="4" fill="#444" transform="rotate(22 59 25)"/>
+                 <text x="50" y="68" text-anchor="middle" font-size="20" font-weight="900" fill="#ffd700" font-family="Arial Black,sans-serif" letter-spacing="1">YATZY</text>
+               </svg>`,
+        // Chance: question mark
+        'ch': `<svg class="cat-badge" viewBox="0 0 100 80">
+                 <rect x="5" y="5" width="90" height="70" rx="14" fill="white" stroke="#6b21a8" stroke-width="4"/>
+                 <text x="50" y="60" text-anchor="middle" font-size="52" font-weight="900" fill="#1a1a1a" font-family="Arial Black,sans-serif">?</text>
+               </svg>`
     };
 
     const CATS = [
@@ -569,8 +586,10 @@
 
     function renderBoard() {
         const table = document.getElementById('game-table');
+        const bonusBar = document.getElementById('bonus-bar');
         table.style.setProperty('--player-count', players.length);
-        
+        bonusBar.style.setProperty('--player-count', players.length);
+
         // Header Row (Sticky)
         let html = `<div class="grid-header bg-black/50"></div>`;
         players.forEach((p) => {
@@ -578,7 +597,7 @@
                 <div class="grid-header">
                     <div class="text-2xl leading-none mb-1">${p.icon}</div>
                     <div class="text-[9px] text-white/60 uppercase font-black truncate max-w-[60px] mb-1">${p.name}</div>
-                    <div class="text-[18px] text-gold-light font-black cinzel">${p.total}</div>
+                    <div class="text-[18px] font-black cinzel" style="color:var(--gold-light)">${p.total}</div>
                 </div>
             `;
         });
@@ -586,15 +605,11 @@
         // Category Rows
         CATS.forEach(cat => {
             const icon = cat.dice ? DICE_SVGS[cat.dice] : CAT_ICONS[cat.id] || '';
-            html += `
-                <div class="category-cell">
-                    ${icon}
-                </div>
-            `;
+            html += `<div class="category-cell">${icon}</div>`;
             players.forEach((p, pIdx) => {
                 const score = p.scores[cat.id];
                 html += `
-                    <div class="score-cell ${score !== undefined ? 'filled' : ''}" 
+                    <div class="score-cell ${score !== undefined ? 'filled' : ''}"
                          onclick="openNumpad(${pIdx}, '${cat.id}')">
                         ${score !== undefined ? score : ''}
                     </div>
@@ -602,21 +617,25 @@
             });
         });
 
-        // Bonus Row
-        html += `<div class="category-cell">${CAT_ICONS['bonus']}</div>`;
+        table.innerHTML = html;
+
+        // Update bonus bar player circles
+        // Keep the label cell, replace player cells
+        const existingPlayerCells = bonusBar.querySelectorAll('.bonus-player-cell');
+        existingPlayerCells.forEach(el => el.remove());
+
         players.forEach(p => {
             const isDone = p.upperSum >= 63;
-            html += `
-                <div class="score-cell">
-                    <div class="progress-circle ${isDone ? 'border-green-500 text-green-500' : 'border-white/10 text-white/30'}">
-                        <div class="text-[14px] leading-tight">${p.upperSum}</div>
-                        <div class="text-[7px] opacity-40">/63</div>
-                    </div>
+            const cell = document.createElement('div');
+            cell.className = 'bonus-player-cell';
+            cell.innerHTML = `
+                <div class="progress-circle ${isDone ? 'done' : ''}">
+                    <div style="font-size:13px;line-height:1.1">${p.upperSum}</div>
+                    <div style="font-size:8px;opacity:0.5">/63</div>
                 </div>
             `;
+            bonusBar.appendChild(cell);
         });
-
-        table.innerHTML = html;
     }
 
     function openNumpad(pIdx, catId) {
