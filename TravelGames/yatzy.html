@@ -488,17 +488,41 @@
             height: 9px;
         }
 
-        /* ── Roll animation — snappy but visible 3D tumble ── */
-        @keyframes dieRoll {
+        /* ── Roll animations — 5 unique tumble paths ── */
+        @keyframes dieRoll0 {
             0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
-            20%  { transform: rotateX(200deg) rotateY(80deg)  rotateZ(25deg); }
-            40%  { transform: rotateX(380deg) rotateY(190deg) rotateZ(-15deg); }
-            60%  { transform: rotateX(520deg) rotateY(290deg) rotateZ(30deg); }
-            80%  { transform: rotateX(620deg) rotateY(370deg) rotateZ(8deg); }
+            25%  { transform: rotateX(210deg) rotateY(95deg)  rotateZ(22deg); }
+            50%  { transform: rotateX(390deg) rotateY(200deg) rotateZ(-18deg); }
+            75%  { transform: rotateX(560deg) rotateY(310deg) rotateZ(12deg); }
             100% { transform: rotateX(720deg) rotateY(440deg) rotateZ(0deg); }
         }
-        .vdie.rolling {
-            animation: dieRoll 0.85s cubic-bezier(0.2, 0.6, 0.4, 1.0) forwards;
+        @keyframes dieRoll1 {
+            0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+            20%  { transform: rotateX(80deg)  rotateY(220deg) rotateZ(-30deg); }
+            45%  { transform: rotateX(200deg) rotateY(400deg) rotateZ(20deg); }
+            70%  { transform: rotateX(340deg) rotateY(540deg) rotateZ(-10deg); }
+            100% { transform: rotateX(360deg) rotateY(720deg) rotateZ(0deg); }
+        }
+        @keyframes dieRoll2 {
+            0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+            30%  { transform: rotateX(300deg) rotateY(60deg)  rotateZ(35deg); }
+            55%  { transform: rotateX(500deg) rotateY(150deg) rotateZ(-25deg); }
+            80%  { transform: rotateX(640deg) rotateY(260deg) rotateZ(8deg); }
+            100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(0deg); }
+        }
+        @keyframes dieRoll3 {
+            0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+            20%  { transform: rotateX(160deg) rotateY(130deg) rotateZ(-28deg); }
+            50%  { transform: rotateX(360deg) rotateY(280deg) rotateZ(18deg); }
+            75%  { transform: rotateX(520deg) rotateY(400deg) rotateZ(-6deg); }
+            100% { transform: rotateX(720deg) rotateY(540deg) rotateZ(0deg); }
+        }
+        @keyframes dieRoll4 {
+            0%   { transform: rotateX(0deg)   rotateY(0deg)   rotateZ(0deg); }
+            25%  { transform: rotateX(100deg) rotateY(280deg) rotateZ(40deg); }
+            50%  { transform: rotateX(260deg) rotateY(460deg) rotateZ(-20deg); }
+            80%  { transform: rotateX(460deg) rotateY(600deg) rotateZ(10deg); }
+            100% { transform: rotateX(540deg) rotateY(720deg) rotateZ(0deg); }
         }
 
         /* Held state — gold border on all faces + glow */
@@ -1316,40 +1340,58 @@
             if (!vDice.held[i]) toRoll.push(i);
         }
 
-        // Rebuild tray so held dice show correctly, un-held get the cube structure
+        // Per-die personality: unique animation name, duration (ms), delay (ms)
+        // Each die tumbles at its own pace and starts slightly offset
+        const ROLL_PARAMS = [
+            { anim: 'dieRoll0', dur: 780,  delay: 0   },
+            { anim: 'dieRoll1', dur: 920,  delay: 40  },
+            { anim: 'dieRoll2', dur: 700,  delay: 80  },
+            { anim: 'dieRoll3', dur: 860,  delay: 20  },
+            { anim: 'dieRoll4', dur: 820,  delay: 60  },
+        ];
+
+        // Rebuild tray so held dice show correctly
         renderDiceTray();
 
-        // Kick off tumble animation on each un-held cube
+        // Kick off each die's unique animation via inline style
         toRoll.forEach(i => {
             const cube = document.getElementById(`vdie-inner-${i}`);
             if (!cube) return;
-            cube.style.transform = '';          // clear resting orientation
-            cube.classList.remove('rolling');
-            void cube.offsetWidth;              // force reflow
-            cube.classList.add('rolling');
+            const { anim, dur, delay } = ROLL_PARAMS[i];
+            cube.style.transition = 'none';
+            cube.style.transform  = '';
+            // Force reflow so the cleared transform takes effect before animating
+            void cube.offsetWidth;
+            cube.style.animation = `${anim} ${dur}ms ${delay}ms cubic-bezier(0.2, 0.55, 0.35, 1.0) forwards`;
         });
 
-        // Randomise final values at ~70% through the animation
+        // The last die to finish determines when we settle
+        const lastFinish = Math.max(...toRoll.map(i =>
+            ROLL_PARAMS[i].dur + ROLL_PARAMS[i].delay
+        ));
+
+        // Randomise values just before the last die lands
         setTimeout(() => {
             toRoll.forEach(i => {
                 vDice.values[i] = Math.ceil(Math.random() * 6);
             });
-        }, 600);
+        }, lastFinish - 120);
 
-        // Settle: remove animation class, apply correct face orientation
+        // Settle all dice once the slowest one finishes
         setTimeout(() => {
             vDice.rolling = false;
             toRoll.forEach(i => {
                 const cube = document.getElementById(`vdie-inner-${i}`);
                 if (!cube) return;
-                cube.classList.remove('rolling');
-                cube.style.transform = FACE_ORIENT[vDice.values[i]];
+                cube.style.animation = 'none';
+                cube.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)';
+                cube.style.transform  = FACE_ORIENT[vDice.values[i]];
             });
             renderDiceTray();
             renderBoard();
-        }, 900);
+        }, lastFinish + 60);
 
-        // Update pips immediately
+        // Update roll pips immediately
         for (let p = 0; p < 3; p++) {
             const pip = document.getElementById(`pip${p}`);
             if (pip) pip.className = 'roll-pip' + (p < vDice.rolls ? ' used' : '');
