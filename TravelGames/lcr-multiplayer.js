@@ -552,7 +552,7 @@ const LCRMultiplayerUI = (() => {
       'flex-direction:column',
       'justify-content:center',
       'align-items:center',
-      'border-radius:50%',
+      'border-radius:inherit',
       'padding:1.5rem',
       'gap:0.75rem',
     ].join(';');

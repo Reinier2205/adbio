@@ -414,6 +414,7 @@ Characters are chosen in the lobby. The host picks first; guests pick from the r
 > ```html
 > <div class="casino-table casino-container">
 > ```
+> The overlay uses `border-radius: inherit`, so it automatically matches the container's shape — round for circular tables, rectangular for card-style layouts.
 
 ```html
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
