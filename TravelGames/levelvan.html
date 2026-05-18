@@ -773,6 +773,21 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="sbtn-title">RECONNECT</div>
       <div class="sbtn-hint">Tap if display can't connect — resets session</div>
     </button>
+
+    <!-- QR code — scan to open as Display -->
+    <div id="s2-qr-wrap" style="display:none;flex-direction:column;align-items:center;gap:10px;width:100%">
+      <div style="font-family:'Orbitron',monospace;font-size:.68rem;color:var(--dim);letter-spacing:3px">
+        OR SCAN TO CONNECT
+      </div>
+      <div style="background:#fff;border-radius:16px;padding:14px;
+                  border:3px solid var(--accent);box-shadow:0 0 24px rgba(0,212,255,0.35);
+                  display:inline-block">
+        <div id="s2-qr-canvas"></div>
+      </div>
+      <div style="font-size:.72rem;color:var(--dim);text-align:center;max-width:240px;line-height:1.7">
+        Point the Display phone's camera here — opens LevelVan and connects automatically.
+      </div>
+    </div>
   </div>
 
   <!-- s3: live level (sensor) -->
@@ -2941,6 +2956,8 @@ function initSensor(resumePin) {
     if (pinLabel) pinLabel.textContent = resumePin ? 'PAIRED PIN' : 'SESSION PIN';
     $('pin-bar-share').style.display = '';
     showPanel('s2');
+    // Generate QR code for the share link
+    _generateQR(_pin);
   });
 
   peer.on('connection', conn => {
@@ -3448,6 +3465,46 @@ function setBar(fid, lid, angle) {
 }
 function clamp(v){ return Math.max(10,Math.min(90,v)); }
 
+// ════════════════════════════════
+//  QR CODE HELPER
+// ════════════════════════════════
+function _generateQR(pin) {
+  const wrap = $('s2-qr-wrap');
+  const container = $('s2-qr-canvas');
+  if (!wrap || !container) return;
+
+  const url = location.origin + location.pathname + '#LVP:' + pin;
+
+  // Clear any previous QR
+  container.innerHTML = '';
+
+  const generate = () => {
+    try {
+      new QRCode(container, {
+        text: url,
+        width: 180,
+        height: 180,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      wrap.style.display = 'flex';
+    } catch(e) {
+      console.warn('QR generation failed:', e);
+    }
+  };
+
+  // QRCode lib loads async — wait for it if needed
+  if (typeof QRCode !== 'undefined') {
+    generate();
+  } else {
+    const poll = setInterval(() => {
+      if (typeof QRCode !== 'undefined') { clearInterval(poll); generate(); }
+    }, 100);
+    setTimeout(() => clearInterval(poll), 5000); // give up after 5s
+  }
+}
+
 function cleanup() {
   conns.forEach(c => {
     try { if (c._heartbeatTimer) clearInterval(c._heartbeatTimer); } catch(_){}
@@ -3461,11 +3518,16 @@ function cleanup() {
   $('pin-bar-code').textContent = '----';
   $('pin-bar-share').style.display = 'none';
   kpadReset();
+  // Hide QR
+  const qrWrap = $('s2-qr-wrap');
+  if (qrWrap) { qrWrap.style.display = 'none'; $('s2-qr-canvas').innerHTML = ''; }
 }
 </script>
 
 <!-- PeerJS for WebRTC signalling -->
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<!-- QR code generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 </body>
 </html>
