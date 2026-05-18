@@ -64,15 +64,22 @@ Define in `:root`. **Never hardcode these values elsewhere.**
 
 ### Casino Table Container
 
+The full `.casino-table` spec is in §2b. The minimal required properties are:
+
 ```css
 .casino-table {
   background: var(--felt-green);
   border: 10px solid #4a2c2a;
   box-shadow: 0 0 0 5px var(--gold);
-  border-radius: 15px;
+  border-radius: 20px;
+  flex: 1;
+  min-height: 0;
   position: relative;
+  overflow: hidden;
 }
 ```
+
+See §2b for the complete 3-zone layout including `body`, `.top-nav`, and `.bottom-bar`.
 
 ---
 
@@ -563,25 +570,31 @@ function _showGamePin(pin) {
 
 ### Building a New Game
 
-1. Add CSS variables + `.casino-table` from §2
-2. Add home + help buttons from §1
-3. Add 3D dice from §3 *(only if the game uses dice)*
-4. Add Disney characters from §4 *(only if multiplayer)*
-5. Wire multiplayer from §5 *(only if multiplayer)*
-6. Include a `#help-modal` with game-specific rules
+1. Set up `body` + 3-zone layout (`.top-nav` / `.casino-table` / `.bottom-bar`) from §2b
+2. Add CSS variables + typography from §2
+3. Add nav buttons in `.top-nav` from §1
+4. Add `#help-modal` with game-specific rules
+5. Add 3D dice from §3 *(only if the game uses dice)*
+6. Add Disney characters from §4 *(only if multiplayer)*
+7. Wire multiplayer from §5 *(only if multiplayer)* — add `.casino-container` as second class on `.casino-table`
 
 ### Auditing an Existing Game
 
-Check every item in the checklists in §1, §3, and §5. Output a list of issues found, then output the corrected full HTML.
+Check every item in the checklists in §1, §2b, §3, and §5. Output a list of issues found, then output the corrected full HTML.
 
 ### Common Fixes
 
-| Symptom                      | Fix |
-|------------------------------|-----|
-| No home/help buttons         | Add `.nav-btn` pair from §1 |
-| Flat emoji or 2D dice        | Replace with 3D `.die-scene` from §3 |
-| Generic avatars in lobby     | Replace with `CHARACTERS` array from §4 |
-| Dice don't animate on roll   | Add `dieRoll` keyframe + `rollDie()` from §3 |
-| Guest can act out of turn    | Ensure `_updateTurnUI()` disables buttons |
-| Host logic duplicated        | Move logic into `gameAdapter.executeRoll()` |
-| PIN not shown in game        | Add `_showGamePin()` after deal-in |
+| Symptom                                  | Fix |
+|------------------------------------------|-----|
+| Nav buttons overlap game content         | Move buttons to `.top-nav` (Zone 1) — see §2b |
+| Multiplayer overlay is wrong shape       | Ensure `border-radius: inherit` in `_createOverlay` in `lcr-multiplayer.js` |
+| Multiplayer overlay mounts on body       | Add `.casino-container` as second class on `.casino-table` |
+| Game overflows viewport / no scroll      | Use `flex: 1; min-height: 0` on `.casino-table`, `height: 100dvh` on `body` |
+| No home/help buttons                     | Add `.nav-btn` pair to `.top-nav` from §1 |
+| Flat emoji or 2D dice                    | Replace with 3D `.die-scene` from §3 |
+| Generic avatars in lobby                 | Replace with `CHARACTERS` array from §4 |
+| Dice don't animate on roll               | Add `dieRoll` keyframe + `rollDie()` from §3 |
+| Guest can act out of turn                | Ensure `_updateTurnUI()` disables buttons |
+| Host logic duplicated                    | Move logic into `gameAdapter.executeRoll()` |
+| PIN not shown in game                    | Add `_showGamePin()` after deal-in |
+| `lcr-multiplayer.js` fails to load       | Use local path `src="lcr-multiplayer.js"` — never a remote URL |
