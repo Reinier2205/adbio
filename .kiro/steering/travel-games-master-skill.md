@@ -306,6 +306,13 @@ Characters are chosen in the lobby. The host picks first; guests pick from the r
 - **4-digit PIN** — maps to predictable PeerJS peer IDs
 - **Local WiFi** — relay used only for initial handshake
 
+`lcr-multiplayer.js` is the **shared multiplayer library for all TravelGames**. Despite the name it is not LCR-specific — every multiplayer game in `/TravelGames/` uses the same file. Always reference it as a local path. Never point to a CDN or remote URL for this file.
+
+> **Important:** The library's UI overlay system mounts panels by looking for `.casino-container` in the DOM. The canonical container class is `.casino-table`, but multiplayer games **must also add `.casino-container`** as a second class so the overlays mount correctly inside the card:
+> ```html
+> <div class="casino-table casino-container">
+> ```
+
 ```html
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="lcr-multiplayer.js"></script>

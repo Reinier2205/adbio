@@ -120,13 +120,23 @@ if (hasMultiplayerScript) {
     html.includes('peerjs@1.5.4') || html.includes('peerjs.min.js'),
     'Add <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script> before the multiplayer script'
   )) failures++;
+
+  if (!assert('lcr-multiplayer.js loaded from local path (not remote URL)',
+    /src=["']lcr-multiplayer\.js["']/.test(html),
+    'Use src="lcr-multiplayer.js" — never point to a CDN or remote URL for this shared library'
+  )) failures++;
+
+  if (!assert('Container has .casino-container class (required by multiplayer UI overlays)',
+    html.includes('casino-container'),
+    'Add casino-container as a second class: <div class="casino-table casino-container">'
+  )) failures++;
 } else {
   console.log(`  ${YELLOW}[–]${RESET} PeerJS check skipped — no multiplayer JS import detected`);
 }
 
 // ── Summary ───────────────────────────────────────────────────────────────────
-// nav(4) + vars(5) + fonts(4) + table(1) + peerjs(0|1)
-const total   = 14 + (hasMultiplayerScript ? 1 : 0);
+// nav(4) + vars(5) + fonts(4) + table(1) + peerjs(0|3)
+const total   = 14 + (hasMultiplayerScript ? 3 : 0);
 const passing = total - failures;
 
 console.log('\n' + '─'.repeat(50));
