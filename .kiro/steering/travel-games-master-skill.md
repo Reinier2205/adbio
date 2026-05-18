@@ -11,43 +11,23 @@ All game files in `/TravelGames/` (every `.html`, `.js`, and `.css` file, at any
 
 ## 1. Navigation Buttons
 
-Every game page must have exactly these two buttons **inside `.casino-table`**:
+Every game page must have exactly these two buttons **inside `.top-nav`** (Zone 1 — see §2b). Nav buttons must **never** be `position: absolute` inside the game card.
 
 ```html
-<!-- Home button — top-left, links to hub -->
-<button class="nav-btn home-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
+<!-- Home button — left side of .top-nav -->
+<button class="nav-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
 
-<!-- Help button — top-right, opens help modal -->
-<button class="nav-btn help-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
+<!-- Help button — right side of .top-nav -->
+<button class="nav-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
 ```
 
-```css
-.nav-btn {
-  position: absolute;
-  top: 12px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid #111;
-  box-shadow: 0 4px 0 #111;
-  cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  transition: transform 0.1s, box-shadow 0.1s;
-}
-.home-btn { left: 12px;  background: radial-gradient(circle, var(--gold-light), var(--gold)); color: #111; }
-.help-btn { right: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); color: #111; }
-.nav-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
-```
+The `.top-nav` div sits between them with the game title centred. See §2b for the full layout template.
 
 **Checklist:**
-- [ ] Home button present, top-left, links to `/TravelGames/index.html`
-- [ ] Help button present, top-right, opens `#help-modal`
+- [ ] Home button present, left of `.top-nav`, links to `/TravelGames/index.html`
+- [ ] Help button present, right of `.top-nav`, opens `#help-modal`
 - [ ] Both use `.nav-btn` with gold gradient and active press effect
+- [ ] Neither button is `position: absolute` inside `.casino-table`
 
 ---
 
@@ -93,6 +73,128 @@ Define in `:root`. **Never hardcode these values elsewhere.**
   position: relative;
 }
 ```
+
+---
+
+## 2b. Standard Page Layout — 3-Zone Structure
+
+Every game page uses this vertical layout. **Never put nav buttons inside the game card.** The three zones stack inside a full-height flex column on `<body>`.
+
+```
+┌─────────────────────────────┐  ← body: flex-col, justify-center, 100dvh
+│  [Zone 1]  .top-nav         │  flex-shrink: 0  — title + home/help buttons
+│  [Zone 2]  .casino-table    │  flex: 1, min-height: 0  — game content
+│  [Zone 3]  .bottom-bar      │  flex-shrink: 0  — primary action button(s)
+└─────────────────────────────┘
+```
+
+```css
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100dvh;
+  min-height: 100dvh;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Zone 1 */
+.top-nav {
+  display: flex;
+  width: 90vw;
+  max-width: 420px;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 6px 0;
+}
+
+/* Zone 2 */
+.casino-table {
+  background: var(--felt-green);
+  border: 10px solid #4a2c2a;
+  box-shadow: 0 0 0 5px var(--gold);
+  border-radius: 20px;
+  width: 90vw;
+  max-width: 420px;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  gap: 10px;
+  overflow: hidden;
+}
+
+/* Zone 3 */
+.bottom-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 90vw;
+  max-width: 420px;
+  flex-shrink: 0;
+  padding: 6px 0 8px;
+}
+```
+
+```html
+<body>
+  <!-- Zone 1: top nav -->
+  <div class="top-nav">
+    <button class="nav-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
+    <div style="text-align:center">
+      <h1 style="font-family:'Cinzel',serif;color:var(--gold);margin:0">GAME TITLE</h1>
+      <p style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.4);margin:2px 0 0">Subtitle</p>
+    </div>
+    <button class="nav-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
+  </div>
+
+  <!-- Zone 2: game card — also needs .casino-container for multiplayer overlays -->
+  <div class="casino-table casino-container">
+    <!-- game content here -->
+  </div>
+
+  <!-- Zone 3: primary action -->
+  <div class="bottom-bar">
+    <button class="btn" onclick="handleRoll()">Roll</button>
+  </div>
+</body>
+```
+
+**Nav button CSS for use in `.top-nav` (not `position:absolute`):**
+
+```css
+.nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #111;
+  box-shadow: 0 4px 0 #111;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: radial-gradient(circle, var(--gold-light), var(--gold));
+  color: #111;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.nav-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
+```
+
+**Checklist:**
+- [ ] `body` is `flex-direction: column`, `height: 100dvh`, `overflow: hidden`
+- [ ] Nav buttons are in `.top-nav` (Zone 1), **not** `position: absolute` inside the card
+- [ ] `.casino-table` uses `flex: 1; min-height: 0` so it fills available space between zones
+- [ ] Primary action button(s) are in `.bottom-bar` (Zone 3), outside the card
+- [ ] Multiplayer games add `.casino-container` as a second class on `.casino-table`
 
 ### Modals
 

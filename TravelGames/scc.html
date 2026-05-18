@@ -27,37 +27,83 @@
             font-family: 'Lato', sans-serif;
             background-color: #051a0d;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            height: 100dvh;
+            min-height: 100dvh;
             margin: 0;
             overflow: hidden;
             color: #fff8e1;
+            gap: 0;
         }
 
+        /* ── Zone 1: Top nav bar (outside the card) ── */
+        .top-nav {
+            display: flex;
+            width: 90vw;
+            max-width: 420px;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            padding: 6px 0;
+            position: relative;
+            z-index: 50;
+        }
+
+        .top-nav h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin: 0;
+            text-align: center;
+        }
+
+        .top-nav p {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: rgba(255,255,255,0.4);
+            margin: 2px 0 0;
+            text-align: center;
+        }
+
+        /* ── Zone 2: Game card (middle) ── */
         .casino-table {
             background: var(--felt-green);
             background-image: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 70%);
             border: 10px solid #4a2c2a;
-            box-shadow: 0 0 0 5px var(--gold), 0 30px 60px rgba(0,0,0,0.9);
-            border-radius: 30px;
-            width: 95vw;
-            height: 92vh;
-            max-width: 400px;
-            max-height: 800px;
+            box-shadow: 0 0 0 5px var(--gold), 0 20px 40px rgba(0,0,0,0.9);
+            border-radius: 20px;
+            width: 90vw;
+            max-width: 420px;
+            flex: 1;
+            min-height: 0;
             position: relative;
             display: flex;
             flex-direction: column;
-            padding: 16px;
-            gap: 12px;
+            padding: 12px 16px;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        /* ── Zone 3: Bottom action bar (outside the card) ── */
+        .bottom-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 90vw;
+            max-width: 420px;
+            flex-shrink: 0;
+            padding: 6px 0 8px;
         }
 
         .cinzel { font-family: 'Cinzel', serif; }
 
-        /* ── Nav buttons (§1) ── */
+        /* ── Nav buttons — live in .top-nav (§1) ── */
         .nav-btn {
-            position: absolute;
-            top: 12px;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -69,11 +115,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 100;
+            flex-shrink: 0;
+            background: radial-gradient(circle, var(--gold-light), var(--gold));
+            color: #111;
             transition: transform 0.1s, box-shadow 0.1s;
         }
-        .home-btn { left: 12px;  background: radial-gradient(circle, var(--gold-light), var(--gold)); color: #111; }
-        .help-btn { right: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); color: #111; }
         .nav-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
 
         .duel-dashboard {
@@ -223,23 +269,30 @@
 </head>
 <body>
 
-    <div class="casino-table casino-container">
-        <!-- Home button — top-left -->
+    <!-- Zone 1: Top nav -->
+    <div class="top-nav">
         <button class="nav-btn home-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
-        <!-- Help button — top-right -->
+        <div class="text-center">
+            <h1>The Captain's Table</h1>
+            <p>Ship · Captain · Crew</p>
+        </div>
         <button class="nav-btn help-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
+    </div>
+
+    <!-- Zone 2: Game card -->
+    <div class="casino-table casino-container">
         <!-- Dashboard -->
         <div id="dashboard" class="duel-dashboard">
             <!-- Seats generated dynamically -->
         </div>
 
-        <div id="log" class="text-center text-[10px] text-gold/60 tracking-widest uppercase py-2">Waiting for Game Start</div>
+        <div id="log" class="text-center text-[10px] text-gold/60 tracking-widest uppercase py-1">Waiting for Game Start</div>
 
         <!-- Table -->
-        <div class="flex-1 flex flex-col justify-center items-center">
+        <div class="flex-1 flex flex-col justify-center items-center min-h-0">
             <div id="dice-container" class="flex flex-wrap justify-center gap-3"></div>
-            
-            <div id="cargo-hud" class="mt-6 text-center opacity-0 transition-opacity">
+
+            <div id="cargo-hud" class="mt-4 text-center opacity-0 transition-opacity">
                 <p class="text-[10px] text-white/40 uppercase tracking-widest">Cargo Scored</p>
                 <h2 id="cargo-val" class="cinzel text-5xl text-white">0</h2>
             </div>
@@ -251,15 +304,13 @@
             <div id="req-5" class="req-box"><span class="block text-[8px] uppercase text-gold">Captain</span><span class="cinzel text-2xl">5</span></div>
             <div id="req-4" class="req-box"><span class="block text-[8px] uppercase text-gold">Crew</span><span class="cinzel text-2xl">4</span></div>
         </div>
+    </div>
 
-        <!-- Controls -->
-        <div class="space-y-2 pb-4">
-            <div class="text-center">
-                <span id="roll-label" class="text-[9px] bg-black/40 px-3 py-1 rounded-full text-zinc-400 uppercase tracking-widest">Roll 1 / 3</span>
-            </div>
-            <button id="roll-btn" class="btn-action" onclick="handleRoll()">Cast Dice</button>
-            <button id="bank-btn" class="hidden w-full text-[10px] text-white/40 py-2 uppercase tracking-widest" onclick="handleBank()">Keep Cargo Early</button>
-        </div>
+    <!-- Zone 3: Bottom action bar -->
+    <div class="bottom-bar">
+        <span id="roll-label" class="text-[9px] bg-black/40 px-3 py-1 rounded-full text-zinc-400 uppercase tracking-widest">Roll 1 / 3</span>
+        <button id="roll-btn" class="btn-action" onclick="handleRoll()">Cast Dice</button>
+        <button id="bank-btn" class="hidden w-full text-[10px] text-white/40 py-1 uppercase tracking-widest" onclick="handleBank()">Keep Cargo Early</button>
     </div>
 
     <!-- Help Modal (§1) -->
