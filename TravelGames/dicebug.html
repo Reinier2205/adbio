@@ -201,10 +201,11 @@ input[type=range] {
 .bottom-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-top: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+  height: 52px;          /* fixed height — never grows */
+  flex-wrap: nowrap;     /* never wraps */
+  overflow: hidden;
 }
 
 /* 3D Die */
@@ -280,70 +281,46 @@ input[type=range] {
 .btn-roll {
   background: radial-gradient(circle, var(--gold-light), var(--gold));
   color: #111;
-  font-size: 1rem;
-  padding: 11px 26px;
+  font-size: 0.9rem;
+  padding: 9px 18px;
+  white-space: nowrap;
 }
 .btn-save {
   background: radial-gradient(circle, #80ff80, #228b22);
   color: #fff;
-  font-size: 1rem;
-  padding: 11px 22px;
+  font-size: 0.9rem;
+  padding: 9px 16px;
   text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  white-space: nowrap;
 }
 .btn-reset {
   background: #3a3a3a; color: #ccc;
-  font-size: 0.78rem; padding: 6px 14px;
+  font-size: 0.75rem; padding: 6px 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Result badge */
 .result-badge {
   font-family: 'Cinzel', serif;
-  font-size: 0.8rem;
-  padding: 5px 12px;
+  font-size: 0.72rem;
+  padding: 4px 8px;
   border-radius: 20px;
   background: rgba(0,0,0,0.4);
   color: var(--gold-light);
   text-align: center;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
-  max-width: 200px;
+  letter-spacing: 0.03em;
+  flex: 1;              /* takes remaining space */
+  min-width: 0;         /* allows shrinking */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: all 0.3s;
 }
 .result-badge.got-it  { background: rgba(0,140,70,0.6); color: #b0ffc0; border: 1px solid #00c060; }
 .result-badge.need-it { background: rgba(160,50,0,0.5); color: #ffb090; }
 
-/* ── SAVE OVERLAY ── */
-.save-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.82);
-  z-index: 500;
-  align-items: center; justify-content: center;
-}
-.save-overlay.show { display: flex; }
-.save-card {
-  background: linear-gradient(160deg, #3e1e24, #2a1a1f);
-  border: 3px solid var(--gold);
-  border-radius: 16px;
-  padding: 1.8rem 2rem;
-  text-align: center;
-  animation: modalIn 0.25s ease;
-  max-width: 300px; width: 90%;
-}
-.save-card .big-icon { font-size: 3rem; margin-bottom: 8px; }
-.save-card h3 {
-  font-family: 'Cinzel', serif;
-  color: var(--gold-light);
-  font-size: 1.1rem;
-  margin-bottom: 6px;
-}
-.save-card p { color: #bbb; font-size: 0.88rem; margin-bottom: 1.2rem; line-height: 1.5; }
-.btn-ok {
-  background: radial-gradient(circle, var(--gold-light), var(--gold));
-  color: #111;
-  padding: 10px 30px;
-  font-size: 1rem;
-}
+
 
 /* ── WINNER ── */
 .winner-banner {
@@ -494,18 +471,8 @@ input[type=range] {
 
     <button class="btn btn-roll" id="roll-btn" onclick="doRoll()">🎲 Roll</button>
     <div class="result-badge" id="result-badge">Roll first!</div>
-    <button class="btn btn-save" id="save-btn" onclick="saveAndPass()" disabled>💾 Save & Pass</button>
+    <button class="btn btn-save" id="save-btn" onclick="saveAndPass()" disabled>➡ Pass</button>
     <button class="btn btn-reset" onclick="resetGame()">↺ New</button>
-  </div>
-</div>
-
-<!-- Save overlay: shows between turns -->
-<div class="save-overlay" id="save-overlay">
-  <div class="save-card">
-    <div class="big-icon" id="so-icon">🎀</div>
-    <h3 id="so-title">Minnie's turn!</h3>
-    <p id="so-desc">Hand the tablet to Minnie.<br>Tap OK to load your drawing.</p>
-    <button class="btn btn-ok" onclick="loadNextPlayer()">OK, I'm ready!</button>
   </div>
 </div>
 
@@ -523,7 +490,7 @@ input[type=range] {
 <div class="modal-overlay" id="help-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-panel">
     <h2>🐛 How to Play Dice Bug</h2>
-    <p>Take turns rolling the die. When you get a part you need, <strong>draw it on the canvas</strong>. Then tap <strong>Save &amp; Pass</strong> to hand over to the other player. First to complete their bug wins!</p>
+    <p>Take turns rolling the die. When you get a part you need, <strong>draw it on the canvas</strong>. Then tap <strong>Pass</strong> to hand over to the other player. First to complete their bug wins!</p>
 
     <table>
       <tr><th>Roll</th><th>Draw this part</th><th>Requires</th></tr>
@@ -588,7 +555,7 @@ input[type=range] {
     <ul>
       <li>You <strong>must roll Body (①)</strong> before any other part.</li>
       <li>Head (②) is required before eyes or antennae.</li>
-      <li>Roll and draw, then <strong>Save &amp; Pass</strong> to the next player.</li>
+      <li>Roll and draw, then <strong>Pass</strong> to the next player.</li>
       <li>If your roll gives nothing new, your turn still ends.</li>
     </ul>
     <button class="close-btn" onclick="document.getElementById('help-modal').classList.remove('open')">Got it!</button>
@@ -708,17 +675,23 @@ const dieEl = document.getElementById('the-die');
 
 function rollDie(value, cb) {
   const transform = FACE_TRANSFORMS[value];
-  dieEl.style.setProperty('--face-transform', transform);
-  dieEl.classList.remove('rolling');
+  const colour = turn === 0 ? 'die--teal' : 'die--maroon';
+  // Set colour first, then trigger animation
+  dieEl.className = 'die ' + colour;
   void dieEl.offsetWidth;
+  dieEl.style.setProperty('--face-transform', transform);
   dieEl.classList.add('rolling');
-  dieEl.addEventListener('animationend', () => {
+  // Use timeout as guaranteed fallback (animation may not fire on all browsers)
+  let done = false;
+  function finish() {
+    if (done) return;
+    done = true;
     dieEl.style.transform = transform;
     dieEl.classList.remove('rolling');
     if (cb) cb();
-  }, { once: true });
-  // swap die colour
-  dieEl.className = 'die ' + (turn === 0 ? 'die--teal' : 'die--maroon');
+  }
+  dieEl.addEventListener('animationend', finish, { once: true });
+  setTimeout(finish, 800); // fallback
 }
 
 function doRoll() {
@@ -756,7 +729,7 @@ function doRoll() {
 
 function setHint(msg) {
   const h = document.getElementById('canvas-hint');
-  h.textContent = msg;
+  h.innerHTML = msg.replace(/\n/g, '<br>');
   h.style.display = '';
 }
 
@@ -802,19 +775,10 @@ function saveAndPass() {
   if (gameOver) return;
   // Save current canvas for this player
   savedImages[turn] = canvas.toDataURL();
-
-  const next = 1 - turn;
-  const pl = PLAYERS[next];
-
-  // Show handoff overlay
-  document.getElementById('so-icon').textContent = pl.icon;
-  document.getElementById('so-title').textContent = pl.name + "'s turn!";
-  document.getElementById('so-desc').textContent = "Hand the device to " + pl.name + ".\nTap OK to load your drawing.";
-  document.getElementById('save-overlay').classList.add('show');
+  loadNextPlayer();
 }
 
 function loadNextPlayer() {
-  document.getElementById('save-overlay').classList.remove('show');
   turn = 1 - turn;
   rolled = false;
 
@@ -840,8 +804,9 @@ function updateTurnUI() {
   document.getElementById('save-btn').disabled = true;
   document.getElementById('result-badge').textContent = pl.icon + ' ' + pl.name + ' — Roll!';
   document.getElementById('result-badge').className = 'result-badge';
-  // Die colour
-  dieEl.className = 'die ' + (turn === 0 ? 'die--teal' : 'die--maroon');
+  // Die colour (only swap colour class, don't disturb transform)
+  dieEl.classList.remove('die--teal', 'die--maroon', 'rolling');
+  dieEl.classList.add(turn === 0 ? 'die--teal' : 'die--maroon');
   // Canvas hint
   setHint(pl.icon + ' ' + pl.name + '\nDraw your bug!');
 }
@@ -870,7 +835,8 @@ function resetGame() {
   document.getElementById('strip-0').classList.remove('winner-glow');
   document.getElementById('strip-1').classList.remove('winner-glow');
   document.querySelectorAll('.p-item').forEach(el => el.classList.remove('done'));
-  // Reset die
+  dieEl.classList.remove('die--teal', 'die--maroon', 'rolling');
+  dieEl.classList.add('die--teal');
   dieEl.style.transform = FACE_TRANSFORMS[1];
   dieEl.style.setProperty('--face-transform', FACE_TRANSFORMS[1]);
   updateTurnUI();
