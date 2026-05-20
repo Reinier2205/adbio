@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Dice Bug</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato&family=Inter&display=swap" rel="stylesheet">
+<style>
+:root {
+  --felt-green: #0a4821;
+  --dark-wood:  #2a1a1f;
+  --gold:       #d4af37;
+  --gold-light: #ffd700;
+  --light-gold: #fff8e1;
+  --teal:       #008080;
+  --maroon:     #800000;
+  --pip-color:  #fff8e1;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--dark-wood);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  font-family: 'Lato', sans-serif;
+  touch-action: manipulation;
+}
+
+h1 {
+  font-family: 'Cinzel', serif;
+  color: var(--gold-light);
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+.casino-table {
+  background: var(--felt-green);
+  border: 10px solid #4a2c2a;
+  box-shadow: 0 0 0 5px var(--gold);
+  border-radius: 15px;
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  padding: 50px 14px 18px;
+}
+
+/* Nav buttons */
+.nav-btn {
+  position: absolute; top: 12px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 2px solid #111;
+  box-shadow: 0 4px 0 #111;
+  cursor: pointer;
+  font-size: 1.1rem; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  transition: transform 0.1s, box-shadow 0.1s;
+  background: radial-gradient(circle, var(--gold-light), var(--gold));
+  color: #111;
+}
+.home-btn { left: 12px; }
+.help-btn { right: 12px; }
+.nav-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
+
+/* ── PLAYER STRIPS ── */
+.player-strips {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.player-strip {
+  flex: 1;
+  background: rgba(0,0,0,0.3);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  padding: 8px 10px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.player-strip.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 14px rgba(212,175,55,0.5);
+}
+.player-strip.winner-glow {
+  border-color: #ffd700;
+  animation: winnerPulse 1s ease-in-out infinite alternate;
+}
+@keyframes winnerPulse {
+  from { box-shadow: 0 0 14px #ffd700; }
+  to   { box-shadow: 0 0 36px #ffd700, 0 0 60px rgba(255,215,0,0.4); }
+}
+.strip-name {
+  font-family: 'Cinzel', serif;
+  color: var(--gold-light);
+  font-size: 0.82rem;
+  margin-bottom: 5px;
+  display: flex; align-items: center; gap: 4px;
+}
+.strip-icon { font-size: 1.2rem; }
+
+.parts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+}
+.p-item {
+  font-size: 0.68rem;
+  color: #777;
+  display: flex; align-items: center; gap: 3px;
+  transition: color 0.3s;
+}
+.p-item.done { color: var(--gold-light); }
+.p-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%; background: #444;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+.p-item.done .p-dot { background: var(--gold); }
+
+/* ── CANVAS AREA ── */
+.canvas-wrapper {
+  position: relative;
+  background: #f5f0e8;
+  border-radius: 10px;
+  border: 3px solid #4a2c2a;
+  box-shadow: 0 0 0 2px var(--gold), inset 0 2px 8px rgba(0,0,0,0.15);
+  overflow: hidden;
+  touch-action: none;
+  cursor: crosshair;
+}
+.canvas-wrapper canvas {
+  display: block;
+  touch-action: none;
+}
+
+/* Pen colour strip — horizontal above canvas */
+.pen-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.colour-swatch {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+.colour-swatch.selected {
+  transform: scale(1.25);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--gold);
+}
+.pen-size-wrap {
+  display: flex; align-items: center; gap: 4px;
+  margin-left: auto;
+}
+.pen-size-wrap label { font-size: 0.72rem; color: #ccc; }
+input[type=range] {
+  width: 70px; accent-color: var(--gold);
+}
+.btn-eraser {
+  background: #fff; color: #333;
+  border: 2px solid #aaa;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 2px 0 #999;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.btn-eraser:active { transform: translateY(1px); box-shadow: 0 1px 0 #999; }
+.btn-eraser.active { background: #ffe; border-color: var(--gold); box-shadow: 0 2px 0 var(--gold); }
+
+/* Hint label on canvas */
+.canvas-hint {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  font-family: 'Cinzel', serif;
+  color: rgba(0,0,0,0.12);
+  font-size: clamp(0.9rem, 3vw, 1.2rem);
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+/* ── BOTTOM CONTROLS ── */
+.bottom-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* 3D Die */
+.die-scene {
+  width: 60px; height: 60px;
+  perspective: 240px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.die {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+}
+.face {
+  position: absolute;
+  width: 60px; height: 60px;
+  border-radius: 9px;
+  border: 2px solid rgba(0,0,0,0.4);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  padding: 6px;
+  backface-visibility: hidden;
+}
+.face.front  { transform: rotateY(  0deg) translateZ(30px); }
+.face.back   { transform: rotateY(180deg) translateZ(30px); }
+.face.right  { transform: rotateY( 90deg) translateZ(30px); }
+.face.left   { transform: rotateY(-90deg) translateZ(30px); }
+.face.top    { transform: rotateX( 90deg) translateZ(30px); }
+.face.bottom { transform: rotateX(-90deg) translateZ(30px); }
+.die--teal .face {
+  background: radial-gradient(circle at 35% 35%, #00b3b3, var(--teal));
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+}
+.die--maroon .face {
+  background: radial-gradient(circle at 35% 35%, #b30000, var(--maroon));
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+}
+.pip {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--pip-color);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  align-self: center; justify-self: center;
+}
+.pip.tl{grid-area:1/1}.pip.tc{grid-area:1/2}.pip.tr{grid-area:1/3}
+.pip.ml{grid-area:2/1}.pip.center{grid-area:2/2}.pip.mr{grid-area:2/3}
+.pip.bl{grid-area:3/1}.pip.bc{grid-area:3/2}.pip.br{grid-area:3/3}
+@keyframes dieRoll {
+  0%   { transform: var(--face-transform) rotateX(0deg) rotateZ(0deg); }
+  25%  { transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg); }
+  50%  { transform: rotateX(180deg) rotateY(360deg) rotateZ(180deg); }
+  75%  { transform: rotateX(90deg) rotateY(270deg) rotateZ(270deg); }
+  100% { transform: var(--face-transform); }
+}
+.die.rolling { animation: dieRoll 0.65s ease-in-out; }
+
+/* Buttons */
+.btn {
+  font-family: 'Inter', sans-serif;
+  border-radius: 8px;
+  box-shadow: 0 4px 0 #111;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #111; }
+.btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #111; }
+
+.btn-roll {
+  background: radial-gradient(circle, var(--gold-light), var(--gold));
+  color: #111;
+  font-size: 1rem;
+  padding: 11px 26px;
+}
+.btn-save {
+  background: radial-gradient(circle, #80ff80, #228b22);
+  color: #fff;
+  font-size: 1rem;
+  padding: 11px 22px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+.btn-reset {
+  background: #3a3a3a; color: #ccc;
+  font-size: 0.78rem; padding: 6px 14px;
+}
+
+/* Result badge */
+.result-badge {
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.4);
+  color: var(--gold-light);
+  text-align: center;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  max-width: 200px;
+  transition: all 0.3s;
+}
+.result-badge.got-it  { background: rgba(0,140,70,0.6); color: #b0ffc0; border: 1px solid #00c060; }
+.result-badge.need-it { background: rgba(160,50,0,0.5); color: #ffb090; }
+
+/* ── SAVE OVERLAY ── */
+.save-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82);
+  z-index: 500;
+  align-items: center; justify-content: center;
+}
+.save-overlay.show { display: flex; }
+.save-card {
+  background: linear-gradient(160deg, #3e1e24, #2a1a1f);
+  border: 3px solid var(--gold);
+  border-radius: 16px;
+  padding: 1.8rem 2rem;
+  text-align: center;
+  animation: modalIn 0.25s ease;
+  max-width: 300px; width: 90%;
+}
+.save-card .big-icon { font-size: 3rem; margin-bottom: 8px; }
+.save-card h3 {
+  font-family: 'Cinzel', serif;
+  color: var(--gold-light);
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+.save-card p { color: #bbb; font-size: 0.88rem; margin-bottom: 1.2rem; line-height: 1.5; }
+.btn-ok {
+  background: radial-gradient(circle, var(--gold-light), var(--gold));
+  color: #111;
+  padding: 10px 30px;
+  font-size: 1rem;
+}
+
+/* ── WINNER ── */
+.winner-banner {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88);
+  z-index: 2000;
+  align-items: center; justify-content: center;
+}
+.winner-banner.show { display: flex; }
+.winner-card {
+  background: linear-gradient(160deg, #3e1e24, #2a1a1f);
+  border: 3px solid var(--gold);
+  border-radius: 18px;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  animation: modalIn 0.35s ease;
+  max-width: 340px; width: 90%;
+}
+.winner-emoji { font-size: 4rem; margin-bottom: 8px; }
+.winner-title { font-family: 'Cinzel', serif; color: var(--gold-light); font-size: 1.6rem; margin-bottom: 6px; }
+.winner-sub { color: #aaa; font-size: 0.9rem; margin-bottom: 1.4rem; }
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── HELP MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-panel {
+  background: linear-gradient(160deg, #3e1e24, #2a1a1f);
+  border: 3px solid var(--gold);
+  border-radius: 12px;
+  padding: 1.4rem 1.5rem;
+  max-width: 440px; width: 92%;
+  animation: modalIn 0.25s ease;
+  color: var(--light-gold);
+  max-height: 88vh; overflow-y: auto;
+}
+.modal-panel h2 { font-family: 'Cinzel', serif; color: var(--gold-light); margin-bottom: 0.8rem; font-size: 1.15rem; }
+.modal-panel p, .modal-panel li { font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.4rem; color: #ddd; }
+.modal-panel ul { padding-left: 1.2rem; margin-bottom: 0.6rem; }
+.modal-panel table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; }
+.modal-panel th { color: var(--gold); padding: 3px 7px; text-align: left; font-size: 0.8rem; }
+.modal-panel td { padding: 3px 7px; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.07); }
+.modal-panel .close-btn {
+  margin-top: 0.8rem;
+  background: var(--gold); color: #111;
+  font-weight: 700; padding: 7px 20px;
+  border: none; border-radius: 6px; cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+/* Reference bug in help */
+.ref-bug-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+.ref-bug-wrap svg { flex-shrink: 0; }
+.ref-legend { font-size: 0.78rem; color: #ccc; line-height: 2; }
+.ref-legend span { color: var(--gold); font-weight: 700; margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<h1>🐛 Dice Bug</h1>
+
+<div class="casino-table">
+  <button class="nav-btn home-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
+  <button class="nav-btn help-btn" onclick="document.getElementById('help-modal').classList.add('open')" title="Help">?</button>
+
+  <!-- Player strips -->
+  <div class="player-strips">
+    <div class="player-strip active" id="strip-0">
+      <div class="strip-name"><span class="strip-icon">🐭</span> Mickey</div>
+      <div class="parts-grid" id="pg-0">
+        <div class="p-item" id="pi0-body"><span class="p-dot"></span>Body ①</div>
+        <div class="p-item" id="pi0-head"><span class="p-dot"></span>Head ②</div>
+        <div class="p-item" id="pi0-leg1"><span class="p-dot"></span>Legs ③</div>
+        <div class="p-item" id="pi0-leg2"><span class="p-dot"></span>Legs ③</div>
+        <div class="p-item" id="pi0-leg3"><span class="p-dot"></span>Legs ③</div>
+        <div class="p-item" id="pi0-eye1"><span class="p-dot"></span>Eye ④</div>
+        <div class="p-item" id="pi0-eye2"><span class="p-dot"></span>Eye ④</div>
+        <div class="p-item" id="pi0-ant1"><span class="p-dot"></span>Ant ⑤</div>
+        <div class="p-item" id="pi0-ant2"><span class="p-dot"></span>Ant ⑤</div>
+        <div class="p-item" id="pi0-tail"><span class="p-dot"></span>Tail ⑥</div>
+      </div>
+    </div>
+    <div class="player-strip" id="strip-1">
+      <div class="strip-name"><span class="strip-icon">🎀</span> Minnie</div>
+      <div class="parts-grid" id="pg-1">
+        <div class="p-item" id="pi1-body"><span class="p-dot"></span>Body ①</div>
+        <div class="p-item" id="pi1-head"><span class="p-dot"></span>Head ②</div>
+        <div class="p-item" id="pi1-leg1"><span class="p-dot"></span>Legs ③</div>
+        <div class="p-item" id="pi1-leg2"><span class="p-dot"></span>Legs ③</div>
+        <div class="p-item" id="pi1-leg3"><span class="p-dot"></span>Legs ③</div>
+        <div class="p-item" id="pi1-eye1"><span class="p-dot"></span>Eye ④</div>
+        <div class="p-item" id="pi1-eye2"><span class="p-dot"></span>Eye ④</div>
+        <div class="p-item" id="pi1-ant1"><span class="p-dot"></span>Ant ⑤</div>
+        <div class="p-item" id="pi1-ant2"><span class="p-dot"></span>Ant ⑤</div>
+        <div class="p-item" id="pi1-tail"><span class="p-dot"></span>Tail ⑥</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawing tools -->
+  <div class="pen-tools">
+    <div class="colour-swatch selected" style="background:#111" data-color="#111" onclick="setColor(this)"></div>
+    <div class="colour-swatch" style="background:#e63946" data-color="#e63946" onclick="setColor(this)"></div>
+    <div class="colour-swatch" style="background:#2a9d8f" data-color="#2a9d8f" onclick="setColor(this)"></div>
+    <div class="colour-swatch" style="background:#e9c46a" data-color="#e9c46a" onclick="setColor(this)"></div>
+    <div class="colour-swatch" style="background:#264653" data-color="#264653" onclick="setColor(this)"></div>
+    <div class="colour-swatch" style="background:#8b5cf6" data-color="#8b5cf6" onclick="setColor(this)"></div>
+    <button class="btn-eraser" id="eraser-btn" onclick="toggleEraser()">✦ Erase</button>
+    <div class="pen-size-wrap">
+      <label>Size</label>
+      <input type="range" id="pen-size" min="2" max="28" value="5" oninput="updateSize(this.value)">
+    </div>
+  </div>
+
+  <!-- Shared canvas -->
+  <div class="canvas-wrapper" id="canvas-wrapper">
+    <canvas id="drawing-canvas"></canvas>
+    <div class="canvas-hint" id="canvas-hint">🐭 Mickey<br>Draw your bug!</div>
+  </div>
+
+  <!-- Bottom controls -->
+  <div class="bottom-row">
+    <!-- 3D Die -->
+    <div class="die-scene">
+      <div class="die die--teal" id="the-die">
+        <div class="face front"><span class="pip center"></span></div>
+        <div class="face back"><span class="pip tl"></span><span class="pip tr"></span><span class="pip ml"></span><span class="pip mr"></span><span class="pip bl"></span><span class="pip br"></span></div>
+        <div class="face right"><span class="pip tr"></span><span class="pip bl"></span></div>
+        <div class="face left"><span class="pip tl"></span><span class="pip tr"></span><span class="pip center"></span><span class="pip bl"></span><span class="pip br"></span></div>
+        <div class="face top"><span class="pip tl"></span><span class="pip center"></span><span class="pip br"></span></div>
+        <div class="face bottom"><span class="pip tl"></span><span class="pip tr"></span><span class="pip bl"></span><span class="pip br"></span></div>
+      </div>
+    </div>
+
+    <button class="btn btn-roll" id="roll-btn" onclick="doRoll()">🎲 Roll</button>
+    <div class="result-badge" id="result-badge">Roll first!</div>
+    <button class="btn btn-save" id="save-btn" onclick="saveAndPass()" disabled>💾 Save & Pass</button>
+    <button class="btn btn-reset" onclick="resetGame()">↺ New</button>
+  </div>
+</div>
+
+<!-- Save overlay: shows between turns -->
+<div class="save-overlay" id="save-overlay">
+  <div class="save-card">
+    <div class="big-icon" id="so-icon">🎀</div>
+    <h3 id="so-title">Minnie's turn!</h3>
+    <p id="so-desc">Hand the tablet to Minnie.<br>Tap OK to load your drawing.</p>
+    <button class="btn btn-ok" onclick="loadNextPlayer()">OK, I'm ready!</button>
+  </div>
+</div>
+
+<!-- Winner -->
+<div class="winner-banner" id="winner-banner">
+  <div class="winner-card">
+    <div class="winner-emoji" id="winner-emoji">🐭</div>
+    <div class="winner-title" id="winner-title">Mickey Wins!</div>
+    <div class="winner-sub">Bug completely drawn! 🐛🎉</div>
+    <button class="btn btn-roll" onclick="resetGame()" style="padding:10px 28px">Play Again</button>
+  </div>
+</div>
+
+<!-- Help modal -->
+<div class="modal-overlay" id="help-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-panel">
+    <h2>🐛 How to Play Dice Bug</h2>
+    <p>Take turns rolling the die. When you get a part you need, <strong>draw it on the canvas</strong>. Then tap <strong>Save &amp; Pass</strong> to hand over to the other player. First to complete their bug wins!</p>
+
+    <table>
+      <tr><th>Roll</th><th>Draw this part</th><th>Requires</th></tr>
+      <tr><td><b>1</b></td><td>Body (large oval)</td><td>—</td></tr>
+      <tr><td><b>2</b></td><td>Head (circle on top)</td><td>Body</td></tr>
+      <tr><td><b>3</b></td><td>One leg pair (×3)</td><td>Body</td></tr>
+      <tr><td><b>4</b></td><td>One eye (×2)</td><td>Head</td></tr>
+      <tr><td><b>5</b></td><td>One antenna (×2)</td><td>Head</td></tr>
+      <tr><td><b>6</b></td><td>Tail</td><td>Body</td></tr>
+    </table>
+
+    <p style="margin-top:8px"><strong>Reference bug</strong> — aim to draw something like this:</p>
+    <div class="ref-bug-wrap">
+      <!-- Reference SVG bug -->
+      <svg width="130" height="150" viewBox="0 0 130 150" xmlns="http://www.w3.org/2000/svg" style="background:#f5f0e8;border-radius:8px;padding:4px">
+        <!-- Antennae -->
+        <line x1="56" y1="24" x2="42" y2="6" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="40" cy="4" r="3.5" fill="#444"/>
+        <line x1="74" y1="24" x2="88" y2="6" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="90" cy="4" r="3.5" fill="#444"/>
+        <!-- Head -->
+        <circle cx="65" cy="32" r="18" fill="#5a9e5a" stroke="#2a6a2a" stroke-width="2"/>
+        <!-- Eyes -->
+        <circle cx="57" cy="28" r="5" fill="white" stroke="#2a6a2a" stroke-width="1.2"/>
+        <circle cx="58" cy="28" r="2.8" fill="#111"/>
+        <circle cx="73" cy="28" r="5" fill="white" stroke="#2a6a2a" stroke-width="1.2"/>
+        <circle cx="74" cy="28" r="2.8" fill="#111"/>
+        <!-- Body -->
+        <ellipse cx="65" cy="95" rx="26" ry="42" fill="#5a9e5a" stroke="#2a6a2a" stroke-width="2"/>
+        <!-- Wing line -->
+        <line x1="65" y1="54" x2="65" y2="136" stroke="#2a6a2a" stroke-width="1.2" stroke-dasharray="3,3"/>
+        <!-- Legs left -->
+        <line x1="40" y1="72" x2="12" y2="58" stroke="#2a6a2a" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="12" y1="58" x2="4" y2="46" stroke="#2a6a2a" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="40" y1="90" x2="10" y2="88" stroke="#2a6a2a" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="10" y1="88" x2="2" y2="78" stroke="#2a6a2a" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="40" y1="108" x2="12" y2="118" stroke="#2a6a2a" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="12" y1="118" x2="4" y2="130" stroke="#2a6a2a" stroke-width="1.8" stroke-linecap="round"/>
+        <!-- Legs right -->
+        <line x1="90" y1="72" x2="118" y2="58" stroke="#2a6a2a" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="118" y1="58" x2="126" y2="46" stroke="#2a6a2a" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="90" y1="90" x2="120" y2="88" stroke="#2a6a2a" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="120" y1="88" x2="128" y2="78" stroke="#2a6a2a" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="90" y1="108" x2="118" y2="118" stroke="#2a6a2a" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="118" y1="118" x2="126" y2="130" stroke="#2a6a2a" stroke-width="1.8" stroke-linecap="round"/>
+        <!-- Tail -->
+        <ellipse cx="65" cy="139" rx="7" ry="9" fill="#5a9e5a" stroke="#2a6a2a" stroke-width="1.5"/>
+        <line x1="65" y1="148" x2="60" y2="156" stroke="#2a6a2a" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="65" y1="148" x2="70" y2="156" stroke="#2a6a2a" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="ref-legend">
+        <div><span>①</span> Large oval body</div>
+        <div><span>②</span> Round head on top</div>
+        <div><span>③</span> 3 leg pairs (6 legs)</div>
+        <div><span>④</span> 2 eyes on head</div>
+        <div><span>⑤</span> 2 antennae from head</div>
+        <div><span>⑥</span> Tail at bottom</div>
+        <div style="margin-top:8px;color:#888;font-size:0.72rem">Draw freely — it's your bug! 🎨</div>
+      </div>
+    </div>
+
+    <ul>
+      <li>You <strong>must roll Body (①)</strong> before any other part.</li>
+      <li>Head (②) is required before eyes or antennae.</li>
+      <li>Roll and draw, then <strong>Save &amp; Pass</strong> to the next player.</li>
+      <li>If your roll gives nothing new, your turn still ends.</li>
+    </ul>
+    <button class="close-btn" onclick="document.getElementById('help-modal').classList.remove('open')">Got it!</button>
+  </div>
+</div>
+
+<script>
+/* ── FACE TRANSFORMS ── */
+const FACE_TRANSFORMS = {
+  1:'rotateY(0deg)', 6:'rotateY(180deg)',
+  2:'rotateY(-90deg)', 5:'rotateY(90deg)',
+  3:'rotateX(-90deg)', 4:'rotateX(90deg)'
+};
+
+const PLAYERS = [
+  { name:'Mickey', icon:'🐭', color:'#008080' },
+  { name:'Minnie', icon:'🎀', color:'#800000' }
+];
+
+/* ── CANVAS SETUP ── */
+const canvas = document.getElementById('drawing-canvas');
+const ctx = canvas.getContext('2d');
+const wrapper = document.getElementById('canvas-wrapper');
+
+function resizeCanvas() {
+  const w = wrapper.clientWidth;
+  const h = Math.min(Math.round(w * 0.72), 340);
+  // Save existing image
+  const img = canvas.width > 0 ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null;
+  canvas.width = w;
+  canvas.height = h;
+  wrapper.style.height = h + 'px';
+  ctx.fillStyle = '#f5f0e8';
+  ctx.fillRect(0, 0, w, h);
+  if (img && img.width === w) ctx.putImageData(img, 0, 0);
+}
+
+/* ── PEN STATE ── */
+let penColor = '#111';
+let penSize = 5;
+let erasing = false;
+let drawing = false;
+let lastX = 0, lastY = 0;
+
+function setColor(el) {
+  erasing = false;
+  document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  penColor = el.dataset.color;
+  document.getElementById('eraser-btn').classList.remove('active');
+}
+function toggleEraser() {
+  erasing = !erasing;
+  document.getElementById('eraser-btn').classList.toggle('active', erasing);
+  document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+}
+function updateSize(v) { penSize = parseInt(v); }
+
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  const src = e.touches ? e.touches[0] : e;
+  return { x: src.clientX - r.left, y: src.clientY - r.top };
+}
+function startDraw(e) {
+  e.preventDefault();
+  if (!rolled) return; // must roll first each turn
+  drawing = true;
+  const p = getPos(e);
+  lastX = p.x; lastY = p.y;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, (erasing ? penSize * 3 : penSize) / 2, 0, Math.PI * 2);
+  ctx.fillStyle = erasing ? '#f5f0e8' : penColor;
+  ctx.fill();
+  hideHint();
+}
+function moveDraw(e) {
+  if (!drawing) return;
+  e.preventDefault();
+  const p = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(p.x, p.y);
+  ctx.strokeStyle = erasing ? '#f5f0e8' : penColor;
+  ctx.lineWidth = erasing ? penSize * 3 : penSize;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+  lastX = p.x; lastY = p.y;
+}
+function stopDraw() { drawing = false; }
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', moveDraw);
+canvas.addEventListener('mouseup', stopDraw);
+canvas.addEventListener('mouseleave', stopDraw);
+canvas.addEventListener('touchstart', startDraw, { passive: false });
+canvas.addEventListener('touchmove', moveDraw, { passive: false });
+canvas.addEventListener('touchend', stopDraw);
+
+function hideHint() {
+  document.getElementById('canvas-hint').style.display = 'none';
+}
+
+/* ── GAME STATE ── */
+function freshState() {
+  return { body:false, head:false, legs:[false,false,false], eyes:[false,false], ants:[false,false], tail:false };
+}
+let states = [freshState(), freshState()];
+let savedImages = [null, null]; // dataURL per player
+let turn = 0;
+let gameOver = false;
+let rolling = false;
+let rolled = false; // must roll before drawing each turn
+
+/* ── DIE ── */
+const dieEl = document.getElementById('the-die');
+
+function rollDie(value, cb) {
+  const transform = FACE_TRANSFORMS[value];
+  dieEl.style.setProperty('--face-transform', transform);
+  dieEl.classList.remove('rolling');
+  void dieEl.offsetWidth;
+  dieEl.classList.add('rolling');
+  dieEl.addEventListener('animationend', () => {
+    dieEl.style.transform = transform;
+    dieEl.classList.remove('rolling');
+    if (cb) cb();
+  }, { once: true });
+  // swap die colour
+  dieEl.className = 'die ' + (turn === 0 ? 'die--teal' : 'die--maroon');
+}
+
+function doRoll() {
+  if (gameOver || rolling || rolled) return;
+  rolling = true;
+  document.getElementById('roll-btn').disabled = true;
+
+  const val = Math.floor(Math.random() * 6) + 1;
+  rollDie(val, () => {
+    const result = applyRoll(turn, val);
+    updateChecklist(turn);
+    showBadge(val, result);
+    rolling = false;
+    rolled = true;
+
+    if (result === 'got') {
+      // Enable drawing + save
+      document.getElementById('save-btn').disabled = false;
+      hideHint();
+      // Update hint to guide drawing
+      const partMap = {1:'body (big oval)',2:'head (circle on top)',3:'a leg pair',4:'an eye on the head',5:'an antenna',6:'the tail'};
+      setHint('Now draw: ' + partMap[val] + '!');
+    } else {
+      // No drawing needed — they can still save and pass
+      document.getElementById('save-btn').disabled = false;
+      if (result === 'cant') setHint('Need ' + (val >= 4 ? 'head' : 'body') + ' first!\nSave & Pass →');
+      else setHint('Nothing new to draw\nSave & Pass →');
+    }
+
+    if (checkWin(turn)) {
+      setTimeout(() => declareWinner(turn), 500);
+    }
+  });
+}
+
+function setHint(msg) {
+  const h = document.getElementById('canvas-hint');
+  h.textContent = msg;
+  h.style.display = '';
+}
+
+/* ── ROLL LOGIC ── */
+function applyRoll(p, val) {
+  const s = states[p];
+  if (val === 1) { if (s.body) return 'already'; s.body = true; return 'got'; }
+  if (!s.body) return 'cant';
+  if (val === 2) { if (s.head) return 'already'; s.head = true; return 'got'; }
+  if (val === 3) { const i = s.legs.indexOf(false); if (i===-1) return 'already'; s.legs[i]=true; return 'got'; }
+  if (val === 4) { if (!s.head) return 'cant'; const i=s.eyes.indexOf(false); if(i===-1) return 'already'; s.eyes[i]=true; return 'got'; }
+  if (val === 5) { if (!s.head) return 'cant'; const i=s.ants.indexOf(false); if(i===-1) return 'already'; s.ants[i]=true; return 'got'; }
+  if (val === 6) { if (s.tail) return 'already'; s.tail=true; return 'got'; }
+  return 'miss';
+}
+
+function showBadge(val, result) {
+  const badge = document.getElementById('result-badge');
+  const partMap = {1:'Body',2:'Head',3:'Leg pair',4:'Eye',5:'Antenna',6:'Tail'};
+  const part = partMap[val];
+  if (result === 'got') { badge.textContent = '✅ Draw the ' + part + '!'; badge.className = 'result-badge got-it'; }
+  else if (result === 'already') { badge.textContent = part + ' done — pass!'; badge.className = 'result-badge'; }
+  else if (result === 'cant') { badge.textContent = 'Need ' + (val>=4?'Head':'Body') + ' first!'; badge.className = 'result-badge need-it'; }
+  else { badge.textContent = 'No match — pass!'; badge.className = 'result-badge'; }
+}
+
+/* ── CHECKLIST ── */
+function updateChecklist(p) {
+  const s = states[p];
+  function mark(id) { const el=document.getElementById(id); if(el) el.classList.add('done'); }
+  if (s.body) mark('pi'+p+'-body');
+  if (s.head) mark('pi'+p+'-head');
+  s.legs.forEach((v,i) => { if(v) mark('pi'+p+'-leg'+(i+1)); });
+  if (s.eyes[0]) mark('pi'+p+'-eye1');
+  if (s.eyes[1]) mark('pi'+p+'-eye2');
+  if (s.ants[0]) mark('pi'+p+'-ant1');
+  if (s.ants[1]) mark('pi'+p+'-ant2');
+  if (s.tail) mark('pi'+p+'-tail');
+}
+
+/* ── SAVE & PASS ── */
+function saveAndPass() {
+  if (gameOver) return;
+  // Save current canvas for this player
+  savedImages[turn] = canvas.toDataURL();
+
+  const next = 1 - turn;
+  const pl = PLAYERS[next];
+
+  // Show handoff overlay
+  document.getElementById('so-icon').textContent = pl.icon;
+  document.getElementById('so-title').textContent = pl.name + "'s turn!";
+  document.getElementById('so-desc').textContent = "Hand the device to " + pl.name + ".\nTap OK to load your drawing.";
+  document.getElementById('save-overlay').classList.add('show');
+}
+
+function loadNextPlayer() {
+  document.getElementById('save-overlay').classList.remove('show');
+  turn = 1 - turn;
+  rolled = false;
+
+  // Load this player's saved drawing (or blank)
+  ctx.fillStyle = '#f5f0e8';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (savedImages[turn]) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0);
+    img.src = savedImages[turn];
+  }
+
+  updateTurnUI();
+}
+
+/* ── TURN UI ── */
+function updateTurnUI() {
+  const pl = PLAYERS[turn];
+  document.getElementById('strip-0').classList.toggle('active', turn === 0);
+  document.getElementById('strip-1').classList.toggle('active', turn === 1);
+  document.getElementById('roll-btn').disabled = false;
+  document.getElementById('save-btn').disabled = true;
+  document.getElementById('result-badge').textContent = pl.icon + ' ' + pl.name + ' — Roll!';
+  document.getElementById('result-badge').className = 'result-badge';
+  // Die colour
+  dieEl.className = 'die ' + (turn === 0 ? 'die--teal' : 'die--maroon');
+  // Canvas hint
+  setHint(pl.icon + ' ' + pl.name + '\nDraw your bug!');
+}
+
+/* ── WIN ── */
+function checkWin(p) {
+  const s = states[p];
+  return s.body && s.head && s.legs.every(Boolean) && s.eyes.every(Boolean) && s.ants.every(Boolean) && s.tail;
+}
+function declareWinner(p) {
+  gameOver = true;
+  document.getElementById('strip-' + p).classList.add('winner-glow');
+  document.getElementById('winner-emoji').textContent = PLAYERS[p].icon;
+  document.getElementById('winner-title').textContent = PLAYERS[p].name + ' Wins!';
+  setTimeout(() => document.getElementById('winner-banner').classList.add('show'), 400);
+}
+
+/* ── RESET ── */
+function resetGame() {
+  states = [freshState(), freshState()];
+  savedImages = [null, null];
+  turn = 0; gameOver = false; rolling = false; rolled = false;
+  ctx.fillStyle = '#f5f0e8';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  document.getElementById('winner-banner').classList.remove('show');
+  document.getElementById('strip-0').classList.remove('winner-glow');
+  document.getElementById('strip-1').classList.remove('winner-glow');
+  document.querySelectorAll('.p-item').forEach(el => el.classList.remove('done'));
+  // Reset die
+  dieEl.style.transform = FACE_TRANSFORMS[1];
+  dieEl.style.setProperty('--face-transform', FACE_TRANSFORMS[1]);
+  updateTurnUI();
+}
+
+/* ── INIT ── */
+resizeCanvas();
+window.addEventListener('resize', () => {
+  // Save image, resize, restore
+  const saved = canvas.toDataURL();
+  resizeCanvas();
+  const img = new Image();
+  img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  img.src = saved;
+});
+updateTurnUI();
+</script>
+</body>
+</html>
