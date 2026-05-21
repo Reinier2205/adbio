@@ -287,10 +287,11 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
   background: linear-gradient(160deg, #3e1e24, #2a1a1f);
   border: 3px solid var(--gold);
   border-radius: 18px;
-  padding: 1.4rem 1.6rem;
+  padding: 1.2rem 1.4rem;
   text-align: center;
   animation: modalIn 0.35s ease;
-  max-width: 560px; width: 100%;
+  max-width: 480px; width: 100%;
+  max-height: 92vh; overflow-y: auto;
 }
 .winner-emoji { font-size: 3rem; margin-bottom: 4px; }
 .winner-title {
@@ -301,15 +302,19 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
 
 /* Bug drawings in winner screen */
 .winner-bugs {
-  display: flex; gap: 10px; margin-bottom: 1rem;
-  justify-content: center;
+  display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem;
+  align-items: center;
 }
 .winner-bug-frame {
-  flex: 1; max-width: 220px;
+  width: 100%; max-width: 380px;
   background: #f5f0e8;
   border-radius: 8px;
   border: 2px solid var(--gold);
   overflow: hidden;
+}
+.winner-bug-frame.runner-up {
+  border-color: rgba(212,175,55,0.4);
+  opacity: 0.85;
 }
 .winner-bug-label {
   font-family: 'Cinzel', serif; font-size: 0.72rem;
@@ -357,6 +362,37 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
 .ref-bug-wrap svg { flex-shrink: 0; }
 .ref-legend { font-size: 0.78rem; color: #ccc; line-height: 2; }
 .ref-legend span { color: var(--gold); font-weight: 700; margin-right: 4px; }
+
+/* ── FREE PICK MODAL ── */
+.freepick-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1500; align-items: center; justify-content: center;
+}
+.freepick-overlay.open { display: flex; }
+.freepick-card {
+  background: linear-gradient(160deg, #3e1e24, #2a1a1f);
+  border: 3px solid var(--gold); border-radius: 14px;
+  padding: 1.4rem 1.6rem; max-width: 340px; width: 92%;
+  animation: modalIn 0.25s ease; text-align: center;
+}
+.freepick-card h3 {
+  font-family: 'Cinzel', serif; color: var(--gold-light);
+  font-size: 1.1rem; margin-bottom: 4px;
+}
+.freepick-card p { color: #bbb; font-size: 0.82rem; margin-bottom: 1rem; line-height: 1.5; }
+.freepick-list { display: flex; flex-direction: column; gap: 7px; }
+.freepick-item {
+  background: rgba(212,175,55,0.12);
+  border: 1px solid rgba(212,175,55,0.35);
+  border-radius: 8px; padding: 10px 14px;
+  color: var(--gold-light); font-family: 'Cinzel', serif;
+  font-size: 0.88rem; cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  text-align: left;
+}
+.freepick-item:hover  { background: rgba(212,175,55,0.25); }
+.freepick-item:active { transform: scale(0.97); }
 </style>
 </head>
 <body>
@@ -439,13 +475,23 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
   </div>
 </div>
 
+<!-- Free pick modal -->
+<div class="freepick-overlay" id="freepick-overlay">
+  <div class="freepick-card">
+    <div style="font-size:2rem;margin-bottom:6px">🍀</div>
+    <h3>Lucky Break!</h3>
+    <p id="freepick-desc">3 passes in a row — pick a part to add for free!</p>
+    <div class="freepick-list" id="freepick-list"></div>
+  </div>
+</div>
+
 <!-- Winner overlay -->
 <div class="winner-banner" id="winner-banner">
   <div class="winner-card">
     <div class="winner-emoji" id="winner-emoji">🐭</div>
     <div class="winner-title" id="winner-title">Mickey Wins!</div>
     <div class="winner-sub">Bug completely drawn! 🐛🎉</div>
-    <div class="winner-bugs">
+    <div class="winner-bugs" id="winner-bugs">
       <div class="winner-bug-frame">
         <div class="winner-bug-label" id="wlabel-0">🐭 Mickey</div>
         <img id="wbug-0" src="" alt="Mickey's bug">
@@ -518,6 +564,7 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
       <li>Head (②) is required before eyes or antennae.</li>
       <li>After rolling, draw your part, then tap <strong>Pass</strong>.</li>
       <li>If your roll gives nothing new, just tap <strong>Pass</strong>.</li>
+      <li>After <strong>3 passes in a row</strong> with no new part, you get a free pick — choose any part you can legally add!</li>
     </ul>
     <button class="close-btn" onclick="document.getElementById('help-modal').classList.remove('open')">Got it!</button>
   </div>
@@ -625,6 +672,7 @@ let turn        = 0;
 let gameOver    = false;
 let rolling     = false;
 let rolled      = false; // false = need to roll; true = need to pass
+let missStreak  = [0, 0]; // consecutive no-gain rolls per player
 
 /* ── DIE ── */
 const dieEl = document.getElementById('the-die');
@@ -685,24 +733,85 @@ function doRoll() {
 
     const partMap = {1:'body (big oval)',2:'head (circle on top)',3:'a leg pair',4:'an eye',5:'an antenna',6:'the tail'};
     if (result === 'got') {
+      missStreak[turn] = 0;
       setHint('Draw: ' + partMap[val] + '\nthen Pass');
-    } else if (result === 'cant') {
-      setHint('Need ' + (val >= 4 ? 'head' : 'body') + ' first!\nTap Pass');
     } else {
-      setHint('Nothing new — tap Pass');
+      missStreak[turn]++;
+      if (result === 'cant') {
+        setHint('Need ' + (val >= 4 ? 'head' : 'body') + ' first!\nTap Pass');
+      } else {
+        setHint('Nothing new — tap Pass');
+      }
+      if (missStreak[turn] >= 3) {
+        // Delay so badge is visible before modal appears
+        setTimeout(() => showFreePick(), 700);
+      }
     }
 
-    if (checkWin(turn)) {
-      setTimeout(() => declareWinner(turn), 600);
-    }
   });
+}
+
+/* ── FREE PICK ── */
+function getAvailableParts(p) {
+  const s = states[p];
+  const parts = [];
+  if (!s.body) { parts.push({ label: 'Body', apply: () => { s.body = true; } }); return parts; } // body blocks everything
+  if (!s.head) parts.push({ label: 'Head', apply: () => { s.head = true; } });
+  const nextLeg = s.legs.indexOf(false);
+  if (nextLeg !== -1) parts.push({ label: 'Leg pair ' + (nextLeg + 1), apply: () => { s.legs[nextLeg] = true; } });
+  if (s.head) {
+    const nextEye = s.eyes.indexOf(false);
+    if (nextEye !== -1) parts.push({ label: 'Eye ' + (nextEye === 0 ? 'left' : 'right'), apply: () => { s.eyes[nextEye] = true; } });
+    const nextAnt = s.ants.indexOf(false);
+    if (nextAnt !== -1) parts.push({ label: 'Antenna ' + (nextAnt === 0 ? 'left' : 'right'), apply: () => { s.ants[nextAnt] = true; } });
+  }
+  if (!s.tail) parts.push({ label: 'Tail', apply: () => { s.tail = true; } });
+  return parts;
+}
+
+function showFreePick() {
+  const pl = PLAYERS[turn];
+  const parts = getAvailableParts(turn);
+  if (parts.length === 0) return; // nothing left to pick (shouldn't happen before win)
+
+  document.getElementById('freepick-desc').textContent =
+    pl.name + ' got 3 passes in a row — pick any part to add for free!';
+
+  const list = document.getElementById('freepick-list');
+  list.innerHTML = '';
+  parts.forEach(part => {
+    const btn = document.createElement('button');
+    btn.className = 'freepick-item';
+    btn.textContent = '+ ' + part.label;
+    btn.onclick = () => applyFreePick(part);
+    list.appendChild(btn);
+  });
+
+  document.getElementById('freepick-overlay').classList.add('open');
+}
+
+function applyFreePick(part) {
+  document.getElementById('freepick-overlay').classList.remove('open');
+  part.apply();
+  missStreak[turn] = 0;
+  updateChecklist(turn);
+  setHint('Draw: ' + part.label.toLowerCase() + '\nthen Pass');
+  document.getElementById('result-badge').textContent = '🍀 Free: Draw the ' + part.label + '!';
+  document.getElementById('result-badge').className = 'result-badge got-it';
 }
 
 function doPass() {
   if (gameOver) return;
-  // save current player's canvas
+  // Save current player's canvas
   savedImages[turn] = canvas.toDataURL();
-  // switch to next player
+
+  // Check win now — after drawing is done
+  if (checkWin(turn)) {
+    declareWinner(turn);
+    return;
+  }
+
+  // Switch to next player
   turn   = 1 - turn;
   rolled = false;
 
@@ -785,12 +894,12 @@ function declareWinner(p) {
   savedImages[p] = canvas.toDataURL();
 
   PLAYERS.forEach((pl, i) => {
-    document.getElementById('wlabel-' + i).textContent = pl.icon + ' ' + pl.name;
+    document.getElementById('wlabel-' + i).textContent = pl.icon + ' ' + pl.name + (i === p ? ' 🏆' : '');
+    document.getElementById('wbug-' + i).parentElement.classList.toggle('runner-up', i !== p);
     const imgEl = document.getElementById('wbug-' + i);
     if (savedImages[i]) {
       imgEl.src = savedImages[i];
     } else {
-      // blank canvas for player who has no drawing yet
       const tmp = document.createElement('canvas');
       tmp.width = canvas.width; tmp.height = canvas.height;
       const tc = tmp.getContext('2d');
@@ -798,6 +907,11 @@ function declareWinner(p) {
       imgEl.src = tmp.toDataURL();
     }
   });
+
+  // Put winner frame first in the DOM
+  const winnerFrame = document.getElementById('wbug-' + p).closest('.winner-bug-frame');
+  const bugsContainer = document.getElementById('winner-bugs');
+  bugsContainer.insertBefore(winnerFrame, bugsContainer.firstChild);
 
   setTimeout(() => document.getElementById('winner-banner').classList.add('show'), 400);
 }
@@ -807,6 +921,7 @@ function resetGame() {
   states = [freshState(), freshState()];
   savedImages = [null, null];
   turn = 0; gameOver = false; rolling = false; rolled = false;
+  missStreak = [0, 0];
   ctx.fillStyle = '#f5f0e8';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   document.getElementById('winner-banner').classList.remove('show');
