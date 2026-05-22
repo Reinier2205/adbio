@@ -1,13 +1,20 @@
+Here is an HTML document that adds an interactive, zoomable map for destination selection to your travel price comparison page.
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TravelGames - Price Comparison Showdown</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TravelGames - Price Comparison Showdown | Map Selector</title>
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS + JS (zoomable map library) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <style>
         :root {
@@ -41,7 +48,7 @@
         .casino-table {
             background: var(--felt-green);
             width: 100%;
-            max-width: 1000px;
+            max-width: 1200px;
             border: 10px solid #4a2c2a;
             box-shadow: 0 0 0 5px var(--gold), 0 20px 40px rgba(0,0,0,0.6);
             border-radius: 15px;
@@ -68,7 +75,6 @@
 
         .home-btn { left: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); }
         .help-btn { right: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); color: var(--dark-wood); font-family: 'Cinzel', serif; font-weight: bold; }
-        .map-toggle-btn { right: 60px; background: radial-gradient(circle, #5cdb95, #379683); color: #fff; font-size: 1.1rem; }
 
         .nav-btn:active, .casino-btn:active {
             transform: translateY(2px);
@@ -90,113 +96,48 @@
             font-size: 0.9rem;
             color: var(--light-gold);
             opacity: 0.8;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
-        /* Interactive Map Container Panel */
-        .map-panel {
-            background: #111;
+        /* Interactive Map Card */
+        .map-card {
+            background: var(--panel-bg);
             border: 2px solid var(--gold);
-            border-radius: 8px;
+            border-radius: 12px;
+            padding: 16px;
             margin-bottom: 25px;
-            padding: 15px;
-            display: none; /* Controlled via state toggles */
-            flex-direction: column;
-            align-items: center;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
-            position: relative;
+            transition: all 0.2s;
         }
-
-        .map-panel.active {
-            display: flex;
-        }
-
         .map-header {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
             font-family: 'Cinzel', serif;
-            font-size: 0.85rem;
             color: var(--gold-light);
-            margin-bottom: 10px;
-            border-bottom: 1px dashed rgba(212, 175, 55, 0.4);
-            padding-bottom: 4px;
-        }
-
-        .map-wrapper {
-            width: 100%;
-            height: 320px;
-            overflow: hidden;
-            position: relative;
-            background: #151a22;
-            border-radius: 6px;
-            cursor: grab;
-        }
-
-        .map-wrapper:active {
-            cursor: grabbing;
-        }
-
-        .world-svg {
-            width: 100%;
-            height: 100%;
-            transform-origin: 0 0;
-            transition: transform 0.05s ease-out;
-        }
-
-        /* SVG Country Path Interaction Rules */
-        .country-path {
-            fill: #324156;
-            stroke: #151a22;
-            stroke-width: 1.5;
-            transition: fill 0.2s ease, stroke 0.2s ease;
-            cursor: pointer;
-        }
-
-        .country-path:hover {
-            fill: #4e6178;
-        }
-
-        .country-path.supported {
-            fill: #1d6e4f;
-            stroke: #2bd992;
-        }
-
-        .country-path.supported:hover {
-            fill: #27946b;
-        }
-
-        .country-path.active-destination {
-            fill: var(--teal) !important;
-            stroke: var(--gold-light) !important;
-            stroke-width: 2.5;
-        }
-
-        .map-controls {
-            position: absolute;
-            bottom: 25px;
-            right: 25px;
+            font-size: 1rem;
+            margin-bottom: 12px;
             display: flex;
-            flex-direction: column;
-            gap: 5px;
+            align-items: center;
+            gap: 8px;
+            border-left: 3px solid var(--gold);
+            padding-left: 12px;
+        }
+        .map-header span {
+            font-size: 1.2rem;
+        }
+        #zoomMap {
+            height: 320px;
+            width: 100%;
+            border-radius: 10px;
+            border: 2px solid #3e1e24;
+            background: #1e2a1a;
             z-index: 5;
         }
-
-        .map-zoom-btn {
-            width: 32px;
-            height: 32px;
-            background: rgba(0,0,0,0.7);
-            border: 1px solid var(--gold);
-            color: var(--gold-light);
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.1rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .map-hint {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 8px;
+            color: var(--gold);
+            font-style: italic;
         }
 
         /* Top Config / Rate Panel */
@@ -250,7 +191,6 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* Live Rate Customizer Styles */
         .rate-customizer {
             background: rgba(0, 0, 0, 0.4);
             padding: 10px 14px;
@@ -279,14 +219,12 @@
             cursor: pointer;
         }
 
-        /* Table Layouts */
         .category-block {
             background: rgba(26, 16, 19, 0.4);
             border: 2px solid #3e1e24;
             border-radius: 10px;
             padding: 16px;
             margin-bottom: 25px;
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
             overflow-x: auto;
         }
 
@@ -364,7 +302,6 @@
         .cell-dest { border-left: 2px solid var(--teal); background: rgba(0, 128, 128, 0.05); }
         .cell-conv { border-left: 2px solid var(--gold); background: rgba(212, 175, 55, 0.05); font-weight: bold; color: var(--gold-light); }
 
-        /* Custom Ledger Form */
         .custom-section {
             background: var(--panel-bg);
             border: 3px solid var(--gold);
@@ -407,7 +344,6 @@
         .btn-teal { background: var(--teal); }
         .btn-maroon { background: var(--maroon); }
 
-        /* Modal Guidelines */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -438,498 +374,389 @@
         .modal-header { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--gold-light); margin-bottom: 15px; text-align: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
         .modal-body { font-size: 0.95rem; line-height: 1.5; color: var(--light-gold); margin-bottom: 20px; }
         .modal-body li { margin-bottom: 8px; margin-left: 20px; }
-        .close-btn-container { display: flex; justify-content: center; }
 
         @media (max-width: 768px) {
             .custom-form { grid-template-columns: 1fr; }
             .showdown-table th, .showdown-table td { padding: 8px 6px; font-size: 0.8rem; }
             .item-title { font-size: 0.85rem; }
+            #zoomMap { height: 260px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="casino-table">
+<div class="casino-table">
+    
+    <div class="nav-btn home-btn" onclick="window.location.href='index.html'">🏠</div>
+    <div class="nav-btn help-btn" onclick="toggleHelpModal(true)">?</div>
+
+    <h1>Buying Power Showdown</h1>
+    <div class="subtitle">Travel Matrix Edition • Interactive Map Selection</div>
+
+    <!-- 🌍 ZOOMABLE MAP DESTINATION PICKER (NEW) -->
+    <div class="map-card">
+        <div class="map-header">
+            <span>🗺️</span> 
+            <span>ZOOM & CLICK: choose destination from world map</span>
+        </div>
+        <div id="zoomMap"></div>
+        <div class="map-hint">📍 Click any marker → instantly updates destination & prices | Drag/Zoom to explore</div>
+    </div>
+
+    <div class="setup-panel">
+        <div class="input-group">
+            <label for="homeCurrency">Home Base</label>
+            <select id="homeCurrency" onchange="handleCurrencyChange()">
+                <option value="ZAR">South African Rand</option>
+                <option value="USD">US Dollar</option>
+                <option value="GBP">British Pound</option>
+                <option value="EUR">Euro</option>
+                <option value="AUD">Australian Dollar</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="destCountry">Destination (syncs with map)</label>
+            <select id="destCountry" onchange="syncMapFromDropdown()">
+                <optgroup label="Africa">
+                    <option value="EGY">Egypt</option>
+                    <option value="KEN">Kenya</option>
+                    <option value="MAR">Morocco</option>
+                    <option value="MUS">Mauritius</option>
+                    <option value="ZAF" selected>South Africa</option>
+                </optgroup>
+                <optgroup label="Europe">
+                    <option value="FRA">France</option>
+                    <option value="DEU">Germany</option>
+                    <option value="ITA">Italy</option>
+                    <option value="ESP">Spain</option>
+                    <option value="GBR">United Kingdom</option>
+                </optgroup>
+                <optgroup label="Asia">
+                    <option value="IND">India</option>
+                    <option value="JPN">Japan</option>
+                    <option value="SGP">Singapore</option>
+                    <option value="THA">Thailand</option>
+                    <option value="ARE">United Arab Emirates</option>
+                </optgroup>
+                <optgroup label="Americas">
+                    <option value="BRA">Brazil</option>
+                    <option value="CAN">Canada</option>
+                    <option value="MEX">Mexico</option>
+                    <option value="USA">United States</option>
+                    <option value="ARG">Argentina</option>
+                </optgroup>
+                <optgroup label="Oceania">
+                    <option value="AUD">Australia</option>
+                    <option value="FJI">Fiji</option>
+                    <option value="NZL">New Zealand</option>
+                    <option value="PYF">French Polynesia</option>
+                    <option value="VUT">Vanuatu</option>
+                </optgroup>
+            </select>
+        </div>
         
-        <!-- Navigation Buttons -->
-        <div class="nav-btn home-btn" onclick="window.location.href='index.html'">🏠</div>
-        <div class="nav-btn map-toggle-btn" onclick="toggleMapPanel()" title="Toggle Interactive Map">🗺️</div>
-        <div class="nav-btn help-btn" onclick="toggleHelpModal(true)">?</div>
-
-        <h1>Buying Power Showdown</h1>
-        <div class="subtitle">Travel Matrix Edition</div>
-
-        <!-- Interactive Vector Map Box -->
-        <div class="map-panel" id="mapPanel">
-            <div class="map-header">
-                <span>Interactive Target Matrix Selector (Click highlighted countries)</span>
-                <span id="mapSelectionStatus" style="color: var(--gold);">Selected: France (FRA)</span>
+        <div class="rate-customizer">
+            <div class="rate-display-text">
+                <span>Live Forex Conversion:</span>
+                <strong id="rateLabel">1 Local = 0.00</strong>
             </div>
-            <div class="map-wrapper" id="mapWrapper" onmousedown="startMapPan(event)" onmousemove="executeMapPan(event)" onmouseup="stopMapPan()" onmouseleave="stopMapPan()">
-                <!-- Inline Optimized World Map Path Stack -->
-                <svg class="world-svg" id="worldSvg" viewBox="0 0 1008 651" xmlns="http://www.w3.org/2000/svg">
-                    <g id="svgMapMatrixGroup">
-                        <!-- North America -->
-                        <path id="USA" class="country-path id-USA supported" d="M162,175 L290,175 L295,245 L200,265 L155,230 Z" onclick="selectMapCountry('USA')" title="United States" />
-                        <path id="CAN" class="country-path id-CAN supported" d="M140,80 L310,85 L290,170 L160,170 Z" onclick="selectMapCountry('CAN')" title="Canada" />
-                        <path id="MEX" class="country-path id-MEX supported" d="M165,240 L210,270 L190,310 L150,270 Z" onclick="selectMapCountry('MEX')" title="Mexico" />
-                        <!-- South America -->
-                        <path id="BRA" class="country-path id-BRA supported" d="M330,360 L410,380 L400,470 L340,450 Z" onclick="selectMapCountry('BRA')" title="Brazil" />
-                        <path id="ARG" class="country-path id-ARG supported" d="M320,475 L360,470 L350,580 L320,580 Z" onclick="selectMapCountry('ARG')" title="Argentina" />
-                        <!-- Europe -->
-                        <path id="FRA" class="country-path id-FRA supported" d="M485,160 L515,160 L510,195 L485,190 Z" onclick="selectMapCountry('FRA')" title="France" />
-                        <path id="DEU" class="country-path id-DEU supported" d="M515,145 L540,145 L540,175 L515,175 Z" onclick="selectMapCountry('DEU')" title="Germany" />
-                        <path id="ITA" class="country-path id-ITA supported" d="M515,195 L535,195 L545,240 L525,240 Z" onclick="selectMapCountry('ITA')" title="Italy" />
-                        <path id="ESP" class="country-path id-ESP supported" d="M455,200 L485,200 L475,240 L445,240 Z" onclick="selectMapCountry('ESP')" title="Spain" />
-                        <path id="GBR" class="country-path id-GBR supported" d="M470,120 L500,120 L495,155 L470,155 Z" onclick="selectMapCountry('GBR')" title="United Kingdom" />
-                        <!-- Africa -->
-                        <path id="EGY" class="country-path id-EGY supported" d="M560,290 L610,290 L610,340 L560,340 Z" onclick="selectMapCountry('EGY')" title="Egypt" />
-                        <path id="MAR" class="country-path id-MAR supported" d="M440,265 L485,265 L470,305 L435,305 Z" onclick="selectMapCountry('MAR')" title="Morocco" />
-                        <path id="KEN" class="country-path id-KEN supported" d="M620,385 L660,395 L650,430 L610,415 Z" onclick="selectMapCountry('KEN')" title="Kenya" />
-                        <path id="MUS" class="country-path id-MUS supported" d="M690,490 A10,10 0 1,1 690,510 A10,10 0 1,1 690,490 Z" onclick="selectMapCountry('MUS')" title="Mauritius" />
-                        <path id="ZAF" class="country-path id-ZAF supported" d="M565,500 L620,495 L610,560 L555,540 Z" onclick="selectMapCountry('ZAF')" title="South Africa" />
-                        <!-- Asia -->
-                        <path id="IND" class="country-path id-IND supported" d="M720,290 L785,310 L755,390 L715,340 Z" onclick="selectMapCountry('IND')" title="India" />
-                        <path id="JPN" class="country-path id-JPN supported" d="M900,180 L940,190 L920,250 L890,230 Z" onclick="selectMapCountry('JPN')" title="Japan" />
-                        <path id="SGP" class="country-path id-SGP supported" d="M820,440 A8,8 0 1,1 820,456 A8,8 0 1,1 820,440 Z" onclick="selectMapCountry('SGP')" title="Singapore" />
-                        <path id="THA" class="country-path id-THA supported" d="M800,365 L840,365 L830,420 L805,420 Z" onclick="selectMapCountry('THA')" title="Thailand" />
-                        <path id="ARE" class="country-path id-ARE supported" d="M645,295 L675,300 L665,325 L640,320 Z" onclick="selectMapCountry('ARE')" title="United Arab Emirates" />
-                        <!-- Oceania -->
-                        <path id="AUD" class="country-path id-AUD supported" d="M830,500 L950,510 L940,600 L820,570 Z" onclick="selectMapCountry('AUD')" title="Australia" />
-                        <path id="NZL" class="country-path id-NZL supported" d="M960,590 L990,600 L950,650 L930,640 Z" onclick="selectMapCountry('NZL')" title="New Zealand" />
-                        <path id="FJI" class="country-path id-FJI supported" d="M985,510 A8,8 0 1,1 985,526 A8,8 0 1,1 985,510 Z" onclick="selectMapCountry('FJI')" title="Fiji" />
-                        <!-- Background Reference / Unmapped Fill Path -->
-                        <path class="country-path" d="M570,110 L680,80 L760,120 L860,100 L850,170 L720,180 L590,150 Z" style="cursor:default; pointer-events:none;" />
-                        <path class="country-path" d="M580,210 L680,210 L700,270 L600,260 Z" style="cursor:default; pointer-events:none;" />
-                    </g>
-                </svg>
-                <div class="map-controls">
-                    <button class="map-zoom-btn" onclick="zoomMap(1.3)">+</button>
-                    <button class="map-zoom-btn" onclick="zoomMap(0.7)">-</button>
-                    <button class="map-zoom-btn" onclick="resetMapZoom()">⟲</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Setup Configuration Bar -->
-        <div class="setup-panel">
-            <div class="input-group">
-                <label for="homeCurrency">Home Base</label>
-                <select id="homeCurrency" onchange="handleCurrencyChange()">
-                    <option value="ZAR" selected>South African Rand</option>
-                    <option value="USD">US Dollar</option>
-                    <option value="GBP">British Pound</option>
-                    <option value="EUR">Euro</option>
-                    <option value="AUD">Australian Dollar</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="destCountry">Destination</label>
-                <select id="destCountry" onchange="handleCurrencyChange()">
-                    <optgroup label="Africa">
-                        <option value="EGY">Egypt</option>
-                        <option value="KEN">Kenya</option>
-                        <option value="MAR">Morocco</option>
-                        <option value="MUS">Mauritius</option>
-                        <option value="ZAF">South Africa</option>
-                    </optgroup>
-                    <optgroup label="Europe">
-                        <option value="FRA" selected>France</option>
-                        <option value="DEU">Germany</option>
-                        <option value="ITA">Italy</option>
-                        <option value="ESP">Spain</option>
-                        <option value="GBR">United Kingdom</option>
-                    </optgroup>
-                    <optgroup label="Asia">
-                        <option value="IND">India</option>
-                        <option value="JPN">Japan</option>
-                        <option value="SGP">Singapore</option>
-                        <option value="THA">Thailand</option>
-                        <option value="ARE">United Arab Emirates</option>
-                    </optgroup>
-                    <optgroup label="Americas">
-                        <option value="BRA">Brazil</option>
-                        <option value="CAN">Canada</option>
-                        <option value="MEX">Mexico</option>
-                        <option value="USA">United States</option>
-                        <option value="ARG">Argentina</option>
-                    </optgroup>
-                    <optgroup label="Oceania">
-                        <option value="AUD">Australia</option>
-                        <option value="FJI">Fiji</option>
-                        <option value="NZL">New Zealand</option>
-                    </optgroup>
-                </select>
-            </div>
-            
-            <!-- Forex Adjuster Block -->
-            <div class="rate-customizer">
-                <div class="rate-display-text">
-                    <span>Live Forex Conversion:</span>
-                    <strong id="rateLabel">1 Local = 0.00</strong>
-                </div>
-                <div class="slider-container">
-                    <input type="range" id="rateSlider" class="rate-slider" min="0.1" max="50" step="0.01" oninput="handleSliderInput()">
-                    <input type="number" id="rateInput" style="width: 80px; padding: 4px; font-size: 0.85rem;" step="0.01" oninput="handleManualRateInput()">
-                </div>
-            </div>
-        </div>
-
-        <!-- Dynamic Category Content Tables -->
-        <div id="showdownTableContent"></div>
-
-        <!-- Custom Item Ledger -->
-        <div class="custom-section">
-            <h2>The Traveler's Custom Ledger</h2>
-            <div class="custom-form">
-                <div class="input-group">
-                    <label for="customName">Expense / Item Name</label>
-                    <input type="text" id="customName" placeholder="e.g., Scooter Rental, Souvenir">
-                </div>
-                <div class="input-group">
-                    <label for="customCat">Category Section</label>
-                    <select id="customCat">
-                        <option value="Supermarket">🛒 Daily Essentials</option>
-                        <option value="Dining Out">🍽️ Dining & Socializing</option>
-                        <option value="Transit">✈️ Transit & Mobility</option>
-                        <option value="Utilities">🎟️ Utilities & Leisure</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label id="customPriceLabel" for="customPrice">Price (Local)</label>
-                    <input type="number" id="customPrice" step="0.01" placeholder="0.00">
-                </div>
-                <button class="casino-btn btn-teal" onclick="addCustomItem()">Add Item</button>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Modal Help Panel Overlay -->
-    <div class="modal-overlay" id="helpModal">
-        <div class="modal-panel">
-            <div class="modal-header">Showdown Guide</div>
-            <div class="modal-body">
-                <p>Analyze local travel costs mapped across key parameters:</p>
-                <ul>
-                    <li><strong>Home Code:</strong> Your baseline home currency expenditure layout.</li>
-                    <li><strong>Target Country Column Code:</strong> Local currency values directly mapped underneath ISO code frames.</li>
-                    <li><strong>Interactive Map Canvas:</strong> Tap the 🗺️ layout icon at the top to pop open the geographic router panel. Drag to pan, scroll/click to zoom, and select a country path directly!</li>
-                </ul>
-            </div>
-            <div class="close-btn-container">
-                <button class="casino-btn btn-maroon" onclick="toggleHelpModal(false)">Close Matrix</button>
+            <div class="slider-container">
+                <input type="range" id="rateSlider" class="rate-slider" min="0.1" max="50" step="0.01" oninput="handleSliderInput()">
+                <input type="number" id="rateInput" style="width: 80px; padding: 4px; font-size: 0.85rem;" step="0.01" oninput="handleManualRateInput()">
             </div>
         </div>
     </div>
 
-    <script>
-        const currencyMeta = {
-            ZAR: { symbol: "R", defaultRateToUSD: 0.054 },
-            USD: { symbol: "$", defaultRateToUSD: 1.0 },
-            GBP: { symbol: "£", defaultRateToUSD: 1.25 },
-            EUR: { symbol: "€", defaultRateToUSD: 1.08 },
-            AUD: { symbol: "A$", defaultRateToUSD: 0.66 },
-            EGP: { symbol: "E£", defaultRateToUSD: 0.021 },
-            KES: { symbol: "KSh", defaultRateToUSD: 0.0076 },
-            MAD: { symbol: "DH", defaultRateToUSD: 0.10 },
-            MUR: { symbol: "₨", defaultRateToUSD: 0.022 },
-            INR: { symbol: "₹", defaultRateToUSD: 0.012 },
-            JPY: { symbol: "¥", defaultRateToUSD: 0.0064 },
-            SGP: { symbol: "S$", defaultRateToUSD: 0.74 },
-            THA: { symbol: "฿", defaultRateToUSD: 0.027 },
-            AED: { symbol: "د.إ", defaultRateToUSD: 0.27 },
-            BRA: { symbol: "R$", defaultRateToUSD: 0.19 },
-            CAN: { symbol: "C$", defaultRateToUSD: 0.73 },
-            MEX: { symbol: "$", defaultRateToUSD: 0.059 },
-            ARG: { symbol: "$", defaultRateToUSD: 0.0011 },
-            FJI: { symbol: "FJ$", defaultRateToUSD: 0.44 },
-            NZL: { symbol: "NZ$", defaultRateToUSD: 0.61 }
-        };
+    <div id="showdownTableContent"></div>
 
-        const countryCurrencies = {
-            EGY: "EGP", KEN: "KES", MAR: "MAD", MUS: "MUR", ZAF: "ZAR",
-            FRA: "EUR", DEU: "EUR", ITA: "EUR", ESP: "EUR", GBR: "GBP",
-            IND: "INR", JPN: "JPY", SGP: "SGP", THA: "THA", ARE: "AED",
-            BRA: "BRA", CAN: "CAN", MEX: "MEX", USA: "USD", ARG: "ARG",
-            AUD: "AUD", FJI: "FJI", NZL: "NZL"
-        };
+    <div class="custom-section">
+        <h2>The Traveler's Custom Ledger</h2>
+        <div class="custom-form">
+            <div class="input-group">
+                <label for="customName">Expense / Item Name</label>
+                <input type="text" id="customName" placeholder="e.g., Scooter Rental, Souvenir">
+            </div>
+            <div class="input-group">
+                <label for="customCat">Category Section</label>
+                <select id="customCat">
+                    <option value="Supermarket">🛒 Daily Essentials</option>
+                    <option value="Dining Out">🍽️ Dining & Socializing</option>
+                    <option value="Transit">✈️ Transit & Mobility</option>
+                    <option value="Utilities">🎟️ Utilities & Leisure</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label id="customPriceLabel" for="customPrice">Price (Local)</label>
+                <input type="number" id="customPrice" step="0.01" placeholder="0.00">
+            </div>
+            <button class="casino-btn btn-teal" onclick="addCustomItem()">Add Item</button>
+        </div>
+    </div>
+</div>
 
-        const categoryMeta = {
-            "Supermarket": { name: "Daily Essentials (Supermarket)", icon: "🛒" },
-            "Dining Out": { name: "Dining Out & Socializing", icon: "🍽️" },
-            "Transit": { name: "Transit & Mobility", icon: "✈️" },
-            "Utilities": { name: "Utilities & Leisure", icon: "🎟️" }
-        };
+<div class="modal-overlay" id="helpModal">
+    <div class="modal-panel">
+        <div class="modal-header">Showdown Guide</div>
+        <div class="modal-body">
+            <p>Analyze travel costs mapped across three columns:</p>
+            <ul>
+                <li><strong>Home:</strong> What you pay at home.</li>
+                <li><strong>Destination:</strong> Local cost in destination's currency.</li>
+                <li><strong>Conv:</strong> Converted to home currency (custom exchange rate).</li>
+                <li><strong>🌍 Zoomable Map:</strong> Click any marker to pick destination instantly.</li>
+                <li><strong>Slider:</strong> Adjust conversion rate in real-time.</li>
+            </ul>
+        </div>
+        <div class="close-btn-container">
+            <button class="casino-btn btn-maroon" onclick="toggleHelpModal(false)">Close Matrix</button>
+        </div>
+    </div>
+</div>
 
-        let itemBasket = [
-            { name: "Fresh Loaf / Baguette", desc: "Standard bakery fresh white loaf", category: "Supermarket", prices: { ZAR: 19.00, EUR: 1.80, GBP: 1.40, USD: 3.50, AUD: 3.20 } },
-            { name: "Sliced Ham (100g)", desc: "Prosciutto, cotto, or regional equivalent", category: "Supermarket", prices: { ZAR: 35.00, EUR: 2.80, GBP: 2.50, USD: 4.20, AUD: 4.00 } },
-            { name: "Local Cheese (100g)", desc: "Cheddar baseline vs regional varieties", category: "Supermarket", prices: { ZAR: 28.00, EUR: 1.90, GBP: 1.80, USD: 3.90, AUD: 2.90 } },
-            { name: "Bottled Water (1.5L)", desc: "Essential grid metric for safe drinking water", category: "Supermarket", prices: { ZAR: 12.50, EUR: 0.65, GBP: 0.85, USD: 1.50, AUD: 2.10 } },
-            { name: "Snack Pack Combo", desc: "Standard packet of crisps + milk chocolate bar", category: "Supermarket", prices: { ZAR: 32.00, EUR: 2.40, GBP: 2.10, USD: 3.25, AUD: 4.50 } },
-            
-            { name: "Regular Cappuccino", desc: "Standard mid-range coffee shop serve", category: "Dining Out", prices: { ZAR: 39.41, EUR: 3.50, GBP: 3.40, USD: 4.90, AUD: 5.00 } },
-            { name: "Fast Food Index Meal", desc: "Global standardized burger meal combo", category: "Dining Out", prices: { ZAR: 100.00, EUR: 10.00, GBP: 8.50, USD: 11.00, AUD: 14.50 } },
-            { name: "Sit-down Dinner (Main)", desc: "Single patron plate at a local neighborhood bistro", category: "Dining Out", prices: { ZAR: 185.00, EUR: 18.50, GBP: 18.00, USD: 22.00, AUD: 28.00 } },
-            { name: "Domestic Draught Beer", desc: "Local tap brew served inside a casual pub (500ml)", category: "Dining Out", prices: { ZAR: 40.00, EUR: 5.00, GBP: 5.50, USD: 6.50, AUD: 9.00 } },
-            { name: "Red Wine (Premium Bottle)", desc: "750ml regional red selection retail checkout cost", category: "Dining Out", prices: { ZAR: 120.00, EUR: 8.00, GBP: 9.00, USD: 14.00, AUD: 20.00 } },
+<script>
+    // ---------- CURRENCY META (unchanged, extended support) ----------
+    const currencyMeta = {
+        ZAR: { symbol: "R", defaultRateToUSD: 0.054 }, USD: { symbol: "$", defaultRateToUSD: 1.0 },
+        GBP: { symbol: "£", defaultRateToUSD: 1.25 }, EUR: { symbol: "€", defaultRateToUSD: 1.08 },
+        AUD: { symbol: "A$", defaultRateToUSD: 0.66 }, EGP: { symbol: "E£", defaultRateToUSD: 0.021 },
+        KES: { symbol: "KSh", defaultRateToUSD: 0.0076 }, MAD: { symbol: "DH", defaultRateToUSD: 0.10 },
+        MUR: { symbol: "₨", defaultRateToUSD: 0.022 }, INR: { symbol: "₹", defaultRateToUSD: 0.012 },
+        JPY: { symbol: "¥", defaultRateToUSD: 0.0064 }, SGP: { symbol: "S$", defaultRateToUSD: 0.74 },
+        THA: { symbol: "฿", defaultRateToUSD: 0.027 }, AED: { symbol: "د.إ", defaultRateToUSD: 0.27 },
+        BRA: { symbol: "R$", defaultRateToUSD: 0.19 }, CAN: { symbol: "C$", defaultRateToUSD: 0.73 },
+        MEX: { symbol: "$", defaultRateToUSD: 0.059 }, ARG: { symbol: "$", defaultRateToUSD: 0.0011 },
+        FJI: { symbol: "FJ$", defaultRateToUSD: 0.44 }, NZL: { symbol: "NZ$", defaultRateToUSD: 0.61 },
+        XPF: { symbol: "₣", defaultRateToUSD: 0.0091 }, VUV: { symbol: "VT", defaultRateToUSD: 0.0083 }
+    };
 
-            { name: "The 'Airport Escape'", desc: "One-way direct train or express shuttle to city center", category: "Transit", prices: { ZAR: 180.00, EUR: 14.00, GBP: 12.00, USD: 18.50, AUD: 22.00 } },
-            { name: "Single Ride Inner-City", desc: "Standard bus, tram, or metro transit token", category: "Transit", prices: { ZAR: 35.00, EUR: 2.10, GBP: 2.80, USD: 2.75, AUD: 4.20 } },
-            { name: "Fuel / Petrol (1 Litre)", desc: "95 octane unleaded fuel baseline tariff", category: "Transit", prices: { ZAR: 26.52, EUR: 1.85, GBP: 1.45, USD: 1.05, AUD: 1.95 } },
+    const countryCurrencies = {
+        EGY: "EGP", KEN: "KES", MAR: "MAD", MUS: "MUR", ZAF: "ZAR",
+        FRA: "EUR", DEU: "EUR", ITA: "EUR", ESP: "EUR", GBR: "GBP",
+        IND: "INR", JPN: "JPY", SGP: "SGP", THA: "THA", ARE: "AED",
+        BRA: "BRA", CAN: "CAN", MEX: "MEX", USA: "USD", ARG: "ARG",
+        AUD: "AUD", FJI: "FJI", NZL: "NZL", PYF: "XPF", VUT: "VUV"
+    };
 
-            { name: "Prepaid Data (10GB eSIM)", desc: "Local virtual data profile setup charge", category: "Utilities", prices: { ZAR: 150.00, EUR: 12.00, GBP: 10.00, USD: 20.00, AUD: 25.00 } },
-            { name: "Museum Attraction Pass", desc: "Standard general admission adult entryway fare", category: "Utilities", prices: { ZAR: 120.00, EUR: 15.00, GBP: 14.00, USD: 22.00, AUD: 30.00 } }
-        ];
+    // GEO coordinates for each destination (capital / central point)
+    const destinationCoords = {
+        EGY: [26.8206, 30.8025], KEN: [-1.286389, 36.817223], MAR: [31.7917, -7.0926], MUS: [-20.348404, 57.552152], ZAF: [-25.7479, 28.2293],
+        FRA: [46.603354, 1.888334], DEU: [51.1657, 10.4515], ITA: [41.8719, 12.5674], ESP: [40.4637, -3.7492], GBR: [51.5074, -0.1278],
+        IND: [20.5937, 78.9629], JPN: [35.6762, 139.6503], SGP: [1.3521, 103.8198], THA: [13.736717, 100.523186], ARE: [23.4241, 53.8478],
+        BRA: [-14.2350, -51.9253], CAN: [56.1304, -106.3468], MEX: [23.6345, -102.5528], USA: [37.0902, -95.7129], ARG: [-38.4161, -63.6167],
+        AUD: [-25.2744, 133.7751], FJI: [-17.7134, 178.0650], NZL: [-40.9006, 174.8860], PYF: [-17.6797, -149.4068], VUT: [-15.3767, 166.9592]
+    };
 
-        let activeExchangeRate = 1.0;
+    const categoryMeta = {
+        "Supermarket": { name: "Daily Essentials (Supermarket)", icon: "🛒" },
+        "Dining Out": { name: "Dining Out & Socializing", icon: "🍽️" },
+        "Transit": { name: "Transit & Mobility", icon: "✈️" },
+        "Utilities": { name: "Utilities & Leisure", icon: "🎟️" }
+    };
 
-        // Vector Map Engine Properties
-        let isMappingPanActive = false;
-        let mapStartX, mapStartY;
-        let mapCurrentPanX = 0, mapCurrentPanY = 0;
-        let currentMapZoomFactor = 1.0;
+    let itemBasket = [
+        { name: "Fresh Loaf / Baguette", desc: "Standard bakery fresh white loaf", category: "Supermarket", prices: { ZAR: 19.00, EUR: 1.80, GBP: 1.40, USD: 3.50, AUD: 3.20 } },
+        { name: "Sliced Ham (100g)", desc: "Prosciutto, cotto, or regional equivalent", category: "Supermarket", prices: { ZAR: 35.00, EUR: 2.80, GBP: 2.50, USD: 4.20, AUD: 4.00 } },
+        { name: "Local Cheese (100g)", desc: "Cheddar baseline vs regional varieties", category: "Supermarket", prices: { ZAR: 28.00, EUR: 1.90, GBP: 1.80, USD: 3.90, AUD: 2.90 } },
+        { name: "Bottled Water (1.5L)", desc: "Essential grid metric for safe drinking water", category: "Supermarket", prices: { ZAR: 12.50, EUR: 0.65, GBP: 0.85, USD: 1.50, AUD: 2.10 } },
+        { name: "Snack Pack Combo", desc: "Standard packet of crisps + milk chocolate bar", category: "Supermarket", prices: { ZAR: 32.00, EUR: 2.40, GBP: 2.10, USD: 3.25, AUD: 4.50 } },
+        { name: "Regular Cappuccino", desc: "Standard mid-range coffee shop serve", category: "Dining Out", prices: { ZAR: 39.41, EUR: 3.50, GBP: 3.40, USD: 4.90, AUD: 5.00 } },
+        { name: "Fast Food Index Meal", desc: "Global standardized burger meal combo", category: "Dining Out", prices: { ZAR: 100.00, EUR: 10.00, GBP: 8.50, USD: 11.00, AUD: 14.50 } },
+        { name: "Sit-down Dinner (Main)", desc: "Single patron plate at a local neighborhood bistro", category: "Dining Out", prices: { ZAR: 185.00, EUR: 18.50, GBP: 18.00, USD: 22.00, AUD: 28.00 } },
+        { name: "Domestic Draught Beer", desc: "Local tap brew served inside a casual pub (500ml)", category: "Dining Out", prices: { ZAR: 40.00, EUR: 5.00, GBP: 5.50, USD: 6.50, AUD: 9.00 } },
+        { name: "Red Wine (Premium Bottle)", desc: "750ml regional red selection retail checkout cost", category: "Dining Out", prices: { ZAR: 120.00, EUR: 8.00, GBP: 9.00, USD: 14.00, AUD: 20.00 } },
+        { name: "White Wine (Chilled Bottle)", desc: "750ml crisp local white retail", category: "Dining Out", prices: { ZAR: 95.00, EUR: 7.00, GBP: 8.00, USD: 12.00, AUD: 18.00 } },
+        { name: "The 'Airport Escape'", desc: "One-way direct train or express shuttle to city center", category: "Transit", prices: { ZAR: 180.00, EUR: 14.00, GBP: 12.00, USD: 18.50, AUD: 22.00 } },
+        { name: "Single Ride Inner-City", desc: "Standard bus, tram, or metro transit token", category: "Transit", prices: { ZAR: 35.00, EUR: 2.10, GBP: 2.80, USD: 2.75, AUD: 4.20 } },
+        { name: "Ride-Hailing Run (5km)", desc: "Standard weekday daytime e-hail routing fare", category: "Transit", prices: { ZAR: 75.00, EUR: 11.50, GBP: 9.00, USD: 13.00, AUD: 16.00 } },
+        { name: "Fuel / Petrol (1 Litre)", desc: "95 octane unleaded fuel baseline tariff", category: "Transit", prices: { ZAR: 26.52, EUR: 1.85, GBP: 1.45, USD: 1.05, AUD: 1.95 } },
+        { name: "Prepaid Data (10GB eSIM)", desc: "Local virtual data profile setup charge", category: "Utilities", prices: { ZAR: 150.00, EUR: 12.00, GBP: 10.00, USD: 20.00, AUD: 25.00 } },
+        { name: "Museum Attraction Pass", desc: "Standard general admission adult entryway fare", category: "Utilities", prices: { ZAR: 120.00, EUR: 15.00, GBP: 14.00, USD: 22.00, AUD: 30.00 } },
+        { name: "Movie / Cinema Ticket", desc: "Single seat reservation for current block release", category: "Utilities", prices: { ZAR: 140.00, EUR: 12.00, GBP: 11.00, USD: 15.00, AUD: 21.00 } },
+        { name: "Laundromat Cycle", desc: "Washing and drying cost for a standard 8kg bundle", category: "Utilities", prices: { ZAR: 90.00, EUR: 7.00, GBP: 6.50, USD: 8.00, AUD: 11.00 } }
+    ];
 
-        function toggleMapPanel() {
-            const panel = document.getElementById('mapPanel');
-            panel.classList.toggle('active');
-            if (panel.classList.contains('active')) {
-                syncDestinationToMapHighlight();
-            }
-        }
+    let activeExchangeRate = 1.0;
+    let mapInstance = null;
+    let mapMarkers = {}; // key: destination code (e.g., "EGY") -> marker object
 
-        function startMapPan(e) {
-            isMappingPanActive = true;
-            mapStartX = e.clientX - mapCurrentPanX;
-            mapStartY = e.clientY - mapCurrentPanY;
-        }
+    // ---------- Map Initialization (zoomable) ----------
+    function initZoomableMap() {
+        if (mapInstance) return;
+        mapInstance = L.map('zoomMap').setView([20, 10], 2);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB',
+            subdomains: 'abcd',
+            maxZoom: 10,
+            minZoom: 1.5
+        }).addTo(mapInstance);
 
-        function executeMapPan(e) {
-            if (!isMappingPanActive) return;
-            mapCurrentPanX = e.clientX - mapStartX;
-            mapCurrentPanY = e.clientY - mapStartY;
-            applyMapTransforms();
-        }
+        // Create custom gold marker icon
+        const goldIcon = L.divIcon({
+            className: 'custom-gold-marker',
+            html: '<div style="background-color: #d4af37; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #2a1a1f; box-shadow: 0 0 6px gold; text-align: center; line-height: 24px; font-size: 14px;">📍</div>',
+            iconSize: [24, 24],
+            popupAnchor: [0, -12]
+        });
+        const defaultIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="background-color: #800000; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ffd700; box-shadow: 0 0 4px black; text-align: center; line-height: 20px; font-size: 12px;">✈️</div>',
+            iconSize: [22, 22],
+            popupAnchor: [0, -10]
+        });
 
-        function stopMapPan() {
-            isMappingPanActive = false;
-        }
-
-        function zoomMap(factor) {
-            currentMapZoomFactor *= factor;
-            // Prevent inverted scaling limits
-            if (currentMapZoomFactor < 0.5) currentMapZoomFactor = 0.5;
-            if (currentMapZoomFactor > 8.0) currentMapZoomFactor = 8.0;
-            applyMapTransforms();
-        }
-
-        function resetMapZoom() {
-            currentMapZoomFactor = 1.0;
-            mapCurrentPanX = 0;
-            mapCurrentPanY = 0;
-            applyMapTransforms();
-        }
-
-        function applyMapTransforms() {
-            const matrixGroup = document.getElementById('svgMapMatrixGroup');
-            matrixGroup.style.transform = `translate(${mapCurrentPanX}px, ${mapCurrentPanY}px) scale(${currentMapZoomFactor})`;
-        }
-
-        function selectMapCountry(countryCode) {
-            const selector = document.getElementById('destCountry');
-            selector.value = countryCode;
-            handleCurrencyChange();
-        }
-
-        function syncDestinationToMapHighlight() {
-            const targetCountryCode = document.getElementById('destCountry').value;
-            const destSelect = document.getElementById('destCountry');
-            const destCountryName = destSelect.options[destSelect.selectedIndex].text;
-
-            // Remove existing active highlight classes
-            document.querySelectorAll('.country-path').forEach(path => {
-                path.classList.remove('active-destination');
-            });
-
-            // Apply target highlighting stroke rules if matched inside inline map definition
-            const activePath = document.getElementById(targetCountryCode);
-            if (activePath) {
-                activePath.classList.add('active-destination');
-                document.getElementById('mapSelectionStatus').innerText = `Selected: ${destCountryName} (${targetCountryCode})`;
-            } else {
-                document.getElementById('mapSelectionStatus').innerText = `Selected: ${destCountryName} (No Map Path Mapping)`;
-            }
-        }
-
-        function handleCurrencyChange() {
-            const home = document.getElementById('homeCurrency').value;
-            const dest = document.getElementById('destCountry').value;
-            const destCurr = countryCurrencies[dest];
-
-            const homeUSD = currencyMeta[home].defaultRateToUSD;
-            const destUSD = currencyMeta[destCurr].defaultRateToUSD;
-            
-            activeExchangeRate = parseFloat((destUSD / homeUSD).toFixed(4));
-
-            const slider = document.getElementById('rateSlider');
-            if (activeExchangeRate > 10) {
-                slider.min = Math.floor(activeExchangeRate * 0.2);
-                slider.max = Math.ceil(activeExchangeRate * 2.0);
-                slider.step = "0.1";
-            } else if (activeExchangeRate < 0.1) {
-                slider.min = (activeExchangeRate * 0.1).toFixed(5);
-                slider.max = (activeExchangeRate * 5.0).toFixed(5);
-                slider.step = "0.0001";
-            } else {
-                slider.min = "0.01";
-                slider.max = (activeExchangeRate * 3.0).toFixed(2);
-                slider.step = "0.01";
-            }
-
-            slider.value = activeExchangeRate;
-            document.getElementById('rateInput').value = activeExchangeRate;
-
-            updateRateLabelText();
-            syncDestinationToMapHighlight();
-            renderShowdownTable();
-        }
-
-        function handleSliderInput() {
-            activeExchangeRate = parseFloat(document.getElementById('rateSlider').value);
-            document.getElementById('rateInput').value = activeExchangeRate;
-            updateRateLabelText();
-            renderShowdownTable();
-        }
-
-        function handleManualRateInput() {
-            const val = parseFloat(document.getElementById('rateInput').value);
-            if (!isNaN(val) && val > 0) {
-                activeExchangeRate = val;
-                document.getElementById('rateSlider').value = val;
-                updateRateLabelText();
-                renderShowdownTable();
-            }
-        }
-
-        function updateRateLabelText() {
-            const home = document.getElementById('homeCurrency').value;
-            const dest = document.getElementById('destCountry').value;
-            const destCurr = countryCurrencies[dest];
-            
-            const homeSymbol = currencyMeta[home].symbol;
-            const destSymbol = currencyMeta[destCurr].symbol;
-
-            document.getElementById('rateLabel').innerText = `1 ${destSymbol} = ${homeSymbol}${activeExchangeRate}`;
-            document.getElementById('customPriceLabel').innerText = `Price (${destSymbol})`;
-        }
-
-        function renderShowdownTable() {
-            const home = document.getElementById('homeCurrency').value;
-            const destCode = document.getElementById('destCountry').value;
-            const destCurr = countryCurrencies[destCode];
-            
-            const homeSymbol = currencyMeta[home].symbol;
-            const destSymbol = currencyMeta[destCurr].symbol;
-            
-            const container = document.getElementById('showdownTableContent');
-            container.innerHTML = "";
-
-            const grouped = {};
-            Object.keys(categoryMeta).forEach(cat => grouped[cat] = []);
-            itemBasket.forEach(item => {
-                if(grouped[item.category]) grouped[item.category].push(item);
-            });
-
-            Object.keys(grouped).forEach(catKey => {
-                if (grouped[catKey].length === 0) return;
-
-                const meta = categoryMeta[catKey];
-                const block = document.createElement('div');
-                block.className = 'category-block';
-                
-                let tableHTML = `
-                    <div class="category-header">
-                        <span>${meta.icon}</span>
-                        <span>${meta.name}</span>
-                    </div>
-                    <table class="showdown-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 46%;">Items</th>
-                                <th style="width: 18%; text-align:right;">${home}</th>
-                                <th style="width: 18%; text-align:right;">${destCode} (${destCurr})</th>
-                                <th style="width: 18%; text-align:right;">CONV (${home})</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-
-                grouped[catKey].forEach(item => {
-                    const homePrice = item.prices[home] !== undefined ? item.prices[home] : (item.prices.USD / currencyMeta[home].defaultRateToUSD);
-                    const destPrice = item.prices[destCurr] !== undefined ? item.prices[destCurr] : (item.prices.USD / currencyMeta[destCurr].defaultRateToUSD);
-                    const convertedDestPrice = destPrice * activeExchangeRate;
-
-                    tableHTML += `
-                        <tr>
-                            <td class="item-cell">
-                                <span class="item-title">${item.name}</span>
-                                <span class="item-subtitle">${item.desc}</span>
-                            </td>
-                            <td class="num-cell cell-home">${homeSymbol}${homePrice.toFixed(2)}</td>
-                            <td class="num-cell cell-dest">${destSymbol}${destPrice.toFixed(2)}</td>
-                            <td class="num-cell cell-conv">${homeSymbol}${convertedDestPrice.toFixed(2)}</td>
-                        </tr>
-                    `;
+        // add markers for each destination in dropdown
+        const destSelect = document.getElementById('destCountry');
+        for (let i = 0; i < destSelect.options.length; i++) {
+            const opt = destSelect.options[i];
+            const code = opt.value;
+            if (destinationCoords[code] && countryCurrencies[code]) {
+                const coords = destinationCoords[code];
+                const countryName = opt.text;
+                const marker = L.marker(coords, { icon: defaultIcon }).addTo(mapInstance);
+                marker.bindPopup(`<b>${countryName}</b><br>Click to select destination`);
+                marker.on('click', () => {
+                    selectDestinationFromMap(code);
                 });
-
-                tableHTML += `
-                        </tbody>
-                    </table>
-                `;
-                
-                block.innerHTML = tableHTML;
-                container.appendChild(block);
-            });
-        }
-
-        function addCustomItem() {
-            const name = document.getElementById('customName').value.trim();
-            const category = document.getElementById('customCat').value;
-            const price = parseFloat(document.getElementById('customPrice').value);
-            const dest = document.getElementById('destCountry').value;
-            const destCurr = countryCurrencies[dest];
-
-            if (!name || isNaN(price) || price <= 0) {
-                alert("Please fill in valid expense names and localized price figures.");
-                return;
+                mapMarkers[code] = { marker, countryName };
             }
+        }
+        // highlight initially selected
+        highlightSelectedMarker(document.getElementById('destCountry').value);
+    }
 
-            const pricesConfig = {};
-            pricesConfig[destCurr] = price;
+    function highlightSelectedMarker(selectedCode) {
+        // Reset all markers to default icon, then highlight current
+        const defaultIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="background-color: #800000; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ffd700; box-shadow: 0 0 4px black; text-align: center; line-height: 20px; font-size: 12px;">✈️</div>',
+            iconSize: [22, 22],
+            popupAnchor: [0, -10]
+        });
+        const goldIcon = L.divIcon({
+            html: '<div style="background-color: #d4af37; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #2a1a1f; box-shadow: 0 0 10px gold; text-align: center; line-height: 26px; font-size: 14px;">🌟</div>',
+            iconSize: [26, 26],
+            popupAnchor: [0, -13]
+        });
+        for (let [code, obj] of Object.entries(mapMarkers)) {
+            if (code === selectedCode) {
+                obj.marker.setIcon(goldIcon);
+                obj.marker.openPopup();
+                // fly to marker smoothly
+                if (mapInstance) mapInstance.flyTo(obj.marker.getLatLng(), 5, { duration: 1 });
+            } else {
+                obj.marker.setIcon(defaultIcon);
+            }
+        }
+    }
 
-            itemBasket.push({
-                name: name,
-                desc: "User custom configured ledger entry",
-                category: category,
-                prices: pricesConfig
+    function selectDestinationFromMap(countryCode) {
+        const destSelect = document.getElementById('destCountry');
+        destSelect.value = countryCode;
+        handleCurrencyChange();  // refresh rates + tables
+        highlightSelectedMarker(countryCode);
+    }
+
+    function syncMapFromDropdown() {
+        const destSelect = document.getElementById('destCountry');
+        const selected = destSelect.value;
+        if (mapMarkers[selected]) {
+            highlightSelectedMarker(selected);
+        }
+        handleCurrencyChange();
+    }
+
+    // ---------- Core Price Logic (unchanged but relies on currency) ----------
+    function handleCurrencyChange() {
+        const home = document.getElementById('homeCurrency').value;
+        const dest = document.getElementById('destCountry').value;
+        const destCurr = countryCurrencies[dest];
+        const homeUSD = currencyMeta[home].defaultRateToUSD;
+        const destUSD = currencyMeta[destCurr].defaultRateToUSD;
+        activeExchangeRate = parseFloat((destUSD / homeUSD).toFixed(6));
+        const slider = document.getElementById('rateSlider');
+        if (activeExchangeRate > 10) { slider.min = Math.floor(activeExchangeRate * 0.2); slider.max = Math.ceil(activeExchangeRate * 2); slider.step = "0.1"; }
+        else if (activeExchangeRate < 0.1) { slider.min = "0.0001"; slider.max = "0.1"; slider.step = "0.0001"; }
+        else { slider.min = "0.01"; slider.max = "15"; slider.step = "0.01"; }
+        slider.value = activeExchangeRate;
+        document.getElementById('rateInput').value = activeExchangeRate;
+        updateRateLabelText();
+        renderShowdownTable();
+    }
+
+    function handleSliderInput() {
+        activeExchangeRate = parseFloat(document.getElementById('rateSlider').value);
+        document.getElementById('rateInput').value = activeExchangeRate;
+        updateRateLabelText();
+        renderShowdownTable();
+    }
+    function handleManualRateInput() {
+        const val = parseFloat(document.getElementById('rateInput').value);
+        if (!isNaN(val) && val > 0) { activeExchangeRate = val; document.getElementById('rateSlider').value = val; updateRateLabelText(); renderShowdownTable(); }
+    }
+    function updateRateLabelText() {
+        const home = document.getElementById('homeCurrency').value;
+        const dest = document.getElementById('destCountry').value;
+        const destCurr = countryCurrencies[dest];
+        const homeSymbol = currencyMeta[home].symbol;
+        const destSymbol = currencyMeta[destCurr].symbol;
+        document.getElementById('rateLabel').innerText = `1 ${destSymbol} = ${homeSymbol}${activeExchangeRate.toFixed(4)}`;
+        document.getElementById('customPriceLabel').innerText = `Price (${destSymbol})`;
+    }
+
+    function renderShowdownTable() {
+        const home = document.getElementById('homeCurrency').value;
+        const destSelect = document.getElementById('destCountry');
+        const destCode = destSelect.value;
+        const destCountryName = destSelect.options[destSelect.selectedIndex].text;
+        const destCurr = countryCurrencies[destCode];
+        const homeSymbol = currencyMeta[home].symbol;
+        const destSymbol = currencyMeta[destCurr].symbol;
+        const container = document.getElementById('showdownTableContent');
+        container.innerHTML = "";
+        const grouped = { Supermarket: [], "Dining Out": [], Transit: [], Utilities: [] };
+        itemBasket.forEach(item => { if(grouped[item.category]) grouped[item.category].push(item); });
+        for (let catKey of Object.keys(grouped)) {
+            if (grouped[catKey].length === 0) continue;
+            const meta = categoryMeta[catKey];
+            let tableHTML = `<div class="category-block"><div class="category-header"><span>${meta.icon}</span><span>${meta.name}</span></div>
+            <table class="showdown-table"><thead><tr><th style="width: 46%;">Items</th><th style="width: 18%;">Home</th><th style="width: 18%;">${destCountryName} (${destCode})</th><th style="width: 18%;">Conv</th></tr></thead><tbody>`;
+            grouped[catKey].forEach(item => {
+                let homePrice = item.prices[home] !== undefined ? item.prices[home] : (item.prices.USD / currencyMeta[home].defaultRateToUSD);
+                let destPrice = item.prices[destCurr] !== undefined ? item.prices[destCurr] : (item.prices.USD / currencyMeta[destCurr].defaultRateToUSD);
+                let converted = destPrice * activeExchangeRate;
+                tableHTML += `<tr><td class="item-cell"><span class="item-title">${item.name}</span><span class="item-subtitle">${item.desc}</span></td>
+                <td class="num-cell cell-home">${homeSymbol}${homePrice.toFixed(2)}</td>
+                <td class="num-cell cell-dest">${destSymbol}${destPrice.toFixed(2)}</td>
+                <td class="num-cell cell-conv">${homeSymbol}${converted.toFixed(2)}</td></tr>`;
             });
-
-            document.getElementById('customName').value = "";
-            document.getElementById('customPrice').value = "";
-            
-            renderShowdownTable();
+            tableHTML += `</tbody></table></div>`;
+            container.innerHTML += tableHTML;
         }
+    }
 
-        function toggleHelpModal(show) {
-            const modal = document.getElementById('helpModal');
-            if (show) modal.classList.add('active');
-            else modal.classList.remove('active');
-        }
+    function addCustomItem() {
+        const name = document.getElementById('customName').value.trim();
+        const category = document.getElementById('customCat').value;
+        const price = parseFloat(document.getElementById('customPrice').value);
+        const dest = document.getElementById('destCountry').value;
+        const destCurr = countryCurrencies[dest];
+        if (!name || isNaN(price)) { alert("Please enter item name & local price!"); return; }
+        const pricesConfig = {}; pricesConfig[destCurr] = price;
+        itemBasket.push({ name: name, desc: "User custom ledger entry", category: category, prices: pricesConfig });
+        document.getElementById('customName').value = "";
+        document.getElementById('customPrice').value = "";
+        renderShowdownTable();
+    }
 
-        window.onload = () => {
-            handleCurrencyChange();
-        };
-    </script>
+    function toggleHelpModal(show) { document.getElementById('helpModal').classList.toggle('active', show); }
+
+    window.onload = () => {
+        handleCurrencyChange();
+        initZoomableMap();
+        // ensure dropdown triggers map highlight
+        const destDropdown = document.getElementById('destCountry');
+        destDropdown.addEventListener('change', () => { syncMapFromDropdown(); });
+    };
+</script>
 </body>
 </html>
