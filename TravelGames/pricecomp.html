@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelGames - Price Comparison Showdown</title>
+    <!-- Fonts required by style guide -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --felt-green: #0a4821;
+            --dark-wood: #2a1a1f;
+            --gold: #d4af37;
+            --gold-light: #ffd700;
+            --light-gold: #fff8e1;
+            --teal: #008080;
+            --maroon: #800000;
+            --pip-color: #fff8e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #1a1013;
+            font-family: 'Lato', sans-serif;
+            color: var(--light-gold);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 4. UI Requirements: Container */
+        .casino-table {
+            background: var(--felt-green);
+            width: 100%;
+            max-width: 900px;
+            border: 10px solid #4a2c2a; /* 10px wood border */
+            box-shadow: 0 0 0 5px var(--gold), 0 20px 40px rgba(0,0,0,0.6); /* Gold outline */
+            border-radius: 15px;
+            position: relative;
+            padding: 70px 24px 30px 24px; /* Space for absolute nav elements */
+        }
+
+        /* 1. Mandatory Navigation Components */
+        .nav-btn {
+            position: absolute;
+            top: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #111;
+            box-shadow: 0 4px 0 #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 10;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .home-btn {
+            left: 12px;
+            background: radial-gradient(circle, var(--gold-light), var(--gold));
+        }
+
+        .help-btn {
+            right: 12px;
+            background: radial-gradient(circle, var(--gold-light), var(--gold));
+            color: var(--dark-wood);
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+        }
+
+        /* Interactions: Button Press */
+        .nav-btn:active, .casino-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #111 !important;
+        }
+
+        /* Typography Styles */
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            text-align: center;
+            color: var(--gold-light);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--light-gold);
+            opacity: 0.8;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Setup Panel (Inputs) */
+        .setup-panel {
+            background: rgba(42, 26, 31, 0.85); /* Mahogany translucent tint */
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            color: var(--gold);
+        }
+
+        input, select {
+            font-family: 'Inter', sans-serif;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--gold);
+            background: #111;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid var(--gold-light);
+        }
+
+        /* Buttons styling */
+        .casino-btn {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            padding: 12px 20px;
+            border: 2px solid #111;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #111;
+            transition: transform 0.05s, box-shadow 0.05s;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-teal {
+            background: var(--teal);
+        }
+
+        .btn-maroon {
+            background: var(--maroon);
+        }
+
+        /* 3.B Grid and Tile Layouts */
+        .basket-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 0.5rem; /* Gap requirement from standard (0.4rem to 0.5rem) */
+            margin-bottom: 25px;
+        }
+
+        .basket-tile {
+            background: #2a1a1f; /* Wood backing color */
+            border: 2px solid var(--gold);
+            border-radius: 8px; /* Standard 6px to 10px */
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .basket-tile::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: var(--teal); /* Positive/Active marker accent */
+        }
+
+        .tile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .tile-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.95rem;
+            color: var(--light-gold);
+        }
+
+        .tile-category {
+            font-size: 0.7rem;
+            background: rgba(0, 128, 128, 0.3);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .price-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .price-row.destination {
+            border-top: 1px dashed rgba(212, 175, 55, 0.3);
+            padding-top: 6px;
+            font-weight: bold;
+            color: var(--gold-light);
+        }
+
+        /* Free Form Section */
+        .custom-section {
+            background: rgba(42, 26, 31, 0.9);
+            border: 3px solid var(--gold);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+        }
+
+        .custom-section h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-light);
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed var(--gold);
+            padding-bottom: 5px;
+        }
+
+        .custom-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        @media (max-width: 600px) {
+            .custom-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 5. Modal Standards */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); /* Overlay standard */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-panel {
+            background: linear-gradient(#3e1e24, #2a1a1f); /* Standard panel background */
+            border: 3px solid var(--gold); /* Standard 3px gold border */
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            transform: scale(0.7); /* Standard scale transition initial state */
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-panel {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            color: var(--gold-light);
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 10px;
+        }
+
+        .modal-body {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--light-gold);
+            margin-bottom: 20px;
+        }
+
+        .modal-body ul {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+
+        .modal-body li {
+            margin-bottom: 8px;
+        }
+
+        .close-btn-container {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Casino Layout Container -->
+    <div class="casino-table">
+        
+        <!-- 1.A Mandatory Home Button -->
+        <div class="nav-btn home-btn" onclick="window.location.href='index.html'" title="Return to Hub">🏠</div>
+        
+        <!-- 1.B Mandatory Help Button -->
+        <div class="nav-btn help-btn" onclick="toggleHelpModal(true)" title="Game Rules">?</div>
+
+        <h1>Buying Power Showdown</h1>
+        <div class="subtitle">Travel Edition Suite</div>
+
+        <!-- Global Settings Panel -->
+        <div class="setup-panel">
+            <div class="input-group">
+                <label for="homeCurrency">Home Currency</label>
+                <select id="homeCurrency" onchange="calculateExchange()">
+                    <option value="ZAR">South African Rand (R)</option>
+                    <option value="USD">US Dollar ($)</option>
+                    <option value="GBP">British Pound (£)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="destCountry">Destination Country</label>
+                <select id="destCountry" onchange="calculateExchange()">
+                    <option value="ITA">Italy (€)</option>
+                    <option value="GBR">United Kingdom (£)</option>
+                    <option value="USA">United States ($)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="baseBudget">Showdown Stake</label>
+                <input type="number" id="baseBudget" value="100" min="1" oninput="calculateExchange()">
+            </div>
+        </div>
+
+        <!-- 3.B Dynamic Grid and Tile Layouts -->
+        <div class="basket-grid" id="basketGrid">
+            <!-- Dynamically populated core items will render here -->
+        </div>
+
+        <!-- Free Form Section for Travelers -->
+        <div class="custom-section">
+            <h2>The Traveler's Custom Ledger</h2>
+            <div class="custom-form">
+                <div class="input-group">
+                    <label for="customName">Item / Expense Name</label>
+                    <input type="text" id="customName" placeholder="e.g., Scooter Rental, Souvenir Magnet">
+                </div>
+                <div class="input-group">
+                    <label for="customCat">Category</label>
+                    <select id="customCat">
+                        <option value="Utilities">Utilities</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Dining Out">Dining Out</option>
+                        <option value="Transit">Transit</option>
+                        <option value="Supermarket">Supermarket</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label id="customPriceLabel" for="customPrice">Price (In Destination €)</label>
+                    <input type="number" id="customPrice" step="0.01" placeholder="0.00">
+                </div>
+                <button class="casino-btn btn-teal" onclick="addCustomItem()">Add Stake</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 5. Modal Standards (Help Overlay) -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-panel">
+            <div class="modal-header">Showdown Rules</div>
+            <div class="modal-body">
+                <p>Welcome to the ultimate Buying Power Showdown table! Track your vacation budget dynamically like a casino pro.</p>
+                <ul>
+                    <li><strong>Set Your Stakes:</strong> Pick your home currency, your travel destination, and change the base stake to watch calculations adjust instantly.</li>
+                    <li><strong>Local Variations:</strong> Compare your essential home baseline rates against live destination metrics.</li>
+                    <li><strong>The Ledger:</strong> Did we skip something? Use the custom input panel below to manually log local purchases as you travel.</li>
+                </ul>
+            </div>
+            <div class="close-btn-container">
+                <button class="casino-btn btn-maroon" onclick="toggleHelpModal(false)">Close Table</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock global database mirroring specified layout parameters
+        const exchangeRates = {
+            ZAR: { symbol: "R", rateToUSD: 0.054 },
+            USD: { symbol: "$", rateToUSD: 1.0 },
+            GBP: { symbol: "£", rateToUSD: 1.25 },
+            EUR: { symbol: "€", rateToUSD: 1.08 }
+        };
+
+        const countryCurrencies = {
+            ZAR: "ZAR",
+            ITA: "EUR",
+            GBR: "GBP",
+            USA: "USD"
+        };
+
+        // Core items mapping base price definitions in local destination rates
+        let itemBasket = [
+            { id: 1, name: "Fresh Loaf / Baguette", category: "Supermarket", prices: { ZAR: 19.00, EUR: 1.80, GBP: 1.40, USD: 3.50 } },
+            { id: 2, name: "Sliced Ham (100g)", category: "Supermarket", prices: { ZAR: 35.00, EUR: 2.80, GBP: 2.50, USD: 4.20 } },
+            { id: 3, name: "Local Cheese (100g)", category: "Supermarket", prices: { ZAR: 28.00, EUR: 1.90, GBP: 1.80, USD: 3.90 } },
+            { id: 4, name: "Domestic Beer (500ml Pub)", category: "Dining Out", prices: { ZAR: 40.00, EUR: 5.00, GBP: 5.50, USD: 6.50 } },
+            { id: 5, name: "Regular Cappuccino", category: "Dining Out", prices: { ZAR: 39.41, EUR: 1.75, GBP: 3.40, USD: 4.90 } },
+            { id: 6, name: "Inner-City Transit Ticket", category: "Transit", prices: { ZAR: 35.00, EUR: 1.70, GBP: 2.80, USD: 2.75 } },
+            { id: 7, name: "Prepaid Data (10GB eSIM)", category: "Utilities", prices: { ZAR: 150.00, EUR: 12.00, GBP: 10.00, USD: 20.00 } },
+            { id: 8, name: "Movie / Cinema Ticket", category: "Entertainment", prices: { ZAR: 140.00, EUR: 9.00, GBP: 11.00, USD: 15.00 } }
+        ];
+
+        // Primary execution logic
+        function calculateExchange() {
+            const home = document.getElementById('homeCurrency').value;
+            const dest = document.getElementById('destCountry').value;
+            const stake = parseFloat(document.getElementById('baseBudget').value) || 0;
+            
+            const destCurr = countryCurrencies[dest];
+            const homeSymbol = exchangeRates[home].symbol;
+            const destSymbol = exchangeRates[destCurr].symbol;
+            
+            // Adjust form text dynamically matching selected location symbols
+            document.getElementById('customPriceLabel').innerText = `Price (In Destination ${destSymbol})`;
+
+            // Convert base standard currency matrices
+            const homeToUSDRate = exchangeRates[home].rateToUSD;
+            const destToUSDRate = exchangeRates[destCurr].rateToUSD;
+            const homeToDestConversionFactor = homeToUSDRate / destToUSDRate;
+
+            const equivalentBuyingPower = (stake * homeToDestConversionFactor).toFixed(2);
+            
+            const grid = document.getElementById('basketGrid');
+            grid.innerHTML = "";
+
+            itemBasket.forEach(item => {
+                const homeItemPrice = item.prices[home] ? item.prices[home] : (item.prices.USD / homeToUSDRate);
+                const destItemPrice = item.prices[destCurr] ? item.prices[destCurr] : (item.prices.USD / destToUSDRate);
+                
+                // Reverse currency verification matrix conversion loop
+                const destPriceConvertedToHome = (destItemPrice / homeToDestConversionFactor).toFixed(2);
+
+                const tile = document.createElement('div');
+                tile.className = 'basket-tile';
+                tile.innerHTML = `
+                    <div class="tile-header">
+                        <span class="tile-title">${item.name}</span>
+                        <span class="tile-category">${item.category}</span>
+                    </div>
+                    <div class="price-comparison">
+                        <div class="price-row">
+                            <span>Home Baseline:</span>
+                            <span>${homeSymbol}${homeItemPrice.toFixed(2)}</span>
+                        </div>
+                        <div class="price-row destination">
+                            <span>Destination Cost:</span>
+                            <span>${destSymbol}${destItemPrice.toFixed(2)} <small style="font-size:0.7rem; font-weight:normal; color:rgba(255,248,225,0.7);">(${homeSymbol}${destPriceConvertedToHome})</small></span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(tile);
+            });
+        }
+
+        // Custom freeform item registration handling logic
+        function addCustomItem() {
+            const name = document.getElementById('customName').value.trim();
+            const category = document.getElementById('customCat').value;
+            const price = parseFloat(document.getElementById('customPrice').value);
+            const dest = document.getElementById('destCountry').value;
+            const destCurr = countryCurrencies[dest];
+
+            if (!name || isNaN(price)) {
+                alert("Please drop a valid item name and stake amount onto the table!");
+                return;
+            }
+
+            // Structure baseline custom inputs into reactive data tracking matrices
+            const newId = itemBasket.length + 1;
+            const pricesConfig = {};
+            pricesConfig[destCurr] = price;
+
+            itemBasket.push({
+                id: newId,
+                name: name,
+                category: category,
+                prices: pricesConfig
+            });
+
+            // Clear configuration forms safely
+            document.getElementById('customName').value = "";
+            document.getElementById('customPrice').value = "";
+            
+            // Re-render comparative matrix values
+            calculateExchange();
+        }
+
+        // 5. Modal Display State Machine Animation Adjustments
+        function toggleHelpModal(show) {
+            const modal = document.getElementById('helpModal');
+            if (show) {
+                modal.classList.add('active');
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Render parameters upon initial app delivery sequence
+        window.onload = () => {
+            calculateExchange();
+        };
+    </script>
+</body>
+</html>
