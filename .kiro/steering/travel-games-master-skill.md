@@ -598,3 +598,56 @@ Check every item in the checklists in §1, §2b, §3, and §5. Output a list of 
 | Host logic duplicated                    | Move logic into `gameAdapter.executeRoll()` |
 | PIN not shown in game                    | Add `_showGamePin()` after deal-in |
 | `lcr-multiplayer.js` fails to load       | Use local path `src="lcr-multiplayer.js"` — never a remote URL |
+
+---
+
+## 7. Index Registration — Every File Must Be Listed
+
+Whenever you create or edit a file in `/TravelGames/` (any `.html` file that is not `index.html` itself), you **must** check whether it already has a card in `index.html`.
+
+### How to Check
+
+Search `index.html` for the filename (e.g. `grokttt.html`). If no `href` containing that filename exists in the file, the page is **not registered**.
+
+### What to Do When a File Is Missing
+
+1. **Ask the user** which section it belongs to — `#games` (Travel Games grid) or `#tools` (Travel Tools grid).
+2. **Generate a matching SVG thumbnail** saved to `TravelGames/images/<filename-without-extension>.svg`.
+   - Use the casino palette: background gradient `#0a4821 → #2a1a1f`, gold accents `#d4af37 / #ffd700`, teal `#008080`, maroon `#800000`.
+   - The illustration must visually reflect the game or tool (e.g. dice for dice games, a board for strategy games, a map for travel tools).
+   - Match the style of existing SVGs in `TravelGames/images/` — rounded rect background, simple bold shapes, gold border glow.
+   - ViewBox must be `0 0 100 100`. Keep the file under ~4 KB.
+3. **Add the card** to the correct section in `index.html` using the standard `.game-card` template:
+
+```html
+<a href="https://adbio.pages.dev/TravelGames/<filename>.html" class="game-card">
+  <img src="./images/<filename-stem>.svg" alt="<Short description>" class="game-card-image">
+  <button class="info-btn" aria-label="Show game info" type="button">ⓘ</button>
+  <h3><Game Title></h3>
+  <p><One-line description — what it is and why it's fun to play while travelling.></p>
+  <div class="game-card-description" role="dialog" aria-modal="true" aria-label="<Game Title> details">
+    <button class="close-desc" aria-label="Close">×</button>
+    <span><Two-sentence description for the flip card.></span>
+  </div>
+</a>
+```
+
+### SVG Style Guide
+
+| Property        | Value |
+|-----------------|-------|
+| ViewBox         | `0 0 100 100` |
+| Background      | `linear-gradient` or `radial-gradient` from `#0a4821` to `#2a1a1f` |
+| Primary accent  | `#d4af37` (gold) / `#ffd700` (gold-light) |
+| Secondary       | `#008080` (teal) or `#800000` (maroon) |
+| Border glow     | `<rect>` with `stroke="#d4af37"` and low opacity, `rx="12–14"` |
+| File size       | < 4 KB |
+| Illustration    | Bold, simple shapes that read clearly at 100×100 px |
+
+### Checklist
+
+- [ ] Searched `index.html` for the filename before finishing any work on a `/TravelGames/` file
+- [ ] If missing: asked user which section (games / tools)
+- [ ] SVG thumbnail created in `TravelGames/images/` matching the style guide above
+- [ ] Card added to the correct section in `index.html` using the standard template
+- [ ] Card `href` uses the full `https://adbio.pages.dev/TravelGames/<filename>.html` URL pattern
