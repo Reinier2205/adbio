@@ -524,7 +524,7 @@ class MultiplayerGuest {
 /**
  * Shared UI panels for LCR multiplayer mode.
  * All panels inject into the casino container (.casino-container or #game-table).
- * Styling matches the casino aesthetic: dark wood, felt green, gold, Bungee/Lato fonts.
+ * Styling matches the casino aesthetic: dark wood, felt green, gold, Cinzel/Inter/Lato fonts.
  */
 const LCRMultiplayerUI = (() => {
 
