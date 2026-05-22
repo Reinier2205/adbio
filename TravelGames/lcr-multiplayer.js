@@ -566,7 +566,7 @@ const LCRMultiplayerUI = (() => {
     style.id = 'lcr-mp-ui-styles';
     style.textContent = `
       .lcr-mp-title {
-        font-family: 'Bungee', cursive;
+        font-family: 'Cinzel', serif;
         color: #d4af37;
         text-align: center;
         margin: 0;
@@ -583,16 +583,17 @@ const LCRMultiplayerUI = (() => {
       }
       .lcr-mp-btn {
         background: linear-gradient(145deg, #d4af37, #b8860b);
-        color: #fff;
-        font-family: 'Bungee', cursive;
+        color: #1a1a1a;
+        font-family: 'Inter', sans-serif;
+        font-weight: 800;
         padding: 10px 24px;
         border-radius: 50px;
         border: 3px solid #222;
         box-shadow: 0 4px 0 #111;
         cursor: pointer;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        font-size: 0.9rem;
+        letter-spacing: 0.08em;
+        font-size: 0.85rem;
         transition: all 0.1s;
         -webkit-tap-highlight-color: transparent;
       }
@@ -600,7 +601,7 @@ const LCRMultiplayerUI = (() => {
       .lcr-mp-btn:disabled { opacity: 0.3; filter: grayscale(1); cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #111; }
       .lcr-mp-btn-lg {
         padding: 14px 28px;
-        font-size: 1rem;
+        font-size: 0.9rem;
         min-width: 130px;
         display: flex;
         flex-direction: column;
@@ -613,11 +614,12 @@ const LCRMultiplayerUI = (() => {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: rgba(255,255,255,0.7);
+        color: rgba(0,0,0,0.6);
         display: block;
       }
       .lcr-mp-pin-display {
-        font-family: 'Bungee', cursive;
+        font-family: 'Cinzel', serif;
+        font-weight: 700;
         font-size: 2.2rem;
         color: #ffd700;
         text-shadow: 0 0 20px rgba(255,215,0,0.5);
@@ -657,7 +659,8 @@ const LCRMultiplayerUI = (() => {
         background: rgba(255,255,255,0.08);
         border: 1px solid rgba(212,175,55,0.4);
         color: #fff8e1;
-        font-family: 'Bungee', cursive;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
         font-size: 1.1rem;
         padding: 10px 0;
         border-radius: 8px;

@@ -428,6 +428,8 @@ Characters are chosen in the lobby. The host picks first; guests pick from the r
 <script src="lcr-multiplayer.js"></script>
 ```
 
+> **Font note:** `lcr-multiplayer.js` injects its own CSS at runtime. It uses `'Cinzel'` for titles and `'Inter'` for buttons — both already loaded by every game page via the standard Google Fonts `<link>`. Never reference `'Bungee'` or any other font not in the standard stack; iOS will fall back to a system serif and render text in an unreadable cursive style.
+
 ### Required Mode Variables
 
 ```js
