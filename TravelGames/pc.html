@@ -37,10 +37,25 @@
             font-family: 'Lato', sans-serif;
             color: var(--light-gold);
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+        }
+
+        .top-nav {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            padding: 6px 0 10px;
+        }
+
+        .top-nav-title {
+            text-align: center;
+            flex: 1;
         }
 
         .casino-table {
@@ -49,14 +64,11 @@
             max-width: 1200px;
             border: 10px solid #4a2c2a;
             box-shadow: 0 0 0 5px var(--gold), 0 20px 40px rgba(0,0,0,0.6);
-            border-radius: 15px;
-            position: relative;
-            padding: 75px 24px 30px 24px;
+            border-radius: 20px;
+            padding: 24px;
         }
 
         .nav-btn {
-            position: absolute;
-            top: 12px;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -66,13 +78,13 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            font-size: 1.2rem;
-            z-index: 10;
+            font-size: 1.1rem;
+            font-weight: 900;
+            flex-shrink: 0;
+            background: radial-gradient(circle, var(--gold-light), var(--gold));
+            color: #111;
             transition: transform 0.1s, box-shadow 0.1s;
         }
-
-        .home-btn { left: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); }
-        .help-btn { right: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); color: var(--dark-wood); font-family: 'Cinzel', serif; font-weight: bold; }
 
         .nav-btn:active, .casino-btn:active {
             transform: translateY(2px);
@@ -83,20 +95,19 @@
             font-family: 'Cinzel', serif;
             font-weight: 700;
             text-align: center;
-            color: var(--gold-light);
+            color: var(--gold);
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            margin-bottom: 5px;
+            margin: 0;
             letter-spacing: 1px;
         }
 
         .subtitle {
             text-align: center;
-            font-size: 0.9rem;
-            color: var(--light-gold);
-            opacity: 0.8;
-            margin-bottom: 20px;
+            font-size: 0.55rem;
+            color: rgba(255,255,255,0.4);
+            margin: 2px 0 0;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 0.2em;
         }
 
         /* Interactive Map Card */
@@ -343,32 +354,29 @@
         .btn-maroon { background: var(--maroon); }
 
         .modal-overlay {
+            display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            inset: 0;
             background: rgba(0, 0, 0, 0.85);
-            display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            z-index: 1000;
         }
-
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
         .modal-panel {
-            background: linear-gradient(#3e1e24, #2a1a1f);
+            background: linear-gradient(160deg, #3e1e24, #2a1a1f);
             border: 3px solid var(--gold);
-            border-radius: 10px;
+            border-radius: 12px;
             width: 90%;
             max-width: 500px;
-            padding: 25px;
-            transform: scale(0.7);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 1.5rem;
+            animation: modalIn 0.25s ease;
         }
 
-        .modal-overlay.active .modal-panel { transform: scale(1); }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.7); }
+            to   { opacity: 1; transform: scale(1); }
+        }
         .modal-header { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--gold-light); margin-bottom: 15px; text-align: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
         .modal-body { font-size: 0.95rem; line-height: 1.5; color: var(--light-gold); margin-bottom: 20px; }
         .modal-body li { margin-bottom: 8px; margin-left: 20px; }
@@ -383,13 +391,16 @@
 </head>
 <body>
 
-<div class="casino-table">
-    
-    <div class="nav-btn home-btn" onclick="window.location.href='index.html'">🏠</div>
-    <div class="nav-btn help-btn" onclick="toggleHelpModal(true)">?</div>
+<div class="top-nav">
+    <button class="nav-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
+    <div class="top-nav-title">
+        <h1>Buying Power Showdown</h1>
+        <p class="subtitle">Travel Matrix Edition • Interactive Map Selection</p>
+    </div>
+    <button class="nav-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
+</div>
 
-    <h1>Buying Power Showdown</h1>
-    <div class="subtitle">Travel Matrix Edition • Interactive Map Selection</div>
+<div class="casino-table">
 
     <!-- 🌍 ZOOMABLE MAP DESTINATION PICKER (NEW) -->
     <div class="map-card">
@@ -492,7 +503,7 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="helpModal">
+<div class="modal-overlay" id="help-modal">
     <div class="modal-panel">
         <div class="modal-header">Showdown Guide</div>
         <div class="modal-body">
@@ -506,7 +517,7 @@
             </ul>
         </div>
         <div class="close-btn-container">
-            <button class="casino-btn btn-maroon" onclick="toggleHelpModal(false)">Close Matrix</button>
+            <button class="casino-btn btn-maroon" onclick="document.getElementById('help-modal').style.display='none'">Close Matrix</button>
         </div>
     </div>
 </div>
@@ -746,7 +757,7 @@
         renderShowdownTable();
     }
 
-    function toggleHelpModal(show) { document.getElementById('helpModal').classList.toggle('active', show); }
+    function toggleHelpModal(show) { document.getElementById('help-modal').style.display = show ? 'flex' : 'none'; }
 
     window.onload = () => {
         handleCurrencyChange();
