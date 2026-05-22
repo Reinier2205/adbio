@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TravelGames - Price Comparison Showdown</title>
-    <!-- Fonts required by style guide -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600&family=Lato:wght@400;700&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
             --light-gold: #fff8e1;
             --teal: #008080;
             --maroon: #800000;
-            --pip-color: #fff8e1;
+            --panel-bg: rgba(42, 26, 31, 0.9);
         }
 
         * {
@@ -38,19 +38,17 @@
             padding: 20px;
         }
 
-        /* 4. UI Requirements: Container */
         .casino-table {
             background: var(--felt-green);
             width: 100%;
-            max-width: 950px;
-            border: 10px solid #4a2c2a; /* 10px wood border */
-            box-shadow: 0 0 0 5px var(--gold), 0 20px 40px rgba(0,0,0,0.6); /* Gold outline */
+            max-width: 1000px;
+            border: 10px solid #4a2c2a;
+            box-shadow: 0 0 0 5px var(--gold), 0 20px 40px rgba(0,0,0,0.6);
             border-radius: 15px;
             position: relative;
-            padding: 75px 24px 30px 24px; /* Space for absolute nav elements */
+            padding: 75px 24px 30px 24px;
         }
 
-        /* 1. Mandatory Navigation Components */
         .nav-btn {
             position: absolute;
             top: 12px;
@@ -68,26 +66,14 @@
             transition: transform 0.1s, box-shadow 0.1s;
         }
 
-        .home-btn {
-            left: 12px;
-            background: radial-gradient(circle, var(--gold-light), var(--gold));
-        }
+        .home-btn { left: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); }
+        .help-btn { right: 12px; background: radial-gradient(circle, var(--gold-light), var(--gold)); color: var(--dark-wood); font-family: 'Cinzel', serif; font-weight: bold; }
 
-        .help-btn {
-            right: 12px;
-            background: radial-gradient(circle, var(--gold-light), var(--gold));
-            color: var(--dark-wood);
-            font-family: 'Cinzel', serif;
-            font-weight: bold;
-        }
-
-        /* Interactions: Button Press */
         .nav-btn:active, .casino-btn:active {
             transform: translateY(2px);
             box-shadow: 0 2px 0 #111 !important;
         }
 
-        /* Typography Styles */
         h1 {
             font-family: 'Cinzel', serif;
             font-weight: 700;
@@ -108,29 +94,31 @@
             letter-spacing: 2px;
         }
 
-        /* Control Input Panel */
+        /* Top Config / Rate Panel */
         .setup-panel {
-            background: rgba(42, 26, 31, 0.85); /* Mahogany translucent tint */
+            background: var(--panel-bg);
             border: 2px solid var(--gold);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 30px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            align-items: center;
         }
 
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
 
         label {
             font-family: 'Cinzel', serif;
             font-size: 0.8rem;
             color: var(--gold);
+            font-weight: bold;
         }
 
         input, select {
@@ -143,24 +131,50 @@
             font-size: 1rem;
         }
 
-        input:focus, select:focus {
-            outline: 2px solid var(--gold-light);
+        /* Live Rate Customizer Styles */
+        .rate-customizer {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px dashed var(--gold);
         }
 
-        /* Category Blocks Section Layouts */
+        .rate-display-text {
+            font-family: 'Cinzel', serif;
+            font-size: 0.95rem;
+            color: var(--gold-light);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rate-slider {
+            flex-grow: 1;
+            accent-color: var(--gold-light);
+            cursor: pointer;
+        }
+
+        /* Table Structural Changes */
         .category-block {
-            background: rgba(26, 16, 19, 0.6);
+            background: rgba(26, 16, 19, 0.4);
             border: 2px solid #3e1e24;
             border-radius: 10px;
-            padding: 15px;
+            padding: 16px;
             margin-bottom: 25px;
             box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
+            overflow-x: auto; /* Graceful scroll if screen is tight */
         }
 
         .category-header {
             font-family: 'Cinzel', serif;
             color: var(--gold-light);
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             margin-bottom: 12px;
             padding-bottom: 6px;
             border-bottom: 2px solid var(--gold);
@@ -169,79 +183,73 @@
             gap: 8px;
         }
 
-        /* Items Grid Layout: Two Column Data Structure */
-        .items-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem; /* Gap constraint requirement */
+        /* Clean Casino Felt Table styling */
+        .showdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Inter', sans-serif;
+            color: var(--light-gold);
+            margin-bottom: 5px;
         }
 
-        .item-row {
-            background: var(--dark-wood);
-            border: 1px solid var(--gold);
-            border-radius: 6px; /* Standard 6px to 10px */
-            padding: 12px 16px;
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            align-items: center;
-            gap: 15px;
-            transition: background 0.2s;
+        .showdown-table th {
+            font-family: 'Cinzel', serif;
+            font-size: 0.75rem;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 12px;
+            border-bottom: 2px solid #3e1e24;
+            text-align: right;
+            background: rgba(0,0,0,0.2);
         }
 
-        .item-row:hover {
-            background: #362228;
+        .showdown-table th:first-child {
+            text-align: left;
         }
 
-        .item-details {
-            display: flex;
-            flex-direction: column;
+        .showdown-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(132, 91, 101, 0.2);
+            font-size: 0.9rem;
+            vertical-align: middle;
         }
 
-        .item-name {
+        .showdown-table tr:hover td {
+            background: rgba(42, 26, 31, 0.5);
+        }
+
+        .item-cell {
+            text-align: left;
+        }
+
+        .item-title {
             font-family: 'Cinzel', serif;
             font-size: 0.95rem;
-            color: var(--light-gold);
-            font-weight: bold;
+            color: #fff;
+            display: block;
         }
 
-        .item-desc {
+        .item-subtitle {
             font-size: 0.75rem;
             color: rgba(255,248,225,0.6);
             margin-top: 2px;
-        }
-
-        /* Two distinct display column blocks */
-        .cost-column {
-            background: rgba(0,0,0,0.2);
-            padding: 8px 12px;
-            border-radius: 4px;
-            text-align: right;
-            font-size: 0.9rem;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .cost-column.home-cost {
-            color: var(--light-gold);
-            border-left: 3px solid var(--maroon); /* Shut baseline indicator */
-        }
-
-        .cost-column.dest-cost {
-            color: var(--gold-light);
-            font-weight: bold;
-            border-left: 3px solid var(--teal); /* Active metric marker */
-        }
-
-        .converted-subtext {
             display: block;
-            font-size: 0.7rem;
-            font-weight: normal;
-            color: rgba(255,248,225,0.7);
-            margin-top: 1px;
         }
 
-        /* Free Form Ledger Section */
+        .num-cell {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        /* Left border styling to visually differentiate the columns */
+        .cell-home { border-left: 2px solid var(--maroon); background: rgba(128, 0, 0, 0.05); }
+        .cell-dest { border-left: 2px solid var(--teal); background: rgba(0, 128, 128, 0.05); }
+        .cell-conv { border-left: 2px solid var(--gold); background: rgba(212, 175, 55, 0.05); font-weight: bold; color: var(--gold-light); }
+
+        /* Custom Ledger Form */
         .custom-section {
-            background: rgba(42, 26, 31, 0.95);
+            background: var(--panel-bg);
             border: 3px solid var(--gold);
             border-radius: 8px;
             padding: 20px;
@@ -265,7 +273,6 @@
             align-items: flex-end;
         }
 
-        /* Buttons styling */
         .casino-btn {
             font-family: 'Inter', sans-serif;
             font-weight: 600;
@@ -280,15 +287,10 @@
             letter-spacing: 1px;
         }
 
-        .btn-teal {
-            background: var(--teal);
-        }
+        .btn-teal { background: var(--teal); }
+        .btn-maroon { background: var(--maroon); }
 
-        .btn-maroon {
-            background: var(--maroon);
-        }
-
-        /* 5. Modal Standards */
+        /* Modal Guidelines */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -302,10 +304,7 @@
             transition: opacity 0.3s ease;
         }
 
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
         .modal-panel {
             background: linear-gradient(#3e1e24, #2a1a1f);
@@ -314,57 +313,19 @@
             width: 90%;
             max-width: 500px;
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             transform: scale(0.7);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .modal-overlay.active .modal-panel {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            font-family: 'Cinzel', serif;
-            font-size: 1.4rem;
-            color: var(--gold-light);
-            margin-bottom: 15px;
-            text-align: center;
-            border-bottom: 2px solid var(--gold);
-            padding-bottom: 10px;
-        }
-
-        .modal-body {
-            font-size: 0.95rem;
-            line-height: 1.5;
-            color: var(--light-gold);
-            margin-bottom: 20px;
-        }
-
-        .modal-body ul {
-            margin-top: 10px;
-            padding-left: 20px;
-        }
-
-        .modal-body li {
-            margin-bottom: 8px;
-        }
-
-        .close-btn-container {
-            display: flex;
-            justify-content: center;
-        }
+        .modal-overlay.active .modal-panel { transform: scale(1); }
+        .modal-header { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--gold-light); margin-bottom: 15px; text-align: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; }
+        .modal-body { font-size: 0.95rem; line-height: 1.5; color: var(--light-gold); margin-bottom: 20px; }
+        .modal-body li { margin-bottom: 8px; margin-left: 20px; }
 
         @media (max-width: 768px) {
-            .item-row {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            .cost-column {
-                text-align: left;
-            }
-            .custom-form {
-                grid-template-columns: 1fr;
-            }
+            .custom-form { grid-template-columns: 1fr; }
+            .showdown-table th, .showdown-table td { padding: 8px 6px; font-size: 0.8rem; }
+            .item-title { font-size: 0.85rem; }
         }
     </style>
 </head>
@@ -372,50 +333,60 @@
 
     <div class="casino-table">
         
-        <!-- 1.A Mandatory Home Button -->
+        <!-- Mandatory Navigation Components -->
         <div class="nav-btn home-btn" onclick="window.location.href='index.html'">🏠</div>
-        
-        <!-- 1.B Mandatory Help Button -->
         <div class="nav-btn help-btn" onclick="toggleHelpModal(true)">?</div>
 
         <h1>Buying Power Showdown</h1>
-        <div class="subtitle">Travel Edition Suite</div>
+        <div class="subtitle">Travel Matrix Edition</div>
 
-        <!-- Setup Configuration Bar -->
+        <!-- Setup Configuration & Exchange Rate Customizer Bar -->
         <div class="setup-panel">
             <div class="input-group">
-                <label for="homeCurrency">Home Currency</label>
-                <select id="homeCurrency" onchange="renderShowdownTable()">
+                <label for="homeCurrency">Home Base</label>
+                <select id="homeCurrency" onchange="handleCurrencyChange()">
                     <option value="ZAR">South African Rand (R)</option>
                     <option value="USD">US Dollar ($)</option>
                     <option value="GBP">British Pound (£)</option>
                 </select>
             </div>
             <div class="input-group">
-                <label for="destCountry">Destination Country</label>
-                <select id="destCountry" onchange="renderShowdownTable()">
+                <label for="destCountry">Destination</label>
+                <select id="destCountry" onchange="handleCurrencyChange()">
                     <option value="ITA">Italy (€)</option>
                     <option value="GBR">United Kingdom (£)</option>
                     <option value="USA">United States ($)</option>
                 </select>
             </div>
+            
+            <!-- Dynamic Rate Adjuster Block -->
+            <div class="rate-customizer">
+                <div class="rate-display-text">
+                    <span>Live Forex Conversion:</span>
+                    <strong id="rateLabel">1 Local = R0.00</strong>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="rateSlider" class="rate-slider" min="0.1" max="50" step="0.01" oninput="handleSliderInput()">
+                    <input type="number" id="rateInput" style="width: 80px; padding: 4px; font-size: 0.85rem;" step="0.01" oninput="handleManualRateInput()">
+                </div>
+            </div>
         </div>
 
-        <!-- Dynamic Category and Two-Column Content Tables Container -->
+        <!-- Dynamic Category Content Tables -->
         <div id="showdownTableContent">
-            <!-- Programmatically injected blocks go here -->
+            <!-- Structured tables are injected programmatically here -->
         </div>
 
-        <!-- Free Form Custom Section -->
+        <!-- Custom Item Ledger -->
         <div class="custom-section">
             <h2>The Traveler's Custom Ledger</h2>
             <div class="custom-form">
                 <div class="input-group">
-                    <label for="customName">Item / Expense Name</label>
-                    <input type="text" id="customName" placeholder="e.g., Scooter Rental, Souvenir Magnet">
+                    <label for="customName">Expense / Item Name</label>
+                    <input type="text" id="customName" placeholder="e.g., Scooter Rental, Souvenir">
                 </div>
                 <div class="input-group">
-                    <label for="customCat">Category Block</label>
+                    <label for="customCat">Category Section</label>
                     <select id="customCat">
                         <option value="Supermarket">🛒 Daily Essentials</option>
                         <option value="Dining Out">🍽️ Dining & Socializing</option>
@@ -433,31 +404,32 @@
 
     </div>
 
-    <!-- 5. Modal Standards Overlay -->
+    <!-- Modal Instructions Overlay -->
     <div class="modal-overlay" id="helpModal">
         <div class="modal-panel">
             <div class="modal-header">Showdown Guide</div>
             <div class="modal-body">
-                <p>Track your international travel budget allocations directly alongside localized consumer indices.</p>
+                <p>Analyze local travel costs mapped clearly across three clean data parameters:</p>
                 <ul>
-                    <li><strong>Two-Column Layout:</strong> View home currency baseline spending standards on the left vs converted destination costs on the right.</li>
-                    <li><strong>Reactive Data Model:</strong> Modify selected currency blocks dynamically to review exact comparative value metrics.</li>
-                    <li><strong>Custom Ledger:</strong> Append independent tracking metrics to localized item clusters at any time.</li>
+                    <li><strong>Home Baseline:</strong> What you usually pay for this item back home.</li>
+                    <li><strong>Destination (Local):</strong> The actual cost at your destination in their currency.</li>
+                    <li><strong>Destination (Converted):</strong> What that local price translates to back in your home currency based on your custom set rate.</li>
+                    <li><strong>Live Adjuster:</strong> Slide or manually type into the rate calculator block at the top to adapt your conversions instantly.</li>
                 </ul>
             </div>
             <div class="close-btn-container">
-                <button class="casino-btn btn-maroon" onclick="toggleHelpModal(false)">Close Table</button>
+                <button class="casino-btn btn-maroon" onclick="toggleHelpModal(false)">Close Matrix</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Data Structure Matrix
-        const exchangeRates = {
-            ZAR: { symbol: "R", rateToUSD: 0.054 },
-            USD: { symbol: "$", rateToUSD: 1.0 },
-            GBP: { symbol: "£", rateToUSD: 1.25 },
-            EUR: { symbol: "€", rateToUSD: 1.08 }
+        // Baseline currency matrix (Relative base peg for programmatic fallback)
+        const currencyMeta = {
+            ZAR: { symbol: "R", defaultRateToUSD: 0.054 },
+            USD: { symbol: "$", defaultRateToUSD: 1.0 },
+            GBP: { symbol: "£", defaultRateToUSD: 1.25 },
+            EUR: { symbol: "€", defaultRateToUSD: 1.08 }
         };
 
         const countryCurrencies = {
@@ -474,15 +446,14 @@
             "Utilities": { name: "Utilities & Leisure", icon: "🎟️" }
         };
 
+        // Master item matrix matching previous configurations
         let itemBasket = [
-            // Daily Essentials
             { name: "Fresh Loaf / Baguette", desc: "Standard bakery fresh white loaf", category: "Supermarket", prices: { ZAR: 19.00, EUR: 1.80, GBP: 1.40, USD: 3.50 } },
             { name: "Sliced Ham (100g)", desc: "Prosciutto, cotto, or regional equivalent", category: "Supermarket", prices: { ZAR: 35.00, EUR: 2.80, GBP: 2.50, USD: 4.20 } },
             { name: "Local Cheese (100g)", desc: "Cheddar baseline vs regional varieties", category: "Supermarket", prices: { ZAR: 28.00, EUR: 1.90, GBP: 1.80, USD: 3.90 } },
             { name: "Bottled Water (1.5L)", desc: "Essential grid metric for safe drinking water", category: "Supermarket", prices: { ZAR: 12.50, EUR: 0.65, GBP: 0.85, USD: 1.50 } },
             { name: "Snack Pack Combo", desc: "Standard packet of crisps + milk chocolate bar", category: "Supermarket", prices: { ZAR: 32.00, EUR: 2.40, GBP: 2.10, USD: 3.25 } },
             
-            // Dining & Socializing (With distinct red and white wine metrics)
             { name: "Regular Cappuccino", desc: "Standard mid-range coffee shop serve", category: "Dining Out", prices: { ZAR: 39.41, EUR: 1.75, GBP: 3.40, USD: 4.90 } },
             { name: "Fast Food Index Meal", desc: "Global standardized burger meal combo", category: "Dining Out", prices: { ZAR: 100.00, EUR: 10.00, GBP: 8.50, USD: 11.00 } },
             { name: "Sit-down Dinner (Main)", desc: "Single patron plate at a local neighborhood bistro", category: "Dining Out", prices: { ZAR: 185.00, EUR: 16.50, GBP: 18.00, USD: 22.00 } },
@@ -490,44 +461,97 @@
             { name: "Red Wine (Premium Bottle)", desc: "750ml regional red selection retail checkout cost", category: "Dining Out", prices: { ZAR: 120.00, EUR: 6.50, GBP: 9.00, USD: 14.00 } },
             { name: "White Wine (Chilled Bottle)", desc: "750ml crisp local white selection retail checkout cost", category: "Dining Out", prices: { ZAR: 95.00, EUR: 4.50, GBP: 8.00, USD: 12.00 } },
 
-            // Transit
             { name: "The 'Airport Escape'", desc: "One-way direct train or express shuttle to city center", category: "Transit", prices: { ZAR: 180.00, EUR: 14.00, GBP: 12.00, USD: 18.50 } },
             { name: "Single Ride Inner-City", desc: "Standard bus, tram, or metro transit token", category: "Transit", prices: { ZAR: 35.00, EUR: 1.70, GBP: 2.80, USD: 2.75 } },
             { name: "Ride-Hailing Run (5km)", desc: "Standard weekday daytime e-hail routing fare", category: "Transit", prices: { ZAR: 75.00, EUR: 11.50, GBP: 9.00, USD: 13.00 } },
             { name: "Fuel / Petrol (1 Litre)", desc: "95 octane unleaded fuel baseline tariff", category: "Transit", prices: { ZAR: 26.52, EUR: 1.76, GBP: 1.45, USD: 1.05 } },
 
-            // Utilities
             { name: "Prepaid Data (10GB eSIM)", desc: "Local virtual data profile setup charge", category: "Utilities", prices: { ZAR: 150.00, EUR: 12.00, GBP: 10.00, USD: 20.00 } },
             { name: "Museum Attraction Pass", desc: "Standard general admission adult entryway fare", category: "Utilities", prices: { ZAR: 120.00, EUR: 15.00, GBP: 14.00, USD: 22.00 } },
             { name: "Movie / Cinema Ticket", desc: "Single seat reservation for current block release", category: "Utilities", prices: { ZAR: 140.00, EUR: 9.00, GBP: 11.00, USD: 15.00 } },
             { name: "Laundromat Cycle", desc: "Washing and drying cost for a standard 8kg bundle", category: "Utilities", prices: { ZAR: 90.00, EUR: 7.00, GBP: 6.50, USD: 8.00 } }
         ];
 
+        // Global variable tracking current user-modified rate
+        let activeExchangeRate = 1.0; 
+
+        function handleCurrencyChange() {
+            const home = document.getElementById('homeCurrency').value;
+            const dest = document.getElementById('destCountry').value;
+            const destCurr = countryCurrencies[dest];
+
+            // Establish standard baseline formula rate: How many home currencies make 1 destination currency
+            const homeUSD = currencyMeta[home].defaultRateToUSD;
+            const destUSD = currencyMeta[destCurr].defaultRateToUSD;
+            
+            // 1 Local Dest Unit = X Home Units
+            activeExchangeRate = parseFloat((destUSD / homeUSD).toFixed(2));
+
+            // Dynamically calibrate range slider borders based on currency pairings
+            const slider = document.getElementById('rateSlider');
+            if (activeExchangeRate > 10) {
+                slider.min = Math.floor(activeExchangeRate * 0.5);
+                slider.max = Math.ceil(activeExchangeRate * 1.5);
+            } else {
+                slider.min = 0.1;
+                slider.max = 25;
+            }
+
+            slider.value = activeExchangeRate;
+            document.getElementById('rateInput').value = activeExchangeRate;
+
+            updateRateLabelText();
+            renderShowdownTable();
+        }
+
+        function handleSliderInput() {
+            activeExchangeRate = parseFloat(document.getElementById('rateSlider').value);
+            document.getElementById('rateInput').value = activeExchangeRate;
+            updateRateLabelText();
+            renderShowdownTable();
+        }
+
+        function handleManualRateInput() {
+            const val = parseFloat(document.getElementById('rateInput').value);
+            if (!isNaN(val) && val > 0) {
+                activeExchangeRate = val;
+                document.getElementById('rateSlider').value = val;
+                updateRateLabelText();
+                renderShowdownTable();
+            }
+        }
+
+        function updateRateLabelText() {
+            const home = document.getElementById('homeCurrency').value;
+            const dest = document.getElementById('destCountry').value;
+            const destCurr = countryCurrencies[dest];
+            
+            const homeSymbol = currencyMeta[home].symbol;
+            const destSymbol = currencyMeta[destCurr].symbol;
+
+            document.getElementById('rateLabel').innerText = `1 ${destSymbol} = ${homeSymbol}${activeExchangeRate.toFixed(2)}`;
+            document.getElementById('customPriceLabel').innerText = `Price (${destSymbol})`;
+        }
+
         function renderShowdownTable() {
             const home = document.getElementById('homeCurrency').value;
             const dest = document.getElementById('destCountry').value;
             const destCurr = countryCurrencies[dest];
             
-            const homeSymbol = exchangeRates[home].symbol;
-            const destSymbol = exchangeRates[destCurr].symbol;
+            const homeSymbol = currencyMeta[home].symbol;
+            const destSymbol = currencyMeta[destCurr].symbol;
             
-            document.getElementById('customPriceLabel').innerText = `Price (In ${destSymbol})`;
-
-            const homeToUSDRate = exchangeRates[home].rateToUSD;
-            const destToUSDRate = exchangeRates[destCurr].rateToUSD;
-            const conversionFactor = homeToUSDRate / destToUSDRate;
-
             const container = document.getElementById('showdownTableContent');
             container.innerHTML = "";
 
-            // Group items into logical category blocks
+            // Group items into their respective structural buckets
             const grouped = {};
             Object.keys(categoryMeta).forEach(cat => grouped[cat] = []);
             itemBasket.forEach(item => {
                 if(grouped[item.category]) grouped[item.category].push(item);
             });
 
-            // Loop and generate two-column rows per block
+            // Loop and build data tables
             Object.keys(grouped).forEach(catKey => {
                 if (grouped[catKey].length === 0) return;
 
@@ -535,41 +559,52 @@
                 const block = document.createElement('div');
                 block.className = 'category-block';
                 
-                block.innerHTML = `
+                // Base setup of table framework headers
+                let tableHTML = `
                     <div class="category-header">
                         <span>${meta.icon}</span>
                         <span>${meta.name}</span>
                     </div>
-                    <div class="items-container" id="container-${catKey}"></div>
+                    <table class="showdown-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Items</th>
+                                <th style="width: 20%;">Home (${homeSymbol})</th>
+                                <th style="width: 20%;">Destination (${destSymbol})</th>
+                                <th style="width: 20%;">Converted (${homeSymbol})</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                 `;
-                
-                container.appendChild(block);
-                const itemsContainer = document.getElementById(`container-${catKey}`);
 
                 grouped[catKey].forEach(item => {
-                    const homePrice = item.prices[home] ? item.prices[home] : (item.prices.USD / homeToUSDRate);
-                    const destPrice = item.prices[destCurr] ? item.prices[destCurr] : (item.prices.USD / destToUSDRate);
-                    const destConvertedBackToHome = (destPrice / conversionFactor).toFixed(2);
+                    // Fallback to cross-multiply estimation values if direct array mappings are missing
+                    const homePrice = item.prices[home] ? item.prices[home] : (item.prices.USD / currencyMeta[home].defaultRateToUSD);
+                    const destPrice = item.prices[destCurr] ? item.prices[destCurr] : (item.prices.USD / currencyMeta[countryCurrencies[dest]].defaultRateToUSD);
+                    
+                    // Controlled conversion calculated directly from current reactive exchange state variable
+                    const convertedDestPrice = destPrice * activeExchangeRate;
 
-                    const row = document.createElement('div');
-                    row.className = 'item-row';
-                    row.innerHTML = `
-                        <div class="item-details">
-                            <span class="item-name">${item.name}</span>
-                            <span class="item-desc">${item.desc}</span>
-                        </div>
-                        <div class="cost-column home-cost">
-                            <small style="font-size:0.7rem; color:rgba(255,248,225,0.6); display:block;">Home Baseline</small>
-                            ${homeSymbol}${homePrice.toFixed(2)}
-                        </div>
-                        <div class="cost-column dest-cost">
-                            <small style="font-size:0.7rem; color:rgba(255,215,0,0.6); display:block;">Destination</small>
-                            ${destSymbol}${destPrice.toFixed(2)}
-                            <span class="converted-subtext">(${homeSymbol}${destConvertedBackToHome})</span>
-                        </div>
+                    tableHTML += `
+                        <tr>
+                            <td class="item-cell">
+                                <span class="item-title">${item.name}</span>
+                                <span class="item-subtitle">${item.desc}</span>
+                            </td>
+                            <td class="num-cell cell-home">${homeSymbol}${homePrice.toFixed(2)}</td>
+                            <td class="num-cell cell-dest">${destSymbol}${destPrice.toFixed(2)}</td>
+                            <td class="num-cell cell-conv">${homeSymbol}${convertedDestPrice.toFixed(2)}</td>
+                        </tr>
                     `;
-                    itemsContainer.appendChild(row);
                 });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+                
+                block.innerHTML = tableHTML;
+                container.appendChild(block);
             });
         }
 
@@ -581,7 +616,7 @@
             const destCurr = countryCurrencies[dest];
 
             if (!name || isNaN(price)) {
-                alert("Please add an item name and destination price amount first!");
+                alert("Please declare a valid item label alongside local target prices!");
                 return;
             }
 
@@ -608,7 +643,7 @@
         }
 
         window.onload = () => {
-            renderShowdownTable();
+            handleCurrencyChange();
         };
     </script>
 </body>
