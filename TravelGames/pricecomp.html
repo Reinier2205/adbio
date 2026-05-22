@@ -131,6 +131,20 @@
             font-size: 1rem;
         }
 
+        optgroup {
+            background: #2a1a1f;
+            color: var(--gold-light);
+            font-family: 'Cinzel', serif;
+            font-style: normal;
+            font-weight: bold;
+        }
+
+        option {
+            background: #111;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
         /* Live Rate Customizer Styles */
         .rate-customizer {
             background: rgba(0, 0, 0, 0.4);
@@ -346,14 +360,48 @@
                     <option value="ZAR">South African Rand</option>
                     <option value="USD">US Dollar</option>
                     <option value="GBP">British Pound</option>
+                    <option value="EUR">Euro</option>
+                    <option value="AUD">Australian Dollar</option>
                 </select>
             </div>
             <div class="input-group">
                 <label for="destCountry">Destination</label>
                 <select id="destCountry" onchange="handleCurrencyChange()">
-                    <option value="ITA">Italy</option>
-                    <option value="GBR">United Kingdom</option>
-                    <option value="USA">United States</option>
+                    <optgroup label="Africa">
+                        <option value="EGY">Egypt</option>
+                        <option value="KEN">Kenya</option>
+                        <option value="MAR">Morocco</option>
+                        <option value="MUS">Mauritius</option>
+                        <option value="ZAF" selected>South Africa</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                        <option value="FRA">France</option>
+                        <option value="DEU">Germany</option>
+                        <option value="ITA">Italy</option>
+                        <option value="ESP">Spain</option>
+                        <option value="GBR">United Kingdom</option>
+                    </optgroup>
+                    <optgroup label="Asia">
+                        <option value="IND">India</option>
+                        <option value="JPN">Japan</option>
+                        <option value="SGP">Singapore</option>
+                        <option value="THA">Thailand</option>
+                        <option value="ARE">United Arab Emirates</option>
+                    </optgroup>
+                    <optgroup label="Americas">
+                        <option value="BRA">Brazil</option>
+                        <option value="CAN">Canada</option>
+                        <option value="MEX">Mexico</option>
+                        <option value="USA">United States</option>
+                        <option value="ARG">Argentina</option>
+                    </optgroup>
+                    <optgroup label="Oceania">
+                        <option value="AUD">Australia</option>
+                        <option value="FJI">Fiji</option>
+                        <option value="NZL">New Zealand</option>
+                        <option value="PYF">French Polynesia</option>
+                        <option value="VUT">Vanuatu</option>
+                    </optgroup>
                 </select>
             </div>
             
@@ -410,7 +458,7 @@
                 <p>Analyze local travel costs mapped clearly across three clean data parameters:</p>
                 <ul>
                     <li><strong>Home:</strong> What you usually pay for this item back home.</li>
-                    <li><strong>Destination Country Name:</strong> The actual cost at your destination in their local currency.</li>
+                    <li><strong>Destination Profile:</strong> The actual cost at your destination displayed under the target country name and code framework.</li>
                     <li><strong>Conv:</strong> What that destination price translates to back in your home currency based on your custom set rate.</li>
                     <li><strong>Live Adjuster:</strong> Slide or manually type into the rate calculator block at the top to adapt your conversions instantly.</li>
                 </ul>
@@ -422,19 +470,39 @@
     </div>
 
     <script>
-        // Baseline currency matrix (Relative base peg for programmatic fallback)
+        // Baseline currency metadata mapping symbols and static fallback values against USD baseline peg
         const currencyMeta = {
             ZAR: { symbol: "R", defaultRateToUSD: 0.054 },
             USD: { symbol: "$", defaultRateToUSD: 1.0 },
             GBP: { symbol: "£", defaultRateToUSD: 1.25 },
-            EUR: { symbol: "€", defaultRateToUSD: 1.08 }
+            EUR: { symbol: "€", defaultRateToUSD: 1.08 },
+            AUD: { symbol: "A$", defaultRateToUSD: 0.66 },
+            EGP: { symbol: "E£", defaultRateToUSD: 0.021 },
+            KES: { symbol: "KSh", defaultRateToUSD: 0.0076 },
+            MAD: { symbol: "DH", defaultRateToUSD: 0.10 },
+            MUR: { symbol: "₨", defaultRateToUSD: 0.022 },
+            INR: { symbol: "₹", defaultRateToUSD: 0.012 },
+            JPY: { symbol: "¥", defaultRateToUSD: 0.0064 },
+            SGP: { symbol: "S$", defaultRateToUSD: 0.74 },
+            THA: { symbol: "฿", defaultRateToUSD: 0.027 },
+            AED: { symbol: "د.إ", defaultRateToUSD: 0.27 },
+            BRA: { symbol: "R$", defaultRateToUSD: 0.19 },
+            CAN: { symbol: "C$", defaultRateToUSD: 0.73 },
+            MEX: { symbol: "$", defaultRateToUSD: 0.059 },
+            ARG: { symbol: "$", defaultRateToUSD: 0.0011 },
+            FJI: { symbol: "FJ$", defaultRateToUSD: 0.44 },
+            NZL: { symbol: "NZ$", defaultRateToUSD: 0.61 },
+            XPF: { symbol: "₣", defaultRateToUSD: 0.0091 },
+            VUV: { symbol: "VT", defaultRateToUSD: 0.0083 }
         };
 
+        // Explicit lookup translating Destination selector values into target operational currency keys
         const countryCurrencies = {
-            ZAR: "ZAR",
-            ITA: "EUR",
-            GBR: "GBP",
-            USA: "USD"
+            EGY: "EGP", KEN: "KES", MAR: "MAD", MUS: "MUR", ZAF: "ZAR",
+            FRA: "EUR", DEU: "EUR", ITA: "EUR", ESP: "EUR", GBR: "GBP",
+            IND: "INR", JPN: "JPY", SGP: "SGP", THA: "THA", ARE: "AED",
+            BRA: "BRA", CAN: "CAN", MEX: "MEX", USA: "USD", ARG: "ARG",
+            AUD: "AUD", FJI: "FJI", NZL: "NZL", PYF: "XPF", VUT: "VUV"
         };
 
         const categoryMeta = {
@@ -444,30 +512,30 @@
             "Utilities": { name: "Utilities & Leisure", icon: "🎟️" }
         };
 
-        // Master item matrix
+        // Master item baseline dataset 
         let itemBasket = [
-            { name: "Fresh Loaf / Baguette", desc: "Standard bakery fresh white loaf", category: "Supermarket", prices: { ZAR: 19.00, EUR: 1.80, GBP: 1.40, USD: 3.50 } },
-            { name: "Sliced Ham (100g)", desc: "Prosciutto, cotto, or regional equivalent", category: "Supermarket", prices: { ZAR: 35.00, EUR: 2.80, GBP: 2.50, USD: 4.20 } },
-            { name: "Local Cheese (100g)", desc: "Cheddar baseline vs regional varieties", category: "Supermarket", prices: { ZAR: 28.00, EUR: 1.90, GBP: 1.80, USD: 3.90 } },
-            { name: "Bottled Water (1.5L)", desc: "Essential grid metric for safe drinking water", category: "Supermarket", prices: { ZAR: 12.50, EUR: 0.65, GBP: 0.85, USD: 1.50 } },
-            { name: "Snack Pack Combo", desc: "Standard packet of crisps + milk chocolate bar", category: "Supermarket", prices: { ZAR: 32.00, EUR: 2.40, GBP: 2.10, USD: 3.25 } },
+            { name: "Fresh Loaf / Baguette", desc: "Standard bakery fresh white loaf", category: "Supermarket", prices: { ZAR: 19.00, EUR: 1.80, GBP: 1.40, USD: 3.50, AUD: 3.20 } },
+            { name: "Sliced Ham (100g)", desc: "Prosciutto, cotto, or regional equivalent", category: "Supermarket", prices: { ZAR: 35.00, EUR: 2.80, GBP: 2.50, USD: 4.20, AUD: 4.00 } },
+            { name: "Local Cheese (100g)", desc: "Cheddar baseline vs regional varieties", category: "Supermarket", prices: { ZAR: 28.00, EUR: 1.90, GBP: 1.80, USD: 3.90, AUD: 2.90 } },
+            { name: "Bottled Water (1.5L)", desc: "Essential grid metric for safe drinking water", category: "Supermarket", prices: { ZAR: 12.50, EUR: 0.65, GBP: 0.85, USD: 1.50, AUD: 2.10 } },
+            { name: "Snack Pack Combo", desc: "Standard packet of crisps + milk chocolate bar", category: "Supermarket", prices: { ZAR: 32.00, EUR: 2.40, GBP: 2.10, USD: 3.25, AUD: 4.50 } },
             
-            { name: "Regular Cappuccino", desc: "Standard mid-range coffee shop serve", category: "Dining Out", prices: { ZAR: 39.41, EUR: 1.75, GBP: 3.40, USD: 4.90 } },
-            { name: "Fast Food Index Meal", desc: "Global standardized burger meal combo", category: "Dining Out", prices: { ZAR: 100.00, EUR: 10.00, GBP: 8.50, USD: 11.00 } },
-            { name: "Sit-down Dinner (Main)", desc: "Single patron plate at a local neighborhood bistro", category: "Dining Out", prices: { ZAR: 185.00, EUR: 16.50, GBP: 18.00, USD: 22.00 } },
-            { name: "Domestic Draught Beer", desc: "Local tap brew served inside a casual pub (500ml)", category: "Dining Out", prices: { ZAR: 40.00, EUR: 5.00, GBP: 5.50, USD: 6.50 } },
-            { name: "Red Wine (Premium Bottle)", desc: "750ml regional red selection retail checkout cost", category: "Dining Out", prices: { ZAR: 120.00, EUR: 6.50, GBP: 9.00, USD: 14.00 } },
-            { name: "White Wine (Chilled Bottle)", desc: "750ml crisp local white selection retail checkout cost", category: "Dining Out", prices: { ZAR: 95.00, EUR: 4.50, GBP: 8.00, USD: 12.00 } },
+            { name: "Regular Cappuccino", desc: "Standard mid-range coffee shop serve", category: "Dining Out", prices: { ZAR: 39.41, EUR: 3.50, GBP: 3.40, USD: 4.90, AUD: 5.00 } },
+            { name: "Fast Food Index Meal", desc: "Global standardized burger meal combo", category: "Dining Out", prices: { ZAR: 100.00, EUR: 10.00, GBP: 8.50, USD: 11.00, AUD: 14.50 } },
+            { name: "Sit-down Dinner (Main)", desc: "Single patron plate at a local neighborhood bistro", category: "Dining Out", prices: { ZAR: 185.00, EUR: 18.50, GBP: 18.00, USD: 22.00, AUD: 28.00 } },
+            { name: "Domestic Draught Beer", desc: "Local tap brew served inside a casual pub (500ml)", category: "Dining Out", prices: { ZAR: 40.00, EUR: 5.00, GBP: 5.50, USD: 6.50, AUD: 9.00 } },
+            { name: "Red Wine (Premium Bottle)", desc: "750ml regional red selection retail checkout cost", category: "Dining Out", prices: { ZAR: 120.00, EUR: 8.00, GBP: 9.00, USD: 14.00, AUD: 20.00 } },
+            { name: "White Wine (Chilled Bottle)", desc: "750ml crisp local white selection retail checkout cost", category: "Dining Out", prices: { ZAR: 95.00, EUR: 7.00, GBP: 8.00, USD: 12.00, AUD: 18.00 } },
 
-            { name: "The 'Airport Escape'", desc: "One-way direct train or express shuttle to city center", category: "Transit", prices: { ZAR: 180.00, EUR: 14.00, GBP: 12.00, USD: 18.50 } },
-            { name: "Single Ride Inner-City", desc: "Standard bus, tram, or metro transit token", category: "Transit", prices: { ZAR: 35.00, EUR: 1.70, GBP: 2.80, USD: 2.75 } },
-            { name: "Ride-Hailing Run (5km)", desc: "Standard weekday daytime e-hail routing fare", category: "Transit", prices: { ZAR: 75.00, EUR: 11.50, GBP: 9.00, USD: 13.00 } },
-            { name: "Fuel / Petrol (1 Litre)", desc: "95 octane unleaded fuel baseline tariff", category: "Transit", prices: { ZAR: 26.52, EUR: 1.76, GBP: 1.45, USD: 1.05 } },
+            { name: "The 'Airport Escape'", desc: "One-way direct train or express shuttle to city center", category: "Transit", prices: { ZAR: 180.00, EUR: 14.00, GBP: 12.00, USD: 18.50, AUD: 22.00 } },
+            { name: "Single Ride Inner-City", desc: "Standard bus, tram, or metro transit token", category: "Transit", prices: { ZAR: 35.00, EUR: 2.10, GBP: 2.80, USD: 2.75, AUD: 4.20 } },
+            { name: "Ride-Hailing Run (5km)", desc: "Standard weekday daytime e-hail routing fare", category: "Transit", prices: { ZAR: 75.00, EUR: 11.50, GBP: 9.00, USD: 13.00, AUD: 16.00 } },
+            { name: "Fuel / Petrol (1 Litre)", desc: "95 octane unleaded fuel baseline tariff", category: "Transit", prices: { ZAR: 26.52, EUR: 1.85, GBP: 1.45, USD: 1.05, AUD: 1.95 } },
 
-            { name: "Prepaid Data (10GB eSIM)", desc: "Local virtual data profile setup charge", category: "Utilities", prices: { ZAR: 150.00, EUR: 12.00, GBP: 10.00, USD: 20.00 } },
-            { name: "Museum Attraction Pass", desc: "Standard general admission adult entryway fare", category: "Utilities", prices: { ZAR: 120.00, EUR: 15.00, GBP: 14.00, USD: 22.00 } },
-            { name: "Movie / Cinema Ticket", desc: "Single seat reservation for current block release", category: "Utilities", prices: { ZAR: 140.00, EUR: 9.00, GBP: 11.00, USD: 15.00 } },
-            { name: "Laundromat Cycle", desc: "Washing and drying cost for a standard 8kg bundle", category: "Utilities", prices: { ZAR: 90.00, EUR: 7.00, GBP: 6.50, USD: 8.00 } }
+            { name: "Prepaid Data (10GB eSIM)", desc: "Local virtual data profile setup charge", category: "Utilities", prices: { ZAR: 150.00, EUR: 12.00, GBP: 10.00, USD: 20.00, AUD: 25.00 } },
+            { name: "Museum Attraction Pass", desc: "Standard general admission adult entryway fare", category: "Utilities", prices: { ZAR: 120.00, EUR: 15.00, GBP: 14.00, USD: 22.00, AUD: 30.00 } },
+            { name: "Movie / Cinema Ticket", desc: "Single seat reservation for current block release", category: "Utilities", prices: { ZAR: 140.00, EUR: 12.00, GBP: 11.00, USD: 15.00, AUD: 21.00 } },
+            { name: "Laundromat Cycle", desc: "Washing and drying cost for a standard 8kg bundle", category: "Utilities", prices: { ZAR: 90.00, EUR: 7.00, GBP: 6.50, USD: 8.00, AUD: 11.00 } }
         ];
 
         let activeExchangeRate = 1.0; 
@@ -480,15 +548,22 @@
             const homeUSD = currencyMeta[home].defaultRateToUSD;
             const destUSD = currencyMeta[destCurr].defaultRateToUSD;
             
-            activeExchangeRate = parseFloat((destUSD / homeUSD).toFixed(2));
+            // Computes operational cross-rate (Dest Local Units to 1 Home Base Unit)
+            activeExchangeRate = parseFloat((destUSD / homeUSD).toFixed(4));
 
             const slider = document.getElementById('rateSlider');
             if (activeExchangeRate > 10) {
-                slider.min = Math.floor(activeExchangeRate * 0.5);
-                slider.max = Math.ceil(activeExchangeRate * 1.5);
+                slider.min = Math.floor(activeExchangeRate * 0.2);
+                slider.max = Math.ceil(activeExchangeRate * 2.0);
+                slider.step = "0.1";
+            } else if (activeExchangeRate < 0.1) {
+                slider.min = "0.0001";
+                slider.max = "0.1";
+                slider.step = "0.0001";
             } else {
-                slider.min = 0.1;
-                slider.max = 25;
+                slider.min = "0.01";
+                slider.max = "15";
+                slider.step = "0.01";
             }
 
             slider.value = activeExchangeRate;
@@ -523,16 +598,16 @@
             const homeSymbol = currencyMeta[home].symbol;
             const destSymbol = currencyMeta[destCurr].symbol;
 
-            document.getElementById('rateLabel').innerText = `1 ${destSymbol} = ${homeSymbol}${activeExchangeRate.toFixed(2)}`;
+            document.getElementById('rateLabel').innerText = `1 ${destSymbol} = ${homeSymbol}${activeExchangeRate}`;
             document.getElementById('customPriceLabel').innerText = `Price (${destSymbol})`;
         }
 
         function renderShowdownTable() {
             const home = document.getElementById('homeCurrency').value;
             const destSelect = document.getElementById('destCountry');
-            const destValue = destSelect.value;
+            const destCode = destSelect.value;
             const destCountryName = destSelect.options[destSelect.selectedIndex].text;
-            const destCurr = countryCurrencies[destValue];
+            const destCurr = countryCurrencies[destCode];
             
             const homeSymbol = currencyMeta[home].symbol;
             const destSymbol = currencyMeta[destCurr].symbol;
@@ -563,7 +638,7 @@
                             <tr>
                                 <th style="width: 46%;">Items</th>
                                 <th style="width: 18%;">Home</th>
-                                <th style="width: 18%;">${destCountryName}</th>
+                                <th style="width: 18%;">${destCountryName} (${destCode})</th>
                                 <th style="width: 18%;">Conv</th>
                             </tr>
                         </thead>
@@ -571,8 +646,9 @@
                 `;
 
                 grouped[catKey].forEach(item => {
-                    const homePrice = item.prices[home] ? item.prices[home] : (item.prices.USD / currencyMeta[home].defaultRateToUSD);
-                    const destPrice = item.prices[destCurr] ? item.prices[destCurr] : (item.prices.USD / currencyMeta[countryCurrencies[destValue]].defaultRateToUSD);
+                    // Pull explicit price configurations or execute cross-rate conversions against USD pegs
+                    const homePrice = item.prices[home] !== undefined ? item.prices[home] : (item.prices.USD / currencyMeta[home].defaultRateToUSD);
+                    const destPrice = item.prices[destCurr] !== undefined ? item.prices[destCurr] : (item.prices.USD / currencyMeta[destCurr].defaultRateToUSD);
                     const convertedDestPrice = destPrice * activeExchangeRate;
 
                     tableHTML += `
