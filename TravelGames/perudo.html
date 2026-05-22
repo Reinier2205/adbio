@@ -2,408 +2,543 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perudo: The Pirate's Code</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Perudo · Pirate's Dice | The Bluffing Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600;700&family=Lato:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&family=Lato:wght@400;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --felt-green: #0a4821;
-            --dark-wood: #2a1a1f;
-            --gold: #d4af37;
-            --gold-light: #ffd700;
-            --light-gold: #fff8e1;
-            --dice-red: #9a1428;
-            --dice-red-dark: #4a070f;
-            --accent-orange: #ff8c00;
-            --velvet-blue: #050a18;
-            --velvet-blue-glow: #0d1b3e;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        *, *::before, *::after { box-sizing: border-box; }
-        
         body {
+            background: radial-gradient(circle at 20% 30%, #2d1c1a, #1a0f0e);
             font-family: 'Lato', sans-serif;
-            background-color: var(--dark-wood);
-            background-image: radial-gradient(circle, #4d322e 0%, var(--dark-wood) 70%);
-            color: var(--light-gold);
-            margin: 0;
-            padding: 2rem 1rem;
-            line-height: 1.6;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-        }
-
-        .casino-table {
-            background: var(--felt-green);
-            background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                              radial-gradient(rgba(255,255,255,0.1) 1px, var(--felt-green) 1px);
-            background-size: 4px 4px;
-            background-position: 0 0, 2px 2px;
-            border: 10px solid #4a2c2a;
-            box-shadow: 0 0 0 5px var(--gold), inset 0 0 25px rgba(0,0,0,0.5);
-            border-radius: 15px;
-            padding: 2.5rem 1.5rem;
-            width: 100%;
-            max-width: 950px;
-            margin: 0 auto;
+            padding: 2rem 1rem;
             position: relative;
-            overflow: hidden;
         }
 
-        /* Mandatory Navigation Buttons */
+        /* MAIN CARD TABLE */
+        .casino-table {
+            position: relative;
+            max-width: 1100px;
+            width: 100%;
+            background: #0a4821;
+            background-image: radial-gradient(rgba(235, 215, 120, 0.08) 1.2px, transparent 1.2px);
+            background-size: 28px 28px;
+            border-radius: 42px;
+            border: 8px solid #3b2a24;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.6), inset 0 0 0 2px #d4af37, inset 0 0 15px rgba(0,0,0,0.4);
+            padding: 2rem 1.8rem;
+            transition: all 0.2s;
+        }
+
+        /* FIXED: no overflow hidden — modal now lives OUTSIDE container, so no clipping */
+        .casino-table {
+            overflow: visible;
+        }
+
+        /* decorative background icons */
+        .bg-icon {
+            position: absolute;
+            font-size: 12rem;
+            color: rgba(0,0,0,0.12);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-1 {
+            top: -10px;
+            right: -20px;
+            transform: rotate(20deg);
+        }
+        .bg-2 {
+            bottom: -20px;
+            left: -15px;
+            transform: rotate(-15deg);
+        }
+
+        /* ---- NAVIGATION BUTTONS (mandatory) ---- */
         .nav-btn {
             position: absolute;
-            top: 12px;
-            width: 40px;
-            height: 40px;
+            top: 20px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
-            border: 2px solid #111;
+            background: radial-gradient(ellipse at 30% 30%, #ffea9e, #d4af37);
+            border: 2px solid #2f211c;
+            box-shadow: 0 5px 0 #5a3e2b;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
-            box-shadow: 0 4px 0 #111;
-            transition: all 0.2s;
-            z-index: 10;
+            font-size: 1.5rem;
+            transition: 0.07s linear;
+            z-index: 25;
             text-decoration: none;
+            color: #1f1a12;
+            font-weight: bold;
         }
-
         .nav-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #111;
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #5a3e2b;
         }
-
         .home-btn {
-            left: 12px;
-            background: radial-gradient(circle, var(--gold-light), var(--gold));
+            left: 20px;
         }
-
         .help-btn {
-            right: 12px;
-            background: radial-gradient(circle, var(--gold-light), var(--gold));
+            right: 20px;
             font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            color: #111;
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1;
         }
 
-        .bg-icon {
-            position: absolute;
-            font-size: 15rem;
-            color: rgba(0,0,0,0.05);
-            z-index: 0;
-            pointer-events: none;
+        /* header */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 2;
         }
-        .bg-1 { top: -20px; right: -20px; transform: rotate(15deg); }
-        .bg-2 { bottom: -20px; left: -20px; transform: rotate(-15deg); }
-
-        header { position: relative; z-index: 1; text-align: center; margin-bottom: 3rem; }
-
         h1 {
             font-family: 'Cinzel', serif;
-            color: var(--gold-light);
-            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-size: clamp(2.8rem, 9vw, 5rem);
+            font-weight: 900;
+            letter-spacing: 5px;
+            color: #ffecb3;
+            text-shadow: 4px 4px 0 #7a2e1a, 8px 8px 0 rgba(0,0,0,0.4);
+            margin-bottom: 0.25rem;
+        }
+        .subtitle {
+            font-size: 1rem;
+            color: #f8bc5c;
             font-weight: 700;
-            letter-spacing: 4px;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.7);
-            margin: 0;
             text-transform: uppercase;
+            word-spacing: 6px;
+            letter-spacing: 2px;
+            background: rgba(0,0,0,0.5);
+            display: inline-block;
+            padding: 0.2rem 1.5rem;
+            border-radius: 60px;
+            backdrop-filter: blur(2px);
         }
 
+        /* section cards */
+        .section {
+            background: rgba(8, 28, 21, 0.7);
+            backdrop-filter: blur(1px);
+            border-radius: 28px;
+            padding: 1.5rem 1.7rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            transition: 0.2s;
+        }
         h2 {
             font-family: 'Cinzel', serif;
-            color: var(--gold);
-            font-size: 1.8rem;
+            color: #f5cf6b;
+            font-size: 1.7rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-top: 0;
+            border-left: 5px solid #e5b83c;
+            padding-left: 1rem;
+        }
+        h2 i {
+            color: #e6b422;
         }
 
-        /* Modal Styles */
-        .modal-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
+        /* ace icon */
+        .ace-badge {
+            display: inline-flex;
             align-items: center;
-            z-index: 100;
-            border-radius: 15px;
-            animation: fadeIn 0.3s ease;
-            overflow-y: auto;
-            padding: 1rem;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes scaleIn {
-            from { transform: scale(0.7); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .modal-content {
-            background: linear-gradient(145deg, #3e1e24, #2a1a1f);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 3px solid var(--gold);
-            text-align: left;
-            box-shadow: 0 0 30px var(--gold);
-            animation: scaleIn 0.3s ease;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-content h3 {
-            font-family: 'Cinzel', serif;
-            font-weight: 700;
-            color: var(--gold-light);
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .close-modal-btn {
-            margin-top: 1rem;
-            background: linear-gradient(145deg, var(--gold), #b8860b);
-            color: white;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            padding: 0.5rem 1.5rem;
-            border: 2px solid #111;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #111;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .close-modal-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #111;
-        }
-
-        .subtitle {
-            font-size: 1.1rem;
-            color: var(--accent-orange);
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .section {
-            position: relative;
-            z-index: 1;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
-        .ace-icon {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            background: var(--dice-red);
-            border-radius: 4px;
+            justify-content: center;
+            background: #b52b1e;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.3), 0 2px 4px black;
+            margin: 0 4px;
             vertical-align: middle;
-            margin: 0 5px;
             position: relative;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.8);
         }
-        .ace-icon::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 6px; height: 6px;
-            background: white;
-            border-radius: 50%;
-        }
-
-        .strategy-box {
-            background: linear-gradient(135deg, var(--velvet-blue), var(--velvet-blue-glow)) !important;
-            background-image: url('https://www.transparenttextures.com/patterns/padded-little.png') !important;
-            border: 2px solid var(--gold);
-            padding: 2rem 1.5rem;
-            border-radius: 20px;
-            margin-top: 2rem;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+        .ace-badge::after {
+            content: "⚀";
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            transform: scale(1.1);
+            display: block;
+            line-height: 1;
         }
 
+        .highlight-text {
+            color: #ffdb7e;
+            font-weight: 800;
+            text-shadow: 0 0 2px #713e1a;
+        }
+
+        /* TABLE STYLES (bidding ladder) */
+        .bidding-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin-top: 0.5rem;
+        }
+        .bidding-table th {
+            text-align: left;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            color: #ffd966;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #c4a23d;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+        .bidding-table td {
+            padding: 12px 10px;
+            background: rgba(0,0,0,0.35);
+            border-radius: 16px;
+            font-weight: 500;
+            vertical-align: middle;
+            color: #f7f2df;
+        }
+        .bidding-table tr td:first-child {
+            font-weight: 800;
+            color: #ffd966;
+        }
+        .example-cell {
+            font-family: monospace;
+            font-weight: bold;
+            background: #1e2a1c;
+            padding: 5px 10px;
+            border-radius: 40px;
+            display: inline-block;
+        }
+
+        /* STRATEGY BOX */
+        .strategy-vault {
+            background: linear-gradient(125deg, #08102b, #020617);
+            border: 2px solid #e5b83c;
+            border-radius: 32px;
+            padding: 1.8rem;
+            margin-top: 1rem;
+            box-shadow: 0 20px 30px -8px black;
+        }
         .strategy-grid {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            margin-top: 1.5rem;
+            gap: 1rem;
+            margin-top: 1.2rem;
         }
-
         .tip-card {
-            background: rgba(255,255,255,0.05);
-            padding: 1.2rem;
-            border-radius: 10px;
-            border-left: 4px solid var(--gold);
+            background: rgba(255,247,180,0.05);
+            border-left: 6px solid #e5b83c;
+            padding: 1rem 1.2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(2px);
+            transition: 0.1s;
+        }
+        .tip-card h4 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            color: #ffdc97;
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .tip-card p {
+            opacity: 0.9;
         }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem; }
-        th { text-align: left; color: var(--gold); padding: 10px; border-bottom: 2px solid var(--gold); }
-        td { padding: 12px 10px; border-bottom: 1px solid rgba(255,215,0,0.1); vertical-align: middle; }
+        /* footer */
+        .pirate-footer {
+            text-align: center;
+            margin-top: 2rem;
+            border-top: 1px dashed #d4af37;
+            padding-top: 1.2rem;
+            font-size: 0.8rem;
+            color: #c7b06b;
+            letter-spacing: 0.5px;
+        }
+        a, button {
+            cursor: pointer;
+        }
 
-        .highlight-text { color: var(--gold); font-weight: bold; }
-
-        .home-btn {
-            position: absolute; top: 15px; left: 15px;
-            width: 40px; height: 40px; border-radius: 50%;
-            background: var(--gold); color: #111;
-            display: flex; align-items: center; justify-content: center;
-            text-decoration: none; font-size: 1.2rem;
-            box-shadow: 0 4px 0 #b8860b; z-index: 10;
+        /* --- MODAL (FIXED POSITION - no overflow clipping) --- */
+        .modal-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        .modal-card {
+            max-width: 550px;
+            width: 100%;
+            background: linear-gradient(145deg, #2c1f1d, #190f0e);
+            border: 3px solid #e5b83c;
+            border-radius: 44px;
+            padding: 2rem 1.8rem;
+            box-shadow: 0 35px 45px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,215,0,0.3);
+            animation: modalRise 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes modalRise {
+            from {
+                opacity: 0;
+                transform: scale(0.92) translateY(25px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .modal-card h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            text-align: center;
+            color: #ffda88;
+            margin-bottom: 1rem;
+        }
+        .modal-card h4 {
+            color: #f5bc70;
+            margin: 1rem 0 0.3rem 0;
+            font-size: 1.2rem;
+        }
+        .modal-card p, .modal-card li {
+            color: #f2e5c6;
+            line-height: 1.5;
+        }
+        .close-modal-button {
+            background: #daa520;
+            border: none;
+            font-weight: bold;
+            padding: 0.7rem 2rem;
+            border-radius: 60px;
+            font-size: 1rem;
+            margin-top: 1.8rem;
+            display: block;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            color: #17100e;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            box-shadow: 0 5px 0 #6f4518;
+            transition: 0.05s linear;
+            cursor: pointer;
+        }
+        .close-modal-button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #6f4518;
+        }
+        ul {
+            margin-left: 1.2rem;
+        }
+        @media (max-width: 650px) {
+            .casino-table {
+                padding: 1.8rem 1rem;
+            }
+            .bidding-table td, .bidding-table th {
+                font-size: 0.8rem;
+                padding: 8px 4px;
+            }
+            h2 {
+                font-size: 1.4rem;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="casino-table">
-        <i class="fa-solid fa-dice bg-icon bg-1"></i>
-        <i class="fa-solid fa-flag bg-icon bg-2"></i>
+<div class="casino-table">
+    <!-- floating piraty decor -->
+    <i class="fa-regular fa-compass bg-icon bg-1"></i>
+    <i class="fa-solid fa-skull bg-icon bg-2"></i>
 
-        <!-- Mandatory Navigation Buttons -->
-        <a href="index.html" class="nav-btn home-btn" title="Home">🏠</a>
-        <button class="nav-btn help-btn" onclick="showHelp()" title="Help">?</button>
-        
-        <header>
-            <h1>Perudo</h1>
-            <div class="subtitle">The Art of the Pirate's Bluff</div>
-        </header>
+    <!-- mandatory nav buttons -->
+    <a href="#" class="nav-btn home-btn" id="homeDummyBtn" aria-label="Home Port"><i class="fas fa-anchor"></i></a>
+    <button class="nav-btn help-btn" id="openHelpBtn" aria-label="Game Rules">?</button>
 
-        <div class="section">
-            <h2><i class="fa-solid fa-flag"></i> The Objective</h2>
-            <p>Listen close, ye scoundrel. Your greatest weapon isn't your dice—it's your <strong>poker face</strong>. Be the last pirate standing with at least one die in your cup. When the "Dudo" (Liar) is called, someone is losing a die. Make sure it isn't you, or you'll be walking the plank.</p>
+    <header>
+        <h1>⚓ PERUDO ⚓</h1>
+        <div class="subtitle">The Pirate's Code of Bluff & Dice</div>
+    </header>
+
+    <!-- objective section -->
+    <div class="section">
+        <h2><i class="fas fa-flag-checkered"></i> The Objective</h2>
+        <p>Listen, ye salty dog! <strong>Bluff, lie, and call out the scoundrels.</strong> Be the last pirate with at least one die in your cup. When "Dudo!" (liar) echoes across the table, someone loses a die and walks the plank. The sea claims the meek — only the bold survive.</p>
+    </div>
+
+    <!-- core rules -->
+    <div class="section">
+        <h2><i class="fas fa-scroll"></i> The Pirate's Code</h2>
+        <p>Every turn, a pirate makes a <strong>bid</strong> on how many dice of a certain face value lie under ALL cups combined.</p>
+        <ul style="margin-top: 12px; margin-left: 1.2rem;">
+            <li><strong>The Bid:</strong> <span class="highlight-text">"Seven 5s"</span> means you claim there are at least seven dice showing 5 (including Aces as wilds).</li>
+            <li><strong>Response:</strong> Next pirate must <span class="highlight-text">RAISE</span> the bid (count or value) or shout <span class="highlight-text">DUDO (LIAR!)</span></li>
+            <li><strong>Aces are WILD:</strong> <span class="ace-badge"></span> <strong>1s count as any number being bid</strong> — they shift the tides of battle!</li>
+        </ul>
+    </div>
+
+    <!-- BIDDING LADDER — exact rules from image (bug-free) -->
+    <div class="section">
+        <h2><i class="fas fa-chart-line"></i> The Bidding Ladder</h2>
+        <table class="bidding-table">
+            <thead>
+                <tr><th>To Move...</th><th>The Pirate's Rule</th><th>Example (from Five 4s)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>⚡ Raise Count</td><td>Keep the value, increase quantity.</td><td><span class="example-cell">Six 4s</span></td></tr>
+                <tr><td>🔥 Raise Value</td><td>Keep quantity, increase value.</td><td><span class="example-cell">Five 6s</span></td></tr>
+                <tr><td>🌀 Jump TO Aces</td><td>Halve the quantity (round up).</td><td><span class="example-cell">Three Aces</span></td></tr>
+                <tr><td>⚓ Leave Aces</td><td>Double Ace bid and add one.</td><td><span class="example-cell">Three Aces → Seven 2s</span></td></tr>
+            </tbody>
+        </table>
+        <p style="margin-top: 1rem; font-size: 0.9rem; font-style: italic;"><i class="fas fa-crown"></i> <strong>Palafico rule:</strong> When a player has 1 die left, Aces are <strong>no longer wild</strong> during that round. Change the strategy!</p>
+    </div>
+
+    <!-- SECRET STRATEGY TIPS (enhanced, matching image spirit) -->
+    <div class="strategy-vault">
+        <h2 style="border-left-color: #ffaa33; margin-bottom: 0.5rem;"><i class="fas fa-mask"></i> Secret Strategy Tips</h2>
+        <p style="margin-bottom: 0.3rem;">Master these tavern-hidden tactics to sink your rivals:</p>
+        <div class="strategy-grid">
+            <div class="tip-card">
+                <h4><i class="fas fa-calculator"></i> The Rule of Thirds</h4>
+                <p>Statistically, <span class="highlight-text">~1/3</span> of total dice on the table will match your bid (value + wild aces). Use this math to detect a lying dog before they send you to Davey Jones.</p>
+            </div>
+            <div class="tip-card">
+                <h4><i class="fas fa-ghost"></i> The "Phantom" Bid</h4>
+                <p>Bid high on a number you <strong>don't possess</strong>. It makes others believe those dice are safe. They'll overcommit — then you strike with Dudo!</p>
+            </div>
+            <div class="tip-card">
+                <h4><i class="fas fa-shield-halbed"></i> The Ace Trap</h4>
+                <p>Switching to Aces halves quantity — a great way to reset pressure. Use it to flush out opponents' hidden wild cards, then leave aces to double & add one.</p>
+            </div>
+            <div class="tip-card">
+                <h4><i class="fas fa-eye"></i> Palafico Awareness</h4>
+                <p>When any sailor has only 1 die, Aces are NOT wild. That changes everything! In that round, bid with precision — wildcard advantage vanishes.</p>
+            </div>
         </div>
+    </div>
 
-        <div class="section">
-            <h2><i class="fa-solid fa-scroll"></i> The Pirate's Code</h2>
-            <p>Every pirate makes a collective bid on how many dice of a certain value exist under <strong>all</strong> cups combined.</p>
+    <div class="pirate-footer">
+        <i class="fas fa-dice-d6"></i> May the best liar win · trust no one · keep yer hand on the cup
+    </div>
+</div>
+
+<!-- ========== MODAL (FIXED, OUTSIDE TABLE = NO OVERFLOW BUG) ========== -->
+<div id="rulesModal" class="modal-fixed">
+    <div class="modal-card">
+        <h3><i class="fas fa-book-skull"></i> PIRATE'S CODE</h3>
+        <div>
+            <h4>🎲 HOW TO PLAY</h4>
+            <p><strong>Goal:</strong> Be last survivor with at least 1 die. Call "Dudo!" when the bid is impossible.</p>
+            <h4>⚓ BIDDING RULES</h4>
             <ul>
-                <li><strong>The Bid:</strong> "I think there be <span class="highlight-text">Seven 5s</span> on this table."</li>
-                <li><strong>The Response:</strong> The next pirate must either <span class="highlight-text">Raise</span> the bid or call <span class="highlight-text">Dudo</span> (Liar!).</li>
-                <li><strong>Aces are Wild:</strong> <span class="ace-icon"></span> <strong>1s count as whatever number is being bid!</strong> They be the ultimate game-changers.</li>
+                <li><strong>RAISE COUNT:</strong> Increase quantity, same face. (ex: Six 4s)</li>
+                <li><strong>RAISE VALUE:</strong> Increase face value, same quantity. (ex: Five 6s)</li>
+                <li><strong>JUMP TO ACES:</strong> Halve quantity (round UP) → move to Aces (1s).</li>
+                <li><strong>LEAVE ACES:</strong> Double Ace bid, add 1 → any normal value (2-6).</li>
             </ul>
+            <h4>💀 DUDO (Liar!)</h4>
+            <p>If you think the bid is too high, shout Dudo! All dice revealed. If total dice (including wild aces) meet or exceed bid → accuser loses a die. Otherwise, the bidder loses a die.</p>
+            <h4>✨ ACE RULE & PALAFICO</h4>
+            <p><span class="ace-badge"></span> Normally Aces are wild and count for every number. BUT in Palafico (when a player has exactly 1 die left), Aces are no longer wild! Strategy changes.</p>
+            <p style="margin-top: 12px;"><i class="fas fa-anchor"></i> <strong>Pro tip:</strong> Master the "Ladder" transitions to control the table!</p>
         </div>
-
-        <div class="section">
-            <h2><i class="fa-solid fa-compass"></i> The Bidding Ladder</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>To Move...</th>
-                        <th>The Pirate's Rule</th>
-                        <th>Example (from Five 4s)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Raise Count</strong></td>
-                        <td>Keep the value, increase quantity.</td>
-                        <td><span class="highlight-text">Six 4s</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Raise Value</strong></td>
-                        <td>Keep quantity, increase value.</td>
-                        <td><span class="highlight-text">Five 6s</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Jump TO Aces</strong></td>
-                        <td>Halve the quantity (round up).</td>
-                        <td><span class="highlight-text">Three Aces</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Leave Aces</strong></td>
-                        <td>Double Ace bid and add one.</td>
-                        <td>Three Aces &rarr; <span class="highlight-text">Seven 2s</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="strategy-box">
-            <h2 style="color: var(--gold);"><i class="fa-solid fa-user-secret"></i> Secret Strategy Tips</h2>
-            <p style="opacity: 0.9;">Master these hidden tactics to dominate the tavern:</p>
-            
-            <div class="strategy-grid">
-                <div class="tip-card">
-                    <h4><i class="fa-solid fa-calculator"></i> The Rule of Thirds</h4>
-                    <p>Statistically, <span class="highlight-text">1/3</span> of the dice on the table will match your bid (Value + Aces). Use this math to spot a lying dog.</p>
-                </div>
-                <div class="tip-card">
-                    <h4><i class="fa-solid fa-ghost"></i> The "Phantom" Bid</h4>
-                    <p>Bid high on a number you <strong>don't</strong> have. It traps others into thinking those dice are safe on the table.</p>
-                </div>
-                <div class="tip-card">
-                    <h4><i class="fa-solid fa-shield-halved"></i> The Ace Trap</h4>
-                    <p>Switching to Aces resets the pressure. Use it to flush out the other pirates' hidden wild cards.</p>
-                </div>
-                <div class="tip-card">
-                    <h4><i class="fa-solid fa-eye"></i> The Palafico Round</h4>
-                    <p>When you have 1 die left, you are Palafico. In this special round, <strong>Aces are NOT wild</strong>. Don't forget the change in the code!</p>
-                </div>
-            </div>
-        </div>
-
+        <button class="close-modal-button" id="closeModalBtn">⚔️  ARR, GOT IT  ⚔️</button>
     </div>
+</div>
 
-    <!-- Help Modal -->
-    <div class="modal-overlay" id="helpModal">
-        <div class="modal-content">
-            <h3>HOW TO PLAY PERUDO</h3>
-            <div style="color: var(--light-gold); line-height: 1.6;">
-                <h4 style="color: var(--gold-light); margin-top: 1rem;">Objective:</h4>
-                <p>Be the last pirate standing with at least one die. Bluff, bid, and call out liars!</p>
-                
-                <h4 style="color: var(--gold-light); margin-top: 1rem;">The Bid:</h4>
-                <p>Bid on how many dice of a certain value exist under ALL cups combined. Example: "Seven 5s"</p>
-                
-                <h4 style="color: var(--gold-light); margin-top: 1rem;">Aces are Wild:</h4>
-                <p>1s count as whatever number is being bid! They're game-changers.</p>
-                
-                <h4 style="color: var(--gold-light); margin-top: 1rem;">Raising the Bid:</h4>
-                <ul style="margin-left: 1.5rem;">
-                    <li>Increase quantity (same value)</li>
-                    <li>Increase value (same quantity)</li>
-                    <li>Jump to Aces (halve quantity)</li>
-                </ul>
-                
-                <h4 style="color: var(--gold-light); margin-top: 1rem;">Calling "Dudo" (Liar):</h4>
-                <p>If you think the bid is too high, call "Dudo!" All dice are revealed. If the bid is met or exceeded, you lose a die. If not, the bidder loses a die.</p>
-            </div>
-            <button onclick="closeHelp()" class="close-modal-btn">GOT IT</button>
-        </div>
-    </div>
+<script>
+    (function() {
+        // Help modal elements — clean fix
+        const modal = document.getElementById('rulesModal');
+        const helpTrigger = document.getElementById('openHelpBtn');
+        const closeButton = document.getElementById('closeModalBtn');
 
-    <script>
-        function showHelp() {
-            document.getElementById('helpModal').style.display = 'flex';
+        // Function to open modal
+        function openModal() {
+            if (modal) {
+                modal.style.display = 'flex';
+                // optional: prevent body scroll
+                document.body.style.overflow = 'hidden';
+            }
         }
 
-        function closeHelp() {
-            document.getElementById('helpModal').style.display = 'none';
+        function closeModal() {
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
         }
-    </script>
 
-    <footer style="text-align: center; margin-top: 2rem; border-top: 1px solid rgba(255,215,0,0.2); padding-top: 1rem; color: var(--gold); opacity: 0.6; font-size: 0.8rem;">
-        <p><i class="fa-solid fa-flag"></i> Play at your own risk. May the best liar win. <i class="fa-solid fa-flag"></i></p>
-    </footer>
+        // Event listeners
+        if (helpTrigger) {
+            helpTrigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                openModal();
+            });
+        }
+        if (closeButton) {
+            closeButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeModal();
+            });
+        }
+        // Close when clicking outside modal content
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            // Also ESC key support
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    closeModal();
+                }
+            });
+        }
 
+        // Home button (mandatory navigation) - anchor simulation, avoids 404 & stays on page
+        const homeBtn = document.getElementById('homeDummyBtn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // optional mini easter-egg: scroll top & slight feedback, but remains same page
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // subtle haptic like effect
+                homeBtn.style.transform = 'scale(0.95)';
+                setTimeout(() => { if (homeBtn) homeBtn.style.transform = ''; }, 120);
+            });
+        }
+
+        // additional small UX: tooltip style for any missing dynamic but also ensure modal no clipping
+        // ensure that no style conflict with .casino-table overflow was fixed (already removed overflow:hidden)
+        console.log('Perudo | Pirate’s Code — fixed modal & bidding ladder');
+    })();
+</script>
 </body>
 </html>
