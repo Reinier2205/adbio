@@ -20,38 +20,29 @@
 
 body {
   background: var(--dark-wood);
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  padding: 10px;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
   font-family: 'Lato', sans-serif;
   touch-action: manipulation;
 }
 
-h1 {
-  font-family: 'Cinzel', serif;
-  color: var(--gold-light);
-  font-size: clamp(1.2rem, 4vw, 1.8rem);
-  letter-spacing: 0.08em;
-  margin-bottom: 8px;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+/* ── ZONE 1: TOP NAV ── */
+.top-nav {
+  display: flex;
+  width: 90vw;
+  max-width: 480px;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 6px 0;
 }
 
-.casino-table {
-  background: var(--felt-green);
-  border: 10px solid #4a2c2a;
-  box-shadow: 0 0 0 5px var(--gold);
-  border-radius: 15px;
-  position: relative;
-  width: 100%;
-  max-width: 680px;
-  padding: 50px 14px 18px;
-}
-
-/* Nav buttons */
 .nav-btn {
-  position: absolute; top: 12px;
   width: 40px; height: 40px;
   border-radius: 50%;
   border: 2px solid #111;
@@ -59,23 +50,50 @@ h1 {
   cursor: pointer;
   font-size: 1.1rem; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
-  z-index: 100;
-  transition: transform 0.1s, box-shadow 0.1s;
+  flex-shrink: 0;
   background: radial-gradient(circle, var(--gold-light), var(--gold));
   color: #111;
+  transition: transform 0.1s, box-shadow 0.1s;
 }
-.home-btn { left: 12px; }
-.help-btn { right: 12px; }
 .nav-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
 
+/* ── ZONE 2: CASINO TABLE ── */
+.casino-table {
+  background: var(--felt-green);
+  border: 10px solid #4a2c2a;
+  box-shadow: 0 0 0 5px var(--gold);
+  border-radius: 20px;
+  width: 90vw;
+  max-width: 480px;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* ── ZONE 3: BOTTOM BAR ── */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 90vw;
+  max-width: 480px;
+  flex-shrink: 0;
+  padding: 6px 0 8px;
+}
+
 /* ── PLAYER STRIPS ── */
-.player-strips { display: flex; gap: 8px; margin-bottom: 10px; }
+.player-strips { display: flex; gap: 8px; flex-shrink: 0; }
 .player-strip {
   flex: 1;
   background: rgba(0,0,0,0.3);
   border-radius: 10px;
   border: 2px solid transparent;
-  padding: 8px 10px;
+  padding: 6px 8px;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 .player-strip.active {
@@ -92,13 +110,13 @@ h1 {
 }
 .strip-name {
   font-family: 'Cinzel', serif; color: var(--gold-light);
-  font-size: 0.82rem; margin-bottom: 5px;
+  font-size: 0.78rem; margin-bottom: 4px;
   display: flex; align-items: center; gap: 4px;
 }
-.strip-icon { font-size: 1.2rem; }
+.strip-icon { font-size: 1.1rem; }
 .parts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
 .p-item {
-  font-size: 0.68rem; color: #777;
+  font-size: 0.65rem; color: #777;
   display: flex; align-items: center; gap: 3px;
   transition: color 0.3s;
 }
@@ -119,16 +137,18 @@ h1 {
   overflow: hidden;
   touch-action: none;
   cursor: crosshair;
+  flex: 1;
+  min-height: 0;
 }
-.canvas-wrapper canvas { display: block; touch-action: none; }
+.canvas-wrapper canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 
 /* Pen tools */
 .pen-tools {
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: 6px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 6px;
+  flex-shrink: 0; flex-wrap: wrap;
 }
 .colour-swatch {
-  width: 26px; height: 26px; border-radius: 50%;
+  width: 24px; height: 24px; border-radius: 50%;
   border: 2px solid rgba(0,0,0,0.3); cursor: pointer;
   transition: transform 0.1s, box-shadow 0.1s;
   box-shadow: 0 2px 4px rgba(0,0,0,0.4);
@@ -138,12 +158,12 @@ h1 {
   box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--gold);
 }
 .pen-size-wrap { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-.pen-size-wrap label { font-size: 0.72rem; color: #ccc; }
-input[type=range] { width: 70px; accent-color: var(--gold); }
+.pen-size-wrap label { font-size: 0.68rem; color: #ccc; }
+input[type=range] { width: 60px; accent-color: var(--gold); }
 .btn-eraser {
   background: #fff; color: #333;
   border: 2px solid #aaa; border-radius: 6px;
-  padding: 3px 10px; font-size: 0.72rem;
+  padding: 2px 8px; font-size: 0.68rem;
   font-family: 'Inter', sans-serif; cursor: pointer; font-weight: 700;
   box-shadow: 0 2px 0 #999; transition: transform 0.1s, box-shadow 0.1s;
 }
@@ -156,20 +176,12 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
   transform: translate(-50%,-50%);
   font-family: 'Cinzel', serif;
   color: rgba(0,0,0,0.12);
-  font-size: clamp(0.9rem, 3vw, 1.2rem);
+  font-size: clamp(0.85rem, 2.5vw, 1.1rem);
   text-align: center; pointer-events: none; user-select: none;
   line-height: 1.6; white-space: nowrap;
 }
 
-/* ── BOTTOM CONTROLS ── */
-.bottom-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-/* ── DIE (skill-exact: 52px, translateZ 26px, perspective 200px) ── */
+/* ── DIE ── */
 .die-scene {
   width: 52px; height: 52px;
   perspective: 200px;
@@ -228,7 +240,7 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
 }
 .die.rolling { animation: dieRoll 0.6s ease-in-out; }
 
-/* ── ACTION BUTTON (single roll/pass button) ── */
+/* ── BUTTONS ── */
 .btn {
   font-family: 'Inter', sans-serif;
   border-radius: 8px;
@@ -240,8 +252,8 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
 .btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: 0 4px 0 #111; }
 
 #action-btn {
-  font-size: 1rem;
-  padding: 12px 24px;
+  font-size: 0.95rem;
+  padding: 11px 20px;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -255,11 +267,11 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
   text-shadow: 0 1px 2px rgba(0,0,0,0.35);
 }
 
-/* Result badge — now gets the remaining space, large and clear */
+/* Result badge */
 .result-badge {
   font-family: 'Cinzel', serif;
-  font-size: 0.95rem;
-  padding: 10px 14px;
+  font-size: 0.88rem;
+  padding: 9px 12px;
   border-radius: 10px;
   background: rgba(0,0,0,0.4);
   color: var(--gold-light);
@@ -299,8 +311,6 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
   font-size: 1.5rem; margin-bottom: 4px;
 }
 .winner-sub { color: #aaa; font-size: 0.85rem; margin-bottom: 1rem; }
-
-/* Bug drawings in winner screen */
 .winner-bugs {
   display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem;
   align-items: center;
@@ -322,12 +332,10 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
   padding: 3px 0; background: rgba(0,0,0,0.4);
 }
 .winner-bug-frame img { width: 100%; display: block; }
-
 .btn-restart {
   background: radial-gradient(circle, var(--gold-light), var(--gold));
   color: #111; padding: 10px 28px; font-size: 1rem;
 }
-
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.6); }
   to   { opacity: 1; transform: scale(1); }
@@ -397,11 +405,18 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
 </head>
 <body>
 
-<h1>🐛 Dice Bug</h1>
+<!-- Zone 1: Top nav -->
+<div class="top-nav">
+  <button class="nav-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
+  <div style="text-align:center">
+    <h1 style="font-family:'Cinzel',serif;color:var(--gold);margin:0;font-size:clamp(1rem,4vw,1.4rem);letter-spacing:0.08em;text-shadow:0 2px 8px rgba(0,0,0,0.6)">🐛 Dice Bug</h1>
+    <p style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.4);margin:2px 0 0">Draw your bug!</p>
+  </div>
+  <button class="nav-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
+</div>
 
+<!-- Zone 2: Casino table -->
 <div class="casino-table">
-  <button class="nav-btn home-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
-  <button class="nav-btn help-btn" onclick="document.getElementById('help-modal').classList.add('open')" title="Help">?</button>
 
   <!-- Player strips -->
   <div class="player-strips">
@@ -458,21 +473,22 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
     <div class="canvas-hint" id="canvas-hint">🐭 Mickey<br>Draw your bug!</div>
   </div>
 
-  <!-- Bottom controls: die + badge + single action button -->
-  <div class="bottom-row">
-    <div class="die-scene">
-      <div class="die die--teal" id="the-die">
-        <div class="face front"><span class="pip center"></span></div>
-        <div class="face back"><span class="pip tl"></span><span class="pip tr"></span><span class="pip ml"></span><span class="pip mr"></span><span class="pip bl"></span><span class="pip br"></span></div>
-        <div class="face right"><span class="pip tr"></span><span class="pip bl"></span></div>
-        <div class="face left"><span class="pip tl"></span><span class="pip tr"></span><span class="pip center"></span><span class="pip bl"></span><span class="pip br"></span></div>
-        <div class="face top"><span class="pip tl"></span><span class="pip center"></span><span class="pip br"></span></div>
-        <div class="face bottom"><span class="pip tl"></span><span class="pip tr"></span><span class="pip bl"></span><span class="pip br"></span></div>
-      </div>
+</div><!-- end .casino-table -->
+
+<!-- Zone 3: Bottom bar — die + badge + action button -->
+<div class="bottom-bar">
+  <div class="die-scene">
+    <div class="die die--teal" id="the-die">
+      <div class="face front"><span class="pip center"></span></div>
+      <div class="face back"><span class="pip tl"></span><span class="pip tr"></span><span class="pip ml"></span><span class="pip mr"></span><span class="pip bl"></span><span class="pip br"></span></div>
+      <div class="face right"><span class="pip tr"></span><span class="pip bl"></span></div>
+      <div class="face left"><span class="pip tl"></span><span class="pip tr"></span><span class="pip center"></span><span class="pip bl"></span><span class="pip br"></span></div>
+      <div class="face top"><span class="pip tl"></span><span class="pip center"></span><span class="pip br"></span></div>
+      <div class="face bottom"><span class="pip tl"></span><span class="pip tr"></span><span class="pip bl"></span><span class="pip br"></span></div>
     </div>
-    <div class="result-badge" id="result-badge">🐭 Mickey — Roll!</div>
-    <button class="btn mode-roll" id="action-btn" onclick="handleAction()">🎲 Roll</button>
   </div>
+  <div class="result-badge" id="result-badge">🐭 Mickey — Roll!</div>
+  <button class="btn mode-roll" id="action-btn" onclick="handleAction()">🎲 Roll</button>
 </div>
 
 <!-- Free pick modal -->
@@ -506,7 +522,7 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
 </div>
 
 <!-- Help modal -->
-<div class="modal-overlay" id="help-modal" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="modal-overlay" id="help-modal" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-panel">
     <h2>🐛 How to Play Dice Bug</h2>
     <p>Take turns rolling the die. When you get a part you can add, <strong>draw it on the canvas</strong>. Then tap <strong>Pass</strong> to hand the device to the other player. First to complete their bug wins!</p>
@@ -564,9 +580,9 @@ input[type=range] { width: 70px; accent-color: var(--gold); }
       <li>Head (②) is required before eyes or antennae.</li>
       <li>After rolling, draw your part, then tap <strong>Pass</strong>.</li>
       <li>If your roll gives nothing new, just tap <strong>Pass</strong>.</li>
-      <li>After <strong>3 passes in a row</strong> with no new part, you get a free pick — choose any part you can legally add!</li>
+      <li>After <strong>3 passes in a row</strong> with no new part, you get a free pick!</li>
     </ul>
-    <button class="close-btn" onclick="document.getElementById('help-modal').classList.remove('open')">Got it!</button>
+    <button class="close-btn" onclick="document.getElementById('help-modal').style.display='none'">Got it!</button>
   </div>
 </div>
 
@@ -583,16 +599,15 @@ const PLAYERS = [
 ];
 
 /* ── CANVAS ── */
-const canvas = document.getElementById('drawing-canvas');
-const ctx    = canvas.getContext('2d');
+const canvas  = document.getElementById('drawing-canvas');
+const ctx     = canvas.getContext('2d');
 const wrapper = document.getElementById('canvas-wrapper');
 
 function resizeCanvas() {
   const w = wrapper.clientWidth;
-  const h = Math.min(Math.round(w * 0.7), 320);
+  const h = wrapper.clientHeight;
   canvas.width  = w;
   canvas.height = h;
-  wrapper.style.height = h + 'px';
   ctx.fillStyle = '#f5f0e8';
   ctx.fillRect(0, 0, w, h);
 }
@@ -618,7 +633,8 @@ function updateSize(v) { penSize = parseInt(v); }
 function getPos(e) {
   const r = canvas.getBoundingClientRect();
   const src = e.touches ? e.touches[0] : e;
-  return { x: src.clientX - r.left, y: src.clientY - r.top };
+  return { x: (src.clientX - r.left) * (canvas.width / r.width),
+           y: (src.clientY - r.top)  * (canvas.height / r.height) };
 }
 function startDraw(e) {
   e.preventDefault();
@@ -671,8 +687,8 @@ let savedImages = [null, null];
 let turn        = 0;
 let gameOver    = false;
 let rolling     = false;
-let rolled      = false; // false = need to roll; true = need to pass
-let missStreak  = [0, 0]; // consecutive no-gain rolls per player
+let rolled      = false;
+let missStreak  = [0, 0];
 
 /* ── DIE ── */
 const dieEl = document.getElementById('the-die');
@@ -700,27 +716,17 @@ const actionBtn = document.getElementById('action-btn');
 
 function handleAction() {
   if (gameOver || rolling) return;
-  if (!rolled) {
-    doRoll();
-  } else {
-    doPass();
-  }
+  if (!rolled) { doRoll(); } else { doPass(); }
 }
 
 function setActionMode(mode) {
-  // mode: 'roll' or 'pass'
   actionBtn.className = 'btn mode-' + mode;
-  if (mode === 'roll') {
-    actionBtn.textContent = '🎲 Roll';
-  } else {
-    actionBtn.textContent = '➡ Pass';
-  }
+  actionBtn.textContent = mode === 'roll' ? '🎲 Roll' : '➡ Pass';
 }
 
 function doRoll() {
   rolling = true;
   actionBtn.disabled = true;
-
   const val = Math.floor(Math.random() * 6) + 1;
   animateDie(val, () => {
     const result = applyRoll(turn, val);
@@ -730,7 +736,6 @@ function doRoll() {
     rolled  = true;
     actionBtn.disabled = false;
     setActionMode('pass');
-
     const partMap = {1:'body (big oval)',2:'head (circle on top)',3:'a leg pair',4:'an eye',5:'an antenna',6:'the tail'};
     if (result === 'got') {
       missStreak[turn] = 0;
@@ -743,11 +748,9 @@ function doRoll() {
         setHint('Nothing new — tap Pass');
       }
       if (missStreak[turn] >= 3) {
-        // Delay so badge is visible before modal appears
         setTimeout(() => showFreePick(), 700);
       }
     }
-
   });
 }
 
@@ -755,7 +758,7 @@ function doRoll() {
 function getAvailableParts(p) {
   const s = states[p];
   const parts = [];
-  if (!s.body) { parts.push({ label: 'Body', apply: () => { s.body = true; } }); return parts; } // body blocks everything
+  if (!s.body) { parts.push({ label: 'Body', apply: () => { s.body = true; } }); return parts; }
   if (!s.head) parts.push({ label: 'Head', apply: () => { s.head = true; } });
   const nextLeg = s.legs.indexOf(false);
   if (nextLeg !== -1) parts.push({ label: 'Leg pair ' + (nextLeg + 1), apply: () => { s.legs[nextLeg] = true; } });
@@ -772,11 +775,9 @@ function getAvailableParts(p) {
 function showFreePick() {
   const pl = PLAYERS[turn];
   const parts = getAvailableParts(turn);
-  if (parts.length === 0) return; // nothing left to pick (shouldn't happen before win)
-
+  if (parts.length === 0) return;
   document.getElementById('freepick-desc').textContent =
     pl.name + ' got 3 passes in a row — pick any part to add for free!';
-
   const list = document.getElementById('freepick-list');
   list.innerHTML = '';
   parts.forEach(part => {
@@ -786,7 +787,6 @@ function showFreePick() {
     btn.onclick = () => applyFreePick(part);
     list.appendChild(btn);
   });
-
   document.getElementById('freepick-overlay').classList.add('open');
 }
 
@@ -802,28 +802,17 @@ function applyFreePick(part) {
 
 function doPass() {
   if (gameOver) return;
-  // Save current player's canvas
   savedImages[turn] = canvas.toDataURL();
-
-  // Check win now — after drawing is done
-  if (checkWin(turn)) {
-    declareWinner(turn);
-    return;
-  }
-
-  // Switch to next player
+  if (checkWin(turn)) { declareWinner(turn); return; }
   turn   = 1 - turn;
   rolled = false;
-
-  // restore next player's canvas
   ctx.fillStyle = '#f5f0e8';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   if (savedImages[turn]) {
     const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0);
+    img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     img.src = savedImages[turn];
   }
-
   updateTurnUI();
 }
 
@@ -844,7 +833,7 @@ function showBadge(val, result) {
   const badge = document.getElementById('result-badge');
   const partMap = {1:'Body',2:'Head',3:'Leg pair',4:'Eye',5:'Antenna',6:'Tail'};
   const part = partMap[val];
-  if (result === 'got')     { badge.textContent = '✅ Draw the ' + part + '!'; badge.className = 'result-badge got-it'; }
+  if (result === 'got')      { badge.textContent = '✅ Draw the ' + part + '!'; badge.className = 'result-badge got-it'; }
   else if (result==='already') { badge.textContent = part + ' already done'; badge.className = 'result-badge'; }
   else if (result==='cant')    { badge.textContent = 'Need ' + (val>=4?'Head':'Body') + ' first!'; badge.className = 'result-badge need-it'; }
   else                         { badge.textContent = 'No match this roll'; badge.className = 'result-badge'; }
@@ -889,10 +878,7 @@ function declareWinner(p) {
   document.getElementById('strip-' + p).classList.add('winner-glow');
   document.getElementById('winner-emoji').textContent = PLAYERS[p].icon;
   document.getElementById('winner-title').textContent = PLAYERS[p].name + ' Wins!';
-
-  // Save winner's current canvas then show both bugs
   savedImages[p] = canvas.toDataURL();
-
   PLAYERS.forEach((pl, i) => {
     document.getElementById('wlabel-' + i).textContent = pl.icon + ' ' + pl.name + (i === p ? ' 🏆' : '');
     document.getElementById('wbug-' + i).parentElement.classList.toggle('runner-up', i !== p);
@@ -907,12 +893,9 @@ function declareWinner(p) {
       imgEl.src = tmp.toDataURL();
     }
   });
-
-  // Put winner frame first in the DOM
   const winnerFrame = document.getElementById('wbug-' + p).closest('.winner-bug-frame');
   const bugsContainer = document.getElementById('winner-bugs');
   bugsContainer.insertBefore(winnerFrame, bugsContainer.firstChild);
-
   setTimeout(() => document.getElementById('winner-banner').classList.add('show'), 400);
 }
 
@@ -936,7 +919,10 @@ function resetGame() {
 }
 
 /* ── INIT ── */
-resizeCanvas();
+window.addEventListener('load', () => {
+  resizeCanvas();
+  updateTurnUI();
+});
 window.addEventListener('resize', () => {
   const saved = canvas.toDataURL();
   resizeCanvas();
@@ -944,7 +930,6 @@ window.addEventListener('resize', () => {
   img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
   img.src = saved;
 });
-updateTurnUI();
 </script>
 </body>
 </html>
