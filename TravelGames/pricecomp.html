@@ -160,7 +160,7 @@
             cursor: pointer;
         }
 
-        /* Table Structural Changes */
+        /* Table Layouts */
         .category-block {
             background: rgba(26, 16, 19, 0.4);
             border: 2px solid #3e1e24;
@@ -168,7 +168,7 @@
             padding: 16px;
             margin-bottom: 25px;
             box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
-            overflow-x: auto; /* Graceful scroll if screen is tight */
+            overflow-x: auto;
         }
 
         .category-header {
@@ -183,7 +183,6 @@
             gap: 8px;
         }
 
-        /* Clean Casino Felt Table styling */
         .showdown-table {
             width: 100%;
             border-collapse: collapse;
@@ -194,7 +193,7 @@
 
         .showdown-table th {
             font-family: 'Cinzel', serif;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: var(--gold);
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -242,7 +241,6 @@
             font-weight: 500;
         }
 
-        /* Left border styling to visually differentiate the columns */
         .cell-home { border-left: 2px solid var(--maroon); background: rgba(128, 0, 0, 0.05); }
         .cell-dest { border-left: 2px solid var(--teal); background: rgba(0, 128, 128, 0.05); }
         .cell-conv { border-left: 2px solid var(--gold); background: rgba(212, 175, 55, 0.05); font-weight: bold; color: var(--gold-light); }
@@ -345,17 +343,17 @@
             <div class="input-group">
                 <label for="homeCurrency">Home Base</label>
                 <select id="homeCurrency" onchange="handleCurrencyChange()">
-                    <option value="ZAR">South African Rand (R)</option>
-                    <option value="USD">US Dollar ($)</option>
-                    <option value="GBP">British Pound (£)</option>
+                    <option value="ZAR">South African Rand</option>
+                    <option value="USD">US Dollar</option>
+                    <option value="GBP">British Pound</option>
                 </select>
             </div>
             <div class="input-group">
                 <label for="destCountry">Destination</label>
                 <select id="destCountry" onchange="handleCurrencyChange()">
-                    <option value="ITA">Italy (€)</option>
-                    <option value="GBR">United Kingdom (£)</option>
-                    <option value="USA">United States ($)</option>
+                    <option value="ITA">Italy</option>
+                    <option value="GBR">United Kingdom</option>
+                    <option value="USA">United States</option>
                 </select>
             </div>
             
@@ -363,7 +361,7 @@
             <div class="rate-customizer">
                 <div class="rate-display-text">
                     <span>Live Forex Conversion:</span>
-                    <strong id="rateLabel">1 Local = R0.00</strong>
+                    <strong id="rateLabel">1 Local = 0.00</strong>
                 </div>
                 <div class="slider-container">
                     <input type="range" id="rateSlider" class="rate-slider" min="0.1" max="50" step="0.01" oninput="handleSliderInput()">
@@ -411,9 +409,9 @@
             <div class="modal-body">
                 <p>Analyze local travel costs mapped clearly across three clean data parameters:</p>
                 <ul>
-                    <li><strong>Home Baseline:</strong> What you usually pay for this item back home.</li>
-                    <li><strong>Destination (Local):</strong> The actual cost at your destination in their currency.</li>
-                    <li><strong>Destination (Converted):</strong> What that local price translates to back in your home currency based on your custom set rate.</li>
+                    <li><strong>Home:</strong> What you usually pay for this item back home.</li>
+                    <li><strong>Destination Country Name:</strong> The actual cost at your destination in their local currency.</li>
+                    <li><strong>Conv:</strong> What that destination price translates to back in your home currency based on your custom set rate.</li>
                     <li><strong>Live Adjuster:</strong> Slide or manually type into the rate calculator block at the top to adapt your conversions instantly.</li>
                 </ul>
             </div>
@@ -446,7 +444,7 @@
             "Utilities": { name: "Utilities & Leisure", icon: "🎟️" }
         };
 
-        // Master item matrix matching previous configurations
+        // Master item matrix
         let itemBasket = [
             { name: "Fresh Loaf / Baguette", desc: "Standard bakery fresh white loaf", category: "Supermarket", prices: { ZAR: 19.00, EUR: 1.80, GBP: 1.40, USD: 3.50 } },
             { name: "Sliced Ham (100g)", desc: "Prosciutto, cotto, or regional equivalent", category: "Supermarket", prices: { ZAR: 35.00, EUR: 2.80, GBP: 2.50, USD: 4.20 } },
@@ -472,7 +470,6 @@
             { name: "Laundromat Cycle", desc: "Washing and drying cost for a standard 8kg bundle", category: "Utilities", prices: { ZAR: 90.00, EUR: 7.00, GBP: 6.50, USD: 8.00 } }
         ];
 
-        // Global variable tracking current user-modified rate
         let activeExchangeRate = 1.0; 
 
         function handleCurrencyChange() {
@@ -480,14 +477,11 @@
             const dest = document.getElementById('destCountry').value;
             const destCurr = countryCurrencies[dest];
 
-            // Establish standard baseline formula rate: How many home currencies make 1 destination currency
             const homeUSD = currencyMeta[home].defaultRateToUSD;
             const destUSD = currencyMeta[destCurr].defaultRateToUSD;
             
-            // 1 Local Dest Unit = X Home Units
             activeExchangeRate = parseFloat((destUSD / homeUSD).toFixed(2));
 
-            // Dynamically calibrate range slider borders based on currency pairings
             const slider = document.getElementById('rateSlider');
             if (activeExchangeRate > 10) {
                 slider.min = Math.floor(activeExchangeRate * 0.5);
@@ -535,8 +529,10 @@
 
         function renderShowdownTable() {
             const home = document.getElementById('homeCurrency').value;
-            const dest = document.getElementById('destCountry').value;
-            const destCurr = countryCurrencies[dest];
+            const destSelect = document.getElementById('destCountry');
+            const destValue = destSelect.value;
+            const destCountryName = destSelect.options[destSelect.selectedIndex].text;
+            const destCurr = countryCurrencies[destValue];
             
             const homeSymbol = currencyMeta[home].symbol;
             const destSymbol = currencyMeta[destCurr].symbol;
@@ -544,14 +540,12 @@
             const container = document.getElementById('showdownTableContent');
             container.innerHTML = "";
 
-            // Group items into their respective structural buckets
             const grouped = {};
             Object.keys(categoryMeta).forEach(cat => grouped[cat] = []);
             itemBasket.forEach(item => {
                 if(grouped[item.category]) grouped[item.category].push(item);
             });
 
-            // Loop and build data tables
             Object.keys(grouped).forEach(catKey => {
                 if (grouped[catKey].length === 0) return;
 
@@ -559,7 +553,6 @@
                 const block = document.createElement('div');
                 block.className = 'category-block';
                 
-                // Base setup of table framework headers
                 let tableHTML = `
                     <div class="category-header">
                         <span>${meta.icon}</span>
@@ -568,21 +561,18 @@
                     <table class="showdown-table">
                         <thead>
                             <tr>
-                                <th style="width: 40%;">Items</th>
-                                <th style="width: 20%;">Home (${homeSymbol})</th>
-                                <th style="width: 20%;">Destination (${destSymbol})</th>
-                                <th style="width: 20%;">Converted (${homeSymbol})</th>
+                                <th style="width: 46%;">Items</th>
+                                <th style="width: 18%;">Home</th>
+                                <th style="width: 18%;">${destCountryName}</th>
+                                <th style="width: 18%;">Conv</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
 
                 grouped[catKey].forEach(item => {
-                    // Fallback to cross-multiply estimation values if direct array mappings are missing
                     const homePrice = item.prices[home] ? item.prices[home] : (item.prices.USD / currencyMeta[home].defaultRateToUSD);
-                    const destPrice = item.prices[destCurr] ? item.prices[destCurr] : (item.prices.USD / currencyMeta[countryCurrencies[dest]].defaultRateToUSD);
-                    
-                    // Controlled conversion calculated directly from current reactive exchange state variable
+                    const destPrice = item.prices[destCurr] ? item.prices[destCurr] : (item.prices.USD / currencyMeta[countryCurrencies[destValue]].defaultRateToUSD);
                     const convertedDestPrice = destPrice * activeExchangeRate;
 
                     tableHTML += `
