@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LevelVan Master Link</title>
+    <title>LevelVan Finder Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
@@ -21,12 +21,21 @@
         }
         .radar-line {
             transform-origin: center;
-            animation: radar-sweep 4s linear infinite;
+            animation: radar-sweep 6s linear infinite;
         }
         video { object-fit: cover; width: 100%; height: 100%; background: #000; display: block; }
         .video-container { position: relative; width: 100%; height: 100%; border-radius: 1.5rem; overflow: hidden; background: #111; border: 1px solid #333; }
         .local-preview { position: absolute; bottom: 1rem; right: 1rem; width: 80px; height: 120px; border-radius: 0.75rem; border: 2px solid #22c55e; overflow: hidden; z-index: 50; background: #000; }
         .play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); z-index: 100; pointer-events: auto; cursor: pointer; }
+        
+        /* Rotation container for compass dial */
+        .compass-dial {
+            transition: transform 0.1s ease-out;
+            transform-style: preserve-3d;
+        }
+        .needle-pointer {
+            transition: transform 0.1s ease-out;
+        }
     </style>
 </head>
 <body class="bg-black text-white font-sans overflow-hidden select-none">
@@ -35,10 +44,10 @@
         <!-- Header -->
         <header class="py-4 border-b border-zinc-800 flex justify-between items-center shrink-0">
             <div>
-                <h1 class="text-xl font-black tracking-tighter text-green-500">LEVELVAN <span class="text-xs font-normal text-zinc-500 ml-1">PRO</span></h1>
+                <h1 class="text-xl font-black tracking-tighter text-green-500">LEVELVAN <span class="text-xs font-normal text-zinc-500 ml-1 font-mono font-bold">FINDER v12</span></h1>
                 <div class="flex items-center gap-2 mt-0.5">
                     <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                    <p id="statusText" class="text-zinc-500 text-[9px] uppercase font-bold tracking-widest">Offline</p>
+                    <p id="statusText" class="text-zinc-500 text-[9px] uppercase font-bold tracking-widest font-mono">Offline</p>
                 </div>
             </div>
             <div id="gpsStatus" class="text-right text-[9px] font-mono text-zinc-500 hidden">
@@ -47,20 +56,33 @@
         </header>
 
         <!-- Room Selector Screen -->
-        <div id="setup-view" class="flex-1 flex flex-col justify-center gap-3">
+        <div id="setup-view" class="flex-1 flex flex-col justify-center gap-3 font-mono">
             <p class="text-center text-zinc-500 text-[10px] uppercase font-bold tracking-widest mb-2">Connect Devices</p>
-            <button onclick="requestAllPermissionsAndJoin('LEVELVAN-A')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-6 rounded-2xl flex justify-between items-center active:scale-95 transition-all group">
+            <button onclick="requestAllPermissionsAndJoin('LEVELVAN-A')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-5 rounded-2xl flex justify-between items-center active:scale-95 transition-all group">
                 <span class="font-bold group-hover:text-green-400 transition-colors">HITCH ROOM ALPHA</span>
                 <span class="text-[10px] bg-green-900/20 text-green-500 px-3 py-1 rounded border border-green-900/30">JOIN</span>
             </button>
-            <button onclick="requestAllPermissionsAndJoin('LEVELVAN-B')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-6 rounded-2xl flex justify-between items-center active:scale-95 transition-all group">
+            <button onclick="requestAllPermissionsAndJoin('LEVELVAN-B')" class="bg-zinc-900 border border-zinc-800 hover:border-green-500 p-5 rounded-2xl flex justify-between items-center active:scale-95 transition-all group">
                 <span class="font-bold group-hover:text-green-400 transition-colors">HITCH ROOM BETA</span>
                 <span class="text-[10px] bg-green-900/20 text-green-500 px-3 py-1 rounded border border-green-900/30">JOIN</span>
             </button>
-            <p id="permWarning" class="text-[10px] text-zinc-500 text-center mt-2">Requires Camera, Microphone, and Location permissions.</p>
+
+            <div class="relative flex py-4 items-center">
+                <div class="flex-grow border-t border-zinc-800"></div>
+                <span class="flex-shrink mx-4 text-zinc-600 text-[10px] uppercase tracking-widest">or Testing Sandbox</span>
+                <div class="flex-grow border-t border-zinc-800"></div>
+            </div>
+
+            <!-- Simulation Mode Button -->
+            <button onclick="startSandboxSimulation()" class="bg-zinc-950 border-2 border-dashed border-green-800/40 hover:border-green-500 p-5 rounded-2xl flex flex-col items-center justify-center active:scale-95 transition-all group shadow-lg shadow-green-950/20">
+                <span class="font-bold text-green-400 group-hover:text-green-300 transition-colors text-sm">LAUNCH LOCAL SIMULATION</span>
+                <span class="text-[9px] text-zinc-500 font-mono mt-1">Tests radar navigation using your device's live sensors</span>
+            </button>
+
+            <p id="permWarning" class="text-[10px] text-zinc-500 text-center mt-2 leading-relaxed">Requires Camera, Microphone, and Location permissions.<br>Simulation mode only requires Location and Compass.</p>
         </div>
 
-        <!-- Main Workspace (Visible only when connected) -->
+        <!-- Main Workspace (Visible only when connected or simulating) -->
         <div id="call-view" class="hidden flex-1 flex flex-col pt-4 gap-4 overflow-hidden justify-between">
             
             <div class="flex-1 relative overflow-hidden">
@@ -101,45 +123,84 @@
                 <!-- Screen 3: Position Tracker & Compass Radar -->
                 <div id="content-tracker" class="hidden h-full flex flex-col justify-between py-2 items-center">
                     
-                    <!-- Radar graphic dial -->
-                    <div class="relative w-56 h-56 flex items-center justify-center">
-                        <svg class="absolute inset-0 w-full h-full text-zinc-800" viewBox="0 0 200 200" fill="none">
-                            <circle cx="100" cy="100" r="95" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 4"/>
-                            <circle cx="100" cy="100" r="70" stroke="currentColor" stroke-width="1" />
-                            <circle cx="100" cy="100" r="45" stroke="currentColor" stroke-width="1" />
-                            <circle cx="100" cy="100" r="20" stroke="currentColor" stroke-width="1" />
-                            <line x1="100" y1="5" x2="100" y2="195" stroke="currentColor" stroke-width="0.5"/>
-                            <line x1="5" y1="100" x2="195" y2="100" stroke="currentColor" stroke-width="0.5"/>
-                            <!-- Glowing sweeping line simulating standard radar -->
-                            <line class="radar-line text-green-500/20" x1="100" y1="100" x2="100" y2="5" stroke="currentColor" stroke-width="2"/>
-                        </svg>
+                    <!-- Radar graphic dial with Cardinal directions -->
+                    <div class="relative w-64 h-64 flex items-center justify-center">
+                        
+                        <!-- Outer rotating dial representing True North/Compass -->
+                        <div id="compassDial" class="compass-dial absolute w-full h-full">
+                            <svg class="w-full h-full text-zinc-800" viewBox="0 0 200 200" fill="none">
+                                <circle cx="100" cy="100" r="95" stroke="currentColor" stroke-width="1.5" />
+                                <circle cx="100" cy="100" r="70" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" />
+                                <circle cx="100" cy="100" r="45" stroke="currentColor" stroke-width="0.5" />
+                                <circle cx="100" cy="100" r="20" stroke="currentColor" stroke-width="0.5" />
+                                
+                                <line x1="100" y1="5" x2="100" y2="195" stroke="currentColor" stroke-width="0.5" stroke-dasharray="1 1"/>
+                                <line x1="5" y1="100" x2="195" y2="100" stroke="currentColor" stroke-width="0.5" stroke-dasharray="1 1"/>
+                                
+                                <!-- Glowing sweeping line simulating standard radar sweep inside the frame -->
+                                <line class="radar-line text-green-500/10" x1="100" y1="100" x2="100" y2="5" stroke="currentColor" stroke-width="1.5"/>
+                                
+                                <!-- Subtle Compass Tickmarks -->
+                                <line x1="100" y1="5" x2="100" y2="12" stroke="currentColor" stroke-width="1.5"/>
+                                <line x1="100" y1="188" x2="100" y2="195" stroke="currentColor" stroke-width="1.5"/>
+                                <line x1="5" y1="100" x2="12" y2="100" stroke="currentColor" stroke-width="1.5"/>
+                                <line x1="188" y1="100" x2="195" y2="100" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                            
+                            <!-- Cardinal text labels floating on the dial -->
+                            <div class="absolute inset-0 flex items-center justify-center font-mono text-[11px] font-black">
+                                <span class="absolute top-2.5 text-red-500">N</span>
+                                <span class="absolute right-3.5 text-zinc-500">E</span>
+                                <span class="absolute bottom-2.5 text-zinc-500">S</span>
+                                <span class="absolute left-3.5 text-zinc-500">W</span>
+                            </div>
+                        </div>
 
-                        <!-- Directional Arrow (Points to target) -->
-                        <div id="compassArrow" class="w-24 h-24 flex items-center justify-center transition-transform duration-100 ease-out" style="transform: rotate(0deg);">
-                            <svg class="w-16 h-16 text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2L2 22l10-6 10 6L12 2z"/>
+                        <!-- Independent Long Glowing Finder Needle (Always points directly to target) -->
+                        <div id="compassArrow" class="needle-pointer w-full h-full absolute flex items-center justify-center">
+                            <!-- Tactical Pointer Design with a long needle shaft and high-contrast glowing arrow head -->
+                            <svg class="w-full h-full text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.7)]" viewBox="0 0 200 200" fill="currentColor">
+                                <!-- Sharp tactical pointer arrow positioned near the outer ring -->
+                                <path d="M 100,12 L 91,40 L 100,32 L 109,40 Z" />
+                                <!-- Sleek linear finder needle line running down to the center axis -->
+                                <line x1="100" y1="32" x2="100" y2="100" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                                <!-- Small aesthetic mechanical hub in the center -->
+                                <circle cx="100" cy="100" r="4.5" fill="#000" stroke="currentColor" stroke-width="2"/>
                             </svg>
                         </div>
                     </div>
 
                     <!-- Telemetry dashboard -->
                     <div class="text-center bg-zinc-950/70 p-4 rounded-2xl border border-zinc-800 w-full max-w-xs backdrop-blur-md">
-                        <div class="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-1">Target Telemetry</div>
+                        <div class="text-xs font-bold text-zinc-500 tracking-widest uppercase mb-1 font-mono">Target Telemetry</div>
                         
                         <div class="flex justify-around items-center py-2">
                             <div>
-                                <span class="block text-[10px] text-zinc-600 font-bold uppercase">Distance</span>
+                                <span class="block text-[10px] text-zinc-600 font-bold uppercase font-mono">Distance</span>
                                 <span id="distVal" class="text-2xl font-black text-green-400 font-mono">--.- m</span>
                             </div>
                             <div class="w-px h-8 bg-zinc-800"></div>
                             <div>
-                                <span class="block text-[10px] text-zinc-600 font-bold uppercase">Bearing</span>
+                                <span class="block text-[10px] text-zinc-600 font-bold uppercase font-mono">Bearing</span>
                                 <span id="bearVal" class="text-2xl font-black text-green-400 font-mono">--°</span>
                             </div>
                         </div>
 
-                        <div class="text-[9px] text-zinc-600 mt-2 border-t border-zinc-900 pt-2 leading-tight">
+                        <div id="simulationFeedback" class="text-[9px] text-zinc-500 mt-2 border-t border-zinc-900 pt-2 leading-tight hidden">
+                            <span class="text-green-500 font-bold">SIMULATION ONLINE:</span> Virtual companion device is nearby. Rotate your phone or use manual controls below.
+                        </div>
+                        <div id="normalTelemetryFeedback" class="text-[9px] text-zinc-600 mt-2 border-t border-zinc-900 pt-2 leading-tight">
                             Note: Indoor/poor GPS satellite connections can increase margin of accuracy error.
+                        </div>
+                    </div>
+
+                    <!-- Interactive Sandbox Simulator Controls -->
+                    <div id="simControlsContainer" class="hidden w-full max-w-xs p-3 bg-zinc-900/90 border border-zinc-800 rounded-xl mt-3 text-center flex flex-col gap-2 backdrop-blur">
+                        <span class="text-[9px] font-bold text-green-400 uppercase tracking-widest font-mono">Sandbox Operations Console</span>
+                        <div class="flex gap-2 justify-center font-mono">
+                            <button onclick="simulateMove()" class="bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[10px] px-2 py-1.5 rounded font-bold border border-zinc-700 select-none">🚶 WALK CLOSE</button>
+                            <button onclick="simulateRotate(-15)" class="bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[10px] px-2.5 py-1.5 rounded font-bold border border-zinc-700 select-none">↺ ROT L</button>
+                            <button onclick="simulateRotate(15)" class="bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-[10px] px-2.5 py-1.5 rounded font-bold border border-zinc-700 select-none">↺ ROT R</button>
                         </div>
                     </div>
                 </div>
@@ -147,7 +208,7 @@
             </div>
 
             <!-- Dashboard Navigation & Action Bar -->
-            <div class="pb-8 pt-4 flex justify-around items-center bg-black/60 backdrop-blur-lg rounded-t-3xl border-t border-zinc-800 shrink-0">
+            <div class="pb-8 pt-4 flex justify-around items-center bg-black/60 backdrop-blur-lg rounded-t-3xl border-t border-zinc-800 shrink-0 font-mono">
                 
                 <!-- Level View Mode (Standard view) -->
                 <div class="flex flex-col items-center gap-1">
@@ -203,7 +264,8 @@
         
         let localPos = { lat: null, lon: null, accuracy: null };
         let remotePos = { lat: null, lon: null };
-        let localHeading = 0; // Degrees relative to true North
+        let localHeading = 0; // Degrees relative to true North (0 = North, 90 = East...)
+        let isSimulationMode = false;
 
         const statusText = document.getElementById('statusText');
         const statusDot = document.getElementById('statusDot');
@@ -211,38 +273,85 @@
         const localVideo = document.getElementById('localVideo');
         const overlay = document.getElementById('playOverlay');
 
-        // Geolocation Tracker Options
         const geoOptions = {
             enableHighAccuracy: true,
             timeout: 5000,
             maximumAge: 0
         };
 
+        // --- Sandboxed Local Simulation Trigger ---
+        async function startSandboxSimulation() {
+            isSimulationMode = true;
+            document.getElementById('permWarning').innerText = "Starting local simulation sandbox...";
+            
+            // Set initial location coordinates (Sandton, ZA region)
+            localPos.lat = -26.1076;
+            localPos.lon = 28.0567;
+            localPos.accuracy = 4.2;
+
+            // Pin virtual peer 28 meters North-East of initial location
+            remotePos.lat = localPos.lat + 0.00020; 
+            remotePos.lon = localPos.lon + 0.00018; 
+
+            // Request compass orientation permission synchronously
+            setupCompass();
+            requestWakeLock();
+
+            // Setup GPS tracking
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(updateLocalPos, handleGeoError, geoOptions);
+            }
+
+            // Transition UI panels
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('call-view').classList.remove('hidden');
+            
+            btnTracker.onclick();
+            
+            updateStatus("SIMULATING", "bg-purple-500");
+            document.getElementById('peerIdentity').innerText = "SIMULATOR ACTIVE";
+            document.getElementById('peerIdentity').className = "text-xl font-black italic text-purple-400 uppercase tracking-tighter";
+            document.getElementById('simulationFeedback').classList.remove('hidden');
+            document.getElementById('simControlsContainer').classList.remove('hidden');
+            document.getElementById('normalTelemetryFeedback').classList.add('hidden');
+
+            calculateRelativePosition();
+        }
+
+        // --- Sandbox Navigation Helpers ---
+        window.simulateMove = function() {
+            if (!isSimulationMode || localPos.lat === null || remotePos.lat === null) return;
+            // Linearly interpolate local coordinates 15% closer to simulated companion
+            localPos.lat += (remotePos.lat - localPos.lat) * 0.15;
+            localPos.lon += (remotePos.lon - localPos.lon) * 0.15;
+            calculateRelativePosition();
+        };
+
+        window.simulateRotate = function(deg) {
+            if (!isSimulationMode) return;
+            // Update device rotation angle manually for debugging
+            localHeading = (localHeading + deg + 360) % 360;
+            calculateRelativePosition();
+        };
+
         // --- Permissions Request Pipeline ---
         async function requestAllPermissionsAndJoin(roomName) {
+            isSimulationMode = false;
             document.getElementById('permWarning').innerText = "Acquiring Permissions & GPS Satellites...";
             try {
-                // 1. Mic and Video (Hitch Camera)
                 localStream = await navigator.mediaDevices.getUserMedia({ 
                     audio: true, 
                     video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 20 } } 
                 });
                 localVideo.srcObject = localStream;
                 
-                // 2. Location (GPS tracking)
-                if (navigator.geolocation) {
-                    navigator.geolocation.watchPosition(updateLocalPos, handleGeoError, geoOptions);
-                } else {
-                    alert("GPS not supported on this browser.");
-                }
-
-                // 3. Orientation (Compass Compass direction)
                 setupCompass();
-
-                // 4. Awake WakeLock
                 requestWakeLock();
 
-                // Hide setup UI, show Call Workspace
+                if (navigator.geolocation) {
+                    navigator.geolocation.watchPosition(updateLocalPos, handleGeoError, geoOptions);
+                }
+
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('call-view').classList.remove('hidden');
                 
@@ -254,7 +363,7 @@
             }
         }
 
-        // --- Wake Lock (Netflix Mode) ---
+        // --- Wake Lock (Keep Screen On) ---
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
                 try {
@@ -268,15 +377,29 @@
 
         // --- Geolocation Position Sync ---
         function updateLocalPos(position) {
-            localPos.lat = position.coords.latitude;
-            localPos.lon = position.coords.longitude;
-            localPos.accuracy = position.coords.accuracy;
+            if (isSimulationMode) {
+                // If real GPS coordinates gain lock while simulating, override fallback coordinates
+                localPos.lat = position.coords.latitude;
+                localPos.lon = position.coords.longitude;
+                localPos.accuracy = position.coords.accuracy;
 
-            document.getElementById('gpsStatus').classList.remove('hidden');
-            document.getElementById('gpsAccuracy').innerText = `±${Math.round(localPos.accuracy)}m`;
+                // Position virtual target near user's real GPS lock
+                if (remotePos.lat === null || Math.abs(remotePos.lat - localPos.lat) > 0.005) {
+                    remotePos.lat = localPos.lat + 0.00020; 
+                    remotePos.lon = localPos.lon + 0.00018; 
+                }
 
-            // Broadcast coordinates to peer instantly
-            broadcastCoordinates();
+                document.getElementById('gpsStatus').classList.remove('hidden');
+                document.getElementById('gpsAccuracy').innerText = `±${Math.round(localPos.accuracy)}m (REAL)`;
+            } else {
+                localPos.lat = position.coords.latitude;
+                localPos.lon = position.coords.longitude;
+                localPos.accuracy = position.coords.accuracy;
+
+                document.getElementById('gpsStatus').classList.remove('hidden');
+                document.getElementById('gpsAccuracy').innerText = `±${Math.round(localPos.accuracy)}m`;
+                broadcastCoordinates();
+            }
             calculateRelativePosition();
         }
 
@@ -294,10 +417,9 @@
             }
         }
 
-        // --- Compass Orientation Logic (Factual Verification) ---
+        // --- Compass Orientation Logic ---
         function setupCompass() {
-            // iOS Safari Compass Event check
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission()
                     .then(state => {
                         if (state === 'granted') {
@@ -305,7 +427,6 @@
                         }
                     }).catch(console.error);
             } else {
-                // Android Chrome absolute compass check
                 window.addEventListener('deviceorientationabsolute', handleOrientation, true);
                 window.addEventListener('deviceorientation', handleOrientation, true);
             }
@@ -314,19 +435,17 @@
         function handleOrientation(event) {
             let heading = 0;
             if (event.webkitCompassHeading) {
-                // iOS directly provides a verified compass heading (0 = North)
                 heading = event.webkitCompassHeading;
             } else if (event.absolute && event.alpha !== null) {
-                // Android standardizes alpha around the magnetic north vector on absolute orientation events
                 heading = 360 - event.alpha;
             } else {
-                return; // Fallback gracefully if hardware is not present
+                return; 
             }
             localHeading = heading;
             calculateRelativePosition();
         }
 
-        // --- Distance & Bearing calculation (Factual Math) ---
+        // --- Distance & Bearing calculation ---
         function calculateRelativePosition() {
             if (localPos.lat === null || remotePos.lat === null) return;
 
@@ -340,7 +459,6 @@
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             const distance = R * c; // in meters
 
-            // Update UI meters/feet dynamically
             const distValEl = document.getElementById('distVal');
             if (distance < 100) {
                 distValEl.innerText = `${distance.toFixed(1)} m`;
@@ -359,8 +477,11 @@
 
             document.getElementById('bearVal').innerText = `${Math.round(bearing)}°`;
 
-            // 3. Direction Arrow Rotation
-            // Relative Angle = True Bearing to target - Device's Heading
+            // 3. Dynamic Outer Dial Rotation
+            // Rotates the N-E-S-W compass disc globally so N always points to physical North
+            document.getElementById('compassDial').style.transform = `rotate(${-localHeading}deg)`;
+
+            // 4. Relative Needle Rotation (Indicates target location relative to your phone frame)
             const relativeHeading = bearing - localHeading;
             document.getElementById('compassArrow').style.transform = `rotate(${relativeHeading}deg)`;
         }
@@ -387,18 +508,15 @@
                     peer = p;
                     updateStatus("SEARCHING PEER", "bg-yellow-500");
                     
-                    // Listen for Media Call
                     peer.on('call', incoming => {
                         incoming.answer(localStream);
                         handleCallStream(incoming);
                     });
 
-                    // Listen for Data Connection (GPS Exchange)
                     peer.on('connection', conn => {
                         handleDataConnection(conn);
                     });
 
-                    // Attempt connection to peer variations
                     setTimeout(() => {
                         const call = peer.call(partnerId, localStream);
                         if (call) handleCallStream(call);
@@ -422,7 +540,7 @@
                 remoteVideo.play().catch(() => overlay.classList.remove('hidden'));
                 updateStatus("CONNECTED", "bg-green-500");
                 document.getElementById('peerIdentity').innerText = "DEVICE PRO LINKED";
-                document.getElementById('peerIdentity').classList.add('text-green-500');
+                document.getElementById('peerIdentity').className = "text-xl font-black italic text-green-500 uppercase tracking-tighter";
             });
             call.on('close', () => window.location.reload());
         }
@@ -430,7 +548,6 @@
         function handleDataConnection(conn) {
             dataConnection = conn;
             conn.on('open', () => {
-                // Push our current coordinates once the P2P pipe is officially open
                 broadcastCoordinates();
             });
             conn.on('data', data => {
@@ -476,6 +593,10 @@
         };
 
         btnVideo.onclick = () => {
+            if (isSimulationMode) {
+                alert("Video Feed is disabled in Local Simulation Sandbox.");
+                return;
+            }
             resetTabs();
             btnVideo.className = "w-12 h-12 bg-green-950/20 border border-green-500 text-green-500 rounded-full flex items-center justify-center transition-all";
             panelVideo.classList.remove('hidden');
