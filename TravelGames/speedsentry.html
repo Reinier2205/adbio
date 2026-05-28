@@ -29,10 +29,9 @@
     </header>
 
     <main class="flex-1 flex flex-col items-center justify-center p-4">
-        <!-- Volume Reminder -->
         <div id="volReminder" class="mb-4 bg-blue-900/30 border border-blue-500/50 p-3 rounded-xl text-center w-full max-w-xs">
             <p class="text-[10px] text-blue-200 uppercase tracking-widest font-bold">Check Phone Volume</p>
-            <p class="text-[9px] text-blue-300/70 mt-1">Ensure hardware volume is UP before starting.</p>
+            <p class="text-[9px] text-blue-300/70 mt-1">Ensure hardware volume is UP.</p>
         </div>
 
         <div class="text-center mb-6">
@@ -61,7 +60,6 @@
         let isTracking = false, currentLimit = localStorage.getItem('limit') || 60, topSpeed = 0, lastSpeech = 0;
         let audioCtx = null;
 
-        // Auto-Night Mode
         const hour = new Date().getHours();
         if (hour >= 19 || hour <= 6) document.body.classList.add('night-mode');
 
@@ -72,12 +70,17 @@
         }
 
         function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
         }
 
         function testAlarm() {
             initAudio();
+            // Test beep
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
@@ -87,6 +90,10 @@
             gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.3);
+            
+            // Test voice
+            const msg = new SpeechSynthesisUtterance("Speed Sentry active");
+            window.speechSynthesis.speak(msg);
         }
 
         function speakWarning() {
@@ -104,12 +111,18 @@
                 initAudio();
                 document.getElementById('startBtn').innerText = "Stop Tracking";
                 document.getElementById('startBtn').className = "w-full py-5 rounded-2xl font-black text-lg bg-red-600 text-white shadow-lg uppercase tracking-widest";
+                
                 navigator.geolocation.watchPosition(pos => {
                     const speed = Math.round((pos.coords.speed || 0) * 3.6);
                     document.getElementById('speedDisplay').innerText = speed;
                     if (speed > topSpeed) { topSpeed = speed; document.getElementById('topSpeedDisplay').innerText = topSpeed + ' km/h'; }
+                    
                     if (speed >= currentLimit) {
                         document.getElementById('speedDisplay').className = "text-[7rem] leading-none font-black font-lcd glow-danger";
+                        // Play beep
+                        const osc = audioCtx.createOscillator();
+                        osc.connect(audioCtx.destination);
+                        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
                         speakWarning();
                     } else {
                         document.getElementById('speedDisplay').className = "text-[7rem] leading-none font-black font-lcd glow-safe";
