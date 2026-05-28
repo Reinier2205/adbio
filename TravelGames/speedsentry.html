@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Share Tech Mono', monospace; background-color: #050505; color: #fff; transition: background 0.5s; }
+        body { font-family: 'Share Tech Mono', monospace; background-color: #050505; color: #fff; transition: background 0.5s; overflow: hidden; }
         .night-mode { background-color: #000; color: #ff0000; }
         .font-lcd { font-family: 'Orbitron', sans-serif; }
         .glow-safe { text-shadow: 0 0 20px rgba(34, 197, 94, 0.6); color: #22c55e; }
@@ -17,90 +17,82 @@
 </head>
 <body id="appBody" class="flex flex-col h-screen">
 
-    <header class="p-4 flex justify-between items-center glass-panel z-10">
-        <div>
-            <h1 class="text-lg font-black tracking-widest text-blue-500 font-lcd">SPEED SENTRY</h1>
-            <div id="gpsStatus" class="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">GPS READY</div>
-        </div>
+    <!-- Header Stats -->
+    <header class="p-4 flex justify-between items-center z-10">
+        <h1 class="text-lg font-black tracking-widest text-blue-500 font-lcd">SPEED SENTRY</h1>
         <div class="text-right">
             <span class="block text-[9px] text-zinc-500 uppercase">Top Speed</span>
             <span id="topSpeedDisplay" class="text-md font-bold text-white">0 km/h</span>
         </div>
     </header>
 
-    <main class="flex-1 flex flex-col items-center justify-center p-4">
-        <div id="volReminder" class="mb-4 bg-blue-900/30 border border-blue-500/50 p-3 rounded-xl text-center w-full max-w-xs">
-            <p class="text-[10px] text-blue-200 uppercase tracking-widest font-bold">Check Phone Volume</p>
-            <p class="text-[9px] text-blue-300/70 mt-1">Ensure hardware volume is UP.</p>
-        </div>
-
-        <div class="text-center mb-6">
-            <div id="speedDisplay" class="text-[7rem] leading-none font-black font-lcd glow-safe transition-colors duration-300">0</div>
-            <div class="text-xl text-zinc-400 font-bold">KM/H</div>
-        </div>
-
-        <div class="glass-panel p-6 rounded-3xl w-full max-w-xs flex flex-col items-center shadow-2xl">
-            <div class="flex items-center justify-between w-full mb-6">
-                <button onclick="adjustLimit(-5)" class="w-12 h-12 bg-zinc-800 rounded-full font-bold">-5</button>
-                <div class="text-center">
-                    <span id="limitDisplay" class="text-3xl font-black font-lcd">60</span>
-                    <span class="block text-[9px] text-zinc-500 uppercase">Limit</span>
-                </div>
-                <button onclick="adjustLimit(5)" class="w-12 h-12 bg-zinc-800 rounded-full font-bold">+5</button>
+    <main class="flex-1 flex flex-col items-center p-4 gap-6">
+        
+        <!-- Hardware Setup Group -->
+        <div class="glass-panel p-4 rounded-2xl w-full max-w-sm flex items-center justify-between border border-blue-900/30">
+            <div>
+                <p class="text-[10px] text-blue-200 uppercase tracking-widest font-bold">Hardware Setup</p>
+                <p class="text-[9px] text-zinc-400">Set physical volume to max.</p>
             </div>
-            <button onclick="testAlarm()" class="w-full py-3 bg-zinc-800 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest">Test Alarm</button>
+            <button onclick="testAlarm()" class="bg-blue-600 px-4 py-2 rounded-lg text-[10px] font-bold uppercase hover:bg-blue-500 transition-all">Test</button>
+        </div>
+
+        <!-- Start Tracking Button -->
+        <button id="startBtn" onclick="toggleTracking()" class="w-full max-w-sm py-6 rounded-2xl font-black text-xl bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] uppercase tracking-widest active:scale-95 transition-all">Start Tracking</button>
+
+        <!-- Live Display -->
+        <div class="text-center my-auto">
+            <div id="speedDisplay" class="text-[8rem] leading-none font-black font-lcd glow-safe transition-colors duration-300">0</div>
+            <div class="text-xl text-zinc-400 font-bold tracking-widest">KM/H</div>
+        </div>
+
+        <!-- Speed Limit Controls -->
+        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm flex items-center justify-between shadow-2xl">
+            <button onclick="adjustLimit(-5)" class="w-20 h-20 bg-zinc-800 rounded-full font-black text-2xl active:bg-zinc-700 transition-all">-5</button>
+            <div class="text-center">
+                <span id="limitDisplay" class="text-5xl font-black font-lcd">60</span>
+                <span class="block text-[10px] text-zinc-500 uppercase tracking-widest mt-1">Limit</span>
+            </div>
+            <button onclick="adjustLimit(5)" class="w-20 h-20 bg-zinc-800 rounded-full font-black text-2xl active:bg-zinc-700 transition-all">+5</button>
         </div>
     </main>
 
-    <footer class="p-6">
-        <button id="startBtn" onclick="toggleTracking()" class="w-full py-5 rounded-2xl font-black text-lg bg-blue-600 text-white shadow-lg uppercase tracking-widest">Start Tracking</button>
-    </footer>
-
     <script>
-        let isTracking = false, currentLimit = localStorage.getItem('limit') || 60, topSpeed = 0, lastSpeech = 0;
-        let audioCtx = null;
+        let isTracking = false, topSpeed = 0, lastSpeech = 0, audioCtx = null;
+        let currentLimit = parseInt(localStorage.getItem('limit') || 60);
 
+        // Initialization
+        document.getElementById('limitDisplay').innerText = currentLimit;
         const hour = new Date().getHours();
         if (hour >= 19 || hour <= 6) document.body.classList.add('night-mode');
 
         function adjustLimit(amt) {
-            currentLimit = Math.max(10, Math.min(250, parseInt(currentLimit) + amt));
+            currentLimit = Math.max(10, Math.min(250, currentLimit + amt));
             document.getElementById('limitDisplay').innerText = currentLimit;
             localStorage.setItem('limit', currentLimit);
         }
 
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function testAlarm() {
             initAudio();
-            // Test beep
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+            osc.connect(gain); gain.connect(audioCtx.destination);
             osc.type = 'square';
             osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
             gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
-            
-            // Test voice
-            const msg = new SpeechSynthesisUtterance("Speed Sentry active");
-            window.speechSynthesis.speak(msg);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance("Alarm test successful"));
         }
 
         function speakWarning() {
             const now = Date.now();
             if (now - lastSpeech > 10000) {
-                const msg = new SpeechSynthesisUtterance("Warning! Speed limit exceeded.");
-                window.speechSynthesis.speak(msg);
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance("Warning! Speed limit exceeded."));
                 lastSpeech = now;
             }
         }
@@ -110,22 +102,20 @@
             if (isTracking) {
                 initAudio();
                 document.getElementById('startBtn').innerText = "Stop Tracking";
-                document.getElementById('startBtn').className = "w-full py-5 rounded-2xl font-black text-lg bg-red-600 text-white shadow-lg uppercase tracking-widest";
-                
+                document.getElementById('startBtn').className = "w-full max-w-sm py-6 rounded-2xl font-black text-xl bg-red-600 text-white shadow-lg uppercase tracking-widest active:scale-95 transition-all";
                 navigator.geolocation.watchPosition(pos => {
                     const speed = Math.round((pos.coords.speed || 0) * 3.6);
                     document.getElementById('speedDisplay').innerText = speed;
                     if (speed > topSpeed) { topSpeed = speed; document.getElementById('topSpeedDisplay').innerText = topSpeed + ' km/h'; }
                     
                     if (speed >= currentLimit) {
-                        document.getElementById('speedDisplay').className = "text-[7rem] leading-none font-black font-lcd glow-danger";
-                        // Play beep
+                        document.getElementById('speedDisplay').className = "text-[8rem] leading-none font-black font-lcd glow-danger";
                         const osc = audioCtx.createOscillator();
                         osc.connect(audioCtx.destination);
                         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
                         speakWarning();
                     } else {
-                        document.getElementById('speedDisplay').className = "text-[7rem] leading-none font-black font-lcd glow-safe";
+                        document.getElementById('speedDisplay').className = "text-[8rem] leading-none font-black font-lcd glow-safe";
                     }
                 }, null, { enableHighAccuracy: true });
             } else {
