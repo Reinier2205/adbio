@@ -422,7 +422,7 @@
                     "Tip: Use tongs, not forks, to flip",
                     "Tip: Keep coals at medium heat"
                 ],
-                stageNames: ["Braai 1st Side", "Turn", "Braai 2nd Side", "Rest"],
+                stageNames: ["Braai 1st Side", "Braai 2nd Side", "Rest"],
                 stageComplete: "Step complete. Next step: ",
                 cookingComplete: "Braai complete. Enjoy your meal!",
                 slowDown: "Slow down",
@@ -430,7 +430,7 @@
                 helpHowTo: "How to use:",
                 helpStep1: "Select your meat type from the categories",
                 helpStep2: "Press Start Cooking to begin",
-                helpStep3: "Timer cycles through: Braai → Turn → Braai → Rest",
+                helpStep3: "Timer cycles through: Braai 1st Side → Turn → Braai 2nd Side → Rest",
                 helpStep4: "Voice guidance announces each stage change",
                 helpStep5: "Adjust time with +/- 30s buttons",
                 helpStep6: "Screen stays on during cooking",
@@ -462,7 +462,7 @@
                     "Wenk: Gebruik tang, nie vurke, om om te draai",
                     "Wenk: Hou kole op medium hitte"
                 ],
-                stageNames: ["Braai 1ste Kant", "Draai Om", "Braai 2de Kant", "Rus"],
+                stageNames: ["Braai 1ste Kant", "Braai 2de Kant", "Rus"],
                 stageComplete: "Stap voltooi. Volgende stap: ",
                 cookingComplete: "Braai voltooi. Geniet jou ete!",
                 slowDown: "Stadig af",
@@ -470,7 +470,7 @@
                 helpHowTo: "Hoe om te gebruik:",
                 helpStep1: "Kies jou vleistipe uit die kategorieë",
                 helpStep2: "Druk Begin Braai om te begin",
-                helpStep3: "Timer siklus deur: Braai → Draai → Braai → Rus",
+                helpStep3: "Timer siklus deur: Braai 1ste Kant → Draai → Braai 2de Kant → Rus",
                 helpStep4: "Stemleiding kondig elke stapverandering aan",
                 helpStep5: "Pas tyd aan met +/- 30s knoppies",
                 helpStep6: "Skerm bly aan tydens braai",
@@ -481,141 +481,142 @@
 
         // Cooking data - Based on Meat Temperature Safety Guide
         // Times calculated for reaching safe internal temperatures
+        // Stage format: [Side 1 time, Side 2 time, Rest time] - Turn is automatic
         const meatData = {
             // BEEF - Different doneness levels
             'beef-rare': { 
                 name: { en: "Beef Rare", af: "Beesvleis Rare" }, 
                 targetTemp: 40,
-                totalTime: 360, 
-                stages: [120, 30, 120, 90] 
+                totalTime: 330, 
+                stages: [120, 120, 90] 
             },
             'beef-medium-rare': { 
                 name: { en: "Beef Medium-Rare", af: "Beesvleis Medium-Rare" }, 
                 targetTemp: 55,
-                totalTime: 420, 
-                stages: [150, 30, 150, 90] 
+                totalTime: 390, 
+                stages: [150, 150, 90] 
             },
             'beef-medium': { 
                 name: { en: "Beef Medium", af: "Beesvleis Medium" }, 
                 targetTemp: 60,
-                totalTime: 480, 
-                stages: [180, 30, 180, 90] 
+                totalTime: 450, 
+                stages: [180, 180, 90] 
             },
             'beef-medium-well': { 
                 name: { en: "Beef Medium-Well", af: "Beesvleis Medium-Well" }, 
                 targetTemp: 65,
-                totalTime: 540, 
-                stages: [210, 30, 210, 90] 
+                totalTime: 510, 
+                stages: [210, 210, 90] 
             },
             'beef-well': { 
                 name: { en: "Beef Well Done", af: "Beesvleis Gaar" }, 
                 targetTemp: 70,
-                totalTime: 600, 
-                stages: [240, 30, 240, 90] 
+                totalTime: 570, 
+                stages: [240, 240, 90] 
             },
             'ground-beef': { 
                 name: { en: "Ground Beef", af: "Maalvleis" }, 
                 targetTemp: 71,
-                totalTime: 540, 
-                stages: [210, 30, 210, 90] 
+                totalTime: 510, 
+                stages: [210, 210, 90] 
             },
             
             // PORK - Safe cooking temperatures
             'pork-white': { 
                 name: { en: "Pork White Meat", af: "Vark Wit Vleis" }, 
                 targetTemp: 63,
-                totalTime: 540, 
-                stages: [210, 30, 210, 90] 
+                totalTime: 510, 
+                stages: [210, 210, 90] 
             },
             'pork-dark': { 
                 name: { en: "Pork Dark Meat", af: "Vark Donker Vleis" }, 
                 targetTemp: 71,
-                totalTime: 600, 
-                stages: [240, 30, 240, 90] 
+                totalTime: 570, 
+                stages: [240, 240, 90] 
             },
             'ground-pork': { 
                 name: { en: "Ground Pork", af: "Maalvark" }, 
                 targetTemp: 71,
-                totalTime: 600, 
-                stages: [240, 30, 240, 90] 
+                totalTime: 570, 
+                stages: [240, 240, 90] 
             },
             'pork-sausage': { 
                 name: { en: "Pork Sausage", af: "Varkvors" }, 
                 targetTemp: 71,
-                totalTime: 660, 
-                stages: [270, 30, 270, 90] 
+                totalTime: 630, 
+                stages: [270, 270, 90] 
             },
             
             // POULTRY - Must reach safe temperatures
             'chicken-white': { 
                 name: { en: "Chicken White Meat", af: "Hoender Wit Vleis" }, 
                 targetTemp: 71,
-                totalTime: 600, 
-                stages: [240, 30, 240, 90] 
+                totalTime: 570, 
+                stages: [240, 240, 90] 
             },
             'chicken-dark': { 
                 name: { en: "Chicken Dark Meat", af: "Hoender Donker Vleis" }, 
                 targetTemp: 75,
-                totalTime: 660, 
-                stages: [270, 30, 270, 90] 
+                totalTime: 630, 
+                stages: [270, 270, 90] 
             },
             'ground-poultry': { 
                 name: { en: "Ground Poultry", af: "Maalpluimvee" }, 
                 targetTemp: 75,
-                totalTime: 660, 
-                stages: [270, 30, 270, 90] 
+                totalTime: 630, 
+                stages: [270, 270, 90] 
             },
             'chicken-whole': { 
                 name: { en: "Whole Chicken", af: "Heel Hoender" }, 
                 targetTemp: 75,
-                totalTime: 900, 
-                stages: [390, 30, 390, 90] 
+                totalTime: 870, 
+                stages: [390, 390, 90] 
             },
             
             // LAMB - Similar to beef
             'lamb-rare': { 
                 name: { en: "Lamb Rare", af: "Lam Rare" }, 
                 targetTemp: 55,
-                totalTime: 420, 
-                stages: [150, 30, 150, 90] 
+                totalTime: 390, 
+                stages: [150, 150, 90] 
             },
             'lamb-medium': { 
                 name: { en: "Lamb Medium", af: "Lam Medium" }, 
                 targetTemp: 60,
-                totalTime: 480, 
-                stages: [180, 30, 180, 90] 
+                totalTime: 450, 
+                stages: [180, 180, 90] 
             },
             'lamb-well': { 
                 name: { en: "Lamb Well Done", af: "Lam Gaar" }, 
                 targetTemp: 70,
-                totalTime: 600, 
-                stages: [240, 30, 240, 90] 
+                totalTime: 570, 
+                stages: [240, 240, 90] 
             },
             'ground-lamb': { 
                 name: { en: "Ground Lamb", af: "Maallam" }, 
                 targetTemp: 71,
-                totalTime: 540, 
-                stages: [210, 30, 210, 90] 
+                totalTime: 510, 
+                stages: [210, 210, 90] 
             },
             
             // OTHER
             'fish': { 
                 name: { en: "Fish", af: "Vis" }, 
                 targetTemp: 63,
-                totalTime: 300, 
-                stages: [105, 30, 105, 60] 
+                totalTime: 270, 
+                stages: [105, 105, 60] 
             },
             'seafood': { 
                 name: { en: "Seafood", af: "Seekos" }, 
                 targetTemp: 63,
-                totalTime: 240, 
-                stages: [75, 30, 75, 60] 
+                totalTime: 210, 
+                stages: [75, 75, 60] 
             },
             'veggies': { 
                 name: { en: "Veggies", af: "Groente" }, 
                 targetTemp: 0,
-                totalTime: 360, 
-                stages: [135, 30, 135, 60] 
+                totalTime: 330, 
+                stages: [135, 135, 60] 
             }
         };
 
@@ -811,6 +812,26 @@
         function advanceStage() {
             clearInterval(timer);
             isRunning = false;
+            
+            // Special handling: After first side, show turn notification
+            if (currentStep === 0) {
+                // Show turn notification
+                const turnMessage = currentLanguage === 'en' ? 
+                    "Turn the meat now!" : 
+                    "Draai die vleis nou om!";
+                const utterance = new SpeechSynthesisUtterance(turnMessage);
+                window.speechSynthesis.speak(utterance);
+                
+                // Move to next stage
+                currentStep++;
+                timeLeft = stageTimes[currentStep];
+                renderProgress();
+                updateStageDisplay();
+                updateDisplay();
+                document.getElementById('mainBtn').textContent = translations[currentLanguage].startNextStep;
+                return;
+            }
+            
             currentStep++;
             
             if (currentStep < stages.length) {
