@@ -3,116 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BraaiTyd</title>
+    <title>BraaiTyd Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #1a1a1a; color: white; font-family: sans-serif; }
-        .card { background: #2d2d2d; border-radius: 1rem; padding: 1.5rem; }
-        .btn { padding: 1rem; border-radius: 0.5rem; font-weight: bold; text-transform: uppercase; }
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; }
+        .stage-active { border: 2px solid #f97316; box-shadow: 0 0 15px rgba(249, 115, 22, 0.3); }
     </style>
 </head>
-<body class="p-4 max-w-lg mx-auto">
+<body class="p-4 max-w-md mx-auto h-screen flex flex-col">
 
-    <header class="mb-6 text-center">
-        <h1 class="text-3xl font-black text-orange-500">BraaiTyd</h1>
-        <p class="text-zinc-400">Master your fire.</p>
-    </header>
+    <!-- Volume Header -->
+    <div class="bg-indigo-900/50 border border-indigo-500/30 p-2 rounded-lg text-center mb-4">
+        <p class="text-[9px] font-bold tracking-widest text-indigo-200 uppercase">Ensure volume is up for voice guidance</p>
+    </div>
 
-    <div id="setup" class="space-y-4">
-        <select id="meatSelect" class="w-full p-4 bg-zinc-800 rounded-lg text-white" onchange="updateMeat()">
-            <option value="rump">Beef: Rump</option>
-            <option value="fillet">Beef: Fillet</option>
-            <option value="ribeye">Beef: Ribeye</option>
-            <option value="lambChop">Lamb: Loin Chops</option>
-            <option value="porkChop">Pork: Loin Chops</option>
-            <option value="wors">Boerewors</option>
-            <option value="chicken">Chicken: Pieces</option>
-            <option value="burger">Beef: Burger Patties</option>
-        </select>
+    <!-- Progress Indicator -->
+    <div id="stepProgress" class="flex gap-2 justify-center mb-8">
+        <!-- Steps generated via JS -->
+    </div>
+
+    <div class="flex-1 flex flex-col items-center justify-center">
+        <h2 id="stepName" class="text-2xl font-black uppercase tracking-widest text-orange-500 mb-6">Braai</h2>
         
-        <div id="wellnessSection" class="hidden">
-            <label class="block text-sm mb-2">Target Wellness</label>
-            <select id="wellness" class="w-full p-4 bg-zinc-800 rounded-lg">
-                <option value="rare">Rare (52°C)</option>
-                <option value="medRare">Medium-Rare (55°C)</option>
-                <option value="medium">Medium (60°C)</option>
-                <option value="wellDone">Well Done (72°C+)</option>
-            </select>
+        <div class="relative w-64 h-64 flex items-center justify-center mb-8">
+            <div class="absolute inset-0 border-8 border-zinc-800 rounded-full"></div>
+            <div id="ring" class="absolute inset-0 border-8 border-orange-500 rounded-full transition-all duration-1000"></div>
+            <span id="timeDisplay" class="text-6xl font-black font-mono">00:00</span>
         </div>
 
-        <div id="controls" class="card">
-            <h2 id="stepName" class="text-xl font-bold mb-4">Braai Step</h2>
-            <div class="flex items-center gap-4 mb-6">
-                <button onclick="changeTime(-60)" class="btn bg-zinc-700">-1m</button>
-                <span id="timeDisplay" class="text-6xl font-mono font-bold flex-1 text-center">00:00</span>
-                <button onclick="changeTime(60)" class="btn bg-zinc-700">+1m</button>
-            </div>
-            <button id="mainBtn" onclick="toggleTimer()" class="w-full btn bg-orange-600">Start Timer</button>
+        <div class="flex w-full gap-4 mb-8">
+            <button onclick="changeTime(-30)" class="flex-1 py-4 bg-zinc-800 rounded-2xl font-bold text-xl active:bg-zinc-700">-30s</button>
+            <button onclick="changeTime(30)" class="flex-1 py-4 bg-zinc-800 rounded-2xl font-bold text-xl active:bg-zinc-700">+30s</button>
         </div>
+
+        <button id="mainBtn" onclick="toggleTimer()" class="w-full py-6 bg-orange-600 rounded-2xl font-black text-2xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">Start</button>
     </div>
 
     <script>
-        const meatData = {
-            rump: { name: "Rump Steak", steps: [{n:"Braai", t:300}, {n:"Turn", t:300}, {n:"Rest", t:300}], hasWellness: true },
-            wors: { name: "Boerewors", steps: [{n:"Braai", t:300}, {n:"Turn", t:300}, {n:"Finish", t:240}], hasWellness: false }
-            // Add more as needed
-        };
-
-        let currentStepIndex = 0;
-        let timeLeft = 300;
-        let timer = null;
+        const stages = ["Braai", "Turn", "Braai", "Rest"];
+        let currentStep = 0;
+        let timeLeft = 300; // 5 min default
         let isRunning = false;
+        let timer = null;
+        let wakeLock = null;
 
-        function updateMeat() {
-            const m = meatData[document.getElementById('meatSelect').value];
-            document.getElementById('wellnessSection').classList.toggle('hidden', !m.hasWellness);
-            timeLeft = m.steps[0].t;
-            render();
+        function renderProgress() {
+            const container = document.getElementById('stepProgress');
+            container.innerHTML = stages.map((s, i) => `
+                <div class="w-3 h-3 rounded-full ${i === currentStep ? 'bg-orange-500' : i < currentStep ? 'bg-orange-900' : 'bg-zinc-700'}"></div>
+            `).join('');
+            document.getElementById('stepName').innerText = stages[currentStep];
         }
 
-        function render() {
-            const m = meatData[document.getElementById('meatSelect').value];
-            document.getElementById('stepName').innerText = m.steps[currentStepIndex].n;
-            document.getElementById('timeDisplay').innerText = formatTime(timeLeft);
-        }
-
-        function formatTime(s) {
-            const m = Math.floor(s/60);
-            const sec = s % 60;
-            return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-        }
-
-        function changeTime(amt) {
-            timeLeft = Math.max(0, timeLeft + amt);
-            render();
-        }
-
-        function toggleTimer() {
-            if(isRunning) {
+        async function toggleTimer() {
+            if (isRunning) {
                 clearInterval(timer);
                 isRunning = false;
-                document.getElementById('mainBtn').innerText = "Start Timer";
+                document.getElementById('mainBtn').innerText = "Start";
             } else {
+                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
                 isRunning = true;
-                document.getElementById('mainBtn').innerText = "Stop Timer";
+                document.getElementById('mainBtn').innerText = "Pause";
                 timer = setInterval(() => {
                     timeLeft--;
-                    render();
-                    if(timeLeft <= 0) {
-                        clearInterval(timer);
-                        playSound();
-                        alert("Time is up!"); // Replace with custom UI if preferred
+                    if (timeLeft <= 0) {
+                        advanceStage();
                     }
+                    updateDisplay();
                 }, 1000);
             }
         }
 
-        function playSound() {
-            const utterance = new SpeechSynthesisUtterance("Time is up. Step complete.");
-            window.speechSynthesis.speak(utterance);
+        function advanceStage() {
+            clearInterval(timer);
+            isRunning = false;
+            currentStep++;
+            if (currentStep < stages.length) {
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance(`Step complete. Next step: ${stages[currentStep]}`));
+                timeLeft = 300; // Reset for next stage
+                renderProgress();
+                updateDisplay();
+                document.getElementById('mainBtn').innerText = "Start Next Step";
+            } else {
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance("Braai complete. Enjoy your meal!"));
+                currentStep = 0;
+                renderProgress();
+                document.getElementById('mainBtn').innerText = "Restart";
+            }
         }
 
-        updateMeat();
+        function updateDisplay() {
+            document.getElementById('timeDisplay').innerText = formatTime(timeLeft);
+        }
+
+        function formatTime(s) {
+            return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+        }
+
+        function changeTime(amt) {
+            timeLeft = Math.max(0, timeLeft + amt);
+            updateDisplay();
+        }
+
+        renderProgress();
+        updateDisplay();
     </script>
 </body>
 </html>
