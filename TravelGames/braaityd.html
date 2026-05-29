@@ -57,7 +57,8 @@
           flex-direction: column;
           padding: 12px 16px;
           gap: 10px;
-          overflow: hidden;
+          overflow-y: auto;
+          overflow-x: hidden;
         }
         
         /* Zone 3 */
@@ -108,6 +109,14 @@
         }
         .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #111; }
         
+        .btn-secondary {
+          background: radial-gradient(circle, var(--teal), #006666);
+        }
+        
+        .btn-danger {
+          background: radial-gradient(circle, var(--maroon), #660000);
+        }
+        
         /* Game specific styles */
         .stage-active { border: 2px solid var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
         
@@ -136,21 +145,116 @@
           max-width: 420px;
           width: 90%;
           animation: modalIn 0.25s ease;
+          max-height: 80vh;
+          overflow-y: auto;
         }
         @keyframes modalIn {
           from { opacity: 0; transform: scale(0.7); }
           to   { opacity: 1; transform: scale(1); }
         }
+        
+        /* Meat selector styles */
+        .meat-category {
+          background: rgba(0,0,0,0.2);
+          border-radius: 10px;
+          padding: 10px;
+          margin-bottom: 10px;
+          border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        
+        .meat-category h4 {
+          font-family: 'Cinzel', serif;
+          color: var(--gold);
+          margin: 0 0 8px 0;
+          font-size: 1rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        
+        .meat-options {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+          gap: 8px;
+        }
+        
+        .meat-option {
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(212, 175, 55, 0.2);
+          border-radius: 6px;
+          padding: 8px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-size: 0.85rem;
+        }
+        
+        .meat-option:hover {
+          background: rgba(212, 175, 55, 0.2);
+          border-color: var(--gold);
+        }
+        
+        .meat-option.selected {
+          background: rgba(212, 175, 55, 0.3);
+          border-color: var(--gold);
+          box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+        
+        /* Language toggle */
+        .lang-toggle {
+          position: absolute;
+          top: 8px;
+          right: 60px;
+          background: rgba(0,0,0,0.5);
+          border: 1px solid var(--gold);
+          border-radius: 20px;
+          padding: 4px 8px;
+          font-size: 0.7rem;
+          color: var(--gold-light);
+          cursor: pointer;
+          z-index: 100;
+        }
+        
+        /* Stage details */
+        .stage-details {
+          background: rgba(0,0,0,0.2);
+          border-radius: 10px;
+          padding: 12px;
+          margin-top: 10px;
+          border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        
+        .stage-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        
+        .stage-time {
+          font-family: 'Cinzel', serif;
+          color: var(--gold-light);
+          font-size: 1.2rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 380px) {
+          .meat-options {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
     </style>
 </head>
 <body>
+
+  <!-- Language Toggle -->
+  <div class="lang-toggle" id="langToggle" onclick="toggleLanguage()">EN</div>
 
   <!-- Zone 1: top nav -->
   <div class="top-nav">
     <button class="nav-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
     <div style="text-align:center">
-      <h1 style="font-family:'Cinzel',serif;color:var(--gold);margin:0">BraaiTyd Pro</h1>
-      <p style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.4);margin:2px 0 0">Perfect Braai Timer</p>
+      <h1 style="font-family:'Cinzel',serif;color:var(--gold);margin:0" id="appTitle">BraaiTyd Pro</h1>
+      <p style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.4);margin:2px 0 0" id="appSubtitle">Perfect Braai Timer</p>
     </div>
     <button class="nav-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
   </div>
@@ -159,76 +263,530 @@
   <div class="casino-table">
     <!-- Volume Header -->
     <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--gold); border-radius: 8px; padding: 8px; text-align: center; margin-bottom: 12px;">
-        <p style="font-size:0.6rem; font-weight: bold; letter-spacing:0.1em; color:var(--gold-light); text-transform: uppercase;">Ensure volume is up for voice guidance</p>
+        <p style="font-size:0.6rem; font-weight: bold; letter-spacing:0.1em; color:var(--gold-light); text-transform: uppercase;" id="volumeReminder">Ensure volume is up for voice guidance</p>
     </div>
 
-    <!-- Progress Indicator -->
-    <div id="stepProgress" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;">
-        <!-- Steps generated via JS -->
+    <!-- Meat Selector -->
+    <div id="meatSelector" style="margin-bottom: 16px;">
+      <h3 style="font-family:'Cinzel',serif; color:var(--gold); margin: 0 0 10px 0; font-size: 1.2rem; text-align: center;" id="selectMeatTitle">Select Your Meat</h3>
+      
+      <div class="meat-category">
+        <h4 id="beefCategory">Beef</h4>
+        <div class="meat-options">
+          <div class="meat-option" data-meat="beef-rare" data-temp="40">Rare (40°C)</div>
+          <div class="meat-option" data-meat="beef-medium-rare" data-temp="55">Med-Rare (55°C)</div>
+          <div class="meat-option" data-meat="beef-medium" data-temp="60">Medium (60°C)</div>
+          <div class="meat-option" data-meat="beef-medium-well" data-temp="65">Med-Well (65°C)</div>
+          <div class="meat-option" data-meat="beef-well" data-temp="70">Well Done (70°C)</div>
+          <div class="meat-option" data-meat="ground-beef" data-temp="71">Ground (71°C)</div>
+        </div>
+      </div>
+      
+      <div class="meat-category">
+        <h4 id="porkCategory">Pork</h4>
+        <div class="meat-options">
+          <div class="meat-option" data-meat="pork-white" data-temp="63">White Meat (63°C)</div>
+          <div class="meat-option" data-meat="pork-dark" data-temp="71">Dark Meat (71°C)</div>
+          <div class="meat-option" data-meat="ground-pork" data-temp="71">Ground (71°C)</div>
+          <div class="meat-option" data-meat="pork-sausage" data-temp="71">Sausage (71°C)</div>
+        </div>
+      </div>
+      
+      <div class="meat-category">
+        <h4 id="poultryCategory">Poultry</h4>
+        <div class="meat-options">
+          <div class="meat-option" data-meat="chicken-white" data-temp="71">White Meat (71°C)</div>
+          <div class="meat-option" data-meat="chicken-dark" data-temp="75">Dark Meat (75°C)</div>
+          <div class="meat-option" data-meat="ground-poultry" data-temp="75">Ground (75°C)</div>
+          <div class="meat-option" data-meat="chicken-whole" data-temp="75">Whole Bird (75°C)</div>
+        </div>
+      </div>
+      
+      <div class="meat-category">
+        <h4 id="lambCategory">Lamb</h4>
+        <div class="meat-options">
+          <div class="meat-option" data-meat="lamb-rare" data-temp="55">Rare (55°C)</div>
+          <div class="meat-option" data-meat="lamb-medium" data-temp="60">Medium (60°C)</div>
+          <div class="meat-option" data-meat="lamb-well" data-temp="70">Well Done (70°C)</div>
+          <div class="meat-option" data-meat="ground-lamb" data-temp="71">Ground (71°C)</div>
+        </div>
+      </div>
+      
+      <div class="meat-category">
+        <h4 id="otherCategory">Other</h4>
+        <div class="meat-options">
+          <div class="meat-option" data-meat="fish" data-temp="63">Fish (63°C)</div>
+          <div class="meat-option" data-meat="seafood" data-temp="63">Seafood (63°C)</div>
+          <div class="meat-option" data-meat="veggies" data-temp="0">Veggies</div>
+        </div>
+      </div>
     </div>
 
-    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <h2 id="stepName" style="font-family:'Cinzel',serif; font-size: 1.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin: 0 0 20px 0;">Braai</h2>
-        
-        <div style="position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-            <div style="position: absolute; inset: 0; border: 8px solid var(--dark-wood); border-radius: 50%;"></div>
-            <div id="ring" style="position: absolute; inset: 0; border: 8px solid var(--gold); border-radius: 50%; transition: all 1s;"></div>
-            <span id="timeDisplay" style="font-family:'Cinzel',serif; font-size: 3.5rem; font-weight: 900; color: var(--gold-light);">00:00</span>
-        </div>
+    <!-- Cooking Process Display (initially hidden) -->
+    <div id="cookingProcess" style="display: none;">
+      <!-- Progress Indicator -->
+      <div id="stepProgress" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;">
+          <!-- Steps generated via JS -->
+      </div>
 
-        <div style="display: flex; width: 100%; gap: 12px; margin-bottom: 20px;">
-            <button onclick="changeTime(-30)" class="btn" style="flex: 1; padding: 12px; font-size: 1.2rem;">-30s</button>
-            <button onclick="changeTime(30)" class="btn" style="flex: 1; padding: 12px; font-size: 1.2rem;">+30s</button>
-        </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <h2 id="stepName" style="font-family:'Cinzel',serif; font-size: 1.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin: 0 0 20px 0;">Braai</h2>
+          
+          <div style="position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+              <div style="position: absolute; inset: 0; border: 8px solid var(--dark-wood); border-radius: 50%;"></div>
+              <div id="ring" style="position: absolute; inset: 0; border: 8px solid var(--gold); border-radius: 50%; transition: all 1s;"></div>
+              <span id="timeDisplay" style="font-family:'Cinzel',serif; font-size: 3.5rem; font-weight: 900; color: var(--gold-light);">00:00</span>
+          </div>
+
+          <div style="display: flex; width: 100%; gap: 12px; margin-bottom: 20px;">
+              <button onclick="changeTime(-30)" class="btn" style="flex: 1; padding: 12px; font-size: 1.2rem;" id="minusBtn">-30s</button>
+              <button onclick="changeTime(30)" class="btn" style="flex: 1; padding: 12px; font-size: 1.2rem;" id="plusBtn">+30s</button>
+          </div>
+          
+          <!-- Stage Details -->
+          <div class="stage-details">
+            <div class="stage-info">
+              <span id="currentStageLabel">Current Stage:</span>
+              <span class="stage-time" id="currentStageTime">5:00</span>
+            </div>
+            <div class="stage-info">
+              <span id="nextStageLabel">Next Stage:</span>
+              <span class="stage-time" id="nextStageTime">2:30</span>
+            </div>
+            <div class="stage-info" id="targetTempDisplay" style="display: none;">
+              <span id="targetTempLabel">Target Temp:</span>
+              <span class="stage-time" id="targetTempValue">60°C</span>
+            </div>
+            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); text-align: center; margin-top: 8px;">
+              <span id="cookingTip">Tip: Don't press the meat while cooking</span>
+            </div>
+          </div>
+      </div>
     </div>
   </div>
 
   <!-- Zone 3: primary action -->
   <div class="bottom-bar">
-    <button id="mainBtn" onclick="toggleTimer()" class="btn" style="width: 100%; padding: 16px; font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.1em;">Start</button>
+    <button id="startCookingBtn" onclick="startCooking()" class="btn" style="width: 100%; padding: 16px; font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.1em;" id="startBtn">Start Cooking</button>
+    <button id="mainBtn" onclick="toggleTimer()" class="btn" style="width: 100%; padding: 16px; font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.1em; display: none;">Start</button>
+    <button id="resetBtn" onclick="resetApp()" class="btn btn-secondary" style="width: 100%; padding: 12px; font-size: 1rem; margin-top: 8px; display: none;" id="resetButton">Reset</button>
   </div>
 
   <!-- Help Modal -->
   <div id="help-modal" class="modal-overlay" onclick="this.style.display='none'">
     <div class="modal-panel" onclick="event.stopPropagation()">
-      <h3 style="font-family:'Cinzel',serif; color:var(--gold); margin-top:0; margin-bottom:12px;">BraaiTyd Pro Guide</h3>
-      <p style="margin-bottom: 8px; font-size: 0.9rem;"><strong>How to use:</strong></p>
+      <h3 style="font-family:'Cinzel',serif; color:var(--gold); margin-top:0; margin-bottom:12px;" id="helpModalTitle">BraaiTyd Pro Guide</h3>
+      <p style="margin-bottom: 8px; font-size: 0.9rem;"><strong id="helpHowTo">How to use:</strong></p>
       <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 0.85rem;">
-        <li>Set your desired time with +30s/-30s buttons</li>
-        <li>Press Start to begin the timer</li>
-        <li>Timer cycles through: Braai → Turn → Braai → Rest</li>
-        <li>Voice guidance announces each stage change</li>
-        <li>Screen stays on during timing</li>
+        <li id="helpStep1">Select your meat type from the categories</li>
+        <li id="helpStep2">Press Start Cooking to begin</li>
+        <li id="helpStep3">Timer cycles through: Braai → Turn → Braai → Rest</li>
+        <li id="helpStep4">Voice guidance announces each stage change</li>
+        <li id="helpStep5">Adjust time with +/- 30s buttons</li>
+        <li id="helpStep6">Screen stays on during cooking</li>
+        <li>Toggle between English/Afrikaans with the language button</li>
+        <li>Different meats have optimized cooking times</li>
+        <li>Get cooking tips during each stage</li>
       </ul>
-      <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 0;">Perfect for camping, picnics, or backyard braais!</p>
-      <button onclick="document.getElementById('help-modal').style.display='none'" class="btn" style="margin-top: 16px; width: 100%;">Got it</button>
+      <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 0;" id="helpPerfectFor">Perfect for camping, picnics, or backyard braais!</p>
+      <button onclick="document.getElementById('help-modal').style.display='none'" class="btn" style="margin-top: 16px; width: 100%;" id="helpGotIt">Got it</button>
     </div>
   </div>
 
     <script>
-        const stages = ["Braai", "Turn", "Braai", "Rest"];
+        // Language management
+        let currentLanguage = 'en';
+        const translations = {
+            en: {
+                appTitle: "BraaiTyd Pro",
+                appSubtitle: "Perfect Braai Timer",
+                volumeReminder: "Ensure volume is up for voice guidance",
+                selectMeatTitle: "Select Your Meat",
+                beefCategory: "Beef",
+                porkCategory: "Pork", 
+                poultryCategory: "Poultry",
+                lambCategory: "Lamb",
+                otherCategory: "Other",
+                startCooking: "Start Cooking",
+                startTimer: "Start",
+                pauseTimer: "Pause",
+                startNextStep: "Start Next Step",
+                restart: "Restart",
+                reset: "Reset",
+                currentStage: "Current Stage:",
+                nextStage: "Next Stage:",
+                targetTemp: "Target Temp:",
+                cookingTips: [
+                    "Tip: Don't press the meat while cooking",
+                    "Tip: Let meat rest before serving",
+                    "Tip: Use tongs, not forks, to flip",
+                    "Tip: Keep coals at medium heat"
+                ],
+                stageNames: ["Braai 1st Side", "Turn", "Braai 2nd Side", "Rest"],
+                stageComplete: "Step complete. Next step: ",
+                cookingComplete: "Braai complete. Enjoy your meal!",
+                slowDown: "Slow down",
+                helpTitle: "BraaiTyd Pro Guide",
+                helpHowTo: "How to use:",
+                helpStep1: "Select your meat type from the categories",
+                helpStep2: "Press Start Cooking to begin",
+                helpStep3: "Timer cycles through: Braai → Turn → Braai → Rest",
+                helpStep4: "Voice guidance announces each stage change",
+                helpStep5: "Adjust time with +/- 30s buttons",
+                helpStep6: "Screen stays on during cooking",
+                helpPerfectFor: "Perfect for camping, picnics, or backyard braais!",
+                helpGotIt: "Got it"
+            },
+            af: {
+                appTitle: "BraaiTyd Pro",
+                appSubtitle: "Perfekte Braai Timer",
+                volumeReminder: "Maak seker volume is op vir stemleiding",
+                selectMeatTitle: "Kies Jou Vleis",
+                beefCategory: "Beef",
+                porkCategory: "Vark", 
+                poultryCategory: "Pluimvee",
+                lambCategory: "Lam",
+                otherCategory: "Ander",
+                startCooking: "Begin Braai",
+                startTimer: "Begin",
+                pauseTimer: "Pouse",
+                startNextStep: "Begin Volgende Stap",
+                restart: "Herbegin",
+                reset: "Herstel",
+                currentStage: "Huidige Stap:",
+                nextStage: "Volgende Stap:",
+                targetTemp: "Teiken Temp:",
+                cookingTips: [
+                    "Wenk: Moenie vleis druk terwyl dit braai nie",
+                    "Wenk: Laat vleis rus voor bediening",
+                    "Wenk: Gebruik tang, nie vurke, om om te draai",
+                    "Wenk: Hou kole op medium hitte"
+                ],
+                stageNames: ["Braai 1ste Kant", "Draai Om", "Braai 2de Kant", "Rus"],
+                stageComplete: "Stap voltooi. Volgende stap: ",
+                cookingComplete: "Braai voltooi. Geniet jou ete!",
+                slowDown: "Stadig af",
+                helpTitle: "BraaiTyd Pro Gids",
+                helpHowTo: "Hoe om te gebruik:",
+                helpStep1: "Kies jou vleistipe uit die kategorieë",
+                helpStep2: "Druk Begin Braai om te begin",
+                helpStep3: "Timer siklus deur: Braai → Draai → Braai → Rus",
+                helpStep4: "Stemleiding kondig elke stapverandering aan",
+                helpStep5: "Pas tyd aan met +/- 30s knoppies",
+                helpStep6: "Skerm bly aan tydens braai",
+                helpPerfectFor: "Perfek vir kamp, pieknieke, of agterplaas braais!",
+                helpGotIt: "Ek het dit"
+            }
+        };
+
+        // Cooking data - Based on Meat Temperature Safety Guide
+        // Times calculated for reaching safe internal temperatures
+        const meatData = {
+            // BEEF - Different doneness levels
+            'beef-rare': { 
+                name: { en: "Beef Rare", af: "Beesvleis Rare" }, 
+                targetTemp: 40,
+                totalTime: 360, 
+                stages: [120, 30, 120, 90] 
+            },
+            'beef-medium-rare': { 
+                name: { en: "Beef Medium-Rare", af: "Beesvleis Medium-Rare" }, 
+                targetTemp: 55,
+                totalTime: 420, 
+                stages: [150, 30, 150, 90] 
+            },
+            'beef-medium': { 
+                name: { en: "Beef Medium", af: "Beesvleis Medium" }, 
+                targetTemp: 60,
+                totalTime: 480, 
+                stages: [180, 30, 180, 90] 
+            },
+            'beef-medium-well': { 
+                name: { en: "Beef Medium-Well", af: "Beesvleis Medium-Well" }, 
+                targetTemp: 65,
+                totalTime: 540, 
+                stages: [210, 30, 210, 90] 
+            },
+            'beef-well': { 
+                name: { en: "Beef Well Done", af: "Beesvleis Gaar" }, 
+                targetTemp: 70,
+                totalTime: 600, 
+                stages: [240, 30, 240, 90] 
+            },
+            'ground-beef': { 
+                name: { en: "Ground Beef", af: "Maalvleis" }, 
+                targetTemp: 71,
+                totalTime: 540, 
+                stages: [210, 30, 210, 90] 
+            },
+            
+            // PORK - Safe cooking temperatures
+            'pork-white': { 
+                name: { en: "Pork White Meat", af: "Vark Wit Vleis" }, 
+                targetTemp: 63,
+                totalTime: 540, 
+                stages: [210, 30, 210, 90] 
+            },
+            'pork-dark': { 
+                name: { en: "Pork Dark Meat", af: "Vark Donker Vleis" }, 
+                targetTemp: 71,
+                totalTime: 600, 
+                stages: [240, 30, 240, 90] 
+            },
+            'ground-pork': { 
+                name: { en: "Ground Pork", af: "Maalvark" }, 
+                targetTemp: 71,
+                totalTime: 600, 
+                stages: [240, 30, 240, 90] 
+            },
+            'pork-sausage': { 
+                name: { en: "Pork Sausage", af: "Varkvors" }, 
+                targetTemp: 71,
+                totalTime: 660, 
+                stages: [270, 30, 270, 90] 
+            },
+            
+            // POULTRY - Must reach safe temperatures
+            'chicken-white': { 
+                name: { en: "Chicken White Meat", af: "Hoender Wit Vleis" }, 
+                targetTemp: 71,
+                totalTime: 600, 
+                stages: [240, 30, 240, 90] 
+            },
+            'chicken-dark': { 
+                name: { en: "Chicken Dark Meat", af: "Hoender Donker Vleis" }, 
+                targetTemp: 75,
+                totalTime: 660, 
+                stages: [270, 30, 270, 90] 
+            },
+            'ground-poultry': { 
+                name: { en: "Ground Poultry", af: "Maalpluimvee" }, 
+                targetTemp: 75,
+                totalTime: 660, 
+                stages: [270, 30, 270, 90] 
+            },
+            'chicken-whole': { 
+                name: { en: "Whole Chicken", af: "Heel Hoender" }, 
+                targetTemp: 75,
+                totalTime: 900, 
+                stages: [390, 30, 390, 90] 
+            },
+            
+            // LAMB - Similar to beef
+            'lamb-rare': { 
+                name: { en: "Lamb Rare", af: "Lam Rare" }, 
+                targetTemp: 55,
+                totalTime: 420, 
+                stages: [150, 30, 150, 90] 
+            },
+            'lamb-medium': { 
+                name: { en: "Lamb Medium", af: "Lam Medium" }, 
+                targetTemp: 60,
+                totalTime: 480, 
+                stages: [180, 30, 180, 90] 
+            },
+            'lamb-well': { 
+                name: { en: "Lamb Well Done", af: "Lam Gaar" }, 
+                targetTemp: 70,
+                totalTime: 600, 
+                stages: [240, 30, 240, 90] 
+            },
+            'ground-lamb': { 
+                name: { en: "Ground Lamb", af: "Maallam" }, 
+                targetTemp: 71,
+                totalTime: 540, 
+                stages: [210, 30, 210, 90] 
+            },
+            
+            // OTHER
+            'fish': { 
+                name: { en: "Fish", af: "Vis" }, 
+                targetTemp: 63,
+                totalTime: 300, 
+                stages: [105, 30, 105, 60] 
+            },
+            'seafood': { 
+                name: { en: "Seafood", af: "Seekos" }, 
+                targetTemp: 63,
+                totalTime: 240, 
+                stages: [75, 30, 75, 60] 
+            },
+            'veggies': { 
+                name: { en: "Veggies", af: "Groente" }, 
+                targetTemp: 0,
+                totalTime: 360, 
+                stages: [135, 30, 135, 60] 
+            }
+        };
+
+        // App state
+        let selectedMeat = null;
+        let stages = [];
+        let stageTimes = [];
         let currentStep = 0;
-        let timeLeft = 300; // 5 min default
+        let timeLeft = 0;
         let isRunning = false;
         let timer = null;
         let wakeLock = null;
+        let cookingStarted = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupMeatSelector();
+            updateLanguageDisplay();
+            
+            // Close modal with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    document.getElementById('help-modal').style.display = 'none';
+                }
+            });
+        });
+
+        function setupMeatSelector() {
+            const meatOptions = document.querySelectorAll('.meat-option');
+            meatOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    meatOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    
+                    // Get meat data
+                    const meatType = this.getAttribute('data-meat');
+                    const targetTemp = parseInt(this.getAttribute('data-temp'));
+                    selectedMeat = meatType;
+                    
+                    // Update button text
+                    const meatName = meatData[meatType].name[currentLanguage];
+                    const tempDisplay = targetTemp > 0 ? ` (${targetTemp}°C)` : '';
+                    document.getElementById('startBtn').textContent = 
+                        `${translations[currentLanguage].startCooking} ${meatName}`;
+                });
+            });
+        }
+
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'af' : 'en';
+            document.getElementById('langToggle').textContent = currentLanguage.toUpperCase();
+            updateLanguageDisplay();
+            
+            // Update selected meat display if cooking has started
+            if (selectedMeat && cookingStarted) {
+                updateStageDisplay();
+            }
+        }
+
+        function updateLanguageDisplay() {
+            const t = translations[currentLanguage];
+            
+            // Update UI elements
+            document.getElementById('appTitle').textContent = t.appTitle;
+            document.getElementById('appSubtitle').textContent = t.appSubtitle;
+            document.getElementById('volumeReminder').textContent = t.volumeReminder;
+            document.getElementById('selectMeatTitle').textContent = t.selectMeatTitle;
+            document.getElementById('beefCategory').textContent = t.beefCategory;
+            document.getElementById('porkCategory').textContent = t.porkCategory;
+            document.getElementById('poultryCategory').textContent = t.poultryCategory;
+            document.getElementById('lambCategory').textContent = t.lambCategory;
+            document.getElementById('otherCategory').textContent = t.otherCategory;
+            document.getElementById('startBtn').textContent = t.startCooking;
+            document.getElementById('currentStageLabel').textContent = t.currentStage;
+            document.getElementById('nextStageLabel').textContent = t.nextStage;
+            document.getElementById('targetTempLabel').textContent = t.targetTemp;
+            document.getElementById('resetButton').textContent = t.reset;
+            document.getElementById('minusBtn').textContent = "-30s";
+            document.getElementById('plusBtn').textContent = "+30s";
+            
+            // Update help modal
+            document.querySelector('#help-modal h3').textContent = t.helpTitle;
+            document.querySelector('#help-modal p strong').textContent = t.helpHowTo;
+            const helpItems = document.querySelectorAll('#help-modal li');
+            if (helpItems.length >= 6) {
+                helpItems[0].textContent = t.helpStep1;
+                helpItems[1].textContent = t.helpStep2;
+                helpItems[2].textContent = t.helpStep3;
+                helpItems[3].textContent = t.helpStep4;
+                helpItems[4].textContent = t.helpStep5;
+                helpItems[5].textContent = t.helpStep6;
+            }
+            document.querySelector('#help-modal p:last-of-type').textContent = t.helpPerfectFor;
+            document.querySelector('#help-modal .btn').textContent = t.helpGotIt;
+        }
+
+        function startCooking() {
+            if (!selectedMeat) {
+                alert(currentLanguage === 'en' ? "Please select a meat type first" : "Kies asseblief eers 'n vleistipe");
+                return;
+            }
+            
+            cookingStarted = true;
+            
+            // Hide meat selector, show cooking process
+            document.getElementById('meatSelector').style.display = 'none';
+            document.getElementById('cookingProcess').style.display = 'block';
+            document.getElementById('startCookingBtn').style.display = 'none';
+            document.getElementById('mainBtn').style.display = 'block';
+            document.getElementById('resetBtn').style.display = 'block';
+            
+            // Setup cooking process
+            const meat = meatData[selectedMeat];
+            stages = translations[currentLanguage].stageNames;
+            stageTimes = meat.stages;
+            currentStep = 0;
+            timeLeft = stageTimes[0];
+            
+            // Show target temperature if applicable
+            if (meat.targetTemp > 0) {
+                document.getElementById('targetTempDisplay').style.display = 'flex';
+                document.getElementById('targetTempValue').textContent = `${meat.targetTemp}°C`;
+            } else {
+                document.getElementById('targetTempDisplay').style.display = 'none';
+            }
+            
+            // Initialize display
+            renderProgress();
+            updateStageDisplay();
+            updateDisplay();
+        }
 
         function renderProgress() {
             const container = document.getElementById('stepProgress');
+            if (!container) return;
+            
             container.innerHTML = stages.map((s, i) => {
                 let color = 'var(--dark-wood)';
                 if (i === currentStep) color = 'var(--gold)';
                 else if (i < currentStep) color = 'var(--gold-light)';
                 return `<div style="width: 12px; height: 12px; border-radius: 50%; background: ${color};"></div>`;
             }).join('');
-            document.getElementById('stepName').innerText = stages[currentStep];
+            
+            document.getElementById('stepName').textContent = stages[currentStep];
+        }
+
+        function updateStageDisplay() {
+            const t = translations[currentLanguage];
+            
+            // Update stage times
+            document.getElementById('currentStageTime').textContent = formatTime(stageTimes[currentStep]);
+            
+            if (currentStep < stages.length - 1) {
+                document.getElementById('nextStageTime').textContent = formatTime(stageTimes[currentStep + 1]);
+            } else {
+                document.getElementById('nextStageTime').textContent = "0:00";
+            }
+            
+            // Update cooking tip
+            const randomTip = t.cookingTips[Math.floor(Math.random() * t.cookingTips.length)];
+            document.getElementById('cookingTip').textContent = randomTip;
         }
 
         async function toggleTimer() {
             if (isRunning) {
                 clearInterval(timer);
                 isRunning = false;
-                document.getElementById('mainBtn').innerText = "Start";
+                document.getElementById('mainBtn').textContent = translations[currentLanguage].startTimer;
                 if (wakeLock) wakeLock.release();
             } else {
                 if ('wakeLock' in navigator) {
@@ -239,7 +797,7 @@
                     }
                 }
                 isRunning = true;
-                document.getElementById('mainBtn').innerText = "Pause";
+                document.getElementById('mainBtn').textContent = translations[currentLanguage].pauseTimer;
                 timer = setInterval(() => {
                     timeLeft--;
                     if (timeLeft <= 0) {
@@ -254,25 +812,38 @@
             clearInterval(timer);
             isRunning = false;
             currentStep++;
+            
             if (currentStep < stages.length) {
-                window.speechSynthesis.speak(new SpeechSynthesisUtterance(`Step complete. Next step: ${stages[currentStep]}`));
-                timeLeft = 300; // Reset for next stage
+                // Speak next stage
+                const utterance = new SpeechSynthesisUtterance(
+                    translations[currentLanguage].stageComplete + stages[currentStep]
+                );
+                window.speechSynthesis.speak(utterance);
+                
+                // Set time for next stage
+                timeLeft = stageTimes[currentStep];
                 renderProgress();
+                updateStageDisplay();
                 updateDisplay();
-                document.getElementById('mainBtn').innerText = "Start Next Step";
+                document.getElementById('mainBtn').textContent = translations[currentLanguage].startNextStep;
             } else {
-                window.speechSynthesis.speak(new SpeechSynthesisUtterance("Braai complete. Enjoy your meal!"));
+                // Cooking complete
+                const utterance = new SpeechSynthesisUtterance(translations[currentLanguage].cookingComplete);
+                window.speechSynthesis.speak(utterance);
+                
                 currentStep = 0;
                 renderProgress();
-                document.getElementById('mainBtn').innerText = "Restart";
+                document.getElementById('mainBtn').textContent = translations[currentLanguage].restart;
+                document.getElementById('mainBtn').style.display = 'none';
             }
         }
 
         function updateDisplay() {
-            document.getElementById('timeDisplay').innerText = formatTime(timeLeft);
+            document.getElementById('timeDisplay').textContent = formatTime(timeLeft);
+            
             // Update ring progress
-            const totalTime = 300;
-            const progress = (totalTime - timeLeft) / totalTime;
+            const totalTime = stageTimes[currentStep];
+            const progress = totalTime > 0 ? (totalTime - timeLeft) / totalTime : 0;
             const ring = document.getElementById('ring');
             if (ring) {
                 ring.style.borderColor = `var(${progress >= 0.8 ? '--gold-light' : '--gold'})`;
@@ -285,20 +856,40 @@
         }
 
         function changeTime(amt) {
+            if (!isRunning) return;
+            
             timeLeft = Math.max(0, timeLeft + amt);
+            stageTimes[currentStep] = timeLeft;
             updateDisplay();
+            updateStageDisplay();
         }
 
-        // Initialize
-        renderProgress();
-        updateDisplay();
-        
-        // Close modal with Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.getElementById('help-modal').style.display = 'none';
+        function resetApp() {
+            // Stop timer
+            if (isRunning) {
+                clearInterval(timer);
+                isRunning = false;
+                if (wakeLock) wakeLock.release();
             }
-        });
+            
+            // Reset state
+            selectedMeat = null;
+            cookingStarted = false;
+            currentStep = 0;
+            
+            // Show meat selector, hide cooking process
+            document.getElementById('meatSelector').style.display = 'block';
+            document.getElementById('cookingProcess').style.display = 'none';
+            document.getElementById('startCookingBtn').style.display = 'block';
+            document.getElementById('mainBtn').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            
+            // Clear selected meat
+            document.querySelectorAll('.meat-option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Reset button text
+            document.getElementById('startBtn').textContent = translations[currentLanguage].startCooking;
+        }
     </script>
 </body>
 </html>
