@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Sentry</title>
+    <title>Speed Sentry Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
@@ -17,18 +17,13 @@
 </head>
 <body id="appBody" class="flex flex-col h-screen">
 
-    <!-- Header Stats -->
     <header class="p-4 flex justify-between items-center z-10">
         <h1 class="text-lg font-black tracking-widest text-blue-500 font-lcd">SPEED SENTRY</h1>
-        <div class="text-right">
-            <span class="block text-[9px] text-zinc-500 uppercase">Top Speed</span>
-            <span id="topSpeedDisplay" class="text-md font-bold text-white">0 km/h</span>
-        </div>
+        <!-- Mini-Map Canvas -->
+        <canvas id="navCanvas" width="80" height="80" class="glass-panel rounded-full border border-blue-900/50"></canvas>
     </header>
 
     <main class="flex-1 flex flex-col items-center p-4 gap-6">
-        
-        <!-- Hardware Setup Group -->
         <div class="glass-panel p-4 rounded-2xl w-full max-w-sm flex items-center justify-between border border-blue-900/30">
             <div>
                 <p class="text-[10px] text-blue-200 uppercase tracking-widest font-bold">Hardware Setup</p>
@@ -37,90 +32,94 @@
             <button onclick="testAlarm()" class="bg-blue-600 px-4 py-2 rounded-lg text-[10px] font-bold uppercase hover:bg-blue-500 transition-all">Test</button>
         </div>
 
-        <!-- Start Tracking Button -->
-        <button id="startBtn" onclick="toggleTracking()" class="w-full max-w-sm py-6 rounded-2xl font-black text-xl bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] uppercase tracking-widest active:scale-95 transition-all">Start Tracking</button>
+        <button id="startBtn" onclick="toggleTracking()" class="w-full max-w-sm py-6 rounded-2xl font-black text-xl bg-blue-600 text-white shadow-lg uppercase tracking-widest active:scale-95 transition-all">Start Tracking</button>
 
-        <!-- Live Display -->
         <div class="text-center my-auto">
             <div id="speedDisplay" class="text-[8rem] leading-none font-black font-lcd glow-safe transition-colors duration-300">0</div>
             <div class="text-xl text-zinc-400 font-bold tracking-widest">KM/H</div>
         </div>
 
-        <!-- Speed Limit Controls -->
         <div class="glass-panel p-6 rounded-3xl w-full max-w-sm flex items-center justify-between shadow-2xl">
-            <button onclick="adjustLimit(-5)" class="w-20 h-20 bg-zinc-800 rounded-full font-black text-2xl active:bg-zinc-700 transition-all">-5</button>
+            <button onclick="adjustLimit(-5)" class="w-20 h-20 bg-zinc-800 rounded-full font-black text-2xl active:bg-zinc-700">-5</button>
             <div class="text-center">
                 <span id="limitDisplay" class="text-5xl font-black font-lcd">60</span>
-                <span class="block text-[10px] text-zinc-500 uppercase tracking-widest mt-1">Limit</span>
+                <span class="block text-[10px] text-zinc-500 uppercase mt-1">Limit</span>
             </div>
-            <button onclick="adjustLimit(5)" class="w-20 h-20 bg-zinc-800 rounded-full font-black text-2xl active:bg-zinc-700 transition-all">+5</button>
+            <button onclick="adjustLimit(5)" class="w-20 h-20 bg-zinc-800 rounded-full font-black text-2xl active:bg-zinc-700">+5</button>
         </div>
     </main>
 
     <script>
-        let isTracking = false, topSpeed = 0, lastSpeech = 0, audioCtx = null;
+        let isTracking = false, topSpeed = 0, lastSpeech = 0, audioCtx = null, wakeLock = null;
         let currentLimit = parseInt(localStorage.getItem('limit') || 60);
+        const canvas = document.getElementById('navCanvas');
+        const ctx = canvas.getContext('2d');
 
-        // Initialization
         document.getElementById('limitDisplay').innerText = currentLimit;
-        const hour = new Date().getHours();
-        if (hour >= 19 || hour <= 6) document.body.classList.add('night-mode');
 
-        function adjustLimit(amt) {
-            currentLimit = Math.max(10, Math.min(250, currentLimit + amt));
-            document.getElementById('limitDisplay').innerText = currentLimit;
-            localStorage.setItem('limit', currentLimit);
+        async function toggleTracking() {
+            isTracking = !isTracking;
+            if (isTracking) {
+                // Request Wake Lock
+                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+                
+                initAudio();
+                document.getElementById('startBtn').innerText = "Stop Tracking";
+                document.getElementById('startBtn').className = "w-full max-w-sm py-6 rounded-2xl font-black text-xl bg-red-600 text-white shadow-lg uppercase tracking-widest active:scale-95";
+                
+                navigator.geolocation.watchPosition(updatePosition, null, { enableHighAccuracy: true });
+            } else {
+                if (wakeLock) wakeLock.release();
+                location.reload();
+            }
+        }
+
+        function updatePosition(pos) {
+            const speed = Math.round((pos.coords.speed || 0) * 3.6);
+            const heading = pos.coords.heading || 0;
+            document.getElementById('speedDisplay').innerText = speed;
+            
+            // Draw Mini-Map
+            drawCompass(heading);
+
+            if (speed >= currentLimit) {
+                document.getElementById('speedDisplay').className = "text-[8rem] leading-none font-black font-lcd glow-danger";
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance("Slow down"));
+            } else {
+                document.getElementById('speedDisplay').className = "text-[8rem] leading-none font-black font-lcd glow-safe";
+            }
+        }
+
+        function drawCompass(angle) {
+            ctx.clearRect(0, 0, 80, 80);
+            ctx.save();
+            ctx.translate(40, 40);
+            ctx.rotate((angle * Math.PI) / 180);
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, -25); ctx.lineTo(0, 25);
+            ctx.moveTo(-10, -15); ctx.lineTo(0, -25); ctx.lineTo(10, -15);
+            ctx.stroke();
+            ctx.restore();
         }
 
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            audioCtx.resume();
         }
 
         function testAlarm() {
             initAudio();
             const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-            window.speechSynthesis.speak(new SpeechSynthesisUtterance("Alarm test successful"));
+            osc.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
         }
 
-        function speakWarning() {
-            const now = Date.now();
-            if (now - lastSpeech > 10000) {
-                window.speechSynthesis.speak(new SpeechSynthesisUtterance("Warning! Speed limit exceeded."));
-                lastSpeech = now;
-            }
-        }
-
-        function toggleTracking() {
-            isTracking = !isTracking;
-            if (isTracking) {
-                initAudio();
-                document.getElementById('startBtn').innerText = "Stop Tracking";
-                document.getElementById('startBtn').className = "w-full max-w-sm py-6 rounded-2xl font-black text-xl bg-red-600 text-white shadow-lg uppercase tracking-widest active:scale-95 transition-all";
-                navigator.geolocation.watchPosition(pos => {
-                    const speed = Math.round((pos.coords.speed || 0) * 3.6);
-                    document.getElementById('speedDisplay').innerText = speed;
-                    if (speed > topSpeed) { topSpeed = speed; document.getElementById('topSpeedDisplay').innerText = topSpeed + ' km/h'; }
-                    
-                    if (speed >= currentLimit) {
-                        document.getElementById('speedDisplay').className = "text-[8rem] leading-none font-black font-lcd glow-danger";
-                        const osc = audioCtx.createOscillator();
-                        osc.connect(audioCtx.destination);
-                        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-                        speakWarning();
-                    } else {
-                        document.getElementById('speedDisplay').className = "text-[8rem] leading-none font-black font-lcd glow-safe";
-                    }
-                }, null, { enableHighAccuracy: true });
-            } else {
-                location.reload();
-            }
+        function adjustLimit(amt) {
+            currentLimit = Math.max(10, Math.min(250, currentLimit + amt));
+            document.getElementById('limitDisplay').innerText = currentLimit;
+            localStorage.setItem('limit', currentLimit);
         }
     </script>
 </body>
