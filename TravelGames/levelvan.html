@@ -290,6 +290,31 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .cloud-status.connecting{color:var(--warn)}
 .cloud-status.offline{color:var(--danger)}
 
+/* ── Caravan dimensions panel ─────────────────────────────── */
+.dims-row{display:flex;flex-direction:column;gap:6px;padding-top:6px;border-top:1px solid var(--border)}
+.dims-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+  font-size:.68rem;color:var(--dim);letter-spacing:2px;font-family:'Orbitron',monospace;
+  padding:2px 0;user-select:none;-webkit-tap-highlight-color:transparent}
+.dims-toggle:active{opacity:.7}
+.dims-toggle-arrow{font-size:.7rem;transition:transform .2s}
+.dims-toggle-arrow.open{transform:rotate(180deg)}
+.dims-fields{display:none;flex-direction:column;gap:6px}
+.dims-fields.open{display:flex}
+.dims-field-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
+.dims-label{font-size:.68rem;color:var(--dim);letter-spacing:1px;font-family:'Share Tech Mono',monospace;line-height:1.4}
+.dims-input{width:72px;background:var(--panel);border:2px solid var(--border);border-radius:8px;
+  color:var(--accent);font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;
+  padding:6px 8px;text-align:right;outline:none;-webkit-appearance:none;
+  transition:border-color .15s}
+.dims-input:focus{border-color:var(--accent)}
+.dims-input::placeholder{color:var(--dim);font-weight:400}
+/* Adjustment row — shows cm values */
+.adj-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;width:100%}
+.adj-cell{text-align:center}
+.adj-lbl{font-size:.62rem;color:var(--dim);letter-spacing:1px;display:block;font-family:'Share Tech Mono',monospace}
+.adj-val{font-family:'Orbitron',monospace;font-size:1.05rem;font-weight:700;display:block;margin-top:1px}
+.adj-sep{font-size:.7rem;color:var(--border);text-align:center}
+
 /* ── Voice Footer Row ─────────────────────────────────────── */
 .voice-footer-row{display:flex;flex-direction:column;gap:5px;padding-top:6px;border-top:1px solid var(--border)}
 .voice-btns{display:flex;gap:8px;height:44px}
@@ -899,6 +924,31 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="badge AD" id="s-badge">--</div>
     <div class="angle"><span class="albl">PITCH ↕</span><span class="aval bd" id="s-pitch">0.0°</span></div>
   </div>
+  <!-- Adjustment row (cm) -->
+  <div class="adj-row" id="s-adj-row" style="display:none">
+    <div class="adj-cell"><span class="adj-lbl">RAISE WHEEL ↔</span><span class="adj-val ok" id="s-adj-roll">—</span></div>
+    <div class="adj-sep">|</div>
+    <div class="adj-cell"><span class="adj-lbl">JOCKEY WHEEL ↕</span><span class="adj-val ok" id="s-adj-pitch">—</span></div>
+  </div>
+  <!-- Caravan dimensions -->
+  <div class="dims-row">
+    <div class="dims-toggle" onclick="toggleDims('s')">
+      <span>📐 CARAVAN DIMENSIONS</span>
+      <span class="dims-toggle-arrow" id="s-dims-arrow">▼</span>
+    </div>
+    <div class="dims-fields" id="s-dims-fields">
+      <div class="dims-field-row">
+        <span class="dims-label">Width axle-to-axle (m)<br><span style="opacity:.6">Default: 2.0 m</span></span>
+        <input class="dims-input" id="s-width" type="number" min="0.5" max="5" step="0.1" placeholder="2.0"
+          oninput="saveDims()" inputmode="decimal">
+      </div>
+      <div class="dims-field-row">
+        <span class="dims-label">Axle to jockey wheel (m)<br><span style="opacity:.6">Default: 3.6 m</span></span>
+        <input class="dims-input" id="s-length" type="number" min="0.5" max="15" step="0.1" placeholder="3.6"
+          oninput="saveDims()" inputmode="decimal">
+      </div>
+    </div>
+  </div>
   <div class="conn-count" id="s3-conn-count" style="font-size:.85rem;padding-top:2px"></div>
   <!-- Voice footer row (sensor) -->
   <div class="voice-footer-row" id="sv-voice-row" style="display:none">
@@ -1092,6 +1142,31 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   <div class="angles">
     <div class="angle"><span class="albl">ROLL ↔</span><span class="aval" id="d-roll">--</span></div>
     <div class="angle"><span class="albl">PITCH ↕</span><span class="aval" id="d-pitch">--</span></div>
+  </div>
+  <!-- Adjustment row (cm) -->
+  <div class="adj-row" id="d-adj-row" style="display:none">
+    <div class="adj-cell"><span class="adj-lbl">RAISE WHEEL ↔</span><span class="adj-val ok" id="d-adj-roll">—</span></div>
+    <div class="adj-sep">|</div>
+    <div class="adj-cell"><span class="adj-lbl">JOCKEY WHEEL ↕</span><span class="adj-val ok" id="d-adj-pitch">—</span></div>
+  </div>
+  <!-- Caravan dimensions -->
+  <div class="dims-row">
+    <div class="dims-toggle" onclick="toggleDims('d')">
+      <span>📐 CARAVAN DIMENSIONS</span>
+      <span class="dims-toggle-arrow" id="d-dims-arrow">▼</span>
+    </div>
+    <div class="dims-fields" id="d-dims-fields">
+      <div class="dims-field-row">
+        <span class="dims-label">Width axle-to-axle (m)<br><span style="opacity:.6">Default: 2.0 m</span></span>
+        <input class="dims-input" id="d-width" type="number" min="0.5" max="5" step="0.1" placeholder="2.0"
+          oninput="saveDims()" inputmode="decimal">
+      </div>
+      <div class="dims-field-row">
+        <span class="dims-label">Axle to jockey wheel (m)<br><span style="opacity:.6">Default: 3.6 m</span></span>
+        <input class="dims-input" id="d-length" type="number" min="0.5" max="15" step="0.1" placeholder="3.6"
+          oninput="saveDims()" inputmode="decimal">
+      </div>
+    </div>
   </div>
   <!-- Voice footer row (display) -->
   <div class="voice-footer-row" id="dv-voice-row" style="display:none">
@@ -2675,6 +2750,8 @@ function showPanel(id) {
   const sf = $('sensor-footer'), df = $('display-footer');
   if (sf) sf.classList.toggle('active', id === 's3');
   if (df) df.classList.toggle('active', id === 'd3');
+  // Load saved dimensions into inputs when entering live panels
+  if (id === 's3' || id === 'd3') loadDimsIntoInputs();
   // Notify VoiceManager so it shows/hides the correct voice row
   if (window.voiceMgr) voiceMgr.onPanelChange(id);
   if (window.videoMgr) videoMgr.onPanelChange(id);
@@ -3378,6 +3455,7 @@ function updateSensor(r, p) {
   $('s-badge').className   = 'badge '+(lv?'LV':cl?'CL':'AD');
   $('s-badge').textContent = lv?'✓ LEVEL':cl?'≈ CLOSE':'✗ ADJUST';
   setBar('s-rb','s-rd',r); setBar('s-pb','s-pd',p);
+  updateAdjRow('s', r, p);
 }
 
 // ════════════════════════════════
@@ -3452,7 +3530,131 @@ function updateDisplay(d) {
   $('d-roll').textContent  = r.toFixed(1)+'°'; $('d-roll').className  = 'aval '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
   $('d-pitch').textContent = p.toFixed(1)+'°'; $('d-pitch').className = 'aval '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
   setBar('d-rb','d-rd',r); setBar('d-pb','d-pd',p);
+  updateAdjRow('d', r, p);
 }
+
+// ════════════════════════════════
+//  CARAVAN DIMENSIONS & ADJUSTMENT
+// ════════════════════════════════
+
+const DIMS_DEFAULTS = { width: 2.0, length: 3.6 };
+
+/** Load saved dims from localStorage, falling back to defaults */
+function getDims() {
+  const w = parseFloat(localStorage.getItem('lv_width'));
+  const l = parseFloat(localStorage.getItem('lv_length'));
+  return {
+    width:  (isFinite(w) && w > 0) ? w : DIMS_DEFAULTS.width,
+    length: (isFinite(l) && l > 0) ? l : DIMS_DEFAULTS.length
+  };
+}
+
+/** Called by both sensor and display input fields — saves and refreshes */
+window.saveDims = function() {
+  // Read from whichever inputs are visible (sensor or display)
+  const sw = $('s-width'),  sl = $('s-length');
+  const dw = $('d-width'),  dl = $('d-length');
+  const wEl = (sw && sw.value !== '') ? sw : (dw && dw.value !== '') ? dw : null;
+  const lEl = (sl && sl.value !== '') ? sl : (dl && dl.value !== '') ? dl : null;
+
+  const w = wEl ? parseFloat(wEl.value) : NaN;
+  const l = lEl ? parseFloat(lEl.value) : NaN;
+
+  if (isFinite(w) && w > 0) {
+    localStorage.setItem('lv_width', w);
+    // Sync the other input
+    if (sw && sw !== wEl) sw.value = w;
+    if (dw && dw !== wEl) dw.value = w;
+  } else {
+    localStorage.removeItem('lv_width');
+  }
+  if (isFinite(l) && l > 0) {
+    localStorage.setItem('lv_length', l);
+    if (sl && sl !== lEl) sl.value = l;
+    if (dl && dl !== lEl) dl.value = l;
+  } else {
+    localStorage.removeItem('lv_length');
+  }
+};
+
+/** Populate dimension inputs from localStorage on screen entry */
+function loadDimsIntoInputs() {
+  const { width, length } = getDims();
+  const savedW = localStorage.getItem('lv_width');
+  const savedL = localStorage.getItem('lv_length');
+  // Only pre-fill if user has explicitly saved a value (don't fill placeholder)
+  ['s-width','d-width'].forEach(id => {
+    const el = $(id); if (el) el.value = savedW ? width : '';
+  });
+  ['s-length','d-length'].forEach(id => {
+    const el = $(id); if (el) el.value = savedL ? length : '';
+  });
+}
+
+/**
+ * Calculate how many centimetres to adjust.
+ * roll  → raise the low wheel side: adj = tan(roll°) × width_m × 100
+ * pitch → raise/lower jockey wheel: adj = tan(pitch°) × length_m × 100
+ * Returns { rollCm, pitchCm } — positive = raise right/rear, negative = raise left/front
+ */
+function calcAdj(roll, pitch) {
+  const { width, length } = getDims();
+  const rollCm  = Math.tan(roll  * Math.PI / 180) * width  * 100;
+  const pitchCm = Math.tan(pitch * Math.PI / 180) * length * 100;
+  return { rollCm, pitchCm };
+}
+
+/**
+ * Format a cm value for display.
+ * Shows direction label + magnitude, e.g. "RAISE RIGHT 4.2 cm"
+ */
+function fmtAdj(cm, axis) {
+  const abs = Math.abs(cm);
+  if (abs < 0.3) return '✓ LEVEL';
+  const mag = abs.toFixed(1) + ' cm';
+  if (axis === 'roll') {
+    return (cm > 0 ? '▲ RAISE RIGHT ' : '▲ RAISE LEFT ') + mag;
+  } else {
+    return (cm > 0 ? '▲ RAISE REAR ' : '▲ RAISE FRONT ') + mag;
+  }
+}
+
+/** Update the adjustment row for a given prefix ('s' or 'd') */
+function updateAdjRow(prefix, roll, pitch) {
+  const adjRow = $(prefix + '-adj-row');
+  if (!adjRow) return;
+
+  const { rollCm, pitchCm } = calcAdj(roll, pitch);
+  const ar = Math.abs(roll), ap = Math.abs(pitch);
+
+  // Only show the row when there's something meaningful to show
+  const hasDims = localStorage.getItem('lv_width') || localStorage.getItem('lv_length');
+  // Always show once we have live data (dims default to 2.0/3.6 even without saved values)
+  adjRow.style.display = '';
+
+  const rollEl  = $(prefix + '-adj-roll');
+  const pitchEl = $(prefix + '-adj-pitch');
+
+  if (rollEl) {
+    rollEl.textContent = fmtAdj(rollCm, 'roll');
+    rollEl.className = 'adj-val ' + (ar <= LT ? 'ok' : ar <= CT ? 'wn' : 'bd');
+  }
+  if (pitchEl) {
+    pitchEl.textContent = fmtAdj(pitchCm, 'pitch');
+    pitchEl.className = 'adj-val ' + (ap <= LT ? 'ok' : ap <= CT ? 'wn' : 'bd');
+  }
+}
+
+/** Toggle the dimensions panel open/closed */
+window.toggleDims = function(prefix) {
+  const fields = $(prefix + '-dims-fields');
+  const arrow  = $(prefix + '-dims-arrow');
+  if (!fields) return;
+  const isOpen = fields.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('open', isOpen);
+  // Load current values into inputs when opening
+  if (isOpen) loadDimsIntoInputs();
+};
 
 function setBar(fid, lid, angle) {
   const pct = Math.min(Math.abs(angle)/MD*50, 48);
