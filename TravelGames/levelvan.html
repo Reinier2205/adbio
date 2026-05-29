@@ -913,9 +913,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 <!-- SENSOR fixed data footer -->
 <div class="data-footer" id="sensor-footer">
   <div class="bars">
-    <div class="bw"><div class="blbl"><span>ROLL</span><span id="s-rd"></span></div>
+    <div class="bw"><div class="blbl"><span>ROLL</span></div>
       <div class="btrack"><div class="bmid"></div><div class="bfill" id="s-rb"></div></div></div>
-    <div class="bw"><div class="blbl"><span>PITCH</span><span id="s-pd"></span></div>
+    <div class="bw"><div class="blbl"><span>PITCH</span></div>
       <div class="btrack"><div class="bmid"></div><div class="bfill" id="s-pb"></div></div></div>
   </div>
   <div class="angles">
@@ -1127,9 +1127,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 <div class="data-footer" id="display-footer">
   <div class="instr wt" id="d-instr">waiting for data...</div>
   <div class="bars">
-    <div class="bw"><div class="blbl"><span>ROLL</span><span id="d-rd"></span></div>
+    <div class="bw"><div class="blbl"><span>ROLL</span></div>
       <div class="btrack"><div class="bmid"></div><div class="bfill" id="d-rb"></div></div></div>
-    <div class="bw"><div class="blbl"><span>PITCH</span><span id="d-pd"></span></div>
+    <div class="bw"><div class="blbl"><span>PITCH</span></div>
       <div class="btrack"><div class="bmid"></div><div class="bfill" id="d-pb"></div></div></div>
   </div>
   <div class="angles">
@@ -3441,7 +3441,7 @@ function updateSensor(r, p) {
   $('s-pitch').textContent = p.toFixed(1)+'°'; $('s-pitch').className = 'aval '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
   $('s-badge').className   = 'badge '+(lv?'LV':cl?'CL':'AD');
   $('s-badge').textContent = lv?'✓ LEVEL':cl?'≈ CLOSE':'✗ ADJUST';
-  setBar('s-rb','s-rd',r); setBar('s-pb','s-pd',p);
+  setBar('s-rb',r); setBar('s-pb',p);
   updateAdjRow('s', r, p);
 }
 
@@ -3516,7 +3516,7 @@ function updateDisplay(d) {
 
   $('d-roll').textContent  = r.toFixed(1)+'°'; $('d-roll').className  = 'aval '+(ar<=LT?'ok':ar<=CT?'wn':'bd');
   $('d-pitch').textContent = p.toFixed(1)+'°'; $('d-pitch').className = 'aval '+(ap<=LT?'ok':ap<=CT?'wn':'bd');
-  setBar('d-rb','d-rd',r); setBar('d-pb','d-pd',p);
+  setBar('d-rb',r); setBar('d-pb',p);
   updateAdjRow('d', r, p);
 }
 
@@ -3599,9 +3599,9 @@ function fmtAdj(cm, axis) {
   const abs = Math.round(Math.abs(cm));
   if (abs < 1) return '✓';
   if (axis === 'roll') {
-    return (cm > 0 ? '▲R ' : '▲L ') + abs + 'cm';
+    return (cm > 0 ? '▲Right ' : '▲Left ') + abs + 'cm';
   } else {
-    return (cm > 0 ? '▲rear ' : '▲front ') + abs + 'cm';
+    return (cm > 0 ? '▲Rear ' : '▲Front ') + abs + 'cm';
   }
 }
 
@@ -3638,14 +3638,12 @@ window.toggleDims = function(prefix) {
   if (isOpen) loadDimsIntoInputs();
 };
 
-function setBar(fid, lid, angle) {
+function setBar(fid, angle) {
   const pct = Math.min(Math.abs(angle)/MD*50, 48);
   const col = Math.abs(angle)<=LT?'var(--accent2)':Math.abs(angle)<=CT?'var(--warn)':'var(--danger)';
   const f=$(fid);
   if(angle>=0){f.style.left='50%';f.style.width=pct+'%';}else{f.style.left=(50-pct)+'%';f.style.width=pct+'%';}
   f.style.background=col;
-  $(lid).textContent = Math.abs(angle)<=LT?'✓':(angle>0?'+':'')+angle.toFixed(1)+'°';
-  $(lid).style.color = col;
 }
 function clamp(v){ return Math.max(10,Math.min(90,v)); }
 
