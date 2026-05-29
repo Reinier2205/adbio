@@ -4,40 +4,206 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BraaiTyd Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato&family=Inter&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; }
-        .stage-active { border: 2px solid #f97316; box-shadow: 0 0 15px rgba(249, 115, 22, 0.3); }
+        :root {
+          --felt-green: #0a4821;
+          --dark-wood:  #2a1a1f;
+          --gold:       #d4af37;
+          --gold-light: #ffd700;
+          --light-gold: #fff8e1;
+          --teal:       #008080;
+          --maroon:     #800000;
+          --pip-color:  #fff8e1;
+        }
+        
+        body {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 100dvh;
+          min-height: 100dvh;
+          margin: 0;
+          overflow: hidden;
+          background: var(--dark-wood);
+          color: var(--light-gold);
+          font-family: 'Lato', sans-serif;
+        }
+        
+        /* Zone 1 */
+        .top-nav {
+          display: flex;
+          width: 90vw;
+          max-width: 420px;
+          justify-content: space-between;
+          align-items: center;
+          flex-shrink: 0;
+          padding: 6px 0;
+        }
+        
+        /* Zone 2 */
+        .casino-table {
+          background: var(--felt-green);
+          border: 10px solid #4a2c2a;
+          box-shadow: 0 0 0 5px var(--gold);
+          border-radius: 20px;
+          width: 90vw;
+          max-width: 420px;
+          flex: 1;
+          min-height: 0;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          padding: 12px 16px;
+          gap: 10px;
+          overflow: hidden;
+        }
+        
+        /* Zone 3 */
+        .bottom-bar {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          width: 90vw;
+          max-width: 420px;
+          flex-shrink: 0;
+          padding: 6px 0 8px;
+        }
+        
+        /* Nav buttons */
+        .nav-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: 2px solid #111;
+          box-shadow: 0 4px 0 #111;
+          cursor: pointer;
+          font-size: 1.1rem;
+          font-weight: 900;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          background: radial-gradient(circle, var(--gold-light), var(--gold));
+          color: #111;
+          transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .nav-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
+        
+        /* General buttons */
+        .btn {
+          font-family: 'Inter', sans-serif;
+          border-radius: 8px;
+          box-shadow: 0 4px 0 #111;
+          border: none;
+          cursor: pointer;
+          transition: transform 0.1s, box-shadow 0.1s;
+          background: radial-gradient(circle, var(--gold-light), var(--gold));
+          color: #111;
+          font-weight: bold;
+          padding: 12px 24px;
+          font-size: 1.1rem;
+        }
+        .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #111; }
+        
+        /* Game specific styles */
+        .stage-active { border: 2px solid var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+        
+        /* Timer display */
+        .timer-display {
+          font-family: 'Cinzel', serif;
+          font-weight: 700;
+          color: var(--gold);
+        }
+        
+        /* Modals */
+        .modal-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.85);
+          z-index: 1000;
+          align-items: center;
+          justify-content: center;
+        }
+        .modal-panel {
+          background: linear-gradient(160deg, #3e1e24, #2a1a1f);
+          border: 3px solid var(--gold);
+          border-radius: 12px;
+          padding: 1.5rem;
+          max-width: 420px;
+          width: 90%;
+          animation: modalIn 0.25s ease;
+        }
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.7); }
+          to   { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
-<body class="p-4 max-w-md mx-auto h-screen flex flex-col">
+<body>
 
+  <!-- Zone 1: top nav -->
+  <div class="top-nav">
+    <button class="nav-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
+    <div style="text-align:center">
+      <h1 style="font-family:'Cinzel',serif;color:var(--gold);margin:0">BraaiTyd Pro</h1>
+      <p style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.4);margin:2px 0 0">Perfect Braai Timer</p>
+    </div>
+    <button class="nav-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
+  </div>
+
+  <!-- Zone 2: game card -->
+  <div class="casino-table">
     <!-- Volume Header -->
-    <div class="bg-indigo-900/50 border border-indigo-500/30 p-2 rounded-lg text-center mb-4">
-        <p class="text-[9px] font-bold tracking-widest text-indigo-200 uppercase">Ensure volume is up for voice guidance</p>
+    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--gold); border-radius: 8px; padding: 8px; text-align: center; margin-bottom: 12px;">
+        <p style="font-size:0.6rem; font-weight: bold; letter-spacing:0.1em; color:var(--gold-light); text-transform: uppercase;">Ensure volume is up for voice guidance</p>
     </div>
 
     <!-- Progress Indicator -->
-    <div id="stepProgress" class="flex gap-2 justify-center mb-8">
+    <div id="stepProgress" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;">
         <!-- Steps generated via JS -->
     </div>
 
-    <div class="flex-1 flex flex-col items-center justify-center">
-        <h2 id="stepName" class="text-2xl font-black uppercase tracking-widest text-orange-500 mb-6">Braai</h2>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <h2 id="stepName" style="font-family:'Cinzel',serif; font-size: 1.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin: 0 0 20px 0;">Braai</h2>
         
-        <div class="relative w-64 h-64 flex items-center justify-center mb-8">
-            <div class="absolute inset-0 border-8 border-zinc-800 rounded-full"></div>
-            <div id="ring" class="absolute inset-0 border-8 border-orange-500 rounded-full transition-all duration-1000"></div>
-            <span id="timeDisplay" class="text-6xl font-black font-mono">00:00</span>
+        <div style="position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+            <div style="position: absolute; inset: 0; border: 8px solid var(--dark-wood); border-radius: 50%;"></div>
+            <div id="ring" style="position: absolute; inset: 0; border: 8px solid var(--gold); border-radius: 50%; transition: all 1s;"></div>
+            <span id="timeDisplay" style="font-family:'Cinzel',serif; font-size: 3.5rem; font-weight: 900; color: var(--gold-light);">00:00</span>
         </div>
 
-        <div class="flex w-full gap-4 mb-8">
-            <button onclick="changeTime(-30)" class="flex-1 py-4 bg-zinc-800 rounded-2xl font-bold text-xl active:bg-zinc-700">-30s</button>
-            <button onclick="changeTime(30)" class="flex-1 py-4 bg-zinc-800 rounded-2xl font-bold text-xl active:bg-zinc-700">+30s</button>
+        <div style="display: flex; width: 100%; gap: 12px; margin-bottom: 20px;">
+            <button onclick="changeTime(-30)" class="btn" style="flex: 1; padding: 12px; font-size: 1.2rem;">-30s</button>
+            <button onclick="changeTime(30)" class="btn" style="flex: 1; padding: 12px; font-size: 1.2rem;">+30s</button>
         </div>
-
-        <button id="mainBtn" onclick="toggleTimer()" class="w-full py-6 bg-orange-600 rounded-2xl font-black text-2xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">Start</button>
     </div>
+  </div>
+
+  <!-- Zone 3: primary action -->
+  <div class="bottom-bar">
+    <button id="mainBtn" onclick="toggleTimer()" class="btn" style="width: 100%; padding: 16px; font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.1em;">Start</button>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="help-modal" class="modal-overlay" onclick="this.style.display='none'">
+    <div class="modal-panel" onclick="event.stopPropagation()">
+      <h3 style="font-family:'Cinzel',serif; color:var(--gold); margin-top:0; margin-bottom:12px;">BraaiTyd Pro Guide</h3>
+      <p style="margin-bottom: 8px; font-size: 0.9rem;"><strong>How to use:</strong></p>
+      <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 0.85rem;">
+        <li>Set your desired time with +30s/-30s buttons</li>
+        <li>Press Start to begin the timer</li>
+        <li>Timer cycles through: Braai → Turn → Braai → Rest</li>
+        <li>Voice guidance announces each stage change</li>
+        <li>Screen stays on during timing</li>
+      </ul>
+      <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 0;">Perfect for camping, picnics, or backyard braais!</p>
+      <button onclick="document.getElementById('help-modal').style.display='none'" class="btn" style="margin-top: 16px; width: 100%;">Got it</button>
+    </div>
+  </div>
 
     <script>
         const stages = ["Braai", "Turn", "Braai", "Rest"];
@@ -49,9 +215,12 @@
 
         function renderProgress() {
             const container = document.getElementById('stepProgress');
-            container.innerHTML = stages.map((s, i) => `
-                <div class="w-3 h-3 rounded-full ${i === currentStep ? 'bg-orange-500' : i < currentStep ? 'bg-orange-900' : 'bg-zinc-700'}"></div>
-            `).join('');
+            container.innerHTML = stages.map((s, i) => {
+                let color = 'var(--dark-wood)';
+                if (i === currentStep) color = 'var(--gold)';
+                else if (i < currentStep) color = 'var(--gold-light)';
+                return `<div style="width: 12px; height: 12px; border-radius: 50%; background: ${color};"></div>`;
+            }).join('');
             document.getElementById('stepName').innerText = stages[currentStep];
         }
 
@@ -60,8 +229,15 @@
                 clearInterval(timer);
                 isRunning = false;
                 document.getElementById('mainBtn').innerText = "Start";
+                if (wakeLock) wakeLock.release();
             } else {
-                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+                if ('wakeLock' in navigator) {
+                    try {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    } catch (err) {
+                        console.log('Wake Lock failed:', err);
+                    }
+                }
                 isRunning = true;
                 document.getElementById('mainBtn').innerText = "Pause";
                 timer = setInterval(() => {
@@ -94,6 +270,14 @@
 
         function updateDisplay() {
             document.getElementById('timeDisplay').innerText = formatTime(timeLeft);
+            // Update ring progress
+            const totalTime = 300;
+            const progress = (totalTime - timeLeft) / totalTime;
+            const ring = document.getElementById('ring');
+            if (ring) {
+                ring.style.borderColor = `var(${progress >= 0.8 ? '--gold-light' : '--gold'})`;
+                ring.style.opacity = 0.7 + (progress * 0.3);
+            }
         }
 
         function formatTime(s) {
@@ -105,8 +289,16 @@
             updateDisplay();
         }
 
+        // Initialize
         renderProgress();
         updateDisplay();
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('help-modal').style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>

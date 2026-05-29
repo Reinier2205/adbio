@@ -4,50 +4,218 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Speed Sentry Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato&family=Inter&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Share Tech Mono', monospace; background-color: #050505; color: #fff; transition: background 0.5s; overflow: hidden; }
+        :root {
+          --felt-green: #0a4821;
+          --dark-wood:  #2a1a1f;
+          --gold:       #d4af37;
+          --gold-light: #ffd700;
+          --light-gold: #fff8e1;
+          --teal:       #008080;
+          --maroon:     #800000;
+          --pip-color:  #fff8e1;
+        }
+        
+        body {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 100dvh;
+          min-height: 100dvh;
+          margin: 0;
+          overflow: hidden;
+          background: var(--dark-wood);
+          color: var(--light-gold);
+          font-family: 'Lato', sans-serif;
+          transition: background 0.5s;
+        }
+        
+        /* Zone 1 */
+        .top-nav {
+          display: flex;
+          width: 90vw;
+          max-width: 420px;
+          justify-content: space-between;
+          align-items: center;
+          flex-shrink: 0;
+          padding: 6px 0;
+        }
+        
+        /* Zone 2 */
+        .casino-table {
+          background: var(--felt-green);
+          border: 10px solid #4a2c2a;
+          box-shadow: 0 0 0 5px var(--gold);
+          border-radius: 20px;
+          width: 90vw;
+          max-width: 420px;
+          flex: 1;
+          min-height: 0;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          padding: 12px 16px;
+          gap: 10px;
+          overflow: hidden;
+        }
+        
+        /* Zone 3 */
+        .bottom-bar {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          width: 90vw;
+          max-width: 420px;
+          flex-shrink: 0;
+          padding: 6px 0 8px;
+        }
+        
+        /* Nav buttons */
+        .nav-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: 2px solid #111;
+          box-shadow: 0 4px 0 #111;
+          cursor: pointer;
+          font-size: 1.1rem;
+          font-weight: 900;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          background: radial-gradient(circle, var(--gold-light), var(--gold));
+          color: #111;
+          transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .nav-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
+        
+        /* General buttons */
+        .btn {
+          font-family: 'Inter', sans-serif;
+          border-radius: 8px;
+          box-shadow: 0 4px 0 #111;
+          border: none;
+          cursor: pointer;
+          transition: transform 0.1s, box-shadow 0.1s;
+          background: radial-gradient(circle, var(--gold-light), var(--gold));
+          color: #111;
+          font-weight: bold;
+          padding: 12px 24px;
+          font-size: 1.1rem;
+        }
+        .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #111; }
+        
+        /* Speed Sentry specific styles */
         .night-mode { background-color: #000; color: #ff0000; }
         .font-lcd { font-family: 'Orbitron', sans-serif; }
         .glow-safe { text-shadow: 0 0 20px rgba(34, 197, 94, 0.6); color: #22c55e; }
         .glow-danger { text-shadow: 0 0 30px rgba(239, 68, 68, 0.9); color: #ef4444; }
-        .glass-panel { background: rgba(20, 20, 25, 0.8); backdrop-filter: blur(10px); border: 1px solid #333; }
+        .glass-panel { 
+          background: rgba(20, 20, 25, 0.8); 
+          backdrop-filter: blur(10px); 
+          border: 1px solid var(--gold);
+          border-radius: 12px;
+        }
+        
+        /* Modals */
+        .modal-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.85);
+          z-index: 1000;
+          align-items: center;
+          justify-content: center;
+        }
+        .modal-panel {
+          background: linear-gradient(160deg, #3e1e24, #2a1a1f);
+          border: 3px solid var(--gold);
+          border-radius: 12px;
+          padding: 1.5rem;
+          max-width: 420px;
+          width: 90%;
+          animation: modalIn 0.25s ease;
+        }
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.7); }
+          to   { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
-<body id="appBody" class="flex flex-col h-screen">
+<body>
 
-    <header class="p-4 flex justify-between items-center z-10">
-        <h1 class="text-lg font-black tracking-widest text-blue-500 font-lcd">SPEED SENTRY</h1>
-        <!-- Mini-Map Canvas -->
-        <canvas id="navCanvas" width="80" height="80" class="glass-panel rounded-full border border-blue-900/50"></canvas>
-    </header>
+  <!-- Zone 1: top nav -->
+  <div class="top-nav">
+    <button class="nav-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
+    <div style="text-align:center">
+      <h1 style="font-family:'Cinzel',serif;color:var(--gold);margin:0">Speed Sentry Pro</h1>
+      <p style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.4);margin:2px 0 0">Speed Limit Alert</p>
+    </div>
+    <button class="nav-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
+  </div>
 
-    <main class="flex-1 flex flex-col items-center p-4 gap-6">
-        <div class="glass-panel p-4 rounded-2xl w-full max-w-sm flex items-center justify-between border border-blue-900/30">
-            <div>
-                <p class="text-[10px] text-blue-200 uppercase tracking-widest font-bold">Hardware Setup</p>
-                <p class="text-[9px] text-zinc-400">Set physical volume to max.</p>
-            </div>
-            <button onclick="testAlarm()" class="bg-blue-600 px-4 py-2 rounded-lg text-[10px] font-bold uppercase hover:bg-blue-500 transition-all">Test</button>
+  <!-- Zone 2: game card -->
+  <div class="casino-table">
+    <div class="glass-panel" style="padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <div>
+            <p style="font-size:0.7rem; font-weight: bold; letter-spacing:0.1em; color:var(--gold-light); text-transform: uppercase;">Hardware Setup</p>
+            <p style="font-size:0.6rem; color:rgba(255,255,255,0.6);">Set physical volume to max.</p>
         </div>
+        <button onclick="testAlarm()" class="btn" style="padding: 8px 16px; font-size: 0.8rem; text-transform: uppercase;">Test</button>
+    </div>
 
-        <button id="startBtn" onclick="toggleTracking()" class="w-full max-w-sm py-6 rounded-2xl font-black text-xl bg-blue-600 text-white shadow-lg uppercase tracking-widest active:scale-95 transition-all">Start Tracking</button>
+    <button id="startBtn" onclick="toggleTracking()" class="btn" style="width: 100%; padding: 16px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">Start Tracking</button>
 
-        <div class="text-center my-auto">
-            <div id="speedDisplay" class="text-[8rem] leading-none font-black font-lcd glow-safe transition-colors duration-300">0</div>
-            <div class="text-xl text-zinc-400 font-bold tracking-widest">KM/H</div>
+    <div style="text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; margin: 20px 0;">
+        <div id="speedDisplay" style="font-family:'Orbitron',sans-serif; font-size: 5rem; font-weight: 900; line-height: 1; color: #22c55e; text-shadow: 0 0 20px rgba(34, 197, 94, 0.6); transition: color 0.3s, text-shadow 0.3s;">0</div>
+        <div style="font-size: 1.2rem; color: rgba(255,255,255,0.7); font-weight: bold; letter-spacing: 0.1em; margin-top: 8px;">KM/H</div>
+    </div>
+
+    <div class="glass-panel" style="padding: 20px; display: flex; align-items: center; justify-content: space-between; margin-top: 20px;">
+        <button onclick="adjustLimit(-5)" class="btn" style="width: 60px; height: 60px; border-radius: 50%; font-size: 1.5rem; padding: 0;">-5</button>
+        <div style="text-align: center;">
+            <span id="limitDisplay" style="font-family:'Orbitron',sans-serif; font-size: 2.5rem; font-weight: 900; color: var(--gold-light);">60</span>
+            <span style="display: block; font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px;">Limit</span>
         </div>
+        <button onclick="adjustLimit(5)" class="btn" style="width: 60px; height: 60px; border-radius: 50%; font-size: 1.5rem; padding: 0;">+5</button>
+    </div>
+    
+    <!-- Mini-Map Canvas -->
+    <div style="text-align: center; margin-top: 16px;">
+        <canvas id="navCanvas" width="80" height="80" style="background: rgba(0,0,0,0.3); border-radius: 50%; border: 2px solid var(--gold);"></canvas>
+        <p style="font-size: 0.7rem; color: rgba(255,255,255,0.6); margin-top: 4px;">Compass Heading</p>
+    </div>
+  </div>
 
-        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm flex items-center justify-between shadow-2xl">
-            <button onclick="adjustLimit(-5)" class="w-20 h-20 bg-zinc-800 rounded-full font-black text-2xl active:bg-zinc-700">-5</button>
-            <div class="text-center">
-                <span id="limitDisplay" class="text-5xl font-black font-lcd">60</span>
-                <span class="block text-[10px] text-zinc-500 uppercase mt-1">Limit</span>
-            </div>
-            <button onclick="adjustLimit(5)" class="w-20 h-20 bg-zinc-800 rounded-full font-black text-2xl active:bg-zinc-700">+5</button>
-        </div>
-    </main>
+  <!-- Zone 3: primary action -->
+  <div class="bottom-bar">
+    <div style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-align: center; margin-top: 8px;">
+      Uses GPS for speed detection
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="help-modal" class="modal-overlay" onclick="this.style.display='none'">
+    <div class="modal-panel" onclick="event.stopPropagation()">
+      <h3 style="font-family:'Cinzel',serif; color:var(--gold); margin-top:0; margin-bottom:12px;">Speed Sentry Pro Guide</h3>
+      <p style="margin-bottom: 8px; font-size: 0.9rem;"><strong>How to use:</strong></p>
+      <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 0.85rem;">
+        <li>Set your speed limit with +/- buttons</li>
+        <li>Press Start Tracking to begin monitoring</li>
+        <li>Tool uses GPS to detect your current speed</li>
+        <li>Visual and voice alerts when exceeding limit</li>
+        <li>Compass shows your current heading</li>
+        <li>Screen stays on during tracking</li>
+      </ul>
+      <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 0;">Perfect for road trips and staying within speed limits!</p>
+      <button onclick="document.getElementById('help-modal').style.display='none'" class="btn" style="margin-top: 16px; width: 100%;">Got it</button>
+    </div>
+  </div>
 
     <script>
         let isTracking = false, topSpeed = 0, lastSpeech = 0, audioCtx = null, wakeLock = null;
@@ -61,16 +229,23 @@
             isTracking = !isTracking;
             if (isTracking) {
                 // Request Wake Lock
-                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+                if ('wakeLock' in navigator) {
+                    try {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    } catch (err) {
+                        console.log('Wake Lock failed:', err);
+                    }
+                }
                 
                 initAudio();
                 document.getElementById('startBtn').innerText = "Stop Tracking";
-                document.getElementById('startBtn').className = "w-full max-w-sm py-6 rounded-2xl font-black text-xl bg-red-600 text-white shadow-lg uppercase tracking-widest active:scale-95";
+                document.getElementById('startBtn').style.background = 'radial-gradient(circle, #ef4444, #dc2626)';
                 
                 navigator.geolocation.watchPosition(updatePosition, null, { enableHighAccuracy: true });
             } else {
                 if (wakeLock) wakeLock.release();
-                location.reload();
+                document.getElementById('startBtn').innerText = "Start Tracking";
+                document.getElementById('startBtn').style.background = 'radial-gradient(circle, var(--gold-light), var(--gold))';
             }
         }
 
@@ -83,10 +258,17 @@
             drawCompass(heading);
 
             if (speed >= currentLimit) {
-                document.getElementById('speedDisplay').className = "text-[8rem] leading-none font-black font-lcd glow-danger";
-                window.speechSynthesis.speak(new SpeechSynthesisUtterance("Slow down"));
+                document.getElementById('speedDisplay').style.color = '#ef4444';
+                document.getElementById('speedDisplay').style.textShadow = '0 0 30px rgba(239, 68, 68, 0.9)';
+                // Only speak alert every 10 seconds to avoid spam
+                const now = Date.now();
+                if (now - lastSpeech > 10000) {
+                    window.speechSynthesis.speak(new SpeechSynthesisUtterance("Slow down"));
+                    lastSpeech = now;
+                }
             } else {
-                document.getElementById('speedDisplay').className = "text-[8rem] leading-none font-black font-lcd glow-safe";
+                document.getElementById('speedDisplay').style.color = '#22c55e';
+                document.getElementById('speedDisplay').style.textShadow = '0 0 20px rgba(34, 197, 94, 0.6)';
             }
         }
 
@@ -95,7 +277,7 @@
             ctx.save();
             ctx.translate(40, 40);
             ctx.rotate((angle * Math.PI) / 180);
-            ctx.strokeStyle = '#3b82f6';
+            ctx.strokeStyle = 'var(--gold-light)';
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.moveTo(0, -25); ctx.lineTo(0, 25);
@@ -121,6 +303,16 @@
             document.getElementById('limitDisplay').innerText = currentLimit;
             localStorage.setItem('limit', currentLimit);
         }
+        
+        // Initialize compass
+        drawCompass(0);
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('help-modal').style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>
