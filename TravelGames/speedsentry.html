@@ -242,6 +242,7 @@
             } else {
                 if (wakeLock) { wakeLock.release(); wakeLock = null; }
                 if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+                stopSpeechLoop();
                 document.getElementById('startBtn').innerText = "Start Tracking";
                 document.getElementById('startBtn').style.background = 'radial-gradient(circle, var(--gold-light), var(--gold))';
                 document.getElementById('speedDisplay').innerText = '0';
@@ -317,24 +318,47 @@
             speakAlert();
         }
 
-        // Speak the alert — called from Test button (user gesture) and from GPS callback
-        // (works on Android after being primed by a user gesture; iOS may still block from GPS)
+        // ── Speech engine ──────────────────────────────────────────────
+        // iOS Safari blocks speechSynthesis from GPS callbacks UNLESS the speech
+        // queue is kept continuously active from the original user gesture.
+        // We do this by looping a silent utterance started on the Start tap.
+        // When an alert fires, we cancel the loop, speak the alert, then restart the loop.
+
+        let _speechLoopActive = false;
+
+        function startSpeechLoop() {
+            if (!window.speechSynthesis || _speechLoopActive) return;
+            _speechLoopActive = true;
+            _loopSilence();
+        }
+
+        function stopSpeechLoop() {
+            _speechLoopActive = false;
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+        }
+
+        function _loopSilence() {
+            if (!_speechLoopActive) return;
+            const u = new SpeechSynthesisUtterance(' ');
+            u.volume = 0;
+            u.rate = 0.1; // very slow — keeps queue alive for ~10s per utterance
+            u.onend = () => { if (_speechLoopActive) _loopSilence(); };
+            window.speechSynthesis.speak(u);
+        }
+
         function speakAlert() {
             if (!window.speechSynthesis) return;
-            window.speechSynthesis.cancel(); // clear any queued utterances
+            // Cancel the silence loop, speak the alert, then restart the loop
+            window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance('Slow down, speed limit exceeded');
             msg.rate = 1.0;
             msg.volume = 1.0;
+            msg.onend = () => { if (_speechLoopActive) _loopSilence(); };
             window.speechSynthesis.speak(msg);
         }
 
-        // Prime speechSynthesis inside a user gesture (Start button tap) so GPS callbacks
-        // can trigger speech on Android. Speaks an empty utterance — inaudible but unlocks the engine.
         function primeSpeech() {
-            if (!window.speechSynthesis) return;
-            const silent = new SpeechSynthesisUtterance('');
-            silent.volume = 0;
-            window.speechSynthesis.speak(silent);
+            startSpeechLoop();
         }
 
         function adjustLimit(amt) {
