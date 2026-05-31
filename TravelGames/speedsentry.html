@@ -218,7 +218,7 @@
   </div>
 
     <script>
-        let isTracking = false, topSpeed = 0, lastSpeech = 0, audioCtx = null, wakeLock = null;
+        let isTracking = false, watchId = null, lastAlert = 0, audioCtx = null, wakeLock = null;
         let currentLimit = parseInt(localStorage.getItem('limit') || 60);
         const canvas = document.getElementById('navCanvas');
         const ctx = canvas.getContext('2d');
@@ -230,46 +230,64 @@
             if (isTracking) {
                 // Request Wake Lock
                 if ('wakeLock' in navigator) {
-                    try {
-                        wakeLock = await navigator.wakeLock.request('screen');
-                    } catch (err) {
-                        console.log('Wake Lock failed:', err);
-                    }
+                    try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
                 }
-                
+                // Unlock AudioContext on this user gesture tap
                 initAudio();
                 document.getElementById('startBtn').innerText = "Stop Tracking";
                 document.getElementById('startBtn').style.background = 'radial-gradient(circle, #ef4444, #dc2626)';
-                
-                navigator.geolocation.watchPosition(updatePosition, null, { enableHighAccuracy: true });
+                watchId = navigator.geolocation.watchPosition(updatePosition,
+                    () => {}, { enableHighAccuracy: true, maximumAge: 1000 });
             } else {
-                if (wakeLock) wakeLock.release();
+                if (wakeLock) { wakeLock.release(); wakeLock = null; }
+                if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
                 document.getElementById('startBtn').innerText = "Start Tracking";
                 document.getElementById('startBtn').style.background = 'radial-gradient(circle, var(--gold-light), var(--gold))';
+                document.getElementById('speedDisplay').innerText = '0';
+                document.getElementById('speedDisplay').style.color = '#22c55e';
+                document.getElementById('speedDisplay').style.textShadow = '0 0 20px rgba(34,197,94,0.6)';
             }
         }
 
         function updatePosition(pos) {
+            if (!isTracking) return;
             const speed = Math.round((pos.coords.speed || 0) * 3.6);
             const heading = pos.coords.heading || 0;
             document.getElementById('speedDisplay').innerText = speed;
-            
-            // Draw Mini-Map
             drawCompass(heading);
 
             if (speed >= currentLimit) {
                 document.getElementById('speedDisplay').style.color = '#ef4444';
-                document.getElementById('speedDisplay').style.textShadow = '0 0 30px rgba(239, 68, 68, 0.9)';
-                // Only speak alert every 10 seconds to avoid spam
+                document.getElementById('speedDisplay').style.textShadow = '0 0 30px rgba(239,68,68,0.9)';
+                // Alert beep every 8 seconds — AudioContext is already unlocked from Start tap
                 const now = Date.now();
-                if (now - lastSpeech > 10000) {
-                    window.speechSynthesis.speak(new SpeechSynthesisUtterance("Slow down"));
-                    lastSpeech = now;
+                if (now - lastAlert > 8000) {
+                    lastAlert = now;
+                    playAlertBeep();
                 }
             } else {
                 document.getElementById('speedDisplay').style.color = '#22c55e';
-                document.getElementById('speedDisplay').style.textShadow = '0 0 20px rgba(34, 197, 94, 0.6)';
+                document.getElementById('speedDisplay').style.textShadow = '0 0 20px rgba(34,197,94,0.6)';
             }
+        }
+
+        // Plays two short beeps — works on iOS/Android without needing a user gesture
+        // because AudioContext was unlocked when the user tapped Start Tracking.
+        function playAlertBeep() {
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            [0, 0.25].forEach(offset => {
+                const osc  = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'square';
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.6, t + offset);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + offset + 0.18);
+                osc.start(t + offset);
+                osc.stop(t + offset + 0.18);
+            });
         }
 
         function drawCompass(angle) {
@@ -277,7 +295,7 @@
             ctx.save();
             ctx.translate(40, 40);
             ctx.rotate((angle * Math.PI) / 180);
-            ctx.strokeStyle = 'var(--gold-light)';
+            ctx.strokeStyle = '#ffd700';
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.moveTo(0, -25); ctx.lineTo(0, 25);
@@ -288,14 +306,12 @@
 
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            audioCtx.resume();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function testAlarm() {
             initAudio();
-            const osc = audioCtx.createOscillator();
-            osc.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            playAlertBeep();
         }
 
         function adjustLimit(amt) {
@@ -303,15 +319,13 @@
             document.getElementById('limitDisplay').innerText = currentLimit;
             localStorage.setItem('limit', currentLimit);
         }
-        
+
         // Initialize compass
         drawCompass(0);
-        
+
         // Close modal with Escape key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.getElementById('help-modal').style.display = 'none';
-            }
+            if (e.key === 'Escape') document.getElementById('help-modal').style.display = 'none';
         });
     </script>
 </body>
