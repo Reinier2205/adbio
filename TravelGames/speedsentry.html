@@ -232,8 +232,9 @@
                 if ('wakeLock' in navigator) {
                     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
                 }
-                // Unlock AudioContext on this user gesture tap
+                // Unlock AudioContext AND prime speechSynthesis on this user gesture tap
                 initAudio();
+                primeSpeech();
                 document.getElementById('startBtn').innerText = "Stop Tracking";
                 document.getElementById('startBtn').style.background = 'radial-gradient(circle, #ef4444, #dc2626)';
                 watchId = navigator.geolocation.watchPosition(updatePosition,
@@ -264,6 +265,7 @@
                 if (now - lastAlert > 8000) {
                     lastAlert = now;
                     playAlertBeep();
+                    speakAlert();
                 }
             } else {
                 document.getElementById('speedDisplay').style.color = '#22c55e';
@@ -312,6 +314,27 @@
         function testAlarm() {
             initAudio();
             playAlertBeep();
+            speakAlert();
+        }
+
+        // Speak the alert — called from Test button (user gesture) and from GPS callback
+        // (works on Android after being primed by a user gesture; iOS may still block from GPS)
+        function speakAlert() {
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel(); // clear any queued utterances
+            const msg = new SpeechSynthesisUtterance('Slow down, speed limit exceeded');
+            msg.rate = 1.0;
+            msg.volume = 1.0;
+            window.speechSynthesis.speak(msg);
+        }
+
+        // Prime speechSynthesis inside a user gesture (Start button tap) so GPS callbacks
+        // can trigger speech on Android. Speaks an empty utterance — inaudible but unlocks the engine.
+        function primeSpeech() {
+            if (!window.speechSynthesis) return;
+            const silent = new SpeechSynthesisUtterance('');
+            silent.volume = 0;
+            window.speechSynthesis.speak(silent);
         }
 
         function adjustLimit(amt) {
