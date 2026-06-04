@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Shylet Upholstery Manager</title>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">Shylet Upholstery</h1>
+            <button onclick="toggleModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">+ New Order</button>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b">
+                    <tr>
+                        <th class="p-4">Client</th>
+                        <th class="p-4">Item</th>
+                        <th class="p-4">Status</th>
+                        <th class="p-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="orderList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">New Order</h2>
+            <input id="client" placeholder="Client Name" class="w-full p-2 border mb-2 rounded">
+            <input id="item" placeholder="Furniture Item" class="w-full p-2 border mb-4 rounded">
+            <select id="status" class="w-full p-2 border mb-4 rounded">
+                <option>Quote Sent</option>
+                <option>Fabric Ordered</option>
+                <option>In Production</option>
+                <option>Ready for Delivery</option>
+            </select>
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleModal()" class="px-4 py-2 text-gray-600">Cancel</button>
+                <button onclick="addOrder()" class="px-4 py-2 bg-blue-600 text-white rounded">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let orders = JSON.parse(localStorage.getItem('shyletOrders')) || [];
+
+        function render() {
+            const list = document.getElementById('orderList');
+            list.innerHTML = orders.map((o, index) => `
+                <tr class="border-b">
+                    <td class="p-4">${o.client}</td>
+                    <td class="p-4">${o.item}</td>
+                    <td class="p-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">${o.status}</span></td>
+                    <td class="p-4">
+                        <button onclick="deleteOrder(${index})" class="text-red-500 text-sm">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function addOrder() {
+            const newOrder = {
+                client: document.getElementById('client').value,
+                item: document.getElementById('item').value,
+                status: document.getElementById('status').value
+            };
+            orders.push(newOrder);
+            localStorage.setItem('shyletOrders', JSON.stringify(orders));
+            toggleModal();
+            render();
+        }
+
+        function deleteOrder(index) {
+            orders.splice(index, 1);
+            localStorage.setItem('shyletOrders', JSON.stringify(orders));
+            render();
+        }
+
+        function toggleModal() {
+            document.getElementById('modal').classList.toggle('hidden');
+        }
+
+        render();
+    </script>
+</body>
+</html>
