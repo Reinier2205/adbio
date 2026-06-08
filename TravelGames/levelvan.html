@@ -290,6 +290,70 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .cloud-status.connecting{color:var(--warn)}
 .cloud-status.offline{color:var(--danger)}
 
+/* ── Connection Status Banner ─────────────────────────────── */
+/* ── Connection status strip ─────────────────────────────── */
+.conn-strip{
+  position:fixed;top:52px;left:12px;right:12px;z-index:30;
+  background:rgba(10,22,40,0.97);border:1px solid var(--border);
+  border-radius:10px;padding:8px 12px;
+  font-family:'Share Tech Mono',monospace;font-size:.76rem;
+  display:none;align-items:center;gap:8px;
+}
+.conn-strip.visible{display:flex}
+.conn-strip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--dim)}
+.conn-strip-dot.ok{background:var(--accent2);box-shadow:0 0 6px var(--accent2)}
+.conn-strip-dot.warn{background:var(--warn);animation:blink .7s infinite}
+.conn-strip-dot.err{background:var(--danger);animation:blink .5s infinite}
+.conn-strip-text{flex:1;color:var(--text)}
+.conn-strip-btn{background:none;border:1px solid var(--dim);border-radius:7px;
+  color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.68rem;
+  padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.conn-strip-btn:active{opacity:.7}
+
+/* ── Network diagnostic modal ────────────────────────────── */
+.net-modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+  z-index:200;align-items:center;justify-content:center;padding:16px;
+}
+.net-modal-overlay.active{display:flex}
+.net-modal{
+  background:linear-gradient(160deg,#0f1f3d,#0a1628);
+  border:2px solid var(--border);border-radius:16px;
+  padding:20px 18px 16px;width:100%;max-width:360px;
+  font-family:'Share Tech Mono',monospace;
+  display:flex;flex-direction:column;gap:14px;
+}
+.net-modal-title{
+  font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;
+  letter-spacing:2px;color:var(--warn);display:flex;align-items:center;gap:8px;
+}
+.net-modal-body{font-size:.78rem;color:var(--text);line-height:1.9}
+.net-modal-body b{color:var(--accent)}
+.net-modal-body ol{padding-left:16px;margin-top:4px}
+.net-modal-body li{margin-bottom:3px}
+.net-modal-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.net-modal-tab{
+  flex:1;padding:8px 6px;border-radius:9px;
+  background:var(--panel);border:1px solid var(--border);
+  color:var(--dim);font-family:'Orbitron',monospace;font-size:.6rem;
+  font-weight:700;letter-spacing:1px;cursor:pointer;text-align:center;
+  transition:all .15s;min-width:60px;
+}
+.net-modal-tab.active{border-color:var(--warn);color:var(--warn);background:rgba(255,170,0,.08)}
+.net-modal-tab:active{transform:scale(.95)}
+.net-modal-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:2px}
+.net-modal-close{
+  background:var(--panel);border:2px solid var(--dim);border-radius:10px;
+  color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.8rem;
+  padding:10px 18px;cursor:pointer;
+}
+.net-modal-retry{
+  background:rgba(0,212,255,.1);border:2px solid var(--accent);border-radius:10px;
+  color:var(--accent);font-family:'Orbitron',monospace;font-size:.75rem;
+  font-weight:700;letter-spacing:2px;padding:10px 18px;cursor:pointer;
+}
+.net-modal-close:active,.net-modal-retry:active{transform:scale(.95)}
+
 /* ── Caravan dimensions panel ─────────────────────────────── */
 .dims-row{display:flex;flex-direction:column;gap:6px;padding-top:6px;border-top:1px solid var(--border)}
 .dims-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;
@@ -434,6 +498,30 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 <div class="grid"></div>
 <div class="wake-status" id="wake-status">WAKE: OFF</div>
 <div class="cloud-status" id="cloud-status">CLOUD: OFFLINE</div>
+
+<!-- Connection status strip -->
+<div class="conn-strip" id="conn-strip">
+  <div class="conn-strip-dot" id="conn-strip-dot"></div>
+  <span class="conn-strip-text" id="conn-strip-text"></span>
+  <button class="conn-strip-btn" id="conn-strip-btn" style="display:none" onclick="ConnStatus.showDiagModal()">HELP?</button>
+</div>
+
+<!-- Network diagnostic modal -->
+<div class="net-modal-overlay" id="net-modal-overlay">
+  <div class="net-modal">
+    <div class="net-modal-title"><span id="net-modal-icon">⚠️</span><span id="net-modal-title-text">CONNECTION ISSUE</span></div>
+    <div class="net-modal-tabs" id="net-modal-tabs">
+      <button class="net-modal-tab active" onclick="ConnStatus._diagTab('vpn')">🛡️ VPN</button>
+      <button class="net-modal-tab" onclick="ConnStatus._diagTab('hotspot')">📶 HOTSPOT</button>
+      <button class="net-modal-tab" onclick="ConnStatus._diagTab('sensor')">📡 SENSOR</button>
+    </div>
+    <div class="net-modal-body" id="net-modal-body"></div>
+    <div class="net-modal-actions">
+      <button class="net-modal-close" onclick="ConnStatus.hideDiagModal()">CLOSE</button>
+      <button class="net-modal-retry" onclick="ConnStatus.retryFromModal()">↺ RETRY</button>
+    </div>
+  </div>
+</div>
 
 <!-- HOME -->
 <div class="screen home" id="home-screen">
@@ -1204,8 +1292,198 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 // ═══════════════════════════════════════════════════════
 
 // ════════════════════════════════
-//  VOICE MANAGER
+//  ConnStatus — lean connection status strip + diagnostic modal
+//  API used by initSensor() and connectWithPin():
+//    ConnStatus.set(level, message)   level = 'info'|'warn'|'err'|'ok'|'retrying'|'ready'|'connected'|'registering'
+//    ConnStatus.hide()
+//    ConnStatus.diagnoseAndShow(role) role = 'sensor'|'display'
+//    ConnStatus.showDiagModal()
+//    ConnStatus.hideDiagModal()
+//    ConnStatus.retryFromModal()
 // ════════════════════════════════
+const ConnStatus = (() => {
+  // ── DOM refs (lazily resolved after DOMContentLoaded) ───────
+  const el = (id) => document.getElementById(id);
+
+  // ── Internal state ───────────────────────────────────────────
+  let _role = 'sensor';     // last role passed to diagnoseAndShow
+  let _activeTab = 'vpn';  // currently shown diag tab
+
+  // ── Diagnostic content per tab ───────────────────────────────
+  const DIAG = {
+    vpn: {
+      label: '🛡️ VPN',
+      html: `
+        <b>VPN is the most common cause of connection failures.</b>
+        Most VPNs block WebRTC — the technology LevelVan uses to connect.<br><br>
+        <ol>
+          <li>Open your phone's <b>Settings → VPN</b></li>
+          <li>Toggle the VPN <b>OFF</b></li>
+          <li>Tap <b>↺ RETRY</b> below</li>
+        </ol>
+        <br>Once connected, you can re-enable the VPN — it only needs to be off for the initial handshake (~5 seconds).`
+    },
+    hotspot: {
+      label: '📶 HOTSPOT',
+      html: `
+        <b>No signal? Use a phone hotspot.</b><br><br>
+        If you're in a remote area or neither phone has internet access:<br><br>
+        <ol>
+          <li>On the <b>Display phone</b>: Settings → <b>Hotspot → Turn ON</b></li>
+          <li>On the <b>Sensor phone</b>: connect to that hotspot in WiFi settings</li>
+          <li>Open LevelVan on both — the Display phone supplies the internet needed for the initial handshake</li>
+          <li>Tap <b>↺ RETRY</b> below</li>
+        </ol>`
+    },
+    sensor: {
+      label: '📡 SENSOR',
+      html: `
+        <b>Sensor not reachable?</b> Try these steps:<br><br>
+        <ol>
+          <li>Check the PIN on the Sensor phone matches what you typed</li>
+          <li>Make sure the <b>Sensor phone is still on the SENSOR screen</b> — it must not have gone to sleep or home</li>
+          <li>On the Sensor phone tap <b>⬅ HOME</b> then <b>SENSOR</b> again to get a fresh PIN</li>
+          <li>Type the new PIN on this phone and tap <b>↺ RETRY</b></li>
+        </ol>`
+    }
+  };
+
+  // ── Public API ───────────────────────────────────────────────
+
+  /**
+   * Show a status message in the strip.
+   * level: 'info' | 'warn' | 'err' | 'ok' | 'registering' | 'retrying' | 'ready' | 'connected'
+   */
+  function set(level, message) {
+    const strip = el('conn-strip');
+    const dot   = el('conn-strip-dot');
+    const text  = el('conn-strip-text');
+    const btn   = el('conn-strip-btn');
+    if (!strip) return;
+
+    text.textContent = message;
+
+    // Reset dot classes
+    dot.className = 'conn-strip-dot';
+
+    switch (level) {
+      case 'ok':
+      case 'connected':
+      case 'ready':
+        dot.classList.add('ok');
+        strip.classList.add('visible');
+        if (btn) btn.style.display = 'none';
+        // Auto-hide after 3s when connected
+        setTimeout(() => { if (strip) strip.classList.remove('visible'); }, 3000);
+        return;
+      case 'registering':
+      case 'info':
+        dot.classList.add('warn'); // amber blink while working
+        if (btn) btn.style.display = 'none';
+        break;
+      case 'retrying':
+        dot.classList.add('warn');
+        if (btn) btn.style.display = '';
+        break;
+      case 'warn':
+        dot.classList.add('warn');
+        if (btn) btn.style.display = '';
+        break;
+      case 'err':
+        dot.classList.add('err');
+        if (btn) btn.style.display = '';
+        break;
+      default:
+        if (btn) btn.style.display = 'none';
+    }
+    strip.classList.add('visible');
+  }
+
+  function hide() {
+    const strip = el('conn-strip');
+    if (strip) strip.classList.remove('visible');
+  }
+
+  /**
+   * Called after a timeout or hard error — runs a quick internet check then
+   * shows the appropriate diagnostic hint in the strip + HELP? button.
+   */
+  async function diagnoseAndShow(role) {
+    _role = role || 'sensor';
+
+    // Quick internet reachability probe (no-cors so no CORS errors)
+    // Use AbortController for iOS 15 compat (AbortSignal.timeout needs iOS 16+)
+    let hasInternet = false;
+    try {
+      const ac = new AbortController();
+      const t = setTimeout(() => ac.abort(), 4000);
+      await fetch('https://www.google.com/generate_204', { method: 'HEAD', mode: 'no-cors', signal: ac.signal });
+      clearTimeout(t);
+      hasInternet = true;
+    } catch(_) {}
+
+    if (!hasInternet) {
+      set('err', 'No internet — connection relay unreachable');
+      _activeTab = 'hotspot';
+    } else {
+      // Internet is fine but PeerJS timed out — likely VPN blocking WebRTC
+      set('err', 'Stuck — VPN or firewall may be blocking connection');
+      _activeTab = 'vpn';
+    }
+  }
+
+  function showDiagModal() {
+    _diagTab(_activeTab);
+    const ov = el('net-modal-overlay');
+    if (ov) ov.classList.add('active');
+  }
+
+  function hideDiagModal() {
+    const ov = el('net-modal-overlay');
+    if (ov) ov.classList.remove('active');
+  }
+
+  function retryFromModal() {
+    hideDiagModal();
+    hide();
+    // Trigger retry based on current mode
+    if (typeof mode !== 'undefined') {
+      if (mode === 'sensor' && typeof initSensor === 'function') {
+        if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+        conns = [];
+        showPanel('s1');
+        initSensor(_pin);
+      } else if (mode === 'display' && typeof connectWithPin === 'function') {
+        const rPin = localStorage.getItem('lv_pin');
+        if (!rPin) { showPanel('d1'); kpadReset(); return; }
+        if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+        conns = [];
+        window._displayRetryCount = 0;
+        window._displayReconnectCount = 0;
+        showPanel('d2');
+        _kpad = rPin.split('');
+        connectWithPin();
+      }
+    }
+  }
+
+  function _diagTab(tab) {
+    _activeTab = tab;
+    // Update tab button styles
+    const tabBtns = document.querySelectorAll('.net-modal-tab');
+    const tabKeys = ['vpn', 'hotspot', 'sensor'];
+    tabBtns.forEach((btn, i) => {
+      btn.classList.toggle('active', tabKeys[i] === tab);
+    });
+    // Update body content
+    const body = el('net-modal-body');
+    if (body && DIAG[tab]) body.innerHTML = DIAG[tab].html;
+  }
+
+  return { set, hide, diagnoseAndShow, showDiagModal, hideDiagModal, retryFromModal, _diagTab };
+})();
+
+window.ConnStatus = ConnStatus;
 
 /**
  * Pure helper — returns the partner voice peer ID.
@@ -2816,6 +3094,9 @@ window.addEventListener('load', async () => {
 // ════════════════════════════════
 window.goHome = async () => {
   if (deviceIdentityManager) deviceIdentityManager.cancelAutoConnect();
+  window._displayRetryCount = 0;
+  window._displayReconnectCount = 0;
+  ConnStatus.hide();
   // Do NOT clear lv_pin or lv_mode — the PIN is the permanent pairing bond.
   // Only resetPairing() should clear those.
   if (window.voiceMgr) voiceMgr.destroy();
@@ -2845,6 +3126,8 @@ window.startDisplay = () => {
   if (firebaseManager) firebaseManager.updateDeviceType('display');
   kpadReset();
   showPanel('d1');
+  window._displayRetryCount = 0;
+  window._displayReconnectCount = 0;
   // Auto-fill saved PIN immediately — skip keypad if we have a known pair
   const savedPin = localStorage.getItem('lv_pin');
   if (savedPin) {
@@ -2934,23 +3217,22 @@ window.forceReconnectSensor = () => {
 
 window.forceReconnectDisplay = () => {
   const savedPin = localStorage.getItem('lv_pin');
+  window._displayRetryCount = 0;
+  window._displayReconnectCount = 0;
+  ConnStatus.hide();
   if (!savedPin) {
     showPanel('d1');
     kpadReset();
     $('d1-hint').textContent = 'Enter the 4-digit PIN shown on the Sensor device';
     return;
   }
-  // Cancel any pending auto-reconnect timers by setting a flag
   window._forceReconnecting = true;
-  // Tear down existing peer cleanly
   if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
   conns = [];
-  // Small delay to let the peer fully close before creating a new one
   setTimeout(() => {
     window._forceReconnecting = false;
     showPanel('d2');
-    $('d2-txt').textContent = 'RECONNECTing...';
-    // Directly call connectWithPin with the saved pin bypassing fillPin
+    $('d2-txt').textContent = 'reconnecting…';
     _kpad = savedPin.split('');
     connectWithPin();
   }, 400);
@@ -2991,11 +3273,14 @@ function initSensor(resumePin) {
   localStorage.setItem('lv_pin', _pin);
   const peerId = 'levelvan-' + _pin + '-sensor';
   $('s1-txt').textContent = resumePin ? 'resuming session...' : 'connecting to relay...';
+  ConnStatus.set('registering', resumePin ? 'Resuming paired session…' : 'Connecting to relay server…');
 
   // Show force button after 8 seconds if still stuck on s1
   const sForceTimer = setTimeout(() => {
     const s1Btn = $('s1-force-btn');
     if (s1Btn && mode === 'sensor') s1Btn.style.display = '';
+    // After 8s with no relay response, check if network/VPN is the cause
+    ConnStatus.diagnoseAndShow('sensor');
   }, 8000);
 
   peer = new Peer(peerId, {
@@ -3013,6 +3298,7 @@ function initSensor(resumePin) {
   peer.on('open', id => {
     console.log('Sensor peer open:', id);
     clearTimeout(sForceTimer);
+    ConnStatus.set('ready', 'Ready — waiting for display to connect');
     const s1Btn = $('s1-force-btn');
     if (s1Btn) s1Btn.style.display = 'none';
     $('pin-bar-code').textContent = _pin;
@@ -3020,29 +3306,29 @@ function initSensor(resumePin) {
     if (pinLabel) pinLabel.textContent = resumePin ? 'PAIRED PIN' : 'SESSION PIN';
     $('pin-bar-share').style.display = '';
     showPanel('s2');
-    // Generate QR code for the share link
     _generateQR(_pin);
   });
 
   peer.on('connection', conn => {
     console.log('Display connected:', conn.peer);
+    ConnStatus.set('connected', 'Display connected ✓');
     setupSensorConn(conn);
   });
 
   peer.on('error', e => {
     console.error('Peer error:', e);
+    clearTimeout(sForceTimer);
     if (e.type === 'unavailable-id') {
-      // PIN collision — only regenerate if this was a fresh PIN (not a saved pair)
-      // If resumePin was set, the sensor is already in use — just wait and retry
       peer.destroy(); peer = null;
       if (resumePin) {
-        // Retry with same PIN after a short delay
+        ConnStatus.set('retrying', 'Session busy — retrying in 3s…');
         setTimeout(() => initSensor(resumePin), 3000);
       } else {
-        initSensor(null); // fresh session, try a new PIN
+        initSensor(null);
       }
     } else {
       $('s1-txt').textContent = '⚠️ ' + e.message;
+      ConnStatus.diagnoseAndShow('sensor');
     }
   });
 }
@@ -3206,11 +3492,17 @@ window.connectWithPin = () => {
 
   showPanel('d2');
   $('d2-txt').textContent = 'connecting to sensor...';
+  ConnStatus.set('registering', 'Connecting to relay server…');
+
+  // Track consecutive peer-unavailable retries so we don't loop forever
+  // _displayRetryCount is reset to 0 on every fresh manual connect
+  if (typeof window._displayRetryCount !== 'number') window._displayRetryCount = 0;
 
   // Show force button after 8 seconds if still stuck
   const forceTimer = setTimeout(() => {
     const d2Btn = $('d2-force-btn');
     if (d2Btn && mode === 'display') d2Btn.style.display = '';
+    ConnStatus.diagnoseAndShow('display');
   }, 8000);
 
   // Each display gets a unique peer ID
@@ -3231,34 +3523,31 @@ window.connectWithPin = () => {
 
   peer.on('open', () => {
     console.log('Display peer open, connecting to sensor:', sensorId);
+    ConnStatus.set('info', 'Relay connected — reaching sensor…');
     const conn = peer.connect(sensorId, { reliable: false, serialization: 'json' });
 
     conn.on('open', () => {
       console.log('Connected to sensor');
       conns = [conn];
       clearTimeout(forceTimer);
+      window._displayRetryCount = 0;   // reset retry counter on success
+      window._displayReconnectCount = 0;
       const d2Btn = $('d2-force-btn');
       if (d2Btn) d2Btn.style.display = 'none';
+      ConnStatus.set('connected', 'Sensor connected ✓');
       showPanel('d3');
-      // Ensure wake lock is active when connected
       if (wakeLockManager) wakeLockManager.maintainWakeLock();
-      // Initialise voice on first connection; reconnect on subsequent ones
       if (window.voiceMgr && mode === 'display' && pin) {
         if (!voiceMgr._voicePeer) voiceMgr.init(pin, 'display');
         else voiceMgr.reconnect();
       }
-      // Initialise video manager
       if (window.videoMgr && mode === 'display' && pin && !videoMgr._videoPeer) {
         videoMgr.init(pin, 'display');
       }
-      // Save pairing bond to cloud on first successful connection
       if (firebaseManager && firebaseManager.isCloudAvailable()) {
         const profile = firebaseManager.getDeviceProfile();
         if (profile && !profile.activePairId) {
-          // We need the sensor's userId — store pin in bond for now
-          // Bond creation requires both UIDs; store pin at minimum
           firebaseManager.updateDeviceType('display').catch(console.warn);
-          // Store pin in localStorage as the persistent pairing key
           localStorage.setItem('lv_pin', pin);
           localStorage.setItem('lv_mode', 'display');
         }
@@ -3267,7 +3556,7 @@ window.connectWithPin = () => {
 
     conn.on('data', data => {
       try {
-        if (data && data.ping) return; // ignore heartbeat pings from sensor
+        if (data && data.ping) return;
         if (data && data.camSignal !== undefined) {
           if (window.videoMgr) videoMgr.onCamSignal(data.camSignal);
           return;
@@ -3282,24 +3571,41 @@ window.connectWithPin = () => {
 
     conn.on('close', () => {
       const savedPin = localStorage.getItem('lv_pin');
-      // If RECONNECT is already in progress, don't start another attempt
       if (window._forceReconnecting) return;
       if (savedPin && mode === 'display') {
-        // Stay on d3 briefly — show subtle reconnecting hint without jarring screen flash
+        // Track how many auto-reconnects we've attempted since last successful connect
+        if (typeof window._displayReconnectCount !== 'number') window._displayReconnectCount = 0;
+        window._displayReconnectCount++;
+
+        // After 3 failed reconnects, stop looping and show the diagnostic
+        if (window._displayReconnectCount > 3) {
+          window._displayReconnectCount = 0;
+          if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+          conns = [];
+          showPanel('d2');
+          $('d2-txt').textContent = '⚠️ Could not reconnect';
+          ConnStatus.set('err', 'Reconnect failed — check connection');
+          ConnStatus.diagnoseAndShow('display');
+          return;
+        }
+
         const instrEl = $('d-instr');
-        if (instrEl) { instrEl.className = 'instr wt'; instrEl.textContent = 'reconnecting...'; }
+        if (instrEl) { instrEl.className = 'instr wt'; instrEl.textContent = 'reconnecting…'; }
+        ConnStatus.set('retrying', 'Connection lost — reconnecting… (' + window._displayReconnectCount + '/3)');
+
         setTimeout(() => {
           if (mode !== 'display') return;
-          if (window._forceReconnecting) return; // RECONNECT took over
+          if (window._forceReconnecting) return;
           if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
           conns = [];
           if (wakeLockManager) wakeLockManager.maintainWakeLock();
           showPanel('d2');
-          $('d2-txt').textContent = 'reconnecting to sensor...';
+          $('d2-txt').textContent = 'reconnecting to sensor…';
           _kpad = savedPin.split('');
           connectWithPin();
-        }, 1500);
+        }, 2000);
       } else {
+        ConnStatus.hide();
         showPanel('d1');
         kpadReset();
       }
@@ -3308,35 +3614,56 @@ window.connectWithPin = () => {
     conn.on('error', e => {
       console.error('conn error:', e);
       $('d2-txt').textContent = '⚠️ ' + e.message;
+      ConnStatus.set('err', 'Connection error — ' + e.message);
       showPanel('d2');
     });
   });
 
   peer.on('error', e => {
     console.error('Peer error:', e);
-    let msg = e.message;
+    clearTimeout(forceTimer);
+
     if (e.type === 'peer-unavailable') {
-      // Sensor not online yet — retry automatically every 4 seconds
-      msg = 'Waiting for sensor…';
-      $('d2-txt').textContent = '⏳ ' + msg;
-      showPanel('d2');
-      // Destroy this peer and retry after a delay
-      setTimeout(() => {
-        if (mode !== 'display' || window._forceReconnecting) return;
-        const retryPin = localStorage.getItem('lv_pin');
-        if (!retryPin) { showPanel('d1'); kpadReset(); return; }
-        if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
-        conns = [];
-        _kpad = retryPin.split('');
-        connectWithPin();
-      }, 4000);
+      window._displayRetryCount = (window._displayRetryCount || 0) + 1;
+
+      if (window._displayRetryCount <= 5) {
+        // Sensor not up yet — show countdown and retry
+        const remaining = 6 - window._displayRetryCount;
+        $('d2-txt').textContent = '⏳ Waiting for sensor… (' + window._displayRetryCount + '/5)';
+        ConnStatus.set('retrying', 'Sensor not found — retrying (' + window._displayRetryCount + '/5)');
+        showPanel('d2');
+        setTimeout(() => {
+          if (mode !== 'display' || window._forceReconnecting) return;
+          const retryPin = localStorage.getItem('lv_pin');
+          if (!retryPin) { showPanel('d1'); kpadReset(); return; }
+          if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+          conns = [];
+          _kpad = retryPin.split('');
+          connectWithPin();
+        }, 4000);
+      } else {
+        // Hit the cap — stop looping, show diagnostic
+        window._displayRetryCount = 0;
+        $('d2-txt').textContent = '⚠️ Sensor not found after 5 attempts';
+        ConnStatus.set('err', 'Sensor unreachable — is it running?');
+        ConnStatus.diagnoseAndShow('display');
+        const d2Btn = $('d2-force-btn');
+        if (d2Btn) d2Btn.style.display = '';
+      }
       return;
     }
-    $('d2-txt').textContent = '⚠️ ' + msg;
-    showPanel('d2');
-    setTimeout(() => { showPanel('d1'); kpadReset(); $('d1-hint').textContent = '⚠️ ' + msg; }, 2000);
+
+    // Any other peer error — diagnose immediately
+    $('d2-txt').textContent = '⚠️ ' + e.message;
+    ConnStatus.set('err', 'Connection error — tap HELP? for guidance');
+    ConnStatus.diagnoseAndShow('display');
   });
+
+  // Reset the per-connect retry counter on each fresh call (not reconnect)
+  // We only reset here when called directly, not from the close-handler retry
+  // (The close handler increments _displayReconnectCount, not _displayRetryCount)
 };
+
 
 // ════════════════════════════════
 //  MOTION (iOS permission)
