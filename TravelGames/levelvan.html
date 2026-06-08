@@ -513,6 +513,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
     <div class="net-modal-tabs" id="net-modal-tabs">
       <button class="net-modal-tab active" onclick="ConnStatus._diagTab('vpn')">🛡️ VPN</button>
       <button class="net-modal-tab" onclick="ConnStatus._diagTab('hotspot')">📶 HOTSPOT</button>
+      <button class="net-modal-tab" onclick="ConnStatus._diagTab('firewall')">🔥 WIFI</button>
       <button class="net-modal-tab" onclick="ConnStatus._diagTab('sensor')">📡 SENSOR</button>
     </div>
     <div class="net-modal-body" id="net-modal-body"></div>
@@ -1313,38 +1314,47 @@ const ConnStatus = (() => {
   const DIAG = {
     vpn: {
       label: '🛡️ VPN',
-      html: `
-        <b>VPN is the most common cause of connection failures.</b>
-        Most VPNs block WebRTC — the technology LevelVan uses to connect.<br><br>
+      html: `<b>Turn off your VPN — this fixes it in seconds.</b><br><br>
+        VPNs block WebRTC, the technology LevelVan uses to connect the two phones.<br><br>
         <ol>
-          <li>Open your phone's <b>Settings → VPN</b></li>
-          <li>Toggle the VPN <b>OFF</b></li>
-          <li>Tap <b>↺ RETRY</b> below</li>
+          <li>Open <b>Settings</b> on this phone</li>
+          <li>Tap <b>VPN</b> and toggle it <b>OFF</b></li>
+          <li>Tap <b>↺ RETRY</b> below — it will connect within 5 seconds</li>
         </ol>
-        <br>Once connected, you can re-enable the VPN — it only needs to be off for the initial handshake (~5 seconds).`
+        <br>✅ You can turn the VPN back on once both phones are connected.`
     },
     hotspot: {
       label: '📶 HOTSPOT',
-      html: `
-        <b>No signal? Use a phone hotspot.</b><br><br>
-        If you're in a remote area or neither phone has internet access:<br><br>
+      html: `<b>No internet — create a hotspot between the two phones.</b><br><br>
         <ol>
-          <li>On the <b>Display phone</b>: Settings → <b>Hotspot → Turn ON</b></li>
-          <li>On the <b>Sensor phone</b>: connect to that hotspot in WiFi settings</li>
-          <li>Open LevelVan on both — the Display phone supplies the internet needed for the initial handshake</li>
-          <li>Tap <b>↺ RETRY</b> below</li>
-        </ol>`
+          <li>On the <b>Display phone</b>: Settings → <b>Personal Hotspot → ON</b></li>
+          <li>On the <b>Sensor phone</b>: open WiFi and connect to the Display's hotspot</li>
+          <li>Come back here and tap <b>↺ RETRY</b></li>
+        </ol>
+        <br>💡 This works anywhere — no campsite WiFi needed. The Display phone only needs a small amount of mobile data (~1 KB) for the initial handshake.`
     },
     sensor: {
       label: '📡 SENSOR',
-      html: `
-        <b>Sensor not reachable?</b> Try these steps:<br><br>
+      html: `<b>Sensor not found — check these in order:</b><br><br>
         <ol>
-          <li>Check the PIN on the Sensor phone matches what you typed</li>
-          <li>Make sure the <b>Sensor phone is still on the SENSOR screen</b> — it must not have gone to sleep or home</li>
-          <li>On the Sensor phone tap <b>⬅ HOME</b> then <b>SENSOR</b> again to get a fresh PIN</li>
-          <li>Type the new PIN on this phone and tap <b>↺ RETRY</b></li>
-        </ol>`
+          <li>Is the <b>Sensor phone awake</b> and still showing the SENSOR screen with a PIN?</li>
+          <li>Does the PIN on <b>this phone match</b> the one on the Sensor?</li>
+          <li>If unsure: on the Sensor phone tap <b>⬅ HOME → SENSOR</b> to get a fresh PIN, then enter it here</li>
+          <li>Tap <b>↺ RETRY</b></li>
+        </ol>
+        <br>💡 If the Sensor went to sleep, just wake it — the PIN is saved and it reconnects automatically.`
+    },
+    firewall: {
+      label: '🔥 FIREWALL',
+      html: `<b>Campsite or hotel WiFi blocking connections?</b><br><br>
+        Some public WiFi networks block peer-to-peer connections (ports 3478, 5349).<br><br>
+        <b>Quickest fix:</b> use mobile data instead of WiFi:<br>
+        <ol>
+          <li>On this phone, open Settings → WiFi → <b>turn WiFi OFF</b></li>
+          <li>Make sure <b>Mobile Data is ON</b></li>
+          <li>Tap <b>↺ RETRY</b></li>
+        </ol>
+        <br>Or use a hotspot — tap the 📶 HOTSPOT tab for instructions.`
     }
   };
 
@@ -1405,14 +1415,23 @@ const ConnStatus = (() => {
   }
 
   /**
-   * Called after a timeout or hard error — runs a quick internet check then
-   * shows the appropriate diagnostic hint in the strip + HELP? button.
+   * Called after a timeout or hard error — probes internet, picks the right tab,
+   * updates the strip AND auto-opens the modal so users see guidance immediately.
+   * @param {string} role  'sensor' | 'display'
+   * @param {string} [hint]  optional override: 'vpn'|'hotspot'|'firewall'|'sensor'
    */
-  async function diagnoseAndShow(role) {
+  async function diagnoseAndShow(role, hint) {
     _role = role || 'sensor';
 
-    // Quick internet reachability probe (no-cors so no CORS errors)
-    // Use AbortController for iOS 15 compat (AbortSignal.timeout needs iOS 16+)
+    // If caller already knows the cause, skip the probe
+    if (hint) {
+      _activeTab = hint;
+      set('err', _stripMsg(hint));
+      showDiagModal();
+      return;
+    }
+
+    // Quick internet probe — AbortController for iOS 15 compat
     let hasInternet = false;
     try {
       const ac = new AbortController();
@@ -1423,16 +1442,37 @@ const ConnStatus = (() => {
     } catch(_) {}
 
     if (!hasInternet) {
-      set('err', 'No internet — connection relay unreachable');
       _activeTab = 'hotspot';
+      set('err', 'No internet — create a hotspot to connect');
     } else {
-      // Internet is fine but PeerJS timed out — likely VPN blocking WebRTC
-      set('err', 'Stuck — VPN or firewall may be blocking connection');
+      // Internet works but WebRTC failed — VPN is the most likely cause
       _activeTab = 'vpn';
+      set('err', 'VPN or firewall blocking — tap HELP? to fix');
+    }
+    showDiagModal();
+  }
+
+  /** Short strip message for a given tab key */
+  function _stripMsg(tab) {
+    switch(tab) {
+      case 'vpn':      return 'VPN blocking connection — tap HELP? to fix';
+      case 'hotspot':  return 'No internet — create a hotspot to connect';
+      case 'firewall': return 'Network blocking connection — tap HELP?';
+      case 'sensor':   return 'Sensor not found — tap HELP? to check';
+      default:         return 'Connection failed — tap HELP?';
     }
   }
 
   function showDiagModal() {
+    // Set the title based on the active tab
+    const titles = {
+      vpn:      '🛡️ VPN BLOCKING',
+      hotspot:  '📶 NO INTERNET',
+      firewall: '🔥 NETWORK BLOCKED',
+      sensor:   '📡 SENSOR OFFLINE'
+    };
+    const titleEl = document.getElementById('net-modal-title-text');
+    if (titleEl) titleEl.textContent = titles[_activeTab] || 'CONNECTION ISSUE';
     _diagTab(_activeTab);
     const ov = el('net-modal-overlay');
     if (ov) ov.classList.add('active');
@@ -1469,9 +1509,9 @@ const ConnStatus = (() => {
 
   function _diagTab(tab) {
     _activeTab = tab;
-    // Update tab button styles
+    // Update tab button styles — 4 tabs: vpn, hotspot, firewall, sensor
     const tabBtns = document.querySelectorAll('.net-modal-tab');
-    const tabKeys = ['vpn', 'hotspot', 'sensor'];
+    const tabKeys = ['vpn', 'hotspot', 'firewall', 'sensor'];
     tabBtns.forEach((btn, i) => {
       btn.classList.toggle('active', tabKeys[i] === tab);
     });
@@ -3275,13 +3315,13 @@ function initSensor(resumePin) {
   $('s1-txt').textContent = resumePin ? 'resuming session...' : 'connecting to relay...';
   ConnStatus.set('registering', resumePin ? 'Resuming paired session…' : 'Connecting to relay server…');
 
-  // Show force button after 8 seconds if still stuck on s1
+  // Show force button after 5 seconds if still stuck on s1
   const sForceTimer = setTimeout(() => {
     const s1Btn = $('s1-force-btn');
     if (s1Btn && mode === 'sensor') s1Btn.style.display = '';
-    // After 8s with no relay response, check if network/VPN is the cause
+    // After 5s with no relay response, diagnose and open modal
     ConnStatus.diagnoseAndShow('sensor');
-  }, 8000);
+  }, 5000);
 
   peer = new Peer(peerId, {
     host: PEER_HOST, port: PEER_PORT, path: PEER_PATH, secure: PEER_SECURE,
@@ -3498,12 +3538,12 @@ window.connectWithPin = () => {
   // _displayRetryCount is reset to 0 on every fresh manual connect
   if (typeof window._displayRetryCount !== 'number') window._displayRetryCount = 0;
 
-  // Show force button after 8 seconds if still stuck
+  // Show force button after 5 seconds if still stuck
   const forceTimer = setTimeout(() => {
     const d2Btn = $('d2-force-btn');
     if (d2Btn && mode === 'display') d2Btn.style.display = '';
     ConnStatus.diagnoseAndShow('display');
-  }, 8000);
+  }, 5000);
 
   // Each display gets a unique peer ID
   const myId = 'levelvan-' + pin + '-display-' + Date.now();
@@ -3626,37 +3666,60 @@ window.connectWithPin = () => {
     if (e.type === 'peer-unavailable') {
       window._displayRetryCount = (window._displayRetryCount || 0) + 1;
 
-      if (window._displayRetryCount <= 5) {
-        // Sensor not up yet — show countdown and retry
-        const remaining = 6 - window._displayRetryCount;
-        $('d2-txt').textContent = '⏳ Waiting for sensor… (' + window._displayRetryCount + '/5)';
-        ConnStatus.set('retrying', 'Sensor not found — retrying (' + window._displayRetryCount + '/5)');
+      // On the FIRST failure, probe internet in parallel.
+      // If no internet → skip retries, go straight to Hotspot tab.
+      if (window._displayRetryCount === 1) {
+        (async () => {
+          let hasInternet = false;
+          try {
+            const ac = new AbortController();
+            const t = setTimeout(() => ac.abort(), 3000);
+            await fetch('https://www.google.com/generate_204', { method: 'HEAD', mode: 'no-cors', signal: ac.signal });
+            clearTimeout(t);
+            hasInternet = true;
+          } catch(_) {}
+          if (!hasInternet && mode === 'display') {
+            // No internet — stop retrying, open hotspot instructions immediately
+            window._displayRetryCount = 99; // prevent further retries
+            if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+            conns = [];
+            $('d2-txt').textContent = '⚠️ No internet connection';
+            ConnStatus.diagnoseAndShow('display', 'hotspot');
+          }
+          // If internet is fine, the normal retry loop already started — let it run
+        })();
+      }
+
+      if (window._displayRetryCount <= 2) {
+        // Show attempt count so user knows something is happening
+        $('d2-txt').textContent = '⏳ Sensor not found — attempt ' + window._displayRetryCount + ' of 2…';
+        ConnStatus.set('retrying', 'Looking for sensor… (' + window._displayRetryCount + '/2)');
         showPanel('d2');
         setTimeout(() => {
           if (mode !== 'display' || window._forceReconnecting) return;
+          if (window._displayRetryCount >= 99) return; // internet probe killed retries
           const retryPin = localStorage.getItem('lv_pin');
           if (!retryPin) { showPanel('d1'); kpadReset(); return; }
           if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
           conns = [];
           _kpad = retryPin.split('');
           connectWithPin();
-        }, 4000);
-      } else {
-        // Hit the cap — stop looping, show diagnostic
+        }, 3000);
+      } else if (window._displayRetryCount < 99) {
+        // Hit the cap — diagnose: internet is available (we checked on attempt 1)
+        // but sensor still not found → guide them to check the sensor
         window._displayRetryCount = 0;
-        $('d2-txt').textContent = '⚠️ Sensor not found after 5 attempts';
-        ConnStatus.set('err', 'Sensor unreachable — is it running?');
-        ConnStatus.diagnoseAndShow('display');
+        $('d2-txt').textContent = '⚠️ Sensor not found — check sensor phone';
+        ConnStatus.diagnoseAndShow('display', 'sensor');
         const d2Btn = $('d2-force-btn');
         if (d2Btn) d2Btn.style.display = '';
       }
       return;
     }
 
-    // Any other peer error — diagnose immediately
+    // Any other peer error — diagnose immediately (no need to probe — relay connected fine, so internet works)
     $('d2-txt').textContent = '⚠️ ' + e.message;
-    ConnStatus.set('err', 'Connection error — tap HELP? for guidance');
-    ConnStatus.diagnoseAndShow('display');
+    ConnStatus.diagnoseAndShow('display', 'vpn');
   });
 
   // Reset the per-connect retry counter on each fresh call (not reconnect)
