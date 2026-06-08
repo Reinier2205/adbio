@@ -1724,6 +1724,8 @@ class VoiceManager {
     this._retryCount   = 0;
     this._retryTimer   = null;
     this._audioCtx     = null;   // WebAudio context unlocked on first tap
+    this._ringCtx      = null;   // separate AudioContext for ringtone
+    this._ringTimer    = null;   // setInterval driving ring pattern
   }
 
   // ── Computed getters — always query the active row ──────────
@@ -1769,6 +1771,7 @@ class VoiceManager {
    */
   destroy() {
     this._clearTimers();
+    this._stopRingtone();
     if (this._activeCall) { try { this._activeCall.close(); } catch(_){} this._activeCall = null; }
     if (this._pendingCall) { try { this._pendingCall.close(); } catch(_){} this._pendingCall = null; }
     if (this._voicePeer) { try { this._voicePeer.destroy(); } catch(_){} this._voicePeer = null; }
@@ -1783,6 +1786,10 @@ class VoiceManager {
     if (this._audioCtx) {
       try { this._audioCtx.close(); } catch(_){}
       this._audioCtx = null;
+    }
+    if (this._ringCtx) {
+      try { this._ringCtx.close(); } catch(_){}
+      this._ringCtx = null;
     }
     this._localVoiceId = null;
     this._pin = null;
@@ -2149,6 +2156,7 @@ class VoiceManager {
     if (this._pendingCall) { try { this._pendingCall.close(); } catch(_){} this._pendingCall = null; }
     this._pendingCall = call;
     this._setCallState('ringing');
+    this._startRingtone();
     call.on('close', () => {
       if (this._pendingCall === call || this._activeCall === call) {
         this._pendingCall = null;
@@ -2201,6 +2209,10 @@ class VoiceManager {
   // ── Internal: UI state ───────────────────────────────────────
 
   _setCallState(newState) {
+    // Stop ringtone whenever we leave ringing state
+    if (this._callState === 'ringing' && newState !== 'ringing') {
+      this._stopRingtone();
+    }
     this._callState = newState;
     this._applyButtonStyles();
   }
@@ -2297,11 +2309,87 @@ class VoiceManager {
     this._callTimeout = null;
   }
 
+  // ── Ringtone — synthesised double-ring via Web Audio (no file needed) ──────
+  // Pattern: two short bursts (400ms on, 200ms off) then a 1.5s pause, repeat.
+  // Uses a sine wave at 480 Hz (classic UK phone tone), modulated with AM for a
+  // warbling "brring" quality. A separate AudioContext is used so it never
+  // conflicts with the remote audio playback context.
+  _startRingtone() {
+    this._stopRingtone(); // clear any existing ring
+    let phase = 0; // 0 = first burst, 1 = gap, 2 = second burst, 3 = pause
+    const PATTERN = [400, 200, 400, 1500]; // ms per phase
+
+    const _playBurst = (durationMs) => {
+      try {
+        if (!this._ringCtx || this._ringCtx.state === 'closed') {
+          this._ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const ctx = this._ringCtx;
+        if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+        const t = ctx.currentTime;
+        const dur = durationMs / 1000;
+
+        // Carrier: 480 Hz sine
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(480, t);
+
+        // AM modulator: 25 Hz gives the "brring" warble
+        const modOsc = ctx.createOscillator();
+        modOsc.type = 'sine';
+        modOsc.frequency.setValueAtTime(25, t);
+        const modGain = ctx.createGain();
+        modGain.gain.setValueAtTime(0.4, t);
+        modOsc.connect(modGain);
+
+        // Main gain: AM effect + overall volume envelope
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.45, t + 0.015); // quick attack
+        gain.gain.setValueAtTime(0.45, t + dur - 0.02);
+        gain.gain.linearRampToValueAtTime(0, t + dur);       // quick release
+        modGain.connect(gain.gain); // AM modulation on the gain node
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(t);
+        osc.stop(t + dur);
+        modOsc.start(t);
+        modOsc.stop(t + dur);
+      } catch (e) {
+        console.warn('Ringtone burst failed:', e);
+      }
+    };
+
+    const _tick = () => {
+      if (this._callState !== 'ringing') { this._stopRingtone(); return; }
+      if (phase === 0 || phase === 2) _playBurst(PATTERN[phase]);
+      // schedule next phase
+      this._ringTimer = setTimeout(() => {
+        phase = (phase + 1) % 4;
+        _tick();
+      }, PATTERN[phase]);
+    };
+
+    _tick();
+  }
+
+  _stopRingtone() {
+    if (this._ringTimer) { clearTimeout(this._ringTimer); this._ringTimer = null; }
+    if (this._ringCtx) {
+      try { this._ringCtx.close(); } catch (_) {}
+      this._ringCtx = null;
+    }
+  }
+
   _clearTimers() {
     this._clearCallTimeout();
     clearTimeout(this._reconnectTimer); this._reconnectTimer = null;
     clearTimeout(this._echoTimer);      this._echoTimer = null;
     clearTimeout(this._retryTimer);     this._retryTimer = null;
+    this._stopRingtone();
   }
 }
 
@@ -3239,6 +3327,12 @@ function showPanel(id) {
   // Notify VoiceManager so it shows/hides the correct voice row
   if (window.voiceMgr) voiceMgr.onPanelChange(id);
   if (window.videoMgr) videoMgr.onPanelChange(id);
+  // Keep screen permanently awake on every sensor panel transition —
+  // iOS can release the wake lock silently between panels, so we re-assert
+  // it here rather than relying solely on the initial startSensor() call.
+  if ((id === 's1' || id === 's2' || id === 's3') && wakeLockManager) {
+    wakeLockManager.maintainWakeLock();
+  }
 }
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
