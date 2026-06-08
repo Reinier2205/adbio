@@ -290,14 +290,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .cloud-status.connecting{color:var(--warn)}
 .cloud-status.offline{color:var(--danger)}
 
-/* ── Connection Status Banner ─────────────────────────────── */
-/* ── Connection status strip ─────────────────────────────── */
+/* ── Connection status strip — live screens (s3/d3), below pin-bar ── */
+/* pin-bar is ~72px tall (10px top pad + 2.4rem code + label + 10px bottom pad + 2px border) */
 .conn-strip{
-  position:fixed;top:52px;left:12px;right:12px;z-index:30;
-  background:rgba(10,22,40,0.97);border:1px solid var(--border);
-  border-radius:10px;padding:8px 12px;
-  font-family:'Share Tech Mono',monospace;font-size:.76rem;
+  position:fixed;top:74px;left:0;right:0;z-index:29;
   display:none;align-items:center;gap:8px;
+  background:rgba(10,22,40,0.97);border-bottom:1px solid var(--warn);
+  padding:6px 14px;
+  font-family:'Share Tech Mono',monospace;font-size:.75rem;
 }
 .conn-strip.visible{display:flex}
 .conn-strip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--dim)}
@@ -305,10 +305,32 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .conn-strip-dot.warn{background:var(--warn);animation:blink .7s infinite}
 .conn-strip-dot.err{background:var(--danger);animation:blink .5s infinite}
 .conn-strip-text{flex:1;color:var(--text)}
-.conn-strip-btn{background:none;border:1px solid var(--dim);border-radius:7px;
-  color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.68rem;
+.conn-strip-btn{background:none;border:1px solid var(--warn);border-radius:7px;
+  color:var(--warn);font-family:'Share Tech Mono',monospace;font-size:.68rem;
   padding:4px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .conn-strip-btn:active{opacity:.7}
+
+/* ── Inline connecting banner — shown inside s1/d2 panels ── */
+.conn-banner{
+  width:100%;border-radius:12px;
+  background:var(--panel);border:2px solid var(--border);
+  padding:14px 16px;display:flex;flex-direction:column;gap:10px;
+  font-family:'Share Tech Mono',monospace;
+}
+.conn-banner-row{display:flex;align-items:center;gap:10px}
+.conn-banner-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:var(--dim)}
+.conn-banner-dot.ok{background:var(--accent2);box-shadow:0 0 6px var(--accent2)}
+.conn-banner-dot.warn{background:var(--warn);animation:blink .7s infinite}
+.conn-banner-dot.err{background:var(--danger);animation:blink .5s infinite}
+.conn-banner-text{flex:1;font-size:.8rem;color:var(--text);line-height:1.5}
+.conn-banner-sub{font-size:.7rem;color:var(--dim);line-height:1.4}
+.conn-banner-helpbtn{
+  width:100%;padding:11px;border-radius:10px;
+  background:rgba(255,170,0,.1);border:2px solid var(--warn);
+  color:var(--warn);font-family:'Orbitron',monospace;font-size:.75rem;
+  font-weight:700;letter-spacing:2px;cursor:pointer;text-align:center;
+}
+.conn-banner-helpbtn:active{transform:scale(.96)}
 
 /* ── Network diagnostic modal ────────────────────────────── */
 .net-modal-overlay{
@@ -499,7 +521,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 <div class="wake-status" id="wake-status">WAKE: OFF</div>
 <div class="cloud-status" id="cloud-status">CLOUD: OFFLINE</div>
 
-<!-- Connection status strip -->
+<!-- Connection status strip — sits below pin-bar on live screens only -->
 <div class="conn-strip" id="conn-strip">
   <div class="conn-strip-dot" id="conn-strip-dot"></div>
   <span class="conn-strip-text" id="conn-strip-text"></span>
@@ -863,8 +885,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
   <!-- s1: creating session -->
   <div class="panel" id="s1" style="padding-top:148px">
-    <div class="srow"><div class="dot busy"></div><span id="s1-txt">creating session...</span></div>
-    <div class="hint">Takes a moment</div>
+    <div class="conn-banner" id="s1-banner">
+      <div class="conn-banner-row">
+        <div class="conn-banner-dot warn" id="s1-dot"></div>
+        <span class="conn-banner-text" id="s1-txt">connecting to relay…</span>
+      </div>
+      <div class="conn-banner-sub" id="s1-sub">This takes a few seconds. Make sure you have internet (WiFi or mobile data).</div>
+      <button class="conn-banner-helpbtn" id="s1-help-btn" style="display:none" onclick="ConnStatus.showDiagModal()">⚠️ STUCK? TAP FOR HELP</button>
+    </div>
     <button class="sbtn warn" id="s1-force-btn" style="display:none" onclick="forceReconnectSensor()">
       <div class="sbtn-ico">🔄</div>
       <div class="sbtn-title">RECONNECT</div>
@@ -1094,8 +1122,15 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 
   <!-- d2: connecting -->
   <div class="panel" id="d2">
-    <div class="srow"><div class="dot busy"></div><span id="d2-txt">connecting...</span></div>
-    <button class="sbtn warn" id="d2-force-btn" style="display:none;margin-top:8px" onclick="forceReconnectDisplay()">
+    <div class="conn-banner" id="d2-banner">
+      <div class="conn-banner-row">
+        <div class="conn-banner-dot warn" id="d2-dot"></div>
+        <span class="conn-banner-text" id="d2-txt">connecting to sensor…</span>
+      </div>
+      <div class="conn-banner-sub" id="d2-sub">Make sure both phones have internet. Takes a few seconds.</div>
+      <button class="conn-banner-helpbtn" id="d2-help-btn" style="display:none" onclick="ConnStatus.showDiagModal()">⚠️ STUCK? TAP FOR HELP</button>
+    </div>
+    <button class="sbtn warn" id="d2-force-btn" style="display:none;margin-top:4px" onclick="forceReconnectDisplay()">
       <div class="sbtn-ico">🔄</div>
       <div class="sbtn-title">RECONNECT</div>
       <div class="sbtn-hint">Tap if stuck — retries with saved PIN</div>
@@ -1361,19 +1396,82 @@ const ConnStatus = (() => {
   // ── Public API ───────────────────────────────────────────────
 
   /**
-   * Show a status message in the strip.
+   * Show a status message.
+   * On connecting panels (s1/d2): updates the inline conn-banner.
+   * On live panels (s3/d3): updates the floating conn-strip below the pin-bar.
    * level: 'info' | 'warn' | 'err' | 'ok' | 'registering' | 'retrying' | 'ready' | 'connected'
    */
   function set(level, message) {
-    const strip = el('conn-strip');
-    const dot   = el('conn-strip-dot');
-    const text  = el('conn-strip-text');
-    const btn   = el('conn-strip-btn');
+    // ── Decide which UI to update based on which panel is visible ──
+    const onS1 = document.getElementById('s1')?.classList.contains('active');
+    const onD2 = document.getElementById('d2')?.classList.contains('active');
+    const onLive = document.getElementById('s3')?.classList.contains('active') ||
+                   document.getElementById('d3')?.classList.contains('active');
+
+    if (onS1 || onD2) {
+      _setBanner(onS1 ? 's1' : 'd2', level, message);
+      // Keep strip hidden on connecting screens
+      const strip = document.getElementById('conn-strip');
+      if (strip) strip.classList.remove('visible');
+      return;
+    }
+
+    if (onLive) {
+      _setStrip(level, message);
+      return;
+    }
+
+    // Fallback: update strip for any other panel
+    _setStrip(level, message);
+  }
+
+  /** Update the inline banner inside s1 or d2 */
+  function _setBanner(prefix, level, message) {
+    const dot  = document.getElementById(prefix + '-dot');
+    const txt  = document.getElementById(prefix + '-txt');
+    const sub  = document.getElementById(prefix + '-sub');
+    const help = document.getElementById(prefix + '-help-btn');
+    if (!txt) return;
+
+    txt.textContent = message;
+    if (dot) {
+      dot.className = 'conn-banner-dot';
+      if (level === 'ok' || level === 'connected' || level === 'ready') dot.classList.add('ok');
+      else if (level === 'err') dot.classList.add('err');
+      else dot.classList.add('warn');
+    }
+    // Sub-text by level
+    if (sub) {
+      if (level === 'err') {
+        sub.textContent = 'Tap the button below for step-by-step help.';
+      } else if (level === 'retrying') {
+        sub.textContent = 'Retrying automatically — or tap HELP? if stuck.';
+      } else {
+        sub.textContent = 'Make sure both phones have internet (WiFi or mobile data).';
+      }
+    }
+    // Show help button on error or retrying
+    if (help) {
+      help.style.display = (level === 'err' || level === 'retrying') ? '' : 'none';
+    }
+  }
+
+  /** Update the floating strip (used on live screens only) — positions itself below the pin-bar */
+  function _setStrip(level, message) {
+    const strip = document.getElementById('conn-strip');
+    const dot   = document.getElementById('conn-strip-dot');
+    const text  = document.getElementById('conn-strip-text');
+    const btn   = document.getElementById('conn-strip-btn');
     if (!strip) return;
 
-    text.textContent = message;
+    // Position strip flush below the pin-bar by measuring it at runtime
+    const pinBar = document.getElementById('pin-bar');
+    if (pinBar) {
+      const rect = pinBar.getBoundingClientRect();
+      strip.style.top = rect.bottom + 'px';
+    }
 
-    // Reset dot classes
+    text.textContent = message;
     dot.className = 'conn-strip-dot';
 
     switch (level) {
@@ -1383,12 +1481,11 @@ const ConnStatus = (() => {
         dot.classList.add('ok');
         strip.classList.add('visible');
         if (btn) btn.style.display = 'none';
-        // Auto-hide after 3s when connected
         setTimeout(() => { if (strip) strip.classList.remove('visible'); }, 3000);
         return;
       case 'registering':
       case 'info':
-        dot.classList.add('warn'); // amber blink while working
+        dot.classList.add('warn');
         if (btn) btn.style.display = 'none';
         break;
       case 'retrying':
@@ -1412,6 +1509,13 @@ const ConnStatus = (() => {
   function hide() {
     const strip = el('conn-strip');
     if (strip) strip.classList.remove('visible');
+    // Also clear error state on banners
+    ['s1-help-btn','d2-help-btn'].forEach(id => {
+      const b = el(id); if (b) b.style.display = 'none';
+    });
+    ['s1-dot','d2-dot'].forEach(id => {
+      const d = el(id); if (d) { d.className = 'conn-banner-dot warn'; }
+    });
   }
 
   /**
@@ -3055,6 +3159,9 @@ function showPanel(id) {
   const sf = $('sensor-footer'), df = $('display-footer');
   if (sf) sf.classList.toggle('active', id === 's3');
   if (df) df.classList.toggle('active', id === 'd3');
+  // Hide the live-screen conn-strip when navigating away from live panels
+  const strip = $('conn-strip');
+  if (strip && id !== 's3' && id !== 'd3') strip.classList.remove('visible');
   // Load saved dimensions into inputs when entering live panels
   if (id === 's3' || id === 'd3') loadDimsIntoInputs();
   // Notify VoiceManager so it shows/hides the correct voice row
@@ -3315,11 +3422,13 @@ function initSensor(resumePin) {
   $('s1-txt').textContent = resumePin ? 'resuming session...' : 'connecting to relay...';
   ConnStatus.set('registering', resumePin ? 'Resuming paired session…' : 'Connecting to relay server…');
 
-  // Show force button after 5 seconds if still stuck on s1
+  // Show force button + help button after 5 seconds if still stuck on s1
   const sForceTimer = setTimeout(() => {
     const s1Btn = $('s1-force-btn');
     if (s1Btn && mode === 'sensor') s1Btn.style.display = '';
-    // After 5s with no relay response, diagnose and open modal
+    const helpBtn = $('s1-help-btn');
+    if (helpBtn) helpBtn.style.display = '';
+    // Diagnose and auto-open modal
     ConnStatus.diagnoseAndShow('sensor');
   }, 5000);
 
@@ -3338,7 +3447,7 @@ function initSensor(resumePin) {
   peer.on('open', id => {
     console.log('Sensor peer open:', id);
     clearTimeout(sForceTimer);
-    ConnStatus.set('ready', 'Ready — waiting for display to connect');
+    ConnStatus.set('ready', 'Relay connected ✓ — waiting for display');
     const s1Btn = $('s1-force-btn');
     if (s1Btn) s1Btn.style.display = 'none';
     $('pin-bar-code').textContent = _pin;
@@ -3538,10 +3647,12 @@ window.connectWithPin = () => {
   // _displayRetryCount is reset to 0 on every fresh manual connect
   if (typeof window._displayRetryCount !== 'number') window._displayRetryCount = 0;
 
-  // Show force button after 5 seconds if still stuck
+  // Show force button + help button after 5 seconds if still stuck
   const forceTimer = setTimeout(() => {
     const d2Btn = $('d2-force-btn');
     if (d2Btn && mode === 'display') d2Btn.style.display = '';
+    const helpBtn = $('d2-help-btn');
+    if (helpBtn) helpBtn.style.display = '';
     ConnStatus.diagnoseAndShow('display');
   }, 5000);
 
