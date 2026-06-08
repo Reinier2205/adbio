@@ -539,9 +539,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <button class="net-modal-tab" onclick="ConnStatus._diagTab('sensor')">📡 SENSOR</button>
     </div>
     <div class="net-modal-body" id="net-modal-body"></div>
-    <div class="net-modal-actions">
-      <button class="net-modal-close" onclick="ConnStatus.hideDiagModal()">CLOSE</button>
-      <button class="net-modal-retry" onclick="ConnStatus.retryFromModal()">↺ RETRY</button>
+    <div class="net-modal-actions" id="net-modal-actions">
+      <!-- Buttons injected by ConnStatus._updateModalActions() -->
     </div>
   </div>
 </div>
@@ -909,11 +908,20 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="sbtn-hint">AirDrop · iMessage · WhatsApp</div>
     </button>
     <div class="conn-count" id="s-conn-count">waiting for display devices...</div>
-    <button class="sbtn warn" id="s2-force-btn" style="display:none" onclick="forceReconnectSensor()">
-      <div class="sbtn-ico">🔄</div>
-      <div class="sbtn-title">RECONNECT</div>
-      <div class="sbtn-hint">Tap if display can't connect — resets session</div>
-    </button>
+
+    <!-- Two half-width action buttons -->
+    <div style="display:flex;gap:10px;width:100%">
+      <button class="sbtn warn" id="s2-force-btn" style="display:none;flex:1" onclick="forceReconnectSensor()">
+        <div class="sbtn-ico">🔄</div>
+        <div class="sbtn-title" style="font-size:.78rem">RECONNECT</div>
+        <div class="sbtn-hint">Reset session</div>
+      </button>
+      <button class="sbtn blue" id="s2-newpin-btn" style="display:none;flex:1" onclick="generateNewPin()">
+        <div class="sbtn-ico">🔢</div>
+        <div class="sbtn-title" style="font-size:.78rem">NEW PIN</div>
+        <div class="sbtn-hint">Share with Display</div>
+      </button>
+    </div>
 
     <!-- QR code — scan to open as Display -->
     <div id="s2-qr-wrap" style="display:none;flex-direction:column;align-items:center;gap:10px;width:100%">
@@ -1370,14 +1378,16 @@ const ConnStatus = (() => {
     },
     sensor: {
       label: '📡 SENSOR',
-      html: `<b>Sensor not found — check these in order:</b><br><br>
-        <ol>
-          <li>Is the <b>Sensor phone awake</b> and still showing the SENSOR screen with a PIN?</li>
-          <li>Does the PIN on <b>this phone match</b> the one on the Sensor?</li>
-          <li>If unsure: on the Sensor phone tap <b>⬅ HOME → SENSOR</b> to get a fresh PIN, then enter it here</li>
-          <li>Tap <b>↺ RETRY</b></li>
-        </ol>
-        <br>💡 If the Sensor went to sleep, just wake it — the PIN is saved and it reconnects automatically.`
+      html: () => {
+        const savedPin = localStorage.getItem('lv_pin') || '????';
+        return `<b>This phone is trying to reach PIN <span style="color:var(--accent);font-family:'Orbitron',monospace;letter-spacing:3px">${savedPin}</span></b><br><br>
+        <b>Is the Sensor showing PIN ${savedPin}?</b><br>
+        → Yes: make sure the Sensor phone is awake and on the SENSOR screen, then tap <b>↺ RETRY</b><br><br>
+        <b>Is the Sensor showing a different PIN?</b><br>
+        → Tap <b>✏️ ENTER PIN</b> below to type the correct PIN<br><br>
+        <b>Sensor screen went blank?</b><br>
+        → Wake the Sensor phone — the PIN is saved and it will reconnect automatically`;
+      }
     },
     firewall: {
       label: '🔥 FIREWALL',
@@ -1619,9 +1629,64 @@ const ConnStatus = (() => {
     tabBtns.forEach((btn, i) => {
       btn.classList.toggle('active', tabKeys[i] === tab);
     });
-    // Update body content
+    // Update body content — sensor tab uses a function (needs live PIN value)
     const body = el('net-modal-body');
-    if (body && DIAG[tab]) body.innerHTML = DIAG[tab].html;
+    if (body && DIAG[tab]) {
+      body.innerHTML = typeof DIAG[tab].html === 'function' ? DIAG[tab].html() : DIAG[tab].html;
+    }
+    // Update action buttons to be context-sensitive
+    _updateModalActions(tab);
+  }
+
+  /** Render the correct action buttons for the current tab */
+  function _updateModalActions(tab) {
+    const container = el('net-modal-actions');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (tab === 'sensor') {
+      // Two clear choices: retry with same PIN, or go back to enter a different PIN
+      const enterBtn = document.createElement('button');
+      enterBtn.className = 'net-modal-close';
+      enterBtn.innerHTML = '✏️ ENTER PIN';
+      enterBtn.onclick = () => {
+        hideDiagModal();
+        hide();
+        // Go back to PIN keypad — reset counters so fresh attempt
+        window._displayRetryCount = 0;
+        window._displayReconnectCount = 0;
+        if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+        conns = [];
+        showPanel('d1');
+        kpadReset();
+        if (typeof $ === 'function') {
+          const hint = $('d1-hint');
+          if (hint) hint.textContent = 'Enter the PIN shown on the Sensor phone';
+        }
+      };
+
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'net-modal-retry';
+      retryBtn.innerHTML = '↺ RETRY SAME PIN';
+      retryBtn.onclick = () => retryFromModal();
+
+      container.appendChild(enterBtn);
+      container.appendChild(retryBtn);
+    } else {
+      // All other tabs: CLOSE (dismiss) + RETRY
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'net-modal-close';
+      closeBtn.textContent = 'DISMISS';
+      closeBtn.onclick = () => hideDiagModal();
+
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'net-modal-retry';
+      retryBtn.innerHTML = '↺ RETRY';
+      retryBtn.onclick = () => retryFromModal();
+
+      container.appendChild(closeBtn);
+      container.appendChild(retryBtn);
+    }
   }
 
   return { set, hide, diagnoseAndShow, showDiagModal, hideDiagModal, retryFromModal, _diagTab };
@@ -3162,6 +3227,13 @@ function showPanel(id) {
   // Hide the live-screen conn-strip when navigating away from live panels
   const strip = $('conn-strip');
   if (strip && id !== 's3' && id !== 'd3') strip.classList.remove('visible');
+  // On s2: always show both sensor action buttons
+  if (id === 's2') {
+    const s2Btn = $('s2-force-btn');
+    const s2New = $('s2-newpin-btn');
+    if (s2Btn) s2Btn.style.display = '';
+    if (s2New) s2New.style.display = '';
+  }
   // Load saved dimensions into inputs when entering live panels
   if (id === 's3' || id === 'd3') loadDimsIntoInputs();
   // Notify VoiceManager so it shows/hides the correct voice row
@@ -3389,11 +3461,13 @@ window.forceReconnectDisplay = () => {
 function updateForceButtons() {
   const savedPin = localStorage.getItem('lv_pin');
   const savedMode = localStorage.getItem('lv_mode');
-  // Sensor force buttons — show after 8 seconds on s1/s2
+  // Sensor force buttons — show after 5 seconds on s1/s2
   const s1Btn = $('s1-force-btn');
   const s2Btn = $('s2-force-btn');
+  const s2NewPin = $('s2-newpin-btn');
   if (s1Btn) s1Btn.style.display = (savedPin && savedMode === 'sensor') ? '' : 'none';
   if (s2Btn) s2Btn.style.display = savedPin ? '' : 'none';
+  if (s2NewPin) s2NewPin.style.display = ''; // always visible on s2
   // Display force buttons
   const d1Btn = $('d1-force-btn');
   const d2Btn = $('d2-force-btn');
@@ -3409,6 +3483,21 @@ function updateForceButtons() {
   }
   if (d2Btn) d2Btn.style.display = savedPin ? '' : 'none';
 }
+
+/**
+ * Generate a fresh PIN on the sensor — destroys the old session and
+ * starts a new one. The Display will need to enter the new PIN.
+ */
+window.generateNewPin = () => {
+  if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+  conns = [];
+  // Clear saved PIN so initSensor generates a fresh one
+  localStorage.removeItem('lv_pin');
+  _pin = null;
+  showPanel('s1');
+  $('s1-txt').textContent = 'generating new PIN…';
+  initSensor(null);
+};
 function initSensor(resumePin) {
   // Use saved PIN on resume, generate new one otherwise
   if (resumePin) {
