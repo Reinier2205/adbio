@@ -3720,6 +3720,120 @@ function fillPin(pin) {
 
 function getPinValue() { return _kpad.join(''); }
 
+// ════════════════════════════════
+//  _wireDisplayConn — attach data-channel handlers to a PeerJS DataConnection.
+//  Called both from the initial connectWithPin() open handler AND from the
+//  silent-reconnect path inside conn.on('close'), so the logic stays in one place.
+//  silentMode = true  → already on d3, don't flash through d2 on success
+//  silentMode = false → normal first-connect, show d3 on open (default)
+// ════════════════════════════════
+function _wireDisplayConn(conn, pin, silentMode) {
+  conn.on('open', () => {
+    console.log('Data channel open (silentMode=' + !!silentMode + ')');
+    conns = [conn];
+    window._displayRetryCount = 0;
+    window._displayReconnectCount = 0;
+    const d2Btn = $('d2-force-btn');
+    if (d2Btn) d2Btn.style.display = 'none';
+    ConnStatus.set('connected', 'Sensor connected ✓');
+    if (!silentMode) {
+      showPanel('d3');
+    }
+    if (wakeLockManager) wakeLockManager.maintainWakeLock();
+    if (window.voiceMgr && mode === 'display' && pin) {
+      if (!voiceMgr._voicePeer) voiceMgr.init(pin, 'display');
+      else voiceMgr.reconnect();
+    }
+    if (window.videoMgr && mode === 'display' && pin && !videoMgr._videoPeer) {
+      videoMgr.init(pin, 'display');
+    }
+    if (firebaseManager && firebaseManager.isCloudAvailable()) {
+      const profile = firebaseManager.getDeviceProfile();
+      if (profile && !profile.activePairId) {
+        firebaseManager.updateDeviceType('display').catch(console.warn);
+        localStorage.setItem('lv_pin', pin);
+        localStorage.setItem('lv_mode', 'display');
+      }
+    }
+  });
+
+  conn.on('data', data => {
+    try {
+      if (data && data.ping) return;
+      if (data && data.camSignal !== undefined) {
+        if (window.videoMgr) videoMgr.onCamSignal(data.camSignal);
+        return;
+      }
+      if (data && data.muteSignal !== undefined) {
+        if (window.voiceMgr) voiceMgr.onMuteSignal(data.muteSignal);
+        return;
+      }
+      updateDisplay(data);
+    } catch(_){}
+  });
+
+  conn.on('close', () => {
+    const savedPin = localStorage.getItem('lv_pin');
+    if (window._forceReconnecting) return;
+    if (savedPin && mode === 'display') {
+      if (typeof window._displayReconnectCount !== 'number') window._displayReconnectCount = 0;
+      window._displayReconnectCount++;
+
+      if (window._displayReconnectCount > 3) {
+        window._displayReconnectCount = 0;
+        if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+        conns = [];
+        showPanel('d2');
+        $('d2-txt').textContent = '⚠️ Could not reconnect';
+        ConnStatus.set('err', 'Reconnect failed — check connection');
+        ConnStatus.diagnoseAndShow('display');
+        return;
+      }
+
+      const instrEl = $('d-instr');
+      if (instrEl) { instrEl.className = 'instr wt'; instrEl.textContent = 'reconnecting…'; }
+      ConnStatus.set('retrying', 'Connection lost — reconnecting… (' + window._displayReconnectCount + '/3)');
+
+      setTimeout(() => {
+        if (mode !== 'display') return;
+        if (window._forceReconnecting) return;
+        conns = [];
+
+        // ── Silent reconnect: if the PeerJS peer itself is still alive and
+        //    registered, just open a new data channel without touching the
+        //    voice/video peers or switching away from d3.  This keeps the
+        //    media connections intact when the data channel drops (common on
+        //    iOS when the app briefly backgrounds).
+        const peerAlive = peer && !peer.destroyed && peer.id;
+        if (peerAlive) {
+          const sensorId = 'levelvan-' + savedPin + '-sensor';
+          ConnStatus.set('retrying', 'Reconnecting data… (' + window._displayReconnectCount + '/3)');
+          const newConn = peer.connect(sensorId, { reliable: false, serialization: 'json' });
+          _wireDisplayConn(newConn, savedPin, true); // stay on d3
+        } else {
+          if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
+          if (wakeLockManager) wakeLockManager.maintainWakeLock();
+          showPanel('d2');
+          $('d2-txt').textContent = 'reconnecting to sensor…';
+          _kpad = savedPin.split('');
+          connectWithPin();
+        }
+      }, 2000);
+    } else {
+      ConnStatus.hide();
+      showPanel('d1');
+      kpadReset();
+    }
+  });
+
+  conn.on('error', e => {
+    console.error('conn error:', e);
+    $('d2-txt').textContent = '⚠️ ' + e.message;
+    ConnStatus.set('err', 'Connection error — ' + e.message);
+    if (!silentMode) showPanel('d2');
+  });
+}
+
 window.connectWithPin = () => {
   const pin = getPinValue();
   if (pin.length !== 4) { $('d1-hint').textContent = '⚠️ Enter all 4 digits'; return; }
@@ -3765,98 +3879,8 @@ window.connectWithPin = () => {
     console.log('Display peer open, connecting to sensor:', sensorId);
     ConnStatus.set('info', 'Relay connected — reaching sensor…');
     const conn = peer.connect(sensorId, { reliable: false, serialization: 'json' });
-
-    conn.on('open', () => {
-      console.log('Connected to sensor');
-      conns = [conn];
-      clearTimeout(forceTimer);
-      window._displayRetryCount = 0;   // reset retry counter on success
-      window._displayReconnectCount = 0;
-      const d2Btn = $('d2-force-btn');
-      if (d2Btn) d2Btn.style.display = 'none';
-      ConnStatus.set('connected', 'Sensor connected ✓');
-      showPanel('d3');
-      if (wakeLockManager) wakeLockManager.maintainWakeLock();
-      if (window.voiceMgr && mode === 'display' && pin) {
-        if (!voiceMgr._voicePeer) voiceMgr.init(pin, 'display');
-        else voiceMgr.reconnect();
-      }
-      if (window.videoMgr && mode === 'display' && pin && !videoMgr._videoPeer) {
-        videoMgr.init(pin, 'display');
-      }
-      if (firebaseManager && firebaseManager.isCloudAvailable()) {
-        const profile = firebaseManager.getDeviceProfile();
-        if (profile && !profile.activePairId) {
-          firebaseManager.updateDeviceType('display').catch(console.warn);
-          localStorage.setItem('lv_pin', pin);
-          localStorage.setItem('lv_mode', 'display');
-        }
-      }
-    });
-
-    conn.on('data', data => {
-      try {
-        if (data && data.ping) return;
-        if (data && data.camSignal !== undefined) {
-          if (window.videoMgr) videoMgr.onCamSignal(data.camSignal);
-          return;
-        }
-        if (data && data.muteSignal !== undefined) {
-          if (window.voiceMgr) voiceMgr.onMuteSignal(data.muteSignal);
-          return;
-        }
-        updateDisplay(data);
-      } catch(_){}
-    });
-
-    conn.on('close', () => {
-      const savedPin = localStorage.getItem('lv_pin');
-      if (window._forceReconnecting) return;
-      if (savedPin && mode === 'display') {
-        // Track how many auto-reconnects we've attempted since last successful connect
-        if (typeof window._displayReconnectCount !== 'number') window._displayReconnectCount = 0;
-        window._displayReconnectCount++;
-
-        // After 3 failed reconnects, stop looping and show the diagnostic
-        if (window._displayReconnectCount > 3) {
-          window._displayReconnectCount = 0;
-          if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
-          conns = [];
-          showPanel('d2');
-          $('d2-txt').textContent = '⚠️ Could not reconnect';
-          ConnStatus.set('err', 'Reconnect failed — check connection');
-          ConnStatus.diagnoseAndShow('display');
-          return;
-        }
-
-        const instrEl = $('d-instr');
-        if (instrEl) { instrEl.className = 'instr wt'; instrEl.textContent = 'reconnecting…'; }
-        ConnStatus.set('retrying', 'Connection lost — reconnecting… (' + window._displayReconnectCount + '/3)');
-
-        setTimeout(() => {
-          if (mode !== 'display') return;
-          if (window._forceReconnecting) return;
-          if (peer) { try { peer.destroy(); } catch(_){} peer = null; }
-          conns = [];
-          if (wakeLockManager) wakeLockManager.maintainWakeLock();
-          showPanel('d2');
-          $('d2-txt').textContent = 'reconnecting to sensor…';
-          _kpad = savedPin.split('');
-          connectWithPin();
-        }, 2000);
-      } else {
-        ConnStatus.hide();
-        showPanel('d1');
-        kpadReset();
-      }
-    });
-
-    conn.on('error', e => {
-      console.error('conn error:', e);
-      $('d2-txt').textContent = '⚠️ ' + e.message;
-      ConnStatus.set('err', 'Connection error — ' + e.message);
-      showPanel('d2');
-    });
+    clearTimeout(forceTimer); // clear the "stuck" timer now that relay connected
+    _wireDisplayConn(conn, pin, false);
   });
 
   peer.on('error', e => {
