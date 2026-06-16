@@ -1,0 +1,1056 @@
+/* ============================================================
+   Health Synchrony — Reusable Component Styles
+   components.css
+   Depends on: tokens.css
+   Note: Nav dropdown styles will be added in task 2.1.
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   1. BUTTONS
+   ------------------------------------------------------------ */
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+  padding: var(--spacing-12, 12px) var(--spacing-24);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 3px;
+}
+
+/* Primary — Navy background, Gold text */
+.btn-primary {
+  background-color: var(--color-navy);
+  color: var(--color-gold);
+  border-color: var(--color-navy);
+}
+
+.btn-primary:hover {
+  background-color: #0d2850; /* slightly lighter navy */
+  border-color: #0d2850;
+}
+
+.btn-primary:active {
+  background-color: #071628;
+  border-color: #071628;
+}
+
+/* Secondary — outlined with Navy border */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-navy);
+  border-color: var(--color-navy);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-navy);
+  color: var(--color-ivory);
+}
+
+.btn-secondary:active {
+  background-color: #071628;
+  border-color: #071628;
+  color: var(--color-ivory);
+}
+
+
+/* ------------------------------------------------------------
+   2. HEADER / NAV SHELLS
+   ------------------------------------------------------------ */
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background-color: var(--color-navy);
+  padding-block: var(--spacing-16);
+  padding-inline: var(--spacing-16);
+  gap: var(--spacing-16);
+}
+
+@media (min-width: 768px) {
+  .site-header {
+    padding-inline: var(--spacing-32);
+  }
+}
+
+/* Logo */
+.site-header .logo {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.site-header .logo img {
+  display: block;
+  height: 48px;
+  width: auto;
+}
+
+/* Primary nav — desktop flex row; hidden on mobile (toggled via nav.js) */
+.primary-nav {
+  flex: 1;
+}
+
+/* Mobile: nav drawer hidden by default; shown when .is-open is toggled */
+.primary-nav {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .primary-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+}
+
+.primary-nav ul {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-8);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.primary-nav a,
+.primary-nav button {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+  padding-inline: var(--spacing-16);
+  color: var(--color-ivory);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.primary-nav a:hover,
+.primary-nav button:hover {
+  color: var(--color-gold);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.primary-nav a:focus-visible,
+.primary-nav button:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+/* Hamburger / nav-toggle — visible on mobile, hidden on desktop */
+.nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+  padding: var(--spacing-8);
+  background: transparent;
+  border: 2px solid var(--color-ivory);
+  border-radius: var(--radius-sm);
+  color: var(--color-ivory);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.nav-toggle:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.nav-toggle:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 3px;
+}
+
+@media (min-width: 768px) {
+  .nav-toggle {
+    display: none;
+  }
+}
+
+/*
+ * Mobile nav open state (toggled by nav.js adding .is-open on <body> or <header>)
+ * When open, the primary-nav is shown as a full-width column drawer.
+ */
+@media (max-width: 767px) {
+  .primary-nav.is-open {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0;
+    top: 0;
+    background-color: var(--color-navy);
+    z-index: var(--z-nav);
+    padding: var(--spacing-64) var(--spacing-24) var(--spacing-24);
+    overflow-y: auto;
+  }
+
+  .primary-nav.is-open ul {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-4);
+    width: 100%;
+  }
+
+  .primary-nav.is-open a,
+  .primary-nav.is-open button {
+    width: 100%;
+    font-size: var(--font-size-lg);
+    padding-block: var(--spacing-16);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    justify-content: flex-start;
+  }
+}
+
+/* Nav dropdown shell — styles extended by task 2.1 */
+.has-dropdown {
+  position: relative;
+}
+
+
+/* ------------------------------------------------------------
+   3. STICKY CTA
+   ------------------------------------------------------------ */
+
+.sticky-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8) var(--spacing-16);
+  background-color: var(--color-navy);
+  border-top: 2px solid var(--color-gold);
+  box-shadow: 0 -4px 16px rgba(10, 31, 60, 0.18);
+}
+
+.sticky-cta__btn {
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
+
+/* Hidden on desktop — inline CTAs replace it */
+@media (min-width: 768px) {
+  .sticky-cta {
+    display: none;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   4. FOOTER
+   ------------------------------------------------------------ */
+
+.site-footer {
+  background-color: var(--color-navy);
+  color: var(--color-ivory);
+  padding-block: var(--spacing-32);
+  padding-inline: var(--spacing-16);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+}
+
+@media (min-width: 768px) {
+  .site-footer {
+    padding-inline: var(--spacing-32);
+  }
+}
+
+.footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-16);
+  margin-bottom: var(--spacing-16);
+}
+
+.footer__links a {
+  color: var(--color-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+
+.footer__links a:hover {
+  color: var(--color-ivory);
+}
+
+.footer__links a:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.footer__disclaimer {
+  margin-bottom: var(--spacing-8);
+  color: var(--color-ivory);
+  opacity: 0.85;
+  line-height: 1.6;
+}
+
+.footer__popia {
+  margin-bottom: 0;
+  color: var(--color-ivory);
+  opacity: 0.65;
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+
+/* ------------------------------------------------------------
+   5. HERO
+   ------------------------------------------------------------ */
+
+.hero {
+  position: relative;
+  min-height: 60vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background-color: var(--color-navy); /* fallback while image loads */
+}
+
+.hero__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 31, 60, 0.45) 0%,
+    rgba(10, 31, 60, 0.65) 100%
+  );
+}
+
+.hero__content {
+  position: relative;
+  z-index: 1;
+  padding: var(--spacing-48) var(--spacing-16);
+  color: var(--color-ivory);
+  max-width: 720px;
+}
+
+@media (min-width: 768px) {
+  .hero__content {
+    padding: var(--spacing-64) var(--spacing-32);
+  }
+}
+
+
+/* ------------------------------------------------------------
+   6. CARDS
+   ------------------------------------------------------------ */
+
+.card {
+  background-color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-24);
+  box-shadow: 0 2px 12px rgba(10, 31, 60, 0.08);
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: 0 6px 24px rgba(10, 31, 60, 0.14);
+  transform: translateY(-2px);
+}
+
+
+/* ------------------------------------------------------------
+   7. BEFORE/AFTER SLIDER
+   ------------------------------------------------------------ */
+
+.before-after-slider {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-ivory);
+  touch-action: none; /* managed by JS */
+  user-select: none;
+}
+
+.bas__track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.bas__before,
+.bas__after {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.bas__after {
+  position: absolute;
+  inset: 0;
+  /* clip-path updated dynamically via JS */
+  clip-path: inset(0 50% 0 0);
+  transition: clip-path var(--transition-normal);
+}
+
+.bas__divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%; /* updated dynamically via JS */
+  transform: translateX(-50%);
+  width: 2px;
+  background-color: var(--color-ivory);
+  pointer-events: none;
+}
+
+.bas__handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--color-ivory);
+  border: 3px solid var(--color-navy);
+  cursor: ew-resize;
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.bas__handle:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 3px;
+}
+
+.bas__handle:hover {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.25);
+}
+
+.bas__caption {
+  /* .sr-only is applied via utility class — see section 14 */
+}
+
+
+/* ------------------------------------------------------------
+   8. JOURNEY MAP
+   ------------------------------------------------------------ */
+
+.journey-map {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  counter-reset: journey-step;
+}
+
+@media (min-width: 768px) {
+  .journey-map {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.journey-map li {
+  counter-increment: journey-step;
+  position: relative;
+  flex: 1;
+  padding: var(--spacing-24);
+  background-color: var(--color-ivory);
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.journey-map li::before {
+  content: counter(journey-step);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--color-navy);
+  color: var(--color-gold);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  margin-bottom: var(--spacing-8);
+}
+
+.journey-map li:hover {
+  border-color: var(--color-gold);
+  box-shadow: 0 2px 12px rgba(10, 31, 60, 0.08);
+}
+
+.journey-map li:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+/* Active / selected step */
+.journey-map li[aria-selected="true"] {
+  border-color: var(--color-gold);
+  background-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(10, 31, 60, 0.12);
+}
+
+.journey-map li[aria-selected="true"]::before {
+  background-color: var(--color-gold);
+  color: var(--color-navy);
+}
+
+.journey-map__title {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-bottom: var(--spacing-8);
+}
+
+.journey-map__description {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-navy);
+  line-height: 1.6;
+  /* Hidden by default; JS reveals on selection */
+  display: none;
+}
+
+.journey-map li[aria-selected="true"] .journey-map__description {
+  display: block;
+}
+
+
+/* ------------------------------------------------------------
+   9. IV CARDS
+   ------------------------------------------------------------ */
+
+/* Base IV card — uses --card-accent CSS variable */
+.iv-card {
+  --card-accent: var(--color-gold); /* overridden per category modifier */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  box-shadow: 0 2px 12px rgba(10, 31, 60, 0.08);
+  overflow: hidden;
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+}
+
+.iv-card:hover {
+  box-shadow: 0 6px 24px rgba(10, 31, 60, 0.14);
+  transform: translateY(-2px);
+}
+
+/* Category accent bar at top of card */
+.iv-card__category-bar {
+  height: 6px;
+  background-color: var(--card-accent);
+  width: 100%;
+}
+
+/* Card content area */
+.iv-card__name {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: var(--spacing-24) var(--spacing-24) var(--spacing-8);
+}
+
+.iv-card__ingredients {
+  list-style: none;
+  margin: 0 var(--spacing-24) var(--spacing-16);
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8);
+}
+
+.iv-card__ingredients li {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-navy);
+  background-color: var(--color-ivory);
+  border: 1px solid rgba(10, 31, 60, 0.15);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-4) var(--spacing-8);
+}
+
+.iv-card__best-for {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-navy);
+  line-height: 1.5;
+  margin: 0 var(--spacing-24) var(--spacing-16);
+  flex: 1; /* push CTA to bottom */
+}
+
+.iv-card__best-for strong {
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.iv-card__cta {
+  margin: var(--spacing-16) var(--spacing-24) var(--spacing-24);
+  align-self: flex-start;
+}
+
+/* Category colour modifiers */
+.iv-card--energy   { --card-accent: var(--color-gold); }
+.iv-card--beauty   { --card-accent: var(--color-sage); }
+.iv-card--immunity { --card-accent: #6AA8C0; } /* teal-light placeholder */
+
+
+/* ------------------------------------------------------------
+   10. TREATMENT QUIZ
+   ------------------------------------------------------------ */
+
+.treatment-quiz {
+  background-color: var(--color-ivory);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-32) var(--spacing-24);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .treatment-quiz {
+    padding: var(--spacing-48) var(--spacing-32);
+  }
+}
+
+.quiz__progress {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-navy);
+  margin-bottom: var(--spacing-24);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+/* Visual progress bar track */
+.quiz__progress::after {
+  content: '';
+  flex: 1;
+  height: 4px;
+  background-color: rgba(10, 31, 60, 0.12);
+  border-radius: 2px;
+}
+
+.quiz__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+}
+
+.quiz__form fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.quiz__form legend {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-bottom: var(--spacing-16);
+}
+
+.quiz__form label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12, 12px);
+  min-height: var(--touch-target);
+  padding: var(--spacing-8) var(--spacing-16);
+  border: 2px solid rgba(10, 31, 60, 0.2);
+  border-radius: var(--radius-md);
+  background-color: #ffffff;
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-navy);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.quiz__form label:hover {
+  border-color: var(--color-gold);
+  background-color: var(--color-ivory);
+}
+
+.quiz__form input[type="radio"]:checked + span,
+.quiz__form label:has(input[type="radio"]:checked) {
+  border-color: var(--color-navy);
+  background-color: var(--color-ivory);
+  font-weight: 600;
+}
+
+/* Result panel — hidden until quiz is complete (toggled via JS) */
+.quiz__result {
+  margin-top: var(--spacing-24);
+  padding: var(--spacing-24);
+  background-color: var(--color-navy);
+  border-radius: var(--radius-md);
+  color: var(--color-ivory);
+  font-family: var(--font-body);
+}
+
+.quiz__result[hidden] {
+  display: none;
+}
+
+
+/* ------------------------------------------------------------
+   11. BOOKING FALLBACK
+   ------------------------------------------------------------ */
+
+/* Hidden by default; booking-widget.js shows this on timeout */
+.booking-fallback {
+  display: none;
+  padding: var(--spacing-24);
+  background-color: var(--color-ivory);
+  border: 2px solid var(--color-gold);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-navy);
+  line-height: 1.6;
+}
+
+.booking-fallback p {
+  margin-bottom: var(--spacing-8);
+}
+
+.booking-fallback p:last-of-type {
+  margin-bottom: var(--spacing-16);
+}
+
+.booking-fallback a {
+  color: var(--color-navy);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+.booking-fallback a:hover {
+  color: var(--color-gold);
+}
+
+
+/* ------------------------------------------------------------
+   12. REVIEWS FALLBACK
+   ------------------------------------------------------------ */
+
+/* Hidden by default; review-widget.js shows this on timeout */
+.reviews-fallback {
+  display: none;
+  padding: var(--spacing-24);
+  background-color: var(--color-ivory);
+  border-radius: var(--radius-md);
+}
+
+.reviews-fallback blockquote {
+  margin: 0 0 var(--spacing-16);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-style: italic;
+  color: var(--color-navy);
+  line-height: 1.6;
+  border-left: 4px solid var(--color-gold);
+  padding-left: var(--spacing-16);
+}
+
+.reviews-fallback cite {
+  display: block;
+  margin-top: var(--spacing-8);
+  font-style: normal;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  color: var(--color-navy);
+  opacity: 0.75;
+}
+
+.reviews-fallback a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  color: var(--color-navy);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.reviews-fallback a:hover {
+  color: var(--color-gold);
+}
+
+
+/* ------------------------------------------------------------
+   13. CREDENTIAL BADGE
+   ------------------------------------------------------------ */
+
+.credential-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  min-height: var(--touch-target);
+  padding: var(--spacing-8) var(--spacing-16);
+  background-color: var(--color-ivory);
+  border: 2px solid var(--color-gold);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base); /* minimum 16px — matches Req 4.1 */
+  font-weight: 600;
+  color: var(--color-navy); /* #0A1F3C on #F5F0E8 — exceeds 4.5:1 */
+  line-height: 1.4;
+}
+
+.credential-badge__icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  color: var(--color-gold);
+}
+
+
+/* ------------------------------------------------------------
+   14. UTILITY — Screen Reader Only
+   ------------------------------------------------------------ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Allow focusable .sr-only elements to become visible on focus */
+.sr-only:focus,
+.sr-only:focus-within {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: var(--spacing-8) var(--spacing-16);
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background-color: var(--color-gold);
+  color: var(--color-navy);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  z-index: var(--z-modal);
+}
+
+
+/* ------------------------------------------------------------
+   15. ARIA-CURRENT — Active nav link highlight
+   ------------------------------------------------------------ */
+
+[aria-current="page"] {
+  color: var(--color-gold) !important;
+  font-weight: 700;
+  position: relative;
+}
+
+/* Underline indicator for the active page link */
+[aria-current="page"]::after {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  left: var(--spacing-16);
+  right: var(--spacing-16);
+  height: 2px;
+  background-color: var(--color-gold);
+  border-radius: 1px;
+}
+
+
+/* ============================================================
+   Task 2.1 — Nav Dropdown Styles (extended from task 1.5)
+   Validates: Requirements 1.2, 1.8
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   DESKTOP DROPDOWN
+   Hidden by default; revealed on aria-expanded="true",
+   :hover, or :focus-within on the parent .has-dropdown item.
+   ------------------------------------------------------------ */
+
+.has-dropdown .dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 180px;
+  background-color: var(--color-navy);
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-md);
+  list-style: none;
+  padding: var(--spacing-8) 0;
+  z-index: var(--z-nav);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+/* Show dropdown when button is expanded, on hover, or focus-within */
+.has-dropdown button[aria-expanded="true"] + .dropdown,
+.has-dropdown:hover .dropdown,
+.has-dropdown:focus-within .dropdown {
+  display: block;
+}
+
+/* Dropdown link styles */
+.has-dropdown .dropdown a {
+  display: block;
+  padding: var(--spacing-8) var(--spacing-16);
+  color: var(--color-ivory);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.has-dropdown .dropdown a:hover {
+  background-color: rgba(255,255,255,0.08);
+  color: var(--color-gold);
+}
+
+.has-dropdown .dropdown a:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: -3px;
+}
+
+/* ------------------------------------------------------------
+   MOBILE NAV OPEN STATE
+   Support both .nav-open (task 2.1+) and .is-open (task 1.5)
+   for backwards compatibility.
+   ------------------------------------------------------------ */
+
+@media (max-width: 767px) {
+  /* Mirror .is-open open-drawer behaviour for .nav-open */
+  .primary-nav.nav-open {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0;
+    top: 0;
+    background-color: var(--color-navy);
+    z-index: var(--z-nav);
+    padding: var(--spacing-64) var(--spacing-24) var(--spacing-24);
+    overflow-y: auto;
+  }
+
+  .primary-nav.nav-open ul {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-4);
+    width: 100%;
+  }
+
+  .primary-nav.nav-open a,
+  .primary-nav.nav-open button {
+    width: 100%;
+    font-size: var(--font-size-lg);
+    padding-block: var(--spacing-16);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    justify-content: flex-start;
+  }
+
+  /* ------------------------------------------------------------
+     MOBILE DROPDOWN: hide the nested dropdown list inside the
+     drawer — service sub-page links are shown flat in the list.
+     ------------------------------------------------------------ */
+
+  /* Hide the dropdown <ul> on mobile (items shown flat in drawer) */
+  .primary-nav.is-open .has-dropdown .dropdown,
+  .primary-nav.nav-open .has-dropdown .dropdown {
+    display: none !important;
+  }
+
+  /* Override hover/focus-within so it stays hidden on mobile */
+  .primary-nav.is-open .has-dropdown:hover .dropdown,
+  .primary-nav.is-open .has-dropdown:focus-within .dropdown,
+  .primary-nav.nav-open .has-dropdown:hover .dropdown,
+  .primary-nav.nav-open .has-dropdown:focus-within .dropdown {
+    display: none !important;
+  }
+
+  /* Override aria-expanded so it stays hidden on mobile */
+  .primary-nav.is-open .has-dropdown button[aria-expanded="true"] + .dropdown,
+  .primary-nav.nav-open .has-dropdown button[aria-expanded="true"] + .dropdown {
+    display: none !important;
+  }
+}

@@ -1,0 +1,220 @@
+<!--
+================================================================================
+  HEALTH SYNCHRONY – SHARED HTML SNIPPETS
+================================================================================
+  Purpose : Copy-paste reference for markup shared across all pages.
+  Tasks   : 2.2 (Header/Nav), 2.3 (Footer), 3.1 (Sticky CTA)
+  Validates: Requirements 1.1, 1.2, 13.5, 18.2, 18.3
+
+  Usage
+  -----
+  1. Copy each snippet into the appropriate position in every page's <body>.
+  2. On the active page, add aria-current="page" to that page's <a> link
+     inside the nav (see note under HEADER).
+  3. The sticky CTA goes immediately before the closing </body> tag.
+  4. The footer goes immediately before the sticky CTA.
+
+  File layout
+  -----------
+  SECTION 1 : <head> boilerplate (fonts, meta — for reference only)
+  SECTION 2 : HEADER / PRIMARY NAV  (task 2.2)
+  SECTION 3 : FOOTER                (task 2.3)
+  SECTION 4 : STICKY CTA            (task 3.1)
+================================================================================
+-->
+
+
+<!-- ============================================================
+  SECTION 1 : <head> BOILERPLATE (reference — not a body snippet)
+  Place this block inside <head> on every page.
+  Satisfies: Req 15.1 (LCP / font loading), Req 16.5 (lang + charset)
+  ============================================================ -->
+<!--
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@400;500;600&display=swap">
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+-->
+
+
+<!-- ============================================================
+  SECTION 2 : HEADER / PRIMARY NAV
+  Task 2.2 — Satisfies: Req 1.1, 1.2, 18.2, 18.3
+
+  Instructions
+  ------------
+  • Paste at the very top of <body>, before any <main> content.
+  • Mark the current page's link with aria-current="page".
+    Example (on about.html):
+      <li><a href="about.html" aria-current="page">About Us</a></li>
+  • nav.js wires the hamburger toggle and focus trap (mobile ≤768px).
+  • The logo href uses a root-relative path. Adjust if the site is
+    served from a subdirectory (e.g. href="/healthsync/index.html").
+  ============================================================ -->
+
+<header class="site-header" role="banner">
+
+  <!-- Logo — links to Home; Req 1.7 -->
+  <a href="index.html" class="logo" aria-label="Health Synchrony home">
+    <img
+      src="images/logo.webp"
+      alt="Health Synchrony logo"
+      width="180"
+      height="48">
+  </a>
+
+  <!-- Primary navigation — Req 1.1, 1.2, 1.8 -->
+  <nav class="primary-nav" aria-label="Primary navigation">
+    <ul role="list">
+
+      <li>
+        <a href="index.html">Home</a>
+      </li>
+
+      <!-- Services dropdown — Req 1.1, 1.8 -->
+      <li class="has-dropdown">
+        <!--
+          nav.js toggles aria-expanded on this button when the dropdown
+          opens/closes. CSS shows/hides .dropdown based on aria-expanded.
+        -->
+        <button aria-expanded="false" aria-haspopup="true">Services</button>
+        <ul class="dropdown" role="list">
+          <li><a href="aesthetics.html">Aesthetics</a></li>
+          <li><a href="weight-loss.html">Weight Loss</a></li>
+          <li><a href="iv-therapy.html">IV Therapy</a></li>
+          <li><a href="consultations.html">Consultations</a></li>
+          <li><a href="dispensary.html">Dispensary</a></li>
+        </ul>
+      </li>
+
+      <li>
+        <a href="about.html">About Us</a>
+      </li>
+
+      <li>
+        <a href="contact.html">Contact Us</a>
+      </li>
+
+    </ul>
+  </nav>
+
+  <!--
+    Mobile hamburger toggle — Req 1.3, 15.5, 18.3
+    nav.js flips aria-expanded and aria-label between
+    "Open navigation menu" / "Close navigation menu".
+    Minimum touch target: 48×48 px (enforced in components.css).
+  -->
+  <button
+    class="nav-toggle"
+    aria-label="Open navigation menu"
+    aria-expanded="false">
+    <!-- Inline SVG — no external request; aria-hidden keeps it decorative -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width="24"
+      height="24"
+      aria-hidden="true"
+      focusable="false">
+      <line x1="3"  y1="6"  x2="21" y2="6"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="3"  y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="3"  y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+</header>
+
+<!-- nav.js must be loaded as a module on every page that uses this header -->
+<!-- <script type="module" src="js/nav.js"></script> -->
+
+
+<!-- ============================================================
+  SECTION 3 : FOOTER
+  Task 2.3 — Satisfies: Req 13.5 (Privacy Policy link on every page),
+             Req 14 (HPCSA disclaimer), Req 18.2
+
+  Instructions
+  ------------
+  • Paste immediately before the Sticky CTA (Section 4) and the
+    closing </body> tag on every page.
+  • The Privacy Policy link in the footer fulfils Req 13.5 — do not
+    remove it.
+  • Update the © year token in tokens.css or here directly each year.
+  ============================================================ -->
+
+<footer class="site-footer" role="contentinfo">
+  <div class="container">
+
+    <!-- Footer navigation links — Req 13.5 -->
+    <div class="footer__links">
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="contact.html">Contact Us</a>
+    </div>
+
+    <!-- HPCSA compliance disclaimer — Req 14.5, 14.6 -->
+    <p class="footer__disclaimer">
+      Health Synchrony is registered with the HPCSA.
+      Results may vary. All treatments are subject to a medical consultation.
+    </p>
+
+    <!-- POPIA notice — Req 13, 13.5 -->
+    <p class="footer__popia">
+      &copy; 2025 Health Synchrony. Personal information is processed in accordance with POPIA.
+    </p>
+
+  </div>
+</footer>
+
+
+<!-- ============================================================
+  SECTION 4 : STICKY CTA
+  Task 3.1 — Satisfies: Req 1.3, 1.4, 1.5, 15.5
+
+  Instructions
+  ------------
+  • Paste immediately after the </footer> tag, before </body>.
+  • sticky-cta.js handles the scroll-vs-navigate logic (Req 1.5):
+      – If #booking-widget exists on the page → smooth-scroll to it.
+      – If not → navigate to contact.html (data-fallback-href).
+  • Displayed fixed at bottom on mobile (≤768px); hidden on desktop
+    via components.css (.sticky-cta { display: none } at ≥768px).
+  • Minimum touch target 48×48 px enforced in components.css (Req 1.4).
+  ============================================================ -->
+
+<div class="sticky-cta" role="complementary" aria-label="Book consultation">
+  <a
+    href="#booking-widget"
+    class="btn-primary sticky-cta__btn"
+    data-fallback-href="contact.html">
+    Book Consultation
+  </a>
+</div>
+
+<!-- sticky-cta.js must be loaded as a module on every page -->
+<!-- <script type="module" src="js/sticky-cta.js"></script> -->
+
+
+<!--
+================================================================================
+  END OF SHARED SNIPPETS
+================================================================================
+  Quick checklist before publishing a new page
+  ---------------------------------------------
+  [ ] Header pasted at top of <body>
+  [ ] aria-current="page" added to the correct nav link
+  [ ] Footer pasted before </body>
+  [ ] Privacy Policy link present in footer (Req 13.5)
+  [ ] Sticky CTA pasted after footer, before </body>
+  [ ] <script type="module" src="js/nav.js"> present in <head> or <body>
+  [ ] <script type="module" src="js/sticky-cta.js"> present in <head> or <body>
+  [ ] <html lang="en"> and <meta charset="UTF-8"> set (Req 16.5)
+================================================================================
+-->

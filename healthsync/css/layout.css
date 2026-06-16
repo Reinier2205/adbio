@@ -1,0 +1,73 @@
+/* ============================================================
+   Health Synchrony — Layout
+   layout.css
+   Content container, section spacing, and responsive grid
+   utility classes. Depends on tokens.css.
+   Requirement 2.3: minimum 64px vertical spacing at ≥1024px,
+   minimum 40px at <1024px.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   Content Container
+   Centers page content with a maximum width of 1280px and
+   responsive horizontal padding.
+   ---------------------------------------------------------- */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: var(--spacing-16);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-inline: var(--spacing-32);
+  }
+}
+
+/* ----------------------------------------------------------
+   Section Spacing
+   Applies consistent vertical rhythm between content sections.
+   Mobile: 40px  (var(--spacing-section-mobile))
+   Desktop ≥1024px: 64px  (var(--spacing-section-desktop))
+   ---------------------------------------------------------- */
+.section {
+  padding-block: var(--spacing-section-mobile);
+}
+
+@media (min-width: 1024px) {
+  .section {
+    padding-block: var(--spacing-section-desktop);
+  }
+}
+
+/* ----------------------------------------------------------
+   Responsive Grid Helpers
+   Stack on mobile; switch to CSS Grid at 768px+.
+   ---------------------------------------------------------- */
+
+/* 2-column grid */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-24);
+}
+
+@media (min-width: 768px) {
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 3-column grid */
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-24);
+}
+
+@media (min-width: 768px) {
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

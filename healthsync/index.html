@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Health Synchrony | Wellness in Centurion</title>
+  <meta name="description" content="Integrated health practitioners in Irene Security Estate, Centurion — aesthetics, weight loss, IV therapy and consultations.">
+
+  <!-- Google Fonts preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@400;500;600&display=swap">
+
+  <!-- CSS cascade: tokens → base → layout → components → page-specific -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages/home.css">
+
+  <!-- MedicalBusiness structured data -->
+  <script type="application/ld+json">
+    <!-- TODO: Replace placeholder with full MedicalBusiness schema.
+         See design.md §Data Models › MedicalBusiness Schema and schema.js.
+    {
+      "@context": "https://schema.org",
+      "@type": "MedicalBusiness",
+      "name": "Health Synchrony – Integrated Health Practitioners",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Irene Security Estate",
+        "addressLocality": "Centurion",
+        "addressRegion": "Gauteng",
+        "addressCountry": "ZA"
+      },
+      "telephone": "+27XXXXXXXXXX",
+      "url": "https://healthsynchrony.co.za",
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+          "opens": "08:00",
+          "closes": "17:00"
+        }
+      ]
+    }
+    -->
+  </script>
+</head>
+<body>
+
+  <!-- ============================================================
+    HEADER / PRIMARY NAV — from _shared-snippets.html (task 2.2)
+    aria-current="page" applied to Home link (this is index.html)
+    Satisfies: Req 1.1, 1.2, 1.7, 18.3
+    ============================================================ -->
+  <header class="site-header" role="banner">
+
+    <a href="index.html" class="logo" aria-label="Health Synchrony home">
+      <img
+        src="images/logo.webp"
+        alt="Health Synchrony logo"
+        width="180"
+        height="48">
+    </a>
+
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <ul role="list">
+
+        <li>
+          <a href="index.html" aria-current="page">Home</a>
+        </li>
+
+        <li class="has-dropdown">
+          <button aria-expanded="false" aria-haspopup="true">Services</button>
+          <ul class="dropdown" role="list">
+            <li><a href="aesthetics.html">Aesthetics</a></li>
+            <li><a href="weight-loss.html">Weight Loss</a></li>
+            <li><a href="iv-therapy.html">IV Therapy</a></li>
+            <li><a href="consultations.html">Consultations</a></li>
+            <li><a href="dispensary.html">Dispensary</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="about.html">About Us</a>
+        </li>
+
+        <li>
+          <a href="contact.html">Contact Us</a>
+        </li>
+
+      </ul>
+    </nav>
+
+    <button
+      class="nav-toggle"
+      aria-label="Open navigation menu"
+      aria-expanded="false">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        width="24"
+        height="24"
+        aria-hidden="true"
+        focusable="false">
+        <line x1="3"  y1="6"  x2="21" y2="6"  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <line x1="3"  y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <line x1="3"  y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+  </header>
+
+  <main>
+
+    <!-- ============================================================
+      HERO SECTION
+      Satisfies: Req 2.4, 3.1, 15.1, 16.1
+      - Full-viewport hero with WebP + JPEG fallback <picture>
+      - fetchpriority="high" (LCP element — no lazy loading)
+      - h1 ≤12 words, includes "Centurion" and "Irene Security Estate"
+      - Inline CTA linking to #booking-widget
+      ============================================================ -->
+    <section class="hero section" aria-label="Hero">
+
+      <picture>
+        <source srcset="images/hero/home-hero.webp" type="image/webp">
+        <img
+          src="images/hero/home-hero.jpg"
+          alt="Dr. van Dyk consulting with a patient at Health Synchrony, Irene Security Estate, Centurion"
+          width="1440"
+          height="810"
+          fetchpriority="high"
+          decoding="async"
+          class="hero__image">
+      </picture>
+
+      <div class="hero__overlay" aria-hidden="true"></div>
+
+      <div class="hero__content">
+        <h1>Integrated Wellness &amp; Aesthetics in Centurion, Irene Security Estate</h1>
+        <p class="hero__subtext">
+          Expert care from Dr. van Dyk — where clinical excellence meets premium wellness.
+        </p>
+        <a href="#booking-widget" class="btn-primary">Book a Consultation</a>
+      </div>
+
+    </section>
+
+    <!-- ============================================================
+      WHO WE ARE
+      Satisfies: Req 3.2, 16.1
+      - ≤150 words, references Dr. van Dyk credential, includes "Centurion"
+      ============================================================ -->
+    <section class="section who-we-are" aria-labelledby="who-we-are-heading">
+      <div class="container">
+
+        <h2 id="who-we-are-heading">Who We Are</h2>
+
+        <p>
+          Health Synchrony is an integrated health practice nestled in the heart of
+          Irene Security Estate, Centurion. Led by Dr. van Dyk — a University of
+          Pretoria graduate and holder of an Advanced Diploma in Aesthetics — our
+          team combines deep clinical expertise with a genuine passion for holistic
+          wellness.
+        </p>
+        <p>
+          We believe that looking and feeling your best should be accessible,
+          evidence-based, and deeply personal. Whether you are exploring aesthetic
+          treatments, seeking a medical weight-loss programme, or simply investing
+          in your long-term wellbeing, we provide a calm, luxurious environment
+          where every treatment plan is tailored to you.
+        </p>
+        <p>
+          Results may vary. All treatments are subject to a medical consultation.
+        </p>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+      SERVICES OVERVIEW
+      Satisfies: Req 1.8, 3.3
+      - Exactly 5 .card elements
+      - Each has <h3>, brief description, and <a> to sub-page
+      ============================================================ -->
+    <section class="section services-overview" aria-labelledby="services-heading">
+      <div class="container">
+
+        <h2 id="services-heading">Our Services</h2>
+        <p class="services-overview__intro">
+          Discover our range of treatments designed to enhance your confidence and wellbeing.
+        </p>
+
+        <div class="services-overview__grid">
+
+          <!-- Card 1: Aesthetics -->
+          <article class="card card--aesthetics">
+            <div class="card__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="card__title">Aesthetics</h3>
+            <p class="card__description">
+              Reveal your natural radiance with personalised aesthetic treatments
+              including skin rejuvenation and facial contouring — all carried out
+              under medical supervision.
+            </p>
+            <a href="aesthetics.html" class="card__link btn-secondary">
+              Explore Aesthetics
+            </a>
+          </article>
+
+          <!-- Card 2: Weight Loss -->
+          <article class="card card--weight-loss">
+            <div class="card__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" focusable="false">
+                <path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.7l-4.9 2.5.9-5.5L4 8.8l5.5-.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="card__title">Weight Loss</h3>
+            <p class="card__description">
+              Achieve sustainable results with a medically guided weight-loss
+              programme tailored to your body, lifestyle, and long-term health goals.
+            </p>
+            <a href="weight-loss.html" class="card__link btn-secondary">
+              Explore Weight Loss
+            </a>
+          </article>
+
+          <!-- Card 3: IV Therapy -->
+          <article class="card card--iv-therapy">
+            <div class="card__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" focusable="false">
+                <path d="M12 2v4M8 6l-2 8h12L16 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="8" y="14" width="8" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="12" y1="20" x2="12" y2="22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="card__title">IV Therapy</h3>
+            <p class="card__description">
+              Replenish, restore, and energise with our customised intravenous
+              nutrient drips — formulated for energy, immunity, beauty, and recovery.
+            </p>
+            <a href="iv-therapy.html" class="card__link btn-secondary">
+              Explore IV Therapy
+            </a>
+          </article>
+
+          <!-- Card 4: Consultations -->
+          <article class="card card--consultations">
+            <div class="card__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" focusable="false">
+                <rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="7" y1="9" x2="17" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="7" y1="13" x2="14" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="card__title">Consultations</h3>
+            <p class="card__description">
+              Begin your wellness journey with a thorough one-on-one consultation
+              with Dr. van Dyk — your health goals, reviewed and addressed in full.
+            </p>
+            <a href="consultations.html" class="card__link btn-secondary">
+              Book a Consultation
+            </a>
+          </article>
+
+          <!-- Card 5: Dispensary -->
+          <article class="card card--dispensary">
+            <div class="card__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" focusable="false">
+                <path d="M9 3h6v4l2 1v12H7V8l2-1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <line x1="12" y1="11" x2="12" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="9.5" y1="13.5" x2="14.5" y2="13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="card__title">Dispensary</h3>
+            <p class="card__description">
+              Access a curated selection of supplements, skincare, and nutraceuticals
+              recommended and dispensed by our qualified medical team.
+            </p>
+            <a href="dispensary.html" class="card__link btn-secondary">
+              Visit the Dispensary
+            </a>
+          </article>
+
+        </div><!-- /.services-overview__grid -->
+
+      </div><!-- /.container -->
+    </section>
+
+    <!-- ============================================================
+      TREATMENT QUIZ
+      Satisfies: Req 3.6, 3.7
+      - Named section with id="treatment-quiz" for anchor linking
+      - Placeholder: treatment-quiz.js will wire this up
+      ============================================================ -->
+    <section class="section" id="treatment-quiz" aria-labelledby="quiz-heading">
+      <div class="container">
+
+        <h2 id="quiz-heading">Find Your Perfect Treatment</h2>
+        <p>
+          Not sure where to start? Our short quiz helps match you with the right
+          treatment based on your personal health goals.
+        </p>
+
+        <!-- treatment-quiz.js will render the interactive quiz inside this element -->
+        <div class="treatment-quiz__placeholder" aria-live="polite">
+          <!-- Quiz content injected by treatment-quiz.js -->
+          <p class="treatment-quiz__loading">
+            Loading your personalised quiz&hellip;
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+      BOOKING WIDGET
+      Satisfies: Req 3.4, 11.1, 11.2, 11.3
+      - id="booking-widget" — anchor target for CTA links and Sticky CTA
+      - booking-widget.js injects iframe; fallback shown if load times out
+      - Fallback contains phone, email, contact.html link, and inline CTA
+      ============================================================ -->
+    <section class="section booking-section" aria-labelledby="booking-heading">
+      <div class="container">
+
+        <h2 id="booking-heading">Book a Consultation</h2>
+        <p>
+          Select a date and time that suits you — our online booking is available
+          24 hours a day.
+        </p>
+
+        <div id="booking-widget" class="booking-widget" aria-label="Online appointment booking">
+
+          <!-- booking-widget.js will inject the iframe here -->
+
+          <!-- Fallback — visible by default; booking-widget.js hides it when iframe loads -->
+          <div class="booking-fallback" role="alert" aria-live="polite">
+            <p>Our online booking is temporarily unavailable.</p>
+            <p>
+              Call us:
+              <a href="tel:+27XXXXXXXXXX">+27 XX XXX XXXX</a>
+            </p>
+            <p>
+              Email:
+              <a href="mailto:info@healthsynchrony.co.za">info@healthsynchrony.co.za</a>
+            </p>
+            <a href="contact.html" class="btn-secondary">Go to Contact Us</a>
+            <a href="contact.html" class="btn-primary booking-fallback__cta">Book a Consultation</a>
+          </div>
+
+        </div><!-- /#booking-widget -->
+
+      </div><!-- /.container -->
+    </section>
+
+    <!-- ============================================================
+      REVIEWS
+      Satisfies: Req 3.5, 17.1, 17.4, 17.5
+      - review-widget.js will attempt Google Places load
+      - Fallback static section always present in markup
+      - ≥1 hardcoded review excerpt + link to Google Business Profile
+      ============================================================ -->
+    <section class="section reviews-section" aria-labelledby="reviews-heading">
+      <div class="container">
+
+        <h2 id="reviews-heading">What Our Patients Say</h2>
+
+        <!-- review-widget.js injects the live widget here -->
+        <div id="review-widget" aria-live="polite" aria-label="Patient reviews">
+          <!-- Live reviews injected by review-widget.js -->
+        </div>
+
+        <!-- Static fallback — review-widget.js hides this when live widget loads -->
+        <section class="reviews-fallback" aria-label="Featured patient review">
+
+          <blockquote class="review-excerpt">
+            <p>
+              "Dr van Dyk was exceptional — thorough, caring, and truly professional.
+              I left feeling heard and with a clear, personalised plan. I highly
+              recommend Health Synchrony to anyone in Centurion looking for quality care."
+            </p>
+            <cite>— Patient via Google Reviews</cite>
+          </blockquote>
+
+          <a
+            href="https://g.page/healthsynchrony"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-secondary">
+            Read all reviews on Google
+          </a>
+
+        </section><!-- /.reviews-fallback -->
+
+      </div><!-- /.container -->
+    </section>
+
+  </main><!-- /main -->
+
+
+  <!-- ============================================================
+    FOOTER — from _shared-snippets.html (task 2.3)
+    Satisfies: Req 13.5, 14.5, 14.6
+    ============================================================ -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+
+      <div class="footer__links">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="contact.html">Contact Us</a>
+      </div>
+
+      <p class="footer__disclaimer">
+        Health Synchrony is registered with the HPCSA.
+        Results may vary. All treatments are subject to a medical consultation.
+      </p>
+
+      <p class="footer__popia">
+        &copy; 2025 Health Synchrony. Personal information is processed in accordance with POPIA.
+      </p>
+
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+    STICKY CTA — from _shared-snippets.html (task 3.1)
+    Satisfies: Req 1.3, 1.4, 1.5
+    sticky-cta.js: scrolls to #booking-widget if present, else navigates to contact.html
+    ============================================================ -->
+  <div class="sticky-cta" role="complementary" aria-label="Book consultation">
+    <a
+      href="#booking-widget"
+      class="btn-primary sticky-cta__btn"
+      data-fallback-href="contact.html">
+      Book Consultation
+    </a>
+  </div>
+
+
+  <!-- ES module scripts — placed at end of body for non-blocking load -->
+  <script type="module" src="js/nav.js"></script>
+  <script type="module" src="js/sticky-cta.js"></script>
+
+</body>
+</html>

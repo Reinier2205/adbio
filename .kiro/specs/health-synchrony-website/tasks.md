@@ -12,13 +12,13 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
 
 ### Phase 1 — Skeleton (MVP for CSS/UI Review)
 
-- [ ] 1. Set up `healthsync/` folder structure and CSS foundation
-  - [ ] 1.1 Create the `healthsync/` directory skeleton with all sub-folders
+- [x] 1. Set up `healthsync/` folder structure and CSS foundation
+  - [x] 1.1 Create the `healthsync/` directory skeleton with all sub-folders
     - Create `healthsync/css/pages/`, `healthsync/js/`, `healthsync/images/hero/`, `healthsync/images/team/`, `healthsync/images/treatments/`, `healthsync/images/icons/`, `healthsync/tests/`, `healthsync/fonts/` (empty placeholder)
     - Add `.gitkeep` files in each empty folder so they are tracked
     - _Requirements: 1.6_
 
-  - [ ] 1.2 Create `healthsync/css/tokens.css` — design tokens
+  - [x] 1.2 Create `healthsync/css/tokens.css` — design tokens
     - Define all CSS custom properties: `--color-navy`, `--color-gold`, `--color-sage`, `--color-ivory`, Option B tokens commented out
     - Font tokens: `--font-heading`, `--font-body` with system fallbacks
     - Spacing tokens: `--spacing-section-mobile: 40px`, `--spacing-section-desktop: 64px`, and `--spacing-4` through `--spacing-64`
@@ -26,7 +26,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Border radius, transition, and z-index scale tokens as defined in the design
     - _Requirements: 2.1, 2.2, 2.3_
 
-  - [ ] 1.3 Create `healthsync/css/base.css` — reset, typography, global elements
+  - [x] 1.3 Create `healthsync/css/base.css` — reset, typography, global elements
     - CSS reset (box-sizing, margin/padding zero on `*`)
     - `<html>` and `<body>` base styles with `--font-body`
     - Heading styles (`h1`–`h4`) using `--font-heading` with Playfair Display
@@ -34,13 +34,13 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Mobile-first breakpoint comments: 320px base, 375px, 768px, 1024px, 1440px
     - _Requirements: 2.1, 15.1_
 
-  - [ ] 1.4 Create `healthsync/css/layout.css` — grid, section spacing, breakpoints
+  - [x] 1.4 Create `healthsync/css/layout.css` — grid, section spacing, breakpoints
     - `.container` class: full-width up to `max-width: 1280px`, centered, `padding-inline: var(--spacing-16)` (32px at ≥768px)
     - `.section` class: `padding-block: var(--spacing-section-mobile)` with `@media (min-width: 1024px)` override to `var(--spacing-section-desktop)`
     - Responsive grid helpers: 2-col and 3-col utility classes
     - _Requirements: 2.3_
 
-  - [ ] 1.5 Create `healthsync/css/components.css` — reusable component styles
+  - [x] 1.5 Create `healthsync/css/components.css` — reusable component styles
     - `.btn-primary` and `.btn-secondary` button styles with `min-height: var(--touch-target)`, `min-width: var(--touch-target)`, focus-visible outline
     - `.site-header` and `.primary-nav` shell styles (desktop layout)
     - `.nav-toggle` hamburger button shell (visible ≤768px, hidden ≥768px)
@@ -57,19 +57,19 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - `sr-only` utility class for screen-reader-only text
     - _Requirements: 1.3, 1.4, 2.2, 2.4, 15.5_
 
-  - [ ] 1.6 Create page-specific CSS stubs in `healthsync/css/pages/`
+  - [x] 1.6 Create page-specific CSS stubs in `healthsync/css/pages/`
     - Create `home.css`, `about.css`, `aesthetics.css`, `weight-loss.css`, `iv-therapy.css`, `consultations.css`, `dispensary.css`, `contact.css` — each with a file comment and one placeholder rule so the file is non-empty and linkable
     - _Requirements: 2.2_
 
-- [ ] 2. Build shared header/nav and footer shell (HTML + CSS, no JS)
-  - [ ] 2.1 Create `healthsync/css/components.css` nav dropdown styles
+- [x] 2. Build shared header/nav and footer shell (HTML + CSS, no JS)
+  - [x] 2.1 Create `healthsync/css/components.css` nav dropdown styles
     - Mobile nav drawer: `<nav>` hidden by default, `.nav-open` class reveals it as full-screen overlay
     - Desktop nav: flex row, dropdown `<ul>` absolutely positioned below Services button
     - `aria-current="page"` highlight style
     - Note: this extends the component styles from task 1.5; edit the same file
     - _Requirements: 1.2, 1.8_
 
-  - [ ] 2.2 Create shared header/nav HTML snippet (to be copy-pasted into each page in task 3)
+  - [x] 2.2 Create shared header/nav HTML snippet (to be copy-pasted into each page in task 3)
     - Write the canonical `<header>` + `<nav>` markup per the design specification
     - Include Services dropdown with all 5 service sub-page links
     - Include `.nav-toggle` button with hamburger SVG icon inline
@@ -77,21 +77,21 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Document the snippet in a comment at the top of `index.html` (created in task 3.1)
     - _Requirements: 1.1, 1.2, 18.2, 18.3_
 
-  - [ ] 2.3 Create shared footer HTML snippet
+  - [x] 2.3 Create shared footer HTML snippet
     - Include Privacy Policy link (`href="privacy-policy.html"`), Contact Us link
     - HPCSA disclaimer paragraph: "Health Synchrony is registered with the HPCSA. Results may vary. All treatments are subject to a medical consultation."
     - POPIA copyright paragraph with current year
     - _Requirements: 13.5_
 
-  - [ ] 2.4 Create `healthsync/images/icons/` SVG icons
+  - [x] 2.4 Create `healthsync/images/icons/` SVG icons
     - Hamburger menu icon (`menu.svg`)
     - Close icon (`close.svg`)
     - Chat bubble icon (`chat.svg`) for AI receptionist trigger
     - Inline the icons directly as `<svg>` in HTML where used
     - _Requirements: 12.8_
 
-- [ ] 3. Build Sticky CTA shell (HTML + CSS, no JS behaviour yet)
-  - [ ] 3.1 Add Sticky CTA markup to shared components
+- [x] 3. Build Sticky CTA shell (HTML + CSS, no JS behaviour yet)
+  - [x] 3.1 Add Sticky CTA markup to shared components
     - Write the `.sticky-cta` `<div>` with the `<a>` button per the design spec
     - Include `data-fallback-href="contact.html"` attribute
     - Ensure `min-height: 48px; min-width: 48px` applied via CSS
@@ -152,14 +152,34 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 16.2, 16.5_
 
   - [ ] 4.5 Create `healthsync/iv-therapy.html` — IV Therapy page shell
-    - Standard `<head>` with unique title and description
-    - Link tokens → base → layout → components → `pages/iv-therapy.css`
-    - Shared header/nav + Sticky CTA + shared footer
-    - `<h1>` benefit-driven heading
-    - IV Cards placeholder section `<div id="iv-menu">` with 3 static `.iv-card` HTML placeholders (Energy, Beauty, Immunity), each with category colour bar, name `<h3>`, ingredients `<ul>` (≥3 items), "Best for" paragraph (≤60 chars), CTA link — static HTML to be replaced/augmented by JS in Phase 2
-    - No stock photography, no prices
-    - Booking widget placeholder + inline CTA fallback visible ≥768px
-    - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 16.2, 16.5_
+    - [ ] 4.5.1 Create page skeleton — `<head>`, CSS links, header/nav, footer, Sticky CTA
+      - `<!DOCTYPE html>`, `<html lang="en">`, `<meta charset="UTF-8">`, viewport meta
+      - `<title>IV Drip Therapy | Health Synchrony Centurion</title>` (≤60 chars)
+      - `<meta name="description">` 50–160 chars with "Centurion" and IV therapy keyword
+      - Link all CSS: `tokens.css` → `base.css` → `layout.css` → `components.css` → `pages/iv-therapy.css`
+      - Google Fonts preconnect links
+      - Shared header/nav markup with `aria-current="page"` on IV Therapy link
+      - Shared footer markup
+      - Sticky CTA markup (`data-fallback-href="contact.html"`)
+      - Empty `<main>` placeholder (filled by 4.5.2 and 4.5.3)
+      - _Requirements: 16.2, 16.5_
+
+    - [ ] 4.5.2 Add `<h1>` hero section and IV cards placeholder (`#iv-menu`)
+      - Benefit-driven `<h1>` heading (e.g. "Restore Your Energy, Beauty and Immunity")
+      - Introductory paragraph (no prices, no promotional terms, no stock-photo `<img>`)
+      - `<div id="iv-menu" class="section container">` containing 3 static `.iv-card` HTML placeholders:
+        - **Energy**: `<article class="iv-card iv-card--energy" aria-labelledby="card-energy-title">` with `<div class="iv-card__category-bar">`, `<h3 id="card-energy-title">Energy Boost Drip</h3>`, `<ul class="iv-card__ingredients">` ≥3 items, `<p class="iv-card__best-for"><strong>Best for:</strong> Fatigue recovery and sustained daily energy</p>` (≤60 chars), `<a href="#booking-widget" class="btn-secondary iv-card__cta">Book This Drip</a>`
+        - **Beauty**: same structure, category `iv-card--beauty`, e.g. "Radiance Drip", ingredients Vitamin C / Glutathione / Biotin / Zinc, bestFor ≤60 chars
+        - **Immunity**: same structure, category `iv-card--immunity`, e.g. "Immunity Shield Drip", ≥3 ingredients, bestFor ≤60 chars
+      - _Requirements: 7.1, 7.2, 7.3, 7.4_
+
+    - [ ] 4.5.3 Add booking widget placeholder and inline CTA fallback
+      - `<section class="section container" id="booking-widget">` with heading "Book Your IV Drip Session"
+      - Inline CTA `<a href="contact.html" class="btn-primary">Book a Consultation</a>` visible without scrolling at ≥768px
+      - `<div class="booking-fallback">` with phone, email, and `<a href="contact.html">` (hidden by default via CSS; booking-widget.js will show on timeout)
+      - `<script type="module" src="js/booking-widget.js"></script>` stub comment
+      - `<script type="module" src="js/nav.js"></script>` and `<script type="module" src="js/sticky-cta.js"></script>` tags
+      - _Requirements: 7.5, 16.2_
 
   - [ ] 4.6 Create `healthsync/consultations.html` — Consultations page shell
     - Standard `<head>` with unique title and description
