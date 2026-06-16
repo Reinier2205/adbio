@@ -1,8 +1,18 @@
 {
+  "type": "module",
   "dependencies": {
     "react-router-dom": "^6.30.1"
   },
   "devDependencies": {
-    "@types/react-router-dom": "^5.3.3"
+    "@types/react-router-dom": "^5.3.3",
+    "fast-check": "^3.22.0",
+    "jsdom": "^25.0.1"
+  },
+  "scripts": {
+    "test:static": "node healthsync/tests/static-analysis.test.js",
+    "test:modules": "node --experimental-vm-modules healthsync/tests/modules.test.js",
+    "test:seo": "node healthsync/tests/seo-validation.test.js",
+    "test:browser": "npx playwright test healthsync/tests/browser.test.js",
+    "test": "npm run test:static && npm run test:seo && npm run test:modules"
   }
 }
