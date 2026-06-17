@@ -98,8 +98,8 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Confirm it is `position: fixed` at the bottom of viewport on mobile
     - _Requirements: 1.3, 1.4, 1.5, 15.5_
 
-- [ ] 4. Create all 9 HTML page shells
-  - [ ] 4.1 Create `healthsync/index.html` — Home page shell
+- [x] 4. Create all 9 HTML page shells
+  - [x] 4.1 Create `healthsync/index.html` — Home page shell
     - `<!DOCTYPE html>`, `<html lang="en">`, `<meta charset="UTF-8">`, viewport meta
     - `<title>Health Synchrony | Wellness in Centurion</title>` (≤60 chars)
     - `<meta name="description">` 50–160 chars with "Centurion" and at least one service keyword
@@ -117,7 +117,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Shared footer (from task 2.3)
     - _Requirements: 1.1, 1.7, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 16.1, 16.2, 16.5_
 
-  - [ ] 4.2 Create `healthsync/about.html` — About Us page shell
+  - [x] 4.2 Create `healthsync/about.html` — About Us page shell
     - Standard `<head>` with unique title ≤60 chars and unique description 50–160 chars ("Centurion")
     - Link tokens → base → layout → components → `pages/about.css`
     - Shared header/nav + Sticky CTA + shared footer
@@ -130,7 +130,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - `<script type="application/ld+json">` placeholder comment for Physician schema
     - _Requirements: 4.1, 4.2, 4.4, 4.6, 4.7, 14.4, 16.2, 16.5_
 
-  - [ ] 4.3 Create `healthsync/aesthetics.html` — Aesthetics page shell
+  - [x] 4.3 Create `healthsync/aesthetics.html` — Aesthetics page shell
     - Standard `<head>` with unique title and description
     - Link tokens → base → layout → components → `pages/aesthetics.css`
     - Shared header/nav + Sticky CTA + shared footer
@@ -140,7 +140,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Booking widget placeholder `<div id="booking-widget">` + inline CTA fallback
     - _Requirements: 5.1, 5.2, 5.4, 5.5, 5.6, 5.7, 5.8, 16.2, 16.5_
 
-  - [ ] 4.4 Create `healthsync/weight-loss.html` — Weight Loss page shell
+  - [x] 4.4 Create `healthsync/weight-loss.html` — Weight Loss page shell
     - Standard `<head>` with unique title and description
     - Link tokens → base → layout → components → `pages/weight-loss.css`
     - Shared header/nav + Sticky CTA + shared footer
@@ -151,8 +151,8 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - No prices, no promotional terms
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 16.2, 16.5_
 
-  - [ ] 4.5 Create `healthsync/iv-therapy.html` — IV Therapy page shell
-    - [ ] 4.5.1 Create page skeleton — `<head>`, CSS links, header/nav, footer, Sticky CTA
+  - [x] 4.5 Create `healthsync/iv-therapy.html` — IV Therapy page shell
+    - [x] 4.5.1 Create page skeleton — `<head>`, CSS links, header/nav, footer, Sticky CTA
       - `<!DOCTYPE html>`, `<html lang="en">`, `<meta charset="UTF-8">`, viewport meta
       - `<title>IV Drip Therapy | Health Synchrony Centurion</title>` (≤60 chars)
       - `<meta name="description">` 50–160 chars with "Centurion" and IV therapy keyword
@@ -164,7 +164,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
       - Empty `<main>` placeholder (filled by 4.5.2 and 4.5.3)
       - _Requirements: 16.2, 16.5_
 
-    - [ ] 4.5.2 Add `<h1>` hero section and IV cards placeholder (`#iv-menu`)
+    - [x] 4.5.2 Add `<h1>` hero section and IV cards placeholder (`#iv-menu`)
       - Benefit-driven `<h1>` heading (e.g. "Restore Your Energy, Beauty and Immunity")
       - Introductory paragraph (no prices, no promotional terms, no stock-photo `<img>`)
       - `<div id="iv-menu" class="section container">` containing 3 static `.iv-card` HTML placeholders:
@@ -173,7 +173,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
         - **Immunity**: same structure, category `iv-card--immunity`, e.g. "Immunity Shield Drip", ≥3 ingredients, bestFor ≤60 chars
       - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-    - [ ] 4.5.3 Add booking widget placeholder and inline CTA fallback
+    - [x] 4.5.3 Add booking widget placeholder and inline CTA fallback
       - `<section class="section container" id="booking-widget">` with heading "Book Your IV Drip Session"
       - Inline CTA `<a href="contact.html" class="btn-primary">Book a Consultation</a>` visible without scrolling at ≥768px
       - `<div class="booking-fallback">` with phone, email, and `<a href="contact.html">` (hidden by default via CSS; booking-widget.js will show on timeout)
@@ -181,7 +181,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
       - `<script type="module" src="js/nav.js"></script>` and `<script type="module" src="js/sticky-cta.js"></script>` tags
       - _Requirements: 7.5, 16.2_
 
-  - [ ] 4.6 Create `healthsync/consultations.html` — Consultations page shell
+  - [x] 4.6 Create `healthsync/consultations.html` — Consultations page shell
     - Standard `<head>` with unique title and description
     - Link tokens → base → layout → components → `pages/consultations.css`
     - Shared header/nav + Sticky CTA + shared footer
@@ -193,7 +193,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Booking widget `<div id="booking-widget">` + inline CTA fallback
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 14.4, 16.2, 16.5_
 
-  - [ ] 4.7 Create `healthsync/dispensary.html` — Dispensary page shell
+  - [x] 4.7 Create `healthsync/dispensary.html` — Dispensary page shell
     - Standard `<head>` with unique title and description
     - Link tokens → base → layout → components → `pages/dispensary.css`
     - Shared header/nav + Sticky CTA + shared footer
@@ -202,7 +202,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Contact CTA within main content directing to Contact Us page or phone
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 16.2, 16.5_
 
-  - [ ] 4.8 Create `healthsync/contact.html` — Contact Us page shell
+  - [x] 4.8 Create `healthsync/contact.html` — Contact Us page shell
     - Standard `<head>` with unique title and description
     - Link tokens → base → layout → components → `pages/contact.css`
     - Shared header/nav + Sticky CTA + shared footer
@@ -217,7 +217,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Confirmation message placeholder `<div role="status" hidden>`
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.7, 10.8, 13.1, 13.2, 13.5, 16.2, 16.5_
 
-  - [ ] 4.9 Create `healthsync/privacy-policy.html` — Privacy Policy page shell
+  - [x] 4.9 Create `healthsync/privacy-policy.html` — Privacy Policy page shell
     - Standard `<head>` with unique title and description
     - Link tokens → base → layout → components
     - Shared header/nav + shared footer
@@ -226,7 +226,7 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Effective date, practice name and contact details
     - _Requirements: 13.6, 16.2, 16.5_
 
-- [ ] 5. Phase 1 Checkpoint — Skeleton review
+- [x] 5. Phase 1 Checkpoint — Skeleton review
   - All 9 pages are browsable by opening `healthsync/index.html` in a browser
   - Header, nav, footer, sticky CTA, and hero sections render correctly at 320px, 768px, and 1440px
   - Navy/Gold colour palette and Playfair Display / Montserrat typography are visually applied
@@ -237,8 +237,8 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
 
 ### Phase 2 — Core Interactive JS Components
 
-- [ ] 6. Implement `nav.js` — mobile hamburger navigation
-  - [ ] 6.1 Create `healthsync/js/nav.js` as an ES module
+- [x] 6. Implement `nav.js` — mobile hamburger navigation
+  - [x] 6.1 Create `healthsync/js/nav.js` as an ES module
     - Toggle `aria-expanded` on `.nav-toggle` button and CSS open class on `<nav>`
     - Trap focus within open nav drawer (Tab and Shift+Tab cycle within nav links)
     - Close drawer on `Escape` key or outside click
@@ -246,22 +246,22 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Add `<script type="module" src="js/nav.js">` to all 9 HTML pages
     - _Requirements: 1.2, 1.8, 18.3_
 
-- [ ] 7. Implement `sticky-cta.js` — Sticky CTA behaviour
-  - [ ] 7.1 Create `healthsync/js/sticky-cta.js` as an ES module
+- [x] 7. Implement `sticky-cta.js` — Sticky CTA behaviour
+  - [x] 7.1 Create `healthsync/js/sticky-cta.js` as an ES module
     - On click of `.sticky-cta__btn`: check for `document.querySelector('#booking-widget')`
     - If found → `element.scrollIntoView({ behavior: 'smooth' })`
     - If not found → `window.location.href = element.dataset.fallbackHref`
     - Add `<script type="module" src="js/sticky-cta.js">` to all 9 HTML pages
     - _Requirements: 1.5_
 
-  - [ ]* 7.2 Write property test for Sticky CTA routing (Property 1)
+  - [x]* 7.2 Write property test for Sticky CTA routing (Property 1)
     - **Property 1: Sticky CTA routing correctness**
     - **Validates: Requirements 1.5**
     - Test both branches: DOM with `#booking-widget` present → scrollIntoView called; DOM without → navigate to fallback href
     - Use jsdom to simulate each DOM state
 
-- [ ] 8. Implement `before-after-slider.js` — Before/After image comparison
-  - [ ] 8.1 Create `healthsync/js/before-after-slider.js` as an ES module
+- [x] 8. Implement `before-after-slider.js` — Before/After image comparison
+  - [x] 8.1 Create `healthsync/js/before-after-slider.js` as an ES module
     - Query all `.before-after-slider` elements on DOMContentLoaded
     - For each: inject the `bas__track`, two `<img>` elements (before/after), divider and handle `<button>` per the design spec
     - `<img>` alt attributes: before image `alt="Before treatment"`, after image `alt="After treatment"`; handle `aria-label="Drag to compare before and after"`, `aria-valuemin="0"`, `aria-valuemax="100"`, `aria-valuenow="50"`
@@ -271,27 +271,27 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Add `<script type="module" src="js/before-after-slider.js">` to `aesthetics.html`
     - _Requirements: 5.2, 5.3, 18.5_
 
-  - [ ]* 8.2 Write property test for Before/After Slider ARIA and transition (Property 26)
+  - [x]* 8.2 Write property test for Before/After Slider ARIA and transition (Property 26)
     - **Property 26: Before/After Slider ARIA and transition**
     - **Validates: Requirements 5.3, 18.5**
     - Assert non-empty `alt` on both images, non-empty `aria-label` on handle, `transition` duration is 300ms for every slider instance
 
-- [ ] 9. Implement `journey-map.js` — Interactive weight loss journey
-  - [ ] 9.1 Create `healthsync/js/journey-map.js` as an ES module
+- [x] 9. Implement `journey-map.js` — Interactive weight loss journey
+  - [x] 9.1 Create `healthsync/js/journey-map.js` as an ES module
     - Export `validateJourneyMap(steps)`: return `{ valid: true }` if `steps.length` is 3–5 and every description is 10–40 words; otherwise `{ valid: false, error: '...' }` and `console.warn`
     - Export `selectStep(stepId, steps, containerEl)`: set `aria-selected="true"` on selected step `<li>`, `aria-selected="false"` on all others, render description panel below
     - On DOMContentLoaded: query `<ol class="journey-map">`, read step data from `data-*` attributes or embedded `<script type="application/json">` sibling, call `validateJourneyMap`, wire click handlers
     - Add `<script type="module" src="js/journey-map.js">` to `weight-loss.html`
     - _Requirements: 6.2, 6.3_
 
-  - [ ]* 9.2 Write property test for journey map step count and description length (Property 9)
+  - [x]* 9.2 Write property test for journey map step count and description length (Property 9)
     - **Property 9: Journey map step count and description length**
     - **Validates: Requirements 6.2, 6.3**
     - Use fast-check: generate arrays of 3–5 step objects with descriptions of 10–40 words; assert `validateJourneyMap(steps).valid === true`
     - Generate arrays outside the bounds (0–2, 6+) and assert `valid === false`
 
-- [ ] 10. Implement `iv-menu.js` — IV therapy card rendering
-  - [ ] 10.1 Create `healthsync/js/iv-menu.js` as an ES module
+- [x] 10. Implement `iv-menu.js` — IV therapy card rendering
+  - [x] 10.1 Create `healthsync/js/iv-menu.js` as an ES module
     - Define the IV card data array (minimum 3 cards: Energy, Beauty, Immunity; total ≤10) per design data contract
     - Export `validateIVCards(cards)`: assert count 3–10, all three category types present, each card has `ingredients.length >= 3` and `bestFor.length <= 60`; return `{ valid: true/false }`
     - Render each card as `<article class="iv-card iv-card--{category}">` with category bar, `<h3>`, ingredients `<ul>`, "Best for" paragraph, CTA `<a>`; use `aria-labelledby` linking to the card title
@@ -299,14 +299,14 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Add `<script type="module" src="js/iv-menu.js">` to `iv-therapy.html`
     - _Requirements: 7.1, 7.2, 7.3_
 
-  - [ ]* 10.2 Write property test for IV card collection and structure (Property 10)
+  - [x]* 10.2 Write property test for IV card collection and structure (Property 10)
     - **Property 10: IV card collection and individual card structure**
     - **Validates: Requirements 7.2, 7.3**
     - Use fast-check: generate card arrays with required category coverage; assert `validateIVCards(cards).valid === true`
     - Assert boundary violations are detected
 
-- [ ] 11. Implement `treatment-quiz.js` — Multi-step quiz engine
-  - [ ] 11.1 Create `healthsync/js/treatment-quiz.js` as an ES module
+- [x] 11. Implement `treatment-quiz.js` — Multi-step quiz engine
+  - [x] 11.1 Create `healthsync/js/treatment-quiz.js` as an ES module
     - Define quiz question data: 5 questions (3–7 range), each with options that carry `weight` per service category
     - Export `runQuiz(answers)`: weighted scoring over answers, return `QuizResult` `{ recommendedService, headline, ctaHref }` — never null for valid answer arrays of length 3–7
     - Validate question count on module load: throw console error if `questions.length < 3 || > 7`
@@ -315,13 +315,13 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Add `<script type="module" src="js/treatment-quiz.js">` to `index.html`
     - _Requirements: 3.6, 3.7_
 
-  - [ ]* 11.2 Write property test for treatment quiz recommendation completeness (Property 5)
+  - [x]* 11.2 Write property test for treatment quiz recommendation completeness (Property 5)
     - **Property 5: Treatment quiz recommendation completeness**
     - **Validates: Requirements 3.7**
     - Use fast-check: generate answer arrays of length 3–7; assert `runQuiz(answers)` is non-null, `recommendedService` is non-empty, `ctaHref` ends with `.html`
 
-- [ ] 12. Implement `contact-form.js` — Form validation and POPIA consent
-  - [ ] 12.1 Create `healthsync/js/contact-form.js` as an ES module
+- [x] 12. Implement `contact-form.js` — Form validation and POPIA consent
+  - [x] 12.1 Create `healthsync/js/contact-form.js` as an ES module
     - Export `VALIDATORS` object with `name`, `email`, `phone`, `message`, `consentAppointment` validators per design spec
     - SA phone regex: `/^(\+27|0)[0-9]{9}$/` applied after `value.replace(/\s/g, "")`
     - Export `submitForm(payload)`: run all validators; if any fail, return `{ blocked: true, errors: { fieldName: 'message' } }` without submission; if `consentAppointment === false`, always block
@@ -330,25 +330,25 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Add `<script type="module" src="js/contact-form.js">` to `contact.html`
     - _Requirements: 10.5, 10.6, 10.7, 10.8, 13.1, 13.2, 13.3, 13.4_
 
-  - [ ]* 12.2 Write property test for contact form validators (Property 11)
+  - [x]* 12.2 Write property test for contact form validators (Property 11)
     - **Property 11: Contact form validators accept/reject correctly**
     - **Validates: Requirements 10.5**
     - Use fast-check `fc.emailAddress()`: assert `VALIDATORS.email(email) === true` for all generated emails
     - Use fast-check string filter for non-matching emails: assert `VALIDATORS.email(s) === false`
     - Test SA phone validator with valid and invalid inputs
 
-  - [ ]* 12.3 Write property test for form validation error display and value retention (Property 12)
+  - [x]* 12.3 Write property test for form validation error display and value retention (Property 12)
     - **Property 12: Form validation error display and value retention**
     - **Validates: Requirements 10.6, 13.3**
     - Assert: on invalid submission, `submitForm` returns `blocked: true`, `errors` keys map to invalid fields, valid field values unchanged in returned payload
 
-  - [ ]* 12.4 Write property test for POPIA consent logic (Property 16)
+  - [x]* 12.4 Write property test for POPIA consent logic (Property 16)
     - **Property 16: POPIA consent logic correctness**
     - **Validates: Requirements 13.3, 13.4**
     - Use fast-check: generate valid payloads with `consentAppointment: false`; assert always blocked with `errors.consentAppointment` defined
     - Generate valid payloads with `consentAppointment: true`, `consentMarketing: false`; assert not blocked
 
-- [ ] 13. Phase 2 Checkpoint
+- [x] 13. Phase 2 Checkpoint
   - All JS modules load without errors on their respective pages
   - Before/After Slider drags and transitions at 300ms on aesthetics.html
   - Journey Map steps highlight and show descriptions on weight-loss.html
@@ -360,8 +360,8 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
 
 ### Phase 3 — Third-Party Integrations
 
-- [ ] 14. Implement `booking-widget.js` — Booking embed and fallback
-  - [ ] 14.1 Create `healthsync/js/booking-widget.js` as an ES module
+- [x] 14. Implement `booking-widget.js` — Booking embed and fallback
+  - [x] 14.1 Create `healthsync/js/booking-widget.js` as an ES module
     - Export `initBookingWidget(containerSelector, fallbackSelector)`:
       - Inject `<iframe>` with Jane App / Vagaro embed URL into container element
       - Iframe container: `max-width: 100%`, `overflow: auto`, no fixed height that clips controls; responsive aspect-ratio trick from design
@@ -372,14 +372,14 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Add `initBookingWidget` calls in `index.html`, `aesthetics.html`, `weight-loss.html`, `iv-therapy.html`, `consultations.html` (via inline `<script type="module">` block or separate page script)
     - _Requirements: 3.4, 5.7, 5.8, 6.5, 7.5, 8.4, 11.1, 11.2, 11.3, 11.4_
 
-  - [ ]* 14.2 Write property test for booking widget fallback invariant (Property 3)
+  - [x]* 14.2 Write property test for booking widget fallback invariant (Property 3)
     - **Property 3: Booking widget fallback invariant**
     - **Validates: Requirements 3.4, 5.7, 5.8, 11.2**
     - Simulate timeout firing without `iframe.onload`; assert fallback element visible, contains phone, email, and `contact.html` link
     - Simulate `iframe.onload` within 10s; assert fallback stays hidden
 
-- [ ] 15. Implement `ai-receptionist.js` — Chatbot embed and HPCSA filter
-  - [ ] 15.1 Create `healthsync/js/ai-receptionist.js` as an ES module
+- [x] 15. Implement `ai-receptionist.js` — Chatbot embed and HPCSA filter
+  - [x] 15.1 Create `healthsync/js/ai-receptionist.js` as an ES module
     - Define `BLOCKED_PATTERNS` array per design spec (7 regex patterns)
     - Export `filterResponse(responseText)`: return `{ allowed: false, text: fallbackMessage }` if any pattern matches; `{ allowed: true, text: responseText }` otherwise
     - Define `FAQ_ENTRIES` array (4+ entries: hours, location, booking, services)
@@ -390,25 +390,25 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Add `<script type="module" src="js/ai-receptionist.js">` to all 9 HTML pages
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8_
 
-  - [ ]* 15.2 Write property test for FAQ response length (Property 13)
+  - [x]* 15.2 Write property test for FAQ response length (Property 13)
     - **Property 13: FAQ response length constraint**
     - **Validates: Requirements 12.3**
     - For every entry in `FAQ_ENTRIES`, assert `answer.length <= 500`
     - Use fast-check to generate arbitrary query strings; for any that match, assert returned answer ≤500 chars
 
-  - [ ]* 15.3 Write property test for unmatched FAQ fallback (Property 14)
+  - [x]* 15.3 Write property test for unmatched FAQ fallback (Property 14)
     - **Property 14: Unmatched FAQ produces fallback**
     - **Validates: Requirements 12.4**
     - Use fast-check: generate strings guaranteed not to contain any FAQ keyword; assert `matchFAQ(query) === null`
 
-  - [ ]* 15.4 Write property test for HPCSA content filter (Property 15)
+  - [x]* 15.4 Write property test for HPCSA content filter (Property 15)
     - **Property 15: HPCSA content filter correctness**
     - **Validates: Requirements 12.5, 12.6**
     - Generate strings containing each blocked trigger word; assert `filterResponse(s).allowed === false`
     - Generate strings containing no blocked patterns (filter out); assert `filterResponse(s).allowed === true`
 
-- [ ] 16. Implement `review-widget.js` — Google Reviews loader and fallback
-  - [ ] 16.1 Create `healthsync/js/review-widget.js` as an ES module
+- [x] 16. Implement `review-widget.js` — Google Reviews loader and fallback
+  - [x] 16.1 Create `healthsync/js/review-widget.js` as an ES module
     - Attempt to load Google Places API JS SDK with configured API key
     - Filter reviews to ≤24 months old; compute aggregate star rating
     - If aggregate ≥ 4.0: render star rating element + review excerpts (each ≤250 chars, 3–10 total)
@@ -417,19 +417,19 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Add `<script type="module" src="js/review-widget.js">` to `index.html`
     - _Requirements: 3.5, 17.1, 17.2, 17.3, 17.4, 17.5_
 
-  - [ ]* 16.2 Write property test for review widget fallback invariant (Property 4)
+  - [x]* 16.2 Write property test for review widget fallback invariant (Property 4)
     - **Property 4: Review widget fallback invariant**
     - **Validates: Requirements 3.5, 17.4, 17.5**
     - Simulate API timeout; assert fallback section rendered in viewport, contains ≥1 excerpt and Google Business Profile link
 
-  - [ ]* 16.3 Write property test for review rating display rule (Property 23)
+  - [x]* 16.3 Write property test for review rating display rule (Property 23)
     - **Property 23: Review widget rating display rule**
     - **Validates: Requirements 17.2, 17.3**
     - Use fast-check: generate aggregate ratings ≥ 4.0; assert star rating element visible
     - Generate ratings < 4.0; assert star rating element hidden, Google Business link present
     - Assert all excerpt lengths ≤ 250 and total count 3–10
 
-- [ ] 17. Phase 3 Checkpoint
+- [x] 17. Phase 3 Checkpoint
   - Booking widget iframes render without horizontal scroll at 320px and 1440px
   - Booking widget fallback message appears after simulated 10s timeout
   - AI Receptionist chat opens with greeting and three prompt options on all pages
@@ -440,8 +440,8 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
 
 ### Phase 4 — Performance, SEO & Compliance Polish
 
-- [ ] 18. WebP image pipeline and lazy loading
-  - [ ] 18.1 Audit all `<img>` and `<picture>` elements across all 9 pages
+- [x] 18. WebP image pipeline and lazy loading
+  - [x] 18.1 Audit all `<img>` and `<picture>` elements across all 9 pages
     - Confirm hero images use `fetchpriority="high"` and no `loading="lazy"`
     - Add `loading="lazy" decoding="async"` to every below-fold `<img>` and `<picture>` source
     - Wrap all `<img>` that are not already in `<picture>` elements in `<picture>` with `<source type="image/webp">` sibling + original JPEG/PNG `<img>` fallback
@@ -449,28 +449,28 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Set explicit `width` and `height` on all `<img>` elements to prevent layout shift
     - _Requirements: 2.6, 15.2, 15.3, 18.1_
 
-  - [ ]* 18.2 Write static analysis test for image hygiene (Property 2)
+  - [x]* 18.2 Write static analysis test for image hygiene (Property 2)
     - **Property 2: Comprehensive image hygiene**
     - **Validates: Requirements 2.6, 15.2, 18.1**
     - Node.js + jsdom: for each page, assert every non-decorative `<img>` has non-empty `alt`, every `<picture>` has a `<source type="image/webp">`, every non-hero `<img>` and `<iframe>` has `loading="lazy"`
 
-- [ ] 19. JSON-LD schema injection
-  - [ ] 19.1 Create `healthsync/js/schema.js` — schema injection helper
+- [x] 19. JSON-LD schema injection
+  - [x] 19.1 Create `healthsync/js/schema.js` — schema injection helper
     - Export `injectSchema(schemaObject)`: create `<script type="application/ld+json">` element, set `textContent` to `JSON.stringify(schemaObject)`, append to `document.head`
     - _Requirements: 16.3, 16.4_
 
-  - [ ] 19.2 Inject MedicalBusiness schema on `index.html`
+  - [x] 19.2 Inject MedicalBusiness schema on `index.html`
     - Add inline `<script type="module">` to `index.html` that imports `schema.js` and calls `injectSchema` with the full `MedicalBusiness` object: name, address (Irene Security Estate, Centurion, Gauteng, ZA), telephone, url, `openingHoursSpecification` (Mon–Fri 08:00–17:00)
     - Remove the placeholder comment added in task 4.1
     - _Requirements: 16.3_
 
-  - [ ] 19.3 Inject Physician schema on `about.html`
+  - [x] 19.3 Inject Physician schema on `about.html`
     - Add inline `<script type="module">` to `about.html` that imports `schema.js` and calls `injectSchema` with the full `Physician` object: name "Dr. van Dyk", `medicalSpecialty`, `worksFor` referencing the practice
     - Remove the placeholder comment added in task 4.2
     - _Requirements: 16.4_
 
-- [ ] 20. HPCSA compliance audit pass
-  - [ ] 20.1 Audit all 9 pages for prohibited terms and patterns
+- [x] 20. HPCSA compliance audit pass
+  - [x] 20.1 Audit all 9 pages for prohibited terms and patterns
     - Search all HTML files for: "Specials", "Discounts", "Deals", "BOGO", "buy one get one", "Sale", "Free", "% off", "Save", "Limited offer", "guaranteed result", "you will lose", "guaranteed improvement"
     - Remove or rewrite any matching text nodes, heading text, button labels, and `alt` attributes
     - Verify all treatment labels use HPCSA generic names (not trade names) as primary labels
@@ -478,15 +478,15 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Confirm cybersecurity disclaimer text is exact and visible (not hidden) on `about.html` and `consultations.html`
     - _Requirements: 5.4, 5.5, 5.6, 6.6, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6_
 
-  - [ ]* 20.2 Write static analysis tests for prohibited terms (Properties 7, 8, 18)
+  - [x]* 20.2 Write static analysis tests for prohibited terms (Properties 7, 8, 18)
     - **Property 7: No prohibited promotional terms on any page**
     - **Property 8: No guaranteed outcome language on any page**
     - **Property 18: Cybersecurity disclaimer on required pages**
     - **Validates: Requirements 5.6, 14.2, 14.3, 14.4, 14.5, 4.6, 8.5**
     - Node.js + jsdom: extract all visible text nodes (exclude `<script>`, `<style>`); assert no matches against each prohibited pattern list; assert disclaimer exact string present on `about.html` and `consultations.html`
 
-- [ ] 21. WCAG 2.1 AA audit pass
-  - [ ] 21.1 Audit all pages for WCAG 2.1 AA compliance
+- [x] 21. WCAG 2.1 AA audit pass
+  - [x] 21.1 Audit all pages for WCAG 2.1 AA compliance
     - Confirm all body text and interactive element foreground/background combinations meet 4.5:1 contrast ratio (verify Navy #0A1F3C on Ivory #F5F0E8, Gold #C9A84C on Navy, etc.)
     - Confirm all interactive elements have visible `:focus-visible` outlines
     - Confirm all form inputs have explicit `<label for="...">` associations (matching `id` attributes)
@@ -496,26 +496,26 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Confirm AI Receptionist trigger button has `aria-label`
     - _Requirements: 15.7, 16.5, 18.1, 18.2, 18.3, 18.4, 18.5_
 
-  - [ ]* 21.2 Write static analysis tests for heading hierarchy and form labels (Properties 24, 25)
+  - [x]* 21.2 Write static analysis tests for heading hierarchy and form labels (Properties 24, 25)
     - **Property 24: Logical heading hierarchy on every page**
     - **Property 25: Form inputs associated with labels**
     - **Validates: Requirements 18.2, 18.4**
     - Node.js + jsdom: extract heading elements in DOM order; assert no skipped levels, exactly one `<h1>` per page
     - Assert every `<input>`, `<select>`, `<textarea>` with an `id` has a matching `<label for="...">` on the same page
 
-  - [ ]* 21.3 Write static analysis tests for per-page meta constraints and lang/charset (Properties 21, 22)
+  - [x]* 21.3 Write static analysis tests for per-page meta constraints and lang/charset (Properties 21, 22)
     - **Property 21: Per-page meta title and description constraints**
     - **Property 22: html lang and charset declarations on every page**
     - **Validates: Requirements 16.2, 16.5**
     - Node.js + jsdom: for each page assert `<title>` ≤60 chars, `<meta name="description">` 50–160 chars, both unique across pages, both contain a location keyword
     - Assert `<html lang="en">` and `<meta charset="UTF-8">` present on every page
 
-  - [ ]* 21.4 Write static analysis test for Privacy Policy footer link (Property 17)
+  - [x]* 21.4 Write static analysis test for Privacy Policy footer link (Property 17)
     - **Property 17: Privacy Policy link in every page footer**
     - **Validates: Requirements 13.5**
     - Node.js + jsdom: for each page assert `<footer>` contains `<a href="privacy-policy.html">`
 
-- [ ] 22. Phase 4 Checkpoint
+- [x] 22. Phase 4 Checkpoint
   - All 9 pages pass manual HPCSA copy review (no prohibited terms)
   - Cybersecurity disclaimer visible on about.html and consultations.html
   - JSON-LD schema visible in page source for index.html and about.html
@@ -526,15 +526,15 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
 
 ### Phase 5 — Testing
 
-- [ ] 23. Set up test infrastructure
-  - [ ] 23.1 Initialise test dependencies
+- [x] 23. Set up test infrastructure
+  - [x] 23.1 Initialise test dependencies
     - Confirm `jsdom` and `fast-check` are listed in the root `package.json` `devDependencies` (add if missing: `npm install --save-dev jsdom fast-check`)
     - Create `healthsync/tests/` directory (already exists from task 1.1)
     - Create `healthsync/tests/README.md` documenting all four test layers and run commands
     - _Requirements: (testing infrastructure)_
 
-- [ ] 24. Layer 1 — Static analysis tests (Node.js + jsdom)
-  - [ ] 24.1 Create `healthsync/tests/static-analysis.test.js`
+- [x] 24. Layer 1 — Static analysis tests (Node.js + jsdom)
+  - [x] 24.1 Create `healthsync/tests/static-analysis.test.js`
     - Consolidate all static analysis assertions from tasks 18.2, 20.2, 21.2, 21.3, 21.4 into a single runnable Node.js test file
     - Load each of the 9 HTML files via `fs.readFileSync` and `new JSDOM(html)`
     - Assertions (one `console.assert` or throw per check):
@@ -550,8 +550,8 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
     - Print pass/fail summary to stdout
     - _Requirements: all of the above_
 
-- [ ] 25. Layer 2 — JS module unit and property-based tests (fast-check)
-  - [ ] 25.1 Create `healthsync/tests/modules.test.js`
+- [x] 25. Layer 2 — JS module unit and property-based tests (fast-check)
+  - [x] 25.1 Create `healthsync/tests/modules.test.js`
     - Consolidate all property tests from tasks 7.2, 8.2, 9.2, 10.2, 11.2, 12.2, 12.3, 12.4, 14.2, 15.2, 15.3, 15.4, 16.2, 16.3 into a single runnable Node.js test file
     - Import each module under test using ES module syntax (`import`)
     - Each `fc.assert(fc.property(...))` runs with `{ numRuns: 200 }`
@@ -566,8 +566,8 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
       - AI Receptionist: FAQ keyword queries → expected responses ≤500 chars
     - _Requirements: all properties listed above_
 
-- [ ] 26. Layer 3 — Browser rendering tests (Playwright)
-  - [ ] 26.1 Create `healthsync/tests/browser.test.js` (Playwright)
+- [x] 26. Layer 3 — Browser rendering tests (Playwright)
+  - [x] 26.1 Create `healthsync/tests/browser.test.js` (Playwright)
     - Add Playwright as a dev dependency: `npm install --save-dev @playwright/test`
     - Add `npx playwright install --with-deps chromium` step to test README
     - Tests:
@@ -578,15 +578,15 @@ Plain HTML5 / CSS3 / Vanilla JS static site built inside `healthsync/` within th
       - Property 26 (Playwright variant): on aesthetics.html — check computed transition duration of `.bas__after` is "0.3s" (300ms)
     - _Requirements: 1.5, 4.4, 4.5, 15.4, 15.5, 5.3_
 
-- [ ] 27. Layer 4 — SEO and schema validation tests (Node.js)
-  - [ ] 27.1 Create `healthsync/tests/seo-validation.test.js`
+- [x] 27. Layer 4 — SEO and schema validation tests (Node.js)
+  - [x] 27.1 Create `healthsync/tests/seo-validation.test.js`
     - Property 21 assertions (duplicate from static analysis to run standalone): title ≤60 chars, description 50–160 chars, unique, location keywords present
     - Property 22 assertions: `lang="en"`, `charset="UTF-8"` on every page
     - MedicalBusiness schema validation on `index.html`: parse JSON-LD from `<script type="application/ld+json">`, assert `@type === "MedicalBusiness"`, `address.addressLocality` contains "Centurion", `telephone` present, `openingHoursSpecification` non-empty array
     - Physician schema validation on `about.html`: assert `@type === "Physician"`, `name` contains "van Dyk", `medicalSpecialty` non-empty, `worksFor.@type === "MedicalBusiness"`
     - _Requirements: 16.2, 16.3, 16.4, 16.5_
 
-- [ ] 28. Final Checkpoint — All tests green
+- [x] 28. Final Checkpoint — All tests green
   - Run `node healthsync/tests/static-analysis.test.js` — all assertions pass
   - Run `node healthsync/tests/modules.test.js` — all property tests pass (200 runs each)
   - Run `npx playwright test` — all browser rendering tests pass across all 5 viewport widths

@@ -265,4 +265,6 @@ function buildChatUI() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', buildChatUI);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', buildChatUI);
+}

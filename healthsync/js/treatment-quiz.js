@@ -180,4 +180,6 @@ function initQuiz() {
   renderQuestion(0);
 }
 
-document.addEventListener('DOMContentLoaded', initQuiz);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initQuiz);
+}

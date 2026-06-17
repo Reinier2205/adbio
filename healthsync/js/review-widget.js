@@ -67,11 +67,12 @@ function aggregateRating(reviews) {
  */
 export function renderReviews(reviews, aggregate, container) {
   const clamped = reviews.slice(0, MAX_EXCERPTS);
+  const doc = container.ownerDocument || document;
 
   container.innerHTML = '';
 
   // Star rating — only shown when aggregate ≥ 4.0 (Req 17.3)
-  const ratingEl = document.createElement('div');
+  const ratingEl = doc.createElement('div');
   ratingEl.className = 'review-widget__rating';
   ratingEl.setAttribute('aria-label', `Average rating: ${aggregate.toFixed(1)} out of 5`);
 
@@ -85,10 +86,10 @@ export function renderReviews(reviews, aggregate, container) {
   container.appendChild(ratingEl);
 
   // Review excerpts
-  const list = document.createElement('div');
+  const list = doc.createElement('div');
   list.style.cssText = 'display:flex;flex-direction:column;gap:16px;margin-top:16px;';
   clamped.forEach(review => {
-    const blockquote = document.createElement('blockquote');
+    const blockquote = doc.createElement('blockquote');
     blockquote.className = 'review-excerpt';
     blockquote.innerHTML = `<p>${review.text}</p><cite>— Patient via Google Reviews</cite>`;
     list.appendChild(blockquote);
@@ -97,7 +98,7 @@ export function renderReviews(reviews, aggregate, container) {
 
   // Google Business link — always shown when aggregate < 4.0, optional otherwise
   if (aggregate < 4.0) {
-    const link = document.createElement('a');
+    const link = doc.createElement('a');
     link.href = GOOGLE_BUSINESS_URL;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
@@ -202,4 +203,6 @@ function initReviewWidget() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', initReviewWidget);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initReviewWidget);
+}

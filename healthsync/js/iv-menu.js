@@ -121,4 +121,6 @@ function initIVMenu() {
   IV_CARDS.forEach(card => container.appendChild(renderCard(card)));
 }
 
-document.addEventListener('DOMContentLoaded', initIVMenu);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initIVMenu);
+}

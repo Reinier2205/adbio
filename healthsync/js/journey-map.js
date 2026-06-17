@@ -77,4 +77,6 @@ function initJourneyMap() {
   selectStep(steps[0].id, steps, ol);
 }
 
-document.addEventListener('DOMContentLoaded', initJourneyMap);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initJourneyMap);
+}

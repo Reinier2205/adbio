@@ -94,4 +94,6 @@ function initSliders() {
   document.querySelectorAll('.before-after-slider').forEach(buildSlider);
 }
 
-document.addEventListener('DOMContentLoaded', initSliders);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initSliders);
+}

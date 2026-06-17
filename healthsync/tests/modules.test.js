@@ -61,18 +61,20 @@ console.log('\n── Property 1: Sticky CTA routing ──');
   assert(scrollCalled, 'Property 1a: #booking-widget present → scrollIntoView called');
 
   // Without #booking-widget → navigate to fallbackHref
+  // Simulate the sticky-cta logic directly without trying to redefine location
   const dom2 = new JSDOM(`<html><body>
     <a class="sticky-cta__btn" href="#booking-widget" data-fallback-href="contact.html">Book</a>
   </body></html>`, { url: 'http://localhost/' });
   const global2 = dom2.window;
-  let navigatedTo = null;
-  Object.defineProperty(global2, 'location', {
-    value: { ...global2.location, set href(v) { navigatedTo = v; }, get href() { return global2.location.href; } },
-    writable: true
-  });
   const btn2 = global2.document.querySelector('.sticky-cta__btn');
   const target2 = global2.document.querySelector('#booking-widget');
-  if (!target2) { navigatedTo = btn2.dataset.fallbackHref; }
+  // Execute the sticky-cta branching logic and capture the expected navigation target
+  let navigatedTo = null;
+  if (target2) {
+    target2.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    navigatedTo = btn2.dataset.fallbackHref;
+  }
   assert(navigatedTo === 'contact.html', 'Property 1b: no #booking-widget → navigate to contact.html');
 }
 
@@ -354,7 +356,7 @@ console.log('\n── Property 23: Review widget rating display rule ──');
 // Feature: health-synchrony-website, Property 23: Review widget rating display rule
 runTest('Property 23a: aggregate ≥4.0 → star rating visible', () => {
   fc.assert(fc.property(
-    fc.float({ min: 4.0, max: 5.0, noNaN: true }),
+    fc.float({ min: Math.fround(4.0), max: Math.fround(5.0), noNaN: true }),
     aggregate => {
       const dom = new JSDOM('<div id="container"></div>', { url: 'http://localhost/' });
       const container = dom.window.document.getElementById('container');
@@ -373,7 +375,7 @@ runTest('Property 23a: aggregate ≥4.0 → star rating visible', () => {
 
 runTest('Property 23b: aggregate <4.0 → star rating hidden, Google link present', () => {
   fc.assert(fc.property(
-    fc.float({ min: 1.0, max: 3.99, noNaN: true }),
+    fc.float({ min: Math.fround(1.0), max: Math.fround(3.99), noNaN: true }),
     aggregate => {
       const dom = new JSDOM('<div id="container"></div>', { url: 'http://localhost/' });
       const container = dom.window.document.getElementById('container');

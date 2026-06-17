@@ -78,8 +78,10 @@ export function initBookingWidget(containerSelector, fallbackSelector) {
 }
 
 // Auto-initialise on pages that have #booking-widget
-document.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('booking-widget')) {
-    initBookingWidget('#booking-widget', '#booking-widget .booking-fallback');
-  }
-});
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('booking-widget')) {
+      initBookingWidget('#booking-widget', '#booking-widget .booking-fallback');
+    }
+  });
+}

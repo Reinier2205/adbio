@@ -25,4 +25,6 @@ function initStickyCta() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', initStickyCta);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initStickyCta);
+}

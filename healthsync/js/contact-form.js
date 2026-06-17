@@ -119,4 +119,6 @@ function initContactForm() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', initContactForm);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initContactForm);
+}

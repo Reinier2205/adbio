@@ -82,4 +82,6 @@ function initNav() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', initNav);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initNav);
+}
