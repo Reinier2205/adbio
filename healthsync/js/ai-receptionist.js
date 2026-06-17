@@ -96,20 +96,20 @@ const PROMPT_OPTIONS = [
 ];
 
 function buildChatUI() {
-  // Trigger button
+  // Trigger button — always visible, fixed bottom-right
   const trigger = document.createElement('button');
   trigger.className = 'ai-chat-trigger';
   trigger.setAttribute('aria-label', 'Open AI receptionist chat');
   trigger.setAttribute('aria-expanded', 'false');
   trigger.style.cssText = `
     position: fixed;
-    bottom: 80px;
-    right: 20px;
-    z-index: var(--z-chat, 400);
-    min-width: 48px;
-    min-height: 48px;
+    bottom: 24px;
+    right: 24px;
+    z-index: 500;
     width: 56px;
     height: 56px;
+    min-width: 48px;
+    min-height: 48px;
     border-radius: 50%;
     background-color: var(--color-navy, #0A1F3C);
     color: var(--color-gold, #C9A84C);
@@ -125,52 +125,123 @@ function buildChatUI() {
           stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>
   </svg>`;
 
-  // Chat panel
+  // Chat panel — fixed size, anchored above trigger, never overflows viewport
   const panel = document.createElement('div');
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-label', 'AI receptionist chat');
   panel.setAttribute('aria-modal', 'true');
-  panel.hidden = true;
   panel.style.cssText = `
+    display: none;
     position: fixed;
-    bottom: 148px;
-    right: 20px;
-    z-index: var(--z-chat, 400);
-    width: min(360px, calc(100vw - 40px));
+    bottom: 92px;
+    right: 24px;
+    z-index: 500;
+    width: min(360px, calc(100vw - 48px));
+    height: 460px;
+    max-height: calc(100vh - 120px);
     background: white;
-    border-radius: var(--radius-lg, 16px);
-    box-shadow: 0 8px 32px rgba(10,31,60,0.2);
-    overflow: hidden;
-    display: flex;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(10,31,60,0.25);
     flex-direction: column;
-    max-height: 480px;
     font-family: var(--font-body, system-ui, sans-serif);
+    overflow: hidden;
   `;
 
-  panel.innerHTML = `
-    <div style="background:var(--color-navy,#0A1F3C);color:var(--color-ivory,#F5F0E8);padding:16px;font-weight:600;">
-      Health Synchrony Assistant
-      <button id="chat-close" aria-label="Close chat"
-              style="float:right;background:transparent;border:none;color:inherit;cursor:pointer;font-size:1.25rem;line-height:1;">✕</button>
-    </div>
-    <div id="chat-messages" role="log" aria-live="polite" aria-label="Chat messages"
-         style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;">
-    </div>
-    <div id="chat-input-area" style="padding:12px;border-top:1px solid #eee;display:flex;gap:8px;">
-      <input id="chat-input" type="text" placeholder="Type a message…"
-             aria-label="Chat message input"
-             style="flex:1;padding:8px 12px;border:1px solid #ccc;border-radius:8px;font-size:0.875rem;">
-      <button id="chat-send" class="btn-primary"
-              style="min-width:48px;min-height:48px;padding:0 12px;font-size:0.875rem;">Send</button>
-    </div>`;
+  // Build panel structure with DOM — avoids innerHTML ID conflicts
+  // Header (sticky, always visible)
+  const header = document.createElement('div');
+  header.style.cssText = `
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-navy, #0A1F3C);
+    color: var(--color-ivory, #F5F0E8);
+    padding: 14px 16px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+  `;
+  header.innerHTML = `<span>Health Synchrony Assistant</span>`;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.setAttribute('aria-label', 'Close chat');
+  closeBtn.style.cssText = `
+    background: transparent;
+    border: none;
+    color: var(--color-ivory, #F5F0E8);
+    cursor: pointer;
+    font-size: 1.375rem;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+  `;
+  closeBtn.textContent = '✕';
+  header.appendChild(closeBtn);
+
+  // Messages area (scrollable)
+  const messagesEl = document.createElement('div');
+  messagesEl.setAttribute('role', 'log');
+  messagesEl.setAttribute('aria-live', 'polite');
+  messagesEl.setAttribute('aria-label', 'Chat messages');
+  messagesEl.style.cssText = `
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  `;
+
+  // Input area (sticky at bottom)
+  const inputArea = document.createElement('div');
+  inputArea.style.cssText = `
+    flex-shrink: 0;
+    padding: 12px;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+  `;
+
+  const inputEl = document.createElement('input');
+  inputEl.type = 'text';
+  inputEl.placeholder = 'Type a message…';
+  inputEl.setAttribute('aria-label', 'Chat message input');
+  inputEl.style.cssText = `
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    min-width: 0;
+  `;
+
+  const sendBtn = document.createElement('button');
+  sendBtn.textContent = 'Send';
+  sendBtn.className = 'btn-primary';
+  sendBtn.style.cssText = `
+    flex-shrink: 0;
+    min-width: 64px;
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 0.875rem;
+  `;
+
+  inputArea.appendChild(inputEl);
+  inputArea.appendChild(sendBtn);
+
+  panel.appendChild(header);
+  panel.appendChild(messagesEl);
+  panel.appendChild(inputArea);
 
   document.body.appendChild(trigger);
   document.body.appendChild(panel);
-
-  const messagesEl = panel.querySelector('#chat-messages');
-  const inputEl = panel.querySelector('#chat-input');
-  const sendBtn = panel.querySelector('#chat-send');
-  const closeBtn = panel.querySelector('#chat-close');
 
   function addMessage(text, sender) {
     const div = document.createElement('div');
@@ -211,7 +282,7 @@ function buildChatUI() {
   }
 
   function openChat() {
-    panel.hidden = false;
+    panel.style.display = 'flex';
     trigger.setAttribute('aria-expanded', 'true');
     // Show greeting and prompts on first open
     if (!messagesEl.children.length) {
@@ -250,13 +321,13 @@ function buildChatUI() {
   }
 
   function closeChat() {
-    panel.hidden = true;
+    panel.style.display = 'none';
     trigger.setAttribute('aria-expanded', 'false');
   }
 
   // Toggle on trigger click: opens if closed, closes if open
   trigger.addEventListener('click', () => {
-    if (panel.hidden) {
+    if (panel.style.display === 'none' || panel.style.display === '') {
       openChat();
     } else {
       closeChat();
