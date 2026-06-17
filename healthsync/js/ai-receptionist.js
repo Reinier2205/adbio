@@ -210,52 +210,63 @@ function buildChatUI() {
     botReply(text);
   }
 
-  // Open/close
-  trigger.addEventListener('click', () => {
-    const isOpen = !panel.hidden;
-    panel.hidden = isOpen;
-    trigger.setAttribute('aria-expanded', String(!isOpen));
-    if (!isOpen) {
-      // Show greeting and prompts on first open
-      if (!messagesEl.children.length) {
-        addMessage('Hello! Welcome to Health Synchrony. How can I help you today?', 'bot');
+  function openChat() {
+    panel.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    // Show greeting and prompts on first open
+    if (!messagesEl.children.length) {
+      addMessage('Hello! Welcome to Health Synchrony. How can I help you today?', 'bot');
 
-        // Prompt buttons
-        const promptsDiv = document.createElement('div');
-        promptsDiv.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
-        PROMPT_OPTIONS.forEach(opt => {
-          const btn = document.createElement('button');
-          btn.textContent = opt.label;
-          btn.style.cssText = `
-            background: var(--color-ivory, #F5F0E8);
-            border: 1px solid var(--color-navy, #0A1F3C);
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            text-align: left;
-          `;
-          btn.addEventListener('click', () => {
-            promptsDiv.remove();
-            if (opt.query) {
-              addMessage(opt.label, 'user');
-              botReply(opt.query);
-            } else {
-              addMessage(opt.label, 'user');
-              addMessage('Of course! Type your question below and I\'ll do my best to help.', 'bot');
-            }
-          });
-          promptsDiv.appendChild(btn);
+      // Prompt buttons
+      const promptsDiv = document.createElement('div');
+      promptsDiv.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+      PROMPT_OPTIONS.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt.label;
+        btn.style.cssText = `
+          background: var(--color-ivory, #F5F0E8);
+          border: 1px solid var(--color-navy, #0A1F3C);
+          border-radius: 8px;
+          padding: 8px 12px;
+          font-size: 0.875rem;
+          cursor: pointer;
+          text-align: left;
+        `;
+        btn.addEventListener('click', () => {
+          promptsDiv.remove();
+          if (opt.query) {
+            addMessage(opt.label, 'user');
+            botReply(opt.query);
+          } else {
+            addMessage(opt.label, 'user');
+            addMessage('Of course! Type your question below and I\'ll do my best to help.', 'bot');
+          }
         });
-        messagesEl.appendChild(promptsDiv);
-      }
-      inputEl.focus();
+        promptsDiv.appendChild(btn);
+      });
+      messagesEl.appendChild(promptsDiv);
+    }
+    inputEl.focus();
+  }
+
+  function closeChat() {
+    panel.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+
+  // Toggle on trigger click: opens if closed, closes if open
+  trigger.addEventListener('click', () => {
+    if (panel.hidden) {
+      openChat();
+    } else {
+      closeChat();
+      trigger.focus();
     }
   });
 
+  // X button always closes
   closeBtn.addEventListener('click', () => {
-    panel.hidden = true;
-    trigger.setAttribute('aria-expanded', 'false');
+    closeChat();
     trigger.focus();
   });
 
