@@ -352,17 +352,51 @@
 
 
 /* ------------------------------------------------------------
-   5. HERO
+   5. HERO — Inner-page hero banner (non-carousel pages)
    ------------------------------------------------------------ */
 
 .hero {
   position: relative;
-  min-height: 60vh;
   width: 100%;
-  display: flex;
-  align-items: center;
+  background-color: var(--color-navy);
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(201, 168, 76, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(143, 175, 138, 0.08) 0%, transparent 50%);
+  color: var(--color-ivory);
   overflow: hidden;
-  background-color: var(--color-navy); /* fallback while image loads */
+}
+
+/* Subtle decorative bottom wave separator */
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-gold) 0%, var(--color-sage) 50%, var(--color-gold) 100%);
+}
+
+.hero .container {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+}
+
+.hero h1 {
+  color: var(--color-ivory);
+  margin-bottom: var(--spacing-16);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  line-height: 1.2;
+}
+
+.hero .lead {
+  color: rgba(245, 240, 232, 0.85);
+  max-width: 60ch;
+}
+
+.hero p {
+  color: rgba(245, 240, 232, 0.85);
 }
 
 .hero__media {
@@ -1044,28 +1078,50 @@
     justify-content: flex-start;
   }
 
-  /* ------------------------------------------------------------
-     MOBILE DROPDOWN: hide the nested dropdown list inside the
-     drawer — service sub-page links are shown flat in the list.
-     ------------------------------------------------------------ */
+  /* ── MOBILE DROPDOWN ─────────────────────────────────────────────────────────
+     On mobile, the dropdown list sits INLINE inside the drawer.
+     It is hidden by default and shown when the Services button is expanded.
+     ──────────────────────────────────────────────────────────────────────────── */
 
-  /* Hide the dropdown <ul> on mobile (items shown flat in drawer) */
-  .primary-nav.is-open .has-dropdown .dropdown,
-  .primary-nav.nav-open .has-dropdown .dropdown {
-    display: none !important;
+  /* Default: hide the sub-list; shown only when aria-expanded="true" */
+  .primary-nav.nav-open .has-dropdown .dropdown,
+  .primary-nav.is-open  .has-dropdown .dropdown {
+    display: none;
   }
 
-  /* Override hover/focus-within so it stays hidden on mobile */
-  .primary-nav.is-open .has-dropdown:hover .dropdown,
-  .primary-nav.is-open .has-dropdown:focus-within .dropdown,
-  .primary-nav.nav-open .has-dropdown:hover .dropdown,
-  .primary-nav.nav-open .has-dropdown:focus-within .dropdown {
-    display: none !important;
+  /* Show inline when the Services button is tapped */
+  .primary-nav.nav-open .has-dropdown button[aria-expanded="true"] + .dropdown,
+  .primary-nav.is-open  .has-dropdown button[aria-expanded="true"] + .dropdown {
+    display: flex;
+    flex-direction: column;
+    position: static;         /* inline in the drawer, not absolute */
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    min-width: unset;
+    border-radius: 0;
+    z-index: auto;
   }
 
-  /* Override aria-expanded so it stays hidden on mobile */
-  .primary-nav.is-open .has-dropdown button[aria-expanded="true"] + .dropdown,
-  .primary-nav.nav-open .has-dropdown button[aria-expanded="true"] + .dropdown {
-    display: none !important;
+  /* Sub-link styles inside the mobile drawer */
+  .primary-nav.nav-open .has-dropdown button[aria-expanded="true"] + .dropdown a,
+  .primary-nav.is-open  .has-dropdown button[aria-expanded="true"] + .dropdown a {
+    display: flex;
+    width: 100%;
+    padding-block: var(--spacing-12, 12px);
+    padding-inline: var(--spacing-32);  /* indent beneath "Services" */
+    font-size: var(--font-size-base);
+    color: var(--color-ivory);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 0;
+    background: transparent;
+    text-decoration: none;
+  }
+
+  .primary-nav.nav-open .has-dropdown button[aria-expanded="true"] + .dropdown a:hover,
+  .primary-nav.is-open  .has-dropdown button[aria-expanded="true"] + .dropdown a:hover {
+    color: var(--color-gold);
+    background: transparent;
   }
 }
