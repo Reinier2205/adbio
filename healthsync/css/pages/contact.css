@@ -3,6 +3,247 @@
    pages/contact.css
    ============================================================ */
 
-.page-contact {
-  /* page-specific styles */
+
+/* ------------------------------------------------------------
+   Page layout
+   ------------------------------------------------------------ */
+.page-contact .container {
+  max-width: 720px;
+}
+
+
+/* ------------------------------------------------------------
+   Enquiry form — card wrapper
+   ------------------------------------------------------------ */
+#enquiry-form {
+  margin-top: var(--spacing-32);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: var(--spacing-32);
+  box-shadow:
+    0 1px 3px rgba(10, 31, 60, 0.06),
+    0 8px 32px rgba(10, 31, 60, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-24);
+}
+
+@media (min-width: 768px) {
+  #enquiry-form {
+    padding: 40px 48px;
+  }
+}
+
+/* Form heading — toned-down size, gold accent underline */
+#form-heading {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+  padding-bottom: var(--spacing-16);
+  border-bottom: 2px solid var(--color-gold);
+  margin-bottom: 0;
+}
+
+
+/* ------------------------------------------------------------
+   Form fields — stacked label + control
+   ------------------------------------------------------------ */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-navy);
+  letter-spacing: 0.01em;
+}
+
+/* Required star */
+.form-field label span[aria-hidden] {
+  color: var(--color-gold);
+  margin-left: 2px;
+}
+
+/* Shared input / textarea / select styles */
+.form-field input[type="text"],
+.form-field input[type="email"],
+.form-field input[type="tel"],
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: var(--font-size-base);
+  font-family: var(--font-body);
+  color: var(--color-navy);
+  background: var(--color-ivory);
+  border: 1.5px solid color-mix(in srgb, var(--color-navy) 20%, transparent);
+  border-radius: 12px;
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Placeholder */
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: color-mix(in srgb, var(--color-navy) 35%, transparent);
+}
+
+/* Focus state */
+.form-field input[type="text"]:focus,
+.form-field input[type="email"]:focus,
+.form-field input[type="tel"]:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+  border-color: var(--color-gold);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 20%, transparent);
+}
+
+/* Invalid after interaction */
+.form-field input:user-invalid,
+.form-field textarea:user-invalid,
+.form-field select:user-invalid {
+  border-color: #c0392b;
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.12);
+}
+
+
+/* ------------------------------------------------------------
+   Textarea
+   ------------------------------------------------------------ */
+.form-field textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+/* Hint text below textarea */
+.form-field__hint {
+  font-size: var(--font-size-xs);
+  color: color-mix(in srgb, var(--color-navy) 50%, transparent);
+  margin-top: 2px;
+}
+
+
+/* ------------------------------------------------------------
+   Select — custom arrow
+   ------------------------------------------------------------ */
+.form-field select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230A1F3C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+
+/* ------------------------------------------------------------
+   Consent fieldset
+   ------------------------------------------------------------ */
+.consent-fieldset {
+  border: 1.5px solid color-mix(in srgb, var(--color-navy) 15%, transparent);
+  border-radius: 12px;
+  padding: var(--spacing-16) var(--spacing-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+}
+
+.consent-fieldset legend {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-navy);
+  padding-inline: var(--spacing-8);
+  letter-spacing: 0.01em;
+}
+
+
+/* ------------------------------------------------------------
+   Checkbox rows
+   ------------------------------------------------------------ */
+.form-field--checkbox {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.form-field--checkbox input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  accent-color: var(--color-navy);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.form-field--checkbox label {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+
+/* ------------------------------------------------------------
+   Submit button — full width on mobile, auto on desktop
+   ------------------------------------------------------------ */
+#enquiry-form .btn-primary[type="submit"] {
+  align-self: flex-start;
+  min-width: 180px;
+  padding: 14px 32px;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border-radius: 12px;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 480px) {
+  #enquiry-form .btn-primary[type="submit"] {
+    width: 100%;
+  }
+}
+
+
+/* ------------------------------------------------------------
+   Confirmation message
+   ------------------------------------------------------------ */
+#form-confirmation {
+  border-radius: 12px;
+  padding: var(--spacing-16) var(--spacing-24);
+  background: color-mix(in srgb, var(--color-gold) 10%, white);
+  border: 1.5px solid var(--color-gold);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-navy);
+}
+
+
+/* ------------------------------------------------------------
+   Map container
+   ------------------------------------------------------------ */
+.map-container iframe {
+  border-radius: 16px;
+  display: block;
+}
+
+
+/* ------------------------------------------------------------
+   Contact details block
+   ------------------------------------------------------------ */
+.contact-details p {
+  max-width: none;
+  display: flex;
+  gap: var(--spacing-8);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
 }
