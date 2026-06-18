@@ -122,6 +122,9 @@ let reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.mat
  * @param {HTMLElement} heroEl  The hero section element to populate.
  */
 function renderCarousel(heroEl) {
+  // --- 0. Clear any static fallback content (e.g. no-JS fallback h1) -------
+  heroEl.innerHTML = '';
+
   // --- 1. Update the section element itself ---------------------------------
   heroEl.classList.add('carousel-hero');
   heroEl.setAttribute('aria-roledescription', 'carousel');
