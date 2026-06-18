@@ -19,35 +19,50 @@ const SLIDES = Object.freeze([
     heading: 'Aesthetics',
     tagline: 'Reveal your natural radiance with personalised, medically supervised treatments.',
     cta:     { text: 'Explore Aesthetics', href: 'aesthetics.html' },
-    img:     { src: 'https://picsum.photos/seed/aesthetics/1440/810', alt: 'Aesthetics treatment room at Health Synchrony' },
+    img:     {
+      src: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1440&h=810&fit=crop&crop=center&auto=format&q=80',
+      alt: 'Personalised aesthetic treatment at Health Synchrony Centurion',
+    },
   },
   {
     id:      'weight-loss',
     heading: 'Weight Loss',
     tagline: 'Achieve sustainable results with a medically guided weight-loss programme.',
     cta:     { text: 'Explore Weight Loss', href: 'weight-loss.html' },
-    img:     { src: 'https://picsum.photos/seed/weightloss/1440/810', alt: 'Weight loss consultation at Health Synchrony' },
+    img:     {
+      src: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1440&h=810&fit=crop&crop=center&auto=format&q=80',
+      alt: 'Medical weight loss consultation at Health Synchrony',
+    },
   },
   {
     id:      'iv-therapy',
     heading: 'IV Therapy',
     tagline: 'Replenish and energise with customised intravenous nutrient drips.',
     cta:     { text: 'Explore IV Therapy', href: 'iv-therapy.html' },
-    img:     { src: 'https://picsum.photos/seed/ivtherapy/1440/810', alt: 'IV therapy drip preparation at Health Synchrony' },
+    img:     {
+      src: 'https://images.unsplash.com/photo-1519494026892-272938fd54c2?w=1440&h=810&fit=crop&crop=center&auto=format&q=80',
+      alt: 'IV therapy drip treatment at Health Synchrony Centurion',
+    },
   },
   {
     id:      'consultations',
     heading: 'Consultations',
     tagline: 'Begin your wellness journey with a thorough one-on-one consultation.',
     cta:     { text: 'Book a Consultation', href: 'consultations.html' },
-    img:     { src: 'https://picsum.photos/seed/consultations/1440/810', alt: 'Doctor consultation at Health Synchrony' },
+    img:     {
+      src: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=1440&h=810&fit=crop&crop=center&auto=format&q=80',
+      alt: 'Doctor consultation with Dr van Dyk at Health Synchrony',
+    },
   },
   {
     id:      'dispensary',
     heading: 'Dispensary',
     tagline: 'Access curated supplements and skincare dispensed by our medical team.',
     cta:     { text: 'Visit the Dispensary', href: 'dispensary.html' },
-    img:     { src: 'https://picsum.photos/seed/dispensary/1440/810', alt: 'Dispensary products at Health Synchrony' },
+    img:     {
+      src: 'https://images.unsplash.com/photo-1584308666744-12ce21db7b1b?w=1440&h=810&fit=crop&crop=center&auto=format&q=80',
+      alt: 'Medical dispensary products at Health Synchrony Centurion',
+    },
   },
 ]);
 
