@@ -1,80 +1,27 @@
 /**
- * booking-widget.js — Booking embed loader and fallback
- * ES module. Requirements: 3.4, 5.7, 5.8, 6.5, 7.5, 8.4, 11.1, 11.2, 11.3, 11.4
+ * booking-widget.js — Booking contact fallback
+ * ES module. Requirements: 3.4, 11.1, 11.2, 11.3
  *
- * Property 3: if iframe.onload doesn't fire within 10s → fallback visible
- *             with phone, email, and contact.html link.
- *             if iframe loads within 10s → fallback stays hidden.
+ * NOTE: Online booking iframe is disabled — no booking system is currently
+ * connected. The contact fallback is shown by default.
+ *
+ * To re-enable when a booking URL is available:
+ *   1. Set BOOKING_EMBED_URL to your booking system's embed URL
+ *   2. Uncomment the iframe injection block
+ *   3. Some providers (JaneApp, Calendly, etc.) block iframes — use a
+ *      redirect button instead: <a href="{URL}" target="_blank">
  */
 
 /**
- * Embed URL — replace with real Jane App / Vagaro URL when available.
- * Using a placeholder that will fail gracefully to trigger fallback.
- */
-const BOOKING_EMBED_URL = 'https://healthsynchrony.janeapp.com/';
-const TIMEOUT_MS = 10000;
-
-/**
+ * Shows the booking fallback immediately.
  * @param {string} containerSelector  CSS selector for the widget container element
  * @param {string} fallbackSelector   CSS selector for the fallback element
  */
 export function initBookingWidget(containerSelector, fallbackSelector) {
-  const container = document.querySelector(containerSelector);
   const fallback = document.querySelector(fallbackSelector);
-
-  if (!container) return;
-
-  // Build responsive iframe wrapper
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:relative;width:100%;overflow:auto;';
-
-  const iframe = document.createElement('iframe');
-  iframe.src = BOOKING_EMBED_URL;
-  iframe.title = 'Online appointment booking';
-  iframe.setAttribute('loading', 'lazy');
-  iframe.setAttribute('allowfullscreen', '');
-  iframe.style.cssText = 'width:100%;min-height:600px;border:0;display:block;';
-
-  wrapper.appendChild(iframe);
-
-  // Insert iframe before fallback (or append to container)
-  if (fallback && container.contains(fallback)) {
-    container.insertBefore(wrapper, fallback);
-  } else {
-    container.appendChild(wrapper);
+  if (fallback) {
+    fallback.style.display = '';  /* show — overrides the default display:none */
   }
-
-  // Hide fallback initially — widget is loading
-  if (fallback) fallback.style.display = 'none';
-
-  // Start 10-second timeout
-  const timer = setTimeout(() => {
-    // Timeout fired — show fallback, hide iframe
-    wrapper.style.display = 'none';
-    if (fallback) {
-      fallback.style.display = '';
-      fallback.setAttribute('role', 'alert');
-    } else {
-      // Safety net: Contact Us link in nav remains accessible — no JS needed
-      console.warn('Booking widget timed out and no fallback element found. Contact Us nav link is the fallback.');
-    }
-  }, TIMEOUT_MS);
-
-  // Iframe loaded — clear timeout, keep it visible
-  iframe.addEventListener('load', () => {
-    clearTimeout(timer);
-    if (fallback) fallback.style.display = 'none';
-  });
-
-  // Iframe error — treat as timeout
-  iframe.addEventListener('error', () => {
-    clearTimeout(timer);
-    wrapper.style.display = 'none';
-    if (fallback) {
-      fallback.style.display = '';
-      fallback.setAttribute('role', 'alert');
-    }
-  });
 }
 
 // Auto-initialise on pages that have #booking-widget
