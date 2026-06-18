@@ -6,3 +6,217 @@
 .page-home {
   /* page-specific styles */
 }
+
+/* ── Carousel Hero ────────────────────────── */
+
+.carousel-hero {
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-navy);
+}
+
+.carousel-hero__track {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Slide ───────────────────────────────── */
+
+.carousel-hero__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  pointer-events: none;
+}
+
+.carousel-hero__slide.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Slide Image ─────────────────────────── */
+
+.carousel-hero__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Slide Overlay ───────────────────────── */
+
+.carousel-hero__overlay {
+  position: absolute;
+  inset: 0;
+  /* Semi-transparent navy gradient — raw rgba values required for gradient stops */
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15)   0%,
+    rgba(10, 15, 40, 0.65) 60%,
+    rgba(10, 15, 40, 0.85) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ── Slide Content ───────────────────────── */
+
+.carousel-hero__content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-64) var(--spacing-32);
+}
+
+.carousel-hero__content h1,
+.carousel-hero__content h2 {
+  color: var(--color-ivory);
+  margin-bottom: var(--spacing-16);
+}
+
+.carousel-hero__tagline {
+  color: var(--color-gold);
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-32);
+}
+
+/* ── Controls ────────────────────────────── */
+
+.carousel-hero__controls {
+  position: absolute;
+  bottom: var(--spacing-32);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-16);
+  z-index: var(--z-sticky);
+}
+
+/* ── Arrows ──────────────────────────────── */
+
+.carousel-hero__arrow {
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
+  width: var(--touch-target);
+  height: var(--touch-target);
+  background: transparent;
+  border: 2px solid var(--color-ivory);
+  border-radius: 50%;
+  color: var(--color-ivory);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.carousel-hero__arrow:hover {
+  opacity: 0.8;
+}
+
+.carousel-hero__arrow--prev {
+  position: absolute;
+  left: var(--spacing-16);
+}
+
+.carousel-hero__arrow--next {
+  position: absolute;
+  right: var(--spacing-16);
+}
+
+/* ── Dots ────────────────────────────────── */
+
+.carousel-hero__dots {
+  display: flex;
+  gap: var(--spacing-8);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.carousel-hero__dot {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  border-radius: 50%;
+  background-color: var(--color-ivory);
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast), background-color var(--transition-fast);
+  padding: 0;
+}
+
+.carousel-hero__dot.is-active {
+  background-color: var(--color-gold);
+  opacity: 1;
+}
+
+/* ── Responsive — mobile (max-width: 767px) ─ */
+
+@media (max-width: 767px) {
+  .carousel-hero__content {
+    padding: var(--spacing-32) var(--spacing-16);
+  }
+
+  .carousel-hero__content h1,
+  .carousel-hero__content h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .carousel-hero__tagline {
+    font-size: var(--font-size-sm);
+  }
+
+  .carousel-hero__content .btn-primary {
+    padding: var(--spacing-8) var(--spacing-16);
+  }
+
+  .carousel-hero__arrow--prev {
+    left: var(--spacing-8);
+  }
+
+  .carousel-hero__arrow--next {
+    right: var(--spacing-8);
+  }
+}
+
+/* ── Reduced-motion overrides — JS class ──── */
+
+.carousel-hero--no-motion .carousel-hero__slide {
+  transition: none;
+}
+
+.carousel-hero--no-motion .carousel-hero__arrow {
+  transition: none;
+}
+
+.carousel-hero--no-motion .carousel-hero__dot {
+  transition: none;
+}
+
+/* ── Reduced-motion overrides — OS preference */
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-hero__slide {
+    transition: none;
+  }
+
+  .carousel-hero__arrow {
+    transition: none;
+  }
+
+  .carousel-hero__dot {
+    transition: none;
+  }
+}
