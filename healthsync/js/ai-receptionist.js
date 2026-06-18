@@ -51,7 +51,7 @@ export const FAQ_ENTRIES = [
   },
   {
     keywords: ['book', 'appointment', 'schedule', 'reserve', 'booking'],
-    answer: 'You can book a consultation via our website booking form, by calling us at +27 XX XXX XXXX, or by emailing info@healthsynchrony.co.za. We recommend booking in advance to secure your preferred time.'
+    answer: 'You can book a consultation via our website booking form, by calling us at +27 (87) 152 3671, or by emailing info@drlvandyk.co.za. We recommend booking in advance to secure your preferred time.'
   },
   {
     keywords: ['services', 'offer', 'treat', 'provide', 'available'],
@@ -85,8 +85,8 @@ export function matchFAQ(query) {
 
 // ── Chat UI ───────────────────────────────────────────────────────
 
-const OFFLINE_MSG = 'Our assistant is temporarily unavailable. Please call us at +27 XX XXX XXXX or email info@healthsynchrony.co.za.';
-const UNMATCHED_MSG = 'I\'m not able to answer that right now. Please call us at +27 XX XXX XXXX or email info@healthsynchrony.co.za for assistance.';
+const OFFLINE_MSG = 'Our assistant is temporarily unavailable. Please call us at +27 (87) 152 3671 or email info@drlvandyk.co.za.';
+const UNMATCHED_MSG = 'I\'m not able to answer that right now. Please call us at +27 (87) 152 3671 or email info@drlvandyk.co.za for assistance.';
 const TIMEOUT_MS = 10000;
 
 const PROMPT_OPTIONS = [
