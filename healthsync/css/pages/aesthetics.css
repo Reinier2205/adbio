@@ -8,24 +8,33 @@
 }
 
 /* ------------------------------------------------------------
-   Before / After sliders — constrain height on desktop
+   Before / After sliders — show full image, constrain width on desktop
    ------------------------------------------------------------ */
 
-/* Mobile: let image drive natural height */
+/* Use aspect-ratio so the container has a defined height without cropping.
+   Both images use object-fit: contain so the full face is always visible. */
 .before-after-slider {
-  max-height: 480px;
+  max-height: none;
+  aspect-ratio: 4 / 3;   /* natural portrait-ish ratio — images scale inside */
 }
 
-/* Tablet: tighten slightly */
 @media (min-width: 768px) {
   .before-after-slider {
-    max-height: 420px;
+    max-width: 600px;
+    aspect-ratio: 4 / 3;
   }
 }
 
-/* Desktop: keep it compact so it doesn't dominate the layout */
 @media (min-width: 1024px) {
   .before-after-slider {
-    max-height: 360px;
+    max-width: 520px;
+    aspect-ratio: 4 / 3;
   }
+}
+
+/* Show the whole image — no cropping */
+.before-after-slider .bas__before,
+.before-after-slider .bas__after {
+  object-fit: contain;
+  object-position: center;
 }
