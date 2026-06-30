@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wood Price Comparer V3</title>
+<title>Wood Price Comparer V4</title>
 
 <style>
 body {
@@ -31,25 +31,9 @@ h1, h2 {
 input, select, button {
     width: 100%;
     padding: 10px;
-    margin-top: 5px;
-    margin-bottom: 8px;
+    margin: 5px 0;
     box-sizing: border-box;
     font-size: 14px;
-}
-
-button {
-    cursor: pointer;
-}
-
-.grid {
-    display: grid;
-    gap: 8px;
-}
-
-@media(min-width:800px){
-    .grid {
-        grid-template-columns: repeat(4,1fr);
-    }
 }
 
 table {
@@ -68,23 +52,51 @@ th {
     background: #efefef;
 }
 
+tr.clickable {
+    cursor: pointer;
+}
+
+tr.clickable:active {
+    background: #f0f0f0;
+}
+
 .cheapest {
     background: #dff0d8;
     font-weight: bold;
+}
+
+/* MODAL */
+.modal {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+    padding: 15px;
+    display: none;
+}
+
+.modal h3 {
+    margin-top: 0;
+}
+
+.modal button {
+    margin-top: 8px;
 }
 
 .btn-danger {
     background: #d9534f;
     color: white;
     border: none;
-    padding: 6px;
 }
 
-.btn-edit {
+.btn-primary {
     background: #0275d8;
     color: white;
     border: none;
-    padding: 6px;
 }
 
 .small {
@@ -98,12 +110,6 @@ th {
     gap: 8px;
     font-size: 13px;
 }
-
-@media(min-width:800px){
-    .summary {
-        grid-template-columns: repeat(4,1fr);
-    }
-}
 </style>
 </head>
 
@@ -113,53 +119,30 @@ th {
 
 <div class="card">
 <h1>Wood Price Comparer</h1>
-
 <div class="summary" id="dashboard"></div>
 </div>
 
-<!-- SELLERS -->
 <div class="card">
-<h2>Sellers</h2>
-<input id="newSeller" placeholder="Add seller">
-<button onclick="addSeller()">Add Seller</button>
-
-<select id="filterSeller" onchange="render()"></select>
-</div>
-
-<!-- WOOD TYPES -->
-<div class="card">
-<h2>Wood Types</h2>
-<input id="newWood" placeholder="Add wood type">
-<button onclick="addWood()">Add Wood Type</button>
-
-<select id="filterWood" onchange="render()"></select>
-</div>
-
-<!-- INPUT -->
-<div class="card">
-<h2>Add / Edit Entry</h2>
+<h2>Add Entry</h2>
 
 <select id="seller"></select>
 <select id="wood"></select>
 
 <label>Qty</label>
-<input type="number" id="qty" value="1" min="1">
+<input id="qty" type="number" value="1">
 
-<label>Weight per bag (kg)</label>
-<input type="number" id="weight">
+<label>Weight per bag</label>
+<input id="weight" type="number">
 
-<label>Price (R)</label>
-<input type="number" id="price">
+<label>Price</label>
+<input id="price" type="number">
 
 <input id="notes" placeholder="Notes">
 
-<button onclick="save()">Save Entry</button>
+<button onclick="save()">Save</button>
 </div>
 
-<!-- TABLE -->
 <div class="card">
-<input id="search" placeholder="Search seller or wood..." oninput="render()">
-
 <table>
 <thead>
 <tr>
@@ -170,7 +153,6 @@ th {
 <th>Total</th>
 <th>Price</th>
 <th>R/kg</th>
-<th>Actions</th>
 </tr>
 </thead>
 <tbody id="table"></tbody>
@@ -179,87 +161,59 @@ th {
 
 </div>
 
+<!-- MODAL -->
+<div class="modal" id="modal">
+<h3>Entry Details</h3>
+
+<div id="modalContent"></div>
+
+<button class="btn-primary" onclick="startEdit()">Edit</button>
+<button class="btn-danger" onclick="remove()">Delete</button>
+<button onclick="closeModal()">Close</button>
+</div>
+
 <script>
 
 let sellers = JSON.parse(localStorage.getItem('sellers')) || ['Bossies'];
 let woods = JSON.parse(localStorage.getItem('woods')) || ['Kameeldoring'];
 let entries = JSON.parse(localStorage.getItem('entries')) || [];
 
+let selected = null;
 let editId = null;
 
-function saveStore(){
+function store(){
     localStorage.setItem('sellers', JSON.stringify(sellers));
     localStorage.setItem('woods', JSON.stringify(woods));
     localStorage.setItem('entries', JSON.stringify(entries));
 }
 
-/* SELLERS */
-function addSeller(){
-    let v = document.getElementById('newSeller').value.trim();
-    if(!v || sellers.includes(v)) return;
-    sellers.push(v);
-    saveStore();
-    load();
-}
-
-/* WOODS */
-function addWood(){
-    let v = document.getElementById('newWood').value.trim();
-    if(!v || woods.includes(v)) return;
-    woods.push(v);
-    saveStore();
-    load();
-}
-
-/* LOAD DROPDOWNS */
+/* INIT */
 function load(){
-
     let s = document.getElementById('seller');
-    let fS = document.getElementById('filterSeller');
-
     let w = document.getElementById('wood');
-    let fW = document.getElementById('filterWood');
 
     s.innerHTML = '';
-    fS.innerHTML = '<option value="">All Sellers</option>';
-
     w.innerHTML = '';
-    fW.innerHTML = '<option value="">All Wood</option>';
 
-    sellers.sort().forEach(x=>{
-        s.add(new Option(x,x));
-        fS.add(new Option(x,x));
-    });
-
-    woods.sort().forEach(x=>{
-        w.add(new Option(x,x));
-        fW.add(new Option(x,x));
-    });
+    sellers.sort().forEach(x=>s.add(new Option(x,x)));
+    woods.sort().forEach(x=>w.add(new Option(x,x)));
 }
 
-/* SAVE ENTRY */
+/* SAVE */
 function save(){
-
-    let seller = sellerEl().value;
-    let wood = woodEl().value;
-    let qty = +document.getElementById('qty').value;
-    let weight = +document.getElementById('weight').value;
-    let price = +document.getElementById('price').value;
-    let notes = document.getElementById('notes').value;
-    let date = new Date().toISOString().split('T')[0];
-
-    if(!seller || !wood || !qty || !weight || !price) return;
 
     let entry = {
         id: editId || Date.now(),
-        seller,
-        wood,
-        qty,
-        weight,
-        price,
-        notes,
-        date
+        seller: seller.value,
+        wood: wood.value,
+        qty: +qty.value,
+        weight: +weight.value,
+        price: +price.value,
+        notes: notes.value,
+        date: new Date().toISOString().split('T')[0]
     };
+
+    if(!entry.seller || !entry.wood || !entry.qty || !entry.weight || !entry.price) return;
 
     if(editId){
         entries = entries.map(e=>e.id===editId?entry:e);
@@ -268,66 +222,27 @@ function save(){
         entries.push(entry);
     }
 
-    saveStore();
+    store();
+    render();
     clear();
-    render();
 }
 
+/* CLEAR */
 function clear(){
-    document.getElementById('qty').value = 1;
-    document.getElementById('weight').value = '';
-    document.getElementById('price').value = '';
-    document.getElementById('notes').value = '';
+    qty.value = 1;
+    weight.value = '';
+    price.value = '';
+    notes.value = '';
 }
 
-/* HELPERS */
-function sellerEl(){ return document.getElementById('seller'); }
-function woodEl(){ return document.getElementById('wood'); }
-
-/* DELETE */
-function del(id){
-    entries = entries.filter(e=>e.id!==id);
-    saveStore();
-    render();
-}
-
-/* EDIT */
-function edit(id){
-    let e = entries.find(x=>x.id===id);
-    if(!e) return;
-
-    editId = id;
-
-    sellerEl().value = e.seller;
-    woodEl().value = e.wood;
-    document.getElementById('qty').value = e.qty;
-    document.getElementById('weight').value = e.weight;
-    document.getElementById('price').value = e.price;
-    document.getElementById('notes').value = e.notes;
-}
-
-/* RENDER */
+/* RENDER TABLE */
 function render(){
-
-    let search = document.getElementById('search').value.toLowerCase();
-    let fSeller = document.getElementById('filterSeller').value;
-    let fWood = document.getElementById('filterWood').value;
 
     let data = entries.map(e=>({
         ...e,
         total: e.qty * e.weight,
         cost: e.price / (e.qty * e.weight)
     }));
-
-    if(fSeller) data = data.filter(d=>d.seller===fSeller);
-    if(fWood) data = data.filter(d=>d.wood===fWood);
-
-    if(search){
-        data = data.filter(d =>
-            d.seller.toLowerCase().includes(search) ||
-            d.wood.toLowerCase().includes(search)
-        );
-    }
 
     data.sort((a,b)=>a.cost-b.cost);
 
@@ -339,21 +254,20 @@ function render(){
     data.forEach(d=>{
 
         let tr = document.createElement('tr');
+        tr.className = 'clickable';
 
-        if(d.cost===cheapest) tr.classList.add('cheapest');
+        if(d.cost === cheapest) tr.classList.add('cheapest');
+
+        tr.onclick = ()=>openModal(d.id);
 
         tr.innerHTML = `
-        <td>${d.seller}</td>
-        <td>${d.wood}</td>
-        <td>${d.qty}</td>
-        <td>${d.weight}</td>
-        <td>${(d.qty*d.weight).toFixed(1)}</td>
-        <td>R${d.price.toFixed(2)}</td>
-        <td>R${d.cost.toFixed(2)}</td>
-        <td>
-            <button class="btn-edit" onclick="edit(${d.id})">E</button>
-            <button class="btn-danger" onclick="del(${d.id})">X</button>
-        </td>
+            <td>${d.seller}</td>
+            <td>${d.wood}</td>
+            <td>${d.qty}</td>
+            <td>${d.weight}</td>
+            <td>${(d.total).toFixed(1)}</td>
+            <td>R${d.price.toFixed(2)}</td>
+            <td>R${d.cost.toFixed(2)}</td>
         `;
 
         t.appendChild(tr);
@@ -372,14 +286,60 @@ function dashboard(){
         cost:e.price/(e.qty*e.weight)
     })).sort((a,b)=>a.cost-b.cost);
 
-    let cheapest = calc[0];
-
     document.getElementById('dashboard').innerHTML = `
-    <div><b>Cheapest</b><br>${cheapest.seller}</div>
-    <div><b>R/kg</b><br>R${cheapest.cost.toFixed(2)}</div>
-    <div><b>Entries</b><br>${entries.length}</div>
-    <div><b>Sellers</b><br>${[...new Set(entries.map(e=>e.seller))].length}</div>
+        <div><b>Cheapest</b><br>${calc[0].seller}</div>
+        <div><b>R/kg</b><br>R${calc[0].cost.toFixed(2)}</div>
+        <div><b>Entries</b><br>${entries.length}</div>
+        <div><b>Sellers</b><br>${[...new Set(entries.map(e=>e.seller))].length}</div>
     `;
+}
+
+/* MODAL */
+function openModal(id){
+
+    selected = entries.find(e=>e.id===id);
+
+    if(!selected) return;
+
+    modal.style.display = 'block';
+
+    modalContent.innerHTML = `
+        <div class="small">Seller</div><div>${selected.seller}</div>
+        <div class="small">Wood</div><div>${selected.wood}</div>
+        <div class="small">Qty</div><div>${selected.qty}</div>
+        <div class="small">Weight</div><div>${selected.weight}</div>
+        <div class="small">Price</div><div>R${selected.price}</div>
+        <div class="small">Cost/kg</div><div>R${(selected.price/(selected.qty*selected.weight)).toFixed(2)}</div>
+        <div class="small">Notes</div><div>${selected.notes || '-'}</div>
+    `;
+}
+
+function closeModal(){
+    modal.style.display = 'none';
+    selected = null;
+}
+
+function remove(){
+    entries = entries.filter(e=>e.id!==selected.id);
+    store();
+    closeModal();
+    render();
+}
+
+function startEdit(){
+
+    if(!selected) return;
+
+    editId = selected.id;
+
+    seller.value = selected.seller;
+    wood.value = selected.wood;
+    qty.value = selected.qty;
+    weight.value = selected.weight;
+    price.value = selected.price;
+    notes.value = selected.notes;
+
+    closeModal();
 }
 
 /* INIT */
