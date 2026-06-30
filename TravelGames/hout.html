@@ -55,13 +55,13 @@
   <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
   <!-- MAIN WRAPPER -->
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
     
     <!-- HEADER -->
     <header class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div class="flex items-center gap-3">
         <div class="p-3 bg-brand-100 rounded-2xl text-brand-700">
-          <!-- Flame/Campfire Icon -->
+          <!-- Campfire Icon -->
           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
@@ -80,7 +80,7 @@
       </div>
     </header>
 
-    <!-- NEW ENTRY SECTION (COMPLETE REDESIGN) -->
+    <!-- NEW ENTRY SECTION -->
     <section class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-6">
       <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex justify-between items-center">
         <div class="flex items-center gap-2">
@@ -189,42 +189,122 @@
       </div>
     </section>
 
+    <!-- NEW INTERACTIVE SEARCH, FILTER, AND SORT DASHBOARD -->
+    <section class="bg-slate-900 text-white rounded-3xl p-6 mb-6 shadow-md border border-slate-800">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            Search & Comparison Filters
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Refine wood listings to evaluate the best braai bargains quickly.</p>
+        </div>
+
+        <!-- View Toggle Buttons -->
+        <div class="flex items-center bg-slate-800 p-1 rounded-xl self-start lg:self-auto">
+          <button id="toggle-grid-btn" onclick="setViewMode('grid')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all-200 bg-brand-600 text-white shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            Compact Grid
+          </button>
+          <button id="toggle-list-btn" onclick="setViewMode('list')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all-200 text-slate-400 hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            Full Details
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Search -->
+        <div class="relative">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Search Keywords</label>
+          <div class="relative">
+            <input id="search-input" oninput="handleFilterChange()" type="text" placeholder="Search seller or wood..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <span class="absolute left-3 top-3 text-slate-500">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- Filter by Wood -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Filter Wood Type</label>
+          <select id="filter-wood" onchange="handleFilterChange()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer">
+            <option value="all">All Woods</option>
+          </select>
+        </div>
+
+        <!-- Filter by Seller -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Filter Seller</label>
+          <select id="filter-seller" onchange="handleFilterChange()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer">
+            <option value="all">All Sellers</option>
+          </select>
+        </div>
+
+        <!-- Sort By -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Listings</label>
+          <select id="sort-by" onchange="handleFilterChange()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer">
+            <option value="cost-asc">Best Value (R/Kg: Low to High)</option>
+            <option value="cost-desc">Worst Value (R/Kg: High to Low)</option>
+            <option value="price-asc">Cheapest Package Price</option>
+            <option value="weight-desc">Heaviest Payload First</option>
+            <option value="seller-asc">Seller Name (A-Z)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
     <!-- LIST OF ENTRIES -->
     <section class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-      <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+      <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
         <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
             <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
           </svg>
-          Comparison Overview
+          <span id="overview-title">Wood Price Compare Grid</span>
         </h2>
-        <span id="count-badge" class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full font-medium">0 items</span>
+        <span id="count-badge" class="bg-brand-100 text-brand-800 text-xs px-2.5 py-1 rounded-full font-bold">0 items</span>
       </div>
 
-      <!-- DESKTOP TABLE -->
-      <div class="hidden md:block overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-50/50 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400">
-              <th class="py-4 px-6">Seller</th>
-              <th class="py-4 px-6">Wood Type</th>
-              <th class="py-4 px-6 text-center">Qty</th>
-              <th class="py-4 px-6 text-center">Bag Wt</th>
-              <th class="py-4 px-6 text-center">Total Kg</th>
-              <th class="py-4 px-6 text-right">Price</th>
-              <th class="py-4 px-6 text-right">R/kg</th>
-              <th class="py-4 px-6 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="table-body" class="divide-y divide-slate-100 text-sm">
-            <!-- Dynamic Rows -->
-          </tbody>
-        </table>
+      <!-- COMPACT COMPARE GRID VIEW (NEW - Default, Scannable Cards) -->
+      <div id="grid-compare-view" class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Dynamic Compact Compare Cards Go Here -->
       </div>
 
-      <!-- MOBILE LIST (CARDS) -->
-      <div id="mobile-cards" class="block md:hidden p-4 space-y-4">
-        <!-- Dynamic Cards -->
+      <!-- FULL DETAILED VIEW (List / Table layout) - Optional Toggle -->
+      <div id="list-details-view" class="hidden">
+        <!-- DESKTOP TABLE -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <th class="py-4 px-6">Seller</th>
+                <th class="py-4 px-6">Wood Type</th>
+                <th class="py-4 px-6 text-center">Qty</th>
+                <th class="py-4 px-6 text-center">Bag Wt</th>
+                <th class="py-4 px-6 text-center">Total Kg</th>
+                <th class="py-4 px-6 text-right">Price</th>
+                <th class="py-4 px-6 text-right">R/kg</th>
+                <th class="py-4 px-6 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-slate-100 text-sm">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- MOBILE FULL DETAIL CARDS -->
+        <div id="mobile-cards" class="block md:hidden p-4 space-y-4">
+          <!-- Dynamic Cards -->
+        </div>
       </div>
 
       <!-- EMPTY STATE -->
@@ -234,14 +314,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
         </div>
-        <h3 class="text-slate-700 font-semibold mb-1">No compared wood entries yet</h3>
-        <p class="text-slate-400 text-xs max-w-sm">Add different sellers and pack sizes to find out which one offers the most braai wood for your Rand.</p>
+        <h3 class="text-slate-700 font-semibold mb-1">No matched results</h3>
+        <p id="empty-subtext" class="text-slate-400 text-xs max-w-sm">Add different wood items or clear the active search filter constraints above.</p>
       </div>
 
     </section>
   </div>
 
-  <!-- ADD OPTION MODAL (REPLACES BROWSER PROMPTS) -->
+  <!-- ADD OPTION MODAL -->
   <div id="add-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
     <div class="bg-white rounded-3xl max-w-md w-full shadow-xl overflow-hidden transform scale-95 transition-transform duration-200">
       <div class="p-6">
@@ -269,7 +349,8 @@
     let entries = JSON.parse(localStorage.getItem('travelgames_entries')) || [];
 
     let editId = null;
-    let modalType = ''; // 'seller' or 'wood'
+    let modalType = ''; 
+    let activeViewMode = 'grid'; // 'grid' (scannable compare view) or 'list' (details table)
 
     /* ---------- INPUT REFERENCE ELEMENTS ---------- */
     const sellerSelect = document.getElementById('seller-select');
@@ -283,6 +364,12 @@
     const btnSaveText = document.getElementById('btn-save-text');
     const btnCancel = document.getElementById('btn-cancel');
     const editIndicator = document.getElementById('edit-indicator');
+
+    /* ---------- FILTER ELEMENTS ---------- */
+    const filterWood = document.getElementById('filter-wood');
+    const filterSeller = document.getElementById('filter-seller');
+    const sortBy = document.getElementById('sort-by');
+    const searchInput = document.getElementById('search-input');
 
     /* ---------- TOAST SYSTEM ---------- */
     function showToast(message, type = 'success') {
@@ -305,17 +392,15 @@
             </svg>
           `}
         </span>
-        <span class="font-medium">${message}</span>
+        <span class="font-semibold text-xs sm:text-sm">${message}</span>
       `;
 
       container.appendChild(toast);
       
-      // Animate entry
       setTimeout(() => {
         toast.classList.remove('translate-y-4', 'opacity-0');
       }, 50);
 
-      // Animate exit & removal
       setTimeout(() => {
         toast.classList.add('translate-y-4', 'opacity-0');
         setTimeout(() => toast.remove(), 300);
@@ -337,7 +422,7 @@
       sellerSelect.innerHTML = '';
       woodSelect.innerHTML = '';
 
-      // Sort alphabetically for clean indexing
+      // Main selector forms
       sellers.sort().forEach(s => {
         sellerSelect.add(new Option(s, s));
       });
@@ -346,9 +431,54 @@
         woodSelect.add(new Option(w, w));
       });
 
-      // Restore selections if valid
       if (sellers.includes(currentSelectedSeller)) sellerSelect.value = currentSelectedSeller;
       if (woods.includes(currentSelectedWood)) woodSelect.value = currentSelectedWood;
+
+      // Filter panels
+      const prevWoodFilter = filterWood.value;
+      const prevSellerFilter = filterSeller.value;
+
+      filterWood.innerHTML = '<option value="all">All Woods</option>';
+      filterSeller.innerHTML = '<option value="all">All Sellers</option>';
+
+      woods.forEach(w => {
+        filterWood.add(new Option(w, w));
+      });
+      sellers.forEach(s => {
+        filterSeller.add(new Option(s, s));
+      });
+
+      filterWood.value = prevWoodFilter || 'all';
+      filterSeller.value = prevSellerFilter || 'all';
+    }
+
+    /* ---------- VIEW TOGGLING ---------- */
+    function setViewMode(mode) {
+      activeViewMode = mode;
+      const gridView = document.getElementById('grid-compare-view');
+      const listView = document.getElementById('list-details-view');
+      const gridBtn = document.getElementById('toggle-grid-btn');
+      const listBtn = document.getElementById('toggle-list-btn');
+      const overviewTitle = document.getElementById('overview-title');
+
+      if (mode === 'grid') {
+        gridView.classList.remove('hidden');
+        listView.classList.add('hidden');
+        
+        // Button Styles
+        gridBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all-200 bg-brand-600 text-white shadow-sm";
+        listBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all-200 text-slate-400 hover:text-white";
+        overviewTitle.innerText = "Wood Price Compare Grid";
+      } else {
+        gridView.classList.add('hidden');
+        listView.classList.remove('hidden');
+
+        // Button Styles
+        listBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all-200 bg-brand-600 text-white shadow-sm";
+        gridBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all-200 text-slate-400 hover:text-white";
+        overviewTitle.innerText = "Comprehensive Wood Details";
+      }
+      render();
     }
 
     /* ---------- MODAL CONTROLS ---------- */
@@ -516,29 +646,36 @@
       inputWeight.value = item.weight;
       inputPrice.value = item.price;
 
-      // Update Form UI state
       formTitle.innerText = 'Edit Existing Entry';
       btnSaveText.innerText = 'Apply Updates';
       editIndicator.classList.remove('hidden');
       btnCancel.classList.remove('hidden');
 
-      // Scroll smoothly to form
       document.getElementById('form-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
       showToast('Loading details into edit fields');
     }
 
+    /* ---------- LIVE FILTER & SORT HANDLE ---------- */
+    function handleFilterChange() {
+      render();
+    }
+
     /* ---------- COMPILER & RENDER ---------- */
     function render() {
+      const gridView = document.getElementById('grid-compare-view');
       const tableBody = document.getElementById('table-body');
       const mobileCards = document.getElementById('mobile-cards');
       const emptyState = document.getElementById('empty-state');
+      const emptySubtext = document.getElementById('empty-subtext');
       const countBadge = document.getElementById('count-badge');
       const summaryBadge = document.getElementById('summary-badge');
 
       if (entries.length === 0) {
+        gridView.innerHTML = '';
         tableBody.innerHTML = '';
         mobileCards.innerHTML = '';
         emptyState.classList.remove('hidden');
+        emptySubtext.innerText = "Add different sellers and pack sizes to find out which one offers the most braai wood for your Rand.";
         countBadge.innerText = '0 items';
         summaryBadge.innerHTML = `
           <span class="animate-pulse flex h-2 w-2 rounded-full bg-slate-400"></span>
@@ -547,38 +684,150 @@
         return;
       }
 
-      emptyState.classList.add('hidden');
-      countBadge.innerText = `${entries.length} item${entries.length > 1 ? 's' : ''}`;
+      // Pre-compute overall cheapest R/kg rate
+      const overallCheapest = Math.min(...entries.map(e => e.price / (e.qty * e.weight)));
 
-      // Calculate total kgs and Rands per kg
-      const processed = entries.map(e => {
+      /* --- STEP 1: APPLY FILTERS --- */
+      const searchQuery = searchInput.value.toLowerCase().trim();
+      const selectedWoodFilter = filterWood.value;
+      const selectedSellerFilter = filterSeller.value;
+
+      let processed = entries.map(e => {
         const totalKg = e.qty * e.weight;
         const randPerKg = totalKg > 0 ? e.price / totalKg : 0;
         return { ...e, totalKg, randPerKg };
       });
 
-      // Find the absolute cheapest choice
-      const cheapestPrice = Math.min(...processed.map(p => p.randPerKg));
+      // Filter logic
+      processed = processed.filter(item => {
+        const matchesSearch = item.seller.toLowerCase().includes(searchQuery) || 
+                              item.wood.toLowerCase().includes(searchQuery);
+        const matchesWood = selectedWoodFilter === 'all' || item.wood === selectedWoodFilter;
+        const matchesSeller = selectedSellerFilter === 'all' || item.seller === selectedSellerFilter;
+        return matchesSearch && matchesWood && matchesSeller;
+      });
 
-      // Build desktop table UI
+      /* --- STEP 2: APPLY SORTING --- */
+      const currentSort = sortBy.value;
+      if (currentSort === 'cost-asc') {
+        processed.sort((a, b) => a.randPerKg - b.randPerKg);
+      } else if (currentSort === 'cost-desc') {
+        processed.sort((a, b) => b.randPerKg - a.randPerKg);
+      } else if (currentSort === 'price-asc') {
+        processed.sort((a, b) => a.price - b.price);
+      } else if (currentSort === 'weight-desc') {
+        processed.sort((a, b) => b.totalKg - a.totalKg);
+      } else if (currentSort === 'seller-asc') {
+        processed.sort((a, b) => a.seller.localeCompare(b.seller));
+      }
+
+      // If no entries match filters, show refined empty state
+      if (processed.length === 0) {
+        gridView.innerHTML = '';
+        tableBody.innerHTML = '';
+        mobileCards.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        emptySubtext.innerText = "No listings match your search criteria. Try modifying your filter settings above.";
+        countBadge.innerText = '0 items';
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      countBadge.innerText = `${processed.length} item${processed.length > 1 ? 's' : ''}`;
+
+      // Reset components
+      gridView.innerHTML = '';
       tableBody.innerHTML = '';
       mobileCards.innerHTML = '';
 
+      /* --- STEP 3: RENDER VIEWS --- */
       processed.forEach(item => {
-        const isCheapest = item.randPerKg === cheapestPrice;
-        const rowBg = isCheapest ? 'bg-emerald-50/70 border-emerald-100 hover:bg-emerald-100/50' : 'hover:bg-slate-50/50';
-        const brandBadge = isCheapest 
-          ? `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ml-1">★ Best Value</span>`
+        const isOverallCheapest = item.randPerKg === overallCheapest;
+        
+        // Relative score color indicator: Best deals are green, worst are red/yellow.
+        // Difference ratio relative to overall cheapest
+        const ratio = overallCheapest / item.randPerKg; // 1.0 down to ~0.1
+        let indicatorBg = 'bg-red-500';
+        let indicatorText = 'Suboptimal Deal';
+        let indicatorBorder = 'border-red-200';
+        
+        if (ratio >= 0.9) {
+          indicatorBg = 'bg-emerald-500';
+          indicatorText = 'Excellent Deal';
+          indicatorBorder = 'border-emerald-200';
+        } else if (ratio >= 0.75) {
+          indicatorBg = 'bg-amber-500';
+          indicatorText = 'Good Deal';
+          indicatorBorder = 'border-amber-200';
+        }
+
+        /* -------------------------------------------
+           RENDER COMPACT COMPARE GRID (Ultra-Scan)
+           ------------------------------------------- */
+        const gridCard = document.createElement('div');
+        gridCard.className = `p-4 rounded-2xl border transition-all-200 bg-white hover:shadow-md flex flex-col justify-between ${isOverallCheapest ? 'ring-2 ring-emerald-500/80 border-transparent shadow-sm' : 'border-slate-100'}`;
+        gridCard.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start gap-2 mb-2">
+              <span class="bg-slate-100 text-slate-700 font-bold px-2.5 py-1 rounded-lg text-[10px] uppercase tracking-wide truncate max-w-[120px]">${item.wood}</span>
+              <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${isOverallCheapest ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+                <span class="h-1.5 w-1.5 rounded-full ${isOverallCheapest ? 'bg-emerald-500' : indicatorBg}"></span>
+                ${isOverallCheapest ? '⭐ BEST DEAL' : indicatorText}
+              </span>
+            </div>
+            
+            <div class="mb-3">
+              <h3 class="font-extrabold text-slate-900 text-base leading-tight truncate" title="${item.seller}">${item.seller}</h3>
+            </div>
+
+            <!-- Essential Compare Figure -->
+            <div class="flex items-baseline gap-1 mb-3">
+              <span class="text-3xl font-extrabold tracking-tight ${isOverallCheapest ? 'text-emerald-700' : 'text-slate-900'}">R${item.randPerKg.toFixed(2)}</span>
+              <span class="text-slate-400 font-medium text-xs">/ kg</span>
+            </div>
+
+            <!-- Custom Compact Pack Line -->
+            <div class="text-[11px] text-slate-500 flex items-center gap-2 mb-4">
+              <span>Pack Price: <strong>R${item.price.toFixed(2)}</strong></span>
+              <span class="text-slate-300">•</span>
+              <span>Yield: <strong>${item.totalKg.toFixed(1)} kg</strong> (${item.qty} × ${item.weight}kg)</span>
+            </div>
+          </div>
+
+          <!-- Quick Action Row -->
+          <div class="border-t border-slate-50 pt-3 flex justify-between items-center">
+            <span class="text-[10px] font-semibold text-slate-400">Total: R${item.price.toFixed(0)}</span>
+            <div class="flex gap-2">
+              <button onclick="loadForEdit(${item.id})" class="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-all-200" title="Edit row">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+              <button onclick="deleteEntry(${item.id})" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all-200" title="Delete row">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+        gridView.appendChild(gridCard);
+
+        /* -------------------------------------------
+           RENDER FULL DETAILED LIST (Alternative Toggle)
+           ------------------------------------------- */
+        const brandBadge = isOverallCheapest 
+          ? `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1">★ Best Value</span>`
           : '';
 
-        // Desktop Table Element
+        // Desktop Table Rows
         const tr = document.createElement('tr');
-        tr.className = `transition-all-200 border-b border-slate-100 ${rowBg}`;
+        tr.className = `transition-all-200 border-b border-slate-100 ${isOverallCheapest ? 'bg-emerald-50/50 hover:bg-emerald-100/40' : 'hover:bg-slate-50/50'}`;
         tr.innerHTML = `
           <td class="py-4 px-6 font-semibold text-slate-800">
             <div class="flex flex-col">
               <span>${item.seller}</span>
-              ${isCheapest ? `<span class="text-emerald-600 text-xs font-semibold">Most Cost Efficient</span>` : ''}
+              ${isOverallCheapest ? `<span class="text-emerald-600 text-xs font-semibold">Most Cost Efficient</span>` : ''}
             </div>
           </td>
           <td class="py-4 px-6 text-slate-600 font-medium">
@@ -589,7 +838,7 @@
           <td class="py-4 px-6 text-center text-slate-700 font-bold">${item.totalKg.toFixed(1)} kg</td>
           <td class="py-4 px-6 text-right font-medium text-slate-600">R${item.price.toFixed(2)}</td>
           <td class="py-4 px-6 text-right">
-            <span class="font-extrabold text-sm ${isCheapest ? 'text-emerald-700' : 'text-slate-800'}">
+            <span class="font-extrabold text-sm ${isOverallCheapest ? 'text-emerald-700' : 'text-slate-800'}">
               R${item.randPerKg.toFixed(2)}
             </span>
             <span class="text-slate-400 text-xs">/kg</span>
@@ -611,8 +860,8 @@
         `;
         tableBody.appendChild(tr);
 
-        // Mobile Responsive card
-        const cardBg = isCheapest ? 'bg-emerald-50/70 border-emerald-200' : 'bg-white border-slate-100';
+        // Mobile Full Detail cards fallback
+        const cardBg = isOverallCheapest ? 'bg-emerald-50/70 border-emerald-200' : 'bg-white border-slate-100';
         const cardDiv = document.createElement('div');
         cardDiv.className = `p-4 rounded-2xl border shadow-sm flex flex-col gap-3 ${cardBg}`;
         cardDiv.innerHTML = `
@@ -622,8 +871,8 @@
               <span class="inline-block mt-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px] font-semibold">${item.wood}</span>
             </div>
             <div class="text-right">
-              <span class="text-xs font-semibold text-slate-400">R/kg rate</span>
-              <div class="font-extrabold text-base ${isCheapest ? 'text-emerald-700' : 'text-slate-800'}">R${item.randPerKg.toFixed(2)}/kg</div>
+              <span class="text-[10px] font-semibold text-slate-400">R/kg rate</span>
+              <div class="font-extrabold text-base ${isOverallCheapest ? 'text-emerald-700' : 'text-slate-800'}">R${item.randPerKg.toFixed(2)}/kg</div>
             </div>
           </div>
           
@@ -657,12 +906,17 @@
         mobileCards.appendChild(cardDiv);
       });
 
-      // Update Top pick recommendation
-      const best = processed.sort((a,b) => a.randPerKg - b.randPerKg)[0];
+      // Update Top Pick Recommendation Widget
+      const overallCheapestItem = entries.map(e => {
+        const totalKg = e.qty * e.weight;
+        const randPerKg = totalKg > 0 ? e.price / totalKg : 0;
+        return { ...e, totalKg, randPerKg };
+      }).sort((a,b) => a.randPerKg - b.randPerKg)[0];
+
       summaryBadge.innerHTML = `
         <span class="flex h-2 w-2 rounded-full bg-emerald-500"></span>
         <span class="text-slate-700 font-semibold text-xs sm:text-sm">
-          🏆 Best Value: <span class="text-brand-700 font-bold">${best.seller}</span> (${best.wood}) @ <span class="text-emerald-700 font-extrabold">R${best.randPerKg.toFixed(2)}/kg</span>
+          🏆 Top Deal: <span class="text-brand-700 font-bold">${overallCheapestItem.seller}</span> (${overallCheapestItem.wood}) @ <span class="text-emerald-700 font-extrabold">R${overallCheapestItem.randPerKg.toFixed(2)}/kg</span>
         </span>
       `;
     }
