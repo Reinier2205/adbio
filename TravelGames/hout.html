@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wood Price Comparer V7</title>
+<title>Wood Price Comparer V7.1</title>
 
 <style>
 body {
@@ -28,18 +28,20 @@ h1 {
     margin: 0 0 10px 0;
 }
 
-/* ENTRY BAR */
+/* ENTRY ROW (FIXED) */
 .entry-bar {
     display: grid;
-    grid-template-columns: 1fr 1fr 70px 80px 100px auto;
+    grid-template-columns: 1.4fr 1.4fr 0.6fr 0.8fr 1fr 0.6fr;
     gap: 6px;
     align-items: center;
 }
 
-.entry-bar input,
-.entry-bar select {
+.entry-bar select,
+.entry-bar input {
     padding: 8px;
     font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .entry-bar button {
@@ -48,6 +50,7 @@ h1 {
     background: #0275d8;
     color: white;
     border: none;
+    cursor: pointer;
 }
 
 /* TABLE */
@@ -107,10 +110,6 @@ tr.clickable {
     color: white;
     border: none;
 }
-
-.summary {
-    font-size: 13px;
-}
 </style>
 </head>
 
@@ -120,10 +119,10 @@ tr.clickable {
 
 <div class="card">
 <h1>Wood Price Comparer</h1>
-<div id="dashboard" class="summary"></div>
+<div id="dashboard"></div>
 </div>
 
-<!-- ENTRY BAR -->
+<!-- ENTRY BAR (RESTORED CLEAN FLOW) -->
 <div class="card">
 <div class="entry-bar">
 
@@ -190,7 +189,7 @@ function normKey(v){
     return norm(v).toLowerCase();
 }
 
-/* ---------- SAVE ---------- */
+/* ---------- STORE ---------- */
 
 function store(){
     localStorage.setItem('sellers', JSON.stringify(sellers));
@@ -198,15 +197,12 @@ function store(){
     localStorage.setItem('entries', JSON.stringify(entries));
 }
 
-/* ---------- LOAD DROPDOWNS ---------- */
+/* ---------- LOAD DROPDOWNS (NO UI BREAK) ---------- */
 
 function load(){
 
     seller.innerHTML = '';
     wood.innerHTML = '';
-
-    seller.add(new Option('+ Add seller', '__addSeller__'));
-    wood.add(new Option('+ Add wood type', '__addWood__'));
 
     sellers.sort().forEach(s=>{
         seller.add(new Option(s,s));
@@ -217,56 +213,37 @@ function load(){
     });
 }
 
-/* ---------- HANDLE ADD SELLER ---------- */
+/* ---------- ADD NEW SELLER / WOOD (SAFE FLOW) ---------- */
 
 function handleSeller(sel){
 
-    if(sel.value === '__addSeller__'){
-        let v = norm(prompt('Enter seller name'));
+    let v = norm(sel.value);
+    if(!v) return;
 
-        if(!v) {
-            sel.value = '';
-            return;
-        }
-
-        if(!sellers.some(s => normKey(s) === normKey(v))){
-            sellers.push(v);
-            store();
-            load();
-        }
-
-        sel.value = v;
+    if(!sellers.some(s => normKey(s) === normKey(v))){
+        sellers.push(v);
+        store();
+        load();
     }
 }
-
-/* ---------- HANDLE ADD WOOD ---------- */
 
 function handleWood(sel){
 
-    if(sel.value === '__addWood__'){
-        let v = norm(prompt('Enter wood type'));
+    let v = norm(sel.value);
+    if(!v) return;
 
-        if(!v) {
-            sel.value = '';
-            return;
-        }
-
-        if(!woods.some(w => normKey(w) === normKey(v))){
-            woods.push(v);
-            store();
-            load();
-        }
-
-        sel.value = v;
+    if(!woods.some(w => normKey(w) === normKey(v))){
+        woods.push(v);
+        store();
+        load();
     }
 }
 
-/* ---------- VALIDATION ---------- */
+/* ---------- VALIDATION (FIXED) ---------- */
 
 function valid(){
-
-    if(!seller.value || seller.value === '__addSeller__') return false;
-    if(!wood.value || wood.value === '__addWood__') return false;
+    if(!seller.value) return false;
+    if(!wood.value) return false;
 
     if(!qty.value || qty.value <= 0) return false;
     if(!weight.value || weight.value <= 0) return false;
@@ -275,12 +252,12 @@ function valid(){
     return true;
 }
 
-/* ---------- SAVE ENTRY ---------- */
+/* ---------- SAVE ---------- */
 
 function save(){
 
     if(!valid()){
-        alert('Select valid seller, wood, qty, weight, and price.');
+        alert('Fill all fields correctly.');
         return;
     }
 
