@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wood Price Comparer V6</title>
+<title>Wood Price Comparer V7</title>
 
 <style>
 body {
@@ -24,15 +24,14 @@ body {
     margin-bottom: 12px;
 }
 
-/* HEADER */
 h1 {
     margin: 0 0 10px 0;
 }
 
-/* MOBILE ENTRY BAR */
+/* ENTRY BAR */
 .entry-bar {
     display: grid;
-    grid-template-columns: 1fr 1fr 60px 70px 90px auto;
+    grid-template-columns: 1fr 1fr 70px 80px 100px auto;
     gap: 6px;
     align-items: center;
 }
@@ -49,7 +48,6 @@ h1 {
     background: #0275d8;
     color: white;
     border: none;
-    cursor: pointer;
 }
 
 /* TABLE */
@@ -110,19 +108,8 @@ tr.clickable {
     border: none;
 }
 
-/* SUMMARY */
 .summary {
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 8px;
     font-size: 13px;
-}
-
-/* SMALL SCREEN FIX */
-@media(max-width:700px){
-    .entry-bar {
-        grid-template-columns: 1fr 1fr;
-    }
 }
 </style>
 </head>
@@ -133,15 +120,15 @@ tr.clickable {
 
 <div class="card">
 <h1>Wood Price Comparer</h1>
-<div class="summary" id="dashboard"></div>
+<div id="dashboard" class="summary"></div>
 </div>
 
 <!-- ENTRY BAR -->
 <div class="card">
 <div class="entry-bar">
 
-<select id="seller" onchange="checkSeller(this)"></select>
-<select id="wood" onchange="checkWood(this)"></select>
+<select id="seller" onchange="handleSeller(this)"></select>
+<select id="wood" onchange="handleWood(this)"></select>
 
 <input id="qty" type="number" value="1" placeholder="Qty">
 <input id="weight" type="number" placeholder="Kg">
@@ -203,28 +190,7 @@ function normKey(v){
     return norm(v).toLowerCase();
 }
 
-/* ---------- CLEAN EXISTING DATA ON LOAD ---------- */
-
-function cleanData(){
-
-    sellers = [...new Map(
-        sellers.map(s => [normKey(s), norm(s)])
-    ).values()];
-
-    woods = [...new Map(
-        woods.map(w => [normKey(w), norm(w)])
-    ).values()];
-
-    entries = entries.map(e => ({
-        ...e,
-        seller: norm(e.seller),
-        wood: norm(e.wood)
-    }));
-
-    store();
-}
-
-/* ---------- STORE ---------- */
+/* ---------- SAVE ---------- */
 
 function store(){
     localStorage.setItem('sellers', JSON.stringify(sellers));
@@ -239,6 +205,9 @@ function load(){
     seller.innerHTML = '';
     wood.innerHTML = '';
 
+    seller.add(new Option('+ Add seller', '__addSeller__'));
+    wood.add(new Option('+ Add wood type', '__addWood__'));
+
     sellers.sort().forEach(s=>{
         seller.add(new Option(s,s));
     });
@@ -248,35 +217,72 @@ function load(){
     });
 }
 
-/* ---------- ADD SELLER / WOOD INLINE ---------- */
+/* ---------- HANDLE ADD SELLER ---------- */
 
-function checkSeller(sel){
-    let v = norm(sel.value);
+function handleSeller(sel){
 
-    if(!v) return;
+    if(sel.value === '__addSeller__'){
+        let v = norm(prompt('Enter seller name'));
 
-    if(!sellers.some(s => normKey(s) === normKey(v))){
-        sellers.push(v);
-        store();
-        load();
+        if(!v) {
+            sel.value = '';
+            return;
+        }
+
+        if(!sellers.some(s => normKey(s) === normKey(v))){
+            sellers.push(v);
+            store();
+            load();
+        }
+
+        sel.value = v;
     }
 }
 
-function checkWood(sel){
-    let v = norm(sel.value);
+/* ---------- HANDLE ADD WOOD ---------- */
 
-    if(!v) return;
+function handleWood(sel){
 
-    if(!woods.some(w => normKey(w) === normKey(v))){
-        woods.push(v);
-        store();
-        load();
+    if(sel.value === '__addWood__'){
+        let v = norm(prompt('Enter wood type'));
+
+        if(!v) {
+            sel.value = '';
+            return;
+        }
+
+        if(!woods.some(w => normKey(w) === normKey(v))){
+            woods.push(v);
+            store();
+            load();
+        }
+
+        sel.value = v;
     }
+}
+
+/* ---------- VALIDATION ---------- */
+
+function valid(){
+
+    if(!seller.value || seller.value === '__addSeller__') return false;
+    if(!wood.value || wood.value === '__addWood__') return false;
+
+    if(!qty.value || qty.value <= 0) return false;
+    if(!weight.value || weight.value <= 0) return false;
+    if(!price.value || price.value <= 0) return false;
+
+    return true;
 }
 
 /* ---------- SAVE ENTRY ---------- */
 
 function save(){
+
+    if(!valid()){
+        alert('Select valid seller, wood, qty, weight, and price.');
+        return;
+    }
 
     let e = {
         id: editId || Date.now(),
@@ -287,8 +293,6 @@ function save(){
         price: +price.value,
         date: new Date().toISOString().split('T')[0]
     };
-
-    if(!e.seller || !e.wood || !e.qty || !e.weight || !e.price) return;
 
     if(editId){
         entries = entries.map(x => x.id === editId ? e : x);
@@ -410,7 +414,6 @@ function edit(){
 
 /* ---------- INIT ---------- */
 
-cleanData();
 load();
 render();
 
