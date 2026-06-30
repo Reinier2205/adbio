@@ -1,450 +1,684 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wood Price Comparator</title>
-
-<style>
-body{
-    font-family: Arial, sans-serif;
-    margin:0;
-    background:#f4f6f8;
-}
-
-.container{
-    max-width:900px;
-    margin:auto;
-    padding:10px;
-}
-
-/* HEADER */
-.header{
-    background:white;
-    padding:12px;
-    border-radius:10px;
-    margin-bottom:10px;
-}
-
-h1{
-    margin:0;
-    font-size:18px;
-}
-
-/* NEW ENTRY */
-.section-title{
-    font-size:13px;
-    font-weight:bold;
-    margin-bottom:6px;
-    color:#333;
-}
-
-.card{
-    background:white;
-    padding:12px;
-    border-radius:10px;
-    margin-bottom:10px;
-}
-
-/* ENTRY GRID */
-.entry-table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:13px;
-}
-
-.entry-table th,
-.entry-table td{
-    border:1px solid #ddd;
-    padding:6px;
-    text-align:center;
-}
-
-.entry-table th{
-    background:#eee;
-    font-size:12px;
-}
-
-.entry-table select,
-.entry-table input{
-    width:100%;
-    padding:6px;
-    font-size:13px;
-    box-sizing:border-box;
-}
-
-.btn{
-    width:100%;
-    padding:7px;
-    background:#007bff;
-    color:white;
-    border:none;
-    cursor:pointer;
-    font-size:13px;
-}
-
-/* DATA TABLE */
-table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:13px;
-}
-
-th, td{
-    border:1px solid #ddd;
-    padding:8px;
-    text-align:center;
-}
-
-th{
-    background:#eee;
-}
-
-tr.clickable{
-    cursor:pointer;
-}
-
-.cheapest{
-    background:#dff5dd;
-    font-weight:bold;
-}
-
-/* MODAL */
-.modal{
-    position:fixed;
-    bottom:0;
-    left:0;
-    width:100%;
-    background:white;
-    border-top-left-radius:15px;
-    border-top-right-radius:15px;
-    box-shadow:0 -2px 10px rgba(0,0,0,0.2);
-    padding:15px;
-    display:none;
-}
-
-.modal button{
-    width:100%;
-    margin-top:8px;
-    padding:10px;
-}
-
-.primary{background:#007bff;color:white;border:none;}
-.danger{background:#dc3545;color:white;border:none;}
-
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premium Wood Price Comparator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+              800: '#92400e',
+              900: '#78350f',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Smooth transition presets */
+    .transition-all-200 {
+      transition: all 0.20s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    /* Hide spin buttons for cleaner numeric inputs */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
 </head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans antialiased pb-12">
 
-<body>
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-<div class="container">
+  <!-- MAIN WRAPPER -->
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    
+    <!-- HEADER -->
+    <header class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-brand-100 rounded-2xl text-brand-700">
+          <!-- Flame/Campfire Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-xs font-bold text-brand-600 uppercase tracking-widest">TravelGames Tool</span>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Wood Price Comparator</h1>
+        </div>
+      </div>
+      
+      <!-- Live dynamic recommendation badge -->
+      <div id="summary-badge" class="bg-brand-50 border border-brand-200 rounded-2xl px-4 py-3 text-sm flex items-center gap-2">
+        <span class="animate-pulse flex h-2 w-2 rounded-full bg-brand-500"></span>
+        <span class="text-slate-600">Enter wood listings to find the best deal.</span>
+      </div>
+    </header>
 
-<div class="header">
-<h1>Wood Price Comparator</h1>
-<div id="summary"></div>
-</div>
+    <!-- NEW ENTRY SECTION (COMPLETE REDESIGN) -->
+    <section class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-6">
+      <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+          </span>
+          <h2 id="form-title" class="font-bold text-slate-800 text-base">New Price Entry</h2>
+        </div>
+        <span id="edit-indicator" class="hidden text-xs bg-brand-100 text-brand-800 px-2.5 py-1 rounded-full font-medium">Editing Mode</span>
+      </div>
 
-<div class="card">
+      <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          
+          <!-- SELLER SELECTION -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Seller / Store</label>
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <select id="seller-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white appearance-none transition-all-200 cursor-pointer">
+                  <!-- Generated via JS -->
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                  <svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
+              </div>
+              <button onclick="openAddModal('seller')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl transition-all-200" title="Add New Seller">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
-<div class="section-title">New Entry</div>
+          <!-- WOOD TYPE SELECTION -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Wood Type</label>
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <select id="wood-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white appearance-none transition-all-200 cursor-pointer">
+                  <!-- Generated via JS -->
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                  <svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
+              </div>
+              <button onclick="openAddModal('wood')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl transition-all-200" title="Add New Wood Type">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
 
-<table class="entry-table">
-<thead>
-<tr>
-<th>Seller</th>
-<th>Wood Type</th>
-<th>Qty</th>
-<th>Kg</th>
-<th>Price</th>
-<th>Action</th>
-</tr>
-</thead>
+        <div class="border-t border-dashed border-slate-100 pt-6">
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Pack Metrics</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            <!-- QUANTITY STEPPER -->
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+              <span class="block text-xs font-semibold text-slate-500 mb-1">Quantity (Bags)</span>
+              <div class="flex items-center justify-between">
+                <button type="button" onclick="stepQty(-1)" class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold">-</button>
+                <input id="input-qty" type="number" min="1" value="1" class="w-12 text-center bg-transparent font-bold text-slate-800 text-base focus:outline-none">
+                <button type="button" onclick="stepQty(1)" class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold">+</button>
+              </div>
+            </div>
 
-<tbody>
-<tr>
-<td>
-<select id="seller" onchange="handleSeller(this)"></select>
-</td>
+            <!-- WEIGHT INPUT -->
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-between">
+              <label for="input-weight" class="block text-xs font-semibold text-slate-500 mb-1">Weight per Bag</label>
+              <div class="relative flex items-center">
+                <input id="input-weight" type="number" step="0.1" placeholder="e.g. 10" class="w-full bg-transparent font-bold text-slate-800 text-base focus:outline-none placeholder:text-slate-300">
+                <span class="absolute right-0 text-xs font-bold text-slate-400 select-none">kg</span>
+              </div>
+            </div>
 
-<td>
-<select id="wood" onchange="handleWood(this)"></select>
-</td>
+            <!-- PRICE INPUT -->
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-between">
+              <label for="input-price" class="block text-xs font-semibold text-slate-500 mb-1">Total Pack Price</label>
+              <div class="relative flex items-center">
+                <span class="absolute left-0 text-base font-bold text-slate-400 select-none">R</span>
+                <input id="input-price" type="number" step="0.01" placeholder="0.00" class="w-full bg-transparent pl-5 font-bold text-slate-800 text-base focus:outline-none placeholder:text-slate-300">
+              </div>
+            </div>
 
-<td><input id="qty" type="number" value="1"></td>
-<td><input id="weight" type="number"></td>
-<td><input id="price" type="number"></td>
-<td><button class="btn" onclick="save()">Add</button></td>
-</tr>
-</tbody>
-</table>
+          </div>
+        </div>
 
-</div>
+        <!-- ACTIONS -->
+        <div class="flex gap-3 mt-6">
+          <button id="btn-save" onclick="saveEntry()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 px-6 rounded-2xl shadow-sm hover:shadow transition-all-200 flex items-center justify-center gap-2">
+            <svg id="save-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            <span id="btn-save-text">Save Entry</span>
+          </button>
+          <button id="btn-cancel" onclick="cancelEdit()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-6 rounded-2xl transition-all-200">
+            Cancel
+          </button>
+        </div>
 
-<div class="card">
-<table>
-<thead>
-<tr>
-<th>Seller</th>
-<th>Wood</th>
-<th>Qty</th>
-<th>Kg</th>
-<th>Total Kg</th>
-<th>Price</th>
-<th>R/kg</th>
-</tr>
-</thead>
-<tbody id="table"></tbody>
-</table>
-</div>
+      </div>
+    </section>
 
-</div>
+    <!-- LIST OF ENTRIES -->
+    <section class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+        <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+          </svg>
+          Comparison Overview
+        </h2>
+        <span id="count-badge" class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-full font-medium">0 items</span>
+      </div>
 
-<!-- MODAL -->
-<div class="modal" id="modal">
-<h3>Entry</h3>
-<div id="modalBody"></div>
+      <!-- DESKTOP TABLE -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50/50 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400">
+              <th class="py-4 px-6">Seller</th>
+              <th class="py-4 px-6">Wood Type</th>
+              <th class="py-4 px-6 text-center">Qty</th>
+              <th class="py-4 px-6 text-center">Bag Wt</th>
+              <th class="py-4 px-6 text-center">Total Kg</th>
+              <th class="py-4 px-6 text-right">Price</th>
+              <th class="py-4 px-6 text-right">R/kg</th>
+              <th class="py-4 px-6 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="table-body" class="divide-y divide-slate-100 text-sm">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
 
-<button class="primary" onclick="edit()">Edit</button>
-<button class="danger" onclick="removeItem()">Delete</button>
-<button onclick="closeModal()">Close</button>
-</div>
+      <!-- MOBILE LIST (CARDS) -->
+      <div id="mobile-cards" class="block md:hidden p-4 space-y-4">
+        <!-- Dynamic Cards -->
+      </div>
 
-<script>
+      <!-- EMPTY STATE -->
+      <div id="empty-state" class="p-12 text-center flex flex-col items-center justify-center">
+        <div class="p-4 bg-slate-50 rounded-full mb-3 text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <h3 class="text-slate-700 font-semibold mb-1">No compared wood entries yet</h3>
+        <p class="text-slate-400 text-xs max-w-sm">Add different sellers and pack sizes to find out which one offers the most braai wood for your Rand.</p>
+      </div>
 
-/* ---------- DATA ---------- */
+    </section>
+  </div>
 
-let sellers = JSON.parse(localStorage.getItem('sellers')) || ['Bossies'];
-let woods = JSON.parse(localStorage.getItem('woods')) || ['Kameeldoring'];
-let entries = JSON.parse(localStorage.getItem('entries')) || [];
+  <!-- ADD OPTION MODAL (REPLACES BROWSER PROMPTS) -->
+  <div id="add-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-xl overflow-hidden transform scale-95 transition-transform duration-200">
+      <div class="p-6">
+        <h3 id="modal-title" class="text-lg font-bold text-slate-900 mb-2">Add New Item</h3>
+        <p id="modal-desc" class="text-xs text-slate-400 mb-4">Specify the name of the new entry item below.</p>
+        
+        <input id="modal-input" type="text" placeholder="Enter name..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white mb-6">
 
-let selected = null;
-let editId = null;
+        <div class="flex gap-3">
+          <button onclick="submitAddModal()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-all-200">
+            Add Option
+          </button>
+          <button onclick="closeAddModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all-200">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-/* ---------- HELPERS ---------- */
+  <script>
+    /* ---------- STORES & DATA ---------- */
+    let sellers = JSON.parse(localStorage.getItem('travelgames_sellers')) || ['Bossies', 'Local Garage', 'Farm Stall'];
+    let woods = JSON.parse(localStorage.getItem('travelgames_woods')) || ['Kameeldoring', 'Sekelbos', 'Rooikrans', 'Mopane'];
+    let entries = JSON.parse(localStorage.getItem('travelgames_entries')) || [];
 
-function norm(v){
-    return (v || '').trim().replace(/\s+/g,' ');
-}
+    let editId = null;
+    let modalType = ''; // 'seller' or 'wood'
 
-function key(v){
-    return norm(v).toLowerCase();
-}
+    /* ---------- INPUT REFERENCE ELEMENTS ---------- */
+    const sellerSelect = document.getElementById('seller-select');
+    const woodSelect = document.getElementById('wood-select');
+    const inputQty = document.getElementById('input-qty');
+    const inputWeight = document.getElementById('input-weight');
+    const inputPrice = document.getElementById('input-price');
 
-/* ---------- STORAGE ---------- */
+    const formTitle = document.getElementById('form-title');
+    const btnSave = document.getElementById('btn-save');
+    const btnSaveText = document.getElementById('btn-save-text');
+    const btnCancel = document.getElementById('btn-cancel');
+    const editIndicator = document.getElementById('edit-indicator');
 
-function store(){
-    localStorage.setItem('sellers', JSON.stringify(sellers));
-    localStorage.setItem('woods', JSON.stringify(woods));
-    localStorage.setItem('entries', JSON.stringify(entries));
-}
+    /* ---------- TOAST SYSTEM ---------- */
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const isError = type === 'error';
+      const bgClass = isError ? 'bg-red-50 border-red-200 text-red-800' : 'bg-slate-900 border-slate-800 text-white';
+      
+      toast.className = `flex items-center gap-2 px-4 py-3 rounded-2xl border shadow-lg text-sm transition-all-200 duration-300 transform translate-y-4 opacity-0 pointer-events-auto ${bgClass}`;
+      toast.innerHTML = `
+        <span class="${isError ? 'text-red-500' : 'text-brand-400'}">
+          ${isError ? `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          ` : `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          `}
+        </span>
+        <span class="font-medium">${message}</span>
+      `;
 
-/* ---------- LOAD DROPDOWNS ---------- */
+      container.appendChild(toast);
+      
+      // Animate entry
+      setTimeout(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      }, 50);
 
-function load(){
-
-    seller.innerHTML = '';
-    wood.innerHTML = '';
-
-    seller.add(new Option('＋ Add new seller', '__addSeller__'));
-    wood.add(new Option('＋ Add new wood type', '__addWood__'));
-
-    sellers.sort().forEach(s=>{
-        seller.add(new Option(s,s));
-    });
-
-    woods.sort().forEach(w=>{
-        wood.add(new Option(w,w));
-    });
-}
-
-/* ---------- ADD SELLER ---------- */
-
-function handleSeller(sel){
-
-    if(sel.value === '__addSeller__'){
-        let v = norm(prompt('Enter seller name'));
-
-        if(!v) return load();
-
-        if(!sellers.some(s => key(s) === key(v))){
-            sellers.push(v);
-            store();
-        }
-
-        load();
-        seller.value = v;
+      // Animate exit & removal
+      setTimeout(() => {
+        toast.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
     }
-}
 
-/* ---------- ADD WOOD ---------- */
-
-function handleWood(sel){
-
-    if(sel.value === '__addWood__'){
-        let v = norm(prompt('Enter wood type'));
-
-        if(!v) return load();
-
-        if(!woods.some(w => key(w) === key(v))){
-            woods.push(v);
-            store();
-        }
-
-        load();
-        wood.value = v;
+    /* ---------- STATE PERSISTENCE ---------- */
+    function saveToStorage() {
+      localStorage.setItem('travelgames_sellers', JSON.stringify(sellers));
+      localStorage.setItem('travelgames_woods', JSON.stringify(woods));
+      localStorage.setItem('travelgames_entries', JSON.stringify(entries));
     }
-}
 
-/* ---------- VALIDATE ---------- */
+    /* ---------- OPTION POPULATORS ---------- */
+    function populateDropdowns() {
+      const currentSelectedSeller = sellerSelect.value;
+      const currentSelectedWood = woodSelect.value;
 
-function valid(){
-    return seller.value &&
-           wood.value &&
-           qty.value > 0 &&
-           weight.value > 0 &&
-           price.value > 0;
-}
+      sellerSelect.innerHTML = '';
+      woodSelect.innerHTML = '';
 
-/* ---------- SAVE ---------- */
+      // Sort alphabetically for clean indexing
+      sellers.sort().forEach(s => {
+        sellerSelect.add(new Option(s, s));
+      });
 
-function save(){
+      woods.sort().forEach(w => {
+        woodSelect.add(new Option(w, w));
+      });
 
-    if(!valid()){
-        alert('Complete all fields');
+      // Restore selections if valid
+      if (sellers.includes(currentSelectedSeller)) sellerSelect.value = currentSelectedSeller;
+      if (woods.includes(currentSelectedWood)) woodSelect.value = currentSelectedWood;
+    }
+
+    /* ---------- MODAL CONTROLS ---------- */
+    function openAddModal(type) {
+      modalType = type;
+      const modal = document.getElementById('add-modal');
+      const title = document.getElementById('modal-title');
+      const desc = document.getElementById('modal-desc');
+      const input = document.getElementById('modal-input');
+
+      input.value = '';
+      
+      if (type === 'seller') {
+        title.innerText = 'Add Custom Seller';
+        desc.innerText = 'Add a new hardware store, garage, local depot, or braai shop.';
+        input.placeholder = 'e.g. Total Garage Sandton';
+      } else {
+        title.innerText = 'Add Custom Wood Type';
+        desc.innerText = 'Define a custom firewood type for camp comparison.';
+        input.placeholder = 'e.g. Sekelbos Supreme';
+      }
+
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.firstElementChild.classList.remove('scale-95');
+      }, 50);
+      input.focus();
+    }
+
+    function closeAddModal() {
+      const modal = document.getElementById('add-modal');
+      modal.firstElementChild.classList.add('scale-95');
+      modal.classList.add('opacity-0');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 200);
+    }
+
+    function submitAddModal() {
+      const input = document.getElementById('modal-input');
+      const value = input.value.trim().replace(/\s+/g, ' ');
+
+      if (!value) {
+        showToast('Please enter a valid option name', 'error');
         return;
+      }
+
+      if (modalType === 'seller') {
+        if (sellers.some(s => s.toLowerCase() === value.toLowerCase())) {
+          showToast('Seller already exists', 'error');
+          return;
+        }
+        sellers.push(value);
+        saveToStorage();
+        populateDropdowns();
+        sellerSelect.value = value;
+        showToast(`"${value}" added successfully`);
+      } else if (modalType === 'wood') {
+        if (woods.some(w => w.toLowerCase() === value.toLowerCase())) {
+          showToast('Wood type already exists', 'error');
+          return;
+        }
+        woods.push(value);
+        saveToStorage();
+        populateDropdowns();
+        woodSelect.value = value;
+        showToast(`"${value}" added successfully`);
+      }
+
+      closeAddModal();
     }
 
-    let e = {
+    /* ---------- FORM UTILITIES ---------- */
+    function stepQty(amount) {
+      let currentVal = parseInt(inputQty.value) || 1;
+      currentVal += amount;
+      if (currentVal < 1) currentVal = 1;
+      inputQty.value = currentVal;
+    }
+
+    function clearForm() {
+      editId = null;
+      inputQty.value = 1;
+      inputWeight.value = '';
+      inputPrice.value = '';
+      
+      formTitle.innerText = 'New Price Entry';
+      btnSaveText.innerText = 'Save Entry';
+      editIndicator.classList.add('hidden');
+      btnCancel.classList.add('hidden');
+    }
+
+    /* ---------- SAVE ENTRY ---------- */
+    function saveEntry() {
+      const qty = parseInt(inputQty.value) || 0;
+      const weight = parseFloat(inputWeight.value) || 0;
+      const price = parseFloat(inputPrice.value) || 0;
+
+      if (!sellerSelect.value || !woodSelect.value) {
+        showToast('Please select/add a seller and wood type', 'error');
+        return;
+      }
+      if (qty <= 0) {
+        showToast('Please enter a valid quantity of 1 or more', 'error');
+        return;
+      }
+      if (weight <= 0) {
+        showToast('Please specify the weight of a single bag', 'error');
+        return;
+      }
+      if (price <= 0) {
+        showToast('Please supply a valid price', 'error');
+        return;
+      }
+
+      const entry = {
         id: editId || Date.now(),
-        seller: norm(seller.value),
-        wood: norm(wood.value),
-        qty: +qty.value,
-        weight: +weight.value,
-        price: +price.value
+        seller: sellerSelect.value,
+        wood: woodSelect.value,
+        qty: qty,
+        weight: weight,
+        price: price
+      };
+
+      if (editId) {
+        entries = entries.map(x => x.id === editId ? entry : x);
+        showToast('Entry updated successfully!');
+      } else {
+        entries.push(entry);
+        showToast('New wood pricing saved!');
+      }
+
+      saveToStorage();
+      clearForm();
+      render();
+    }
+
+    /* ---------- CANCEL EDIT ---------- */
+    function cancelEdit() {
+      clearForm();
+      showToast('Edit discarded');
+    }
+
+    /* ---------- DELETE ENTRY ---------- */
+    function deleteEntry(id) {
+      entries = entries.filter(e => e.id !== id);
+      saveToStorage();
+      render();
+      showToast('Entry removed');
+      if (editId === id) {
+        clearForm();
+      }
+    }
+
+    /* ---------- LOAD FOR EDIT ---------- */
+    function loadForEdit(id) {
+      const item = entries.find(e => e.id === id);
+      if (!item) return;
+
+      editId = item.id;
+      sellerSelect.value = item.seller;
+      woodSelect.value = item.wood;
+      inputQty.value = item.qty;
+      inputWeight.value = item.weight;
+      inputPrice.value = item.price;
+
+      // Update Form UI state
+      formTitle.innerText = 'Edit Existing Entry';
+      btnSaveText.innerText = 'Apply Updates';
+      editIndicator.classList.remove('hidden');
+      btnCancel.classList.remove('hidden');
+
+      // Scroll smoothly to form
+      document.getElementById('form-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showToast('Loading details into edit fields');
+    }
+
+    /* ---------- COMPILER & RENDER ---------- */
+    function render() {
+      const tableBody = document.getElementById('table-body');
+      const mobileCards = document.getElementById('mobile-cards');
+      const emptyState = document.getElementById('empty-state');
+      const countBadge = document.getElementById('count-badge');
+      const summaryBadge = document.getElementById('summary-badge');
+
+      if (entries.length === 0) {
+        tableBody.innerHTML = '';
+        mobileCards.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        countBadge.innerText = '0 items';
+        summaryBadge.innerHTML = `
+          <span class="animate-pulse flex h-2 w-2 rounded-full bg-slate-400"></span>
+          <span class="text-slate-500">No options entered yet.</span>
+        `;
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      countBadge.innerText = `${entries.length} item${entries.length > 1 ? 's' : ''}`;
+
+      // Calculate total kgs and Rands per kg
+      const processed = entries.map(e => {
+        const totalKg = e.qty * e.weight;
+        const randPerKg = totalKg > 0 ? e.price / totalKg : 0;
+        return { ...e, totalKg, randPerKg };
+      });
+
+      // Find the absolute cheapest choice
+      const cheapestPrice = Math.min(...processed.map(p => p.randPerKg));
+
+      // Build desktop table UI
+      tableBody.innerHTML = '';
+      mobileCards.innerHTML = '';
+
+      processed.forEach(item => {
+        const isCheapest = item.randPerKg === cheapestPrice;
+        const rowBg = isCheapest ? 'bg-emerald-50/70 border-emerald-100 hover:bg-emerald-100/50' : 'hover:bg-slate-50/50';
+        const brandBadge = isCheapest 
+          ? `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ml-1">★ Best Value</span>`
+          : '';
+
+        // Desktop Table Element
+        const tr = document.createElement('tr');
+        tr.className = `transition-all-200 border-b border-slate-100 ${rowBg}`;
+        tr.innerHTML = `
+          <td class="py-4 px-6 font-semibold text-slate-800">
+            <div class="flex flex-col">
+              <span>${item.seller}</span>
+              ${isCheapest ? `<span class="text-emerald-600 text-xs font-semibold">Most Cost Efficient</span>` : ''}
+            </div>
+          </td>
+          <td class="py-4 px-6 text-slate-600 font-medium">
+            <span class="bg-slate-100 text-slate-700 px-2 py-1 rounded-md text-xs font-semibold">${item.wood}</span>
+          </td>
+          <td class="py-4 px-6 text-center text-slate-600 font-medium">${item.qty}</td>
+          <td class="py-4 px-6 text-center text-slate-600 font-medium">${item.weight} kg</td>
+          <td class="py-4 px-6 text-center text-slate-700 font-bold">${item.totalKg.toFixed(1)} kg</td>
+          <td class="py-4 px-6 text-right font-medium text-slate-600">R${item.price.toFixed(2)}</td>
+          <td class="py-4 px-6 text-right">
+            <span class="font-extrabold text-sm ${isCheapest ? 'text-emerald-700' : 'text-slate-800'}">
+              R${item.randPerKg.toFixed(2)}
+            </span>
+            <span class="text-slate-400 text-xs">/kg</span>
+          </td>
+          <td class="py-4 px-6">
+            <div class="flex items-center justify-center gap-2">
+              <button onclick="loadForEdit(${item.id})" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all-200" title="Edit row">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+              <button onclick="deleteEntry(${item.id})" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all-200" title="Delete row">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+
+        // Mobile Responsive card
+        const cardBg = isCheapest ? 'bg-emerald-50/70 border-emerald-200' : 'bg-white border-slate-100';
+        const cardDiv = document.createElement('div');
+        cardDiv.className = `p-4 rounded-2xl border shadow-sm flex flex-col gap-3 ${cardBg}`;
+        cardDiv.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm">${item.seller} ${brandBadge}</h4>
+              <span class="inline-block mt-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px] font-semibold">${item.wood}</span>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-semibold text-slate-400">R/kg rate</span>
+              <div class="font-extrabold text-base ${isCheapest ? 'text-emerald-700' : 'text-slate-800'}">R${item.randPerKg.toFixed(2)}/kg</div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2 border-t border-b border-slate-100/60 py-2.5 text-xs text-slate-600">
+            <div>
+              <span class="block text-slate-400 font-medium">Bags qty</span>
+              <span class="font-bold text-slate-800">${item.qty}</span>
+            </div>
+            <div>
+              <span class="block text-slate-400 font-medium">Bag weight</span>
+              <span class="font-bold text-slate-800">${item.weight} kg</span>
+            </div>
+            <div>
+              <span class="block text-slate-400 font-medium">Total weight</span>
+              <span class="font-bold text-slate-800">${item.totalKg.toFixed(1)} kg</span>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center mt-1">
+            <span class="text-xs font-bold text-slate-500">Total Price: R${item.price.toFixed(2)}</span>
+            <div class="flex gap-2">
+              <button onclick="loadForEdit(${item.id})" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition-all-200">
+                Edit
+              </button>
+              <button onclick="deleteEntry(${item.id})" class="text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition-all-200">
+                Remove
+              </button>
+            </div>
+          </div>
+        `;
+        mobileCards.appendChild(cardDiv);
+      });
+
+      // Update Top pick recommendation
+      const best = processed.sort((a,b) => a.randPerKg - b.randPerKg)[0];
+      summaryBadge.innerHTML = `
+        <span class="flex h-2 w-2 rounded-full bg-emerald-500"></span>
+        <span class="text-slate-700 font-semibold text-xs sm:text-sm">
+          🏆 Best Value: <span class="text-brand-700 font-bold">${best.seller}</span> (${best.wood}) @ <span class="text-emerald-700 font-extrabold">R${best.randPerKg.toFixed(2)}/kg</span>
+        </span>
+      `;
+    }
+
+    /* ---------- INITIALIZATION ---------- */
+    window.onload = function() {
+      populateDropdowns();
+      render();
     };
 
-    if(editId){
-        entries = entries.map(x => x.id === editId ? e : x);
-        editId = null;
-    } else {
-        entries.push(e);
-    }
-
-    store();
-    clear();
-    render();
-}
-
-/* ---------- CLEAR ---------- */
-
-function clear(){
-    qty.value = 1;
-    weight.value = '';
-    price.value = '';
-}
-
-/* ---------- RENDER ---------- */
-
-function render(){
-
-    let data = entries.map(e=>({
-        ...e,
-        total: e.qty * e.weight,
-        cost: e.price / (e.qty * e.weight)
-    }));
-
-    data.sort((a,b)=>a.cost-b.cost);
-
-    let cheapest = data[0]?.cost;
-
-    table.innerHTML = '';
-
-    data.forEach(d=>{
-
-        let tr = document.createElement('tr');
-        tr.className = 'clickable';
-
-        if(d.cost === cheapest) tr.classList.add('cheapest');
-
-        tr.onclick = ()=>openModal(d.id);
-
-        tr.innerHTML = `
-            <td>${d.seller}</td>
-            <td>${d.wood}</td>
-            <td>${d.qty}</td>
-            <td>${d.weight}</td>
-            <td>${d.total.toFixed(1)}</td>
-            <td>R${d.price.toFixed(2)}</td>
-            <td>R${d.cost.toFixed(2)}</td>
-        `;
-
-        table.appendChild(tr);
+    // Close Modal on overlay press
+    document.getElementById('add-modal').addEventListener('click', function(e) {
+      if(e.target === this) {
+        closeAddModal();
+      }
     });
-
-    summaryView();
-}
-
-/* ---------- SUMMARY ---------- */
-
-function summaryView(){
-
-    if(!entries.length) return;
-
-    let best = entries
-        .map(e=>({s:e.seller,c:e.price/(e.qty*e.weight)}))
-        .sort((a,b)=>a.c-b.c)[0];
-
-    summary.innerHTML =
-        `<b>Best:</b> ${best.s} @ R${best.c.toFixed(2)}/kg`;
-}
-
-/* ---------- MODAL ---------- */
-
-function openModal(id){
-
-    selected = entries.find(e=>e.id===id);
-
-    modal.style.display = 'block';
-
-    modalBody.innerHTML = `
-        Seller: ${selected.seller}<br>
-        Wood: ${selected.wood}<br>
-        Qty: ${selected.qty}<br>
-        Kg: ${selected.weight}<br>
-        Price: R${selected.price}<br>
-        Cost: R${(selected.price/(selected.qty*selected.weight)).toFixed(2)}
-    `;
-}
-
-function closeModal(){
-    modal.style.display = 'none';
-}
-
-function removeItem(){
-    entries = entries.filter(e=>e.id!==selected.id);
-    store();
-    closeModal();
-    render();
-}
-
-function edit(){
-    editId = selected.id;
-
-    seller.value = selected.seller;
-    wood.value = selected.wood;
-    qty.value = selected.qty;
-    weight.value = selected.weight;
-    price.value = selected.price;
-
-    closeModal();
-}
-
-/* ---------- INIT ---------- */
-
-load();
-render();
-
-</script>
-
+  </script>
 </body>
 </html>
