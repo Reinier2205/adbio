@@ -3,113 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wood Price Comparer V7.1</title>
+<title>Wood Price Comparator</title>
 
 <style>
-body {
+body{
     font-family: Arial, sans-serif;
-    margin: 10px;
-    background: #f4f4f4;
+    margin:0;
+    background:#f4f6f8;
 }
 
-.container {
-    max-width: 980px;
-    margin: auto;
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:10px;
 }
 
-.card {
-    background: white;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 12px;
+/* HEADER */
+.header{
+    background:white;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:10px;
 }
 
-h1 {
-    margin: 0 0 10px 0;
+h1{
+    margin:0;
+    font-size:18px;
 }
 
-/* ENTRY ROW (FIXED) */
-.entry-bar {
-    display: grid;
-    grid-template-columns: 1.4fr 1.4fr 0.6fr 0.8fr 1fr 0.6fr;
-    gap: 6px;
-    align-items: center;
+/* NEW ENTRY */
+.section-title{
+    font-size:13px;
+    font-weight:bold;
+    margin-bottom:6px;
+    color:#333;
 }
 
-.entry-bar select,
-.entry-bar input {
-    padding: 8px;
-    font-size: 13px;
-    width: 100%;
-    box-sizing: border-box;
+.card{
+    background:white;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:10px;
 }
 
-.entry-bar button {
-    padding: 8px;
-    font-size: 13px;
-    background: #0275d8;
-    color: white;
-    border: none;
-    cursor: pointer;
+/* ENTRY GRID */
+.entry-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
 }
 
-/* TABLE */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
+.entry-table th,
+.entry-table td{
+    border:1px solid #ddd;
+    padding:6px;
+    text-align:center;
 }
 
-th, td {
-    padding: 8px;
-    border: 1px solid #ddd;
-    text-align: center;
+.entry-table th{
+    background:#eee;
+    font-size:12px;
 }
 
-th {
-    background: #efefef;
+.entry-table select,
+.entry-table input{
+    width:100%;
+    padding:6px;
+    font-size:13px;
+    box-sizing:border-box;
 }
 
-tr.clickable {
-    cursor: pointer;
+.btn{
+    width:100%;
+    padding:7px;
+    background:#007bff;
+    color:white;
+    border:none;
+    cursor:pointer;
+    font-size:13px;
 }
 
-.cheapest {
-    background: #dff0d8;
-    font-weight: bold;
+/* DATA TABLE */
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+}
+
+th, td{
+    border:1px solid #ddd;
+    padding:8px;
+    text-align:center;
+}
+
+th{
+    background:#eee;
+}
+
+tr.clickable{
+    cursor:pointer;
+}
+
+.cheapest{
+    background:#dff5dd;
+    font-weight:bold;
 }
 
 /* MODAL */
-.modal {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: white;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-    padding: 15px;
-    display: none;
+.modal{
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+    background:white;
+    border-top-left-radius:15px;
+    border-top-right-radius:15px;
+    box-shadow:0 -2px 10px rgba(0,0,0,0.2);
+    padding:15px;
+    display:none;
 }
 
-.modal button {
-    margin-top: 8px;
-    width: 100%;
-    padding: 10px;
+.modal button{
+    width:100%;
+    margin-top:8px;
+    padding:10px;
 }
 
-.btn-danger {
-    background: #d9534f;
-    color: white;
-    border: none;
-}
+.primary{background:#007bff;color:white;border:none;}
+.danger{background:#dc3545;color:white;border:none;}
 
-.btn-primary {
-    background: #0275d8;
-    color: white;
-    border: none;
-}
 </style>
 </head>
 
@@ -117,28 +139,47 @@ tr.clickable {
 
 <div class="container">
 
-<div class="card">
-<h1>Wood Price Comparer</h1>
-<div id="dashboard"></div>
+<div class="header">
+<h1>Wood Price Comparator</h1>
+<div id="summary"></div>
 </div>
 
-<!-- ENTRY BAR (RESTORED CLEAN FLOW) -->
 <div class="card">
-<div class="entry-bar">
 
+<div class="section-title">New Entry</div>
+
+<table class="entry-table">
+<thead>
+<tr>
+<th>Seller</th>
+<th>Wood Type</th>
+<th>Qty</th>
+<th>Kg</th>
+<th>Price</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>
 <select id="seller" onchange="handleSeller(this)"></select>
+</td>
+
+<td>
 <select id="wood" onchange="handleWood(this)"></select>
+</td>
 
-<input id="qty" type="number" value="1" placeholder="Qty">
-<input id="weight" type="number" placeholder="Kg">
-<input id="price" type="number" placeholder="Price">
-
-<button onclick="save()">Add</button>
+<td><input id="qty" type="number" value="1"></td>
+<td><input id="weight" type="number"></td>
+<td><input id="price" type="number"></td>
+<td><button class="btn" onclick="save()">Add</button></td>
+</tr>
+</tbody>
+</table>
 
 </div>
-</div>
 
-<!-- TABLE -->
 <div class="card">
 <table>
 <thead>
@@ -147,7 +188,7 @@ tr.clickable {
 <th>Wood</th>
 <th>Qty</th>
 <th>Kg</th>
-<th>Total</th>
+<th>Total Kg</th>
 <th>Price</th>
 <th>R/kg</th>
 </tr>
@@ -161,16 +202,16 @@ tr.clickable {
 <!-- MODAL -->
 <div class="modal" id="modal">
 <h3>Entry</h3>
-<div id="modalContent"></div>
+<div id="modalBody"></div>
 
-<button class="btn-primary" onclick="edit()">Edit</button>
-<button class="btn-danger" onclick="del()">Delete</button>
+<button class="primary" onclick="edit()">Edit</button>
+<button class="danger" onclick="removeItem()">Delete</button>
 <button onclick="closeModal()">Close</button>
 </div>
 
 <script>
 
-/* ---------- STORAGE ---------- */
+/* ---------- DATA ---------- */
 
 let sellers = JSON.parse(localStorage.getItem('sellers')) || ['Bossies'];
 let woods = JSON.parse(localStorage.getItem('woods')) || ['Kameeldoring'];
@@ -179,17 +220,17 @@ let entries = JSON.parse(localStorage.getItem('entries')) || [];
 let selected = null;
 let editId = null;
 
-/* ---------- NORMALISE ---------- */
+/* ---------- HELPERS ---------- */
 
 function norm(v){
     return (v || '').trim().replace(/\s+/g,' ');
 }
 
-function normKey(v){
+function key(v){
     return norm(v).toLowerCase();
 }
 
-/* ---------- STORE ---------- */
+/* ---------- STORAGE ---------- */
 
 function store(){
     localStorage.setItem('sellers', JSON.stringify(sellers));
@@ -197,12 +238,15 @@ function store(){
     localStorage.setItem('entries', JSON.stringify(entries));
 }
 
-/* ---------- LOAD DROPDOWNS (NO UI BREAK) ---------- */
+/* ---------- LOAD DROPDOWNS ---------- */
 
 function load(){
 
     seller.innerHTML = '';
     wood.innerHTML = '';
+
+    seller.add(new Option('＋ Add new seller', '__addSeller__'));
+    wood.add(new Option('＋ Add new wood type', '__addWood__'));
 
     sellers.sort().forEach(s=>{
         seller.add(new Option(s,s));
@@ -213,43 +257,52 @@ function load(){
     });
 }
 
-/* ---------- ADD NEW SELLER / WOOD (SAFE FLOW) ---------- */
+/* ---------- ADD SELLER ---------- */
 
 function handleSeller(sel){
 
-    let v = norm(sel.value);
-    if(!v) return;
+    if(sel.value === '__addSeller__'){
+        let v = norm(prompt('Enter seller name'));
 
-    if(!sellers.some(s => normKey(s) === normKey(v))){
-        sellers.push(v);
-        store();
+        if(!v) return load();
+
+        if(!sellers.some(s => key(s) === key(v))){
+            sellers.push(v);
+            store();
+        }
+
         load();
+        seller.value = v;
     }
 }
+
+/* ---------- ADD WOOD ---------- */
 
 function handleWood(sel){
 
-    let v = norm(sel.value);
-    if(!v) return;
+    if(sel.value === '__addWood__'){
+        let v = norm(prompt('Enter wood type'));
 
-    if(!woods.some(w => normKey(w) === normKey(v))){
-        woods.push(v);
-        store();
+        if(!v) return load();
+
+        if(!woods.some(w => key(w) === key(v))){
+            woods.push(v);
+            store();
+        }
+
         load();
+        wood.value = v;
     }
 }
 
-/* ---------- VALIDATION (FIXED) ---------- */
+/* ---------- VALIDATE ---------- */
 
 function valid(){
-    if(!seller.value) return false;
-    if(!wood.value) return false;
-
-    if(!qty.value || qty.value <= 0) return false;
-    if(!weight.value || weight.value <= 0) return false;
-    if(!price.value || price.value <= 0) return false;
-
-    return true;
+    return seller.value &&
+           wood.value &&
+           qty.value > 0 &&
+           weight.value > 0 &&
+           price.value > 0;
 }
 
 /* ---------- SAVE ---------- */
@@ -257,7 +310,7 @@ function valid(){
 function save(){
 
     if(!valid()){
-        alert('Fill all fields correctly.');
+        alert('Complete all fields');
         return;
     }
 
@@ -267,8 +320,7 @@ function save(){
         wood: norm(wood.value),
         qty: +qty.value,
         weight: +weight.value,
-        price: +price.value,
-        date: new Date().toISOString().split('T')[0]
+        price: +price.value
     };
 
     if(editId){
@@ -329,23 +381,21 @@ function render(){
         table.appendChild(tr);
     });
 
-    dashboard();
+    summaryView();
 }
 
-/* ---------- DASHBOARD ---------- */
+/* ---------- SUMMARY ---------- */
 
-function dashboard(){
+function summaryView(){
 
     if(!entries.length) return;
 
-    let calc = entries.map(e=>({
-        seller:e.seller,
-        cost:e.price/(e.qty*e.weight)
-    })).sort((a,b)=>a.cost-b.cost);
+    let best = entries
+        .map(e=>({s:e.seller,c:e.price/(e.qty*e.weight)}))
+        .sort((a,b)=>a.c-b.c)[0];
 
-    dashboard.innerHTML = `
-        <b>Cheapest:</b> ${calc[0].seller} - R${calc[0].cost.toFixed(2)}/kg
-    `;
+    summary.innerHTML =
+        `<b>Best:</b> ${best.s} @ R${best.c.toFixed(2)}/kg`;
 }
 
 /* ---------- MODAL ---------- */
@@ -356,13 +406,13 @@ function openModal(id){
 
     modal.style.display = 'block';
 
-    modalContent.innerHTML = `
+    modalBody.innerHTML = `
         Seller: ${selected.seller}<br>
         Wood: ${selected.wood}<br>
         Qty: ${selected.qty}<br>
         Kg: ${selected.weight}<br>
         Price: R${selected.price}<br>
-        Cost/kg: R${(selected.price/(selected.qty*selected.weight)).toFixed(2)}
+        Cost: R${(selected.price/(selected.qty*selected.weight)).toFixed(2)}
     `;
 }
 
@@ -370,7 +420,7 @@ function closeModal(){
     modal.style.display = 'none';
 }
 
-function del(){
+function removeItem(){
     entries = entries.filter(e=>e.id!==selected.id);
     store();
     closeModal();
