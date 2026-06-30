@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wood Price Comparer V4</title>
+<title>Wood Price Comparer V5</title>
 
 <style>
 body {
@@ -56,10 +56,6 @@ tr.clickable {
     cursor: pointer;
 }
 
-tr.clickable:active {
-    background: #f0f0f0;
-}
-
 .cheapest {
     background: #dff0d8;
     font-weight: bold;
@@ -79,14 +75,6 @@ tr.clickable:active {
     display: none;
 }
 
-.modal h3 {
-    margin-top: 0;
-}
-
-.modal button {
-    margin-top: 8px;
-}
-
 .btn-danger {
     background: #d9534f;
     color: white;
@@ -98,18 +86,6 @@ tr.clickable:active {
     color: white;
     border: none;
 }
-
-.small {
-    font-size: 12px;
-    color: #666;
-}
-
-.summary {
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    gap: 8px;
-    font-size: 13px;
-}
 </style>
 </head>
 
@@ -119,14 +95,14 @@ tr.clickable:active {
 
 <div class="card">
 <h1>Wood Price Comparer</h1>
-<div class="summary" id="dashboard"></div>
+<div id="dashboard"></div>
 </div>
 
 <div class="card">
 <h2>Add Entry</h2>
 
-<select id="seller"></select>
-<select id="wood"></select>
+<select id="seller" onchange="checkSeller(this)"></select>
+<select id="wood" onchange="checkWood(this)"></select>
 
 <label>Qty</label>
 <input id="qty" type="number" value="1">
@@ -163,12 +139,11 @@ tr.clickable:active {
 
 <!-- MODAL -->
 <div class="modal" id="modal">
-<h3>Entry Details</h3>
-
+<h3>Entry</h3>
 <div id="modalContent"></div>
 
-<button class="btn-primary" onclick="startEdit()">Edit</button>
-<button class="btn-danger" onclick="remove()">Delete</button>
+<button class="btn-primary" onclick="edit()">Edit</button>
+<button class="btn-danger" onclick="del()">Delete</button>
 <button onclick="closeModal()">Close</button>
 </div>
 
@@ -181,28 +156,67 @@ let entries = JSON.parse(localStorage.getItem('entries')) || [];
 let selected = null;
 let editId = null;
 
+/* SAVE STORE */
 function store(){
     localStorage.setItem('sellers', JSON.stringify(sellers));
     localStorage.setItem('woods', JSON.stringify(woods));
     localStorage.setItem('entries', JSON.stringify(entries));
 }
 
-/* INIT */
+/* LOAD DROPDOWNS */
 function load(){
-    let s = document.getElementById('seller');
-    let w = document.getElementById('wood');
 
-    s.innerHTML = '';
-    w.innerHTML = '';
+    seller.innerHTML = '';
+    wood.innerHTML = '';
 
-    sellers.sort().forEach(x=>s.add(new Option(x,x)));
-    woods.sort().forEach(x=>w.add(new Option(x,x)));
+    seller.add(new Option('+ Add seller', '__addSeller__'));
+    wood.add(new Option('+ Add wood type', '__addWood__'));
+
+    sellers.sort().forEach(s=>{
+        seller.add(new Option(s,s));
+    });
+
+    woods.sort().forEach(w=>{
+        wood.add(new Option(w,w));
+    });
 }
 
-/* SAVE */
+/* INLINE ADD SELLER */
+function checkSeller(sel){
+
+    if(sel.value === '__addSeller__'){
+        let v = prompt('Enter new seller name');
+        if(v && !sellers.includes(v)){
+            sellers.push(v);
+            store();
+            load();
+            seller.value = v;
+        } else {
+            seller.value = sellers[0];
+        }
+    }
+}
+
+/* INLINE ADD WOOD */
+function checkWood(sel){
+
+    if(sel.value === '__addWood__'){
+        let v = prompt('Enter new wood type');
+        if(v && !woods.includes(v)){
+            woods.push(v);
+            store();
+            load();
+            wood.value = v;
+        } else {
+            wood.value = woods[0];
+        }
+    }
+}
+
+/* SAVE ENTRY */
 function save(){
 
-    let entry = {
+    let e = {
         id: editId || Date.now(),
         seller: seller.value,
         wood: wood.value,
@@ -213,21 +227,20 @@ function save(){
         date: new Date().toISOString().split('T')[0]
     };
 
-    if(!entry.seller || !entry.wood || !entry.qty || !entry.weight || !entry.price) return;
+    if(!e.seller || !e.wood || !e.qty || !e.weight || !e.price) return;
 
     if(editId){
-        entries = entries.map(e=>e.id===editId?entry:e);
+        entries = entries.map(x=>x.id===editId?e:x);
         editId = null;
     } else {
-        entries.push(entry);
+        entries.push(e);
     }
 
     store();
-    render();
     clear();
+    render();
 }
 
-/* CLEAR */
 function clear(){
     qty.value = 1;
     weight.value = '';
@@ -235,21 +248,20 @@ function clear(){
     notes.value = '';
 }
 
-/* RENDER TABLE */
+/* RENDER */
 function render(){
 
     let data = entries.map(e=>({
         ...e,
         total: e.qty * e.weight,
-        cost: e.price / (e.qty * e.weight)
+        cost: e.price/(e.qty*e.weight)
     }));
 
     data.sort((a,b)=>a.cost-b.cost);
 
     let cheapest = data[0]?.cost;
 
-    let t = document.getElementById('table');
-    t.innerHTML = '';
+    table.innerHTML = '';
 
     data.forEach(d=>{
 
@@ -258,19 +270,19 @@ function render(){
 
         if(d.cost === cheapest) tr.classList.add('cheapest');
 
-        tr.onclick = ()=>openModal(d.id);
+        tr.onclick = ()=>open(d.id);
 
         tr.innerHTML = `
             <td>${d.seller}</td>
             <td>${d.wood}</td>
             <td>${d.qty}</td>
             <td>${d.weight}</td>
-            <td>${(d.total).toFixed(1)}</td>
+            <td>${d.total.toFixed(1)}</td>
             <td>R${d.price.toFixed(2)}</td>
             <td>R${d.cost.toFixed(2)}</td>
         `;
 
-        t.appendChild(tr);
+        table.appendChild(tr);
     });
 
     dashboard();
@@ -286,50 +298,39 @@ function dashboard(){
         cost:e.price/(e.qty*e.weight)
     })).sort((a,b)=>a.cost-b.cost);
 
-    document.getElementById('dashboard').innerHTML = `
-        <div><b>Cheapest</b><br>${calc[0].seller}</div>
-        <div><b>R/kg</b><br>R${calc[0].cost.toFixed(2)}</div>
-        <div><b>Entries</b><br>${entries.length}</div>
-        <div><b>Sellers</b><br>${[...new Set(entries.map(e=>e.seller))].length}</div>
+    dashboard.innerHTML = `
+        <b>Cheapest:</b> ${calc[0].seller} - R${calc[0].cost.toFixed(2)}/kg
     `;
 }
 
 /* MODAL */
-function openModal(id){
+function open(id){
 
     selected = entries.find(e=>e.id===id);
-
-    if(!selected) return;
-
     modal.style.display = 'block';
 
     modalContent.innerHTML = `
-        <div class="small">Seller</div><div>${selected.seller}</div>
-        <div class="small">Wood</div><div>${selected.wood}</div>
-        <div class="small">Qty</div><div>${selected.qty}</div>
-        <div class="small">Weight</div><div>${selected.weight}</div>
-        <div class="small">Price</div><div>R${selected.price}</div>
-        <div class="small">Cost/kg</div><div>R${(selected.price/(selected.qty*selected.weight)).toFixed(2)}</div>
-        <div class="small">Notes</div><div>${selected.notes || '-'}</div>
+        Seller: ${selected.seller}<br>
+        Wood: ${selected.wood}<br>
+        Qty: ${selected.qty}<br>
+        Weight: ${selected.weight}<br>
+        Price: R${selected.price}<br>
+        Cost: R${(selected.price/(selected.qty*selected.weight)).toFixed(2)}
     `;
 }
 
 function closeModal(){
     modal.style.display = 'none';
-    selected = null;
 }
 
-function remove(){
+function del(){
     entries = entries.filter(e=>e.id!==selected.id);
     store();
     closeModal();
     render();
 }
 
-function startEdit(){
-
-    if(!selected) return;
-
+function edit(){
     editId = selected.id;
 
     seller.value = selected.seller;
