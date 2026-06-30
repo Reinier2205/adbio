@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wood Price Comparer V2</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 15px;
+    background: #f4f4f4;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+h1, h2 {
+    margin-top: 0;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+button {
+    cursor: pointer;
+}
+
+.grid {
+    display: grid;
+    gap: 10px;
+}
+
+@media(min-width:800px){
+    .grid {
+        grid-template-columns: repeat(4,1fr);
+    }
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+th {
+    background: #efefef;
+}
+
+.cheapest {
+    background: #dff0d8;
+    font-weight: bold;
+}
+
+.lowlight {
+    background: #f9f9f9;
+}
+
+.btn-danger {
+    background: #d9534f;
+    color: white;
+    border: none;
+}
+
+.btn-edit {
+    background: #0275d8;
+    color: white;
+    border: none;
+}
+
+.small {
+    font-size: 12px;
+    color: #666;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 10px;
+}
+
+@media(min-width:800px){
+    .summary-grid {
+        grid-template-columns: repeat(4,1fr);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- DASHBOARD -->
+<div class="card">
+<h1>Wood Price Comparer</h1>
+
+<div class="summary-grid" id="dashboard"></div>
+</div>
+
+<!-- ADD SELLER -->
+<div class="card">
+<h2>Seller Management</h2>
+
+<input id="newSeller" placeholder="Add new seller">
+<button onclick="addSeller()">Add Seller</button>
+
+<select id="filterSeller" onchange="renderTable()"></select>
+</div>
+
+<!-- INPUT -->
+<div class="card">
+<h2>Add / Edit Entry</h2>
+
+<div class="grid">
+<select id="seller"></select>
+<input type="number" id="qty" placeholder="Qty" value="1">
+<input type="number" id="weight" placeholder="Weight per bag">
+<input type="number" id="price" placeholder="Price (R)">
+<input type="date" id="date">
+</div>
+
+<input id="notes" placeholder="Notes">
+
+<button onclick="saveEntry()">Save Entry</button>
+<button onclick="exportCSV()">Export CSV</button>
+<button onclick="exportJSON()">Backup JSON</button>
+<input type="file" onchange="importJSON(event)">
+</div>
+
+<!-- TABLE -->
+<div class="card">
+<input id="search" placeholder="Search seller..." oninput="renderTable()">
+
+<table>
+<thead>
+<tr>
+<th>Seller</th>
+<th>Qty</th>
+<th>Weight</th>
+<th>Total</th>
+<th>Price</th>
+<th>R/kg</th>
+<th>Date</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<!-- RANKING -->
+<div class="card">
+<h2>Seller Ranking</h2>
+<div id="ranking"></div>
+</div>
+
+</div>
+
+<script>
+
+let sellers = JSON.parse(localStorage.getItem('sellers')) || ['Bossies'];
+let entries = JSON.parse(localStorage.getItem('entries')) || [];
+let editId = null;
+
+function save() {
+    localStorage.setItem('sellers', JSON.stringify(sellers));
+    localStorage.setItem('entries', JSON.stringify(entries));
+}
+
+function addSeller() {
+    const val = document.getElementById('newSeller').value.trim();
+    if (!val || sellers.includes(val)) return;
+
+    sellers.push(val);
+    save();
+    loadSellers();
+    document.getElementById('newSeller').value = '';
+}
+
+function loadSellers() {
+
+    const sellerSel = document.getElementById('seller');
+    const filterSel = document.getElementById('filterSeller');
+
+    sellerSel.innerHTML = '';
+    filterSel.innerHTML = '<option value="">All Sellers</option>';
+
+    sellers.sort().forEach(s => {
+        let o1 = new Option(s, s);
+        let o2 = new Option(s, s);
+        sellerSel.add(o1);
+        filterSel.add(o2);
+    });
+}
+
+function saveEntry() {
+
+    const seller = document.getElementById('seller').value;
+    const qty = +document.getElementById('qty').value;
+    const weight = +document.getElementById('weight').value;
+    const price = +document.getElementById('price').value;
+    const date = document.getElementById('date').value || new Date().toISOString().split('T')[0];
+    const notes = document.getElementById('notes').value;
+
+    if (!seller || !qty || !weight || !price) return;
+
+    const entry = {
+        id: editId || Date.now(),
+        seller,
+        qty,
+        weight,
+        price,
+        date,
+        notes
+    };
+
+    if (editId) {
+        entries = entries.map(e => e.id === editId ? entry : e);
+        editId = null;
+    } else {
+        entries.push(entry);
+    }
+
+    save();
+    clearForm();
+    renderTable();
+}
+
+function clearForm() {
+    document.getElementById('qty').value = 1;
+    document.getElementById('weight').value = '';
+    document.getElementById('price').value = '';
+    document.getElementById('notes').value = '';
+}
+
+function deleteEntry(id) {
+    entries = entries.filter(e => e.id !== id);
+    save();
+    renderTable();
+}
+
+function editEntry(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+
+    editId = id;
+
+    document.getElementById('seller').value = e.seller;
+    document.getElementById('qty').value = e.qty;
+    document.getElementById('weight').value = e.weight;
+    document.getElementById('price').value = e.price;
+    document.getElementById('date').value = e.date;
+    document.getElementById('notes').value = e.notes;
+}
+
+function renderTable() {
+
+    const search = document.getElementById('search').value.toLowerCase();
+    const filter = document.getElementById('filterSeller').value;
+
+    let data = entries.map(e => ({
+        ...e,
+        total: e.qty * e.weight,
+        cost: e.price / (e.qty * e.weight)
+    }));
+
+    if (filter) data = data.filter(d => d.seller === filter);
+    if (search) data = data.filter(d => d.seller.toLowerCase().includes(search));
+
+    data.sort((a,b)=>a.cost-b.cost);
+
+    const cheapest = data[0]?.cost;
+
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    data.forEach(d => {
+
+        const tr = document.createElement('tr');
+
+        if (d.cost === cheapest) tr.classList.add('cheapest');
+
+        tr.innerHTML = `
+            <td>${d.seller}</td>
+            <td>${d.qty}</td>
+            <td>${d.weight}</td>
+            <td>${d.total.toFixed(1)}</td>
+            <td>R${d.price.toFixed(2)}</td>
+            <td>R${d.cost.toFixed(2)}</td>
+            <td>${d.date}</td>
+            <td>
+                <button class="btn-edit" onclick="editEntry(${d.id})">Edit</button>
+                <button class="btn-danger" onclick="deleteEntry(${d.id})">X</button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+
+    renderDashboard();
+    renderRanking();
+}
+
+function renderDashboard() {
+
+    if (!entries.length) return;
+
+    let calc = entries.map(e => ({
+        seller: e.seller,
+        cost: e.price / (e.qty * e.weight)
+    }));
+
+    calc.sort((a,b)=>a.cost-b.cost);
+
+    const cheapest = calc[0];
+
+    document.getElementById('dashboard').innerHTML = `
+        <div><b>Cheapest</b><br>${cheapest.seller}<br>R${cheapest.cost.toFixed(2)}/kg</div>
+        <div><b>Total Entries</b><br>${entries.length}</div>
+        <div><b>Sellers</b><br>${[...new Set(entries.map(e=>e.seller))].length}</div>
+        <div><b>Best Price</b><br>R${cheapest.cost.toFixed(2)}</div>
+    `;
+}
+
+function renderRanking() {
+
+    const map = {};
+
+    entries.forEach(e => {
+        const cost = e.price / (e.qty * e.weight);
+
+        if (!map[e.seller]) {
+            map[e.seller] = { total: 0, count: 0, best: cost };
+        }
+
+        map[e.seller].total += cost;
+        map[e.seller].count++;
+        map[e.seller].best = Math.min(map[e.seller].best, cost);
+    });
+
+    let arr = Object.keys(map).map(s => ({
+        seller: s,
+        avg: map[s].total / map[s].count,
+        best: map[s].best
+    }));
+
+    arr.sort((a,b)=>a.best-b.best);
+
+    let html = '<table><tr><th>Rank</th><th>Seller</th><th>Best</th><th>Avg</th></tr>';
+
+    arr.forEach((a,i)=>{
+        html += `
+        <tr>
+            <td>${i+1}</td>
+            <td>${a.seller}</td>
+            <td>R${a.best.toFixed(2)}</td>
+            <td>R${a.avg.toFixed(2)}</td>
+        </tr>`;
+    });
+
+    html += '</table>';
+
+    document.getElementById('ranking').innerHTML = html;
+}
+
+function exportCSV() {
+
+    let csv = "Seller,Qty,Weight,Total,Price,Cost,Date,Notes\n";
+
+    entries.forEach(e => {
+        csv += `${e.seller},${e.qty},${e.weight},${e.qty*e.weight},${e.price},${(e.price/(e.qty*e.weight)).toFixed(2)},${e.date},${e.notes}\n`;
+    });
+
+    download(csv, "wood-data.csv", "text/csv");
+}
+
+function exportJSON() {
+    download(JSON.stringify(entries), "wood-data.json", "application/json");
+}
+
+function importJSON(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(evt) {
+        entries = JSON.parse(evt.target.result);
+        save();
+        renderTable();
+    };
+
+    reader.readAsText(file);
+}
+
+function download(data, name, type) {
+    const blob = new Blob([data], {type});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+loadSellers();
+renderTable();
+
+</script>
+
+</body>
+</html>
