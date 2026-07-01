@@ -57,7 +57,7 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="card rounded-xl shadow-xl max-w-md w-full">
+      <div className="card rounded-xl shadow-xl max-w-md w-full max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-8 border-b border-card-divider">
           <h2 className="text-xl font-bold font-sans text-main mb-0">Update Profile</h2>
           <button
@@ -67,7 +67,7 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
             <X className="w-5 h-5 text-muted" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+        <form onSubmit={handleSubmit} className="p-8 space-y-8 overflow-y-auto">
           {error && (
             <div className="bg-danger-bg border border-danger-border rounded-lg p-4 flex items-center gap-4">
               <AlertCircle className="w-5 h-5 text-danger flex-shrink-0" />
