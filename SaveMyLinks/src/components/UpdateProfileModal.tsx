@@ -3,6 +3,7 @@ import { X, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { resetIOSZoom } from '../utils/iosZoomReset';
+import { ApiAccessSection } from './ApiAccessSection';
 
 interface UpdateProfileModalProps {
   isOpen: boolean;
@@ -107,6 +108,20 @@ export function UpdateProfileModal({ isOpen, onClose }: UpdateProfileModalProps)
               required
             />
           </div>
+          <ApiAccessSection
+            user={user ?? null}
+            supabase={supabase}
+            onUserUpdated={async () => {
+              // Refresh the user session so token status re-reads the updated user_metadata
+              if (supabase) {
+                const { data } = await supabase.auth.getUser();
+                if (data.user) {
+                  // The useAuth hook listens to onAuthStateChange so this triggers a re-render
+                  await supabase.auth.refreshSession();
+                }
+              }
+            }}
+          />
           <button
             type="submit"
             disabled={loading}
