@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Synchrony — Design Mock</title>
+  <meta name="description" content="Health Synchrony — integrated wellness and aesthetics in Centurion, Irene Security Estate.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@400;500&display=swap">
+  <style>
+    /* ===========================
+       RESET & TOKENS
+    =========================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #FAF8F5;
+      --text:     #1A1A1A;
+      --text-mid: #4A4A4A;
+      --text-sub: #7A7A7A;
+      --sage:     #7A9E7E;
+      --sage-bg:  #EEF3EE;
+      --gold:     #C9A84C;
+      --white:    #FFFFFF;
+      --border:   #E0DBD3;
+      --ff-head:  'Cormorant Garamond', Georgia, serif;
+      --ff-body:  'Inter', system-ui, sans-serif;
+      --max-w:    1280px;
+      --pad-x:    clamp(1.25rem, 5vw, 4rem);
+    }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ff-body);
+      font-size: 1rem;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    img { display: block; max-width: 100%; height: auto; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    /* ===========================
+       NAVIGATION
+    =========================== */
+    .site-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem var(--pad-x);
+      background: transparent;
+      transition: background 0.3s ease, border-bottom 0.3s ease;
+    }
+    .site-nav.scrolled {
+      background: rgba(250, 248, 245, 0.96);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(6px);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .nav-logo img {
+      height: 36px;
+      width: auto;
+      background: #1A1A1A;
+      border-radius: 8px;
+      padding: 5px 8px;
+    }
+    .nav-logo__name {
+      font-family: var(--ff-head);
+      font-weight: 300;
+      font-size: 1.1rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2.25rem;
+    }
+    .nav-links a {
+      font-family: var(--ff-body);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--sage); }
+    .nav-book {
+      font-size: 0.75rem !important;
+      letter-spacing: 0.1em !important;
+      border: 1px solid var(--text);
+      padding: 0.45rem 1.1rem;
+      transition: background 0.2s, color 0.2s !important;
+    }
+    .nav-book:hover {
+      background: var(--text) !important;
+      color: var(--bg) !important;
+    }
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.25rem;
+      color: var(--text);
+    }
+
+    /* ===========================
+       HERO
+    =========================== */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100svh;
+      min-height: 100vh;
+    }
+    .hero__text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 8rem var(--pad-x) 4rem;
+      padding-left: max(var(--pad-x), calc((100vw - var(--max-w)) / 2 + var(--pad-x)));
+    }
+    .hero__eyebrow {
+      font-family: var(--ff-body);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .hero__eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 2rem;
+      height: 1px;
+      background: var(--gold);
+    }
+    .hero__heading {
+      font-family: var(--ff-head);
+      font-weight: 300;
+      font-size: clamp(2.75rem, 4.5vw, 5rem);
+      line-height: 1.08;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+    .hero__heading em {
+      font-style: italic;
+      color: var(--sage);
+    }
+    .hero__sub {
+      font-size: 0.9375rem;
+      color: var(--text-mid);
+      max-width: 30ch;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+    .hero__actions {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .btn-primary {
+      display: inline-block;
+      background: var(--text);
+      color: var(--bg);
+      font-family: var(--ff-body);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.875rem 2rem;
+      transition: background 0.25s, color 0.25s;
+    }
+    .btn-primary:hover {
+      background: var(--sage);
+    }
+    .btn-ghost {
+      font-family: var(--ff-body);
+      font-size: 0.8125rem;
+      font-weight: 400;
+      color: var(--text-mid);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.125rem;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+    .hero__image {
+      position: relative;
+      overflow: hidden;
+    }
+    .hero__image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+    }
+    .hero__image-caption {
+      position: absolute;
+      bottom: 2rem;
+      right: 2rem;
+      font-size: 0.6875rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      writing-mode: vertical-rl;
+    }
+
+    /* ===========================
+       INTRO STRIP
+    =========================== */
+    .intro-strip {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem var(--pad-x);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3rem;
+      overflow-x: auto;
+    }
+    .intro-strip__item {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      white-space: nowrap;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+    .intro-strip__dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--gold);
+      flex-shrink: 0;
+    }
+
+    /* ===========================
+       SECTION UTILITY
+    =========================== */
+    .section {
+      padding: clamp(4rem, 8vw, 7rem) var(--pad-x);
+    }
+    .container {
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .section-label {
+      font-family: var(--ff-body);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin-bottom: 1rem;
+    }
+    .section-heading {
+      font-family: var(--ff-head);
+      font-weight: 300;
+      font-size: clamp(2rem, 3.5vw, 3.5rem);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .gold-rule {
+      width: 2.5rem;
+      height: 1px;
+      background: var(--gold);
+      margin: 1.75rem 0;
+    }
+
+    /* ===========================
+       SERVICES — NUMBERED LIST
+    =========================== */
+    .services {
+      background: var(--bg);
+    }
+    .services__header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 3.5rem;
+      gap: 2rem;
+    }
+    .services__view-all {
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.125rem;
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+    .services__view-all:hover { color: var(--text); }
+    .services__list { border-top: 1px solid var(--border); }
+    .service-item {
+      display: grid;
+      grid-template-columns: 5rem 1fr auto;
+      align-items: center;
+      gap: 2rem;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    .service-item:hover { background: rgba(122,158,126,0.04); }
+    .service-item:hover .service-item__arrow { opacity: 1; transform: translateX(4px); }
+    .service-num {
+      font-family: var(--ff-head);
+      font-weight: 300;
+      font-size: 2.5rem;
+      color: var(--border);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .service-item__body { min-width: 0; }
+    .service-item__name {
+      font-family: var(--ff-head);
+      font-weight: 400;
+      font-size: 1.4375rem;
+      margin-bottom: 0.25rem;
+    }
+    .service-item__desc {
+      font-size: 0.875rem;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+    .service-item__arrow {
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      color: var(--sage);
+    }
+
+    /* ===========================
+       ABOUT / DR VAN DYK
+    =========================== */
+    .about {
+      background: var(--white);
+    }
+    .about__inner {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: clamp(3rem, 6vw, 7rem);
+      align-items: center;
+    }
+    .about__image-wrap {
+      position: relative;
+      max-width: 320px;
+    }
+    .about__image-wrap img {
+      width: 100%;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      object-position: top;
+    }
+    .about__image-accent {
+      position: absolute;
+      bottom: -1.5rem;
+      right: -1.5rem;
+      width: 60%;
+      aspect-ratio: 1;
+      border: 1px solid var(--gold);
+      z-index: -1;
+    }
+    .about__text { }
+    .about__quote {
+      font-family: var(--ff-head);
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(1.375rem, 2.2vw, 2rem);
+      line-height: 1.45;
+      color: var(--text);
+      border-left: 2px solid var(--gold);
+      padding-left: 1.75rem;
+      margin: 1.75rem 0 2rem;
+    }
+    .about__body {
+      font-size: 0.9375rem;
+      color: var(--text-mid);
+      line-height: 1.75;
+      margin-bottom: 1rem;
+    }
+    .about__credential {
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ===========================
+       TREATMENT IMAGE FEATURE
+    =========================== */
+    .treatment-feature {
+      background: var(--bg);
+    }
+    .treatment-feature__inner {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: clamp(2rem, 4vw, 5rem);
+      align-items: end;
+    }
+    .treatment-feature__text { padding-bottom: 1rem; }
+    .treatment-feature__body {
+      font-size: 0.9375rem;
+      color: var(--text-mid);
+      line-height: 1.75;
+      margin-bottom: 2rem;
+      max-width: 36ch;
+    }
+    .treatment-feature__images {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .treatment-feature__img-wrap {
+      overflow: hidden;
+    }
+    .treatment-feature__img-wrap img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .treatment-feature__img-wrap:hover img { transform: scale(1.03); }
+    .treatment-feature__img-label {
+      font-size: 0.6875rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin-top: 0.625rem;
+    }
+
+    /* ===========================
+       REVIEW PULL QUOTE
+    =========================== */
+    .review-section {
+      background: var(--white);
+    }
+    .review-section__inner {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: clamp(3rem, 6vw, 6rem);
+      align-items: start;
+    }
+    .review-section__label-col { padding-top: 0.5rem; }
+    .review-section__quote {
+      font-family: var(--ff-head);
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(1.25rem, 2vw, 1.75rem);
+      line-height: 1.55;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+    .review-section__cite {
+      font-size: 0.8125rem;
+      color: var(--text-sub);
+      letter-spacing: 0.04em;
+    }
+    .review-section__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.75rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.125rem;
+    }
+
+    /* ===========================
+       CTA BAND
+    =========================== */
+    .cta-band {
+      background: var(--sage);
+      padding: clamp(3.5rem, 6vw, 5rem) var(--pad-x);
+      text-align: center;
+    }
+    .cta-band__eyebrow {
+      font-size: 0.6875rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 1.25rem;
+    }
+    .cta-band__heading {
+      font-family: var(--ff-head);
+      font-weight: 300;
+      font-size: clamp(1.875rem, 3.5vw, 3rem);
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 2rem;
+    }
+    .cta-band__heading em { font-style: italic; }
+    .btn-cta-band {
+      display: inline-block;
+      background: var(--white);
+      color: var(--sage);
+      font-family: var(--ff-body);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.875rem 2.25rem;
+      transition: background 0.25s, color 0.25s;
+    }
+    .btn-cta-band:hover {
+      background: var(--text);
+      color: var(--white);
+    }
+
+    /* ===========================
+       FOOTER
+    =========================== */
+    .site-footer {
+      padding: 2rem var(--pad-x);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .footer__logo {
+      font-family: var(--ff-head);
+      font-weight: 300;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      color: var(--text-sub);
+    }
+    .footer__links {
+      display: flex;
+      gap: 2rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+    .footer__links a:hover { color: var(--text); }
+    .footer__copy {
+      font-size: 0.6875rem;
+      color: var(--text-sub);
+    }
+
+    /* ===========================
+       FLOATING BOOK PILL
+    =========================== */
+    .book-pill {
+      position: fixed;
+      bottom: 1.75rem;
+      right: 1.75rem;
+      z-index: 200;
+      background: var(--text);
+      color: var(--bg);
+      font-family: var(--ff-body);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.65rem 1.375rem;
+      border-radius: 100px;
+      box-shadow: 0 4px 20px rgba(26,26,26,0.18);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .book-pill:hover {
+      background: var(--sage);
+      transform: translateY(-2px);
+    }
+
+    /* ===========================
+       MOBILE RESPONSIVE
+    =========================== */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: var(--bg);
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+        z-index: 99;
+      }
+      .nav-links.open a { font-size: 1.125rem; }
+      .nav-toggle { display: block; z-index: 101; }
+      .hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+      .hero__image {
+        order: -1;
+        height: 55vw;
+        min-height: 240px;
+      }
+      .hero__text { padding: 3rem var(--pad-x) 3.5rem; }
+      .about__inner,
+      .treatment-feature__inner,
+      .review-section__inner {
+        grid-template-columns: 1fr;
+      }
+      .about__image-accent { display: none; }
+      .treatment-feature__inner { grid-template-columns: 1fr; }
+      .services__header { flex-direction: column; align-items: flex-start; }
+      .service-item { grid-template-columns: 3.5rem 1fr auto; gap: 1rem; }
+      .service-num { font-size: 1.75rem; }
+      .site-footer { flex-direction: column; text-align: center; }
+      .footer__links { flex-wrap: wrap; justify-content: center; }
+      .intro-strip { gap: 1.5rem; justify-content: flex-start; }
+    }
+
+    /* ===========================
+       FOCUS / A11Y
+    =========================== */
+    :focus-visible {
+      outline: 2px solid var(--sage);
+      outline-offset: 3px;
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================
+    NAVIGATION
+  ============================ -->
+  <header class="site-nav" id="site-nav" role="banner">
+    <a href="#" class="nav-logo" aria-label="Health Synchrony home">
+      <img src="images/hero/HS-Logo-White@2x.png" alt="" aria-hidden="true" height="36" id="nav-logo-img">
+      <span class="nav-logo__name" id="nav-logo-name" style="color: #fff;">Health Synchrony</span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <ul class="nav-links" id="nav-links" role="list">
+        <li><a href="#" style="color:#fff;" class="nav-link-item">Home</a></li>
+        <li><a href="#services" style="color:#fff;" class="nav-link-item">Services</a></li>
+        <li><a href="#about" style="color:#fff;" class="nav-link-item">About</a></li>
+        <li><a href="#contact" style="color:#fff;" class="nav-link-item">Contact</a></li>
+        <li><a href="#booking" class="nav-book nav-link-item" style="color:#fff; border-color:#fff;">Book Now</a></li>
+      </ul>
+    </nav>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-links">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" id="burger-icon">
+        <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </header>
+
+  <main>
+
+    <!-- ============================
+      HERO
+    ============================ -->
+    <section class="hero" aria-label="Hero — Health Synchrony">
+      <div class="hero__text">
+        <p class="hero__eyebrow" aria-hidden="true">Irene Security Estate, Centurion</p>
+        <h1 class="hero__heading">
+          Where wellness<br>meets <em>clinical</em><br>precision.
+        </h1>
+        <p class="hero__sub">
+          Integrated aesthetic medicine and holistic wellness,
+          led by Dr. L. van Dyk in the heart of Irene, Centurion.
+        </p>
+        <div class="hero__actions">
+          <a href="#booking" class="btn-primary">Book a Consultation</a>
+          <a href="#services" class="btn-ghost">Explore services</a>
+        </div>
+      </div>
+      <div class="hero__image" aria-hidden="true">
+        <img
+          src="images/hero/home-hero.jpg"
+          alt=""
+          fetchpriority="high"
+          loading="eager">
+        <span class="hero__image-caption">Health Synchrony</span>
+      </div>
+    </section>
+
+
+    <!-- ============================
+      INTRO STRIP
+    ============================ -->
+    <div class="intro-strip" role="list" aria-label="Practice highlights">
+      <div class="intro-strip__item" role="listitem">
+        <span class="intro-strip__dot" aria-hidden="true"></span>
+        HPCSA Registered Practice
+      </div>
+      <div class="intro-strip__item" role="listitem">
+        <span class="intro-strip__dot" aria-hidden="true"></span>
+        University of Pretoria Graduate
+      </div>
+      <div class="intro-strip__item" role="listitem">
+        <span class="intro-strip__dot" aria-hidden="true"></span>
+        Advanced Diploma in Aesthetics
+      </div>
+      <div class="intro-strip__item" role="listitem">
+        <span class="intro-strip__dot" aria-hidden="true"></span>
+        Evidence-Based Wellness
+      </div>
+    </div>
+
+    <!-- ============================
+      SERVICES — NUMBERED LIST
+    ============================ -->
+    <section class="section services" id="services" aria-labelledby="services-heading">
+      <div class="container">
+        <div class="services__header">
+          <div>
+            <p class="section-label">What We Offer</p>
+            <h2 class="section-heading" id="services-heading">Our Services</h2>
+          </div>
+          <a href="aesthetics.html" class="services__view-all">View all services &rarr;</a>
+        </div>
+        <ol class="services__list" aria-label="Service list">
+          <li>
+            <a href="aesthetics.html" class="service-item" aria-label="Aesthetics — learn more">
+              <span class="service-num" aria-hidden="true">01</span>
+              <div class="service-item__body">
+                <div class="service-item__name">Aesthetics</div>
+                <div class="service-item__desc">Medical-grade skin rejuvenation, facial contouring, and anti-ageing treatments</div>
+              </div>
+              <svg class="service-item__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+          </li>
+          <li>
+            <a href="weight-loss.html" class="service-item" aria-label="Weight Loss — learn more">
+              <span class="service-num" aria-hidden="true">02</span>
+              <div class="service-item__body">
+                <div class="service-item__name">Weight Loss</div>
+                <div class="service-item__desc">Medically guided, sustainable weight-loss programmes tailored to your body</div>
+              </div>
+              <svg class="service-item__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+          </li>
+          <li>
+            <a href="iv-therapy.html" class="service-item" aria-label="IV Therapy — learn more">
+              <span class="service-num" aria-hidden="true">03</span>
+              <div class="service-item__body">
+                <div class="service-item__name">IV Therapy</div>
+                <div class="service-item__desc">Customised intravenous drips for energy, immunity, beauty, and recovery</div>
+              </div>
+              <svg class="service-item__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+          </li>
+          <li>
+            <a href="consultations.html" class="service-item" aria-label="Consultations — learn more">
+              <span class="service-num" aria-hidden="true">04</span>
+              <div class="service-item__body">
+                <div class="service-item__name">Consultations</div>
+                <div class="service-item__desc">Comprehensive one-on-one health reviews with Dr. van Dyk</div>
+              </div>
+              <svg class="service-item__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+          </li>
+          <li>
+            <a href="dispensary.html" class="service-item" aria-label="Dispensary — learn more">
+              <span class="service-num" aria-hidden="true">05</span>
+              <div class="service-item__body">
+                <div class="service-item__name">Dispensary</div>
+                <div class="service-item__desc">Curated supplements, skincare, and nutraceuticals dispensed by our medical team</div>
+              </div>
+              <svg class="service-item__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+
+    <!-- ============================
+      ABOUT / DR VAN DYK
+    ============================ -->
+    <section class="section about" id="about" aria-labelledby="about-heading">
+      <div class="container">
+        <div class="about__inner">
+          <div class="about__image-wrap">
+            <img
+              src="images/team/dr-van-dyk-clinical.jpg"
+              alt="Dr. L. van Dyk in a clinical setting at Health Synchrony, Centurion"
+              loading="lazy">
+            <div class="about__image-accent" aria-hidden="true"></div>
+          </div>
+          <div class="about__text">
+            <p class="section-label" id="about-heading">Who We Are</p>
+            <h2 class="section-heading">A practice built around&nbsp;you.</h2>
+            <div class="gold-rule" aria-hidden="true"></div>
+            <blockquote class="about__quote">
+              "We believe that looking and feeling your best should be accessible,
+              evidence-based, and deeply personal."
+            </blockquote>
+            <p class="about__body">
+              Health Synchrony is an integrated health practice nestled in the heart of
+              Irene Security Estate, Centurion. Led by Dr. L. van Dyk — a University of
+              Pretoria graduate and holder of an Advanced Diploma in Aesthetics — our team
+              combines deep clinical expertise with a genuine passion for holistic wellness.
+            </p>
+            <p class="about__body">
+              Whether you are exploring aesthetic treatments, seeking a medical weight-loss
+              programme, or investing in your long-term wellbeing, we provide a calm,
+              considered environment where every treatment plan is tailored to you.
+            </p>
+            <p class="about__credential">
+              Dr. L. van Dyk — MBChB (UP) · Advanced Diploma in Aesthetics · HPCSA Registered
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================
+      TREATMENT IMAGE FEATURE
+    ============================ -->
+    <section class="section treatment-feature" aria-labelledby="treatment-heading">
+      <div class="container">
+        <div class="treatment-feature__inner">
+          <div class="treatment-feature__text">
+            <p class="section-label">Aesthetic Results</p>
+            <h2 class="section-heading" id="treatment-heading">Precision aesthetics, natural outcomes.</h2>
+            <div class="gold-rule" aria-hidden="true"></div>
+            <p class="treatment-feature__body">
+              Every aesthetic treatment at Health Synchrony is performed under full medical
+              supervision, with outcomes that are refined, natural, and built to last. Results may vary.
+            </p>
+            <a href="aesthetics.html" class="btn-primary">Explore Aesthetics</a>
+          </div>
+          <div class="treatment-feature__images" aria-label="Aesthetic treatment result images">
+            <div class="treatment-feature__img-wrap">
+              <img
+                src="images/treatments/face-before.jpg"
+                alt="Patient skin before aesthetic treatment"
+                loading="lazy">
+              <p class="treatment-feature__img-label">Before</p>
+            </div>
+            <div class="treatment-feature__img-wrap">
+              <img
+                src="images/treatments/face-after.jpg"
+                alt="Patient skin after aesthetic treatment showing improved texture and radiance"
+                loading="lazy">
+              <p class="treatment-feature__img-label">After</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================
+      PATIENT REVIEW
+    ============================ -->
+    <section class="section review-section" aria-labelledby="review-heading">
+      <div class="container">
+        <div class="review-section__inner">
+          <div class="review-section__label-col">
+            <p class="section-label" id="review-heading">Patient Reviews</p>
+            <div class="gold-rule" aria-hidden="true"></div>
+            <a
+              href="https://g.page/healthsynchrony"
+              class="review-section__link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Read all reviews on Google (opens in new tab)">
+              View on Google
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </a>
+          </div>
+          <div>
+            <blockquote class="review-section__quote">
+              "Dr van Dyk was exceptional — thorough, caring, and truly professional.
+              I left feeling heard and with a clear, personalised plan. I highly
+              recommend Health Synchrony to anyone in Centurion looking for quality care."
+            </blockquote>
+            <p class="review-section__cite">— Patient via Google Reviews</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================
+      CTA BAND
+    ============================ -->
+    <section class="cta-band" id="booking" aria-labelledby="cta-heading">
+      <p class="cta-band__eyebrow">Begin your wellness journey</p>
+      <h2 class="cta-band__heading" id="cta-heading">
+        Ready to invest in<br><em>yourself?</em>
+      </h2>
+      <a href="contact.html" class="btn-cta-band">Book a Consultation</a>
+    </section>
+
+  </main>
+
+  <!-- ============================
+    FOOTER
+  ============================ -->
+  <footer class="site-footer" role="contentinfo">
+    <span class="footer__logo">Health Synchrony</span>
+    <nav class="footer__links" aria-label="Footer navigation">
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="contact.html">Contact Us</a>
+      <a href="about.html">About</a>
+    </nav>
+    <p class="footer__copy">
+      &copy; 2025 Health Synchrony. HPCSA registered. Results may vary.
+    </p>
+  </footer>
+
+  <!-- ============================
+    FLOATING BOOK PILL
+  ============================ -->
+  <a href="#booking" class="book-pill" aria-label="Book a consultation">
+    Book Consultation
+  </a>
+
+
+  <!-- ============================
+    INLINE JS — Nav scroll effect + mobile toggle
+  ============================ -->
+  <script>
+    (function () {
+      var nav = document.getElementById('site-nav');
+      var logoImg = document.getElementById('nav-logo-img');
+      var logoName = document.getElementById('nav-logo-name');
+      var navLinks = document.querySelectorAll('.nav-link-item');
+      var burger = document.getElementById('burger-icon');
+
+      // On hero the nav is over the image — swap colours once scrolled
+      function updateNav() {
+        var scrolled = window.scrollY > 60;
+        nav.classList.toggle('scrolled', scrolled);
+
+        // Swap white nav links to dark when not over hero
+        navLinks.forEach(function (el) {
+          if (scrolled) {
+            el.style.color = '';
+            if (el.classList.contains('nav-book')) {
+              el.style.borderColor = '';
+            }
+          } else {
+            el.style.color = '#ffffff';
+            if (el.classList.contains('nav-book')) {
+              el.style.borderColor = '#ffffff';
+            }
+          }
+        });
+
+        // Logo name
+        if (logoName) logoName.style.color = scrolled ? '' : '#ffffff';
+
+        // Logo image stays as white version — pill background keeps it visible always
+      }
+
+      window.addEventListener('scroll', updateNav, { passive: true });
+      updateNav();
+
+      // Mobile nav toggle
+      var toggle = document.getElementById('nav-toggle');
+      var navList = document.getElementById('nav-links');
+      if (toggle && navList) {
+        toggle.addEventListener('click', function () {
+          var open = navList.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', String(open));
+
+          // When menu is open, force dark links
+          navList.querySelectorAll('.nav-link-item').forEach(function (el) {
+            el.style.color = open ? '' : (window.scrollY > 60 ? '' : '#ffffff');
+          });
+        });
+
+        // Close on link click
+        navList.querySelectorAll('a').forEach(function (a) {
+          a.addEventListener('click', function () {
+            navList.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+          });
+        });
+      }
+    })();
+  </script>
+
+</body>
+</html>
