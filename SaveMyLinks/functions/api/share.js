@@ -90,25 +90,33 @@ async function insertLink(supabaseUrl, serviceRoleKey, link) {
 /**
  * Fetches OG metadata for a URL using linkedom. Never throws — errors are
  * caught by the caller and the link is still saved with a fallback title.
+ * Hard timeout of 5 seconds to avoid hanging the Cloudflare Worker.
  */
 async function fetchMetadata(url) {
-  const resp = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SaveMyLinks/1.0)' },
-    redirect: 'follow',
-  });
-  if (!resp.ok) return { title: '', imageUrl: '' };
-  const html = await resp.text();
-  const { document } = parseHTML(html);
-  const title =
-    document.querySelector('meta[property="og:title"]')?.getAttribute('content') ||
-    document.querySelector('title')?.textContent ||
-    '';
-  let imageUrl =
-    document.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
-  if (imageUrl) {
-    try { imageUrl = new URL(imageUrl, url).href; } catch { imageUrl = ''; }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const resp = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SaveMyLinks/1.0)' },
+      redirect: 'follow',
+      signal: controller.signal,
+    });
+    if (!resp.ok) return { title: '', imageUrl: '' };
+    const html = await resp.text();
+    const { document } = parseHTML(html);
+    const title =
+      document.querySelector('meta[property="og:title"]')?.getAttribute('content') ||
+      document.querySelector('title')?.textContent ||
+      '';
+    let imageUrl =
+      document.querySelector('meta[property="og:image"]')?.getAttribute('content') || '';
+    if (imageUrl) {
+      try { imageUrl = new URL(imageUrl, url).href; } catch { imageUrl = ''; }
+    }
+    return { title: title.trim(), imageUrl };
+  } finally {
+    clearTimeout(timer);
   }
-  return { title: title.trim(), imageUrl };
 }
 
 /** Handle CORS preflight. */
