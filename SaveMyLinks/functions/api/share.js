@@ -1,8 +1,10 @@
 // functions/api/share.js
-import { createClient } from '@supabase/supabase-js';
+// Uses native fetch for all Supabase calls — no npm SDK needed, works on
+// Cloudflare Pages Functions without a bundler step.
 import { parseHTML } from 'linkedom';
 
-// TODO: Rate limiting — recommended future enhancement: per-IP and per-token limiting (e.g. Cloudflare Rate Limiting rules or a KV-based counter)
+// TODO: Rate limiting — recommended future enhancement: per-IP and per-token
+// limiting (e.g. Cloudflare Rate Limiting rules or a KV-based counter)
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -10,76 +12,84 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-/**
- * Returns a JSON Response that always includes CORS headers.
- * @param {unknown} body      - Value to serialize as JSON.
- * @param {number}  status    - HTTP status code (default 200).
- * @param {Record<string,string>} extraHeaders - Additional headers to merge in.
- */
-function json(body, status = 200, extraHeaders = {}) {
+/** Returns a JSON Response that always includes CORS headers. */
+function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: {
-      'Content-Type': 'application/json',
-      ...CORS_HEADERS,
-      ...extraHeaders,
-    },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
 
-/**
- * Extracts the raw Bearer token from the Authorization header.
- * Returns the token string (the part after "Bearer ") or null if the header
- * is absent or does not start with "Bearer ".
- * @param {Request} request
- * @returns {string|null}
- */
+/** Extracts the raw Bearer token string, or null if absent/malformed. */
 function extractBearerToken(request) {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader) return null;
-  if (!authHeader.startsWith('Bearer ')) return null;
-  return authHeader.slice('Bearer '.length);
+  const auth = request.headers.get('Authorization');
+  if (!auth) return null;
+  if (!auth.startsWith('Bearer ')) return null;
+  return auth.slice('Bearer '.length).trim();
 }
 
 /**
- * Hashes a raw token string using SHA-256 and returns a lowercase hex digest.
- * NOTE: The iOS Shortcut sends the token as a string; we encode it to bytes
- * before hashing. The browser-side ApiAccessSection hashes the raw Uint8Array
- * directly — these are intentionally different inputs (string bytes vs raw bytes)
- * because the Shortcut transmits the hex-encoded token string over the wire.
- * @param {string} rawToken
- * @returns {Promise<string>}
+ * SHA-256 hex digest of a token string.
+ * The iOS Shortcut transmits the token as the hex string the user copied, so
+ * we encode that string to UTF-8 bytes before hashing — matching exactly what
+ * the browser-side ApiAccessSection stores.
  */
 async function hashToken(rawToken) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(rawToken);
-  const hashBuf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const data = new TextEncoder().encode(rawToken);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**
- * Looks up a user in Supabase Auth by their stored api_token_hash.
- * Uses the Admin API (service role) to list all users and filter by metadata.
- * Returns the matching user object or null if no match is found.
- * @param {import('@supabase/supabase-js').SupabaseClient} supabaseAdminClient
- * @param {string} tokenHash - Lowercase hex SHA-256 digest to match against.
- * @returns {Promise<object|null>}
+ * Looks up a user whose user_metadata.api_token_hash matches tokenHash.
+ * Uses the Supabase Auth Admin REST API with the service role key.
+ * Returns the user object or null.
  */
-async function lookupUserByTokenHash(supabaseAdminClient, tokenHash) {
-  const { data, error } = await supabaseAdminClient.auth.admin.listUsers();
-  if (error || !data) return null;
-  const match = data.users.find(
-    user => user.user_metadata?.api_token_hash === tokenHash
+async function lookupUserByTokenHash(supabaseUrl, serviceRoleKey, tokenHash) {
+  // Fetch page 1 of users (up to 1000). For apps with >1000 users, add pagination.
+  const resp = await fetch(
+    `${supabaseUrl}/auth/v1/admin/users?page=1&per_page=1000`,
+    {
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+    }
   );
-  return match ?? null;
+  if (!resp.ok) return null;
+  const data = await resp.json();
+  const users = data.users ?? [];
+  return users.find(u => u.user_metadata?.api_token_hash === tokenHash) ?? null;
 }
 
 /**
- * Optionally fetches Open Graph metadata for a URL using linkedom.
- * Returns { title, imageUrl } — both may be empty strings if scraping fails or
- * if the page has no OG tags. Never throws; errors are caught by the caller.
- * @param {string} url
- * @returns {Promise<{ title: string, imageUrl: string }>}
+ * Inserts a link into public.links using the Supabase PostgREST API.
+ * Returns { id, url, title } on success, throws on error.
+ */
+async function insertLink(supabaseUrl, serviceRoleKey, link) {
+  const resp = await fetch(`${supabaseUrl}/rest/v1/links`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(link),
+  });
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(err);
+  }
+  const rows = await resp.json();
+  return rows[0];
+}
+
+/**
+ * Fetches OG metadata for a URL using linkedom. Never throws — errors are
+ * caught by the caller and the link is still saved with a fallback title.
  */
 async function fetchMetadata(url) {
   const resp = await fetch(url, {
@@ -101,80 +111,57 @@ async function fetchMetadata(url) {
   return { title: title.trim(), imageUrl };
 }
 
-/**
- * Handle CORS preflight requests.
- * Returns HTTP 204 with no body and the required CORS headers.
- */
-export async function onRequestOptions(_context) {
-  return new Response(null, {
-    status: 204,
-    headers: CORS_HEADERS,
-  });
+/** Handle CORS preflight. */
+export async function onRequestOptions() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
 }
 
-/**
- * Handle POST /api/share requests.
- * Authenticates the request via Bearer token, optionally scrapes OG metadata,
- * inserts a new row into public.links, and returns the saved link data.
- */
+/** Handle POST /api/share */
 export async function onRequestPost(context) {
   const { request, env } = context;
 
-  // Requirement 4.2 / 4.3 — validate env secrets are present
+  // Validate required env vars
   const supabaseUrl = env.SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceRoleKey) {
     return json({ error: 'Server misconfiguration' }, 500);
   }
 
-  // Initialise the service-role Supabase client (never use the anon key here)
-  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
-
-  // Requirement 1.1 — reject missing Authorization header
-  // Requirement 1.2 — reject malformed Authorization header
+  // Auth — extract and validate Bearer token
   const rawToken = extractBearerToken(request);
   if (rawToken === null) {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader) {
-      return json({ error: 'Missing authorization header' }, 401);
-    }
-    return json({ error: 'Invalid authorization format' }, 401);
+    const hasHeader = !!request.headers.get('Authorization');
+    return json(
+      { error: hasHeader ? 'Invalid authorization format' : 'Missing authorization header' },
+      401
+    );
   }
 
-  // Requirement 1.5 — hash the raw token; never log or store the raw value
   const tokenHash = await hashToken(rawToken);
-
-  // Requirement 1.3 — reject tokens that don't match any stored hash
-  const user = await lookupUserByTokenHash(supabaseAdmin, tokenHash);
+  const user = await lookupUserByTokenHash(supabaseUrl, serviceRoleKey, tokenHash);
   if (!user) {
     return json({ error: 'Invalid token' }, 401);
   }
 
-  // --- Body Validation (Requirement 2.x) ---
-
-  // Requirement 2.1 — reject non-JSON bodies
+  // Parse and validate request body
   let body;
   try {
     body = await request.json();
-  } catch (_e) {
+  } catch {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
-  // Requirement 2.2 — require a non-empty url field
   if (!body.url || typeof body.url !== 'string' || body.url.trim() === '') {
     return json({ error: 'url is required' }, 400);
   }
 
-  // Requirement 2.3 — normalise optional fields
   const url = body.url.trim();
   const title = (typeof body.title === 'string' ? body.title : '').trim();
   const notes = typeof body.notes === 'string' ? body.notes : '';
   const tags = Array.isArray(body.tags) ? body.tags : [];
 
-  // --- Metadata Scraping (Requirement 3.2 / 3.3 / 3.4) ---
-  let finalTitle = title; // may be empty if not provided in body
+  // Optional metadata scraping
+  let finalTitle = title;
   let favicon = null;
 
   if (!finalTitle) {
@@ -183,18 +170,15 @@ export async function onRequestPost(context) {
       if (meta.title) finalTitle = meta.title;
       if (meta.imageUrl) favicon = meta.imageUrl;
     } catch (e) {
-      // Requirement 3.4 — scraper failure is non-fatal
       console.warn('MetadataScraper failed (non-fatal):', e?.message ?? e);
     }
   }
 
-  // Requirement 3.2 — final title fallback: url string
   if (!finalTitle) finalTitle = url;
 
-  // --- Link Insertion (Requirement 3.1 / 3.5 / 3.6) ---
-  const { data: insertedLink, error: insertError } = await supabaseAdmin
-    .from('links')
-    .insert({
+  // Insert link
+  try {
+    const inserted = await insertLink(supabaseUrl, serviceRoleKey, {
       user_id: user.id,
       url,
       title: finalTitle,
@@ -202,22 +186,10 @@ export async function onRequestPost(context) {
       notes,
       tags,
       starred: false,
-    })
-    .select('id, url, title')
-    .single();
-
-  if (insertError) {
-    console.error('Link insertion error:', insertError.message);
+    });
+    return json({ success: true, link: { id: inserted.id, url: inserted.url, title: inserted.title } });
+  } catch (e) {
+    console.error('Link insertion error:', e?.message ?? e);
     return json({ error: 'Failed to save link' }, 500);
   }
-
-  // Requirement 3.5 — success response
-  return json({
-    success: true,
-    link: {
-      id: insertedLink.id,
-      url: insertedLink.url,
-      title: insertedLink.title,
-    },
-  }, 200);
 }

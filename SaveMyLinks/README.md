@@ -1,6 +1,6 @@
 # SaveMyLinks - Landing Page
 
-A beautiful, modern landing page for the SaveMyLinks application - your personal link manager for a more organized digital life.
+A beautiful, modern landing page for the SaveMyLinks application - your personal link manager for a more organized digital life...
 
 ## 🚀 Features #
 
