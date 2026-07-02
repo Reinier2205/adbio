@@ -331,7 +331,7 @@
     </section>
 
     <!-- STEP 4: COMPACT COMPARE TABLE -->
-    <section class="wood-card rounded-2xl overflow-hidden">
+    <section class="wood-card rounded-2xl overflow-hidden mb-6">
       <div class="px-5 py-3 border-b border-[#d4af37]/20 flex justify-between items-center bg-black/20">
         <h3 class="font-cinzel text-xs text-[#ffd700] tracking-wider flex items-center gap-1.5">
           📊 Compact Compare Matrix
@@ -363,6 +363,30 @@
         <span class="text-4xl mb-3">⚖️</span>
         <h3 class="text-[#ffd700] font-cinzel text-sm tracking-wide mb-1">No compared wood entries yet</h3>
         <p id="empty-subtext" class="text-[#fff8e1]/60 text-xs max-w-sm font-lato">Enter multiple hardware listings above to visualize and compare the absolute best firewood bargains.</p>
+      </div>
+    </section>
+
+    <!-- STEP 5: CASINO DATA BACKUP DECK (EXPORT & IMPORT AT THE VERY BOTTOM) -->
+    <section class="wood-card rounded-2xl p-4 sm:p-5">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-black/25 p-4 rounded-xl border border-[#d4af37]/15">
+        <div>
+          <h4 class="text-xs font-bold text-[#ffd700] font-cinzel flex items-center gap-1.5">
+            💾 Save & Secure Your Database
+          </h4>
+          <p class="text-[10px] text-[#fff8e1]/50 font-lato mt-1">Export comparator entries as a file or import to restore settings.</p>
+        </div>
+        <div class="flex gap-2 font-inter">
+          <!-- Export Trigger -->
+          <button onclick="exportData()" class="bg-[#008080]/85 hover:bg-[#008080] border border-[#d4af37]/30 text-[#fff8e1] font-bold text-[10px] uppercase tracking-wide py-2.5 px-4 rounded-xl transition-all active:translate-y-[1px] flex items-center gap-1.5 shadow-md">
+            📥 Export JSON
+          </button>
+          
+          <!-- Import Trigger -->
+          <button onclick="triggerImport()" class="bg-[#2a1a1f] hover:bg-[#321f24] border border-[#d4af37]/50 text-[#fff8e1] font-bold text-[10px] uppercase tracking-wide py-2.5 px-4 rounded-xl transition-all active:translate-y-[1px] flex items-center gap-1.5">
+            📂 Import JSON
+          </button>
+          <input type="file" id="import-file-input" class="hidden" accept=".json" onchange="handleImportFile(event)">
+        </div>
       </div>
     </section>
 
@@ -479,7 +503,7 @@
     </div>
   </div>
 
-  <!-- CUSTOM ADD OPTION OVERLAY (SAVES SELLER WITH OPTIONAL URL) -->
+  <!-- CUSTOM ADD OPTION OVERLAY -->
   <div id="add-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
     <div class="casino-modal-panel rounded-3xl max-w-md w-full overflow-hidden transform scale-95 transition-transform duration-200">
       <div class="p-6">
@@ -492,7 +516,7 @@
           <input id="modal-input" type="text" placeholder="Enter name..." class="w-full bg-[#0a4821]/20 border border-[#d4af37]/50 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700] font-inter">
         </div>
 
-        <!-- Optional URL Field (Conditional) -->
+        <!-- Optional URL Field -->
         <div id="url-input-container" class="mb-5 hidden">
           <label class="block text-[10px] font-bold text-[#fff8e1]/65 uppercase tracking-wider mb-1 font-inter">Website URL (Optional)</label>
           <input id="modal-url-input" type="text" placeholder="https://example.com" class="w-full bg-[#0a4821]/20 border border-[#d4af37]/50 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700] font-inter">
@@ -506,6 +530,29 @@
             Cancel
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW: CUSTOM IMPORT CONFIRMATION MODAL -->
+  <div id="import-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
+    <div class="casino-modal-panel rounded-3xl max-w-md w-full overflow-hidden transform scale-95 transition-all duration-300">
+      <div class="bg-black/35 px-6 py-4 border-b border-[#d4af37]/30 flex items-center justify-between">
+        <h3 class="font-cinzel text-base text-[#ffd700] tracking-wider">⚠️ Replace Local Database?</h3>
+        <button onclick="closeImportConfirm()" class="text-[#ffd700] hover:text-[#fff8e1] font-bold text-2xl">×</button>
+      </div>
+      <div class="p-6 font-lato text-xs text-[#fff8e1]/90 space-y-3">
+        <p class="font-bold text-[#ffd700] text-sm">Warning: Destructive Operation</p>
+        <p>You are about to load a wood comparator database backup. This will completely **overwrite and replace** all current lists, custom wood types, and dealers currently saved on this device.</p>
+        <p class="text-amber-400 font-semibold">It is recommended that you export a copy of your current active records first if you wish to keep them.</p>
+      </div>
+      <div class="p-4 bg-black/20 border-t border-[#d4af37]/20 flex gap-3 justify-end font-inter">
+        <button id="import-confirm-execute" class="flex-1 btn-3d-maroon font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl">
+          Confirm Overwrite
+        </button>
+        <button onclick="closeImportConfirm()" class="flex-1 bg-[#2a1a1f] border border-[#d4af37]/40 text-[#fff8e1] hover:bg-[#3e1e24] font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl transition-all">
+          Cancel
+        </button>
       </div>
     </div>
   </div>
@@ -526,6 +573,7 @@
 
     let editId = null;
     let modalType = ''; 
+    let pendingImportData = null; // Caches payload temporarily during Custom Modal Confirmation
 
     /* ---------- INPUT REFERENCE ELEMENTS ---------- */
     const sellerSelect = document.getElementById('seller-select');
@@ -702,7 +750,6 @@
           if (!/^https?:\/\//i.test(urlValue)) {
             urlValue = 'https://' + urlValue;
           }
-          // Validate base URL format
           try {
             new URL(urlValue);
           } catch (_) {
@@ -916,6 +963,117 @@
     /* ---------- LIVE FILTER & SORT CHANGE ---------- */
     function handleFilterChange() {
       render();
+    }
+
+    /* ---------- EXPORT & IMPORT UTILITIES ---------- */
+    function exportData() {
+      try {
+        const payload = {
+          sellers: sellers,
+          woods: woods,
+          entries: entries,
+          timestamp: new Date().toISOString(),
+          appId: "TravelGamesWoodComparator"
+        };
+        
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const downloadAnchor = document.createElement('a');
+        const datestamp = new Date().toISOString().slice(0, 10);
+        downloadAnchor.href = url;
+        downloadAnchor.download = `wood_comparator_backup_${datestamp}.json`;
+        
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        
+        // Clean up allocation memory immediately
+        document.body.removeChild(downloadAnchor);
+        URL.revokeObjectURL(url);
+        
+        showToast('Data exported successfully!');
+      } catch (err) {
+        showToast('Export failed: ' + err.message, 'error');
+      }
+    }
+
+    function triggerImport() {
+      document.getElementById('import-file-input').click();
+    }
+
+    function handleImportFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          
+          // Factual format verification
+          if (!parsed.sellers || !parsed.woods || !parsed.entries) {
+            showToast('Invalid backup schema layout', 'error');
+            return;
+          }
+
+          // Cache the data temporarily, open visual overlay confirmation
+          pendingImportData = parsed;
+          openImportConfirm();
+        } catch (err) {
+          showToast('Failed to parse backup JSON file', 'error');
+        }
+        // Reset file element value to allow same-file selection consecutively
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    function openImportConfirm() {
+      const modal = document.getElementById('import-confirm-modal');
+      document.getElementById('import-confirm-execute').onclick = executeImport;
+      
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.firstElementChild.classList.remove('scale-95');
+      }, 50);
+    }
+
+    function closeImportConfirm() {
+      const modal = document.getElementById('import-confirm-modal');
+      modal.firstElementChild.classList.add('scale-95');
+      modal.classList.add('opacity-0');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+      pendingImportData = null;
+    }
+
+    function executeImport() {
+      if (!pendingImportData) return;
+
+      try {
+        // Enforce Seller object normalization mapping in case old backup has simple strings
+        sellers = pendingImportData.sellers.map(s => {
+          if (typeof s === 'string') {
+            return { name: s, url: '' };
+          }
+          return s;
+        });
+
+        woods = pendingImportData.woods;
+        entries = pendingImportData.entries;
+
+        // Commit, update interfaces, reset view state
+        saveToStorage();
+        populateDropdowns();
+        render();
+        closeImportConfirm();
+        showToast('Database restored successfully!');
+      } catch (err) {
+        showToast('Error executing restore: ' + err.message, 'error');
+        closeImportConfirm();
+      }
     }
 
     /* ---------- COMPILER & RENDER LAYOUT ---------- */
@@ -1155,6 +1313,11 @@
     document.getElementById('help-modal').addEventListener('click', function(e) {
       if(e.target === this) {
         closeHelpModal();
+      }
+    });
+    document.getElementById('import-confirm-modal').addEventListener('click', function(e) {
+      if(e.target === this) {
+        closeImportConfirm();
       }
     });
   </script>
