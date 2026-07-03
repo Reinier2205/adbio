@@ -3,7 +3,7 @@ import { User, SupabaseClient } from '@supabase/supabase-js';
 import { Smartphone, ExternalLink, AlertCircle } from 'lucide-react';
 import { hashToken } from '../utils/tokenHash';
 
-const IOS_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/TODO';
+const IOS_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/9842e1a963c340048c8a254b08611a5e';
 
 interface ApiAccessSectionProps {
   user: User | null;
