@@ -29,14 +29,17 @@ function extractBearerToken(request) {
 }
 
 /**
- * SHA-256 hex digest of a token string.
- * The iOS Shortcut transmits the token as the hex string the user copied, so
- * we encode that string to UTF-8 bytes before hashing — matching exactly what
- * the browser-side ApiAccessSection stores.
+ * SHA-256 hex digest matching the browser-side hashToken in src/utils/tokenHash.ts.
+ * The iOS Shortcut sends the token as a 64-char hex string (the value the user copied).
+ * We convert that hex string back to raw bytes before hashing — this matches exactly
+ * what the browser does (hashing the raw Uint8Array, not the hex string).
  */
 async function hashToken(rawToken) {
-  const data = new TextEncoder().encode(rawToken);
-  const buf = await crypto.subtle.digest('SHA-256', data);
+  // Convert hex string → raw bytes (same input the browser hashed)
+  const bytes = new Uint8Array(
+    rawToken.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
+  );
+  const buf = await crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(buf))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
