@@ -4,48 +4,99 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wood Price Comparator - Travel Edition</title>
-  
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <!-- Google Fonts: Cinzel (Luxury Serif), Lato (Body), Inter (Buttons/Inputs) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Lato:wght@300;400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+
   <style>
     :root {
       --felt-green: #0a4821;
-      --dark-wood: #2a1a1f;
-      --gold: #d4af37;
+      --dark-wood:  #2a1a1f;
+      --gold:       #d4af37;
       --gold-light: #ffd700;
       --light-gold: #fff8e1;
-      --teal: #008080;
-      --maroon: #800000;
-      --pip-color: #fff8e1;
+      --teal:       #008080;
+      --maroon:     #800000;
+      --pip-color:  #fff8e1;
     }
 
-    /* Custom Fonts */
-    .font-cinzel {
-      font-family: 'Cinzel', serif;
-    }
-    .font-lato {
+    /* ---- Base fonts ---- */
+    .font-cinzel { font-family: 'Cinzel', serif; }
+    .font-lato   { font-family: 'Lato', sans-serif; }
+    .font-inter  { font-family: 'Inter', sans-serif; }
+
+    /* ---- Page shell ---- */
+    body {
+      background: #120b0d;
+      color: var(--light-gold);
       font-family: 'Lato', sans-serif;
-    }
-    .font-inter {
-      font-family: 'Inter', sans-serif;
+      min-height: 100dvh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    /* Main Luxury Container Border */
+    /* ---- Zone 1: top-nav ---- */
+    .top-nav {
+      display: flex;
+      width: 90vw;
+      max-width: 720px;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      padding: 10px 0 6px;
+    }
+
+    /* ---- Nav buttons (skill §1 & §2b compliant — never position:absolute) ---- */
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #111;
+      box-shadow: 0 4px 0 #111;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: radial-gradient(circle, var(--gold-light), var(--gold));
+      color: #111;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .nav-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #111; }
+
+    /* ---- Zone 2: main casino card ---- */
     .casino-table {
       background: var(--felt-green);
       background-image: radial-gradient(circle, #0e5e2c 0%, #0a4821 100%);
       border: 10px solid #4a2c2a;
       box-shadow: 0 0 0 5px var(--gold), 0 10px 25px rgba(0,0,0,0.5);
       border-radius: 20px;
+      width: 90vw;
+      max-width: 720px;
+      position: relative;
+      padding: 20px 20px 24px;
     }
 
-    /* Premium Tactile Buttons */
+    /* ---- Buttons ---- */
+    .btn {
+      font-family: 'Inter', sans-serif;
+      border-radius: 8px;
+      box-shadow: 0 4px 0 #111;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #111; }
+
     .btn-3d-teal {
       background: linear-gradient(180deg, #009d9d 0%, var(--teal) 100%);
       border-bottom: 4px solid #004d4d;
@@ -53,11 +104,7 @@
       text-shadow: 0 1px 2px rgba(0,0,0,0.5);
       transition: all 0.1s ease;
     }
-    .btn-3d-teal:active {
-      transform: translateY(2px);
-      border-bottom-width: 2px;
-      margin-top: 2px;
-    }
+    .btn-3d-teal:active { transform: translateY(2px); border-bottom-width: 2px; margin-top: 2px; }
 
     .btn-3d-maroon {
       background: linear-gradient(180deg, #aa0000 0%, var(--maroon) 100%);
@@ -66,49 +113,16 @@
       text-shadow: 0 1px 2px rgba(0,0,0,0.5);
       transition: all 0.1s ease;
     }
-    .btn-3d-maroon:active {
-      transform: translateY(2px);
-      border-bottom-width: 2px;
-      margin-top: 2px;
-    }
+    .btn-3d-maroon:active { transform: translateY(2px); border-bottom-width: 2px; margin-top: 2px; }
 
-    /* Standardized 3D navigation button style */
-    .nav-btn {
-      position: absolute;
-      top: 12px;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      border: 2px solid #111;
-      box-shadow: 0 4px 0 #111;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.1s ease;
-      z-index: 30;
-    }
-    .nav-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 #111;
-    }
-
-    .home-btn {
-      left: 12px;
-      background: radial-gradient(circle, var(--gold-light), var(--gold));
-    }
-    .help-btn {
-      right: 12px;
-      background: radial-gradient(circle, var(--gold-light), var(--gold));
-    }
-
-    /* Wood Panel Containers */
+    /* ---- Section panels ---- */
     .wood-card {
       background: linear-gradient(135deg, #321f24 0%, var(--dark-wood) 100%);
       border: 2px solid var(--gold);
       box-shadow: 0 6px 12px rgba(0,0,0,0.3);
     }
 
-    /* Inputs Focus Overrides */
+    /* ---- Inputs ---- */
     .casino-input {
       background-color: rgba(10, 72, 33, 0.2);
       border: 1.5px solid var(--gold);
@@ -117,61 +131,79 @@
     .casino-input:focus {
       outline: none;
       border-color: var(--gold-light);
-      box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+      box-shadow: 0 0 8px rgba(255,215,0,0.4);
     }
 
-    /* Modal Backdrop and Gradient Panels */
+    /* ---- Modals (skill §2b compliant) ---- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-panel {
+      background: linear-gradient(160deg, #3e1e24, #2a1a1f);
+      border: 3px solid var(--gold);
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 420px;
+      width: 90%;
+      animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ---- Tailwind-compatible modal helpers (kept for rich modal UI) ---- */
     .casino-modal-panel {
       background: linear-gradient(180deg, #3e1e24 0%, var(--dark-wood) 100%);
       border: 3px solid var(--gold);
       box-shadow: 0 15px 30px rgba(0,0,0,0.6);
     }
 
-    /* Hide numeric step indicators */
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
-      -webkit-appearance: none; 
-      margin: 0; 
-    }
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
+    /* ---- Misc ---- */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* ---- Bottom spacer ---- */
+    .page-foot { padding-bottom: 2rem; }
   </style>
 </head>
-<body class="bg-[#120b0d] text-[#fff8e1] min-h-screen font-lato antialiased pb-12 pt-4 px-2 sm:px-4">
+<body class="antialiased">
 
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-  <!-- MAIN CASINO LAYOUT CONTAINER -->
-  <div class="max-w-4xl mx-auto casino-table p-4 sm:p-6 mt-8 relative">
-    
-    <!-- MANDATORY NAVIGATION COMPONENTS -->
-    <!-- Home Button (Top-Left) -->
-    <a href="index.html" class="nav-btn home-btn" title="Back to Travel Hub">
-      <span class="text-xl">🏠</span>
-    </a>
+  <!-- ══════════════════════════════════════════
+       ZONE 1 — TOP NAV (skill §1 & §2b)
+       Nav buttons are NEVER position:absolute
+  ══════════════════════════════════════════ -->
+  <div class="top-nav">
+    <button class="nav-btn" onclick="location.href='/TravelGames/index.html'" title="Home">🏠</button>
+    <div style="text-align:center">
+      <h1 style="font-family:'Cinzel',serif;color:var(--gold);margin:0;font-size:1.1rem;font-weight:700;letter-spacing:0.05em">WOOD PRICE COMPARATOR</h1>
+      <p style="font-size:0.55rem;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.4);margin:2px 0 0">Travel Edition Suite</p>
+    </div>
+    <button class="nav-btn" onclick="document.getElementById('help-modal').style.display='flex'" title="Help">?</button>
+  </div>
 
-    <!-- Help Button (Top-Right) -->
-    <button onclick="openHelpModal()" class="nav-btn help-btn" title="Game Rules & Help">
-      <span class="text-xl font-bold text-[#2a1a1f]">?</span>
-    </button>
+  <!-- ══════════════════════════════════════════
+       ZONE 2 — MAIN CASINO CARD
+  ══════════════════════════════════════════ -->
+  <div class="casino-table">
 
-    <!-- TITLE HEADER -->
-    <header class="text-center pt-10 pb-6 border-b border-[#d4af37]/30 mb-8">
-      <h1 class="text-3xl sm:text-4xl font-extrabold font-cinzel text-transparent bg-clip-text bg-gradient-to-b from-[#ffd700] to-[#d4af37] tracking-wider drop-shadow-md">
-        Wood Price Comparator
-      </h1>
-      <p class="text-[11px] uppercase tracking-widest text-[#ffd700]/75 font-inter mt-1">Travel Edition Suite</p>
-      
-      <!-- Live Dynamic Best Deal Global Widget -->
-      <div class="mt-4 flex justify-center">
-        <div id="summary-badge" class="bg-[#2a1a1f]/95 border border-[#d4af37]/60 rounded-xl px-4 py-2.5 text-xs inline-flex items-center gap-2 max-w-md shadow-md text-slate-100 font-inter">
-          <span class="animate-ping h-2 w-2 rounded-full bg-emerald-400"></span>
-          <span>Loading comparator deals data...</span>
-        </div>
+    <!-- Live Dynamic Best Deal Global Widget -->
+    <div class="flex justify-center mb-6">
+      <div id="summary-badge" class="bg-[#2a1a1f]/95 border border-[#d4af37]/60 rounded-xl px-4 py-2.5 text-xs inline-flex items-center gap-2 max-w-md shadow-md text-slate-100 font-inter">
+        <span class="animate-ping h-2 w-2 rounded-full bg-emerald-400"></span>
+        <span>Loading comparator deals data...</span>
       </div>
-    </header>
+    </div>
 
     <!-- STEP 1: FORM - NEW ENTRY PANEL -->
     <section class="wood-card rounded-2xl p-5 mb-6">
@@ -190,9 +222,7 @@
           <label class="block text-xs font-bold text-[#ffd700] uppercase tracking-wider mb-1.5 font-inter">Seller / Dealer</label>
           <div class="flex gap-2">
             <div class="relative flex-1">
-              <select id="seller-select" class="w-full casino-input rounded-xl px-4 py-2.5 text-xs font-inter appearance-none cursor-pointer">
-                <!-- Generated dynamically -->
-              </select>
+              <select id="seller-select" class="w-full casino-input rounded-xl px-4 py-2.5 text-xs font-inter appearance-none cursor-pointer"></select>
               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#d4af37]">
                 <svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
               </div>
@@ -202,15 +232,12 @@
             </button>
           </div>
         </div>
-
         <!-- WOOD TYPE SELECTION -->
         <div>
           <label class="block text-xs font-bold text-[#ffd700] uppercase tracking-wider mb-1.5 font-inter">Wood Type</label>
           <div class="flex gap-2">
             <div class="relative flex-1">
-              <select id="wood-select" class="w-full casino-input rounded-xl px-4 py-2.5 text-xs font-inter appearance-none cursor-pointer">
-                <!-- Generated dynamically -->
-              </select>
+              <select id="wood-select" class="w-full casino-input rounded-xl px-4 py-2.5 text-xs font-inter appearance-none cursor-pointer"></select>
               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#d4af37]">
                 <svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
               </div>
@@ -224,7 +251,6 @@
 
       <div class="border-t border-[#d4af37]/10 pt-4">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          
           <!-- QUANTITY STEPPER -->
           <div class="bg-black/20 p-2.5 rounded-xl border border-[#d4af37]/20 flex flex-col justify-between">
             <span class="block text-[10px] font-bold text-[#fff8e1]/70 font-inter mb-1">Quantity (Bags)</span>
@@ -234,7 +260,6 @@
               <button type="button" onclick="stepQty(1)" class="w-7 h-7 rounded bg-[#2a1a1f] hover:bg-[#3d272d] text-[#ffd700] font-bold text-center text-sm border border-[#d4af37]/35">+</button>
             </div>
           </div>
-
           <!-- WEIGHT INPUT -->
           <div class="bg-black/20 p-2.5 rounded-xl border border-[#d4af37]/20 flex flex-col justify-between">
             <label for="input-weight" class="block text-[10px] font-bold text-[#fff8e1]/70 font-inter mb-1">Weight per Bag</label>
@@ -243,7 +268,6 @@
               <span class="absolute right-2 text-[10px] font-bold text-[#ffd700] font-inter">kg</span>
             </div>
           </div>
-
           <!-- PRICE INPUT -->
           <div class="bg-black/20 p-2.5 rounded-xl border border-[#d4af37]/20 flex flex-col justify-between">
             <label for="input-price" class="block text-[10px] font-bold text-[#fff8e1]/70 font-inter mb-1">Total Pack Price</label>
@@ -252,7 +276,6 @@
               <input id="input-price" type="number" step="0.01" placeholder="0.00" class="w-full bg-transparent pl-4 font-bold text-[#fff8e1] text-sm focus:outline-none placeholder:text-[#fff8e1]/20 font-inter">
             </div>
           </div>
-
         </div>
       </div>
 
@@ -270,27 +293,19 @@
     <!-- STEP 2: BEST DEALS BY WOOD TYPE SUMMARY DASHBOARD -->
     <section id="best-by-wood-section" class="bg-[#2a1a1f] border-2 border-[#d4af37] rounded-2xl p-5 mb-6 shadow-xl hidden">
       <div class="flex items-center justify-between pb-2 border-b border-[#d4af37]/20 mb-4">
-        <h3 class="font-cinzel text-xs text-[#ffd700] tracking-wider flex items-center gap-1.5">
-          👑 Best Deal Per Wood Type
-        </h3>
+        <h3 class="font-cinzel text-xs text-[#ffd700] tracking-wider flex items-center gap-1.5">👑 Best Deal Per Wood Type</h3>
         <span class="text-[9px] bg-[#fff8e1] text-[#2a1a1f] font-extrabold px-2 py-0.5 rounded-md uppercase font-inter tracking-wider">Top Value</span>
       </div>
-      <div id="best-by-wood-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <!-- Grouped top rate cards injected here -->
-      </div>
+      <div id="best-by-wood-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
     </section>
 
     <!-- STEP 3: INTERACTIVE CONTROLS (FILTER, SEARCH, SORT) -->
     <section class="wood-card rounded-2xl p-4 sm:p-5 mb-6">
       <div class="flex flex-col gap-4">
         <div class="flex items-center justify-between pb-2 border-b border-[#d4af37]/10">
-          <h4 class="font-cinzel text-xs text-[#ffd700] tracking-wide flex items-center gap-1.5">
-            🔍 Filters & Sorters
-          </h4>
+          <h4 class="font-cinzel text-xs text-[#ffd700] tracking-wide flex items-center gap-1.5">🔍 Filters & Sorters</h4>
         </div>
-
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <!-- Search -->
           <div class="relative">
             <label class="block text-[9px] font-bold text-[#fff8e1]/65 uppercase tracking-wider mb-1 font-inter">Live Search</label>
             <div class="relative">
@@ -298,24 +313,18 @@
               <span class="absolute left-2.5 top-2.5 text-[#d4af37]/70 text-xs">🔎</span>
             </div>
           </div>
-
-          <!-- Filter Wood -->
           <div>
             <label class="block text-[9px] font-bold text-[#fff8e1]/65 uppercase tracking-wider mb-1 font-inter">Wood Category</label>
             <select id="filter-wood" onchange="handleFilterChange()" class="w-full bg-[#0a4821]/20 border border-[#d4af37]/40 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700] font-inter cursor-pointer">
               <option value="all">All Woods</option>
             </select>
           </div>
-
-          <!-- Filter Seller -->
           <div>
             <label class="block text-[9px] font-bold text-[#fff8e1]/65 uppercase tracking-wider mb-1 font-inter">Dealer Shop</label>
             <select id="filter-seller" onchange="handleFilterChange()" class="w-full bg-[#0a4821]/20 border border-[#d4af37]/40 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700] font-inter cursor-pointer">
               <option value="all">All Sellers</option>
             </select>
           </div>
-
-          <!-- Sort -->
           <div>
             <label class="block text-[9px] font-bold text-[#fff8e1]/65 uppercase tracking-wider mb-1 font-inter">Order Yield</label>
             <select id="sort-by" onchange="handleFilterChange()" class="w-full bg-[#0a4821]/20 border border-[#d4af37]/40 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700] font-inter cursor-pointer">
@@ -333,13 +342,9 @@
     <!-- STEP 4: COMPACT COMPARE TABLE -->
     <section class="wood-card rounded-2xl overflow-hidden mb-6">
       <div class="px-5 py-3 border-b border-[#d4af37]/20 flex justify-between items-center bg-black/20">
-        <h3 class="font-cinzel text-xs text-[#ffd700] tracking-wider flex items-center gap-1.5">
-          📊 Compact Compare Matrix
-        </h3>
+        <h3 class="font-cinzel text-xs text-[#ffd700] tracking-wider flex items-center gap-1.5">📊 Compact Compare Matrix</h3>
         <span id="count-badge" class="bg-[#ffd700] text-[#2a1a1f] text-[10px] px-2.5 py-0.5 rounded-full font-bold font-inter">0 Entries</span>
       </div>
-
-      <!-- TABLE STRUCTURE -->
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse table-auto text-xs font-inter">
           <thead>
@@ -352,13 +357,9 @@
               <th class="py-3 px-4 sm:px-6 text-center">Inspect</th>
             </tr>
           </thead>
-          <tbody id="compare-table-body" class="divide-y divide-[#d4af37]/15">
-            <!-- Table Rows dynamically generated -->
-          </tbody>
+          <tbody id="compare-table-body" class="divide-y divide-[#d4af37]/15"></tbody>
         </table>
       </div>
-
-      <!-- EMPTY STATE WRAPPER -->
       <div id="empty-state" class="p-12 text-center flex flex-col items-center justify-center">
         <span class="text-4xl mb-3">⚖️</span>
         <h3 class="text-[#ffd700] font-cinzel text-sm tracking-wide mb-1">No compared wood entries yet</h3>
@@ -366,22 +367,17 @@
       </div>
     </section>
 
-    <!-- STEP 5: CASINO DATA BACKUP DECK (EXPORT & IMPORT AT THE VERY BOTTOM) -->
+    <!-- STEP 5: EXPORT & IMPORT -->
     <section class="wood-card rounded-2xl p-4 sm:p-5">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-black/25 p-4 rounded-xl border border-[#d4af37]/15">
         <div>
-          <h4 class="text-xs font-bold text-[#ffd700] font-cinzel flex items-center gap-1.5">
-            💾 Save & Secure Your Database
-          </h4>
+          <h4 class="text-xs font-bold text-[#ffd700] font-cinzel flex items-center gap-1.5">💾 Save & Secure Your Database</h4>
           <p class="text-[10px] text-[#fff8e1]/50 font-lato mt-1">Export comparator entries as a file or import to restore settings.</p>
         </div>
         <div class="flex gap-2 font-inter">
-          <!-- Export Trigger -->
           <button onclick="exportData()" class="bg-[#008080]/85 hover:bg-[#008080] border border-[#d4af37]/30 text-[#fff8e1] font-bold text-[10px] uppercase tracking-wide py-2.5 px-4 rounded-xl transition-all active:translate-y-[1px] flex items-center gap-1.5 shadow-md">
             📥 Export JSON
           </button>
-          
-          <!-- Import Trigger -->
           <button onclick="triggerImport()" class="bg-[#2a1a1f] hover:bg-[#321f24] border border-[#d4af37]/50 text-[#fff8e1] font-bold text-[10px] uppercase tracking-wide py-2.5 px-4 rounded-xl transition-all active:translate-y-[1px] flex items-center gap-1.5">
             📂 Import JSON
           </button>
@@ -390,42 +386,40 @@
       </div>
     </section>
 
-  </div>
+  </div><!-- end .casino-table -->
 
-  <!-- HELP RULES MODAL -->
-  <div id="help-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
-    <div class="casino-modal-panel rounded-3xl max-w-md w-full overflow-hidden transform scale-95 transition-all duration-300">
-      
-      <!-- Header -->
-      <div class="bg-black/30 px-6 py-4 border-b border-[#d4af37]/30 flex justify-between items-center">
-        <h3 class="font-cinzel text-base text-[#ffd700] tracking-wider">📋 Game Rules & Help</h3>
-        <button onclick="closeHelpModal()" class="text-[#ffd700] hover:text-[#fff8e1] font-bold text-xl">×</button>
+  <div class="page-foot"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       MODALS  (skill §2b — position:fixed overlays)
+  ══════════════════════════════════════════════════════════ -->
+
+  <!-- HELP MODAL (id=help-modal, opened by nav-btn per skill §1) -->
+  <div id="help-modal" class="modal-overlay" style="display:none;align-items:center;justify-content:center;">
+    <div class="modal-panel" style="max-width:460px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(212,175,55,0.3)">
+        <h3 style="font-family:'Cinzel',serif;color:var(--gold);margin:0;font-size:1rem;">📋 How to Use</h3>
+        <button onclick="document.getElementById('help-modal').style.display='none'" style="background:none;border:none;color:var(--gold);font-size:1.4rem;cursor:pointer;font-weight:900;line-height:1;">×</button>
       </div>
-
-      <!-- Body -->
-      <div class="p-6 font-lato text-xs text-[#fff8e1]/90 space-y-3 leading-relaxed">
-        <p class="font-bold text-[#ffd700] text-sm">How to use the Comparator:</p>
-        <ol class="list-decimal pl-4 space-y-2">
-          <li><strong>Select or Create a Seller</strong> (e.g., local garage, farm stall, depot). When adding, optionally supply their website URL.</li>
-          <li><strong>Select or Create Wood Type</strong> (e.g., Sekelbos, Kameeldoring).</li>
-          <li>Fill in the package <strong>quantity</strong>, single bag <strong>weight</strong>, and total package <strong>cost</strong>.</li>
-          <li>Save the listing. The calculator dynamically analyzes metrics to supply the <strong>Rand-per-kilogram</strong> yield.</li>
-          <li>Tapping on any row inside the compact compare table displays comprehensive details and actions, including an instant portal link to the seller's web page if set!</li>
+      <div style="font-family:'Lato',sans-serif;font-size:0.78rem;color:rgba(255,248,225,0.9);line-height:1.6;">
+        <p style="font-weight:700;color:var(--gold-light);margin:0 0 0.5rem">Wood Price Comparator — Travel Edition</p>
+        <ol style="padding-left:1.2rem;margin:0 0 0.75rem;display:flex;flex-direction:column;gap:0.4rem;">
+          <li><strong>Select or Create a Seller</strong> — e.g. local garage, farm stall, depot. Optionally supply a website URL.</li>
+          <li><strong>Select or Create Wood Type</strong> — e.g. Sekelbos, Kameeldoring.</li>
+          <li>Fill in <strong>quantity</strong>, bag <strong>weight</strong>, and total <strong>cost</strong>.</li>
+          <li>Save the listing — the tool calculates <strong>Rand-per-kilogram</strong> for every entry.</li>
+          <li>Tap any row in the compare table for full details and a link to the seller's website.</li>
         </ol>
-        <p class="pt-2 border-t border-[#d4af37]/10 text-[#ffd700] font-semibold">Classification Values:</p>
-        <ul class="list-disc pl-4 space-y-1">
-          <li><span class="text-emerald-400">Best Deal:</span> Lowest R/kg in the registry.</li>
-          <li><span class="text-emerald-300">Excellent Value:</span> Within 10% of the best rate.</li>
-          <li><span class="text-amber-400">Good Deal:</span> Within 25% of the best rate.</li>
-          <li><span class="text-red-400">Suboptimal:</span> More than 25% expensive.</li>
+        <p style="font-weight:700;color:var(--gold-light);margin:0 0 0.4rem">Deal Ratings:</p>
+        <ul style="padding-left:1.2rem;margin:0;display:flex;flex-direction:column;gap:0.3rem;">
+          <li><span style="color:#34d399">Best Deal:</span> Lowest R/kg in the registry.</li>
+          <li><span style="color:#6ee7b7">Excellent Value:</span> Within 10% of the best rate.</li>
+          <li><span style="color:#ffd700">Good Deal:</span> Within 25% of the best rate.</li>
+          <li><span style="color:#f87171">Suboptimal:</span> More than 25% above cheapest.</li>
         </ul>
       </div>
-
-      <!-- Footer -->
-      <div class="p-4 bg-black/20 border-t border-[#d4af37]/20 flex justify-end">
-        <button onclick="closeHelpModal()" class="btn-3d-teal font-inter font-bold text-xs uppercase tracking-wide py-2.5 px-6 rounded-xl">
-          Got It!
-        </button>
+      <div style="margin-top:1.25rem;text-align:right;">
+        <button onclick="document.getElementById('help-modal').style.display='none'" class="btn-3d-teal font-inter font-bold text-xs uppercase tracking-wide py-2.5 px-6 rounded-xl">Got It!</button>
       </div>
     </div>
   </div>
@@ -433,8 +427,6 @@
   <!-- DETAILS INSPECTOR MODAL -->
   <div id="detail-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
     <div class="casino-modal-panel rounded-3xl max-w-md w-full overflow-hidden transform scale-95 transition-all duration-300">
-      
-      <!-- Header -->
       <div class="bg-black/30 px-6 py-4 border-b border-[#d4af37]/30 flex justify-between items-start">
         <div>
           <span id="detail-wood-badge" class="bg-gradient-to-r from-[#ffd700] to-[#d4af37] text-slate-950 font-bold text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-inter">Kameeldoring</span>
@@ -442,8 +434,6 @@
         </div>
         <button onclick="closeDetailModal()" class="text-[#ffd700] hover:text-[#fff8e1] font-bold text-2xl">×</button>
       </div>
-
-      <!-- Body -->
       <div class="p-6 font-lato">
         <h4 class="text-[10px] font-bold text-[#ffd700] uppercase tracking-wider mb-2 font-inter">Financial Analysis</h4>
         <div class="grid grid-cols-2 gap-3 mb-4">
@@ -457,12 +447,10 @@
           <div class="bg-black/20 p-3 rounded-xl border border-[#d4af37]/20 flex flex-col justify-center">
             <span class="text-[10px] text-[#fff8e1]/70 font-semibold">Value Assessment</span>
             <div id="detail-class-badge" class="inline-flex items-center gap-1.5 font-bold text-xs mt-1.5 font-inter">
-              <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-              Excellent Value
+              <span class="h-2 w-2 rounded-full bg-emerald-500"></span>Excellent Value
             </div>
           </div>
         </div>
-
         <h4 class="text-[10px] font-bold text-[#ffd700] uppercase tracking-wider mb-2 font-inter">Yield Data</h4>
         <div class="bg-black/20 rounded-xl p-3 border border-[#d4af37]/20 divide-y divide-[#d4af37]/10 text-xs space-y-2">
           <div class="flex justify-between pt-1">
@@ -482,23 +470,14 @@
             <span id="detail-price" class="font-bold text-white">R250.00</span>
           </div>
         </div>
-
-        <!-- Action Grid -->
         <div class="flex flex-wrap gap-2.5 mt-5 pt-4 border-t border-[#d4af37]/20 font-inter">
           <a id="detail-website-btn" href="#" target="_blank" rel="noopener noreferrer" class="flex-1 bg-gradient-to-b from-[#ffd700] to-[#d4af37] text-[#2a1a1f] font-bold text-xs uppercase tracking-wider py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-sm active:translate-y-[1px]">
             🌐 Visit Website
           </a>
-          <button id="detail-edit-btn" class="flex-1 btn-3d-teal font-bold text-xs uppercase tracking-wide py-2.5 px-3 rounded-xl">
-            Edit
-          </button>
-          <button id="detail-delete-btn" class="flex-1 btn-3d-maroon font-bold text-xs uppercase tracking-wide py-2.5 px-3 rounded-xl">
-            Delete
-          </button>
-          <button onclick="closeDetailModal()" class="bg-[#2a1a1f] border border-[#d4af37]/40 text-[#fff8e1] hover:bg-[#3e1e24] font-bold text-xs uppercase tracking-wide py-2.5 px-4 rounded-xl transition-all">
-            Close
-          </button>
+          <button id="detail-edit-btn" class="flex-1 btn-3d-teal font-bold text-xs uppercase tracking-wide py-2.5 px-3 rounded-xl">Edit</button>
+          <button id="detail-delete-btn" class="flex-1 btn-3d-maroon font-bold text-xs uppercase tracking-wide py-2.5 px-3 rounded-xl">Delete</button>
+          <button onclick="closeDetailModal()" class="bg-[#2a1a1f] border border-[#d4af37]/40 text-[#fff8e1] hover:bg-[#3e1e24] font-bold text-xs uppercase tracking-wide py-2.5 px-4 rounded-xl transition-all">Close</button>
         </div>
-
       </div>
     </div>
   </div>
@@ -509,32 +488,23 @@
       <div class="p-6">
         <h3 id="modal-title" class="text-lg font-cinzel text-[#ffd700] mb-1">Add New Item</h3>
         <p id="modal-desc" class="text-xs text-[#fff8e1]/60 mb-4 font-lato">Specify the label of the custom option item below.</p>
-        
-        <!-- Standard Name Field -->
         <div class="mb-4">
           <label id="modal-input-label" class="block text-[10px] font-bold text-[#fff8e1]/65 uppercase tracking-wider mb-1 font-inter">Name</label>
           <input id="modal-input" type="text" placeholder="Enter name..." class="w-full bg-[#0a4821]/20 border border-[#d4af37]/50 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700] font-inter">
         </div>
-
-        <!-- Optional URL Field -->
         <div id="url-input-container" class="mb-5 hidden">
           <label class="block text-[10px] font-bold text-[#fff8e1]/65 uppercase tracking-wider mb-1 font-inter">Website URL (Optional)</label>
           <input id="modal-url-input" type="text" placeholder="https://example.com" class="w-full bg-[#0a4821]/20 border border-[#d4af37]/50 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700] font-inter">
         </div>
-
         <div class="flex gap-3 font-inter">
-          <button onclick="submitAddModal()" class="flex-1 btn-3d-teal font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl">
-            Add Option
-          </button>
-          <button onclick="closeAddModal()" class="flex-1 bg-[#2a1a1f] border border-[#d4af37]/40 text-[#fff8e1] hover:bg-[#3e1e24] font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl transition-all">
-            Cancel
-          </button>
+          <button onclick="submitAddModal()" class="flex-1 btn-3d-teal font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl">Add Option</button>
+          <button onclick="closeAddModal()" class="flex-1 bg-[#2a1a1f] border border-[#d4af37]/40 text-[#fff8e1] hover:bg-[#3e1e24] font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl transition-all">Cancel</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- NEW: CUSTOM IMPORT CONFIRMATION MODAL -->
+  <!-- IMPORT CONFIRMATION MODAL -->
   <div id="import-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm hidden opacity-0 transition-all duration-300">
     <div class="casino-modal-panel rounded-3xl max-w-md w-full overflow-hidden transform scale-95 transition-all duration-300">
       <div class="bg-black/35 px-6 py-4 border-b border-[#d4af37]/30 flex items-center justify-between">
@@ -543,179 +513,110 @@
       </div>
       <div class="p-6 font-lato text-xs text-[#fff8e1]/90 space-y-3">
         <p class="font-bold text-[#ffd700] text-sm">Warning: Destructive Operation</p>
-        <p>You are about to load a wood comparator database backup. This will completely **overwrite and replace** all current lists, custom wood types, and dealers currently saved on this device.</p>
-        <p class="text-amber-400 font-semibold">It is recommended that you export a copy of your current active records first if you wish to keep them.</p>
+        <p>You are about to load a wood comparator database backup. This will completely overwrite and replace all current lists, custom wood types, and dealers currently saved on this device.</p>
+        <p class="text-amber-400 font-semibold">Export a copy of your current records first if you wish to keep them.</p>
       </div>
       <div class="p-4 bg-black/20 border-t border-[#d4af37]/20 flex gap-3 justify-end font-inter">
-        <button id="import-confirm-execute" class="flex-1 btn-3d-maroon font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl">
-          Confirm Overwrite
-        </button>
-        <button onclick="closeImportConfirm()" class="flex-1 bg-[#2a1a1f] border border-[#d4af37]/40 text-[#fff8e1] hover:bg-[#3e1e24] font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl transition-all">
-          Cancel
-        </button>
+        <button id="import-confirm-execute" class="flex-1 btn-3d-maroon font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl">Confirm Overwrite</button>
+        <button onclick="closeImportConfirm()" class="flex-1 bg-[#2a1a1f] border border-[#d4af37]/40 text-[#fff8e1] hover:bg-[#3e1e24] font-bold text-xs uppercase tracking-wider py-2.5 px-4 rounded-xl transition-all">Cancel</button>
       </div>
     </div>
   </div>
 
   <script>
     /* ---------- STORES & DATA ---------- */
-    // Migrate raw string sellers to legacy-proof objects { name, url }
     let rawSellers = JSON.parse(localStorage.getItem('travelgames_sellers')) || ['Bossies', 'Local Garage', 'Farm Stall'];
-    let sellers = rawSellers.map(s => {
-      if (typeof s === 'string') {
-        return { name: s, url: '' };
-      }
-      return s;
-    });
-
-    let woods = JSON.parse(localStorage.getItem('travelgames_woods')) || ['Kameeldoring', 'Sekelbos', 'Rooikrans', 'Mopane'];
+    let sellers = rawSellers.map(s => typeof s === 'string' ? { name: s, url: '' } : s);
+    let woods   = JSON.parse(localStorage.getItem('travelgames_woods'))   || ['Kameeldoring', 'Sekelbos', 'Rooikrans', 'Mopane'];
     let entries = JSON.parse(localStorage.getItem('travelgames_entries')) || [];
 
     let editId = null;
-    let modalType = ''; 
-    let pendingImportData = null; // Caches payload temporarily during Custom Modal Confirmation
+    let modalType = '';
+    let pendingImportData = null;
 
-    /* ---------- INPUT REFERENCE ELEMENTS ---------- */
-    const sellerSelect = document.getElementById('seller-select');
-    const woodSelect = document.getElementById('wood-select');
-    const inputQty = document.getElementById('input-qty');
-    const inputWeight = document.getElementById('input-weight');
-    const inputPrice = document.getElementById('input-price');
-
-    const formTitle = document.getElementById('form-title');
-    const btnSave = document.getElementById('btn-save');
-    const btnCancel = document.getElementById('btn-cancel');
+    /* ---------- INPUT REFERENCES ---------- */
+    const sellerSelect  = document.getElementById('seller-select');
+    const woodSelect    = document.getElementById('wood-select');
+    const inputQty      = document.getElementById('input-qty');
+    const inputWeight   = document.getElementById('input-weight');
+    const inputPrice    = document.getElementById('input-price');
+    const formTitle     = document.getElementById('form-title');
+    const btnSave       = document.getElementById('btn-save');
+    const btnCancel     = document.getElementById('btn-cancel');
     const editIndicator = document.getElementById('edit-indicator');
+    const filterWood    = document.getElementById('filter-wood');
+    const filterSeller  = document.getElementById('filter-seller');
+    const sortBy        = document.getElementById('sort-by');
+    const searchInput   = document.getElementById('search-input');
 
-    /* ---------- FILTER ELEMENTS ---------- */
-    const filterWood = document.getElementById('filter-wood');
-    const filterSeller = document.getElementById('filter-seller');
-    const sortBy = document.getElementById('sort-by');
-    const searchInput = document.getElementById('search-input');
-
-    /* ---------- CASINO TOAST NOTIFICATIONS ---------- */
+    /* ---------- TOAST ---------- */
     function showToast(message, type = 'success') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
-      
       const isError = type === 'error';
       const borderClass = isError ? 'border-[#800000] bg-[#3e1e24]' : 'border-[#d4af37] bg-[#2a1a1f]';
       const indicatorColor = isError ? 'bg-[#800000]' : 'bg-[#008080]';
-
       toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl text-xs font-inter transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto text-[#fff8e1] ${borderClass}`;
-      toast.innerHTML = `
-        <span class="h-2 w-2 rounded-full ${indicatorColor} animate-pulse"></span>
-        <span class="font-medium flex-1">${message}</span>
-      `;
-
+      toast.innerHTML = `<span class="h-2 w-2 rounded-full ${indicatorColor} animate-pulse"></span><span class="font-medium flex-1">${message}</span>`;
       container.appendChild(toast);
-      
-      setTimeout(() => {
-        toast.classList.remove('translate-y-4', 'opacity-0');
-      }, 50);
-
-      setTimeout(() => {
-        toast.classList.add('translate-y-4', 'opacity-0');
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
-    }
-
-    /* ---------- HELP MODAL DISPLAY CONTROLS ---------- */
-    function openHelpModal() {
-      const modal = document.getElementById('help-modal');
-      modal.classList.remove('hidden');
-      setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        modal.firstElementChild.classList.remove('scale-95');
-      }, 50);
-    }
-
-    function closeHelpModal() {
-      const modal = document.getElementById('help-modal');
-      modal.firstElementChild.classList.add('scale-95');
-      modal.classList.add('opacity-0');
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 300);
+      setTimeout(() => toast.classList.remove('translate-y-4', 'opacity-0'), 50);
+      setTimeout(() => { toast.classList.add('translate-y-4', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
     }
 
     /* ---------- STATE STORAGE ---------- */
     function saveToStorage() {
       localStorage.setItem('travelgames_sellers', JSON.stringify(sellers));
-      localStorage.setItem('travelgames_woods', JSON.stringify(woods));
+      localStorage.setItem('travelgames_woods',   JSON.stringify(woods));
       localStorage.setItem('travelgames_entries', JSON.stringify(entries));
     }
 
-    /* ---------- OPTIONS POPULATOR ---------- */
+    /* ---------- DROPDOWNS ---------- */
     function populateDropdowns() {
-      const currentSelectedSeller = sellerSelect.value;
-      const currentSelectedWood = woodSelect.value;
-
+      const curSeller = sellerSelect.value;
+      const curWood   = woodSelect.value;
       sellerSelect.innerHTML = '';
-      woodSelect.innerHTML = '';
+      woodSelect.innerHTML   = '';
+      sellers.sort((a, b) => a.name.localeCompare(b.name)).forEach(s => sellerSelect.add(new Option(s.name, s.name)));
+      woods.sort().forEach(w => woodSelect.add(new Option(w, w)));
+      if (sellers.some(s => s.name === curSeller)) sellerSelect.value = curSeller;
+      if (woods.includes(curWood)) woodSelect.value = curWood;
 
-      sellers.sort((a, b) => a.name.localeCompare(b.name)).forEach(s => {
-        sellerSelect.add(new Option(s.name, s.name));
-      });
-
-      woods.sort().forEach(w => {
-        woodSelect.add(new Option(w, w));
-      });
-
-      if (sellers.some(s => s.name === currentSelectedSeller)) sellerSelect.value = currentSelectedSeller;
-      if (woods.includes(currentSelectedWood)) woodSelect.value = currentSelectedWood;
-
-      // Filter panels
-      const prevWoodFilter = filterWood.value;
-      const prevSellerFilter = filterSeller.value;
-
-      filterWood.innerHTML = '<option value="all">All Woods</option>';
+      const prevWood   = filterWood.value;
+      const prevSeller = filterSeller.value;
+      filterWood.innerHTML   = '<option value="all">All Woods</option>';
       filterSeller.innerHTML = '<option value="all">All Sellers</option>';
-
-      woods.sort().forEach(w => {
-        filterWood.add(new Option(w, w));
-      });
-      sellers.sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
-        filterSeller.add(new Option(s.name, s.name));
-      });
-
-      filterWood.value = prevWoodFilter || 'all';
-      filterSeller.value = prevSellerFilter || 'all';
+      woods.sort().forEach(w => filterWood.add(new Option(w, w)));
+      sellers.sort((a, b) => a.name.localeCompare(b.name)).forEach(s => filterSeller.add(new Option(s.name, s.name)));
+      filterWood.value   = prevWood   || 'all';
+      filterSeller.value = prevSeller || 'all';
     }
 
-    /* ---------- MODAL CONTROLS ---------- */
+    /* ---------- ADD MODAL ---------- */
     function openAddModal(type) {
       modalType = type;
-      const modal = document.getElementById('add-modal');
-      const title = document.getElementById('modal-title');
-      const desc = document.getElementById('modal-desc');
-      const input = document.getElementById('modal-input');
+      const modal      = document.getElementById('add-modal');
+      const title      = document.getElementById('modal-title');
+      const desc       = document.getElementById('modal-desc');
+      const input      = document.getElementById('modal-input');
       const inputLabel = document.getElementById('modal-input-label');
       const urlContainer = document.getElementById('url-input-container');
-      const urlInput = document.getElementById('modal-url-input');
-
-      input.value = '';
-      urlInput.value = '';
-      
+      const urlInput   = document.getElementById('modal-url-input');
+      input.value = ''; urlInput.value = '';
       if (type === 'seller') {
         title.innerText = 'Add Custom Seller';
-        desc.innerText = 'Add a custom hardware store, depot, or braai shop to compare.';
+        desc.innerText  = 'Add a custom hardware store, depot, or braai shop to compare.';
         inputLabel.innerText = 'Seller Name';
         input.placeholder = 'e.g. Shell Garage Nelspruit';
         urlContainer.classList.remove('hidden');
       } else {
         title.innerText = 'Add Wood Type';
-        desc.innerText = 'Define a custom firewood type for comparison.';
+        desc.innerText  = 'Define a custom firewood type for comparison.';
         inputLabel.innerText = 'Wood Type Label';
         input.placeholder = 'e.g. Sekelbos High-Yield';
         urlContainer.classList.add('hidden');
       }
-
       modal.classList.remove('hidden');
-      setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        modal.firstElementChild.classList.remove('scale-95');
-      }, 50);
+      setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); }, 50);
       input.focus();
     }
 
@@ -723,306 +624,155 @@
       const modal = document.getElementById('add-modal');
       modal.firstElementChild.classList.add('scale-95');
       modal.classList.add('opacity-0');
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 200);
+      setTimeout(() => modal.classList.add('hidden'), 200);
     }
 
     function submitAddModal() {
-      const input = document.getElementById('modal-input');
-      const value = input.value.trim().replace(/\s+/g, ' ');
+      const input    = document.getElementById('modal-input');
+      const value    = input.value.trim().replace(/\s+/g, ' ');
       const urlInput = document.getElementById('modal-url-input');
-      let urlValue = urlInput.value.trim();
-
-      if (!value) {
-        showToast('Please enter a valid option name', 'error');
-        return;
-      }
-
+      let urlValue   = urlInput.value.trim();
+      if (!value) { showToast('Please enter a valid option name', 'error'); return; }
       if (modalType === 'seller') {
-        if (sellers.some(s => s.name.toLowerCase() === value.toLowerCase())) {
-          showToast('Seller already exists', 'error');
-          return;
-        }
-
-        // Factual URL verification & structure protocol injection
+        if (sellers.some(s => s.name.toLowerCase() === value.toLowerCase())) { showToast('Seller already exists', 'error'); return; }
         if (urlValue) {
-          if (!/^https?:\/\//i.test(urlValue)) {
-            urlValue = 'https://' + urlValue;
-          }
-          try {
-            new URL(urlValue);
-          } catch (_) {
-            showToast('Please provide a valid website address', 'error');
-            return;
-          }
+          if (!/^https?:\/\//i.test(urlValue)) urlValue = 'https://' + urlValue;
+          try { new URL(urlValue); } catch (_) { showToast('Please provide a valid website address', 'error'); return; }
         }
-
         sellers.push({ name: value, url: urlValue });
-        saveToStorage();
-        populateDropdowns();
-        sellerSelect.value = value;
+        saveToStorage(); populateDropdowns(); sellerSelect.value = value;
         showToast(`"${value}" added successfully`);
-      } else if (modalType === 'wood') {
-        if (woods.some(w => w.toLowerCase() === value.toLowerCase())) {
-          showToast('Wood type already exists', 'error');
-          return;
-        }
+      } else {
+        if (woods.some(w => w.toLowerCase() === value.toLowerCase())) { showToast('Wood type already exists', 'error'); return; }
         woods.push(value);
-        saveToStorage();
-        populateDropdowns();
-        woodSelect.value = value;
+        saveToStorage(); populateDropdowns(); woodSelect.value = value;
         showToast(`"${value}" added successfully`);
       }
-
       closeAddModal();
     }
 
-    /* ---------- DETAIL INSPECTOR MODAL ---------- */
+    /* ---------- DETAIL MODAL ---------- */
     function showRowDetails(id) {
       const item = entries.find(e => e.id === id);
       if (!item) return;
-
-      const totalKg = item.qty * item.weight;
-      const randPerKg = totalKg > 0 ? item.price / totalKg : 0;
+      const totalKg      = item.qty * item.weight;
+      const randPerKg    = totalKg > 0 ? item.price / totalKg : 0;
       const overallCheapest = Math.min(...entries.map(e => e.price / (e.qty * e.weight)));
-
-      // Classification rating rules
       const ratio = overallCheapest / randPerKg;
-      let indicatorBg = 'bg-[#800000]';
-      let indicatorText = 'Suboptimal Rate';
-      let indicatorTextColor = 'text-[#800000]';
-      
-      if (randPerKg === overallCheapest) {
-        indicatorBg = 'bg-emerald-400';
-        indicatorText = 'Best Value Overall';
-        indicatorTextColor = 'text-emerald-400';
-      } else if (ratio >= 0.9) {
-        indicatorBg = 'bg-emerald-400';
-        indicatorText = 'Excellent Value';
-        indicatorTextColor = 'text-emerald-400';
-      } else if (ratio >= 0.75) {
-        indicatorBg = 'bg-[#ffd700]';
-        indicatorText = 'Good Deal';
-        indicatorTextColor = 'text-[#ffd700]';
-      }
+      let indicatorBg = 'bg-[#800000]', indicatorText = 'Suboptimal Rate', indicatorTextColor = 'text-[#800000]';
+      if (randPerKg === overallCheapest)    { indicatorBg = 'bg-emerald-400'; indicatorText = 'Best Value Overall'; indicatorTextColor = 'text-emerald-400'; }
+      else if (ratio >= 0.9)               { indicatorBg = 'bg-emerald-400'; indicatorText = 'Excellent Value';    indicatorTextColor = 'text-emerald-400'; }
+      else if (ratio >= 0.75)              { indicatorBg = 'bg-[#ffd700]';   indicatorText = 'Good Deal';          indicatorTextColor = 'text-[#ffd700]'; }
 
-      // Populating the detailed model values
-      document.getElementById('detail-wood-badge').innerText = item.wood;
+      document.getElementById('detail-wood-badge').innerText  = item.wood;
       document.getElementById('detail-seller-name').innerText = item.seller;
-      document.getElementById('detail-rate').innerText = `R${randPerKg.toFixed(2)}`;
-      
+      document.getElementById('detail-rate').innerText        = `R${randPerKg.toFixed(2)}`;
       const classBadge = document.getElementById('detail-class-badge');
       classBadge.className = `inline-flex items-center gap-1.5 font-bold text-xs mt-1.5 font-inter ${indicatorTextColor}`;
       classBadge.innerHTML = `<span class="h-2.5 w-2.5 rounded-full ${indicatorBg}"></span>${indicatorText}`;
-
-      document.getElementById('detail-qty').innerText = `${item.qty} ${item.qty === 1 ? 'Bag' : 'Bags'}`;
-      document.getElementById('detail-weight').innerText = `${item.weight.toFixed(1)} kg`;
+      document.getElementById('detail-qty').innerText          = `${item.qty} ${item.qty === 1 ? 'Bag' : 'Bags'}`;
+      document.getElementById('detail-weight').innerText       = `${item.weight.toFixed(1)} kg`;
       document.getElementById('detail-total-weight').innerText = `${totalKg.toFixed(1)} kg`;
-      document.getElementById('detail-price').innerText = `R${item.price.toFixed(2)}`;
+      document.getElementById('detail-price').innerText        = `R${item.price.toFixed(2)}`;
 
-      // Dynamic website link manifest
-      const sellerObj = sellers.find(s => s.name === item.seller);
+      const sellerObj  = sellers.find(s => s.name === item.seller);
       const websiteBtn = document.getElementById('detail-website-btn');
-      if (sellerObj && sellerObj.url) {
-        websiteBtn.href = sellerObj.url;
-        websiteBtn.classList.remove('hidden');
-      } else {
-        websiteBtn.classList.add('hidden');
-      }
+      if (sellerObj && sellerObj.url) { websiteBtn.href = sellerObj.url; websiteBtn.classList.remove('hidden'); }
+      else websiteBtn.classList.add('hidden');
 
-      // Modal Actions bindings
-      document.getElementById('detail-edit-btn').onclick = () => {
-        closeDetailModal();
-        loadForEdit(item.id);
-      };
-      document.getElementById('detail-delete-btn').onclick = () => {
-        closeDetailModal();
-        deleteEntry(item.id);
-      };
+      document.getElementById('detail-edit-btn').onclick   = () => { closeDetailModal(); loadForEdit(item.id); };
+      document.getElementById('detail-delete-btn').onclick = () => { closeDetailModal(); deleteEntry(item.id); };
 
-      // Slide in transition
       const modal = document.getElementById('detail-modal');
       modal.classList.remove('hidden');
-      setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        modal.firstElementChild.classList.remove('scale-95');
-      }, 50);
+      setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); }, 50);
     }
 
     function closeDetailModal() {
       const modal = document.getElementById('detail-modal');
       modal.firstElementChild.classList.add('scale-95');
       modal.classList.add('opacity-0');
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 300);
+      setTimeout(() => modal.classList.add('hidden'), 300);
     }
 
     /* ---------- FORM UTILITIES ---------- */
     function stepQty(amount) {
-      let currentVal = parseInt(inputQty.value) || 1;
-      currentVal += amount;
-      if (currentVal < 1) currentVal = 1;
-      inputQty.value = currentVal;
+      let v = parseInt(inputQty.value) || 1;
+      v += amount;
+      if (v < 1) v = 1;
+      inputQty.value = v;
     }
 
     function clearForm() {
       editId = null;
-      inputQty.value = 1;
-      inputWeight.value = '';
-      inputPrice.value = '';
-      
+      inputQty.value = 1; inputWeight.value = ''; inputPrice.value = '';
       formTitle.innerText = '🎟️ Add Wood Listing';
       editIndicator.classList.add('hidden');
       btnCancel.classList.add('hidden');
     }
 
-    /* ---------- SAVE ENTRY ---------- */
     function saveEntry() {
-      const qty = parseInt(inputQty.value) || 0;
+      const qty    = parseInt(inputQty.value)   || 0;
       const weight = parseFloat(inputWeight.value) || 0;
-      const price = parseFloat(inputPrice.value) || 0;
-
-      if (!sellerSelect.value || !woodSelect.value) {
-        showToast('Please select/add a seller and wood type', 'error');
-        return;
-      }
-      if (qty <= 0) {
-        showToast('Please enter a valid quantity of 1 or more', 'error');
-        return;
-      }
-      if (weight <= 0) {
-        showToast('Please specify the weight of a single bag', 'error');
-        return;
-      }
-      if (price <= 0) {
-        showToast('Please supply a valid price', 'error');
-        return;
-      }
-
-      const entry = {
-        id: editId || Date.now(),
-        seller: sellerSelect.value,
-        wood: woodSelect.value,
-        qty: qty,
-        weight: weight,
-        price: price
-      };
-
-      if (editId) {
-        entries = entries.map(x => x.id === editId ? entry : x);
-        showToast('Entry updated successfully!');
-      } else {
-        entries.push(entry);
-        showToast('New wood pricing saved!');
-      }
-
-      saveToStorage();
-      clearForm();
-      render();
+      const price  = parseFloat(inputPrice.value)  || 0;
+      if (!sellerSelect.value || !woodSelect.value) { showToast('Please select/add a seller and wood type', 'error'); return; }
+      if (qty <= 0)    { showToast('Please enter a valid quantity of 1 or more', 'error'); return; }
+      if (weight <= 0) { showToast('Please specify the weight of a single bag', 'error'); return; }
+      if (price <= 0)  { showToast('Please supply a valid price', 'error'); return; }
+      const entry = { id: editId || Date.now(), seller: sellerSelect.value, wood: woodSelect.value, qty, weight, price };
+      if (editId) { entries = entries.map(x => x.id === editId ? entry : x); showToast('Entry updated successfully!'); }
+      else        { entries.push(entry); showToast('New wood pricing saved!'); }
+      saveToStorage(); clearForm(); render();
     }
 
-    /* ---------- CANCEL EDIT ---------- */
-    function cancelEdit() {
-      clearForm();
-      showToast('Edit discarded');
-    }
+    function cancelEdit() { clearForm(); showToast('Edit discarded'); }
 
-    /* ---------- DELETE ENTRY ---------- */
     function deleteEntry(id) {
       entries = entries.filter(e => e.id !== id);
-      saveToStorage();
-      render();
-      showToast('Entry removed');
-      if (editId === id) {
-        clearForm();
-      }
+      saveToStorage(); render(); showToast('Entry removed');
+      if (editId === id) clearForm();
     }
 
-    /* ---------- LOAD FOR EDIT ---------- */
     function loadForEdit(id) {
       const item = entries.find(e => e.id === id);
       if (!item) return;
-
       editId = item.id;
-      sellerSelect.value = item.seller;
-      woodSelect.value = item.wood;
-      inputQty.value = item.qty;
-      inputWeight.value = item.weight;
-      inputPrice.value = item.price;
-
+      sellerSelect.value = item.seller; woodSelect.value = item.wood;
+      inputQty.value = item.qty; inputWeight.value = item.weight; inputPrice.value = item.price;
       formTitle.innerText = '⚙️ Edit Wood Listing';
-      editIndicator.classList.remove('hidden');
-      btnCancel.classList.remove('hidden');
-
+      editIndicator.classList.remove('hidden'); btnCancel.classList.remove('hidden');
       document.getElementById('form-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
       showToast('Loaded details into inputs');
     }
 
-    /* ---------- LIVE FILTER & SORT CHANGE ---------- */
-    function handleFilterChange() {
-      render();
-    }
+    function handleFilterChange() { render(); }
 
-    /* ---------- EXPORT & IMPORT UTILITIES ---------- */
+    /* ---------- EXPORT / IMPORT ---------- */
     function exportData() {
       try {
-        const payload = {
-          sellers: sellers,
-          woods: woods,
-          entries: entries,
-          timestamp: new Date().toISOString(),
-          appId: "TravelGamesWoodComparator"
-        };
-        
+        const payload = { sellers, woods, entries, timestamp: new Date().toISOString(), appId: 'TravelGamesWoodComparator' };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const downloadAnchor = document.createElement('a');
-        const datestamp = new Date().toISOString().slice(0, 10);
-        downloadAnchor.href = url;
-        downloadAnchor.download = `wood_comparator_backup_${datestamp}.json`;
-        
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        
-        // Clean up allocation memory immediately
-        document.body.removeChild(downloadAnchor);
-        URL.revokeObjectURL(url);
-        
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `wood_comparator_backup_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         showToast('Data exported successfully!');
-      } catch (err) {
-        showToast('Export failed: ' + err.message, 'error');
-      }
+      } catch (err) { showToast('Export failed: ' + err.message, 'error'); }
     }
 
-    function triggerImport() {
-      document.getElementById('import-file-input').click();
-    }
+    function triggerImport() { document.getElementById('import-file-input').click(); }
 
     function handleImportFile(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
           const parsed = JSON.parse(e.target.result);
-          
-          // Factual format verification
-          if (!parsed.sellers || !parsed.woods || !parsed.entries) {
-            showToast('Invalid backup schema layout', 'error');
-            return;
-          }
-
-          // Cache the data temporarily, open visual overlay confirmation
-          pendingImportData = parsed;
-          openImportConfirm();
-        } catch (err) {
-          showToast('Failed to parse backup JSON file', 'error');
-        }
-        // Reset file element value to allow same-file selection consecutively
+          if (!parsed.sellers || !parsed.woods || !parsed.entries) { showToast('Invalid backup schema layout', 'error'); return; }
+          pendingImportData = parsed; openImportConfirm();
+        } catch (err) { showToast('Failed to parse backup JSON file', 'error'); }
         event.target.value = '';
       };
       reader.readAsText(file);
@@ -1031,295 +781,141 @@
     function openImportConfirm() {
       const modal = document.getElementById('import-confirm-modal');
       document.getElementById('import-confirm-execute').onclick = executeImport;
-      
       modal.classList.remove('hidden');
-      setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        modal.firstElementChild.classList.remove('scale-95');
-      }, 50);
+      setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); }, 50);
     }
 
     function closeImportConfirm() {
       const modal = document.getElementById('import-confirm-modal');
-      modal.firstElementChild.classList.add('scale-95');
-      modal.classList.add('opacity-0');
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 300);
+      modal.firstElementChild.classList.add('scale-95'); modal.classList.add('opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 300);
       pendingImportData = null;
     }
 
     function executeImport() {
       if (!pendingImportData) return;
-
       try {
-        // Enforce Seller object normalization mapping in case old backup has simple strings
-        sellers = pendingImportData.sellers.map(s => {
-          if (typeof s === 'string') {
-            return { name: s, url: '' };
-          }
-          return s;
-        });
-
-        woods = pendingImportData.woods;
+        sellers = pendingImportData.sellers.map(s => typeof s === 'string' ? { name: s, url: '' } : s);
+        woods   = pendingImportData.woods;
         entries = pendingImportData.entries;
-
-        // Commit, update interfaces, reset view state
-        saveToStorage();
-        populateDropdowns();
-        render();
-        closeImportConfirm();
+        saveToStorage(); populateDropdowns(); render(); closeImportConfirm();
         showToast('Database restored successfully!');
-      } catch (err) {
-        showToast('Error executing restore: ' + err.message, 'error');
-        closeImportConfirm();
-      }
+      } catch (err) { showToast('Error executing restore: ' + err.message, 'error'); closeImportConfirm(); }
     }
 
-    /* ---------- COMPILER & RENDER LAYOUT ---------- */
+    /* ---------- RENDER ---------- */
     function render() {
-      const tableBody = document.getElementById('compare-table-body');
-      const emptyState = document.getElementById('empty-state');
-      const emptySubtext = document.getElementById('empty-subtext');
-      const countBadge = document.getElementById('count-badge');
-      const summaryBadge = document.getElementById('summary-badge');
-      
+      const tableBody   = document.getElementById('compare-table-body');
+      const emptyState  = document.getElementById('empty-state');
+      const emptySubtext= document.getElementById('empty-subtext');
+      const countBadge  = document.getElementById('count-badge');
+      const summaryBadge= document.getElementById('summary-badge');
       const bestSection = document.getElementById('best-by-wood-section');
-      const bestGrid = document.getElementById('best-by-wood-grid');
+      const bestGrid    = document.getElementById('best-by-wood-grid');
 
       if (entries.length === 0) {
-        tableBody.innerHTML = '';
-        bestSection.classList.add('hidden');
-        emptyState.classList.remove('hidden');
-        emptySubtext.innerText = "Enter multiple hardware listings above to visualize and compare the absolute best firewood bargains.";
+        tableBody.innerHTML = ''; bestSection.classList.add('hidden'); emptyState.classList.remove('hidden');
+        emptySubtext.innerText = 'Enter multiple hardware listings above to visualize and compare the absolute best firewood bargains.';
         countBadge.innerText = '0 Entries';
-        summaryBadge.innerHTML = `
-          <span class="animate-pulse flex h-2 w-2 rounded-full bg-slate-400"></span>
-          <span class="text-slate-400">No wood options entered yet.</span>
-        `;
+        summaryBadge.innerHTML = `<span class="animate-pulse flex h-2 w-2 rounded-full bg-slate-400"></span><span class="text-slate-400">No wood options entered yet.</span>`;
         return;
       }
 
-      // Pre-compute overall cheapest R/kg rate
       const overallCheapest = Math.min(...entries.map(e => e.price / (e.qty * e.weight)));
+      const processedAll    = entries.map(e => { const totalKg = e.qty * e.weight; return { ...e, totalKg, randPerKg: totalKg > 0 ? e.price / totalKg : 0 }; });
 
-      // Process raw entries
-      const processedAll = entries.map(e => {
-        const totalKg = e.qty * e.weight;
-        const randPerKg = totalKg > 0 ? e.price / totalKg : 0;
-        return { ...e, totalKg, randPerKg };
-      });
-
-      /* -------------------------------------------------------------
-         STEP 1: TOP DEALS GROUPED BY WOOD TYPE
-         ------------------------------------------------------------- */
+      /* Best deals by wood type */
       const woodGroups = {};
-      processedAll.forEach(item => {
-        if (!woodGroups[item.wood]) {
-          woodGroups[item.wood] = [];
-        }
-        woodGroups[item.wood].push(item);
-      });
+      processedAll.forEach(item => { if (!woodGroups[item.wood]) woodGroups[item.wood] = []; woodGroups[item.wood].push(item); });
+      const bestDealsByWood = Object.keys(woodGroups).map(w => woodGroups[w].sort((a,b) => a.randPerKg - b.randPerKg)[0]);
 
-      const bestDealsByWood = [];
-      for (const woodType in woodGroups) {
-        const sortedGroup = woodGroups[woodType].sort((a, b) => a.randPerKg - b.randPerKg);
-        bestDealsByWood.push(sortedGroup[0]);
-      }
-
-      // Render wood-grouped top picks dashboard
       bestGrid.innerHTML = '';
       if (bestDealsByWood.length > 0) {
         bestSection.classList.remove('hidden');
-        
         bestDealsByWood.sort((a,b) => a.wood.localeCompare(b.wood)).forEach(deal => {
-          const isGlobalCheapest = deal.randPerKg === overallCheapest;
-          const dealCard = document.createElement('div');
-          
-          dealCard.className = `p-3 rounded-xl bg-black/45 border cursor-pointer hover:shadow-md transition-all-200 flex flex-col justify-between ${
-            isGlobalCheapest ? 'border-[#ffd700] ring-1 ring-[#ffd700]/30' : 'border-[#d4af37]/30'
-          }`;
-          
-          dealCard.onclick = () => showRowDetails(deal.id);
-          
-          dealCard.innerHTML = `
+          const isGlobal = deal.randPerKg === overallCheapest;
+          const card = document.createElement('div');
+          card.className = `p-3 rounded-xl bg-black/45 border cursor-pointer hover:shadow-md transition-all-200 flex flex-col justify-between ${isGlobal ? 'border-[#ffd700] ring-1 ring-[#ffd700]/30' : 'border-[#d4af37]/30'}`;
+          card.onclick = () => showRowDetails(deal.id);
+          card.innerHTML = `
             <div>
               <div class="flex items-center justify-between gap-1 mb-2">
-                <span class="bg-[#ffd700] text-[#2a1a1f] font-extrabold text-[9px] px-2.5 py-0.5 rounded uppercase tracking-wider truncate max-w-[130px] font-inter">
-                  ${deal.wood}
-                </span>
-                ${isGlobalCheapest ? `
-                  <span class="bg-emerald-950 text-emerald-400 border border-emerald-500/30 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider flex items-center gap-1 font-inter">
-                    Best Global
-                  </span>
-                ` : ''}
+                <span class="bg-[#ffd700] text-[#2a1a1f] font-extrabold text-[9px] px-2.5 py-0.5 rounded uppercase tracking-wider truncate max-w-[130px] font-inter">${deal.wood}</span>
+                ${isGlobal ? `<span class="bg-emerald-950 text-emerald-400 border border-emerald-500/30 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider font-inter">Best Global</span>` : ''}
               </div>
               <div class="mb-1">
                 <h4 class="text-[9px] text-[#fff8e1]/50 font-medium font-inter">Best Dealer</h4>
                 <div class="text-xs font-bold text-white truncate font-inter">${deal.seller}</div>
               </div>
             </div>
-            
-            <div class="flex items-baseline justify-between border-t border-[#d4af37]/10 pt-2 mt-2">
-              <div class="flex items-baseline gap-0.5">
-                <span class="text-base font-extrabold text-[#ffd700] font-inter">R${deal.randPerKg.toFixed(2)}</span>
-                <span class="text-[#fff8e1]/50 text-[9px]">/kg</span>
-              </div>
-              <span class="text-[9px] text-[#fff8e1]/40 font-medium font-inter">${deal.totalKg.toFixed(0)}kg yield</span>
-            </div>
-          `;
-          bestGrid.appendChild(dealCard);
+            <div class="mt-2 flex items-baseline gap-1">
+              <span class="text-lg font-black text-[#ffd700] font-inter">R${deal.randPerKg.toFixed(2)}</span>
+              <span class="text-[9px] text-[#fff8e1]/50 font-inter">/ kg</span>
+            </div>`;
+          bestGrid.appendChild(card);
         });
-      } else {
-        bestSection.classList.add('hidden');
-      }
+      } else { bestSection.classList.add('hidden'); }
 
-      /* -------------------------------------------------------------
-         STEP 2: APPLY FILTER & SORT PROCESSORS
-         ------------------------------------------------------------- */
-      const searchQuery = searchInput.value.toLowerCase().trim();
-      const selectedWoodFilter = filterWood.value;
-      const selectedSellerFilter = filterSeller.value;
+      /* Apply filters */
+      const q      = (searchInput.value || '').toLowerCase();
+      const fWood  = filterWood.value;
+      const fSell  = filterSeller.value;
+      const sort   = sortBy.value;
 
-      let filtered = [...processedAll];
-
-      // Filters
-      filtered = filtered.filter(item => {
-        const matchesSearch = item.seller.toLowerCase().includes(searchQuery) || 
-                              item.wood.toLowerCase().includes(searchQuery);
-        const matchesWood = selectedWoodFilter === 'all' || item.wood === selectedWoodFilter;
-        const matchesSeller = selectedSellerFilter === 'all' || item.seller === selectedSellerFilter;
-        return matchesSearch && matchesWood && matchesSeller;
+      let filtered = processedAll.filter(item => {
+        if (fWood  !== 'all' && item.wood   !== fWood)  return false;
+        if (fSell  !== 'all' && item.seller !== fSell)  return false;
+        if (q && !item.seller.toLowerCase().includes(q) && !item.wood.toLowerCase().includes(q)) return false;
+        return true;
       });
 
-      // Sorters
-      const currentSort = sortBy.value;
-      if (currentSort === 'cost-asc') {
-        filtered.sort((a, b) => a.randPerKg - b.randPerKg);
-      } else if (currentSort === 'cost-desc') {
-        filtered.sort((a, b) => b.randPerKg - a.randPerKg);
-      } else if (currentSort === 'price-asc') {
-        filtered.sort((a, b) => a.price - b.price);
-      } else if (currentSort === 'weight-desc') {
-        filtered.sort((a, b) => b.totalKg - a.totalKg);
-      } else if (currentSort === 'seller-asc') {
-        filtered.sort((a, b) => a.seller.localeCompare(b.seller));
-      }
+      filtered.sort((a, b) => {
+        if (sort === 'cost-asc')    return a.randPerKg - b.randPerKg;
+        if (sort === 'cost-desc')   return b.randPerKg - a.randPerKg;
+        if (sort === 'price-asc')   return a.price - b.price;
+        if (sort === 'weight-desc') return b.totalKg - a.totalKg;
+        if (sort === 'seller-asc')  return a.seller.localeCompare(b.seller);
+        return 0;
+      });
 
-      // Empty State Table handler
+      countBadge.innerText = `${filtered.length} ${filtered.length === 1 ? 'Entry' : 'Entries'}`;
+
       if (filtered.length === 0) {
         tableBody.innerHTML = '';
         emptyState.classList.remove('hidden');
-        emptySubtext.innerText = "No listings match your search criteria. Try modifying your filter settings above.";
-        countBadge.innerText = '0 Entries';
+        emptySubtext.innerText = 'No entries match your current filters.';
+        summaryBadge.innerHTML = `<span class="animate-pulse flex h-2 w-2 rounded-full bg-amber-400"></span><span class="text-amber-300">No matches — try clearing filters.</span>`;
         return;
       }
-
       emptyState.classList.add('hidden');
-      countBadge.innerText = `${filtered.length} Entr${filtered.length > 1 ? 'ies' : 'y'}`;
 
-      // Rebuild Table rows
-      tableBody.innerHTML = '';
+      const globalBest = filtered.reduce((a, b) => a.randPerKg <= b.randPerKg ? a : b);
+      summaryBadge.innerHTML = `<span class="h-2 w-2 rounded-full bg-emerald-400"></span><span><strong class="text-emerald-400">${globalBest.seller}</strong> has the best rate for <strong class="text-[#ffd700]">${globalBest.wood}</strong> at <strong>R${globalBest.randPerKg.toFixed(2)}/kg</strong></span>`;
 
-      filtered.forEach(item => {
-        const isOverallCheapest = item.randPerKg === overallCheapest;
-        
+      tableBody.innerHTML = filtered.map(item => {
         const ratio = overallCheapest / item.randPerKg;
-        let indicatorBg = 'bg-[#800000]';
-        let indicatorText = 'Suboptimal';
-        let indicatorPill = 'bg-[#3e1e24] text-red-300 border-red-500/20';
-        
-        if (isOverallCheapest) {
-          indicatorBg = 'bg-emerald-400';
-          indicatorText = '⭐ BEST DEAL';
-          indicatorPill = 'bg-emerald-950/70 text-emerald-300 border-emerald-400/40';
-        } else if (ratio >= 0.9) {
-          indicatorBg = 'bg-emerald-400';
-          indicatorText = 'Excellent';
-          indicatorPill = 'bg-[#0a4821]/50 text-emerald-200 border-emerald-400/20';
-        } else if (ratio >= 0.75) {
-          indicatorBg = 'bg-[#ffd700]';
-          indicatorText = 'Good Deal';
-          indicatorPill = 'bg-[#2a1a1f] text-amber-200 border-[#ffd700]/20';
-        }
+        let badgeClass, badgeText;
+        if (item.randPerKg === overallCheapest) { badgeClass = 'text-emerald-400'; badgeText = '✦ Best Deal'; }
+        else if (ratio >= 0.9)                 { badgeClass = 'text-emerald-300'; badgeText = 'Excellent'; }
+        else if (ratio >= 0.75)                { badgeClass = 'text-[#ffd700]';   badgeText = 'Good Deal'; }
+        else                                   { badgeClass = 'text-red-400';     badgeText = 'Suboptimal'; }
 
-        const rowBg = isOverallCheapest ? 'bg-emerald-950/20 hover:bg-emerald-950/30' : 'hover:bg-black/10';
-
-        const tr = document.createElement('tr');
-        tr.className = `transition-all border-b border-[#d4af37]/10 cursor-pointer ${rowBg}`;
-        tr.onclick = () => showRowDetails(item.id);
-        
-        tr.innerHTML = `
-          <td class="py-3 px-4 sm:px-6 font-bold text-white">
-            <div class="flex items-center gap-1.5">
-              <span class="truncate max-w-[120px] sm:max-w-[200px]">${item.seller}</span>
-              ${isOverallCheapest ? `<span class="hidden sm:inline-block bg-gradient-to-r from-[#ffd700] to-[#d4af37] text-slate-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase font-inter">Top Pick</span>` : ''}
-            </div>
-          </td>
-          <td class="py-3 px-4 sm:px-6 text-[#fff8e1]/80 font-medium">
-            <span class="bg-[#2a1a1f] text-[#ffd700] border border-[#d4af37]/30 px-2 py-0.5 rounded-md text-[10px] font-bold">${item.wood}</span>
-          </td>
-          <td class="py-3 px-4 sm:px-6 text-right">
-            <span class="font-extrabold text-sm ${isOverallCheapest ? 'text-emerald-400' : 'text-white'}">
-              R${item.randPerKg.toFixed(2)}
-            </span>
-            <span class="text-[#fff8e1]/40 text-[10px]">/kg</span>
-          </td>
+        return `<tr class="hover:bg-[#d4af37]/5 cursor-pointer transition-colors" onclick="showRowDetails(${item.id})">
+          <td class="py-3 px-4 sm:px-6 font-medium text-[#fff8e1] truncate max-w-[120px]">${item.seller}</td>
+          <td class="py-3 px-4 sm:px-6 text-[#ffd700]/80">${item.wood}</td>
+          <td class="py-3 px-4 sm:px-6 text-right font-black text-[#ffd700]">R${item.randPerKg.toFixed(2)}</td>
+          <td class="py-3 px-4 sm:px-6 text-center font-bold text-xs ${badgeClass}">${badgeText}</td>
+          <td class="py-3 px-4 sm:px-6 text-right text-[#fff8e1]/80">R${item.price.toFixed(2)}</td>
           <td class="py-3 px-4 sm:px-6 text-center">
-            <span class="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${indicatorPill}">
-              <span class="h-1.5 w-1.5 rounded-full ${indicatorBg}"></span>
-              ${indicatorText}
-            </span>
+            <button class="text-[10px] bg-[#d4af37]/20 hover:bg-[#d4af37]/40 border border-[#d4af37]/30 text-[#ffd700] font-bold px-2.5 py-1 rounded-lg font-inter transition-colors">View</button>
           </td>
-          <td class="py-3 px-4 sm:px-6 text-right font-bold text-[#fff8e1]/75">
-            R${item.price.toFixed(2)}
-          </td>
-          <td class="py-3 px-4 sm:px-6 text-center">
-            <button class="p-1 text-[#ffd700] hover:text-white transition-colors">
-              🔎
-            </button>
-          </td>
-        `;
-        tableBody.appendChild(tr);
-      });
-
-      // Update Header Widget Info
-      const topGlobalItem = processedAll.sort((a,b) => a.randPerKg - b.randPerKg)[0];
-      summaryBadge.innerHTML = `
-        <span class="flex h-2 w-2 rounded-full bg-emerald-400"></span>
-        <span class="text-[#fff8e1] text-xs">
-          🏆 Champion Deal: <span class="text-[#ffd700] font-extrabold">${topGlobalItem.seller}</span> (${topGlobalItem.wood}) @ <span class="text-emerald-400 font-extrabold">R${topGlobalItem.randPerKg.toFixed(2)}/kg</span>
-        </span>
-      `;
+        </tr>`;
+      }).join('');
     }
 
-    /* ---------- INITIALIZATION ---------- */
-    window.onload = function() {
-      populateDropdowns();
-      render();
-    };
-
-    // Close Modals on clicking background overlay
-    document.getElementById('add-modal').addEventListener('click', function(e) {
-      if(e.target === this) {
-        closeAddModal();
-      }
-    });
-    document.getElementById('detail-modal').addEventListener('click', function(e) {
-      if(e.target === this) {
-        closeDetailModal();
-      }
-    });
-    document.getElementById('help-modal').addEventListener('click', function(e) {
-      if(e.target === this) {
-        closeHelpModal();
-      }
-    });
-    document.getElementById('import-confirm-modal').addEventListener('click', function(e) {
-      if(e.target === this) {
-        closeImportConfirm();
-      }
-    });
+    /* ---------- INIT ---------- */
+    populateDropdowns();
+    render();
   </script>
 </body>
 </html>
