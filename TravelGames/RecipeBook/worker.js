@@ -76,6 +76,7 @@ async function handleExtract(request, env) {
 
   const geminiModel = 'gemini-2.5-flash-lite';
   const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${env.GEMINI_API_KEY}`;
+  console.log('Calling Gemini:', geminiUrl.replace(env.GEMINI_API_KEY, 'REDACTED'));
 
   const result = await callGeminiWithRetry(geminiUrl, parts);
   return cors(JSON.stringify(result));
@@ -146,10 +147,12 @@ async function callGeminiWithRetry(url, parts, maxAttempts = 4) {
       continue;
     }
 
+    let errBody = '';
+    try { errBody = await response.text(); } catch {}
     if (response.status === 429) lastErr = { error: 'AI service is busy. Wait a moment and try again.' };
-    else if (response.status === 400) lastErr = { error: 'AI could not read that input. Try a clearer photo.' };
-    else if (response.status === 403) lastErr = { error: 'AI API key is invalid or not enabled. Check Gemini setup.' };
-    else lastErr = { error: `AI service error (${response.status}). Try again shortly.` };
+    else if (response.status === 400) lastErr = { error: `AI bad request: ${errBody.slice(0,200)}` };
+    else if (response.status === 403) lastErr = { error: `AI API key issue: ${errBody.slice(0,200)}` };
+    else lastErr = { error: `AI error ${response.status}: ${errBody.slice(0,300)}` };
     break;
   }
   return lastErr || { error: 'Unknown error contacting AI service.' };
