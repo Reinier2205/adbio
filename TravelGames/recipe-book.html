@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Recipe Box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2B2620;
+    --paper:#EFE6D8;
+    --card:#F8F3E9;
+    --olive:#454F2E;
+    --olive-dark:#333B22;
+    --mustard:#C99A2E;
+    --rust:#8C3B2B;
+    --line:rgba(43,38,32,0.14);
+    --shadow:0 2px 6px rgba(43,38,32,0.12), 0 8px 20px -8px rgba(43,38,32,0.18);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(43,38,32,0.05) 1px, transparent 0);
+    background-size:18px 18px;
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Fraunces', serif;}
+  .eyebrow{
+    font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--olive); font-weight:600; opacity:0.75;
+  }
+
+  header.app{
+    position:sticky; top:0; z-index:20;
+    background:var(--paper);
+    border-bottom:1px solid var(--line);
+    padding:16px 16px 12px;
+  }
+  header.app h1{
+    margin:0; font-size:26px; font-weight:700; letter-spacing:-0.01em;
+  }
+  header.app .row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .newbtn{
+    background:var(--olive); color:#F8F3E9; border:none; border-radius:100px;
+    padding:10px 16px; font-family:'Work Sans'; font-weight:600; font-size:14px;
+    display:flex; align-items:center; gap:6px; cursor:pointer;
+    box-shadow:var(--shadow);
+  }
+  .newbtn:active{background:var(--olive-dark);}
+
+  .tagbar{display:flex; gap:6px; overflow-x:auto; margin-top:12px; padding-bottom:2px;}
+  .tagbar::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:none; font-size:12px; padding:6px 12px; border-radius:100px;
+    border:1px solid var(--line); background:var(--card); color:var(--ink);
+    white-space:nowrap; cursor:pointer; font-weight:500;
+  }
+  .chip.active{background:var(--olive); color:#F8F3E9; border-color:var(--olive);}
+
+  main{padding:16px; max-width:640px; margin:0 auto;}
+
+  .empty{
+    text-align:center; padding:60px 20px; color:var(--ink); opacity:0.7;
+  }
+  .empty svg{width:48px; height:48px; margin-bottom:12px; opacity:0.5;}
+  .empty .display{font-size:20px; margin-bottom:6px; opacity:1;}
+
+  .cardlist{display:flex; flex-direction:column; gap:10px;}
+  .rcard{
+    display:flex; gap:12px; background:var(--card); border:1px solid var(--line);
+    border-radius:10px; padding:10px; box-shadow:var(--shadow); cursor:pointer;
+    animation:rise 0.35s ease backwards;
+    position:relative; overflow:hidden;
+  }
+  .rcard::before{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--mustard);
+  }
+  @keyframes rise{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .rcard .thumb{
+    width:64px; height:64px; border-radius:8px; object-fit:cover; flex:none;
+    background:var(--line);
+  }
+  .rcard .thumb.placeholder{display:flex; align-items:center; justify-content:center;}
+  .rcard .info{flex:1; min-width:0;}
+  .rcard .info h3{margin:0 0 2px; font-size:17px; font-weight:600; line-height:1.25;}
+  .rcard .meta{font-size:12px; color:var(--ink); opacity:0.65; display:flex; gap:8px; flex-wrap:wrap;}
+  .rcard .tags{display:flex; gap:5px; margin-top:6px; flex-wrap:wrap;}
+  .rcard .tags span{
+    font-size:10.5px; padding:2px 8px; border-radius:100px; background:var(--paper);
+    border:1px solid var(--line); color:var(--olive); font-weight:600; text-transform:uppercase; letter-spacing:0.03em;
+  }
+
+  /* Overlay screens */
+  .overlay{
+    position:fixed; inset:0; background:var(--paper); z-index:50;
+    display:flex; flex-direction:column; transform:translateY(100%);
+    transition:transform 0.28s ease;
+  }
+  .overlay.open{transform:translateY(0);}
+  .ov-header{
+    padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px;
+    background:var(--paper); position:sticky; top:0;
+  }
+  .iconbtn{
+    background:none; border:none; width:36px; height:36px; border-radius:100px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink);
+  }
+  .iconbtn:active{background:var(--line);}
+  .ov-header h2{margin:0; font-size:17px; font-weight:600; flex:1;}
+  .ov-body{flex:1; overflow-y:auto; padding:16px; max-width:640px; margin:0 auto; width:100%;}
+
+  /* Add flow */
+  .dropzone{
+    border:2px dashed var(--line); border-radius:14px; padding:28px 16px; text-align:center;
+    background:var(--card);
+  }
+  .dropzone svg{width:32px; height:32px; color:var(--olive); margin-bottom:8px;}
+  .dropzone p{margin:0; font-size:14px; opacity:0.75;}
+  .filebtns{display:flex; gap:10px; justify-content:center; margin-top:14px;}
+  .filebtn{
+    background:var(--olive); color:#F8F3E9; border:none; border-radius:100px;
+    padding:10px 16px; font-weight:600; font-size:13px; cursor:pointer;
+  }
+  .filebtn.secondary{background:transparent; color:var(--olive); border:1px solid var(--olive);}
+
+  .thumbrow{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
+  .thumbwrap{position:relative; width:72px; height:72px;}
+  .thumbwrap img{width:100%; height:100%; object-fit:cover; border-radius:8px; border:1px solid var(--line);}
+  .thumbwrap .rm{
+    position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:100px;
+    background:var(--rust); color:#fff; border:none; font-size:12px; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+
+  .extractbtn{
+    width:100%; margin-top:16px; background:var(--mustard); color:var(--ink);
+    border:none; border-radius:10px; padding:14px; font-weight:700; font-size:15px; cursor:pointer;
+  }
+  .extractbtn:disabled{opacity:0.55;}
+
+  .loadingrow{
+    display:flex; align-items:center; gap:10px; justify-content:center; margin-top:16px;
+    font-size:13px; opacity:0.75;
+  }
+  .spinner{
+    width:16px; height:16px; border:2px solid var(--line); border-top-color:var(--olive);
+    border-radius:100%; animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .errbox{
+    background:#F6E4DF; border:1px solid var(--rust); color:var(--rust); border-radius:8px;
+    padding:10px 12px; font-size:13px; margin-top:14px;
+  }
+
+  /* Form */
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.08em;
+    font-weight:600; color:var(--olive); opacity:0.85; margin-bottom:6px;
+  }
+  .field input[type=text], .field textarea{
+    width:100%; border:1px solid var(--line); background:var(--card); border-radius:8px;
+    padding:10px 12px; font-family:'Work Sans'; font-size:15px; color:var(--ink); resize:vertical;
+  }
+  .field input[type=text]:focus, .field textarea:focus{outline:2px solid var(--olive); outline-offset:1px;}
+  .field.row2{display:flex; gap:10px;}
+  .field.row2 > div{flex:1;}
+
+  .listedit{display:flex; flex-direction:column; gap:6px;}
+  .listedit .li{display:flex; gap:6px; align-items:flex-start;}
+  .listedit .li span.num{
+    font-family:'Fraunces'; font-weight:600; color:var(--mustard); font-size:15px;
+    padding:9px 2px; flex:none; min-width:18px;
+  }
+  .listedit textarea{flex:1; min-height:38px;}
+  .listedit .del{
+    background:none; border:none; color:var(--rust); font-size:18px; padding:6px; cursor:pointer; flex:none;
+  }
+  .addline{
+    background:none; border:1px dashed var(--line); border-radius:8px; padding:8px;
+    font-size:13px; color:var(--olive); font-weight:600; cursor:pointer; width:100%; margin-top:4px;
+  }
+
+  .tageditor{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
+  .tageditor .chip{cursor:default;}
+  .tageditor .chip .x{margin-left:6px; cursor:pointer; font-weight:700;}
+  .tageditor input{
+    border:none; background:none; font-size:13px; flex:1; min-width:80px; outline:none; padding:6px 0;
+  }
+
+  .savebar{
+    position:sticky; bottom:0; background:var(--paper); border-top:1px solid var(--line);
+    padding:12px 16px; display:flex; gap:10px;
+  }
+  .savebtn{
+    flex:1; background:var(--olive); color:#F8F3E9; border:none; border-radius:10px;
+    padding:13px; font-weight:700; font-size:15px; cursor:pointer;
+  }
+  .cancelbtn{
+    background:transparent; border:1px solid var(--line); color:var(--ink); border-radius:10px;
+    padding:13px 18px; font-weight:600; font-size:15px; cursor:pointer;
+  }
+
+  /* Detail view */
+  .detail-hero{
+    width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px; margin-bottom:16px;
+    background:var(--card);
+  }
+  .detail-title{font-size:24px; margin:0 0 4px;}
+  .detail-meta{display:flex; gap:14px; flex-wrap:wrap; font-size:13px; opacity:0.7; margin-bottom:10px;}
+  .detail-meta b{color:var(--olive);}
+  .detail-tags{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px;}
+  .section-title{
+    font-family:'Fraunces'; font-size:15px; font-weight:600; color:var(--olive);
+    border-bottom:2px solid var(--mustard); display:inline-block; padding-bottom:2px; margin:0 0 10px;
+  }
+  .ingredients-list{margin:0 0 24px; padding-left:0; list-style:none;}
+  .ingredients-list li{
+    padding:9px 0; border-bottom:1px solid var(--line); font-size:14.5px;
+    display:flex; gap:10px; align-items:flex-start;
+  }
+  .ingredients-list li::before{content:'—'; color:var(--mustard); font-weight:700; flex:none;}
+  .steps-list{margin:0 0 20px; padding:0; list-style:none; counter-reset:step;}
+  .steps-list li{
+    counter-increment:step; padding:10px 0 10px 34px; position:relative; font-size:14.5px; line-height:1.5;
+    border-bottom:1px solid var(--line);
+  }
+  .steps-list li::before{
+    content:counter(step); position:absolute; left:0; top:9px; font-family:'Fraunces'; font-weight:700;
+    color:#F8F3E9; background:var(--olive); width:22px; height:22px; border-radius:100%;
+    display:flex; align-items:center; justify-content:center; font-size:12px;
+  }
+  .notesbox{
+    background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px;
+    font-size:14px; font-style:italic; opacity:0.85; margin-bottom:20px;
+  }
+  .detail-actions{display:flex; gap:10px; margin-top:8px;}
+  .actionbtn{
+    flex:1; border-radius:10px; padding:12px; font-weight:600; font-size:14px; cursor:pointer;
+    border:1px solid var(--line); background:var(--card); color:var(--ink);
+  }
+  .actionbtn.danger{color:var(--rust); border-color:var(--rust);}
+
+  input[type=file]{display:none;}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="row">
+    <div>
+      <div class="eyebrow">Recipe Box</div>
+      <h1 class="display">Your recipes</h1>
+    </div>
+    <button class="newbtn" id="btnNew">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      New
+    </button>
+  </div>
+  <div class="tagbar" id="tagbar"></div>
+</header>
+
+<main>
+  <div id="listArea"></div>
+</main>
+
+<!-- ADD OVERLAY -->
+<div class="overlay" id="addOverlay">
+  <div class="ov-header">
+    <button class="iconbtn" id="closeAdd"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2>New recipe</h2>
+  </div>
+  <div class="ov-body">
+    <div id="addStep1">
+      <div class="dropzone" id="dropzone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <p>Add one or more photos of the recipe — a cookbook page, a website screenshot, a handwritten card.</p>
+        <div class="filebtns">
+          <button class="filebtn" id="btnCamera">Take photo</button>
+          <button class="filebtn secondary" id="btnLibrary">Choose photos</button>
+        </div>
+      </div>
+      <input type="file" id="fileCamera" accept="image/*" capture="environment">
+      <input type="file" id="fileLibrary" accept="image/*" multiple>
+
+      <div class="thumbrow" id="thumbrow"></div>
+
+      <button class="extractbtn" id="btnExtract" disabled>Extract recipe</button>
+      <div id="loadingRow" style="display:none" class="loadingrow"><div class="spinner"></div> Reading your recipe…</div>
+      <div id="errArea"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT/REVIEW OVERLAY -->
+<div class="overlay" id="editOverlay">
+  <div class="ov-header">
+    <button class="iconbtn" id="closeEdit"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2 id="editHeading">Review recipe</h2>
+  </div>
+  <div class="ov-body" id="editBody"></div>
+  <div class="savebar">
+    <button class="cancelbtn" id="btnCancelEdit">Cancel</button>
+    <button class="savebtn" id="btnSaveEdit">Save recipe</button>
+  </div>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay" id="detailOverlay">
+  <div class="ov-header">
+    <button class="iconbtn" id="closeDetail"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2>Recipe</h2>
+  </div>
+  <div class="ov-body" id="detailBody"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'recipeBook.recipes';
+let recipes = loadRecipes();
+let pendingImages = []; // {dataUrl, mediaType}
+let activeTagFilter = null;
+let editingRecipe = null; // recipe being reviewed/edited (draft)
+let editingIsNew = false;
+
+function loadRecipes(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e){ return []; }
+}
+function saveRecipes(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
+}
+function uid(){ return 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+
+// ---------- Rendering: list ----------
+function allTags(){
+  const s = new Set();
+  recipes.forEach(r => (r.tags||[]).forEach(t => s.add(t)));
+  return Array.from(s).sort();
+}
+
+function renderTagbar(){
+  const bar = document.getElementById('tagbar');
+  const tags = allTags();
+  if(tags.length === 0){ bar.innerHTML = ''; return; }
+  bar.innerHTML = tags.map(t =>
+    `<button class="chip ${activeTagFilter===t?'active':''}" data-tag="${escapeAttr(t)}">${escapeHtml(t)}</button>`
+  ).join('');
+  bar.querySelectorAll('.chip').forEach(chip => {
+    chip.onclick = () => {
+      const t = chip.dataset.tag;
+      activeTagFilter = (activeTagFilter === t) ? null : t;
+      renderTagbar(); renderList();
+    };
+  });
+}
+
+function renderList(){
+  const area = document.getElementById('listArea');
+  let list = recipes;
+  if(activeTagFilter) list = list.filter(r => (r.tags||[]).includes(activeTagFilter));
+  list = [...list].sort((a,b) => b.createdAt - a.createdAt);
+
+  if(list.length === 0){
+    area.innerHTML = `
+      <div class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5V6a2 2 0 012-2h12a2 2 0 012 2v13.5M4 19.5H20"/></svg>
+        <div class="display">Your box is empty</div>
+        <div>Tap "New" and snap a photo of a recipe to get started.</div>
+      </div>`;
+    return;
+  }
+
+  area.innerHTML = `<div class="cardlist">${list.map((r,i) => cardHtml(r,i)).join('')}</div>`;
+  area.querySelectorAll('.rcard').forEach(el => {
+    el.onclick = () => openDetail(el.dataset.id);
+  });
+}
+
+function cardHtml(r, i){
+  const thumb = r.thumbnail
+    ? `<img class="thumb" src="${r.thumbnail}" alt="">`
+    : `<div class="thumb placeholder">🍽️</div>`;
+  const meta = [];
+  if(r.servings) meta.push(`Serves ${escapeHtml(r.servings)}`);
+  if(r.prepTime) meta.push(`Prep ${escapeHtml(r.prepTime)}`);
+  if(r.cookTime) meta.push(`Cook ${escapeHtml(r.cookTime)}`);
+  return `
+    <div class="rcard" data-id="${r.id}" style="animation-delay:${i*40}ms">
+      ${thumb}
+      <div class="info">
+        <h3>${escapeHtml(r.title || 'Untitled recipe')}</h3>
+        <div class="meta">${meta.map(m=>`<span>${m}</span>`).join('')}</div>
+        <div class="tags">${(r.tags||[]).map(t=>`<span>${escapeHtml(t)}</span>`).join('')}</div>
+      </div>
+    </div>`;
+}
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+// ---------- Add flow ----------
+const addOverlay = document.getElementById('addOverlay');
+document.getElementById('btnNew').onclick = () => {
+  pendingImages = [];
+  renderThumbrow();
+  document.getElementById('errArea').innerHTML = '';
+  addOverlay.classList.add('open');
+};
+document.getElementById('closeAdd').onclick = () => addOverlay.classList.remove('open');
+document.getElementById('btnCamera').onclick = () => document.getElementById('fileCamera').click();
+document.getElementById('btnLibrary').onclick = () => document.getElementById('fileLibrary').click();
+
+document.getElementById('fileCamera').onchange = e => handleFiles(e.target.files);
+document.getElementById('fileLibrary').onchange = e => handleFiles(e.target.files);
+
+function handleFiles(fileList){
+  const files = Array.from(fileList || []);
+  if(files.length === 0) return;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      normalizeImage(reader.result).then(norm => {
+        pendingImages.push(norm);
+        renderThumbrow();
+      }).catch(() => {
+        document.getElementById('errArea').innerHTML =
+          `<div class="errbox">Couldn't read one of those photos — try a different one.</div>`;
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+  // reset inputs so the same file can be re-picked later
+  document.getElementById('fileCamera').value = '';
+  document.getElementById('fileLibrary').value = '';
+}
+
+// Re-encode any photo (HEIC, huge camera originals, etc.) as a reasonably-sized JPEG
+// so it's always a format + size the API accepts.
+function normalizeImage(dataUrl){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxEdge = 1568; // Anthropic's recommended max image dimension
+      const scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const jpegUrl = canvas.toDataURL('image/jpeg', 0.85);
+      resolve({ dataUrl: jpegUrl, mediaType: 'image/jpeg' });
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+function renderThumbrow(){
+  const row = document.getElementById('thumbrow');
+  row.innerHTML = pendingImages.map((img,idx) => `
+    <div class="thumbwrap">
+      <img src="${img.dataUrl}" alt="">
+      <button class="rm" data-idx="${idx}">✕</button>
+    </div>
+  `).join('');
+  row.querySelectorAll('.rm').forEach(btn => {
+    btn.onclick = (e) => { e.stopPropagation(); pendingImages.splice(+btn.dataset.idx,1); renderThumbrow(); };
+  });
+  document.getElementById('btnExtract').disabled = pendingImages.length === 0;
+}
+
+document.getElementById('btnExtract').onclick = extractRecipe;
+
+async function callClaudeWithRetry(content, maxAttempts = 4){
+  let lastErr;
+  for(let attempt = 1; attempt <= maxAttempts; attempt++){
+    let response;
+    try{
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content }]
+        })
+      });
+    }catch(networkErr){
+      lastErr = new Error('Could not reach the extraction service. Check your connection and try again.');
+      break; // network errors aren't retried
+    }
+
+    if(response.ok){
+      return await response.json();
+    }
+
+    // Retry on overload (529) and transient server errors (500/502/503/504)
+    const retryable = response.status === 529 || (response.status >= 500 && response.status < 600 && response.status !== 501);
+    if(retryable && attempt < maxAttempts){
+      updateLoadingMessage(attempt === 1 ? 'Server is busy, retrying…' : `Still busy, retrying (${attempt}/${maxAttempts - 1})…`);
+      const delayMs = 800 * Math.pow(2, attempt - 1); // 800ms, 1.6s, 3.2s
+      await new Promise(res => setTimeout(res, delayMs));
+      continue;
+    }
+
+    if(response.status === 529){
+      lastErr = new Error("Claude's extraction service is overloaded right now. It should clear up shortly — please try again in a minute.");
+    } else if(response.status === 429){
+      lastErr = new Error("You're sending requests a bit too fast. Wait a moment and try again.");
+    } else {
+      lastErr = new Error('The extraction service returned an error (' + response.status + ').');
+    }
+    break;
+  }
+  throw lastErr;
+}
+
+function updateLoadingMessage(msg){
+  const loading = document.getElementById('loadingRow');
+  loading.innerHTML = `<div class="spinner"></div> ${escapeHtml(msg)}`;
+}
+
+async function extractRecipe(){
+  const loading = document.getElementById('loadingRow');
+  const errArea = document.getElementById('errArea');
+  const btn = document.getElementById('btnExtract');
+  errArea.innerHTML = '';
+  loading.innerHTML = '<div class="spinner"></div> Reading your recipe…';
+  loading.style.display = 'flex';
+  btn.disabled = true;
+
+  let parsed = null;
+  let extractionNote = '';
+
+  try{
+    const content = [];
+    pendingImages.forEach(img => {
+      const base64 = img.dataUrl.split(',')[1];
+      content.push({ type: 'image', source: { type:'base64', media_type: img.mediaType, data: base64 } });
+    });
+    content.push({ type: 'text', text:
+      `Extract the recipe shown in these image(s) into JSON only, with no preamble, no markdown fences, and no text outside the JSON object. Use this exact schema:
+{
+  "title": "string",
+  "servings": "string (e.g. '4' or '' if unknown)",
+  "prepTime": "string (e.g. '15 min' or '')",
+  "cookTime": "string (e.g. '30 min' or '')",
+  "ingredients": ["string", "..."],
+  "steps": ["string", "..."],
+  "tags": ["string", "..."] ,
+  "notes": "string (any tips, storage notes, or variations mentioned; '' if none)"
+}
+Rules:
+- If multiple images are provided, treat them as pages of the same recipe and merge them.
+- Keep ingredient quantities with the ingredient in one string each (e.g. "2 cups flour").
+- Keep steps as separate short items in order.
+- For tags, infer up to 4 short lowercase category words from the dish itself (e.g. "dessert", "vegetarian", "italian", "quick") — only if reasonably inferable, otherwise leave the array empty.
+- If the images do not contain a recognizable recipe, return {"error": "no_recipe_found"}.`
+    });
+
+    const data = await callClaudeWithRetry(content);
+    const textBlock = (data.content || []).find(b => b.type === 'text');
+    if(!textBlock) throw new Error('No response received from the extraction service.');
+
+    let clean = textBlock.text.trim().replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```\s*$/,'');
+    const first = clean.indexOf('{');
+    const last = clean.lastIndexOf('}');
+    if(first !== -1 && last !== -1) clean = clean.substring(first, last + 1);
+
+    let candidate;
+    try{ candidate = JSON.parse(clean); }
+    catch(e){ throw new Error("Couldn't parse what came back — you can still fill in the details by hand."); }
+
+    if(candidate.error){
+      throw new Error('No recipe was recognizable in those photos — fill in what you can below.');
+    }
+    parsed = candidate;
+
+  }catch(err){
+    // Don't block the user — carry the message into the edit screen as a heads-up instead.
+    extractionNote = err.message || 'Automatic extraction had trouble with that photo — fill in the details below.';
+  }
+
+  // Always build a thumbnail and always land on the edit screen, extraction or not.
+  const thumbnail = await makeThumbnail(pendingImages[0].dataUrl).catch(() => null);
+
+  editingRecipe = {
+    id: uid(),
+    title: (parsed && parsed.title) || '',
+    servings: (parsed && parsed.servings) || '',
+    prepTime: (parsed && parsed.prepTime) || '',
+    cookTime: (parsed && parsed.cookTime) || '',
+    ingredients: (parsed && Array.isArray(parsed.ingredients)) ? parsed.ingredients : [],
+    steps: (parsed && Array.isArray(parsed.steps)) ? parsed.steps : [],
+    tags: (parsed && Array.isArray(parsed.tags)) ? parsed.tags : [],
+    notes: (parsed && parsed.notes) || '',
+    thumbnail,
+    createdAt: Date.now()
+  };
+  editingIsNew = true;
+  loading.style.display = 'none';
+  btn.disabled = pendingImages.length === 0;
+  addOverlay.classList.remove('open');
+  openEditor(extractionNote);
+}
+
+function makeThumbnail(dataUrl){
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 480;
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+// ---------- Edit/review overlay ----------
+const editOverlay = document.getElementById('editOverlay');
+document.getElementById('closeEdit').onclick = closeEditor;
+document.getElementById('btnCancelEdit').onclick = closeEditor;
+function closeEditor(){ editOverlay.classList.remove('open'); editingRecipe = null; }
+
+function openEditor(note){
+  document.getElementById('editHeading').textContent = editingIsNew ? 'Review recipe' : 'Edit recipe';
+  renderEditorBody(note);
+  editOverlay.classList.add('open');
+}
+
+function renderEditorBody(note){
+  const r = editingRecipe;
+  const body = document.getElementById('editBody');
+  body.innerHTML = `
+    ${note ? `<div class="errbox" style="margin-bottom:16px;">${escapeHtml(note)}</div>` : ''}
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="f_title" value="${escapeAttr(r.title)}" placeholder="Untitled recipe">
+    </div>
+    <div class="field row2">
+      <div><label>Servings</label><input type="text" id="f_servings" value="${escapeAttr(r.servings)}" placeholder="4"></div>
+      <div><label>Prep time</label><input type="text" id="f_prep" value="${escapeAttr(r.prepTime)}" placeholder="15 min"></div>
+      <div><label>Cook time</label><input type="text" id="f_cook" value="${escapeAttr(r.cookTime)}" placeholder="30 min"></div>
+    </div>
+    <div class="field">
+      <label>Ingredients</label>
+      <div class="listedit" id="ing_list"></div>
+      <button class="addline" id="addIng">+ Add ingredient</button>
+    </div>
+    <div class="field">
+      <label>Steps</label>
+      <div class="listedit" id="step_list"></div>
+      <button class="addline" id="addStep">+ Add step</button>
+    </div>
+    <div class="field">
+      <label>Tags</label>
+      <div class="tageditor" id="tagEditor"></div>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f_notes" rows="3" placeholder="Tips, storage, variations…">${escapeHtml(r.notes)}</textarea>
+    </div>
+  `;
+  renderListEditor('ing_list', r.ingredients, 'ingredients');
+  renderListEditor('step_list', r.steps, 'steps');
+  renderTagEditor();
+
+  document.getElementById('addIng').onclick = () => { r.ingredients.push(''); renderListEditor('ing_list', r.ingredients, 'ingredients'); };
+  document.getElementById('addStep').onclick = () => { r.steps.push(''); renderListEditor('step_list', r.steps, 'steps'); };
+}
+
+function renderListEditor(containerId, arr, key){
+  const c = document.getElementById(containerId);
+  c.innerHTML = arr.map((val, i) => `
+    <div class="li">
+      <span class="num">${i+1}</span>
+      <textarea rows="1" data-idx="${i}">${escapeHtml(val)}</textarea>
+      <button class="del" data-idx="${i}">×</button>
+    </div>
+  `).join('');
+  c.querySelectorAll('textarea').forEach(t => {
+    autoGrow(t);
+    t.oninput = () => { editingRecipe[key][+t.dataset.idx] = t.value; autoGrow(t); };
+  });
+  c.querySelectorAll('.del').forEach(btn => {
+    btn.onclick = () => { editingRecipe[key].splice(+btn.dataset.idx,1); renderListEditor(containerId, editingRecipe[key], key); };
+  });
+}
+function autoGrow(t){ t.style.height='auto'; t.style.height = t.scrollHeight + 'px'; }
+
+function renderTagEditor(){
+  const wrap = document.getElementById('tagEditor');
+  const r = editingRecipe;
+  wrap.innerHTML = r.tags.map((t,i) => `<span class="chip">${escapeHtml(t)}<span class="x" data-idx="${i}">×</span></span>`).join('')
+    + `<input type="text" id="tagInput" placeholder="Add tag…">`;
+  wrap.querySelectorAll('.x').forEach(x => {
+    x.onclick = () => { r.tags.splice(+x.dataset.idx,1); renderTagEditor(); };
+  });
+  const input = document.getElementById('tagInput');
+  input.onkeydown = (e) => {
+    if(e.key === 'Enter' && input.value.trim()){
+      r.tags.push(input.value.trim().toLowerCase());
+      renderTagEditor();
+      document.getElementById('tagInput').focus();
+      e.preventDefault();
+    }
+  };
+}
+
+document.getElementById('btnSaveEdit').onclick = () => {
+  const r = editingRecipe;
+  r.title = document.getElementById('f_title').value.trim();
+  r.servings = document.getElementById('f_servings').value.trim();
+  r.prepTime = document.getElementById('f_prep').value.trim();
+  r.cookTime = document.getElementById('f_cook').value.trim();
+  r.notes = document.getElementById('f_notes').value.trim();
+  r.ingredients = r.ingredients.map(s=>s.trim()).filter(Boolean);
+  r.steps = r.steps.map(s=>s.trim()).filter(Boolean);
+
+  const idx = recipes.findIndex(x => x.id === r.id);
+  if(idx >= 0) recipes[idx] = r; else recipes.push(r);
+  saveRecipes();
+  closeEditor();
+  renderTagbar();
+  renderList();
+};
+
+// ---------- Detail overlay ----------
+const detailOverlay = document.getElementById('detailOverlay');
+document.getElementById('closeDetail').onclick = () => detailOverlay.classList.remove('open');
+
+function openDetail(id){
+  const r = recipes.find(x => x.id === id);
+  if(!r) return;
+  const body = document.getElementById('detailBody');
+  body.innerHTML = `
+    ${r.thumbnail ? `<img class="detail-hero" src="${r.thumbnail}" alt="">` : ''}
+    <h1 class="display detail-title">${escapeHtml(r.title || 'Untitled recipe')}</h1>
+    <div class="detail-meta">
+      ${r.servings ? `<span><b>Serves</b> ${escapeHtml(r.servings)}</span>`:''}
+      ${r.prepTime ? `<span><b>Prep</b> ${escapeHtml(r.prepTime)}</span>`:''}
+      ${r.cookTime ? `<span><b>Cook</b> ${escapeHtml(r.cookTime)}</span>`:''}
+    </div>
+    <div class="detail-tags">${(r.tags||[]).map(t=>`<span class="chip">${escapeHtml(t)}</span>`).join('')}</div>
+
+    ${r.ingredients.length ? `
+      <div class="section-title">Ingredients</div>
+      <ul class="ingredients-list">${r.ingredients.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul>
+    ` : ''}
+
+    ${r.steps.length ? `
+      <div class="section-title">Method</div>
+      <ol class="steps-list">${r.steps.map(s=>`<li>${escapeHtml(s)}</li>`).join('')}</ol>
+    ` : ''}
+
+    ${r.notes ? `<div class="section-title">Notes</div><div class="notesbox">${escapeHtml(r.notes)}</div>` : ''}
+
+    <div class="detail-actions">
+      <button class="actionbtn" id="btnEditRecipe">Edit</button>
+      <button class="actionbtn danger" id="btnDeleteRecipe">Delete</button>
+    </div>
+  `;
+  document.getElementById('btnEditRecipe').onclick = () => {
+    editingRecipe = JSON.parse(JSON.stringify(r));
+    editingIsNew = false;
+    detailOverlay.classList.remove('open');
+    openEditor();
+  };
+  document.getElementById('btnDeleteRecipe').onclick = () => {
+    if(confirm('Delete this recipe? This can\'t be undone.')){
+      recipes = recipes.filter(x => x.id !== id);
+      saveRecipes();
+      detailOverlay.classList.remove('open');
+      renderTagbar();
+      renderList();
+    }
+  };
+  detailOverlay.classList.add('open');
+}
+
+// ---------- init ----------
+renderTagbar();
+renderList();
+</script>
+</body>
+</html>

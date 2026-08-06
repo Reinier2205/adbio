@@ -3405,10 +3405,11 @@ function showPanel(id) {
   // Notify VoiceManager so it shows/hides the correct voice row
   if (window.voiceMgr) voiceMgr.onPanelChange(id);
   if (window.videoMgr) videoMgr.onPanelChange(id);
-  // Keep screen permanently awake on every sensor panel transition —
-  // iOS can release the wake lock silently between panels, so we re-assert
-  // it here rather than relying solely on the initial startSensor() call.
-  if ((id === 's1' || id === 's2' || id === 's3') && wakeLockManager) {
+  // Re-assert wake lock on every panel transition for both sensor and display.
+  // iOS silently releases the lock between navigation events; Android relies on
+  // the silent-video fallback inside maintainWakeLock() since Chrome on Android
+  // often ignores the Wake Lock API in a browser tab.
+  if (wakeLockManager) {
     wakeLockManager.maintainWakeLock();
   }
 }
