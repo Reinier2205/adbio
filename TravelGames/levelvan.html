@@ -57,7 +57,13 @@
   --glow:0 0 20px rgba(0,212,255,0.4);--glow2:0 0 20px rgba(0,255,136,0.4);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace}
+html{height:100%}
+body{
+  min-height:100%;
+  min-height:100svh;
+  overflow:hidden;
+  background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace
+}
 body::before{content:'';position:fixed;inset:0;z-index:0;
   background:radial-gradient(ellipse at 20% 20%,rgba(0,100,200,.15),transparent 60%),
              radial-gradient(ellipse at 80% 80%,rgba(0,212,255,.08),transparent 50%);pointer-events:none}
@@ -65,13 +71,38 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),
   linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);
   background-size:40px 40px;pointer-events:none}
-.screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;
-  align-items:center;padding:24px;overflow-y:auto}
-.screen.home{justify-content:center;gap:20px}
+.screen{
+  position:fixed;
+  /* Use inset with safe area so content never hides under status bar or home indicator */
+  top:env(safe-area-inset-top, 0px);
+  bottom:env(safe-area-inset-bottom, 0px);
+  left:env(safe-area-inset-left, 0px);
+  right:env(safe-area-inset-right, 0px);
+  z-index:1;
+  display:flex;flex-direction:column;
+  align-items:center;
+  padding:16px 20px;
+  overflow-y:auto;
+  /* Prevent rubber-band scroll from revealing background on iOS */
+  overscroll-behavior:contain;
+}
+.screen.home{
+  /* flex-start + gap keeps items at the top; padding creates visual centering on large screens */
+  justify-content:flex-start;
+  gap:16px;
+  padding-top:max(24px, env(safe-area-inset-top, 24px));
+  padding-bottom:max(24px, env(safe-area-inset-bottom, 24px));
+}
+/* On screens tall enough, vertically centre the home content without cutting it */
+@media (min-height:600px){
+  .screen.home{
+    justify-content:center;
+  }
+}
 .screen.hidden{display:none!important}
 /* Sensor and display live screens must never scroll */
-#sensor-screen,#display-screen{overflow:hidden}
-.back{position:fixed;top:12px;left:12px;background:none;
+#sensor-screen,#display-screen{overflow:hidden;padding:0}
+.back{position:fixed;top:calc(12px + env(safe-area-inset-top, 0px));left:max(12px, env(safe-area-inset-left, 12px));background:none;
   border:2px solid var(--dim);border-radius:10px;color:var(--text);
   font-family:'Share Tech Mono',monospace;font-size:.85rem;cursor:pointer;
   z-index:20;padding:8px 14px;white-space:nowrap}
@@ -84,15 +115,24 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   color:var(--accent);text-shadow:var(--glow);letter-spacing:4px}
 .sub{color:var(--dim);font-size:.78rem;letter-spacing:2px;margin-top:-12px}
 .cards{display:flex;gap:16px;width:100%;max-width:320px}
-.card{flex:1;padding:28px 12px;border-radius:14px;background:var(--panel);
+.card{flex:1;padding:20px 10px;border-radius:14px;background:var(--panel);
   border:2px solid var(--border);cursor:pointer;text-align:center;
-  display:flex;flex-direction:column;align-items:center;gap:12px;transition:all .15s}
+  display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .15s}
 .card:active{transform:scale(.95)}
 .card.s{border-color:rgba(0,212,255,.5)}.card.d{border-color:rgba(0,255,136,.5)}
-.card-ico{font-size:2.4rem}
-.card-title{font-family:'Orbitron',monospace;font-size:.92rem;font-weight:700;letter-spacing:2px}
+.card-ico{font-size:2rem}
+.card-title{font-family:'Orbitron',monospace;font-size:.88rem;font-weight:700;letter-spacing:2px}
 .card.s .card-title{color:var(--accent)}.card.d .card-title{color:var(--accent2)}
-.card-desc{font-size:.74rem;color:var(--dim);line-height:1.6}
+.card-desc{font-size:.72rem;color:var(--dim);line-height:1.5}
+/* Compact home layout on short screens (iPhone SE, iPhone 7 with browser chrome) */
+@media (max-height:620px){
+  .screen.home{gap:10px}
+  .logo{font-size:1.6rem;letter-spacing:3px}
+  .card{padding:14px 8px;gap:7px}
+  .card-ico{font-size:1.6rem}
+  .sbtn{padding:12px 16px}
+  .sbtn-ico{font-size:1.4rem}
+}
 /* Status */
 .srow{display:flex;align-items:center;gap:10px;font-size:1rem;color:var(--dim)}
 .dot{width:12px;height:12px;border-radius:50%;background:var(--dim);flex-shrink:0}
@@ -269,10 +309,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .help-scenario-text li{margin-bottom:4px}
 .help-section-title{font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;
   color:var(--dim);letter-spacing:3px;margin:0 0 16px;text-transform:uppercase}
-.pin-bar{position:fixed;top:0;left:0;right:0;z-index:10;
+.pin-bar{
+  position:fixed;
+  top:env(safe-area-inset-top, 0px);
+  left:env(safe-area-inset-left, 0px);
+  right:env(safe-area-inset-right, 0px);
+  z-index:10;
   display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
   padding:10px 14px;background:rgba(10,22,40,.95);
-  border-bottom:2px solid var(--accent);backdrop-filter:blur(8px)}
+  border-bottom:2px solid var(--accent);backdrop-filter:blur(8px)
+}
 .pin-bar-centre{display:flex;flex-direction:column;align-items:center;justify-content:center}
 .pin-bar-label{font-size:.62rem;color:var(--dim);letter-spacing:3px;margin-bottom:1px;text-align:center}
 .pin-bar-code{font-family:'Orbitron',monospace;font-size:2.4rem;font-weight:900;
@@ -904,7 +950,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- s0: motion permission gate (iOS) -->
-  <div class="panel" id="s0" style="padding-top:148px">
+  <div class="panel" id="s0" style="padding-top:min(148px, 25vh);padding-bottom:12px">
     <div class="srow"><div class="dot busy"></div><span>motion access required</span></div>
     <button class="sbtn warn" onclick="askMotion()">
       <div class="sbtn-ico">📐</div>
@@ -915,7 +961,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- s1: creating session -->
-  <div class="panel" id="s1" style="padding-top:148px">
+  <div class="panel" id="s1" style="padding-top:min(148px, 25vh);padding-bottom:12px">
     <div class="conn-banner" id="s1-banner">
       <div class="conn-banner-row">
         <div class="conn-banner-dot warn" id="s1-dot"></div>
@@ -932,7 +978,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- s2: PIN ready, waiting for displays -->
-  <div class="panel" id="s2" style="padding-top:148px">
+  <div class="panel" id="s2" style="padding-top:min(148px, 25vh);padding-bottom:12px">
     <div class="hint">Any device can join using the PIN above.</div>
     <button class="sbtn blue" onclick="shareLink()">
       <div class="sbtn-ico">📤</div>
@@ -972,7 +1018,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- s3: live level (sensor) -->
-  <div class="panel" id="s3" style="padding-top:80px;padding-bottom:200px;flex:1;justify-content:flex-start">
+  <div class="panel" id="s3" style="padding-top:min(80px,15vh);padding-bottom:200px;flex:1;justify-content:flex-start">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)" id="s3-status">connected ✓</span></div>
 
     <!-- 3D caravan view (sensor) -->
@@ -1178,7 +1224,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
   </div>
 
   <!-- d3: live display -->
-  <div class="panel" id="d3" style="padding-bottom:240px;flex:1;justify-content:flex-start;padding-top:20px">
+  <div class="panel" id="d3" style="padding-bottom:240px;flex:1;justify-content:flex-start;padding-top:min(20px,8vh)">
     <div class="srow"><div class="dot ok"></div><span style="color:var(--accent2)">sensor connected ✓</span></div>
 
     <!-- 3D caravan view -->
