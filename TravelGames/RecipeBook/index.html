@@ -1080,12 +1080,25 @@ async function saveRecipe() {
   let savedId = r.id;
   if (editingIsNew) {
     const { data, error } = await sb.from('recipes').insert(payload).select().single();
-    if (error) { showToast('Save failed — try again'); console.error(error); }
-    else { savedId = data.id; showToast('Recipe saved!'); }
+    if (error) {
+      showToast('Save failed: ' + error.message);
+      console.error('Insert error:', error);
+      document.getElementById('btnSaveEdit').disabled = false;
+      document.getElementById('btnSaveEdit').textContent = 'Save recipe';
+      return;
+    }
+    savedId = data.id;
+    showToast('Recipe saved!');
   } else {
     const { error } = await sb.from('recipes').update(payload).eq('id', r.id);
-    if (error) { showToast('Save failed — try again'); console.error(error); }
-    else showToast('Recipe updated!');
+    if (error) {
+      showToast('Save failed: ' + error.message);
+      console.error('Update error:', error);
+      document.getElementById('btnSaveEdit').disabled = false;
+      document.getElementById('btnSaveEdit').textContent = 'Save recipe';
+      return;
+    }
+    showToast('Recipe updated!');
   }
 
   document.getElementById('btnSaveEdit').disabled = false;
