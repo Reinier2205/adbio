@@ -1064,18 +1064,42 @@ document.getElementById('closeDetail').onclick = () =>
   document.getElementById('detailOverlay').classList.remove('open');
 
 async function openDetail(id, context, bookId) {
-  // Find recipe in local cache or fetch fresh
+  // Find recipe in local cache first (avoids RLS issues on direct fetch)
   let r = myRecipes.find(x => x.id === id);
   if (!r && bookId && bookRecipes[bookId]) r = bookRecipes[bookId].find(x => x.id === id);
+  // Fallback: try fetching all camp book recipes for this book if cache is stale
+  if (!r && bookId) {
+    const { data: links } = await sb.from('camp_book_recipes')
+      .select('recipe_id').eq('book_id', bookId);
+    const ids = (links || []).map(l => l.recipe_id).filter(Boolean);
+    if (ids.length) {
+      const { data: fetched } = await sb.from('recipes').select('*').in('id', ids);
+      if (fetched && fetched.length) {
+        bookRecipes[bookId] = fetched;
+        r = fetched.find(x => x.id === id);
+      }
+    }
+  }
+  // Last resort: direct single-row fetch
   if (!r) {
     const { data, error } = await sb.from('recipes').select('*').eq('id', id).single();
-    if (error || !data) { showToast('Could not load recipe'); return; }
+    if (error || !data) {
+      console.error('openDetail fetch failed', error);
+      showToast('Could not load recipe');
+      return;
+    }
     r = data;
   }
 
   const isOwner = r.owner_id === currentUser.id;
-  const inBook  = context === 'camp' && bookId;
+  const inBook  = context === 'camp' && !!bookId;
   const isMember = inBook; // any camp member can edit/remove
+
+  // Defensive: ensure jsonb columns are arrays (Supabase may return strings in some clients)
+  if (typeof r.ingredients === 'string') try { r.ingredients = JSON.parse(r.ingredients); } catch { r.ingredients = []; }
+  if (typeof r.steps === 'string')       try { r.steps       = JSON.parse(r.steps);       } catch { r.steps = []; }
+  if (!Array.isArray(r.ingredients)) r.ingredients = [];
+  if (!Array.isArray(r.steps))       r.steps = [];
 
   document.getElementById('detailHeading').textContent = r.title || 'Recipe';
   const body = document.getElementById('detailBody');
@@ -1374,7 +1398,13 @@ async function openBook(bookId) {
     : { data: [], error: null };
   if (recipesErr) console.error('recipes fetch error:', recipesErr.message, recipesErr.code);
   console.log('Recipes loaded:', (recipeData||[]).length);
-  const recipes = recipeData || [];
+  const recipes = (recipeData || []).map(r => ({
+    ...r,
+    ingredients: Array.isArray(r.ingredients) ? r.ingredients
+      : (typeof r.ingredients === 'string' ? (() => { try { return JSON.parse(r.ingredients); } catch { return []; } })() : []),
+    steps: Array.isArray(r.steps) ? r.steps
+      : (typeof r.steps === 'string' ? (() => { try { return JSON.parse(r.steps); } catch { return []; } })() : []),
+  }));
   bookRecipes[bookId] = recipes;
 
   const isCreator = book.created_by === currentUser.id;
