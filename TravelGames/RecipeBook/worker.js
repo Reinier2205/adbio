@@ -74,7 +74,7 @@ async function handleExtract(request, env) {
     parts.push({ text: `${instruction}\n\nRecipe source:\n${content}` });
   }
 
-  const geminiModel = type === 'images' ? 'gemini-1.5-flash' : 'gemini-1.5-flash';
+  const geminiModel = 'gemini-2.5-flash-lite';
   const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${env.GEMINI_API_KEY}`;
 
   const result = await callGeminiWithRetry(geminiUrl, parts);
