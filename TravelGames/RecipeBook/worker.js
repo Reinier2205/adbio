@@ -74,7 +74,7 @@ async function handleExtract(request, env) {
     parts.push({ text: `${instruction}\n\nRecipe source:\n${content}` });
   }
 
-  const geminiModel = 'gemini-2.5-flash';
+  const geminiModel = 'gemini-3.5-flash-lite';
   const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${env.GEMINI_API_KEY}`;
   console.log('Calling Gemini:', geminiUrl.replace(env.GEMINI_API_KEY, 'REDACTED'));
 
