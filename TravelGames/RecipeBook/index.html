@@ -903,7 +903,7 @@ function closeEditor() {
 function startEdit(parsed, isNew, note = '') {
   editingIsNew = isNew;
   editingRecipe = {
-    id:          editingIsNew ? null : (editingRecipe?.id || null),
+    id:          editingIsNew ? null : (editingRecipe?.id || parsed?.id || null),
     owner_id:    currentUser.id,
     title:       (parsed?.title)       || '',
     servings:    (parsed?.servings)    || '',
@@ -915,6 +915,8 @@ function startEdit(parsed, isNew, note = '') {
     notes:       (parsed?.notes)       || '',
     photo_url:   (parsed?.photo_url)   || '',
     photo_path:  (parsed?.photo_path)  || '',
+    _bookId:     parsed?._bookId       || null,
+    _context:    parsed?._context      || null,
   };
   document.getElementById('editHeading').textContent = isNew ? 'Review recipe' : 'Edit recipe';
   renderEditorBody(note);
@@ -1660,12 +1662,17 @@ async function saveRecipe() {
   closeEditor();
   await loadMyRecipes();
 
-  // Navigate: back to camp book if that's where we came from, else open detail
-  const returnBookId = pendingCampBookId || fromBookId || currentBookId;
-  pendingCampBookId = null;
-  if (returnBookId) {
-    await openBook(returnBookId);
+  // Navigate back to the right place
+  if (pendingCampBookId) {
+    // New recipe created for a specific camp book → go to that book
+    const dest = pendingCampBookId;
+    pendingCampBookId = null;
+    await openBook(dest);
+  } else if (fromBookId) {
+    // Edited an existing camp book recipe → go back to that book
+    await openBook(fromBookId);
   } else if (savedId) {
+    // Personal recipe add/edit → stay on personal list, open detail
     openDetail(savedId, 'personal');
   }
 }
