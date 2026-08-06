@@ -1170,28 +1170,17 @@ async function openDetail(id, context, bookId) {
   if (inBook) {
     const removeBtn = document.createElement('button');
     removeBtn.className = 'actionbtn danger';
-    removeBtn.textContent = isOwner ? 'Delete recipe' : 'Remove from book';
+    removeBtn.textContent = 'Remove from book';
     removeBtn.onclick = async () => {
-      if (isOwner) {
-        // Owner: truly delete the recipe everywhere
-        const ok = await confirm2('Delete recipe?', 'This permanently deletes the recipe for everyone.');
-        if (!ok) return;
-        if (r.photo_path) await sb.storage.from('recipe-photos').remove([r.photo_path]);
-        await sb.from('recipes').delete().eq('id', r.id);
-        document.getElementById('detailOverlay').classList.remove('open');
-        showToast('Recipe deleted');
-        await loadMyRecipes();
-        await openBook(bookId);
-      } else {
-        // Member: just remove the link from the camp book
-        const ok = await confirm2('Remove from camp book?', 'Removes it from the shared book. The owner keeps their copy.');
-        if (!ok) return;
-        await sb.from('camp_book_recipes').delete()
-          .eq('book_id', bookId).eq('recipe_id', r.id);
-        document.getElementById('detailOverlay').classList.remove('open');
-        showToast('Removed from camp book');
-        await openBook(bookId);
-      }
+      // The recipe in the book is always a copy — delete the copy and its link
+      const ok = await confirm2('Remove from camp book?', 'Removes this recipe from the shared book. Your personal library is not affected.');
+      if (!ok) return;
+      if (r.photo_path) await sb.storage.from('recipe-photos').remove([r.photo_path]);
+      await sb.from('recipes').delete().eq('id', r.id);
+      document.getElementById('detailOverlay').classList.remove('open');
+      showToast('Removed from camp book');
+      await loadMyRecipes();
+      await openBook(bookId);
     };
     actions.appendChild(removeBtn);
   }
@@ -1252,10 +1241,39 @@ async function showAddToCampPicker(recipeId) {
   if (bookId) await addRecipeToCampBook(recipeId, bookId);
 }
 
-async function addRecipeToCampBook(recipeId, bookId) {
+async function addRecipeToCampBook(recipeId, bookId, linkOnly = false) {
+  let copyId = recipeId;
+
+  if (!linkOnly) {
+    // Fetch the original recipe to copy it
+    const original = myRecipes.find(x => x.id === recipeId)
+      || (await sb.from('recipes').select('*').eq('id', recipeId).single()).data;
+    if (!original) { showToast('Could not find recipe'); return; }
+
+    // Create an independent copy owned by the current user
+    const { data: copy, error: copyErr } = await sb.from('recipes').insert({
+      owner_id:    currentUser.id,
+      title:       original.title,
+      servings:    original.servings,
+      prep_time:   original.prep_time,
+      cook_time:   original.cook_time,
+      ingredients: original.ingredients,
+      steps:       original.steps,
+      tags:        original.tags,
+      notes:       original.notes,
+      photo_url:   original.photo_url  || '',
+      photo_path:  '',  // don't share storage ownership
+      source_url:  original.source_url || '',
+      source_text: original.source_text || '',
+    }).select().single();
+    if (copyErr) { showToast('Could not copy recipe'); return; }
+    copyId = copy.id;
+  }
+
+  // Link the recipe (copy or freshly created) to the camp book
   const { error } = await sb.from('camp_book_recipes').insert({
     book_id:   bookId,
-    recipe_id: recipeId,
+    recipe_id: copyId,
     added_by:  currentUser.id,
   });
   if (error && error.code === '23505') { showToast('Already in that camp book'); return; }
@@ -1596,8 +1614,9 @@ async function saveRecipe() {
     }
     savedId = data.id;
     // If this new recipe was created directly for a camp book, link it now
+    // (linkOnly=true because the row was just inserted — no need to copy again)
     if (pendingCampBookId) {
-      await addRecipeToCampBook(savedId, pendingCampBookId);
+      await addRecipeToCampBook(savedId, pendingCampBookId, true);
     }
     showToast('Recipe saved!');
   } else {
