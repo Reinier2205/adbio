@@ -542,12 +542,21 @@ let confirmResolve = () => {};
 
 // ── Init ─────────────────────────────────────────────────
 (async () => {
+  // Let Supabase process any OAuth callback in the URL first
   const { data: { session } } = await sb.auth.getSession();
-  if (session) await onSignedIn(session.user);
+  if (session) {
+    await onSignedIn(session.user);
+  } else {
+    showAuthScreen();
+  }
 
-  sb.auth.onAuthStateChange(async (_event, session) => {
-    if (session) await onSignedIn(session.user);
-    else showAuthScreen();
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      await onSignedIn(session.user);
+    } else if (event === 'SIGNED_OUT') {
+      showAuthScreen();
+    }
+    // Ignore TOKEN_REFRESHED, USER_UPDATED, INITIAL_SESSION etc.
   });
 
   // Handle invite link: ?join=XXXXXX
@@ -573,6 +582,13 @@ async function onSignedIn(user) {
     document.getElementById('avatarBtn').innerHTML =
       `<img src="${user.user_metadata.avatar_url}" alt="">`;
   }
+
+  // Ensure profile row exists (trigger may not have fired yet on first sign-in)
+  await sb.from('profiles').upsert({
+    id:           user.id,
+    display_name: user.user_metadata?.full_name || user.user_metadata?.name || 'Chef',
+    avatar_url:   user.user_metadata?.avatar_url || '',
+  }, { onConflict: 'id', ignoreDuplicates: true });
 
   await loadMyRecipes();
   await loadCampBooks();
@@ -621,7 +637,10 @@ async function loadMyRecipes() {
     .select('*')
     .eq('owner_id', currentUser.id)
     .order('created_at', { ascending: false });
-  if (error) { showToast('Could not load recipes'); return; }
+  // RLS error on first sign-in (profile not yet created) — just show empty state
+  if (error && error.code !== 'PGRST116') {
+    console.warn('loadMyRecipes:', error.message);
+  }
   myRecipes = data || [];
   renderTagbar();
   renderList();
