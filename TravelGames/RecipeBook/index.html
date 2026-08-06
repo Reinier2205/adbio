@@ -639,15 +639,23 @@ function switchTab(tab) {
 
 // ── Load personal recipes ─────────────────────────────────
 async function loadMyRecipes() {
+  // Fetch all my recipe rows
   const { data, error } = await sb.from('recipes')
     .select('*')
     .eq('owner_id', currentUser.id)
     .order('created_at', { ascending: false });
-  // RLS error on first sign-in (profile not yet created) — just show empty state
   if (error && error.code !== 'PGRST116') {
     console.warn('loadMyRecipes:', error.message);
   }
-  myRecipes = data || [];
+  const all = data || [];
+
+  // Exclude recipes that are camp book copies (linked in camp_book_recipes)
+  // Those belong to a camp book and should not appear in the personal list
+  const { data: campLinks } = await sb.from('camp_book_recipes')
+    .select('recipe_id');
+  const campIds = new Set((campLinks || []).map(l => l.recipe_id));
+  myRecipes = all.filter(r => !campIds.has(r.id));
+
   renderTagbar();
   renderList();
 }
