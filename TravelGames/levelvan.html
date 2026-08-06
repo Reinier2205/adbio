@@ -561,6 +561,38 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="card-desc">Hold this phone. Shows leveling guide.</div>
     </div>
   </div>
+  <!-- Resume card — shown only when a saved pairing exists; hidden by default -->
+  <div id="resume-card" style="display:none;width:100%;max-width:320px;
+       background:var(--panel);border:2px solid var(--accent);border-radius:16px;
+       padding:16px 18px;flex-direction:column;gap:12px;
+       font-family:'Share Tech Mono',monospace">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="resume-card-ico" style="font-size:1.8rem">📡</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;
+             color:var(--accent);letter-spacing:2px;margin-bottom:3px" id="resume-card-title">RESUME SESSION</div>
+        <div style="font-size:.78rem;color:var(--text);line-height:1.5" id="resume-card-desc">Saved pairing found</div>
+        <div style="font-size:.68rem;color:var(--dim);margin-top:3px" id="resume-card-sub"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button id="resume-connect-btn" onclick="resumeConnect()"
+        style="flex:2;padding:13px 10px;border-radius:12px;border:2px solid var(--accent);
+               background:rgba(0,212,255,.1);color:var(--accent);
+               font-family:'Orbitron',monospace;font-size:.78rem;font-weight:700;
+               letter-spacing:2px;cursor:pointer">
+        ▶ CONNECT
+      </button>
+      <button onclick="resumeStartFresh()"
+        style="flex:1;padding:13px 8px;border-radius:12px;border:2px solid var(--dim);
+               background:none;color:var(--dim);
+               font-family:'Orbitron',monospace;font-size:.68rem;font-weight:700;
+               letter-spacing:1px;cursor:pointer">
+        START<br>FRESH
+      </button>
+    </div>
+  </div>
+
   <button class="sbtn blue" style="max-width:320px;margin-top:4px" onclick="startSolo()">
     <div class="sbtn-ico">🫧</div>
     <div class="sbtn-title">SOLO MODE</div>
@@ -652,8 +684,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <p class="help-section-title">Next time you use it</p>
 
       <div class="help-tip">
-        <div class="help-tip-title">🔗 AUTOMATIC RECONNECT</div>
-        <div class="help-tip-text">Both phones remember each other after the first pairing. Next time, just open the app and tap <b>SENSOR</b> or <b>DISPLAY</b> — they reconnect automatically using the saved PIN. No typing needed.</div>
+        <div class="help-tip-title">🔗 QUICK RECONNECT</div>
+        <div class="help-tip-text">Both phones remember each other after the first pairing. Next time, open the app and a <b>RESUME</b> card appears showing the saved role and PIN. Tap <b>CONNECT</b> to resume instantly — no typing needed. Tap <b>START FRESH</b> to pair with a different phone instead.</div>
       </div>
 
       <div class="help-tip">
@@ -1121,6 +1153,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="kbtn del" onclick="kpadDel()">⌫</div>
     </div>
     <div class="hint" id="d1-hint">Enter the 4-digit PIN shown on the Sensor device</div>
+    <button class="sbtn blue" id="d1-connect-btn" onclick="connectWithPin()" style="margin-top:4px;display:none">
+      <div class="sbtn-ico">🔗</div>
+      <div class="sbtn-title">CONNECT</div>
+      <div class="sbtn-hint">Tap to connect with this PIN</div>
+    </button>
     <button class="sbtn warn" id="d1-force-btn" style="display:none;margin-top:4px" onclick="forceReconnectDisplay()">
       <div class="sbtn-ico">🔄</div>
       <div class="sbtn-title">RECONNECT</div>
@@ -3354,14 +3391,26 @@ window.addEventListener('load', async () => {
   // Always initialize managers
   wakeLockManager = new WakeLockManager();
 
-  // Handle shared link — highest priority, skip all auto-connect logic
+  // Handle shared link — highest priority, skip all other logic
   if (_hash.startsWith('LVP:')) {
     const pin = _hash.slice(4);
     mode = 'display';
     showScreen('display-screen');
     showPanel('d1');
     wakeLockManager.maintainWakeLock();
-    setTimeout(() => fillPin(pin), 300);
+    setTimeout(() => {
+      kpadReset();
+      // Pre-fill PIN digits but do NOT auto-submit — user taps CONNECT
+      for (const ch of pin) {
+        if (_kpad.length < 4) {
+          _kpad.push(ch);
+          const dot = $('pd' + (_kpad.length - 1));
+          dot.classList.add('filled');
+          dot.textContent = ch;
+        }
+      }
+      $('d1-hint').textContent = 'PIN pre-filled from shared link — tap CONNECT';
+    }, 300);
     return;
   }
 
@@ -3389,17 +3438,14 @@ window.addEventListener('load', async () => {
   // Initialize device identity manager
   deviceIdentityManager = new DeviceIdentityManager(cloudReady ? firebaseManager : null);
 
-  // Attempt automatic connection for previously paired devices
-  // Skip if mode is solo (solo never saves lv_mode, but guard anyway)
+  // Detect saved pairing — but never auto-connect.
+  // Show a resume card on the home screen so the user decides what to do.
   const roleInfo = await deviceIdentityManager.detectExistingRole();
-  if (roleInfo && roleInfo.role !== 'solo') {
-    const autoConnected = await deviceIdentityManager.attemptAutomaticConnection(roleInfo);
-    if (autoConnected) return;
-  }
-
-  // No saved state — show home screen
   showScreen('home-screen');
   updateForceButtons();
+  if (roleInfo && roleInfo.role !== 'solo' && roleInfo.pin) {
+    _showResumeCard(roleInfo);
+  }
 });
 
 // ════════════════════════════════
@@ -3411,12 +3457,21 @@ window.goHome = async () => {
   window._displayReconnectCount = 0;
   ConnStatus.hide();
   // Do NOT clear lv_pin or lv_mode — the PIN is the permanent pairing bond.
-  // Only resetPairing() should clear those.
+  // Only resetPairing() or START FRESH should clear those.
   if (window.voiceMgr) voiceMgr.destroy();
   if (window.videoMgr) videoMgr.destroy();
   if (wakeLockManager) { await wakeLockManager.releaseWakeLock(); wakeLockManager.stopWakeLockMonitoring(); }
   cleanup();
   showScreen('home-screen');
+  // Re-show resume card if a pairing still exists
+  const savedMode = localStorage.getItem('lv_mode');
+  const savedPin  = localStorage.getItem('lv_pin');
+  const card = $('resume-card');
+  if (savedMode && savedPin && savedMode !== 'solo') {
+    _showResumeCard({ role: savedMode, pin: savedPin });
+  } else if (card) {
+    card.style.display = 'none';
+  }
 };
 
 window.startSensor = () => {
@@ -3441,10 +3496,24 @@ window.startDisplay = () => {
   showPanel('d1');
   window._displayRetryCount = 0;
   window._displayReconnectCount = 0;
-  // Auto-fill saved PIN immediately — skip keypad if we have a known pair
+  // Pre-fill saved PIN so user can see it, but wait for them to tap CONNECT
   const savedPin = localStorage.getItem('lv_pin');
   if (savedPin) {
-    setTimeout(() => fillPin(savedPin), 300);
+    for (const ch of savedPin) {
+      if (_kpad.length < 4) {
+        _kpad.push(ch);
+        const dot = $('pd' + (_kpad.length - 1));
+        dot.classList.add('filled');
+        dot.textContent = ch;
+      }
+    }
+    const partnerName = localStorage.getItem('lv_partner_name');
+    $('d1-hint').textContent = partnerName
+      ? 'Saved PIN for ' + partnerName + ' — tap CONNECT or change'
+      : 'Saved PIN — tap CONNECT or change digits';
+    // Show CONNECT button since PIN is already full
+    const btn = $('d1-connect-btn');
+    if (btn) btn.style.display = '';
   }
   updateForceButtons();
 };
@@ -3497,9 +3566,13 @@ window.resetPairing = async () => {
     localStorage.removeItem('lv_mode');
     localStorage.removeItem('lv_pin');
     localStorage.removeItem('lv_partner_name');
+    _pendingResumeInfo = null;
     if (wakeLockManager) { wakeLockManager.releaseWakeLock(); wakeLockManager.stopWakeLockMonitoring(); }
     cleanup();
     showScreen('home-screen');
+    const card = $('resume-card');
+    if (card) card.style.display = 'none';
+    updateForceButtons();
     console.log('Pairing reset complete');
   } catch (error) {
     console.error('Pairing reset failed:', error);
@@ -3592,6 +3665,69 @@ window.generateNewPin = () => {
   $('s1-txt').textContent = 'generating new PIN…';
   initSensor(null);
 };
+// ════════════════════════════════
+//  RESUME CARD — user-driven reconnect from home screen
+// ════════════════════════════════
+
+// Holds the roleInfo detected at startup so resumeConnect() can use it
+let _pendingResumeInfo = null;
+
+/**
+ * Show the resume card on the home screen with the detected saved role/PIN.
+ * The user taps CONNECT or START FRESH — nothing happens automatically.
+ */
+function _showResumeCard(roleInfo) {
+  _pendingResumeInfo = roleInfo;
+  const card = $('resume-card');
+  if (!card) return;
+
+  const role = roleInfo.role;        // 'sensor' | 'display'
+  const pin  = roleInfo.pin;         // 4-digit string
+  const partnerName = localStorage.getItem('lv_partner_name');
+
+  // Icon and title
+  $('resume-card-ico').textContent = role === 'sensor' ? '📡' : '📱';
+  $('resume-card-title').textContent = role === 'sensor' ? 'RESUME AS SENSOR' : 'RESUME AS DISPLAY';
+
+  // Description: what we found
+  const pinStr = pin ? 'PIN ' + pin : '';
+  const nameStr = partnerName ? ' · ' + partnerName : '';
+  $('resume-card-desc').textContent = pinStr + nameStr;
+  $('resume-card-sub').textContent  = role === 'sensor'
+    ? 'Tap CONNECT to start measuring tilt and wait for the Display to join'
+    : 'Tap CONNECT to open the PIN keypad and pair with the Sensor';
+
+  // Show the card — override the initial display:none
+  card.style.display = 'flex';
+}
+
+/** Called when the user taps CONNECT on the resume card */
+window.resumeConnect = function() {
+  if (!_pendingResumeInfo) return;
+  const { role, pin } = _pendingResumeInfo;
+  _pendingResumeInfo = null;
+  $('resume-card').style.display = 'none';
+
+  if (role === 'sensor') {
+    window.startSensor(); // startSensor() reads the saved PIN itself
+  } else {
+    // Go to display screen with PIN pre-filled — user still taps CONNECT there
+    window.startDisplay();
+  }
+};
+
+/** Called when the user taps START FRESH on the resume card */
+window.resumeStartFresh = function() {
+  _pendingResumeInfo = null;
+  // Hide card
+  $('resume-card').style.display = 'none';
+  // Clear saved pairing so the normal cards work without a pre-filled PIN
+  localStorage.removeItem('lv_mode');
+  localStorage.removeItem('lv_pin');
+  localStorage.removeItem('lv_partner_name');
+  updateForceButtons();
+};
+
 function initSensor(resumePin) {
   // Use saved PIN on resume, generate new one otherwise
   if (resumePin) {
@@ -3786,7 +3922,10 @@ window.kpadPress = function(digit) {
   dot.classList.add('filled');
   dot.textContent = digit;
   if (_kpad.length === 4) {
-    setTimeout(() => connectWithPin(), 120); // brief pause so last digit animates
+    // Show CONNECT button and update hint — don't auto-submit
+    const btn = $('d1-connect-btn');
+    if (btn) btn.style.display = '';
+    $('d1-hint').textContent = 'Ready — tap CONNECT to pair';
   }
 }
 
@@ -3797,6 +3936,9 @@ window.kpadDel = function() {
   dot.classList.remove('filled');
   dot.textContent = '';
   $('d1-hint').textContent = 'Enter the 4-digit PIN shown on the Sensor device';
+  // Hide CONNECT button once below 4 digits
+  const btn = $('d1-connect-btn');
+  if (btn) btn.style.display = 'none';
 }
 
 function kpadReset() {
@@ -3805,6 +3947,8 @@ function kpadReset() {
     $('pd'+i).classList.remove('filled');
     $('pd'+i).textContent = '';
   }
+  const btn = $('d1-connect-btn');
+  if (btn) btn.style.display = 'none';
 }
 
 function fillPin(pin) {
