@@ -573,14 +573,16 @@ async function onSignedIn(user) {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
 
-  // Avatar
+  // Avatar — guard against elements not yet in DOM
+  const avatarInitialEl = document.getElementById('avatarInitial');
+  const menuNameEl = document.getElementById('menuName');
   const initial = (user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase();
-  document.getElementById('avatarInitial').textContent = initial;
-  document.getElementById('menuName').textContent = user.user_metadata?.full_name || user.email;
+  if (avatarInitialEl) avatarInitialEl.textContent = initial;
+  if (menuNameEl) menuNameEl.textContent = user.user_metadata?.full_name || user.email;
 
   if (user.user_metadata?.avatar_url) {
-    document.getElementById('avatarBtn').innerHTML =
-      `<img src="${user.user_metadata.avatar_url}" alt="">`;
+    const avatarBtn = document.getElementById('avatarBtn');
+    if (avatarBtn) avatarBtn.innerHTML = `<img src="${user.user_metadata.avatar_url}" alt="">`;
   }
 
   // Ensure profile row exists (trigger may not have fired yet on first sign-in)
