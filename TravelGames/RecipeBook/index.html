@@ -1435,14 +1435,18 @@ async function openBook(bookId) {
   const members = memberProfiles || [];
 
   // Load recipes — two-step to work around RLS on recipes table
-  // Step 1: get recipe IDs from the camp book (RLS on camp_book_recipes allows this)
-  const { data: links } = await sb.from('camp_book_recipes')
+  // Step 1: get recipe IDs from the camp book
+  const { data: links, error: linksErr } = await sb.from('camp_book_recipes')
     .select('recipe_id, added_by, added_at').eq('book_id', bookId);
+  if (linksErr) console.error('camp_book_recipes fetch error:', linksErr.message, linksErr.code);
   const recipeIds = (links||[]).map(l => l.recipe_id).filter(Boolean);
-  // Step 2: fetch the actual recipes (RLS allows via recipes_camp_select policy)
-  const { data: recipeData } = recipeIds.length
+  console.log('Camp book recipe IDs found:', recipeIds.length, recipeIds);
+  // Step 2: fetch the actual recipes
+  const { data: recipeData, error: recipesErr } = recipeIds.length
     ? await sb.from('recipes').select('*').in('id', recipeIds)
-    : { data: [] };
+    : { data: [], error: null };
+  if (recipesErr) console.error('recipes fetch error:', recipesErr.message, recipesErr.code);
+  console.log('Recipes loaded:', (recipeData||[]).length);
   const recipes = recipeData || [];
   bookRecipes[bookId] = recipes;
 
