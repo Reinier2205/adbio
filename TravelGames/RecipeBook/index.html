@@ -1393,9 +1393,15 @@ async function openBook(bookId) {
   const body = document.getElementById('bookBody');
   body.innerHTML = `<div class="loadingrow"><div class="spinner"></div> Loading…</div>`;
 
-  // Load members
-  const { data: members } = await sb.from('camp_book_members')
-    .select('user_id, profiles(display_name, avatar_url)').eq('book_id', bookId);
+  // Load members — query via camp_books join to avoid RLS self-reference
+  // We load our own membership rows (which RLS allows) then fetch profiles separately
+  const { data: myMembership } = await sb.from('camp_book_members')
+    .select('user_id').eq('book_id', bookId);
+  const memberIds = (myMembership||[]).map(m => m.user_id);
+  const { data: memberProfiles } = memberIds.length
+    ? await sb.from('profiles').select('id, display_name, avatar_url').in('id', memberIds)
+    : { data: [] };
+  const members = memberProfiles || [];
 
   // Load recipes
   const { data: links } = await sb.from('camp_book_recipes')
@@ -1406,8 +1412,7 @@ async function openBook(bookId) {
   const isCreator = book.created_by === currentUser.id;
   const shareUrl  = `${location.origin}${location.pathname}?join=${book.invite_code}`;
 
-  const memberChips = (members||[]).map(m => {
-    const p = m.profiles;
+  const memberChips = members.map(p => {
     const name = p?.display_name || 'Member';
     return `<div class="member-chip">${p?.avatar_url ? `<img src="${p.avatar_url}" alt="">` : ''}${esc(name)}</div>`;
   }).join('');
@@ -1422,7 +1427,7 @@ async function openBook(bookId) {
       <button class="copy-btn" id="btnShareBook">Share link</button>
     </div>
     <div style="margin-bottom:12px;">
-      <div class="eyebrow" style="margin-bottom:6px;">Members (${(members||[]).length})</div>
+      <div class="eyebrow" style="margin-bottom:6px;">Members (${members.length})</div>
       <div class="book-members">${memberChips}</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
