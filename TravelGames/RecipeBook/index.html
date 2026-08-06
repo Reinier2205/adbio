@@ -585,9 +585,12 @@ function showAuthScreen() {
 }
 
 // ── Auth ─────────────────────────────────────────────────
-document.getElementById('btnGoogleSignIn').onclick = () =>
-  sb.auth.signInWithOAuth({ provider: 'google',
-    options: { redirectTo: location.href } });
+document.getElementById('btnGoogleSignIn').onclick = () => {
+  const redirectTo = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+    ? location.href
+    : 'https://adbio.pages.dev/TravelGames/RecipeBook/index.html';
+  sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+};
 
 document.getElementById('btnSignOut').onclick = async () => {
   await sb.auth.signOut();
