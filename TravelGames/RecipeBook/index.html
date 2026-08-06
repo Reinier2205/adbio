@@ -1393,20 +1393,34 @@ async function openBook(bookId) {
   const body = document.getElementById('bookBody');
   body.innerHTML = `<div class="loadingrow"><div class="spinner"></div> Loading…</div>`;
 
-  // Load members — query via camp_books join to avoid RLS self-reference
-  // We load our own membership rows (which RLS allows) then fetch profiles separately
+  // Load members — fetch all member user_ids for this book
+  // Creators see all rows via RLS; members only see their own.
+  // So we load what RLS allows, then also fetch the book's created_by profile,
+  // and deduplicate — this gives all members to both creator and guests.
   const { data: myMembership } = await sb.from('camp_book_members')
     .select('user_id').eq('book_id', bookId);
-  const memberIds = (myMembership||[]).map(m => m.user_id);
+  let memberIds = (myMembership||[]).map(m => m.user_id);
+  // Always include the book creator even if not in our visible membership rows
+  if (book.created_by && !memberIds.includes(book.created_by)) {
+    memberIds.push(book.created_by);
+  }
+  // Deduplicate
+  memberIds = [...new Set(memberIds)];
   const { data: memberProfiles } = memberIds.length
     ? await sb.from('profiles').select('id, display_name, avatar_url').in('id', memberIds)
     : { data: [] };
   const members = memberProfiles || [];
 
-  // Load recipes
+  // Load recipes — two-step to work around RLS on recipes table
+  // Step 1: get recipe IDs from the camp book (RLS on camp_book_recipes allows this)
   const { data: links } = await sb.from('camp_book_recipes')
-    .select('recipe_id, added_by, added_at, recipes(*)').eq('book_id', bookId);
-  const recipes = (links||[]).map(l => l.recipes).filter(Boolean);
+    .select('recipe_id, added_by, added_at').eq('book_id', bookId);
+  const recipeIds = (links||[]).map(l => l.recipe_id).filter(Boolean);
+  // Step 2: fetch the actual recipes (RLS allows via recipes_camp_select policy)
+  const { data: recipeData } = recipeIds.length
+    ? await sb.from('recipes').select('*').in('id', recipeIds)
+    : { data: [] };
+  const recipes = recipeData || [];
   bookRecipes[bookId] = recipes;
 
   const isCreator = book.created_by === currentUser.id;
