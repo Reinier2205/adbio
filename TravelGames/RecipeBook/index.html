@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Recipe Box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --ink:#2B2620; --paper:#EFE6D8; --card:#F8F3E9; --olive:#454F2E;
+  --olive-dark:#333B22; --mustard:#C99A2E; --rust:#8C3B2B;
+  --line:rgba(43,38,32,0.14); --teal:#2A7B6F;
+  --shadow:0 2px 6px rgba(43,38,32,0.12),0 8px 20px -8px rgba(43,38,32,0.18);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);
+  background-image:radial-gradient(circle at 1px 1px,rgba(43,38,32,0.05) 1px,transparent 0);
+  background-size:18px 18px;color:var(--ink);font-family:'Work Sans',sans-serif;
+  min-height:100vh;-webkit-font-smoothing:antialiased;}
+.display{font-family:'Fraunces',serif;}
+.eyebrow{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--olive);font-weight:600;opacity:0.75;}
+
+/* ── Auth screen ── */
+#auth-screen{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:100vh;padding:40px 24px;text-align:center;}
+#auth-screen h1{font-size:2.4rem;margin:0 0 8px;color:var(--olive);}
+#auth-screen p{font-size:1rem;opacity:.7;max-width:300px;line-height:1.6;margin:0 0 32px;}
+.google-btn{display:flex;align-items:center;gap:12px;background:#fff;
+  border:1.5px solid var(--line);border-radius:100px;padding:14px 24px;
+  font-family:'Work Sans';font-size:15px;font-weight:600;cursor:pointer;
+  box-shadow:var(--shadow);color:var(--ink);transition:box-shadow .15s;}
+.google-btn:hover{box-shadow:0 4px 16px rgba(43,38,32,.2);}
+.google-btn svg{flex:none;}
+
+/* ── App shell (hidden until auth) ── */
+#app{display:none;}
+
+/* ── Header ── */
+header.app{position:sticky;top:0;z-index:20;background:var(--paper);
+  border-bottom:1px solid var(--line);padding:14px 16px 10px;}
+header.app .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+header.app h1{margin:0;font-size:22px;font-weight:700;}
+.hdr-actions{display:flex;align-items:center;gap:8px;}
+.avatar{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);
+  object-fit:cover;cursor:pointer;background:var(--olive);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;color:#fff;flex:none;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.newbtn{background:var(--olive);color:#F8F3E9;border:none;border-radius:100px;
+  padding:9px 15px;font-family:'Work Sans';font-weight:600;font-size:13px;
+  display:flex;align-items:center;gap:5px;cursor:pointer;box-shadow:var(--shadow);}
+.newbtn:active{background:var(--olive-dark);}
+
+/* ── Tab bar ── */
+.tabbar{display:flex;border-bottom:2px solid var(--line);}
+.tab{flex:1;padding:11px 8px;font-family:'Work Sans';font-size:12px;font-weight:600;
+  letter-spacing:.03em;text-align:center;cursor:pointer;color:var(--ink);
+  opacity:.55;border-bottom:3px solid transparent;margin-bottom:-2px;
+  background:none;border-top:none;border-left:none;border-right:none;transition:all .2s;}
+.tab.active{opacity:1;color:var(--olive);border-bottom-color:var(--mustard);}
+
+/* ── Search + tag bar ── */
+.search-bar{padding:10px 16px 0;display:flex;gap:8px;}
+.search-input{flex:1;border:1px solid var(--line);background:var(--card);
+  border-radius:100px;padding:9px 14px;font-family:'Work Sans';font-size:14px;
+  color:var(--ink);outline:none;}
+.search-input:focus{border-color:var(--olive);}
+.tagbar{display:flex;gap:6px;overflow-x:auto;padding:10px 16px 4px;}
+.tagbar::-webkit-scrollbar{display:none;}
+.chip{flex:none;font-size:12px;padding:5px 11px;border-radius:100px;
+  border:1px solid var(--line);background:var(--card);color:var(--ink);
+  white-space:nowrap;cursor:pointer;font-weight:500;}
+.chip.active{background:var(--olive);color:#F8F3E9;border-color:var(--olive);}
+.chip.teal{background:var(--teal);color:#fff;border-color:var(--teal);}
+
+/* ── Main content ── */
+main{padding:12px 16px;max-width:640px;margin:0 auto;}
+.empty{text-align:center;padding:60px 20px;color:var(--ink);opacity:.7;}
+.empty .display{font-size:20px;margin-bottom:6px;opacity:1;}
+
+/* ── Recipe cards ── */
+.cardlist{display:flex;flex-direction:column;gap:10px;}
+.rcard{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:10px;padding:10px;box-shadow:var(--shadow);cursor:pointer;
+  animation:rise .3s ease backwards;position:relative;overflow:hidden;}
+.rcard::before{content:'';position:absolute;left:0;top:0;bottom:0;
+  width:4px;background:var(--mustard);}
+.rcard.camp::before{background:var(--teal);}
+@keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.rcard .thumb{width:62px;height:62px;border-radius:8px;object-fit:cover;flex:none;
+  background:var(--line);display:flex;align-items:center;justify-content:center;font-size:1.6rem;}
+.rcard .thumb img{width:100%;height:100%;border-radius:8px;object-fit:cover;}
+.rcard .info{flex:1;min-width:0;}
+.rcard .info h3{margin:0 0 2px;font-size:16px;font-weight:600;line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rcard .meta{font-size:12px;color:var(--ink);opacity:.65;display:flex;gap:8px;flex-wrap:wrap;}
+.rcard .tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}
+.rcard .tags span{font-size:10px;padding:2px 7px;border-radius:100px;
+  background:var(--paper);border:1px solid var(--line);color:var(--olive);
+  font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+.camp-badge{font-size:10px;color:var(--teal);font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;display:flex;align-items:center;gap:3px;margin-top:3px;}
+
+/* ── Overlays (slide-up panels) ── */
+.overlay{position:fixed;inset:0;background:var(--paper);z-index:50;
+  display:flex;flex-direction:column;transform:translateY(100%);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);}
+.overlay.open{transform:translateY(0);}
+.ov-header{padding:14px 16px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;background:var(--paper);position:sticky;top:0;z-index:2;}
+.iconbtn{background:none;border:none;width:36px;height:36px;border-radius:100px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);}
+.iconbtn:active{background:var(--line);}
+.ov-header h2{margin:0;font-size:17px;font-weight:600;flex:1;}
+.ov-body{flex:1;overflow-y:auto;padding:16px;max-width:640px;margin:0 auto;width:100%;}
+
+/* ── Add flow ── */
+.source-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+.srcbtn{border:1.5px solid var(--line);border-radius:12px;background:var(--card);
+  padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;
+  cursor:pointer;transition:border-color .15s,background .15s;}
+.srcbtn:active{background:var(--paper);}
+.srcbtn.selected{border-color:var(--olive);background:rgba(69,79,46,.07);}
+.srcbtn svg,.srcbtn .ico{font-size:1.8rem;}
+.srcbtn span{font-size:13px;font-weight:600;color:var(--olive);}
+.srcbtn small{font-size:11px;color:var(--ink);opacity:.6;text-align:center;line-height:1.4;}
+
+/* image zone */
+.dropzone{border:2px dashed var(--line);border-radius:14px;padding:24px 16px;
+  text-align:center;background:var(--card);margin-top:12px;}
+.dropzone p{margin:4px 0 0;font-size:13px;opacity:.75;}
+.filebtns{display:flex;gap:10px;justify-content:center;margin-top:12px;}
+.filebtn{background:var(--olive);color:#F8F3E9;border:none;border-radius:100px;
+  padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer;}
+.filebtn.secondary{background:transparent;color:var(--olive);border:1px solid var(--olive);}
+input[type=file]{display:none;}
+.thumbrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.thumbwrap{position:relative;width:70px;height:70px;}
+.thumbwrap img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--line);}
+.thumbwrap .rm{position:absolute;top:-6px;right:-6px;width:20px;height:20px;
+  border-radius:100px;background:var(--rust);color:#fff;border:none;
+  font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+
+/* url / text inputs */
+.url-input-wrap{margin-top:12px;display:flex;gap:8px;}
+.url-input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:8px;
+  padding:10px 12px;font-family:'Work Sans';font-size:14px;color:var(--ink);outline:none;}
+.url-input:focus{border-color:var(--olive);}
+.paste-area{width:100%;border:1px solid var(--line);background:var(--card);
+  border-radius:8px;padding:10px 12px;font-family:'Work Sans';font-size:14px;
+  color:var(--ink);resize:vertical;min-height:140px;outline:none;margin-top:12px;}
+.paste-area:focus{border-color:var(--olive);}
+
+.extractbtn{width:100%;margin-top:14px;background:var(--mustard);color:var(--ink);
+  border:none;border-radius:10px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;}
+.extractbtn:disabled{opacity:.5;cursor:not-allowed;}
+.loadingrow{display:flex;align-items:center;gap:10px;justify-content:center;
+  margin-top:14px;font-size:13px;opacity:.75;}
+.spinner{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--olive);
+  border-radius:100%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.errbox{background:#F6E4DF;border:1px solid var(--rust);color:var(--rust);
+  border-radius:8px;padding:10px 12px;font-size:13px;margin-top:12px;}
+.infobox{background:#EDF3EC;border:1px solid var(--teal);color:var(--teal);
+  border-radius:8px;padding:10px 12px;font-size:13px;margin-top:12px;}
+
+/* ── Edit form ── */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  font-weight:600;color:var(--olive);opacity:.85;margin-bottom:5px;}
+.field input[type=text],.field textarea{width:100%;border:1px solid var(--line);
+  background:var(--card);border-radius:8px;padding:9px 11px;
+  font-family:'Work Sans';font-size:15px;color:var(--ink);resize:vertical;}
+.field input[type=text]:focus,.field textarea:focus{outline:2px solid var(--olive);outline-offset:1px;}
+.field.row2{display:flex;gap:10px;}
+.field.row2>div{flex:1;}
+.listedit{display:flex;flex-direction:column;gap:6px;}
+.listedit .li{display:flex;gap:6px;align-items:flex-start;}
+.listedit .li span.num{font-family:'Fraunces';font-weight:600;color:var(--mustard);
+  font-size:15px;padding:8px 2px;flex:none;min-width:18px;}
+.listedit textarea{flex:1;min-height:36px;border:1px solid var(--line);
+  background:var(--card);border-radius:8px;padding:8px 10px;
+  font-family:'Work Sans';font-size:14px;color:var(--ink);resize:none;}
+.listedit textarea:focus{outline:2px solid var(--olive);outline-offset:1px;}
+.listedit .del{background:none;border:none;color:var(--rust);font-size:18px;
+  padding:5px;cursor:pointer;flex:none;}
+.addline{background:none;border:1px dashed var(--line);border-radius:8px;padding:7px;
+  font-size:13px;color:var(--olive);font-weight:600;cursor:pointer;width:100%;margin-top:3px;}
+.tageditor{display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--card);}
+.tageditor .chip{cursor:default;}
+.tageditor .chip .x{margin-left:5px;cursor:pointer;font-weight:700;}
+.tageditor input{border:none;background:none;font-size:13px;flex:1;min-width:80px;
+  outline:none;padding:4px 0;font-family:'Work Sans';}
+.photo-edit-row{display:flex;align-items:center;gap:10px;margin-top:6px;}
+.photo-preview{width:72px;height:72px;border-radius:8px;object-fit:cover;
+  border:1px solid var(--line);background:var(--line);display:flex;
+  align-items:center;justify-content:center;font-size:1.6rem;flex:none;}
+.photo-preview img{width:100%;height:100%;object-fit:cover;border-radius:7px;}
+.photo-actions{display:flex;flex-direction:column;gap:6px;}
+.savebar{position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line);
+  padding:12px 16px;display:flex;gap:10px;}
+.savebtn{flex:1;background:var(--olive);color:#F8F3E9;border:none;border-radius:10px;
+  padding:12px;font-weight:700;font-size:15px;cursor:pointer;}
+.cancelbtn{background:transparent;border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:12px 16px;font-weight:600;font-size:15px;cursor:pointer;}
+
+/* ── Detail view ── */
+.detail-hero{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;
+  margin-bottom:14px;background:var(--card);}
+.detail-title{font-size:22px;margin:0 0 4px;}
+.detail-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;opacity:.7;margin-bottom:8px;}
+.detail-meta b{color:var(--olive);}
+.detail-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.section-title{font-family:'Fraunces';font-size:15px;font-weight:600;color:var(--olive);
+  border-bottom:2px solid var(--mustard);display:inline-block;padding-bottom:2px;margin:0 0 10px;}
+.ingredients-list{margin:0 0 22px;padding-left:0;list-style:none;}
+.ingredients-list li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;
+  display:flex;gap:10px;align-items:flex-start;}
+.ingredients-list li::before{content:'—';color:var(--mustard);font-weight:700;flex:none;}
+.steps-list{margin:0 0 20px;padding:0;list-style:none;counter-reset:step;}
+.steps-list li{counter-increment:step;padding:10px 0 10px 34px;position:relative;
+  font-size:14px;line-height:1.5;border-bottom:1px solid var(--line);}
+.steps-list li::before{content:counter(step);position:absolute;left:0;top:9px;
+  font-family:'Fraunces';font-weight:700;color:#F8F3E9;background:var(--olive);
+  width:22px;height:22px;border-radius:100%;display:flex;align-items:center;
+  justify-content:center;font-size:12px;}
+.notesbox{background:var(--card);border:1px solid var(--line);border-radius:8px;
+  padding:12px;font-size:14px;font-style:italic;opacity:.85;margin-bottom:18px;}
+.detail-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.actionbtn{flex:1;border-radius:10px;padding:11px;font-weight:600;font-size:14px;
+  cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  min-width:90px;}
+.actionbtn.primary{background:var(--olive);color:#fff;border-color:var(--olive);}
+.actionbtn.teal{background:var(--teal);color:#fff;border-color:var(--teal);}
+.actionbtn.danger{color:var(--rust);border-color:var(--rust);}
+
+/* ── Camp Books tab ── */
+.camp-header{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.camp-header h2{margin:0;font-size:18px;}
+.bookcard{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:14px;box-shadow:var(--shadow);margin-bottom:10px;cursor:pointer;
+  animation:rise .3s ease backwards;}
+.bookcard h3{margin:0 0 4px;font-size:16px;font-weight:600;}
+.bookcard .bmeta{font-size:12px;opacity:.65;display:flex;gap:10px;flex-wrap:wrap;}
+.bookcard .bcode{font-family:'Fraunces';color:var(--mustard);font-size:13px;
+  font-weight:700;letter-spacing:.05em;margin-top:6px;}
+.join-bar{display:flex;gap:8px;margin-bottom:16px;}
+.join-input{flex:1;border:1px solid var(--line);background:var(--card);
+  border-radius:8px;padding:10px 12px;font-family:'Work Sans';font-size:15px;
+  color:var(--ink);outline:none;letter-spacing:.1em;text-transform:uppercase;}
+.join-input:focus{border-color:var(--teal);}
+.joinbtn{background:var(--teal);color:#fff;border:none;border-radius:8px;
+  padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;}
+
+/* ── Camp book detail ── */
+.book-members{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.member-chip{display:flex;align-items:center;gap:5px;background:var(--card);
+  border:1px solid var(--line);border-radius:100px;padding:4px 10px;font-size:12px;}
+.member-chip img{width:20px;height:20px;border-radius:50%;object-fit:cover;}
+.invite-row{background:rgba(42,123,111,.08);border:1px solid var(--teal);
+  border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;
+  margin-bottom:14px;}
+.invite-code{font-family:'Fraunces';font-size:1.4rem;font-weight:700;
+  color:var(--teal);letter-spacing:.1em;}
+.invite-row .share-hint{font-size:12px;opacity:.7;flex:1;}
+.copy-btn{background:var(--teal);color:#fff;border:none;border-radius:8px;
+  padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+
+/* ── User menu ── */
+.user-menu{position:fixed;top:60px;right:12px;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+  z-index:100;min-width:180px;overflow:hidden;display:none;}
+.user-menu.open{display:block;}
+.user-menu-item{padding:12px 16px;font-size:14px;font-weight:500;cursor:pointer;
+  display:flex;align-items:center;gap:8px;border:none;background:none;
+  width:100%;text-align:left;color:var(--ink);}
+.user-menu-item:hover{background:var(--paper);}
+.user-menu-item.danger{color:var(--rust);}
+.menu-name{padding:12px 16px;font-size:13px;opacity:.6;border-bottom:1px solid var(--line);}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(40px);
+  background:var(--olive);color:#fff;padding:10px 20px;border-radius:100px;
+  font-size:14px;font-weight:600;z-index:200;opacity:0;
+  transition:opacity .25s,transform .25s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── Confirm modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:150;
+  display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal-panel{background:var(--card);border-radius:14px;padding:22px 20px;
+  max-width:320px;width:100%;box-shadow:var(--shadow);}
+.modal-panel h3{margin:0 0 8px;font-size:18px;}
+.modal-panel p{font-size:14px;opacity:.75;margin:0 0 18px;line-height:1.5;}
+.modal-actions{display:flex;gap:8px;}
+.modal-actions button{flex:1;padding:11px;border-radius:10px;font-weight:700;
+  font-size:14px;cursor:pointer;border:none;}
+.modal-cancel{background:var(--line);color:var(--ink);}
+.modal-confirm{background:var(--rust);color:#fff;}
+.modal-confirm.safe{background:var(--olive);}
+</style>
+</style>
+</head>
+<body>
+
+<!-- ── Auth screen ── -->
+<div id="auth-screen">
+  <div style="font-size:3rem;margin-bottom:16px;">🍽️</div>
+  <h1 class="display">Recipe Box</h1>
+  <p>Save, organise, and share your favourite recipes. Sign in to get started.</p>
+  <button class="google-btn" id="btnGoogleSignIn">
+    <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.2 0 6 1.1 8.2 3.2l6.1-6.1C34.3 3 29.4 1 24 1 14.9 1 7.1 6.6 3.6 14.5l7.1 5.5C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-2.7-.4-3.9H24v7.4h12.8c-.6 2.9-2.3 5.3-4.8 7l7.4 5.7c4.4-4 6.9-9.9 6.9-16.2z"/><path fill="#FBBC05" d="M10.7 28.5c-.5-1.4-.8-2.9-.8-4.5s.3-3.1.8-4.5L3.6 14C2 17.1 1 20.4 1 24s1 6.9 2.6 10l7.1-5.5z"/><path fill="#34A853" d="M24 47c5.4 0 10-1.8 13.3-4.8l-7.4-5.7c-1.8 1.2-4.1 1.9-5.9 1.9-6.3 0-11.6-4.1-13.3-9.9L3.6 34C7.1 41.4 14.9 47 24 47z"/></svg>
+    Continue with Google
+  </button>
+  <p style="font-size:12px;opacity:.45;margin-top:24px;">Your recipes are private by default.</p>
+</div>
+
+<!-- ── App shell ── -->
+<div id="app">
+  <!-- Header -->
+  <header class="app">
+    <div class="row">
+      <div>
+        <div class="eyebrow">Recipe Box</div>
+        <h1 class="display">My Recipes</h1>
+      </div>
+      <div class="hdr-actions">
+        <button class="newbtn" id="btnNew">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          New
+        </button>
+        <div class="avatar" id="avatarBtn"><span id="avatarInitial"></span></div>
+      </div>
+    </div>
+    <!-- Tab bar -->
+    <div class="tabbar">
+      <button class="tab active" id="tabMine" onclick="switchTab('mine')">My Recipes</button>
+      <button class="tab" id="tabCamp" onclick="switchTab('camp')">🏕️ Camp Books</button>
+    </div>
+  </header>
+
+  <!-- User menu -->
+  <div class="user-menu" id="userMenu">
+    <div class="menu-name" id="menuName"></div>
+    <button class="user-menu-item" onclick="location.href='../index.html'">🧳 Travel Games</button>
+    <button class="user-menu-item danger" id="btnSignOut">Sign out</button>
+  </div>
+
+  <!-- Personal recipes tab -->
+  <div id="tab-mine">
+    <div class="search-bar">
+      <input class="search-input" id="searchInput" type="text" placeholder="Search recipes…" oninput="onSearch()">
+    </div>
+    <div class="tagbar" id="tagbar"></div>
+    <main><div id="listArea"></div></main>
+  </div>
+
+  <!-- Camp books tab -->
+  <div id="tab-camp" style="display:none;">
+    <main>
+      <div class="camp-header">
+        <h2 class="display">Camp Books</h2>
+        <button class="newbtn" id="btnNewBook" style="background:var(--teal)">+ New Book</button>
+      </div>
+      <!-- Join by code -->
+      <div class="join-bar">
+        <input class="join-input" id="joinCodeInput" maxlength="6" placeholder="JOIN CODE" oninput="this.value=this.value.toUpperCase()">
+        <button class="joinbtn" id="btnJoin">Join</button>
+      </div>
+      <div id="campListArea"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════ OVERLAYS ══════════════ -->
+
+<!-- ADD overlay -->
+<div class="overlay" id="addOverlay">
+  <div class="ov-header">
+    <button class="iconbtn" id="closeAdd"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2>New recipe</h2>
+  </div>
+  <div class="ov-body">
+    <p style="font-size:13px;opacity:.7;margin:0 0 14px;">How would you like to add your recipe?</p>
+    <div class="source-grid">
+      <button class="srcbtn" id="src-photo" onclick="selectSource('photo')">
+        <span class="ico">📷</span>
+        <span>Photo / Screenshot</span>
+        <small>Snap or upload an image</small>
+      </button>
+      <button class="srcbtn" id="src-url" onclick="selectSource('url')">
+        <span class="ico">🔗</span>
+        <span>Website URL</span>
+        <small>Paste a link to a recipe</small>
+      </button>
+      <button class="srcbtn" id="src-text" onclick="selectSource('text')">
+        <span class="ico">📋</span>
+        <span>Paste Text</span>
+        <small>Any raw text or notes</small>
+      </button>
+      <button class="srcbtn" id="src-blank" onclick="selectSource('blank')">
+        <span class="ico">✏️</span>
+        <span>Start Blank</span>
+        <small>Type it yourself</small>
+      </button>
+    </div>
+
+    <!-- Photo input -->
+    <div id="src-photo-ui" style="display:none;">
+      <div class="dropzone">
+        <div style="font-size:2rem;">📸</div>
+        <p>Add one or more photos of the recipe</p>
+        <div class="filebtns">
+          <button class="filebtn" id="btnCamera">Take photo</button>
+          <button class="filebtn secondary" id="btnLib">Choose photos</button>
+        </div>
+      </div>
+      <input type="file" id="fileCamera" accept="image/*" capture="environment">
+      <input type="file" id="fileLib" accept="image/*" multiple>
+      <div class="thumbrow" id="thumbrow"></div>
+    </div>
+
+    <!-- URL input -->
+    <div id="src-url-ui" style="display:none;">
+      <div class="url-input-wrap">
+        <input class="url-input" id="urlInput" type="url" placeholder="https://www.example.com/recipe/...">
+      </div>
+    </div>
+
+    <!-- Text paste -->
+    <div id="src-text-ui" style="display:none;">
+      <textarea class="paste-area" id="pasteArea" placeholder="Paste any recipe text here — from a message, a blog, a cookbook, anything…"></textarea>
+    </div>
+
+    <button class="extractbtn" id="btnExtract" disabled>Extract recipe →</button>
+    <div id="addLoading" style="display:none;" class="loadingrow"><div class="spinner"></div><span id="loadingMsg">Reading your recipe…</span></div>
+    <div id="addErr"></div>
+  </div>
+</div>
+
+<!-- EDIT overlay -->
+<div class="overlay" id="editOverlay">
+  <div class="ov-header">
+    <button class="iconbtn" id="closeEdit"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2 id="editHeading">Review recipe</h2>
+  </div>
+  <div class="ov-body" id="editBody"></div>
+  <div class="savebar">
+    <button class="cancelbtn" id="btnCancelEdit">Cancel</button>
+    <button class="savebtn" id="btnSaveEdit">Save recipe</button>
+  </div>
+</div>
+
+<!-- DETAIL overlay -->
+<div class="overlay" id="detailOverlay">
+  <div class="ov-header">
+    <button class="iconbtn" id="closeDetail"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2 id="detailHeading">Recipe</h2>
+  </div>
+  <div class="ov-body" id="detailBody"></div>
+</div>
+
+<!-- CAMP BOOK DETAIL overlay -->
+<div class="overlay" id="bookOverlay">
+  <div class="ov-header">
+    <button class="iconbtn" id="closeBook"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2 id="bookHeading">Camp Book</h2>
+  </div>
+  <div class="ov-body" id="bookBody"></div>
+</div>
+
+<!-- NEW BOOK overlay -->
+<div class="overlay" id="newBookOverlay">
+  <div class="ov-header">
+    <button class="iconbtn" id="closeNewBook"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <h2>New Camp Book</h2>
+  </div>
+  <div class="ov-body">
+    <div class="field">
+      <label>Book name</label>
+      <input type="text" id="newBookName" placeholder="e.g. Kleinmond Meisies 2025" maxlength="60">
+    </div>
+    <div class="field">
+      <label>Description (optional)</label>
+      <textarea id="newBookDesc" rows="2" placeholder="What's this camp about?"></textarea>
+    </div>
+    <div id="newBookErr"></div>
+  </div>
+  <div class="savebar">
+    <button class="cancelbtn" id="btnCancelNewBook">Cancel</button>
+    <button class="savebtn" id="btnCreateBook" style="background:var(--teal)">Create Book</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Confirm modal -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal-panel">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMsg"></p>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="confirmResolve(false)">Cancel</button>
+      <button class="modal-confirm" id="confirmOkBtn" onclick="confirmResolve(true)">Delete</button>
+    </div>
+  </div>
+</div>
+
+</body>
+
+<script>
+// ════════════════════════════════════════════════════════
+// CONFIG — replace with your actual values
+// ════════════════════════════════════════════════════════
+const SUPABASE_URL    = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_ANON   = 'YOUR_ANON_KEY';
+const WORKER_URL      = 'https://recipebook-worker.YOUR_ACCOUNT.workers.dev';
+// ════════════════════════════════════════════════════════
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ── State ────────────────────────────────────────────────
+let currentUser   = null;
+let myRecipes     = [];
+let campBooks     = [];
+let activeTag     = null;
+let searchQuery   = '';
+let editingRecipe = null;
+let editingIsNew  = false;
+let pendingImages = [];  // { base64, mimeType }
+let pendingPhotoFile = null; // File for recipe photo upload
+let currentBookId = null;
+let bookRecipes   = {};  // bookId -> recipe[]
+let confirmResolve = () => {};
+
+// ── Init ─────────────────────────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) await onSignedIn(session.user);
+
+  sb.auth.onAuthStateChange(async (_event, session) => {
+    if (session) await onSignedIn(session.user);
+    else showAuthScreen();
+  });
+
+  // Handle invite link: ?join=XXXXXX
+  const joinCode = new URLSearchParams(location.search).get('join');
+  if (joinCode && currentUser) {
+    await joinBookByCode(joinCode.toUpperCase());
+    // Clean URL
+    history.replaceState({}, '', location.pathname);
+  }
+})();
+
+async function onSignedIn(user) {
+  currentUser = user;
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // Avatar
+  const initial = (user.user_metadata?.full_name || user.email || 'U')[0].toUpperCase();
+  document.getElementById('avatarInitial').textContent = initial;
+  document.getElementById('menuName').textContent = user.user_metadata?.full_name || user.email;
+
+  if (user.user_metadata?.avatar_url) {
+    document.getElementById('avatarBtn').innerHTML =
+      `<img src="${user.user_metadata.avatar_url}" alt="">`;
+  }
+
+  await loadMyRecipes();
+  await loadCampBooks();
+}
+
+function showAuthScreen() {
+  currentUser = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ── Auth ─────────────────────────────────────────────────
+document.getElementById('btnGoogleSignIn').onclick = () =>
+  sb.auth.signInWithOAuth({ provider: 'google',
+    options: { redirectTo: location.href } });
+
+document.getElementById('btnSignOut').onclick = async () => {
+  await sb.auth.signOut();
+  closeAllOverlays();
+  showAuthScreen();
+};
+
+document.getElementById('avatarBtn').onclick = () =>
+  document.getElementById('userMenu').classList.toggle('open');
+document.addEventListener('click', e => {
+  if (!e.target.closest('#userMenu') && !e.target.closest('#avatarBtn'))
+    document.getElementById('userMenu').classList.remove('open');
+});
+
+// ── Tabs ─────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tab-mine').style.display  = tab === 'mine'  ? '' : 'none';
+  document.getElementById('tab-camp').style.display  = tab === 'camp'  ? '' : 'none';
+  document.getElementById('tabMine').classList.toggle('active', tab === 'mine');
+  document.getElementById('tabCamp').classList.toggle('active', tab === 'camp');
+  document.querySelector('header.app h1').textContent = tab === 'mine' ? 'My Recipes' : 'Camp Books';
+  document.getElementById('btnNew').style.display = tab === 'mine' ? '' : 'none';
+}
+
+// ── Load personal recipes ─────────────────────────────────
+async function loadMyRecipes() {
+  const { data, error } = await sb.from('recipes')
+    .select('*')
+    .eq('owner_id', currentUser.id)
+    .order('created_at', { ascending: false });
+  if (error) { showToast('Could not load recipes'); return; }
+  myRecipes = data || [];
+  renderTagbar();
+  renderList();
+}
+
+// ── Render tag bar ────────────────────────────────────────
+function renderTagbar() {
+  const all = new Set();
+  myRecipes.forEach(r => (r.tags || []).forEach(t => all.add(t)));
+  const tags = Array.from(all).sort();
+  const bar = document.getElementById('tagbar');
+  if (!tags.length) { bar.innerHTML = ''; return; }
+  bar.innerHTML = tags.map(t =>
+    `<button class="chip ${activeTag===t?'active':''}" data-tag="${esc(t)}">${esc(t)}</button>`
+  ).join('');
+  bar.querySelectorAll('.chip').forEach(c =>
+    c.onclick = () => { activeTag = activeTag === c.dataset.tag ? null : c.dataset.tag; renderTagbar(); renderList(); }
+  );
+}
+
+// ── Render recipe list ────────────────────────────────────
+function renderList() {
+  const area = document.getElementById('listArea');
+  let list = myRecipes;
+  if (activeTag) list = list.filter(r => (r.tags||[]).includes(activeTag));
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(r =>
+      (r.title||'').toLowerCase().includes(q) ||
+      (r.tags||[]).some(t => t.toLowerCase().includes(q)) ||
+      (Array.isArray(r.ingredients) ? r.ingredients : []).some(i => i.toLowerCase().includes(q))
+    );
+  }
+  if (!list.length) {
+    area.innerHTML = `<div class="empty">
+      <div style="font-size:2.5rem;margin-bottom:8px;">🍽️</div>
+      <div class="display">${myRecipes.length ? 'No matches' : 'Your box is empty'}</div>
+      <div>${myRecipes.length ? 'Try a different search or tag.' : 'Tap "New" to add your first recipe.'}</div>
+    </div>`;
+    return;
+  }
+  area.innerHTML = `<div class="cardlist">${list.map(cardHtml).join('')}</div>`;
+  area.querySelectorAll('.rcard').forEach(el =>
+    el.onclick = () => openDetail(el.dataset.id, 'personal')
+  );
+}
+
+function cardHtml(r, i) {
+  const thumb = r.photo_url
+    ? `<div class="thumb"><img src="${r.photo_url}" alt="" loading="lazy"></div>`
+    : `<div class="thumb">🍽️</div>`;
+  const meta = [];
+  if (r.servings)  meta.push(`Serves ${esc(r.servings)}`);
+  if (r.prep_time) meta.push(`Prep ${esc(r.prep_time)}`);
+  if (r.cook_time) meta.push(`Cook ${esc(r.cook_time)}`);
+  return `<div class="rcard" data-id="${r.id}" style="animation-delay:${(i||0)*35}ms">
+    ${thumb}
+    <div class="info">
+      <h3>${esc(r.title||'Untitled')}</h3>
+      <div class="meta">${meta.map(m=>`<span>${m}</span>`).join('')}</div>
+      <div class="tags">${(r.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function onSearch() {
+  searchQuery = document.getElementById('searchInput').value.trim();
+  renderList();
+}
+
+// ── ADD flow ──────────────────────────────────────────────
+let selectedSource = null;
+
+document.getElementById('btnNew').onclick = openAddOverlay;
+document.getElementById('closeAdd').onclick = () => {
+  document.getElementById('addOverlay').classList.remove('open');
+  resetAddOverlay();
+};
+
+function openAddOverlay() {
+  resetAddOverlay();
+  document.getElementById('addOverlay').classList.add('open');
+}
+
+function resetAddOverlay() {
+  selectedSource = null;
+  pendingImages = [];
+  document.getElementById('thumbrow').innerHTML = '';
+  document.getElementById('addErr').innerHTML = '';
+  document.getElementById('addLoading').style.display = 'none';
+  document.getElementById('btnExtract').disabled = true;
+  document.getElementById('urlInput').value = '';
+  document.getElementById('pasteArea').value = '';
+  ['photo','url','text','blank'].forEach(s => {
+    document.getElementById(`src-${s}`).classList.remove('selected');
+    const ui = document.getElementById(`src-${s}-ui`);
+    if (ui) ui.style.display = 'none';
+  });
+  document.getElementById('btnExtract').textContent = 'Extract recipe →';
+}
+
+function selectSource(src) {
+  selectedSource = src;
+  ['photo','url','text','blank'].forEach(s => {
+    document.getElementById(`src-${s}`).classList.toggle('selected', s === src);
+    const ui = document.getElementById(`src-${s}-ui`);
+    if (ui) ui.style.display = s === src ? '' : 'none';
+  });
+  if (src === 'blank') {
+    document.getElementById('btnExtract').textContent = 'Start editing →';
+    document.getElementById('btnExtract').disabled = false;
+  } else if (src === 'url') {
+    document.getElementById('btnExtract').disabled = false;
+  } else if (src === 'text') {
+    document.getElementById('btnExtract').disabled = false;
+  } else {
+    document.getElementById('btnExtract').disabled = pendingImages.length === 0;
+  }
+}
+
+// Photo picking
+document.getElementById('btnCamera').onclick = () => document.getElementById('fileCamera').click();
+document.getElementById('btnLib').onclick    = () => document.getElementById('fileLib').click();
+document.getElementById('fileCamera').onchange = e => handleFiles(e.target.files);
+document.getElementById('fileLib').onchange    = e => handleFiles(e.target.files);
+
+function handleFiles(fileList) {
+  Array.from(fileList||[]).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => normalizeImage(reader.result).then(n => {
+      pendingImages.push(n);
+      renderThumbs();
+    });
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('fileCamera').value = '';
+  document.getElementById('fileLib').value = '';
+}
+
+function normalizeImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 1568;
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const jpegUrl = c.toDataURL('image/jpeg', 0.85);
+      resolve({ base64: jpegUrl.split(',')[1], mimeType: 'image/jpeg', dataUrl: jpegUrl });
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+function renderThumbs() {
+  const row = document.getElementById('thumbrow');
+  row.innerHTML = pendingImages.map((img,i) =>
+    `<div class="thumbwrap">
+      <img src="${img.dataUrl}" alt="">
+      <button class="rm" data-idx="${i}">✕</button>
+    </div>`
+  ).join('');
+  row.querySelectorAll('.rm').forEach(b =>
+    b.onclick = e => { e.stopPropagation(); pendingImages.splice(+b.dataset.idx,1); renderThumbs(); }
+  );
+  document.getElementById('btnExtract').disabled = pendingImages.length === 0 && selectedSource === 'photo';
+}
+
+// ── Extract ───────────────────────────────────────────────
+document.getElementById('btnExtract').onclick = runExtract;
+
+async function runExtract() {
+  if (selectedSource === 'blank') {
+    startEdit(null, true);
+    document.getElementById('addOverlay').classList.remove('open');
+    return;
+  }
+
+  const loadingEl = document.getElementById('addLoading');
+  const errEl     = document.getElementById('addErr');
+  const btn       = document.getElementById('btnExtract');
+  errEl.innerHTML = '';
+  loadingEl.style.display = 'flex';
+  btn.disabled = true;
+  setLoadingMsg('Reading your recipe…');
+
+  let result;
+  try {
+    if (selectedSource === 'photo') {
+      const images = pendingImages.map(i => ({ base64: i.base64, mimeType: i.mimeType }));
+      result = await workerPost('/extract', { type: 'images', content: images });
+    } else if (selectedSource === 'url') {
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url) throw new Error('Please enter a URL.');
+      setLoadingMsg('Fetching page…');
+      const fetched = await workerPost('/fetch-url', { url });
+      if (fetched.error) throw new Error(fetched.error);
+      setLoadingMsg('Extracting recipe…');
+      result = await workerPost('/extract', { type: 'url_text', content: fetched.text });
+    } else if (selectedSource === 'text') {
+      const text = document.getElementById('pasteArea').value.trim();
+      if (!text) throw new Error('Please paste some text first.');
+      result = await workerPost('/extract', { type: 'text', content: text });
+    }
+  } catch (err) {
+    loadingEl.style.display = 'none';
+    btn.disabled = false;
+    errEl.innerHTML = `<div class="errbox">${esc(err.message)}</div>`;
+    return;
+  }
+
+  loadingEl.style.display = 'none';
+  btn.disabled = false;
+
+  let note = '';
+  let parsed = null;
+  if (result.error) { note = result.error; }
+  else if (result.recipe?.error) { note = 'No recipe found in that source — fill in manually.'; }
+  else { parsed = result.recipe; }
+
+  // Use first image as pending photo for thumbnail
+  pendingPhotoFile = pendingImages[0] || null;
+
+  document.getElementById('addOverlay').classList.remove('open');
+  startEdit(parsed, true, note);
+}
+
+function setLoadingMsg(msg) {
+  document.getElementById('loadingMsg').textContent = msg;
+}
+
+async function workerPost(path, body) {
+  const resp = await fetch(WORKER_URL + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) throw new Error(`Worker error ${resp.status}`);
+  return resp.json();
+}
+
+// ── Edit overlay ──────────────────────────────────────────
+document.getElementById('closeEdit').onclick  = closeEditor;
+document.getElementById('btnCancelEdit').onclick = closeEditor;
+
+function closeEditor() {
+  document.getElementById('editOverlay').classList.remove('open');
+  editingRecipe = null;
+  pendingPhotoFile = null;
+}
+
+function startEdit(parsed, isNew, note = '') {
+  editingIsNew = isNew;
+  editingRecipe = {
+    id:          editingIsNew ? null : (editingRecipe?.id || null),
+    owner_id:    currentUser.id,
+    title:       (parsed?.title)       || '',
+    servings:    (parsed?.servings)    || '',
+    prep_time:   (parsed?.prepTime || parsed?.prep_time) || '',
+    cook_time:   (parsed?.cookTime || parsed?.cook_time) || '',
+    ingredients: Array.isArray(parsed?.ingredients) ? parsed.ingredients : [],
+    steps:       Array.isArray(parsed?.steps)       ? parsed.steps       : [],
+    tags:        Array.isArray(parsed?.tags)        ? parsed.tags        : [],
+    notes:       (parsed?.notes)       || '',
+    photo_url:   (parsed?.photo_url)   || '',
+    photo_path:  (parsed?.photo_path)  || '',
+  };
+  document.getElementById('editHeading').textContent = isNew ? 'Review recipe' : 'Edit recipe';
+  renderEditorBody(note);
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function renderEditorBody(note = '') {
+  const r = editingRecipe;
+  const body = document.getElementById('editBody');
+  body.innerHTML = `
+    ${note ? `<div class="errbox" style="margin-bottom:14px;">${esc(note)}</div>` : ''}
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="f_title" value="${escAttr(r.title)}" placeholder="Recipe name">
+    </div>
+    <div class="field row2">
+      <div><label>Serves</label><input type="text" id="f_servings" value="${escAttr(r.servings)}" placeholder="4"></div>
+      <div><label>Prep</label><input type="text" id="f_prep" value="${escAttr(r.prep_time)}" placeholder="15 min"></div>
+      <div><label>Cook</label><input type="text" id="f_cook" value="${escAttr(r.cook_time)}" placeholder="30 min"></div>
+    </div>
+    <div class="field">
+      <label>Photo</label>
+      <div class="photo-edit-row">
+        <div class="photo-preview" id="photoPreview">
+          ${r.photo_url ? `<img src="${r.photo_url}" alt="">` : '🍽️'}
+        </div>
+        <div class="photo-actions">
+          <button class="filebtn secondary" id="btnChangePhoto" style="font-size:12px;padding:7px 12px;">
+            ${r.photo_url ? 'Change photo' : 'Add photo'}
+          </button>
+          ${r.photo_url ? `<button class="filebtn secondary" id="btnRemovePhoto" style="font-size:12px;padding:7px 12px;color:var(--rust);border-color:var(--rust);">Remove</button>` : ''}
+        </div>
+      </div>
+      <input type="file" id="filePhoto" accept="image/*">
+    </div>
+    <div class="field">
+      <label>Ingredients</label>
+      <div class="listedit" id="ing_list"></div>
+      <button class="addline" id="addIng">+ Add ingredient</button>
+    </div>
+    <div class="field">
+      <label>Steps</label>
+      <div class="listedit" id="step_list"></div>
+      <button class="addline" id="addStep">+ Add step</button>
+    </div>
+    <div class="field">
+      <label>Tags</label>
+      <div class="tageditor" id="tagEditor"></div>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f_notes" rows="3" placeholder="Tips, variations, storage…">${esc(r.notes)}</textarea>
+    </div>
+  `;
+  renderListEditor('ing_list',  r.ingredients, 'ingredients');
+  renderListEditor('step_list', r.steps,       'steps');
+  renderTagEditor();
+  document.getElementById('addIng').onclick  = () => { r.ingredients.push(''); renderListEditor('ing_list',  r.ingredients, 'ingredients'); };
+  document.getElementById('addStep').onclick = () => { r.steps.push('');       renderListEditor('step_list', r.steps,       'steps');       };
+  document.getElementById('btnChangePhoto').onclick = () => document.getElementById('filePhoto').click();
+  const removeBtn = document.getElementById('btnRemovePhoto');
+  if (removeBtn) removeBtn.onclick = () => {
+    editingRecipe.photo_url = '';
+    editingRecipe.photo_path = '';
+    pendingPhotoFile = null;
+    renderEditorBody();
+  };
+  document.getElementById('filePhoto').onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const norm = await normalizeImage(await fileToDataUrl(file));
+    pendingPhotoFile = norm;
+    editingRecipe.photo_url = norm.dataUrl; // preview
+    document.getElementById('photoPreview').innerHTML = `<img src="${norm.dataUrl}" alt="">`;
+    document.getElementById('filePhoto').value = '';
+  };
+
+  // Pre-fill pending photo from add flow
+  if (pendingPhotoFile && !r.photo_url) {
+    editingRecipe.photo_url = pendingPhotoFile.dataUrl;
+    document.getElementById('photoPreview').innerHTML = `<img src="${pendingPhotoFile.dataUrl}" alt="">`;
+  }
+}
+
+function fileToDataUrl(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function renderListEditor(containerId, arr, key) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = arr.map((v, i) =>
+    `<div class="li">
+      <span class="num">${i+1}</span>
+      <textarea rows="1" data-idx="${i}">${esc(v)}</textarea>
+      <button class="del" data-idx="${i}">×</button>
+    </div>`
+  ).join('');
+  c.querySelectorAll('textarea').forEach(t => {
+    autoGrow(t);
+    t.oninput = () => { editingRecipe[key][+t.dataset.idx] = t.value; autoGrow(t); };
+  });
+  c.querySelectorAll('.del').forEach(b =>
+    b.onclick = () => { editingRecipe[key].splice(+b.dataset.idx,1); renderListEditor(containerId, editingRecipe[key], key); }
+  );
+}
+function autoGrow(t) { t.style.height='auto'; t.style.height=t.scrollHeight+'px'; }
+
+function renderTagEditor() {
+  const wrap = document.getElementById('tagEditor');
+  const r = editingRecipe;
+  wrap.innerHTML = r.tags.map((t,i) =>
+    `<span class="chip">${esc(t)}<span class="x" data-idx="${i}">×</span></span>`
+  ).join('') + `<input type="text" id="tagInput" placeholder="Add tag…">`;
+  wrap.querySelectorAll('.x').forEach(x =>
+    x.onclick = () => { r.tags.splice(+x.dataset.idx,1); renderTagEditor(); }
+  );
+  document.getElementById('tagInput').onkeydown = e => {
+    if (e.key === 'Enter' && e.target.value.trim()) {
+      r.tags.push(e.target.value.trim().toLowerCase());
+      renderTagEditor();
+      document.getElementById('tagInput')?.focus();
+      e.preventDefault();
+    }
+  };
+}
+
+// ── Save recipe ───────────────────────────────────────────
+document.getElementById('btnSaveEdit').onclick = saveRecipe;
+
+async function saveRecipe() {
+  const r = editingRecipe;
+  r.title     = document.getElementById('f_title').value.trim() || 'Untitled recipe';
+  r.servings  = document.getElementById('f_servings').value.trim();
+  r.prep_time = document.getElementById('f_prep').value.trim();
+  r.cook_time = document.getElementById('f_cook').value.trim();
+  r.notes     = document.getElementById('f_notes').value.trim();
+  r.ingredients = r.ingredients.map(s=>s.trim()).filter(Boolean);
+  r.steps       = r.steps.map(s=>s.trim()).filter(Boolean);
+
+  document.getElementById('btnSaveEdit').disabled = true;
+  document.getElementById('btnSaveEdit').textContent = 'Saving…';
+
+  // Upload photo if we have a pending one
+  if (pendingPhotoFile && pendingPhotoFile.base64) {
+    const uploadResult = await uploadRecipePhoto(r.id || 'new', pendingPhotoFile);
+    if (uploadResult) { r.photo_url = uploadResult.url; r.photo_path = uploadResult.path; }
+    pendingPhotoFile = null;
+  }
+
+  const payload = {
+    owner_id:    currentUser.id,
+    title:       r.title,
+    servings:    r.servings,
+    prep_time:   r.prep_time,
+    cook_time:   r.cook_time,
+    ingredients: r.ingredients,
+    steps:       r.steps,
+    tags:        r.tags,
+    notes:       r.notes,
+    photo_url:   r.photo_url || '',
+    photo_path:  r.photo_path || '',
+  };
+
+  let savedId = r.id;
+  if (editingIsNew) {
+    const { data, error } = await sb.from('recipes').insert(payload).select().single();
+    if (error) { showToast('Save failed — try again'); console.error(error); }
+    else { savedId = data.id; showToast('Recipe saved!'); }
+  } else {
+    const { error } = await sb.from('recipes').update(payload).eq('id', r.id);
+    if (error) { showToast('Save failed — try again'); console.error(error); }
+    else showToast('Recipe updated!');
+  }
+
+  document.getElementById('btnSaveEdit').disabled = false;
+  document.getElementById('btnSaveEdit').textContent = 'Save recipe';
+  closeEditor();
+  await loadMyRecipes();
+  if (savedId) openDetail(savedId, 'personal');
+}
+
+async function uploadRecipePhoto(recipeId, imgData) {
+  try {
+    const binary = atob(imgData.base64);
+    const bytes  = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], { type: imgData.mimeType });
+    const path = `${currentUser.id}/${recipeId}_${Date.now()}.jpg`;
+    const { error } = await sb.storage.from('recipe-photos').upload(path, blob, { upsert: true });
+    if (error) { console.error('Photo upload error', error); return null; }
+    const { data } = sb.storage.from('recipe-photos').getPublicUrl(path);
+    return { url: data.publicUrl, path };
+  } catch (err) { console.error(err); return null; }
+}
+
+// ── Detail view ───────────────────────────────────────────
+document.getElementById('closeDetail').onclick = () =>
+  document.getElementById('detailOverlay').classList.remove('open');
+
+async function openDetail(id, context, bookId) {
+  // Find recipe in local cache or fetch
+  let r = myRecipes.find(x => x.id === id);
+  if (!r && bookId && bookRecipes[bookId]) r = bookRecipes[bookId].find(x => x.id === id);
+  if (!r) {
+    const { data } = await sb.from('recipes').select('*').eq('id', id).single();
+    r = data;
+  }
+  if (!r) return;
+
+  const isOwner = r.owner_id === currentUser.id;
+  const inBook  = context === 'camp' && bookId;
+
+  document.getElementById('detailHeading').textContent = r.title || 'Recipe';
+  const body = document.getElementById('detailBody');
+  const meta = [];
+  if (r.servings)  meta.push(`<span><b>Serves</b> ${esc(r.servings)}</span>`);
+  if (r.prep_time) meta.push(`<span><b>Prep</b> ${esc(r.prep_time)}</span>`);
+  if (r.cook_time) meta.push(`<span><b>Cook</b> ${esc(r.cook_time)}</span>`);
+
+  body.innerHTML = `
+    ${r.photo_url ? `<img class="detail-hero" src="${r.photo_url}" alt="">` : ''}
+    <h1 class="display detail-title">${esc(r.title||'Untitled')}</h1>
+    <div class="detail-meta">${meta.join('')}</div>
+    <div class="detail-tags">${(r.tags||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>
+    ${(Array.isArray(r.ingredients)&&r.ingredients.length) ? `
+      <div class="section-title">Ingredients</div>
+      <ul class="ingredients-list">${r.ingredients.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>` : ''}
+    ${(Array.isArray(r.steps)&&r.steps.length) ? `
+      <div class="section-title">Method</div>
+      <ol class="steps-list">${r.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>` : ''}
+    ${r.notes ? `<div class="section-title">Notes</div><div class="notesbox">${esc(r.notes)}</div>` : ''}
+    <div class="detail-actions" id="detailActions"></div>
+  `;
+
+  const actions = document.getElementById('detailActions');
+
+  // Edit button — owner OR camp member can edit
+  const canEdit = isOwner || inBook;
+  if (canEdit) {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'actionbtn';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = () => {
+      editingRecipe = JSON.parse(JSON.stringify(r));
+      editingIsNew = false;
+      document.getElementById('detailOverlay').classList.remove('open');
+      startEdit(editingRecipe, false);
+    };
+    actions.appendChild(editBtn);
+  }
+
+  // Copy to personal (only in camp context, and not already owner)
+  if (inBook && !isOwner) {
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'actionbtn teal';
+    copyBtn.textContent = '📋 Copy to My Recipes';
+    copyBtn.onclick = async () => {
+      await copyRecipeToPersonal(r);
+      document.getElementById('detailOverlay').classList.remove('open');
+    };
+    actions.appendChild(copyBtn);
+  }
+
+  // Share to camp book (only in personal context)
+  if (context === 'personal' && campBooks.length) {
+    const shareBtn = document.createElement('button');
+    shareBtn.className = 'actionbtn teal';
+    shareBtn.textContent = '🏕️ Add to Camp Book';
+    shareBtn.onclick = () => showAddToCampPicker(r.id);
+    actions.appendChild(shareBtn);
+  }
+
+  // Remove from camp book
+  if (inBook) {
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'actionbtn danger';
+    removeBtn.textContent = 'Remove from book';
+    removeBtn.onclick = async () => {
+      const ok = await confirm2('Remove from camp book?', 'This removes the recipe from the shared book but keeps it in the owner\'s personal recipes.');
+      if (!ok) return;
+      await sb.from('camp_book_recipes').delete()
+        .eq('book_id', bookId).eq('recipe_id', r.id);
+      document.getElementById('detailOverlay').classList.remove('open');
+      await openBook(bookId);
+      showToast('Removed from camp book');
+    };
+    actions.appendChild(removeBtn);
+  }
+
+  // Delete (owner only, personal context)
+  if (isOwner && context === 'personal') {
+    const delBtn = document.createElement('button');
+    delBtn.className = 'actionbtn danger';
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = async () => {
+      const ok = await confirm2('Delete recipe?', 'This can\'t be undone.');
+      if (!ok) return;
+      if (r.photo_path) await sb.storage.from('recipe-photos').remove([r.photo_path]);
+      await sb.from('recipes').delete().eq('id', r.id);
+      document.getElementById('detailOverlay').classList.remove('open');
+      showToast('Recipe deleted');
+      await loadMyRecipes();
+    };
+    actions.appendChild(delBtn);
+  }
+
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+async function copyRecipeToPersonal(r) {
+  const { data, error } = await sb.from('recipes').insert({
+    owner_id:    currentUser.id,
+    title:       r.title,
+    servings:    r.servings,
+    prep_time:   r.prep_time,
+    cook_time:   r.cook_time,
+    ingredients: r.ingredients,
+    steps:       r.steps,
+    tags:        r.tags,
+    notes:       r.notes,
+    photo_url:   r.photo_url,
+    photo_path:  '',  // copy URL but not storage path ownership
+  }).select().single();
+  if (error) { showToast('Could not copy recipe'); return; }
+  showToast('Copied to My Recipes!');
+  await loadMyRecipes();
+}
+
+async function showAddToCampPicker(recipeId) {
+  if (!campBooks.length) { showToast('You have no camp books yet'); return; }
+  // Simple: if only one book, add straight away; else show options
+  if (campBooks.length === 1) {
+    await addRecipeToCampBook(recipeId, campBooks[0].id);
+    return;
+  }
+  // Multiple books — show inline picker in confirm modal
+  const list = campBooks.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  const selected = await confirm2('Add to camp book', 
+    `<select id="bookPicker" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);margin-top:8px;font-size:14px;">${list}</select>`,
+    'Add', false);
+  if (!selected) return;
+  const bookId = document.getElementById('bookPicker')?.value;
+  if (bookId) await addRecipeToCampBook(recipeId, bookId);
+}
+
+async function addRecipeToCampBook(recipeId, bookId) {
+  const { error } = await sb.from('camp_book_recipes').insert({
+    book_id:   bookId,
+    recipe_id: recipeId,
+    added_by:  currentUser.id,
+  });
+  if (error && error.code === '23505') { showToast('Already in that camp book'); return; }
+  if (error) { showToast('Could not add to camp book'); return; }
+  showToast('Added to camp book!');
+}
+
+// ── Camp Books ────────────────────────────────────────────
+async function loadCampBooks() {
+  // Books created by me
+  const { data: created } = await sb.from('camp_books')
+    .select('*').eq('created_by', currentUser.id).order('created_at', { ascending: false });
+  // Books I'm a member of
+  const { data: memberships } = await sb.from('camp_book_members')
+    .select('book_id, camp_books(*)').eq('user_id', currentUser.id);
+  const memberBooks = (memberships||[]).map(m => m.camp_books).filter(Boolean);
+  // Merge, deduplicate
+  const allBooks = [...(created||[])];
+  memberBooks.forEach(b => { if (!allBooks.find(x=>x.id===b.id)) allBooks.push(b); });
+  campBooks = allBooks;
+  renderCampList();
+}
+
+function renderCampList() {
+  const area = document.getElementById('campListArea');
+  if (!campBooks.length) {
+    area.innerHTML = `<div class="empty">
+      <div style="font-size:2.5rem;margin-bottom:8px;">🏕️</div>
+      <div class="display">No camp books yet</div>
+      <div>Create one or join with a code from a friend.</div>
+    </div>`;
+    return;
+  }
+  area.innerHTML = campBooks.map((b,i) => `
+    <div class="bookcard" data-id="${b.id}" style="animation-delay:${i*40}ms">
+      <h3>${esc(b.name)}</h3>
+      ${b.description ? `<div class="bmeta"><span>${esc(b.description)}</span></div>` : ''}
+      <div class="bcode">CODE: ${esc(b.invite_code)}</div>
+    </div>`
+  ).join('');
+  area.querySelectorAll('.bookcard').forEach(el =>
+    el.onclick = () => openBook(el.dataset.id)
+  );
+}
+
+document.getElementById('btnNewBook').onclick = () =>
+  document.getElementById('newBookOverlay').classList.add('open');
+document.getElementById('closeNewBook').onclick  = () =>
+  document.getElementById('newBookOverlay').classList.remove('open');
+document.getElementById('btnCancelNewBook').onclick = () =>
+  document.getElementById('newBookOverlay').classList.remove('open');
+
+document.getElementById('btnCreateBook').onclick = async () => {
+  const name = document.getElementById('newBookName').value.trim();
+  if (!name) { document.getElementById('newBookErr').innerHTML = '<div class="errbox">Please enter a name.</div>'; return; }
+  document.getElementById('btnCreateBook').disabled = true;
+  document.getElementById('btnCreateBook').textContent = 'Creating…';
+
+  const { data, error } = await sb.from('camp_books')
+    .insert({ name, description: document.getElementById('newBookDesc').value.trim(), created_by: currentUser.id })
+    .select().single();
+
+  document.getElementById('btnCreateBook').disabled = false;
+  document.getElementById('btnCreateBook').textContent = 'Create Book';
+
+  if (error) { document.getElementById('newBookErr').innerHTML = `<div class="errbox">${esc(error.message)}</div>`; return; }
+
+  // Creator auto-joins as member
+  await sb.from('camp_book_members').insert({ book_id: data.id, user_id: currentUser.id });
+  document.getElementById('newBookOverlay').classList.remove('open');
+  document.getElementById('newBookName').value = '';
+  document.getElementById('newBookDesc').value = '';
+  showToast('Camp book created!');
+  await loadCampBooks();
+  switchTab('camp');
+  openBook(data.id);
+}
+
+// Join by code
+document.getElementById('btnJoin').onclick = async () => {
+  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  if (!code) return;
+  await joinBookByCode(code);
+};
+
+async function joinBookByCode(code) {
+  const { data: book, error } = await sb.from('camp_books')
+    .select('*').eq('invite_code', code).single();
+  if (error || !book) { showToast('Code not found — check and try again'); return; }
+  // Already a member?
+  const { data: existing } = await sb.from('camp_book_members')
+    .select('*').eq('book_id', book.id).eq('user_id', currentUser.id).single();
+  if (existing) { showToast(`Already in "${book.name}"`); openBook(book.id); return; }
+  await sb.from('camp_book_members').insert({ book_id: book.id, user_id: currentUser.id });
+  document.getElementById('joinCodeInput').value = '';
+  showToast(`Joined "${book.name}"!`);
+  await loadCampBooks();
+  switchTab('camp');
+  openBook(book.id);
+}
+
+// ── Camp book detail ──────────────────────────────────────
+document.getElementById('closeBook').onclick = () =>
+  document.getElementById('bookOverlay').classList.remove('open');
+
+async function openBook(bookId) {
+  currentBookId = bookId;
+  const book = campBooks.find(b => b.id === bookId);
+  if (!book) return;
+  document.getElementById('bookHeading').textContent = book.name;
+  document.getElementById('bookOverlay').classList.add('open');
+
+  const body = document.getElementById('bookBody');
+  body.innerHTML = `<div class="loadingrow"><div class="spinner"></div> Loading…</div>`;
+
+  // Load members
+  const { data: members } = await sb.from('camp_book_members')
+    .select('user_id, profiles(display_name, avatar_url)').eq('book_id', bookId);
+
+  // Load recipes
+  const { data: links } = await sb.from('camp_book_recipes')
+    .select('recipe_id, added_by, added_at, recipes(*)').eq('book_id', bookId);
+  const recipes = (links||[]).map(l => l.recipes).filter(Boolean);
+  bookRecipes[bookId] = recipes;
+
+  const isCreator = book.created_by === currentUser.id;
+  const shareUrl  = `${location.origin}${location.pathname}?join=${book.invite_code}`;
+
+  const memberChips = (members||[]).map(m => {
+    const p = m.profiles;
+    const name = p?.display_name || 'Member';
+    return `<div class="member-chip">${p?.avatar_url ? `<img src="${p.avatar_url}" alt="">` : ''}${esc(name)}</div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="invite-row">
+      <div>
+        <div style="font-size:11px;opacity:.6;margin-bottom:2px;">INVITE CODE</div>
+        <div class="invite-code">${esc(book.invite_code)}</div>
+        <div class="share-hint">Share this code or link to invite friends</div>
+      </div>
+      <button class="copy-btn" id="btnShareBook">Share link</button>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div class="eyebrow" style="margin-bottom:6px;">Members (${(members||[]).length})</div>
+      <div class="book-members">${memberChips}</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="eyebrow">Recipes (${recipes.length})</div>
+      <button class="newbtn" style="background:var(--teal)" id="btnAddToBook">+ Add recipe</button>
+    </div>
+    <div id="bookRecipeList">
+      ${recipes.length ? `<div class="cardlist">${recipes.map((r,i) => campCardHtml(r,i)).join('')}</div>` : 
+        `<div class="empty" style="padding:30px 0;"><div>No recipes yet.</div><div>Add your first one!</div></div>`}
+    </div>
+    ${isCreator ? `<div style="margin-top:24px;border-top:1px solid var(--line);padding-top:16px;">
+      <button class="actionbtn danger" id="btnDeleteBook" style="width:100%;">Delete this camp book</button>
+    </div>` : `<div style="margin-top:24px;border-top:1px solid var(--line);padding-top:16px;">
+      <button class="actionbtn" id="btnLeaveBook" style="width:100%;">Leave this camp book</button>
+    </div>`}
+  `;
+
+  body.querySelectorAll('.rcard').forEach(el =>
+    el.onclick = () => openDetail(el.dataset.id, 'camp', bookId)
+  );
+
+  document.getElementById('btnShareBook').onclick = () => {
+    if (navigator.share) {
+      navigator.share({ title: book.name, text: `Join our camp recipe book "${book.name}"!`, url: shareUrl });
+    } else {
+      navigator.clipboard.writeText(shareUrl).then(() => showToast('Link copied!'));
+    }
+  };
+
+  document.getElementById('btnAddToBook').onclick = () => showAddRecipePicker(bookId);
+
+  const delBtn = document.getElementById('btnDeleteBook');
+  if (delBtn) delBtn.onclick = async () => {
+    const ok = await confirm2('Delete camp book?', `"${book.name}" and all its recipe links will be deleted. Personal recipes are kept.`);
+    if (!ok) return;
+    await sb.from('camp_books').delete().eq('id', bookId);
+    document.getElementById('bookOverlay').classList.remove('open');
+    showToast('Camp book deleted');
+    await loadCampBooks();
+  };
+
+  const leaveBtn = document.getElementById('btnLeaveBook');
+  if (leaveBtn) leaveBtn.onclick = async () => {
+    const ok = await confirm2('Leave camp book?', `You can rejoin later with the code ${book.invite_code}.`);
+    if (!ok) return;
+    await sb.from('camp_book_members').delete().eq('book_id', bookId).eq('user_id', currentUser.id);
+    document.getElementById('bookOverlay').classList.remove('open');
+    showToast('Left camp book');
+    await loadCampBooks();
+  };
+}
+
+function campCardHtml(r, i) {
+  const thumb = r.photo_url
+    ? `<div class="thumb"><img src="${r.photo_url}" alt="" loading="lazy"></div>`
+    : `<div class="thumb">🍽️</div>`;
+  const meta = [];
+  if (r.servings)  meta.push(`Serves ${esc(r.servings)}`);
+  if (r.prep_time) meta.push(`Prep ${esc(r.prep_time)}`);
+  const isOwner = r.owner_id === currentUser.id;
+  return `<div class="rcard camp" data-id="${r.id}" style="animation-delay:${i*35}ms">
+    ${thumb}
+    <div class="info">
+      <h3>${esc(r.title||'Untitled')}</h3>
+      <div class="meta">${meta.map(m=>`<span>${m}</span>`).join('')}</div>
+      <div class="tags">${(r.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</div>
+      ${isOwner ? '' : '<div class="camp-badge">🏕️ shared</div>'}
+    </div>
+  </div>`;
+}
+
+async function showAddRecipePicker(bookId) {
+  // Options: pick from personal recipes or add new
+  if (!myRecipes.length) {
+    const ok = await confirm2('No personal recipes', 'You have no personal recipes yet. Add a new recipe directly to the camp book?', 'Add new recipe', false);
+    if (ok) { openAddToCampDirect(bookId); }
+    return;
+  }
+  // Show a list overlay — reuse detail overlay for picker
+  const body = document.getElementById('detailBody');
+  document.getElementById('detailHeading').textContent = 'Add to camp book';
+  const alreadyInBook = (bookRecipes[bookId]||[]).map(r=>r.id);
+  const available = myRecipes.filter(r => !alreadyInBook.includes(r.id));
+  if (!available.length) {
+    showToast('All your recipes are already in this book');
+    return;
+  }
+  body.innerHTML = `
+    <p style="font-size:14px;opacity:.7;margin-bottom:12px;">Pick from your personal recipes:</p>
+    <div class="cardlist">
+      ${available.map((r,i) => cardHtml(r,i)).join('')}
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
+      <button class="actionbtn teal" id="btnNewForCamp" style="width:100%;">+ Create new recipe for this book</button>
+    </div>
+  `;
+  body.querySelectorAll('.rcard').forEach(el => {
+    el.onclick = async () => {
+      await addRecipeToCampBook(el.dataset.id, bookId);
+      document.getElementById('detailOverlay').classList.remove('open');
+      await openBook(bookId);
+    };
+  });
+  document.getElementById('btnNewForCamp').onclick = () => {
+    document.getElementById('detailOverlay').classList.remove('open');
+    openAddToCampDirect(bookId);
+  };
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function openAddToCampDirect(bookId) {
+  // After saving recipe, also link it to the camp book
+  pendingCampBookId = bookId;
+  openAddOverlay();
+}
+let pendingCampBookId = null;
+
+// Override saveRecipe to also link when pendingCampBookId is set
+const _origSave = saveRecipe;
+async function saveRecipe() {
+  const r = editingRecipe;
+  r.title     = document.getElementById('f_title').value.trim() || 'Untitled recipe';
+  r.servings  = document.getElementById('f_servings').value.trim();
+  r.prep_time = document.getElementById('f_prep').value.trim();
+  r.cook_time = document.getElementById('f_cook').value.trim();
+  r.notes     = document.getElementById('f_notes').value.trim();
+  r.ingredients = r.ingredients.map(s=>s.trim()).filter(Boolean);
+  r.steps       = r.steps.map(s=>s.trim()).filter(Boolean);
+
+  document.getElementById('btnSaveEdit').disabled = true;
+  document.getElementById('btnSaveEdit').textContent = 'Saving…';
+
+  if (pendingPhotoFile && pendingPhotoFile.base64) {
+    const up = await uploadRecipePhoto(r.id || 'new', pendingPhotoFile);
+    if (up) { r.photo_url = up.url; r.photo_path = up.path; }
+    pendingPhotoFile = null;
+  }
+
+  const payload = {
+    owner_id:    currentUser.id,
+    title:       r.title,
+    servings:    r.servings,
+    prep_time:   r.prep_time,
+    cook_time:   r.cook_time,
+    ingredients: r.ingredients,
+    steps:       r.steps,
+    tags:        r.tags,
+    notes:       r.notes,
+    photo_url:   r.photo_url || '',
+    photo_path:  r.photo_path || '',
+  };
+
+  let savedId = r.id;
+  if (editingIsNew) {
+    const { data, error } = await sb.from('recipes').insert(payload).select().single();
+    if (error) { showToast('Save failed — try again'); console.error(error); }
+    else {
+      savedId = data.id;
+      if (pendingCampBookId) {
+        await addRecipeToCampBook(savedId, pendingCampBookId);
+        pendingCampBookId = null;
+      }
+      showToast('Recipe saved!');
+    }
+  } else {
+    const { error } = await sb.from('recipes').update(payload).eq('id', r.id);
+    if (error) { showToast('Save failed — try again'); console.error(error); }
+    else showToast('Recipe updated!');
+  }
+
+  document.getElementById('btnSaveEdit').disabled = false;
+  document.getElementById('btnSaveEdit').textContent = 'Save recipe';
+  closeEditor();
+  await loadMyRecipes();
+  if (pendingCampBookId === null && currentBookId) await openBook(currentBookId);
+}
+
+// ── Utilities ─────────────────────────────────────────────
+function esc(s) {
+  return (s||'').replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escAttr(s) { return esc(s); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function confirm2(title, msgHtml, okLabel = 'Delete', isDanger = true) {
+  return new Promise(resolve => {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').innerHTML = msgHtml;
+    const okBtn = document.getElementById('confirmOkBtn');
+    okBtn.textContent = okLabel;
+    okBtn.className = isDanger ? 'modal-confirm' : 'modal-confirm safe';
+    confirmResolve = v => {
+      document.getElementById('confirmModal').classList.remove('open');
+      resolve(v);
+    };
+    document.getElementById('confirmModal').classList.add('open');
+  });
+}
+
+function closeAllOverlays() {
+  ['addOverlay','editOverlay','detailOverlay','bookOverlay','newBookOverlay']
+    .forEach(id => document.getElementById(id).classList.remove('open'));
+}
+</script>
+</html>
