@@ -1107,7 +1107,15 @@ async function saveRecipe() {
   document.getElementById('btnSaveEdit').textContent = 'Save recipe';
   closeEditor();
   await loadMyRecipes();
-  if (savedId) openDetail(savedId, 'personal');
+  // Return to camp book if that's where edit was triggered from
+  const fromBook = editingRecipe?._bookId || (pendingCampBookId ? null : currentBookId);
+  if (editingIsNew && pendingCampBookId) {
+    // handled inside saveRecipe already
+  } else if (!editingIsNew && fromBook) {
+    await openBook(fromBook);
+  } else if (savedId) {
+    openDetail(savedId, 'personal');
+  }
 }
 
 async function uploadRecipePhoto(recipeId, imgData) {
@@ -1129,17 +1137,18 @@ document.getElementById('closeDetail').onclick = () =>
   document.getElementById('detailOverlay').classList.remove('open');
 
 async function openDetail(id, context, bookId) {
-  // Find recipe in local cache or fetch
+  // Find recipe in local cache or fetch fresh
   let r = myRecipes.find(x => x.id === id);
   if (!r && bookId && bookRecipes[bookId]) r = bookRecipes[bookId].find(x => x.id === id);
   if (!r) {
-    const { data } = await sb.from('recipes').select('*').eq('id', id).single();
+    const { data, error } = await sb.from('recipes').select('*').eq('id', id).single();
+    if (error || !data) { showToast('Could not load recipe'); return; }
     r = data;
   }
-  if (!r) return;
 
   const isOwner = r.owner_id === currentUser.id;
   const inBook  = context === 'camp' && bookId;
+  const isMember = inBook; // any camp member can edit/remove
 
   document.getElementById('detailHeading').textContent = r.title || 'Recipe';
   const body = document.getElementById('detailBody');
@@ -1165,14 +1174,15 @@ async function openDetail(id, context, bookId) {
 
   const actions = document.getElementById('detailActions');
 
-  // Edit button — owner OR camp member can edit
-  const canEdit = isOwner || inBook;
-  if (canEdit) {
+  // ── Edit — any camp member or owner ──
+  if (isOwner || isMember) {
     const editBtn = document.createElement('button');
     editBtn.className = 'actionbtn';
     editBtn.textContent = 'Edit';
     editBtn.onclick = () => {
       editingRecipe = JSON.parse(JSON.stringify(r));
+      editingRecipe._context = context;
+      editingRecipe._bookId  = bookId;
       editingIsNew = false;
       document.getElementById('detailOverlay').classList.remove('open');
       startEdit(editingRecipe, false);
@@ -1180,7 +1190,7 @@ async function openDetail(id, context, bookId) {
     actions.appendChild(editBtn);
   }
 
-  // Copy to personal (only in camp context, and not already owner)
+  // ── Copy to personal — camp context, non-owner ──
   if (inBook && !isOwner) {
     const copyBtn = document.createElement('button');
     copyBtn.className = 'actionbtn teal';
@@ -1192,7 +1202,7 @@ async function openDetail(id, context, bookId) {
     actions.appendChild(copyBtn);
   }
 
-  // Share to camp book (only in personal context)
+  // ── Add to camp book — personal context ──
   if (context === 'personal' && campBooks.length) {
     const shareBtn = document.createElement('button');
     shareBtn.className = 'actionbtn teal';
@@ -1201,30 +1211,43 @@ async function openDetail(id, context, bookId) {
     actions.appendChild(shareBtn);
   }
 
-  // Remove from camp book
+  // ── Remove from camp book — any member ──
   if (inBook) {
     const removeBtn = document.createElement('button');
     removeBtn.className = 'actionbtn danger';
-    removeBtn.textContent = 'Remove from book';
+    removeBtn.textContent = isOwner ? 'Delete recipe' : 'Remove from book';
     removeBtn.onclick = async () => {
-      const ok = await confirm2('Remove from camp book?', 'This removes the recipe from the shared book but keeps it in the owner\'s personal recipes.');
-      if (!ok) return;
-      await sb.from('camp_book_recipes').delete()
-        .eq('book_id', bookId).eq('recipe_id', r.id);
-      document.getElementById('detailOverlay').classList.remove('open');
-      await openBook(bookId);
-      showToast('Removed from camp book');
+      if (isOwner) {
+        // Owner: truly delete the recipe everywhere
+        const ok = await confirm2('Delete recipe?', 'This permanently deletes the recipe for everyone.');
+        if (!ok) return;
+        if (r.photo_path) await sb.storage.from('recipe-photos').remove([r.photo_path]);
+        await sb.from('recipes').delete().eq('id', r.id);
+        document.getElementById('detailOverlay').classList.remove('open');
+        showToast('Recipe deleted');
+        await loadMyRecipes();
+        await openBook(bookId);
+      } else {
+        // Member: just remove the link from the camp book
+        const ok = await confirm2('Remove from camp book?', 'Removes it from the shared book. The owner keeps their copy.');
+        if (!ok) return;
+        await sb.from('camp_book_recipes').delete()
+          .eq('book_id', bookId).eq('recipe_id', r.id);
+        document.getElementById('detailOverlay').classList.remove('open');
+        showToast('Removed from camp book');
+        await openBook(bookId);
+      }
     };
     actions.appendChild(removeBtn);
   }
 
-  // Delete (owner only, personal context)
+  // ── Delete — personal context, owner only ──
   if (isOwner && context === 'personal') {
     const delBtn = document.createElement('button');
     delBtn.className = 'actionbtn danger';
     delBtn.textContent = 'Delete';
     delBtn.onclick = async () => {
-      const ok = await confirm2('Delete recipe?', 'This can\'t be undone.');
+      const ok = await confirm2('Delete recipe?', 'This permanently deletes your recipe.');
       if (!ok) return;
       if (r.photo_path) await sb.storage.from('recipe-photos').remove([r.photo_path]);
       await sb.from('recipes').delete().eq('id', r.id);
