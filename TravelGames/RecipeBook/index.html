@@ -1619,6 +1619,30 @@ async function saveRecipe() {
       await addRecipeToCampBook(savedId, pendingCampBookId, true);
     }
     showToast('Recipe saved!');
+  } else if (fromBookId) {
+    // Camp book edit — insert a fresh independent copy, repoint the link, delete the old copy.
+    // This ensures the personal library row is never touched.
+    const oldId = r.id;
+    const { data: newCopy, error: insertErr } = await sb.from('recipes').insert(payload).select().single();
+    if (insertErr) {
+      showToast('Save failed: ' + insertErr.message);
+      console.error('Insert error:', insertErr);
+      document.getElementById('btnSaveEdit').disabled = false;
+      document.getElementById('btnSaveEdit').textContent = 'Save recipe';
+      return;
+    }
+    savedId = newCopy.id;
+    // Repoint the camp_book_recipes link: delete old, insert new
+    await sb.from('camp_book_recipes')
+      .delete().eq('book_id', fromBookId).eq('recipe_id', oldId);
+    await sb.from('camp_book_recipes').insert({
+      book_id:   fromBookId,
+      recipe_id: newCopy.id,
+      added_by:  currentUser.id,
+    });
+    // Delete the old copy row now that the link is moved
+    await sb.from('recipes').delete().eq('id', oldId);
+    showToast('Recipe updated!');
   } else {
     const { error } = await sb.from('recipes').update(payload).eq('id', r.id);
     if (error) {
