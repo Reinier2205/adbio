@@ -1158,11 +1158,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
       <div class="sbtn-title">CONNECT</div>
       <div class="sbtn-hint">Tap to connect with this PIN</div>
     </button>
-    <button class="sbtn warn" id="d1-force-btn" style="display:none;margin-top:4px" onclick="forceReconnectDisplay()">
-      <div class="sbtn-ico">🔄</div>
-      <div class="sbtn-title">RECONNECT</div>
-      <div class="sbtn-hint" id="d1-force-hint">Reconnect with saved PIN</div>
-    </button>
   </div>
 
   <!-- d2: connecting -->
@@ -3352,13 +3347,6 @@ function showPanel(id) {
   // Hide the live-screen conn-strip when navigating away from live panels
   const strip = $('conn-strip');
   if (strip && id !== 's3' && id !== 'd3') strip.classList.remove('visible');
-  // On s2: always show both sensor action buttons
-  if (id === 's2') {
-    const s2Btn = $('s2-force-btn');
-    const s2New = $('s2-newpin-btn');
-    if (s2Btn) s2Btn.style.display = '';
-    if (s2New) s2New.style.display = '';
-  }
   // Load saved dimensions into inputs when entering live panels
   if (id === 's3' || id === 'd3') loadDimsIntoInputs();
   // Notify VoiceManager so it shows/hides the correct voice row
@@ -3626,29 +3614,10 @@ window.forceReconnectDisplay = () => {
 
 // Show/hide force buttons based on whether a saved PIN exists
 function updateForceButtons() {
-  const savedPin = localStorage.getItem('lv_pin');
-  const savedMode = localStorage.getItem('lv_mode');
-  // Sensor force buttons — show after 5 seconds on s1/s2
-  const s1Btn = $('s1-force-btn');
-  const s2Btn = $('s2-force-btn');
-  const s2NewPin = $('s2-newpin-btn');
-  if (s1Btn) s1Btn.style.display = (savedPin && savedMode === 'sensor') ? '' : 'none';
-  if (s2Btn) s2Btn.style.display = savedPin ? '' : 'none';
-  if (s2NewPin) s2NewPin.style.display = ''; // always visible on s2
-  // Display force buttons
-  const d1Btn = $('d1-force-btn');
-  const d2Btn = $('d2-force-btn');
-  const d1Hint = $('d1-force-hint');
-  if (d1Btn) {
-    d1Btn.style.display = savedPin ? '' : 'none';
-    if (d1Hint && savedPin) {
-      const partnerName = localStorage.getItem('lv_partner_name');
-      d1Hint.textContent = partnerName
-        ? 'Reconnect with ' + partnerName + ' (PIN ' + savedPin + ')'
-        : 'Reconnect with PIN ' + savedPin;
-    }
-  }
-  if (d2Btn) d2Btn.style.display = savedPin ? '' : 'none';
+  // All rescue buttons start hidden — they surface only after timeouts or errors.
+  // This function just ensures they're hidden when entering a fresh screen.
+  const ids = ['s1-force-btn','s2-force-btn','s2-newpin-btn','d2-force-btn'];
+  ids.forEach(id => { const el = $(id); if (el) el.style.display = 'none'; });
 }
 
 /**
@@ -3775,6 +3744,17 @@ function initSensor(resumePin) {
     $('pin-bar-share').style.display = '';
     showPanel('s2');
     _generateQR(_pin);
+    // Show rescue buttons only after waiting 30s with no display connected —
+    // not immediately, as the user just arrived here and should just wait.
+    clearTimeout(window._s2RescueTimer);
+    window._s2RescueTimer = setTimeout(() => {
+      if (mode === 'sensor' && conns.length === 0) {
+        const s2Btn = $('s2-force-btn');
+        const s2New = $('s2-newpin-btn');
+        if (s2Btn) s2Btn.style.display = '';
+        if (s2New) s2New.style.display = '';
+      }
+    }, 30000);
   });
 
   peer.on('connection', conn => {
@@ -3818,7 +3798,10 @@ function setupSensorConn(conn) {
   conn.on('open', () => {
     conns.push(conn);
     updateSensorConnCount();
-    if (conns.length === 1) showPanel('s3');
+    if (conns.length === 1) {
+      clearTimeout(window._s2RescueTimer); // display arrived — no need for rescue buttons
+      showPanel('s3');
+    }
     if (wakeLockManager) wakeLockManager.maintainWakeLock();
     // Initialise voice on first display connection; reconnect on subsequent ones
     if (window.voiceMgr && mode === 'sensor' && _pin) {
@@ -4549,6 +4532,7 @@ function cleanup() {
   if(motionOn){window.removeEventListener('deviceorientation',onOrient,true);motionOn=false;}
   mode=null; _pin=null; _lastSend=0;
   window._forceReconnecting = false;
+  clearTimeout(window._s2RescueTimer);
   $('pin-bar-code').textContent = '----';
   $('pin-bar-share').style.display = 'none';
   kpadReset();
