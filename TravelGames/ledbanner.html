@@ -9,11 +9,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LED Banner">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f0f12">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
-    /* Use env(safe-area-inset) to cover full screen including notches */
     html, body {
       width: 100%;
       height: 100%;
@@ -29,7 +29,7 @@
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
 
-    /* Setup UI Styling */
+    /* Setup UI Card */
     .setup-card { 
       width: 100%; 
       max-width: 420px; 
@@ -43,9 +43,35 @@
       margin: 16px; 
       max-height: 90vh;
       overflow-y: auto;
+      position: relative;
     }
-    .setup-card h1 { font-size: 1.5rem; text-align: center; color: #fff; margin-bottom: 4px; }
-    
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header h1 { font-size: 1.4rem; color: #fff; }
+
+    /* Floating Help Icon Button */
+    .help-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #252533;
+      border: 1px solid #3a3a4d;
+      color: #ff0055;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .help-btn:active { background: #3a3a4d; }
+
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     label { font-size: 0.85rem; font-weight: 600; color: #a0a0b0; text-transform: uppercase; letter-spacing: 0.5px; }
     
@@ -66,6 +92,49 @@
     .start-btn { padding: 16px; border: none; border-radius: 10px; background: linear-gradient(135deg, #ff0055, #ff5500); color: #fff; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); transition: transform 0.1s; }
     .start-btn:active { transform: scale(0.98); }
 
+    /* Modal Styling */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-card {
+      background: #1a1a24;
+      border: 1px solid #3a3a4d;
+      border-radius: 16px;
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-card h2 { font-size: 1.2rem; color: #fff; border-bottom: 1px solid #3a3a4d; padding-bottom: 8px; }
+    .modal-card h3 { font-size: 0.95rem; color: #ff0055; margin-top: 8px; }
+    .modal-card p, .modal-card li { font-size: 0.85rem; color: #c0c0d0; line-height: 1.4; }
+    .modal-card ul { padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+
+    .close-btn {
+      padding: 10px;
+      background: #252533;
+      border: 1px solid #3a3a4d;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
     /* LED Banner Screen Styling */
     #banner-screen { display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; }
     canvas { width: 100%; height: 100%; display: block; }
@@ -79,7 +148,10 @@
 <body>
 
   <div class="setup-card" id="setup-screen">
-    <h1>LED Scroller Setup</h1>
+    <div class="card-header">
+      <h1>LED Scroller Setup</h1>
+      <button class="help-btn" id="open-help" title="Help & Instructions">?</button>
+    </div>
 
     <div class="form-group">
       <label for="text-input">Banner Text & Emojis</label>
@@ -127,6 +199,35 @@
     <button class="start-btn" id="start-btn">START LED BANNER</button>
   </div>
 
+  <div class="modal-overlay" id="help-modal">
+    <div class="modal-card">
+      <h2>Help & Guide</h2>
+
+      <h3>How it Works</h3>
+      <p>Configure text, colors, size, and speed. Tap <strong>START LED BANNER</strong> to begin scrolling. Turn your phone sideways for landscape display.</p>
+      <p><strong>Double tap</strong> anywhere on the screen during display to return to setup.</p>
+
+      <h3>How to Install (Full-Screen Mode)</h3>
+      <p>To eliminate browser address bars permanently on both Android and iOS:</p>
+
+      <strong>Android (Chrome):</strong>
+      <ul>
+        <li>Tap the <strong>3 dots menu (⋮)</strong> at the top right of Chrome.</li>
+        <li>Select <strong>Add to Home screen</strong> or <strong>Install app</strong>.</li>
+        <li>Open the icon from your Home Screen.</li>
+      </ul>
+
+      <strong>iOS (Safari):</strong>
+      <ul>
+        <li>Tap the <strong>Share button</strong> at the top/bottom of Safari.</li>
+        <li>Scroll down and select <strong>Add to Home Screen</strong>.</li>
+        <li>Launch from your Home Screen to auto-hide all browser UI.</li>
+      </ul>
+
+      <button class="close-btn" id="close-help">Got it!</button>
+    </div>
+  </div>
+
   <div id="banner-screen">
     <div class="exit-hint">Double tap screen to edit setup</div>
     <div class="led-grid-overlay" id="led-overlay"></div>
@@ -139,6 +240,10 @@
     const canvas = document.getElementById('led-canvas');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('led-overlay');
+
+    const helpModal = document.getElementById('help-modal');
+    const openHelpBtn = document.getElementById('open-help');
+    const closeHelpBtn = document.getElementById('close-help');
 
     const textInput = document.getElementById('text-input');
     const textColorInput = document.getElementById('text-color');
@@ -154,6 +259,10 @@
     let wakeLock = null;
     let xPos = 0;
     let lastTapTime = 0;
+
+    // Help Modal Logic
+    openHelpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
+    closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
 
     // Update range labels
     speedInput.addEventListener('input', () => speedVal.textContent = speedInput.value);
@@ -173,7 +282,7 @@
           await docEl.webkitRequestFullscreen();
         }
       } catch (err) {
-        console.warn('Fullscreen API unavailable on Safari iOS without PWA mode.');
+        console.warn('Native Fullscreen API blocked; install as PWA via Help menu.');
       }
     }
 
@@ -241,7 +350,7 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.fillStyle = textColorInput.value;
-      ctx.font = `bold ${fontSize}px sans-serif, "Apple Color Emoji", "Segoe UI Emoji"`;
+      ctx.font = `bold ${fontSize}px sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"`;
       ctx.textBaseline = 'middle';
 
       ctx.fillText(text, xPos, canvas.height / 2);
@@ -256,6 +365,7 @@
       animationId = requestAnimationFrame(animate);
     }
 
+    // Handle Double-Tap Gesture to Exit
     function handleDoubleTap(e) {
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTapTime;
