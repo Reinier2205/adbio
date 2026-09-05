@@ -39,7 +39,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
       display: flex; 
       flex-direction: column; 
-      gap: 18px; 
+      gap: 16px; 
       margin: 16px; 
       max-height: 90vh;
       overflow-y: auto;
@@ -54,7 +54,7 @@
 
     .card-header h1 { font-size: 1.4rem; color: #fff; }
 
-    /* Floating Help Icon Button */
+    /* Help Icon Button */
     .help-btn {
       width: 32px;
       height: 32px;
@@ -89,8 +89,40 @@
     .checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 4px; }
     .checkbox-group input { width: 18px; height: 18px; accent-color: #ff0055; }
 
-    .start-btn { padding: 16px; border: none; border-radius: 10px; background: linear-gradient(135deg, #ff0055, #ff5500); color: #fff; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); transition: transform 0.1s; }
+    /* Action Buttons */
+    .button-group { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+
+    .start-btn { 
+      padding: 16px; 
+      border: none; 
+      border-radius: 10px; 
+      background: linear-gradient(135deg, #ff0055, #ff5500); 
+      color: #fff; 
+      font-size: 1.1rem; 
+      font-weight: bold; 
+      cursor: pointer; 
+      box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); 
+      transition: transform 0.1s; 
+    }
     .start-btn:active { transform: scale(0.98); }
+
+    .share-btn { 
+      padding: 14px; 
+      border: none; 
+      border-radius: 10px; 
+      background: #25D366; 
+      color: #fff; 
+      font-size: 1rem; 
+      font-weight: bold; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 8px; 
+      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); 
+      transition: transform 0.1s; 
+    }
+    .share-btn:active { transform: scale(0.98); }
 
     /* Modal Styling */
     .modal-overlay {
@@ -196,7 +228,15 @@
       <span>Enable LED Dot-Matrix Grid Effect</span>
     </label>
 
-    <button class="start-btn" id="start-btn">START LED BANNER</button>
+    <div class="button-group">
+      <button class="start-btn" id="start-btn">START LED BANNER</button>
+      <button class="share-btn" id="share-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+        </svg>
+        SHARE VIA WHATSAPP
+      </button>
+    </div>
   </div>
 
   <div class="modal-overlay" id="help-modal">
@@ -207,21 +247,20 @@
       <p>Configure text, colors, size, and speed. Tap <strong>START LED BANNER</strong> to begin scrolling. Turn your phone sideways for landscape display.</p>
       <p><strong>Double tap</strong> anywhere on the screen during display to return to setup.</p>
 
-      <h3>How to Install (Full-Screen Mode)</h3>
-      <p>To eliminate browser address bars permanently on both Android and iOS:</p>
+      <h3>Sharing Banners</h3>
+      <p>Tap <strong>SHARE VIA WHATSAPP</strong> to send your custom message link. When the recipient opens the link, the banner will automatically load with your custom settings.</p>
 
+      <h3>How to Install (Full-Screen Mode)</h3>
       <strong>Android (Chrome):</strong>
       <ul>
-        <li>Tap the <strong>3 dots menu (⋮)</strong> at the top right of Chrome.</li>
+        <li>Tap the <strong>3 dots menu (⋮)</strong> at top right.</li>
         <li>Select <strong>Add to Home screen</strong> or <strong>Install app</strong>.</li>
-        <li>Open the icon from your Home Screen.</li>
       </ul>
 
       <strong>iOS (Safari):</strong>
       <ul>
-        <li>Tap the <strong>Share button</strong> at the top/bottom of Safari.</li>
-        <li>Scroll down and select <strong>Add to Home Screen</strong>.</li>
-        <li>Launch from your Home Screen to auto-hide all browser UI.</li>
+        <li>Tap the <strong>Share button</strong> in Safari.</li>
+        <li>Select <strong>Add to Home Screen</strong>.</li>
       </ul>
 
       <button class="close-btn" id="close-help">Got it!</button>
@@ -268,6 +307,49 @@
     speedInput.addEventListener('input', () => speedVal.textContent = speedInput.value);
     sizeInput.addEventListener('input', () => sizeVal.textContent = `${sizeInput.value}%`);
 
+    function buildShareableUrl() {
+      const baseUrl = window.location.origin + window.location.pathname;
+      const params = new URLSearchParams({
+        text: textInput.value,
+        color: textColorInput.value,
+        bg: bgColorInput.value,
+        speed: speedInput.value,
+        size: sizeInput.value,
+        led: ledEffectInput.checked ? '1' : '0',
+        play: '1' // Flag to auto-start on load
+      });
+      return `${baseUrl}?${params.toString()}`;
+    }
+
+    function shareToWhatsApp() {
+      const url = buildShareableUrl();
+      const message = `Check out this LED banner message I made for you! 📲✨\n\n${url}`;
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    }
+
+    function loadParamsFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      if (urlParams.has('text')) textInput.value = urlParams.get('text');
+      if (urlParams.has('color')) textColorInput.value = urlParams.get('color');
+      if (urlParams.has('bg')) bgColorInput.value = urlParams.get('bg');
+      if (urlParams.has('speed')) {
+        speedInput.value = urlParams.get('speed');
+        speedVal.textContent = speedInput.value;
+      }
+      if (urlParams.has('size')) {
+        sizeInput.value = urlParams.get('size');
+        sizeVal.textContent = `${sizeInput.value}%`;
+      }
+      if (urlParams.has('led')) ledEffectInput.checked = urlParams.get('led') === '1';
+
+      // Auto start if 'play=1' is in URL
+      if (urlParams.get('play') === '1') {
+        startBanner();
+      }
+    }
+
     function resizeCanvas() {
       canvas.width = window.innerWidth * window.devicePixelRatio;
       canvas.height = window.innerHeight * window.devicePixelRatio;
@@ -282,7 +364,7 @@
           await docEl.webkitRequestFullscreen();
         }
       } catch (err) {
-        console.warn('Native Fullscreen API blocked; install as PWA via Help menu.');
+        console.warn('Native Fullscreen API blocked;');
       }
     }
 
@@ -365,7 +447,6 @@
       animationId = requestAnimationFrame(animate);
     }
 
-    // Handle Double-Tap Gesture to Exit
     function handleDoubleTap(e) {
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTapTime;
@@ -377,7 +458,9 @@
       lastTapTime = currentTime;
     }
 
+    // Event Listeners
     document.getElementById('start-btn').addEventListener('click', startBanner);
+    document.getElementById('share-btn').addEventListener('click', shareToWhatsApp);
     bannerScreen.addEventListener('pointerdown', handleDoubleTap);
 
     window.addEventListener('resize', () => {
@@ -385,6 +468,9 @@
         resizeCanvas();
       }
     });
+
+    // Check query parameters on page launch
+    window.addEventListener('DOMContentLoaded', loadParamsFromUrl);
   </script>
 </body>
 </html>
