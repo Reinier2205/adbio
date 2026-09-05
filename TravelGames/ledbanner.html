@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mobile LED Banner Scroller</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0f0f12; color: #f0f0f0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+
+    /* Setup UI Styling */
+    .setup-card { width: 100%; max-width: 420px; padding: 24px; background: #1a1a24; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 18px; margin: 16px; }
+    .setup-card h1 { font-size: 1.5rem; text-align: center; color: #fff; margin-bottom: 4px; }
+    
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 0.85rem; font-weight: 600; color: #a0a0b0; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    input[type="text"] { width: 100%; padding: 12px 14px; background: #252533; border: 1px solid #3a3a4d; border-radius: 8px; color: #fff; font-size: 1rem; outline: none; }
+    input[type="text"]:focus { border-color: #ff0055; }
+
+    .color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .color-picker-wrapper { display: flex; align-items: center; gap: 10px; background: #252533; padding: 8px 12px; border-radius: 8px; border: 1px solid #3a3a4d; }
+    input[type="color"] { border: none; background: transparent; width: 32px; height: 32px; cursor: pointer; border-radius: 4px; }
+
+    .range-group { display: flex; align-items: center; gap: 12px; }
+    input[type="range"] { flex: 1; accent-color: #ff0055; height: 6px; background: #252533; border-radius: 3px; }
+    .val-display { width: 35px; text-align: right; font-size: 0.9rem; color: #ff0055; font-weight: bold; }
+
+    .checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 4px; }
+    .checkbox-group input { width: 18px; height: 18px; accent-color: #ff0055; }
+
+    .start-btn { padding: 16px; border: none; border-radius: 10px; background: linear-gradient(135deg, #ff0055, #ff5500); color: #fff; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); transition: transform 0.1s; }
+    .start-btn:active { transform: scale(0.98); }
+
+    /* LED Banner Screen Styling */
+    #banner-screen { display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; }
+    canvas { width: 100%; height: 100%; display: block; }
+
+    /* Dot Matrix Overlay Effect */
+    .led-grid-overlay { position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(circle, transparent 25%, #000 70%); background-size: 6px 6px; }
+
+    .exit-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: #888; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; pointer-events: none; backdrop-filter: blur(4px); }
+  </style>
+</head>
+<body>
+
+  <div class="setup-card" id="setup-screen">
+    <h1>LED Scroller Setup</h1>
+
+    <div class="form-group">
+      <label for="text-input">Banner Text & Emojis</label>
+      <input type="text" id="text-input" value="Hola! 🎉 Welcome 🚀" placeholder="Type message here...">
+    </div>
+
+    <div class="color-row">
+      <div class="form-group">
+        <label>Text Color</label>
+        <div class="color-picker-wrapper">
+          <input type="color" id="text-color" value="#FFE600">
+          <span style="font-size: 0.85rem;">Font</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Background</label>
+        <div class="color-picker-wrapper">
+          <input type="color" id="bg-color" value="#000000">
+          <span style="font-size: 0.85rem;">BG</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Speed</label>
+      <div class="range-group">
+        <input type="range" id="speed-input" min="1" max="20" value="7">
+        <span class="val-display" id="speed-val">7</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Text Size</label>
+      <div class="range-group">
+        <input type="range" id="size-input" min="30" max="90" value="65">
+        <span class="val-display" id="size-val">65%</span>
+      </div>
+    </div>
+
+    <label class="checkbox-group">
+      <input type="checkbox" id="led-effect" checked>
+      <span>Enable LED Dot-Matrix Grid Effect</span>
+    </label>
+
+    <button class="start-btn" id="start-btn">START LED BANNER</button>
+  </div>
+
+  <div id="banner-screen">
+    <div class="exit-hint">Tap anywhere to edit setup</div>
+    <div class="led-grid-overlay" id="led-overlay"></div>
+    <canvas id="led-canvas"></canvas>
+  </div>
+
+  <script>
+    const setupScreen = document.getElementById('setup-screen');
+    const bannerScreen = document.getElementById('banner-screen');
+    const canvas = document.getElementById('led-canvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('led-overlay');
+
+    const textInput = document.getElementById('text-input');
+    const textColorInput = document.getElementById('text-color');
+    const bgColorInput = document.getElementById('bg-color');
+    const speedInput = document.getElementById('speed-input');
+    const sizeInput = document.getElementById('size-input');
+    const ledEffectInput = document.getElementById('led-effect');
+
+    const speedVal = document.getElementById('speed-val');
+    const sizeVal = document.getElementById('size-val');
+
+    let animationId = null;
+    let wakeLock = null;
+    let xPos = 0;
+
+    // Update range labels
+    speedInput.addEventListener('input', () => speedVal.textContent = speedInput.value);
+    sizeInput.addEventListener('input', () => sizeVal.textContent = `${sizeInput.value}%`);
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth * window.devicePixelRatio;
+      canvas.height = window.innerHeight * window.devicePixelRatio;
+    }
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.warn('Wake Lock error:', err.message);
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock !== null) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+    }
+
+    function startBanner() {
+      setupScreen.style.display = 'none';
+      bannerScreen.style.display = 'block';
+
+      // Fullscreen request (if supported)
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+
+      overlay.style.display = ledEffectInput.checked ? 'block' : 'none';
+      bannerScreen.style.backgroundColor = bgColorInput.value;
+
+      resizeCanvas();
+      requestWakeLock();
+
+      xPos = canvas.width; // Start off right edge
+      animate();
+    }
+
+    function stopBanner() {
+      if (animationId) cancelAnimationFrame(animationId);
+      releaseWakeLock();
+
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+
+      bannerScreen.style.display = 'none';
+      setupScreen.style.display = 'flex';
+    }
+
+    function animate() {
+      const text = textInput.value || ' ';
+      const fontSize = (canvas.height * (sizeInput.value / 100));
+      const speed = parseFloat(speedInput.value) * (window.devicePixelRatio || 1);
+
+      // Clear background
+      ctx.fillStyle = bgColorInput.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Set Font style
+      ctx.fillStyle = textColorInput.value;
+      ctx.font = `bold ${fontSize}px sans-serif, "Apple Color Emoji", "Segoe UI Emoji"`;
+      ctx.textBaseline = 'middle';
+
+      // Render Text
+      ctx.fillText(text, xPos, canvas.height / 2);
+
+      // Move position leftwards
+      xPos -= speed;
+
+      // Loop animation when text moves completely off-screen
+      const textWidth = ctx.measureText(text).width;
+      if (xPos < -textWidth) {
+        xPos = canvas.width;
+      }
+
+      animationId = requestAnimationFrame(animate);
+    }
+
+    // Event Listeners
+    document.getElementById('start-btn').addEventListener('click', startBanner);
+    bannerScreen.addEventListener('click', stopBanner);
+    window.addEventListener('resize', () => {
+      if (bannerScreen.style.display === 'block') {
+        resizeCanvas();
+      }
+    });
+  </script>
+</body>
+</html>
