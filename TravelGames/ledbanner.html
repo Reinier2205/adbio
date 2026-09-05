@@ -148,7 +148,6 @@
       display: none;
     }
 
-    /* Action Buttons */
     .button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 
     .start-btn { 
@@ -178,7 +177,6 @@
       gap: 8px; 
     }
 
-    /* Modal Styling */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -220,7 +218,6 @@
       cursor: pointer;
     }
 
-    /* LED Banner Display Screen */
     #banner-screen { display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; }
     canvas { width: 100%; height: 100%; display: block; }
 
@@ -324,7 +321,7 @@
       <p><strong>Double tap</strong> anywhere on the active screen to exit back to setup.</p>
 
       <h3>Sharing Banners</h3>
-      <p>Tap <strong>SHARE VIA WHATSAPP</strong> to send message setups via custom links.</p>
+      <p>Tap <strong>SHARE VIA WHATSAPP</strong> to send message setups via custom links, including compressed background photos.</p>
 
       <h3>Full-Screen PWA Installation</h3>
       <strong>Android (Chrome):</strong>
@@ -380,12 +377,11 @@
     let xPos = 0;
     let lastTapTime = 0;
     let loadedBgImage = null;
+    let compressedImgDataUrl = null;
 
-    // Help Modal Toggle
     openHelpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
     closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
 
-    // Live Preview Update Handler
     function updatePreview() {
       speedVal.textContent = speedInput.value;
       sizeVal.textContent = `${sizeInput.value}%`;
@@ -405,7 +401,27 @@
       }
     }
 
-    // Photo Upload Handler
+    // Compress photo to lightweight thumbnail so it fits inside URL parameter
+    function compressImage(img) {
+      const tempCanvas = document.createElement('canvas');
+      const maxDim = 200; // Small resolution canvas for high JPEG compression
+      let w = img.width;
+      let h = img.height;
+
+      if (w > h) {
+        if (w > maxDim) { h *= maxDim / w; w = maxDim; }
+      } else {
+        if (h > maxDim) { w *= maxDim / h; h = maxDim; }
+      }
+
+      tempCanvas.width = w;
+      tempCanvas.height = h;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(img, 0, 0, w, h);
+
+      return tempCanvas.toDataURL('image/jpeg', 0.4); // Quality 40%
+    }
+
     bgFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -414,6 +430,7 @@
           const img = new Image();
           img.onload = function() {
             loadedBgImage = img;
+            compressedImgDataUrl = compressImage(img);
             clearImgBtn.style.display = 'inline-block';
             updatePreview();
           };
@@ -425,12 +442,12 @@
 
     clearImgBtn.addEventListener('click', () => {
       loadedBgImage = null;
+      compressedImgDataUrl = null;
       bgFileInput.value = '';
       clearImgBtn.style.display = 'none';
       updatePreview();
     });
 
-    // Update listeners for inputs
     [textInput, fontSelect, textColorInput, bgColorInput, speedInput, sizeInput, ledEffectInput].forEach(el => {
       el.addEventListener('input', updatePreview);
       el.addEventListener('change', updatePreview);
@@ -448,6 +465,11 @@
         led: ledEffectInput.checked ? '1' : '0',
         play: '1'
       });
+
+      if (compressedImgDataUrl) {
+        params.set('img', compressedImgDataUrl);
+      }
+
       return `${baseUrl}?${params.toString()}`;
     }
 
@@ -469,10 +491,24 @@
       if (urlParams.has('size')) sizeInput.value = urlParams.get('size');
       if (urlParams.has('led')) ledEffectInput.checked = urlParams.get('led') === '1';
 
-      updatePreview();
-
-      if (urlParams.get('play') === '1') {
-        startBanner();
+      if (urlParams.has('img')) {
+        const imgUrl = urlParams.get('img');
+        const img = new Image();
+        img.onload = function() {
+          loadedBgImage = img;
+          compressedImgDataUrl = imgUrl;
+          clearImgBtn.style.display = 'inline-block';
+          updatePreview();
+          if (urlParams.get('play') === '1') {
+            startBanner();
+          }
+        };
+        img.src = imgUrl;
+      } else {
+        updatePreview();
+        if (urlParams.get('play') === '1') {
+          startBanner();
+        }
       }
     }
 
@@ -555,7 +591,6 @@
       const speed = parseFloat(speedInput.value) * (window.devicePixelRatio || 1);
       const chosenFont = fontSelect.value;
 
-      // Draw Background (Photo or Color)
       if (loadedBgImage) {
         ctx.drawImage(loadedBgImage, 0, 0, canvas.width, canvas.height);
       } else {
@@ -563,7 +598,6 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
 
-      // Draw Text
       ctx.fillStyle = textColorInput.value;
       ctx.font = `bold ${fontSize}px ${chosenFont}, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"`;
       ctx.textBaseline = 'middle';
@@ -591,7 +625,6 @@
       lastTapTime = currentTime;
     }
 
-    // Event Listeners
     document.getElementById('start-btn').addEventListener('click', startBanner);
     document.getElementById('share-btn').addEventListener('click', shareToWhatsApp);
     bannerScreen.addEventListener('pointerdown', handleDoubleTap);
