@@ -39,7 +39,7 @@
     /* Dot Matrix Overlay Effect */
     .led-grid-overlay { position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(circle, transparent 25%, #000 70%); background-size: 6px 6px; }
 
-    .exit-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: #888; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; pointer-events: none; backdrop-filter: blur(4px); }
+    .exit-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: #888; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; pointer-events: none; backdrop-filter: blur(4px); user-select: none; }
   </style>
 </head>
 <body>
@@ -94,7 +94,7 @@
   </div>
 
   <div id="banner-screen">
-    <div class="exit-hint">Tap anywhere to edit setup</div>
+    <div class="exit-hint">Double tap screen to edit setup</div>
     <div class="led-grid-overlay" id="led-overlay"></div>
     <canvas id="led-canvas"></canvas>
   </div>
@@ -119,6 +119,7 @@
     let animationId = null;
     let wakeLock = null;
     let xPos = 0;
+    let lastTapTime = 0;
 
     // Update range labels
     speedInput.addEventListener('input', () => speedVal.textContent = speedInput.value);
@@ -127,6 +128,35 @@
     function resizeCanvas() {
       canvas.width = window.innerWidth * window.devicePixelRatio;
       canvas.height = window.innerHeight * window.devicePixelRatio;
+    }
+
+    async function enterFullscreen() {
+      const docEl = document.documentElement;
+      try {
+        if (docEl.requestFullscreen) {
+          await docEl.requestFullscreen();
+        } else if (docEl.webkitRequestFullscreen) { /* Safari / iOS */
+          await docEl.webkitRequestFullscreen();
+        } else if (docEl.msRequestFullscreen) {
+          await docEl.msRequestFullscreen();
+        }
+      } catch (err) {
+        console.warn('Fullscreen request failed:', err.message);
+      }
+    }
+
+    async function exitFullscreen() {
+      try {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          await document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          await document.msExitFullscreen();
+        }
+      } catch (err) {
+        console.warn('Exit fullscreen failed:', err.message);
+      }
     }
 
     async function requestWakeLock() {
@@ -146,14 +176,12 @@
       }
     }
 
-    function startBanner() {
+    async function startBanner() {
       setupScreen.style.display = 'none';
       bannerScreen.style.display = 'block';
 
-      // Fullscreen request (if supported)
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
+      // Force Fullscreen
+      await enterFullscreen();
 
       overlay.style.display = ledEffectInput.checked ? 'block' : 'none';
       bannerScreen.style.backgroundColor = bgColorInput.value;
@@ -161,7 +189,7 @@
       resizeCanvas();
       requestWakeLock();
 
-      xPos = canvas.width; // Start off right edge
+      xPos = canvas.width; // Start text off right edge
       animate();
     }
 
@@ -169,9 +197,7 @@
       if (animationId) cancelAnimationFrame(animationId);
       releaseWakeLock();
 
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      }
+      exitFullscreen();
 
       bannerScreen.style.display = 'none';
       setupScreen.style.display = 'flex';
@@ -206,9 +232,34 @@
       animationId = requestAnimationFrame(animate);
     }
 
+    // Handle Double-Tap Gesture to Exit
+    function handleDoubleTap(e) {
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTapTime;
+
+      // Single tap fallback check to enforce fullscreen if dismissed by OS gestures
+      if (bannerScreen.style.display === 'block' && !document.fullscreenElement) {
+        enterFullscreen();
+      }
+
+      if (tapLength < 300 && tapLength > 0) {
+        e.preventDefault();
+        stopBanner();
+      }
+      lastTapTime = currentTime;
+    }
+
     // Event Listeners
     document.getElementById('start-btn').addEventListener('click', startBanner);
-    bannerScreen.addEventListener('click', stopBanner);
+    bannerScreen.addEventListener('pointerdown', handleDoubleTap);
+    
+    // Auto re-enter fullscreen if user interacts after an OS prompt closes it
+    bannerScreen.addEventListener('click', () => {
+      if (bannerScreen.style.display === 'block' && !document.fullscreenElement) {
+        enterFullscreen();
+      }
+    });
+
     window.addEventListener('resize', () => {
       if (bannerScreen.style.display === 'block') {
         resizeCanvas();
