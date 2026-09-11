@@ -322,8 +322,8 @@
       <div class="form-group">
         <label>Text Size</label>
         <div class="range-group">
-          <input type="range" id="size-input" min="30" max="90" value="65">
-          <span class="val-display" id="size-val">65%</span>
+          <input type="range" id="size-input" min="10" max="60" value="30">
+          <span class="val-display" id="size-val">30%</span>
         </div>
       </div>
     </div>
@@ -633,13 +633,27 @@
     }
 
     function animate() {
-      const text      = textInput.value || ' ';
-      const fontSize  = canvas.height * (sizeInput.value / 100);
-      const speed     = parseFloat(speedInput.value) * (window.devicePixelRatio || 1);
+      const text       = textInput.value || ' ';
+      const dpr        = window.devicePixelRatio || 1;
+      // Use CSS pixel height for font size so the slider % matches what the eye sees
+      const cssHeight  = canvas.height / dpr;
+      const fontSize   = cssHeight * (sizeInput.value / 100) * dpr;
+      const speed      = parseFloat(speedInput.value) * dpr;
       const chosenFont = fontSelect.value;
 
+      // Background
       if (loadedBgImage) {
-        ctx.drawImage(loadedBgImage, 0, 0, canvas.width, canvas.height);
+        // Draw image with cover behaviour: scale to fill canvas, keep aspect ratio, center
+        const iw = loadedBgImage.naturalWidth;
+        const ih = loadedBgImage.naturalHeight;
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const scale = Math.max(cw / iw, ch / ih);
+        const dw = iw * scale;
+        const dh = ih * scale;
+        const dx = (cw - dw) / 2;
+        const dy = (ch - dh) / 2;
+        ctx.drawImage(loadedBgImage, dx, dy, dw, dh);
       } else {
         ctx.fillStyle = bgColorInput.value;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
