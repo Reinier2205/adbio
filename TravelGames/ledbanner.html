@@ -540,26 +540,41 @@
       if (p.has('speed')) speedInput.value     = p.get('speed');
       if (p.has('size'))  sizeInput.value      = p.get('size');
 
-      const imgUrl = p.get('imgurl');
+      const autoPlay = p.get('play') === '1';
+      const imgUrl   = p.get('imgurl');
+
       if (imgUrl) {
         uploadedImgUrl = imgUrl;
+
+        // Show a loading indicator so the receiver knows something is happening
+        setUploadStatus('uploading', '⏳ Loading background photo…');
+        clearImgBtn.style.display = 'inline-block';
+
         const img = new Image();
-        img.crossOrigin = 'anonymous';  // Supabase Storage allows CORS
+        img.crossOrigin = 'anonymous'; // Supabase Storage sends Access-Control-Allow-Origin: *
+
         img.onload = () => {
           loadedBgImage = img;
-          clearImgBtn.style.display = 'inline-block';
+          uploadStatus.className = 'upload-status'; // hide status
           updatePreview();
-          if (p.get('play') === '1') startBanner();
+          // Only auto-start once the image is confirmed loaded
+          if (autoPlay) startBanner();
         };
+
         img.onerror = () => {
-          // Photo URL expired or unavailable — continue without background
+          // Photo URL expired or unavailable — start without background
+          setUploadStatus('error', '⚠ Background photo unavailable');
           updatePreview();
-          if (p.get('play') === '1') startBanner();
+          if (autoPlay) startBanner();
         };
+
+        // Set src last — triggers the load
         img.src = imgUrl;
+
+        updatePreview(); // render text preview immediately while image loads
       } else {
         updatePreview();
-        if (p.get('play') === '1') startBanner();
+        if (autoPlay) startBanner();
       }
     }
 
@@ -600,8 +615,9 @@
       setupScreen.style.display = 'none';
       bannerScreen.style.display = 'block';
       bannerScreen.style.backgroundColor = bgColorInput.value;
+      resizeCanvas(); // size the canvas BEFORE entering fullscreen so dimensions are correct
       await enterFullscreen();
-      resizeCanvas();
+      resizeCanvas(); // re-size after fullscreen in case dimensions changed
       requestWakeLock();
       xPos = canvas.width;
       animate();
