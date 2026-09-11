@@ -643,12 +643,16 @@
 
       // Background
       if (loadedBgImage) {
-        // Draw image with cover behaviour: scale to fill canvas, keep aspect ratio, center
+        // Fill canvas with bg colour first (letterbox/pillarbox areas)
+        ctx.fillStyle = bgColorInput.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw image with CONTAIN behaviour: whole image always visible, centered
         const iw = loadedBgImage.naturalWidth;
         const ih = loadedBgImage.naturalHeight;
         const cw = canvas.width;
         const ch = canvas.height;
-        const scale = Math.max(cw / iw, ch / ih);
+        const scale = Math.min(cw / iw, ch / ih);   // <-- min = contain (was max = cover)
         const dw = iw * scale;
         const dh = ih * scale;
         const dx = (cw - dw) / 2;
