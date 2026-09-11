@@ -69,27 +69,21 @@
       justify-content: center;
     }
 
-    /* Live Preview Box */
+    /* Live Preview Box — canvas-based */
     .preview-container {
       width: 100%;
       height: 80px;
       border-radius: 10px;
       border: 2px dashed #3a3a4d;
-      position: relative;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-size: cover;
-      background-position: center;
-    }
-
-    .preview-text {
-      white-space: nowrap;
-      font-size: 1.5rem;
-      font-weight: bold;
-      z-index: 2;
+      display: block;
       position: relative;
+    }
+    #preview-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 8px;
     }
 
     .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -266,7 +260,7 @@
     </div>
 
     <div class="preview-container" id="preview-box">
-      <div class="preview-text" id="preview-text-element">Hola! 🎉 Welcome 🚀</div>
+      <canvas id="preview-canvas"></canvas>
     </div>
 
     <div class="form-group">
@@ -374,43 +368,42 @@
 
   <script>
     // ─── CONFIG ──────────────────────────────────────────────────────────────
-    // Set this to your deployed Cloudflare Worker URL after deploying
-    // ledbanner-upload-worker.js to Cloudflare Workers.
     const UPLOAD_WORKER_URL = 'https://ledbanner-upload.reinier-olivier.workers.dev';
     // ─────────────────────────────────────────────────────────────────────────
 
-    const setupScreen   = document.getElementById('setup-screen');
-    const bannerScreen  = document.getElementById('banner-screen');
-    const canvas        = document.getElementById('led-canvas');
-    const ctx           = canvas.getContext('2d');
+    const setupScreen    = document.getElementById('setup-screen');
+    const bannerScreen   = document.getElementById('banner-screen');
+    const canvas         = document.getElementById('led-canvas');
+    const ctx            = canvas.getContext('2d');
+    const previewCanvas  = document.getElementById('preview-canvas');
+    const pctx           = previewCanvas.getContext('2d');
 
-    const helpModal     = document.getElementById('help-modal');
-    const openHelpBtn   = document.getElementById('open-help');
-    const closeHelpBtn  = document.getElementById('close-help');
+    const helpModal      = document.getElementById('help-modal');
+    const openHelpBtn    = document.getElementById('open-help');
+    const closeHelpBtn   = document.getElementById('close-help');
 
-    const previewBox    = document.getElementById('preview-box');
-    const previewText   = document.getElementById('preview-text-element');
-
-    const textInput     = document.getElementById('text-input');
-    const fontSelect    = document.getElementById('font-select');
+    const textInput      = document.getElementById('text-input');
+    const fontSelect     = document.getElementById('font-select');
     const textColorInput = document.getElementById('text-color');
-    const bgColorInput  = document.getElementById('bg-color');
-    const bgFileInput   = document.getElementById('bg-file');
-    const clearImgBtn   = document.getElementById('clear-img-btn');
-    const uploadStatus  = document.getElementById('upload-status');
-    const speedInput    = document.getElementById('speed-input');
-    const sizeInput     = document.getElementById('size-input');
-    const speedVal      = document.getElementById('speed-val');
-    const sizeVal       = document.getElementById('size-val');
-    const startBtn      = document.getElementById('start-btn');
+    const bgColorInput   = document.getElementById('bg-color');
+    const bgFileInput    = document.getElementById('bg-file');
+    const clearImgBtn    = document.getElementById('clear-img-btn');
+    const uploadStatus   = document.getElementById('upload-status');
+    const speedInput     = document.getElementById('speed-input');
+    const sizeInput      = document.getElementById('size-input');
+    const speedVal       = document.getElementById('speed-val');
+    const sizeVal        = document.getElementById('size-val');
+    const startBtn       = document.getElementById('start-btn');
 
-    let animationId  = null;
-    let wakeLock     = null;
-    let xPos         = 0;
-    let lastTapTime  = 0;
-    let loadedBgImage   = null;   // HTMLImageElement for canvas drawing
-    let uploadedImgUrl  = null;   // Supabase public URL (used in share link)
-    let uploadPending   = false;  // true while upload is in flight
+    let animationId    = null;
+    let previewAnimId  = null;
+    let previewXPos    = 0;
+    let wakeLock       = null;
+    let xPos           = 0;
+    let lastTapTime    = 0;
+    let loadedBgImage  = null;   // HTMLImageElement for canvas drawing
+    let uploadedImgUrl = null;   // Supabase public URL (used in share link)
+    let uploadPending  = false;  // true while upload is in flight
 
     // ─── UI helpers ──────────────────────────────────────────────────────────
 
@@ -422,21 +415,62 @@
       uploadStatus.textContent = msg;
     }
 
-    function updatePreview() {
+    function updateSliderLabels() {
       speedVal.textContent = speedInput.value;
       sizeVal.textContent  = `${sizeInput.value}%`;
+    }
 
-      previewText.textContent   = textInput.value || ' ';
-      previewText.style.color      = textColorInput.value;
-      previewText.style.fontFamily = fontSelect.value;
+    // ─── Preview canvas animation ─────────────────────────────────────────────
 
+    function sizePreviewCanvas() {
+      // Use the CSS pixel size of the container (no DPR scaling for preview —
+      // it's small enough that 1:1 looks fine and avoids blurry text)
+      const rect = previewCanvas.getBoundingClientRect();
+      previewCanvas.width  = rect.width  || previewCanvas.offsetWidth  || 380;
+      previewCanvas.height = rect.height || previewCanvas.offsetHeight || 80;
+    }
+
+    function drawPreviewFrame() {
+      const pw = previewCanvas.width;
+      const ph = previewCanvas.height;
+      const text       = textInput.value || ' ';
+      const fontSize   = ph * (sizeInput.value / 100);   // CSS px — no DPR needed here
+      const speed      = parseFloat(speedInput.value) * 0.5; // half-speed for the small preview
+      const chosenFont = fontSelect.value;
+
+      // Background
       if (loadedBgImage) {
-        previewBox.style.backgroundImage = `url(${loadedBgImage.src})`;
-        previewBox.style.backgroundColor = 'transparent';
+        pctx.fillStyle = bgColorInput.value;
+        pctx.fillRect(0, 0, pw, ph);
+        const iw = loadedBgImage.naturalWidth;
+        const ih = loadedBgImage.naturalHeight;
+        const scale = Math.min(pw / iw, ph / ih);
+        const dw = iw * scale;
+        const dh = ih * scale;
+        pctx.drawImage(loadedBgImage, (pw - dw) / 2, (ph - dh) / 2, dw, dh);
       } else {
-        previewBox.style.backgroundImage = 'none';
-        previewBox.style.backgroundColor = bgColorInput.value;
+        pctx.fillStyle = bgColorInput.value;
+        pctx.fillRect(0, 0, pw, ph);
       }
+
+      // Text
+      pctx.fillStyle    = textColorInput.value;
+      pctx.font         = `bold ${fontSize}px ${chosenFont}, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"`;
+      pctx.textBaseline = 'middle';
+      pctx.fillText(text, previewXPos, ph / 2);
+
+      previewXPos -= speed;
+      const textWidth = pctx.measureText(text).width;
+      if (previewXPos < -textWidth) previewXPos = pw;
+
+      previewAnimId = requestAnimationFrame(drawPreviewFrame);
+    }
+
+    function startPreview() {
+      if (previewAnimId) cancelAnimationFrame(previewAnimId);
+      sizePreviewCanvas();
+      previewXPos = previewCanvas.width;
+      drawPreviewFrame();
     }
 
     // ─── Photo upload ─────────────────────────────────────────────────────────
@@ -448,7 +482,7 @@
       // Show local preview immediately while upload runs
       const localUrl = URL.createObjectURL(file);
       const img = new Image();
-      img.onload = () => { loadedBgImage = img; updatePreview(); };
+      img.onload = () => { loadedBgImage = img; startPreview(); };
       img.src = localUrl;
 
       // Upload to Supabase via the Cloudflare Worker
@@ -477,7 +511,6 @@
       } catch (err) {
         console.error('Upload failed:', err);
         setUploadStatus('error', `✖ Upload failed: ${err.message}`);
-        // Keep local preview but clear the share URL
         uploadedImgUrl = null;
       } finally {
         uploadPending = false;
@@ -492,13 +525,19 @@
       clearImgBtn.style.display = 'none';
       uploadStatus.className = 'upload-status';
       uploadStatus.textContent = '';
-      updatePreview();
+      startPreview();
     });
 
-    [textInput, fontSelect, textColorInput, bgColorInput, speedInput, sizeInput].forEach(el => {
-      el.addEventListener('input', updatePreview);
-      el.addEventListener('change', updatePreview);
+    // Any control change: update labels and the preview redraws automatically
+    // (preview loop reads inputs directly each frame, so no restart needed for
+    //  color/text/font changes — only restart for size since it resets xPos)
+    [textInput, fontSelect, textColorInput, bgColorInput, speedInput].forEach(el => {
+      el.addEventListener('input', updateSliderLabels);
+      el.addEventListener('change', updateSliderLabels);
     });
+    // Size change restarts preview so text resets position at new size
+    sizeInput.addEventListener('input',  () => { updateSliderLabels(); startPreview(); });
+    sizeInput.addEventListener('change', () => { updateSliderLabels(); startPreview(); });
 
     // ─── Share URL ────────────────────────────────────────────────────────────
 
@@ -556,7 +595,7 @@
         img.onload = () => {
           loadedBgImage = img;
           uploadStatus.className = 'upload-status'; // hide status
-          updatePreview();
+          startPreview();
           // Only auto-start once the image is confirmed loaded
           if (autoPlay) startBanner();
         };
@@ -564,16 +603,16 @@
         img.onerror = () => {
           // Photo URL expired or unavailable — start without background
           setUploadStatus('error', '⚠ Background photo unavailable');
-          updatePreview();
+          startPreview();
           if (autoPlay) startBanner();
         };
 
         // Set src last — triggers the load
         img.src = imgUrl;
 
-        updatePreview(); // render text preview immediately while image loads
+        startPreview(); // render preview immediately while image loads
       } else {
-        updatePreview();
+        startPreview();
         if (autoPlay) startBanner();
       }
     }
@@ -694,7 +733,11 @@
       if (bannerScreen.style.display === 'block') resizeCanvas();
     });
 
-    window.addEventListener('DOMContentLoaded', loadParamsFromUrl);
+    window.addEventListener('DOMContentLoaded', () => {
+      updateSliderLabels();
+      startPreview();
+      loadParamsFromUrl();
+    });
   </script>
 </body>
 </html>
