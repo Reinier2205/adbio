@@ -13,7 +13,7 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    
+
     html, body {
       width: 100%;
       height: 100%;
@@ -30,17 +30,17 @@
     }
 
     /* Setup UI Card */
-    .setup-card { 
-      width: 100%; 
-      max-width: 420px; 
-      padding: 20px; 
-      background: #1a1a24; 
-      border-radius: 16px; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-      display: flex; 
-      flex-direction: column; 
-      gap: 14px; 
-      margin: 16px; 
+    .setup-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+      background: #1a1a24;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin: 16px;
       max-height: 95vh;
       overflow-y: auto;
       position: relative;
@@ -89,29 +89,21 @@
       font-size: 1.5rem;
       font-weight: bold;
       z-index: 2;
-    }
-
-    .preview-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background-image: radial-gradient(circle, transparent 25%, #000 70%);
-      background-size: 4px 4px;
-      z-index: 1;
+      position: relative;
     }
 
     .form-group { display: flex; flex-direction: column; gap: 6px; }
     label { font-size: 0.8rem; font-weight: 600; color: #a0a0b0; text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    input[type="text"], select { 
-      width: 100%; 
-      padding: 10px 12px; 
-      background: #252533; 
-      border: 1px solid #3a3a4d; 
-      border-radius: 8px; 
-      color: #fff; 
-      font-size: 0.95rem; 
-      outline: none; 
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 10px 12px;
+      background: #252533;
+      border: 1px solid #3a3a4d;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
     }
 
     .color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -122,19 +114,16 @@
     input[type="range"] { flex: 1; accent-color: #ff0055; height: 6px; background: #252533; border-radius: 3px; }
     .val-display { width: 35px; text-align: right; font-size: 0.85rem; color: #ff0055; font-weight: bold; }
 
-    .checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-    .checkbox-group input { width: 16px; height: 16px; accent-color: #ff0055; }
-
     .file-input-wrapper { display: flex; gap: 8px; align-items: center; }
-    .file-btn { 
-      padding: 8px 12px; 
-      background: #252533; 
-      border: 1px solid #3a3a4d; 
-      border-radius: 8px; 
-      color: #a0a0b0; 
-      font-size: 0.85rem; 
-      cursor: pointer; 
-      flex: 1; 
+    .file-btn {
+      padding: 8px 12px;
+      background: #252533;
+      border: 1px solid #3a3a4d;
+      border-radius: 8px;
+      color: #a0a0b0;
+      font-size: 0.85rem;
+      cursor: pointer;
+      flex: 1;
       text-align: center;
     }
     .clear-img-btn {
@@ -148,33 +137,63 @@
       display: none;
     }
 
-    .button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
-
-    .start-btn { 
-      padding: 14px; 
-      border: none; 
-      border-radius: 10px; 
-      background: linear-gradient(135deg, #ff0055, #ff5500); 
-      color: #fff; 
-      font-size: 1rem; 
-      font-weight: bold; 
-      cursor: pointer; 
-      box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); 
+    /* Upload status indicator */
+    .upload-status {
+      font-size: 0.78rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: none;
+    }
+    .upload-status.uploading {
+      display: block;
+      background: #1a2533;
+      border: 1px solid #3a5a7d;
+      color: #7ab8f5;
+    }
+    .upload-status.success {
+      display: block;
+      background: #1a2e1a;
+      border: 1px solid #3a7d3a;
+      color: #7af57a;
+    }
+    .upload-status.error {
+      display: block;
+      background: #2e1a1a;
+      border: 1px solid #7d3a3a;
+      color: #f57a7a;
     }
 
-    .share-btn { 
-      padding: 12px; 
-      border: none; 
-      border-radius: 10px; 
-      background: #25D366; 
-      color: #fff; 
-      font-size: 0.95rem; 
-      font-weight: bold; 
-      cursor: pointer; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      gap: 8px; 
+    .button-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+
+    .start-btn {
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ff0055, #ff5500);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4);
+    }
+    .start-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .share-btn {
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: #25D366;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .modal-overlay {
@@ -221,8 +240,21 @@
     #banner-screen { display: none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; }
     canvas { width: 100%; height: 100%; display: block; }
 
-    .led-grid-overlay { position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(circle, transparent 25%, #000 70%); background-size: 6px 6px; }
-    .exit-hint { position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: #888; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; pointer-events: none; backdrop-filter: blur(4px); user-select: none; z-index: 10; }
+    .exit-hint {
+      position: absolute;
+      top: calc(12px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      color: #888;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+      user-select: none;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
@@ -234,7 +266,6 @@
     </div>
 
     <div class="preview-container" id="preview-box">
-      <div class="preview-overlay" id="preview-led-overlay"></div>
       <div class="preview-text" id="preview-text-element">Hola! 🎉 Welcome 🚀</div>
     </div>
 
@@ -273,10 +304,11 @@
         </div>
         <div class="file-input-wrapper">
           <label for="bg-file" class="file-btn">📷 Select Photo</label>
-          <input type="file" id="bg-file" accept="image/*" style="display: none;">
+          <input type="file" id="bg-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display: none;">
           <button class="clear-img-btn" id="clear-img-btn">✖</button>
         </div>
       </div>
+      <div class="upload-status" id="upload-status"></div>
     </div>
 
     <div class="color-row">
@@ -296,11 +328,6 @@
       </div>
     </div>
 
-    <label class="checkbox-group">
-      <input type="checkbox" id="led-effect" checked>
-      <span>Enable LED Dot-Matrix Grid Effect</span>
-    </label>
-
     <div class="button-group">
       <button class="start-btn" id="start-btn">START LED BANNER</button>
       <button class="share-btn" id="share-btn">
@@ -317,21 +344,23 @@
       <h2>Help & Guide</h2>
 
       <h3>How it Works</h3>
-      <p>Configure text, choose fonts, pick colors, or upload a gallery photo for the background. Tap <strong>START LED BANNER</strong> to launch in landscape or portrait.</p>
+      <p>Configure text, choose a font, pick colors, or upload a gallery photo for the background. Tap <strong>START LED BANNER</strong> to launch full-screen.</p>
       <p><strong>Double tap</strong> anywhere on the active screen to exit back to setup.</p>
 
+      <h3>Photo Backgrounds</h3>
+      <p>When you select a photo it uploads automatically to the cloud. Once uploaded the preview updates and sharing works instantly — no compressed thumbnails, full quality.</p>
+
       <h3>Sharing Banners</h3>
-      <p>Tap <strong>SHARE VIA WHATSAPP</strong> to send message setups via custom links, including compressed background photos.</p>
+      <p>Tap <strong>SHARE VIA WHATSAPP</strong> to send the full banner setup via a link. The recipient opens it and sees exactly what you configured, including the background photo.</p>
 
       <h3>Full-Screen PWA Installation</h3>
       <strong>Android (Chrome):</strong>
       <ul>
-        <li>Tap the <strong>3 dots menu (⋮)</strong> -> <strong>Add to Home screen</strong>.</li>
+        <li>Tap the <strong>3 dots menu (⋮)</strong> → <strong>Add to Home screen</strong>.</li>
       </ul>
-
       <strong>iOS (Safari):</strong>
       <ul>
-        <li>Tap the <strong>Share button</strong> -> <strong>Add to Home Screen</strong>.</li>
+        <li>Tap the <strong>Share button</strong> → <strong>Add to Home Screen</strong>.</li>
       </ul>
 
       <button class="close-btn" id="close-help">Got it!</button>
@@ -340,57 +369,66 @@
 
   <div id="banner-screen">
     <div class="exit-hint">Double tap screen to edit setup</div>
-    <div class="led-grid-overlay" id="led-overlay"></div>
     <canvas id="led-canvas"></canvas>
   </div>
 
   <script>
-    const setupScreen = document.getElementById('setup-screen');
-    const bannerScreen = document.getElementById('banner-screen');
-    const canvas = document.getElementById('led-canvas');
-    const ctx = canvas.getContext('2d');
-    const overlay = document.getElementById('led-overlay');
+    // ─── CONFIG ──────────────────────────────────────────────────────────────
+    // Set this to your deployed Cloudflare Worker URL after deploying
+    // ledbanner-upload-worker.js to Cloudflare Workers.
+    const UPLOAD_WORKER_URL = 'https://ledbanner-upload.reinier-olivier.workers.dev';
+    // ─────────────────────────────────────────────────────────────────────────
 
-    const helpModal = document.getElementById('help-modal');
-    const openHelpBtn = document.getElementById('open-help');
-    const closeHelpBtn = document.getElementById('close-help');
+    const setupScreen   = document.getElementById('setup-screen');
+    const bannerScreen  = document.getElementById('banner-screen');
+    const canvas        = document.getElementById('led-canvas');
+    const ctx           = canvas.getContext('2d');
 
-    const previewBox = document.getElementById('preview-box');
-    const previewText = document.getElementById('preview-text-element');
-    const previewLedOverlay = document.getElementById('preview-led-overlay');
+    const helpModal     = document.getElementById('help-modal');
+    const openHelpBtn   = document.getElementById('open-help');
+    const closeHelpBtn  = document.getElementById('close-help');
 
-    const textInput = document.getElementById('text-input');
-    const fontSelect = document.getElementById('font-select');
+    const previewBox    = document.getElementById('preview-box');
+    const previewText   = document.getElementById('preview-text-element');
+
+    const textInput     = document.getElementById('text-input');
+    const fontSelect    = document.getElementById('font-select');
     const textColorInput = document.getElementById('text-color');
-    const bgColorInput = document.getElementById('bg-color');
-    const bgFileInput = document.getElementById('bg-file');
-    const clearImgBtn = document.getElementById('clear-img-btn');
-    const speedInput = document.getElementById('speed-input');
-    const sizeInput = document.getElementById('size-input');
-    const ledEffectInput = document.getElementById('led-effect');
+    const bgColorInput  = document.getElementById('bg-color');
+    const bgFileInput   = document.getElementById('bg-file');
+    const clearImgBtn   = document.getElementById('clear-img-btn');
+    const uploadStatus  = document.getElementById('upload-status');
+    const speedInput    = document.getElementById('speed-input');
+    const sizeInput     = document.getElementById('size-input');
+    const speedVal      = document.getElementById('speed-val');
+    const sizeVal       = document.getElementById('size-val');
+    const startBtn      = document.getElementById('start-btn');
 
-    const speedVal = document.getElementById('speed-val');
-    const sizeVal = document.getElementById('size-val');
+    let animationId  = null;
+    let wakeLock     = null;
+    let xPos         = 0;
+    let lastTapTime  = 0;
+    let loadedBgImage   = null;   // HTMLImageElement for canvas drawing
+    let uploadedImgUrl  = null;   // Supabase public URL (used in share link)
+    let uploadPending   = false;  // true while upload is in flight
 
-    let animationId = null;
-    let wakeLock = null;
-    let xPos = 0;
-    let lastTapTime = 0;
-    let loadedBgImage = null;
-    let compressedImgDataUrl = null;
+    // ─── UI helpers ──────────────────────────────────────────────────────────
 
     openHelpBtn.addEventListener('click', () => helpModal.style.display = 'flex');
     closeHelpBtn.addEventListener('click', () => helpModal.style.display = 'none');
 
+    function setUploadStatus(state, msg) {
+      uploadStatus.className = 'upload-status ' + state;
+      uploadStatus.textContent = msg;
+    }
+
     function updatePreview() {
       speedVal.textContent = speedInput.value;
-      sizeVal.textContent = `${sizeInput.value}%`;
+      sizeVal.textContent  = `${sizeInput.value}%`;
 
-      previewText.textContent = textInput.value || ' ';
-      previewText.style.color = textColorInput.value;
+      previewText.textContent   = textInput.value || ' ';
+      previewText.style.color      = textColorInput.value;
       previewText.style.fontFamily = fontSelect.value;
-
-      previewLedOverlay.style.display = ledEffectInput.checked ? 'block' : 'none';
 
       if (loadedBgImage) {
         previewBox.style.backgroundImage = `url(${loadedBgImage.src})`;
@@ -401,73 +439,84 @@
       }
     }
 
-    // Compress photo to lightweight thumbnail so it fits inside URL parameter
-    function compressImage(img) {
-      const tempCanvas = document.createElement('canvas');
-      const maxDim = 200; // Small resolution canvas for high JPEG compression
-      let w = img.width;
-      let h = img.height;
+    // ─── Photo upload ─────────────────────────────────────────────────────────
 
-      if (w > h) {
-        if (w > maxDim) { h *= maxDim / w; w = maxDim; }
-      } else {
-        if (h > maxDim) { w *= maxDim / h; h = maxDim; }
-      }
-
-      tempCanvas.width = w;
-      tempCanvas.height = h;
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.drawImage(img, 0, 0, w, h);
-
-      return tempCanvas.toDataURL('image/jpeg', 0.4); // Quality 40%
-    }
-
-    bgFileInput.addEventListener('change', (e) => {
+    bgFileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          const img = new Image();
-          img.onload = function() {
-            loadedBgImage = img;
-            compressedImgDataUrl = compressImage(img);
-            clearImgBtn.style.display = 'inline-block';
-            updatePreview();
-          };
-          img.src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+
+      // Show local preview immediately while upload runs
+      const localUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { loadedBgImage = img; updatePreview(); };
+      img.src = localUrl;
+
+      // Upload to Supabase via the Cloudflare Worker
+      uploadPending = true;
+      startBtn.disabled = true;
+      setUploadStatus('uploading', '⏳ Uploading photo…');
+
+      try {
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        const res = await fetch(UPLOAD_WORKER_URL, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.url) {
+          throw new Error(data.error || `HTTP ${res.status}`);
+        }
+
+        uploadedImgUrl = data.url;
+        clearImgBtn.style.display = 'inline-block';
+        setUploadStatus('success', '✔ Photo uploaded — ready to share');
+      } catch (err) {
+        console.error('Upload failed:', err);
+        setUploadStatus('error', `✖ Upload failed: ${err.message}`);
+        // Keep local preview but clear the share URL
+        uploadedImgUrl = null;
+      } finally {
+        uploadPending = false;
+        startBtn.disabled = false;
       }
     });
 
     clearImgBtn.addEventListener('click', () => {
-      loadedBgImage = null;
-      compressedImgDataUrl = null;
+      loadedBgImage  = null;
+      uploadedImgUrl = null;
       bgFileInput.value = '';
       clearImgBtn.style.display = 'none';
+      uploadStatus.className = 'upload-status';
+      uploadStatus.textContent = '';
       updatePreview();
     });
 
-    [textInput, fontSelect, textColorInput, bgColorInput, speedInput, sizeInput, ledEffectInput].forEach(el => {
+    [textInput, fontSelect, textColorInput, bgColorInput, speedInput, sizeInput].forEach(el => {
       el.addEventListener('input', updatePreview);
       el.addEventListener('change', updatePreview);
     });
 
+    // ─── Share URL ────────────────────────────────────────────────────────────
+
     function buildShareableUrl() {
       const baseUrl = window.location.origin + window.location.pathname;
       const params = new URLSearchParams({
-        text: textInput.value,
-        font: fontSelect.value,
+        text:  textInput.value,
+        font:  fontSelect.value,
         color: textColorInput.value,
-        bg: bgColorInput.value,
+        bg:    bgColorInput.value,
         speed: speedInput.value,
-        size: sizeInput.value,
-        led: ledEffectInput.checked ? '1' : '0',
-        play: '1'
+        size:  sizeInput.value,
+        play:  '1',
       });
 
-      if (compressedImgDataUrl) {
-        params.set('img', compressedImgDataUrl);
+      // Use the Supabase public URL — no base64 blob in the URL
+      if (uploadedImgUrl) {
+        params.set('imgurl', uploadedImgUrl);
       }
 
       return `${baseUrl}?${params.toString()}`;
@@ -476,119 +525,101 @@
     function shareToWhatsApp() {
       const url = buildShareableUrl();
       const message = `Check out this LED banner message I made for you! 📲✨\n\n${url}`;
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
     }
 
-    function loadParamsFromUrl() {
-      const urlParams = new URLSearchParams(window.location.search);
-      
-      if (urlParams.has('text')) textInput.value = urlParams.get('text');
-      if (urlParams.has('font')) fontSelect.value = urlParams.get('font');
-      if (urlParams.has('color')) textColorInput.value = urlParams.get('color');
-      if (urlParams.has('bg')) bgColorInput.value = urlParams.get('bg');
-      if (urlParams.has('speed')) speedInput.value = urlParams.get('speed');
-      if (urlParams.has('size')) sizeInput.value = urlParams.get('size');
-      if (urlParams.has('led')) ledEffectInput.checked = urlParams.get('led') === '1';
+    // ─── Load params from URL (shared link) ──────────────────────────────────
 
-      if (urlParams.has('img')) {
-        const imgUrl = urlParams.get('img');
+    function loadParamsFromUrl() {
+      const p = new URLSearchParams(window.location.search);
+
+      if (p.has('text'))  textInput.value      = p.get('text');
+      if (p.has('font'))  fontSelect.value     = p.get('font');
+      if (p.has('color')) textColorInput.value = p.get('color');
+      if (p.has('bg'))    bgColorInput.value   = p.get('bg');
+      if (p.has('speed')) speedInput.value     = p.get('speed');
+      if (p.has('size'))  sizeInput.value      = p.get('size');
+
+      const imgUrl = p.get('imgurl');
+      if (imgUrl) {
+        uploadedImgUrl = imgUrl;
         const img = new Image();
-        img.onload = function() {
+        img.crossOrigin = 'anonymous';  // Supabase Storage allows CORS
+        img.onload = () => {
           loadedBgImage = img;
-          compressedImgDataUrl = imgUrl;
           clearImgBtn.style.display = 'inline-block';
           updatePreview();
-          if (urlParams.get('play') === '1') {
-            startBanner();
-          }
+          if (p.get('play') === '1') startBanner();
+        };
+        img.onerror = () => {
+          // Photo URL expired or unavailable — continue without background
+          updatePreview();
+          if (p.get('play') === '1') startBanner();
         };
         img.src = imgUrl;
       } else {
         updatePreview();
-        if (urlParams.get('play') === '1') {
-          startBanner();
-        }
+        if (p.get('play') === '1') startBanner();
       }
     }
 
+    // ─── Banner display ───────────────────────────────────────────────────────
+
     function resizeCanvas() {
-      canvas.width = window.innerWidth * window.devicePixelRatio;
+      canvas.width  = window.innerWidth  * window.devicePixelRatio;
       canvas.height = window.innerHeight * window.devicePixelRatio;
     }
 
     async function enterFullscreen() {
-      const docEl = document.documentElement;
       try {
-        if (docEl.requestFullscreen) {
-          await docEl.requestFullscreen();
-        } else if (docEl.webkitRequestFullscreen) {
-          await docEl.webkitRequestFullscreen();
-        }
-      } catch (err) {
-        console.warn('Native Fullscreen API blocked;');
-      }
+        const el = document.documentElement;
+        if (el.requestFullscreen)            await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      } catch { /* blocked on some browsers — continue anyway */ }
     }
 
     async function exitFullscreen() {
       try {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          await document.webkitExitFullscreen();
-        }
-      } catch (err) {
-        console.warn('Exit fullscreen failed:', err.message);
-      }
+        if (document.exitFullscreen)            await document.exitFullscreen();
+        else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+      } catch { /* ignore */ }
     }
 
     async function requestWakeLock() {
       try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-        }
-      } catch (err) {
-        console.warn('Wake Lock error:', err.message);
-      }
+        if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+      } catch { /* not supported */ }
     }
 
     function releaseWakeLock() {
-      if (wakeLock !== null) {
-        wakeLock.release();
-        wakeLock = null;
-      }
+      if (wakeLock) { wakeLock.release(); wakeLock = null; }
     }
 
     async function startBanner() {
+      if (uploadPending) return; // Don't start while upload is in flight
       setupScreen.style.display = 'none';
       bannerScreen.style.display = 'block';
-
-      await enterFullscreen();
-
-      overlay.style.display = ledEffectInput.checked ? 'block' : 'none';
       bannerScreen.style.backgroundColor = bgColorInput.value;
-
+      await enterFullscreen();
       resizeCanvas();
       requestWakeLock();
-
       xPos = canvas.width;
       animate();
     }
 
     function stopBanner() {
       if (animationId) cancelAnimationFrame(animationId);
+      animationId = null;
       releaseWakeLock();
-
       exitFullscreen();
-
       bannerScreen.style.display = 'none';
-      setupScreen.style.display = 'flex';
+      setupScreen.style.display  = 'flex';
     }
 
     function animate() {
-      const text = textInput.value || ' ';
-      const fontSize = (canvas.height * (sizeInput.value / 100));
-      const speed = parseFloat(speedInput.value) * (window.devicePixelRatio || 1);
+      const text      = textInput.value || ' ';
+      const fontSize  = canvas.height * (sizeInput.value / 100);
+      const speed     = parseFloat(speedInput.value) * (window.devicePixelRatio || 1);
       const chosenFont = fontSelect.value;
 
       if (loadedBgImage) {
@@ -598,41 +629,35 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
 
-      ctx.fillStyle = textColorInput.value;
-      ctx.font = `bold ${fontSize}px ${chosenFont}, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"`;
+      ctx.fillStyle    = textColorInput.value;
+      ctx.font         = `bold ${fontSize}px ${chosenFont}, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"`;
       ctx.textBaseline = 'middle';
-
       ctx.fillText(text, xPos, canvas.height / 2);
 
       xPos -= speed;
-
       const textWidth = ctx.measureText(text).width;
-      if (xPos < -textWidth) {
-        xPos = canvas.width;
-      }
+      if (xPos < -textWidth) xPos = canvas.width;
 
       animationId = requestAnimationFrame(animate);
     }
 
     function handleDoubleTap(e) {
-      const currentTime = new Date().getTime();
-      const tapLength = currentTime - lastTapTime;
-
-      if (tapLength < 300 && tapLength > 0) {
+      const now = Date.now();
+      if (now - lastTapTime < 300 && now - lastTapTime > 0) {
         e.preventDefault();
         stopBanner();
       }
-      lastTapTime = currentTime;
+      lastTapTime = now;
     }
 
-    document.getElementById('start-btn').addEventListener('click', startBanner);
+    // ─── Event listeners ──────────────────────────────────────────────────────
+
+    startBtn.addEventListener('click', startBanner);
     document.getElementById('share-btn').addEventListener('click', shareToWhatsApp);
     bannerScreen.addEventListener('pointerdown', handleDoubleTap);
 
     window.addEventListener('resize', () => {
-      if (bannerScreen.style.display === 'block') {
-        resizeCanvas();
-      }
+      if (bannerScreen.style.display === 'block') resizeCanvas();
     });
 
     window.addEventListener('DOMContentLoaded', loadParamsFromUrl);
