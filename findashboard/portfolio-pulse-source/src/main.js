@@ -3,7 +3,6 @@ import Chart from 'chart.js/auto';
 import { createIcons, Upload, Clipboard, WalletCards, TrendingUp, CalendarDays, ShieldCheck, MoreHorizontal, ArrowUpRight, ArrowDownRight, Minus, X, ImagePlus, Trash2, Download, FileUp, Check, Plus, ChevronDown, Info, RotateCcw } from 'lucide';
 import { createWorker } from 'tesseract.js';
 
-const STORAGE_KEY = 'portfolio-pulse-v1';
 const RANGE_KEY = 'portfolio-pulse-range';
 const seed = [{
   date: '2026-07-10',
@@ -15,7 +14,7 @@ const seed = [{
   ]
 }];
 
-let records = loadRecords();
+let records = [];
 let range = localStorage.getItem(RANGE_KEY) || '4w';
 let charts = {};
 let pendingImage = null;
@@ -24,13 +23,6 @@ const currency = new Intl.NumberFormat('en-ZA', { style: 'currency', currency: '
 const compactCurrency = new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', notation: 'compact', maximumFractionDigits: 1 });
 const dateLong = new Intl.DateTimeFormat('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
 
-function loadRecords() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return Array.isArray(saved) && saved.length ? saved.sort(sortDate) : seed;
-  } catch { return seed; }
-}
-function saveRecords() { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
 function sortDate(a, b) { return new Date(a.date) - new Date(b.date); }
 function money(value) { return currency.format(value).replace('ZAR', 'R'); }
 function latest() { return records.at(-1); }
@@ -38,6 +30,40 @@ function previous() { return records.at(-2); }
 function delta(current, old) { return old == null ? null : current - old; }
 function percent(current, old) { return !old ? null : ((current - old) / old) * 100; }
 function escapeHtml(s = '') { return String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+
+async function fetchRecords() {
+  try {
+    const res = await fetch('/api/records');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return Array.isArray(data) && data.length ? data.sort(sortDate) : seed;
+  } catch (err) {
+    console.error('fetchRecords error:', err);
+    showToast('Failed to load data from server', 'error');
+    return seed;
+  }
+}
+
+async function pushRecord(record) {
+  const res = await fetch('/api/records', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record)
+  });
+  if (!res.ok) {
+    showToast('Failed to save record to server');
+    throw new Error(`HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function deleteRecord(date) {
+  const res = await fetch(`/api/records/${encodeURIComponent(date)}`, { method: 'DELETE' });
+  if (!res.ok && res.status !== 204) {
+    showToast('Failed to delete record from server');
+    throw new Error(`HTTP ${res.status}`);
+  }
+}
 
 function changeMarkup(value, pct, label = 'since last upload') {
   if (value == null) return `<span class="change neutral"><i data-lucide="minus"></i> First record</span>`;
@@ -68,7 +94,7 @@ function render() {
           <a href="#history"><i data-lucide="calendar-days"></i>History</a>
           <a href="#privacy"><i data-lucide="shield-check"></i>Privacy</a>
         </nav>
-        <div class="privacy-note"><i data-lucide="shield-check"></i><div><strong>Private by design</strong><span>Your records stay in this browser.</span></div></div>
+        <div class="privacy-note"><i data-lucide="shield-check"></i><div><strong>Secure cloud storage</strong><span>Your records are stored in Cloudflare D1.</span></div></div>
       </aside>
       <main>
         <header class="topbar">
@@ -256,7 +282,7 @@ function populateReview(data) {
   if (data.funds?.length) { document.querySelector('#fundEditor').innerHTML=''; data.funds.forEach(addFundRow); }
 }
 
-function saveRecord(e) {
+async function saveRecord(e) {
   e.preventDefault();
   const date = document.querySelector('#recordDate').value;
   const total = parseAmount(document.querySelector('#recordTotal').value);
@@ -267,8 +293,15 @@ function saveRecord(e) {
   const existing = records.findIndex(r => r.date === date);
   if (existing >= 0 && !confirm('A record already exists for this date. Replace it?')) return;
   const record = { date, total, funds };
-  if (existing >= 0) records[existing] = record; else records.push(record);
-  records.sort(sortDate); saveRecords(); closeModal(); render(); showToast('Weekly portfolio record saved.');
+  try {
+    await pushRecord(record);
+    records = await fetchRecords();
+    closeModal();
+    render();
+    showToast('Weekly portfolio record saved.');
+  } catch (err) {
+    // pushRecord already showed a toast
+  }
 }
 
 function getRangeRecords() {
@@ -287,8 +320,33 @@ function renderCharts() {
 }
 
 function exportData() { const blob=new Blob([JSON.stringify({app:'Portfolio Pulse',version:1,exportedAt:new Date().toISOString(),records},null,2)],{type:'application/json'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`portfolio-pulse-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href);showToast('Backup downloaded.'); }
-async function importData(e) { try { const data=JSON.parse(await e.target.files[0].text()); const incoming=Array.isArray(data)?data:data.records; if(!Array.isArray(incoming)||!incoming.length) throw new Error(); if(!confirm(`Import ${incoming.length} records and replace the current history?`)) return; records=incoming.sort(sortDate);saveRecords();render();showToast('Backup imported.'); } catch { showToast('That backup file is not valid.'); } e.target.value=''; }
-function resetData() { if(!confirm('Remove all saved history and restore the sample record from 10 July 2026?')) return; records=structuredClone(seed);saveRecords();render();showToast('Dashboard reset.'); }
+async function importData(e) { try { const data=JSON.parse(await e.target.files[0].text()); const incoming=Array.isArray(data)?data:data.records; if(!Array.isArray(incoming)||!incoming.length) throw new Error(); if(!confirm(`Import ${incoming.length} records and replace the current history?`)) return;
+    for (const rec of incoming) {
+      await pushRecord(rec);
+    }
+    records = await fetchRecords();
+    render();
+    showToast('Backup imported.');
+  } catch { showToast('That backup file is not valid.'); } e.target.value=''; }
+async function resetData() {
+  if (!confirm('Remove all saved history and restore the sample record from 10 July 2026?')) return;
+  try {
+    // Delete all current records via the API
+    for (const rec of [...records]) {
+      await deleteRecord(rec.date);
+    }
+    // POST the seed record
+    await pushRecord(seed[0]);
+    records = await fetchRecords();
+    render();
+    showToast('Dashboard reset.');
+  } catch (err) {
+    // individual API calls already showed toasts
+  }
+}
 function showToast(message) { const t=document.querySelector('#toast');t.textContent=message;t.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.classList.remove('show'),3500); }
 
-render();
+(async () => {
+  records = await fetchRecords();
+  render();
+})();
