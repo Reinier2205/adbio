@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Knowledge Quest</title>
+<style>
+  :root{
+    --bg1:#4a5568;
+    --bg2:#553c9a;
+    --gold:#ffd700;
+    --glass: rgba(255,255,255,0.06);
+    --glass-strong: rgba(255,255,255,0.08);
+    --text:#f7f7fb;
+    --muted: rgba(247,247,251,0.7);
+    --green:#22c55e;
+    --red:#ef4444;
+    --blue:#3b82f6;
+    --radius:16px;
+    --gap:12px;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    background: linear-gradient(160deg,var(--bg1),var(--bg2));
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* Container */
+  .card{
+    width:100%;
+    max-width:420px;
+    height:92vh;
+    display:flex;
+    flex-direction:column;
+    border-radius:18px;
+    padding:16px;
+    box-sizing:border-box;
+    backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    gap:12px;
+  }
+
+  /* Top and bottom split */
+  .top{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:12px;
+    min-height:0;
+  }
+  .bottom{
+    height:160px;
+    display:flex;
+    gap:10px;
+    padding:12px;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  /* Header row */
+  .header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+  }
+  .title{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .logo{
+    width:44px;
+    height:44px;
+    border-radius:10px;
+    display:grid;
+    place-items:center;
+    font-weight:700;
+    color:#2b2b2b;
+    background: linear-gradient(180deg,var(--gold),#e6b800);
+    box-shadow:0 4px 14px rgba(0,0,0,0.25);
+  }
+  h1{ font-size:16px; margin:0; letter-spacing:0.2px; color:var(--text) }
+  .meta{
+    text-align:right;
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  /* Question box */
+  .question-box{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:10px;
+    padding:14px;
+    border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.03);
+    backdrop-filter: blur(6px);
+    min-height:0;
+  }
+  .q-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .question{
+    font-size:18px;
+    line-height:1.25;
+    color:var(--text);
+    font-weight:600;
+    min-height:56px;
+    display:flex;
+    align-items:center;
+  }
+
+  /* Timer */
+  .timer-wrap{
+    height:12px;
+    border-radius:8px;
+    background: rgba(255,255,255,0.03);
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.02);
+  }
+  .timer-bar{
+    height:100%;
+    width:100%;
+    background: linear-gradient(90deg,var(--gold), #f7ec9a);
+    transform-origin:left;
+    transition:width 0.05s linear;
+  }
+  .timer-text{
+    font-size:12px;
+    text-align:right;
+    color:var(--muted);
+    margin-top:6px;
+  }
+
+  /* Options fixed positions */
+  .options{
+    width:100%;
+    display:flex;
+    gap:10px;
+    justify-content:space-between;
+    align-items:stretch;
+  }
+  .opt{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+    border-radius:12px;
+    background: rgba(255,255,255,0.03);
+    color:var(--text);
+    font-weight:600;
+    text-align:center;
+    cursor:pointer;
+    user-select:none;
+    transition:transform .15s ease, background .18s ease, opacity .2s ease;
+    border:1px solid rgba(255,255,255,0.03);
+    min-width:0;
+  }
+  .opt:active{ transform:scale(.995) }
+  .opt.dim{ opacity:0.45; pointer-events:none }
+  .opt.disabled{ pointer-events:none }
+
+  /* status colors */
+  .correct{ background: linear-gradient(90deg, rgba(34,197,94,0.18), rgba(34,197,94,0.08)); border-color: rgba(34,197,94,0.28); color:var(--text) }
+  .wrong{ background: linear-gradient(90deg, rgba(239,68,68,0.16), rgba(239,68,68,0.06)); border-color: rgba(239,68,68,0.28); color:var(--text) }
+  .timeout-correct{ background: linear-gradient(90deg, rgba(59,130,246,0.16), rgba(59,130,246,0.06)); border-color: rgba(59,130,246,0.28); color:var(--text) }
+
+  /* Start and footer */
+  .center{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    padding:6px;
+  }
+  .btn{
+    padding:10px 16px;
+    border-radius:12px;
+    border:none;
+    background:linear-gradient(90deg,var(--gold), #f7ec9a);
+    color:#1a1a1a;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  }
+  .small{
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  /* score screen */
+  .score-panel{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+  }
+  .score-big{ font-size:40px; font-weight:800; color:var(--gold) }
+  .score-msg{ font-size:16px; text-align:center; color:var(--text) }
+
+  /* compact for mobile */
+  @media (max-width:420px){
+    .card{ height:98vh; padding:12px; border-radius:14px }
+    .bottom{ height:150px }
+    .question{ font-size:16px }
+    .title h1{ font-size:15px }
+  }
+</style>
+</head>
+<body>
+<div class="card" role="application" aria-label="Knowledge Quest">
+  <div class="top">
+    <div class="header">
+      <div class="title">
+        <div class="logo">KQ</div>
+        <div>
+          <h1>Knowledge Quest</h1>
+          <div class="small">A quick 5-question round</div>
+        </div>
+      </div>
+      <div class="meta">
+        <div id="difficultyLabel">Difficulty: EASY</div>
+        <div id="qCounter">1 of 5</div>
+      </div>
+    </div>
+
+    <div class="question-box" id="questionBox" aria-live="polite">
+      <div class="q-top">
+        <div id="statusText" class="small">Press Start to play</div>
+        <div id="timerText" class="small">—</div>
+      </div>
+
+      <div id="questionText" class="question">Welcome to Knowledge Quest</div>
+
+      <div>
+        <div class="timer-wrap" aria-hidden="true">
+          <div id="timerBar" class="timer-bar" style="width:100%"></div>
+        </div>
+        <div id="timerLabel" class="timer-text">Ready</div>
+      </div>
+    </div>
+
+    <div class="center">
+      <button id="startBtn" class="btn">Start Quiz</button>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="options" id="options">
+      <div id="opt0" class="opt dim" data-index="0" tabindex="0"></div>
+      <div id="opt1" class="opt dim" data-index="1" tabindex="0"></div>
+      <div id="opt2" class="opt dim" data-index="2" tabindex="0"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Knowledge Quest - Single file app
+   - 5 questions per round
+   - 3 choices each
+   - 5-second timer per question
+   - difficulty adapt: 0 easy, 1 medium, 2 hard
+   - Set() used to avoid repeats
+*/
+
+const QUESTION_COUNT = 5;
+const TIMER_SECONDS = 5;
+const PAUSE_MS = 2500;
+const difficultyNames = ['EASY','MEDIUM','HARD'];
+
+let difficulty = 1;             // start medium to adapt quickly
+let usedQuestionHashes = new Set();
+let currentQuestion = null;
+let qIndex = 0;
+let score = 0;
+let timerInterval = null;
+let timerStart = null;
+let timerRemaining = TIMER_SECONDS;
+let choicesLocked = false;
+
+/* UI refs */
+const startBtn = document.getElementById('startBtn');
+let questionText = document.getElementById('questionText');
+let statusText = document.getElementById('statusText');
+let timerBar = document.getElementById('timerBar');
+let timerLabel = document.getElementById('timerLabel');
+let timerText = document.getElementById('timerText');
+const qCounter = document.getElementById('qCounter');
+const difficultyLabel = document.getElementById('difficultyLabel');
+const optionsWrap = document.getElementById('options');
+const opts = [document.getElementById('opt0'), document.getElementById('opt1'), document.getElementById('opt2')];
+
+/* Score messages */
+const scoreMsgs = {
+  5: "🏆 Perfect Score! You're a trivia champion!",
+  4: "🌟 Excellent work! Almost perfect!",
+  3: "👍 Good job! You know your stuff!",
+  2: "📚 Not bad! Room for improvement!",
+  1: "🎯 You got one right! That's a start!",
+  0: "🎪 Tough round! Don't give up!"
+};
+
+/* Helper: RNG */
+const rand = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
+const sample = (arr) => arr[rand(0,arr.length-1)];
+const shuffle = (arr) => {
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+};
+
+/* Unique hash for a question object to avoid repeats */
+function qHash(q){
+  return btoa(unescape(encodeURIComponent(JSON.stringify([q.level,q.type,q.text,q.correct]))));
+}
+
+/* Generators per difficulty.
+   Each generator returns: { text, choices:[..], correct, meta:{type,level} }
+   Generators must be algorithmic, not static question lists.
+*/
+
+/* EASY generators */
+const easyGenerators = [
+  // Math: addition, subtraction, multiplication (simple)
+  function(){
+    const op = sample(['+','-','×']);
+    if(op === '+'){
+      const a=rand(1,20), b=rand(1,20);
+      const ans = a+b;
+      const choices = shuffle([ans, ans+rand(1,6), ans-rand(1,6)]);
+      return { text:`What is ${a} + ${b}?`, choices, correct:ans, type:'math', level:'EASY' };
+    }
+    if(op === '-'){
+      let a=rand(5,30), b=rand(1,Math.min(a,20));
+      const ans = a-b;
+      const choices = shuffle([ans, ans+rand(1,6), ans-rand(1,6)]);
+      return { text:`What is ${a} - ${b}?`, choices, correct:ans, type:'math', level:'EASY' };
+    }
+    // multiply
+    const x=rand(1,12), y=rand(1,12);
+    const ans=x*y;
+    const choices = shuffle([ans, ans + rand(1,20), Math.max(1,ans - rand(1,6))]);
+    return { text:`What is ${x} × ${y}?`, choices, correct:ans, type:'math', level:'EASY' };
+  },
+
+  // Colors: mixing basic combos
+  function(){
+    const mixes = [
+      {a:'red',b:'yellow',r:'orange'},
+      {a:'red',b:'blue',r:'purple'},
+      {a:'blue',b:'yellow',r:'green'},
+      {a:'white',b:'black',r:'grey'},
+      {a:'red',b:'white',r:'pink'}
+    ];
+    const m = sample(mixes);
+    const wrong1 = sample(mixes.filter(x=>x.r!==m.r)).r;
+    const wrong2 = sample(mixes.filter(x=>x.r!==m.r && x.r!==wrong1)).r;
+    const choices = shuffle([m.r, wrong1, wrong2]);
+    return { text:`Mixing ${m.a} + ${m.b} yields which color?`, choices, correct:m.r, type:'colors', level:'EASY' };
+  },
+
+  // Animals: leg counts
+  function(){
+    const animals = [
+      {name:'ant',legs:6},
+      {name:'dog',legs:4},
+      {name:'cow',legs:4},
+      {name:'spider',legs:8},
+      {name:'human',legs:2},
+      {name:'centipede',legs:100}
+    ];
+    const a = sample(animals);
+    const choices = shuffle([a.legs, a.legs + (a.legs>2?2:1), Math.max(0,a.legs - (a.legs>2?2:1))]);
+    return { text:`How many legs does a ${a.name} have?`, choices, correct:a.legs, type:'animals', level:'EASY' };
+  },
+
+  // Geography: basic countries & capitals
+  function(){
+    const pairs = [
+      {c:'France',cap:'Paris'},
+      {c:'Japan',cap:'Tokyo'},
+      {c:'Egypt',cap:'Cairo'},
+      {c:'Brazil',cap:'Brasília'},
+      {c:'Canada',cap:'Ottawa'},
+      {c:'Kenya',cap:'Nairobi'}
+    ];
+    const p=sample(pairs);
+    const wrongs = shuffle(pairs.filter(x=>x.cap!==p.cap)).slice(0,2).map(x=>x.cap);
+    const choices = shuffle([p.cap,...wrongs]);
+    return { text:`What is the capital of ${p.c}?`, choices, correct:p.cap, type:'geography-basic', level:'EASY' };
+  },
+
+  // Time: years ago question using current date
+  function(){
+    const now = new Date();
+    const yearsAgo = rand(1,50);
+    const year = now.getFullYear() - yearsAgo;
+    const choices = shuffle([`${year}`, `${year+rand(1,4)}`, `${year-rand(1,4)}`]);
+    return { text:`If it is ${now.getFullYear()}, what year was ${yearsAgo} years ago?`, choices, correct:`${year}`, type:'time', level:'EASY' };
+  }
+];
+
+/* MEDIUM generators */
+const mediumGenerators = [
+  // Calculations: (num1 + num2) × num3
+  function(){
+    const a=rand(2,30), b=rand(2,30), c=rand(2,6);
+    const ans = (a+b)*c;
+    const choices = shuffle([ans, ans + rand(1,30), Math.max(1, ans - rand(2,20))]);
+    return { text:`Calculate: (${a} + ${b}) × ${c} = ?`, choices, correct:ans, type:'calc-medium', level:'MEDIUM' };
+  },
+
+  // History: event year questions (simple modern events)
+  function(){
+    const events = [
+      {ev:'Moon landing (Apollo 11)',yr:1969},
+      {ev:'Fall of Berlin Wall',yr:1989},
+      {ev:'First iPhone release',yr:2007},
+      {ev:'Nelson Mandela released',yr:1990},
+      {ev:'World Wide Web made public',yr:1991}
+    ];
+    const e = sample(events);
+    const choices = shuffle([e.yr, e.yr + rand(1,6), e.yr - rand(1,6)]);
+    return { text:`In which year did the event occur: ${e.ev}?`, choices, correct:e.yr, type:'history', level:'MEDIUM' };
+  },
+
+  // Science: elements and symbols
+  function(){
+    const elements = [
+      {name:'Oxygen',sym:'O'},
+      {name:'Gold',sym:'Au'},
+      {name:'Sodium',sym:'Na'},
+      {name:'Iron',sym:'Fe'},
+      {name:'Helium',sym:'He'},
+      {name:'Carbon',sym:'C'}
+    ];
+    const el = sample(elements);
+    const wrongs = shuffle(elements.filter(x=>x.sym!==el.sym)).slice(0,2).map(x=>x.sym);
+    const choices = shuffle([el.sym,...wrongs]);
+    return { text:`What is the chemical symbol for ${el.name}?`, choices, correct:el.sym, type:'science-element', level:'MEDIUM' };
+  },
+
+  // Geography: advanced countries and capitals
+  function(){
+    const pairs = [
+      {c:'New Zealand',cap:'Wellington'},
+      {c:'Sri Lanka',cap:'Colombo'},
+      {c:'Argentina',cap:'Buenos Aires'},
+      {c:'Sweden',cap:'Stockholm'},
+      {c:'Turkey',cap:'Ankara'}
+    ];
+    const p=sample(pairs);
+    const wrongs = shuffle(pairs.filter(x=>x.cap!==p.cap)).slice(0,2).map(x=>x.cap);
+    const choices = shuffle([p.cap,...wrongs]);
+    return { text:`Capital of ${p.c}?`, choices, correct:p.cap, type:'geography-advanced', level:'MEDIUM' };
+  },
+
+  // Language: basic translations (common words)
+  function(){
+    const trans = [
+      {from:'Hello',to:'Hola',lang:'Spanish'},
+      {from:'Thank you',to:'Merci',lang:'French'},
+      {from:'Goodbye',to:'Auf Wiedersehen',lang:'German'},
+      {from:'Yes',to:'Si',lang:'Spanish'},
+      {from:'Please',to:'Por favor',lang:'Spanish'}
+    ];
+    const t = sample(trans);
+    const wrongs = shuffle(trans.filter(x=>x.to!==t.to)).slice(0,2).map(x=>x.to);
+    const choices = shuffle([t.to,...wrongs]);
+    return { text:`Translate to ${t.lang}: "${t.from}"`, choices, correct:t.to, type:'language', level:'MEDIUM' };
+  }
+];
+
+/* HARD generators */
+const hardGenerators = [
+  // Advanced Math: powers/exponents
+  function(){
+    const base = rand(2,6);
+    const exp = rand(2,4);
+    const ans = Math.pow(base,exp);
+    const choices = shuffle([ans, ans + rand(1,40), Math.max(1,ans - rand(1,40))]);
+    return { text:`What is ${base}^${exp}?`, choices, correct:ans, type:'math-hard', level:'HARD' };
+  },
+
+  // Complex History: decade calculations
+  function(){
+    const decStart = sample([1910,1920,1930,1940,1950,1960,1970,1980,1990,2000]);
+    const dec = `${decStart}s`;
+    const choices = shuffle([dec, `${decStart+10}s`, `${decStart-10}s`]);
+    return { text:`Which decade is known for events starting in ${decStart}?`, choices, correct:dec, type:'history-decade', level:'HARD' };
+  },
+
+  // Advanced Science: speeds facts (light, sound, earth rotation ~)
+  function(){
+    const facts = [
+      {q:'Speed of sound in air (approx m/s)',a:343},
+      {q:'Speed of light in vacuum (km/s approx)',a:299792},
+      {q:'Earth rotation speed at equator (km/h approx)',a:1674}
+    ];
+    const f = sample(facts);
+    const wrongs = shuffle(facts.filter(x=>x.a!==f.a)).slice(0,2).map(x=>x.a);
+    const choices = shuffle([f.a, ...wrongs]);
+    return { text:`Approx. ${f.q}?`, choices, correct:f.a, type:'science-speed', level:'HARD' };
+  },
+
+  // World Facts: continents, oceans counts
+  function(){
+    const facts = [
+      {q:'How many continents are there?',a:7},
+      {q:'How many oceans are there?',a:5},
+      {q:'How many countries approximately in Africa (rounded)?',a:54}
+    ];
+    const f = sample(facts);
+    const choices = shuffle([f.a, f.a + rand(1,3), Math.max(1,f.a - rand(1,3))]);
+    return { text:`${f.q}`, choices, correct:f.a, type:'world-facts', level:'HARD' };
+  },
+
+  // Advanced Geography: features with measurements
+  function(){
+    const feats = [
+      {name:'Mount Everest height (m approx)',val:8848},
+      {name:'Nile length (km approx)',val:6650},
+      {name:'Sahara area (km² million approx)',val:9200000}
+    ];
+    const f = sample(feats);
+    const choices = shuffle([
+      f.val,
+      Math.round(f.val * (1 + (Math.random() * 0.2 - 0.1))),
+      Math.max(1, Math.round(f.val * (1 + (Math.random() * 0.25 - 0.15))))
+    ]);
+    return { text:`Approx. ${f.name}?`, choices, correct:f.val, type:'geography-adv', level:'HARD' };
+  }
+];
+
+/* Select generator by difficulty */
+function pickGenerator(level){
+  if(level === 0) return sample(easyGenerators);
+  if(level === 1) return sample(mediumGenerators);
+  return sample(hardGenerators);
+}
+
+/* Create a new unique question. Will try multiple times if a duplicate is generated. */
+function makeUniqueQuestion(level){
+  for(let attempts=0; attempts<30; attempts++){
+    const genFn = pickGenerator(level);
+    const q = genFn();
+    q.level = level;
+    const hash = qHash(q);
+    if(!usedQuestionHashes.has(hash)){
+      usedQuestionHashes.add(hash);
+      return q;
+    }
+  }
+  // fallback: allow repetition after many attempts
+  return pickGenerator(level)();
+}
+
+/* UI: load question */
+function loadQuestion(){
+  choicesLocked = false;
+  opts.forEach(o=>{ o.classList.remove('correct','wrong','timeout-correct'); o.classList.remove('disabled'); o.innerText = ''; });
+  statusText.innerText = '🤔 Thinking...';
+  timerLabel.innerText = 'Loading';
+  timerText.innerText = '';
+  timerBar.style.width = '100%';
+
+  setTimeout(()=>{
+    currentQuestion = makeUniqueQuestion(difficulty);
+    qIndex++;
+    qCounter.innerText = `${qIndex} of ${QUESTION_COUNT}`;
+    difficultyLabel.innerText = `Difficulty: ${difficultyNames[difficulty]}`;
+    // Format choices to strings consistently
+    const choices = currentQuestion.choices.map(c => typeof c === 'number' ? String(c) : c);
+    // ensure exactly 3 choices
+    const normalized = choices.slice(0,3);
+    while(normalized.length < 3) normalized.push('—');
+    // assign correct as string
+    const correct = String(currentQuestion.correct);
+    currentQuestion.correct = correct;
+    currentQuestion.choices = normalized;
+
+    questionText.innerText = currentQuestion.text;
+    statusText.innerText = 'Select an answer';
+    opts.forEach((el,i)=>{
+      el.innerText = normalized[i];
+      el.classList.remove('dim');
+      el.classList.remove('correct','wrong','timeout-correct');
+    });
+
+    startTimer();
+  }, 350); // small loading feel
+}
+
+/* Timer: 5 seconds countdown with smooth bar */
+function startTimer(){
+  clearInterval(timerInterval);
+  timerStart = performance.now();
+  timerRemaining = TIMER_SECONDS;
+  timerLabel.innerText = `${TIMER_SECONDS.toFixed(1)}s`;
+  timerText.innerText = `Time: ${TIMER_SECONDS}s`;
+  const total = TIMER_SECONDS*1000;
+  timerInterval = setInterval(()=>{
+    const elapsed = performance.now() - timerStart;
+    const left = Math.max(0, total - elapsed);
+    const pct = (left / total) * 100;
+    timerBar.style.width = `${pct}%`;
+    timerLabel.innerText = `${Math.max(0,(left/1000)).toFixed(1)}s`;
+    if(left <= 0){
+      clearInterval(timerInterval);
+      onTimeout();
+    }
+  }, 50);
+}
+
+/* Handle user selection */
+function onSelect(i){
+  if(choicesLocked) return;
+  choicesLocked = true;
+  clearInterval(timerInterval);
+  const selectedText = opts[i].innerText;
+  const correctText = String(currentQuestion.correct);
+  if(selectedText === correctText){
+    // correct
+    opts[i].classList.add('correct');
+    statusText.innerText = 'Correct!';
+    score++;
+  } else {
+    // wrong
+    opts[i].classList.add('wrong');
+    // find correct option
+    const idx = currentQuestion.choices.findIndex(c => String(c) === correctText);
+    if(idx >= 0){
+      opts[idx].classList.add('correct');
+    }
+    statusText.innerText = 'Wrong!';
+  }
+  // disable options visually
+  opts.forEach(o=>o.classList.add('disabled'));
+  // set timer bar to final state
+  timerBar.style.width = '0%';
+  timerText.innerText = '';
+  setTimeout(nextOrFinish, PAUSE_MS);
+}
+
+/* Timeout handling */
+function onTimeout(){
+  choicesLocked = true;
+  statusText.innerText = 'Time\'s up!';
+  // highlight correct in blue style
+  const correctText = String(currentQuestion.correct);
+  const idx = currentQuestion.choices.findIndex(c => String(c) === correctText);
+  if(idx >=0) opts[idx].classList.add('timeout-correct');
+  // dim others
+  opts.forEach(o=>o.classList.add('disabled'));
+  timerText.innerText = '';
+  setTimeout(nextOrFinish, PAUSE_MS);
+}
+
+/* Advance to next question or show score */
+function nextOrFinish(){
+  if(qIndex >= QUESTION_COUNT){
+    showScore();
+  } else {
+    loadQuestion();
+  }
+}
+
+/* Show final score and adjust difficulty */
+function showScore(){
+  // small transition: replace question area with score panel content
+  const panel = document.createElement('div');
+  panel.className = 'score-panel';
+  panel.innerHTML = `
+    <div class="score-big">${score}/${QUESTION_COUNT}</div>
+    <div class="score-msg">${scoreMsgs[score] || "Nice try!"}</div>
+    <div class="small">Difficulty was: ${difficultyNames[difficulty]}</div>
+    <div style="display:flex;gap:8px">
+      <button id="replayBtn" class="btn">Play Again</button>
+      <button id="keepBtn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text)">Change Difficulty</button>
+    </div>
+  `;
+  // swap content in top.question-box
+  const parent = document.querySelector('.question-box');
+  parent.innerHTML = '';
+  parent.appendChild(panel);
+
+  // adjust difficulty
+  if(score <= 1) difficulty = Math.max(0, difficulty-1);
+  else if(score >= 4) difficulty = Math.min(2, difficulty+1);
+
+  // bind replay
+  document.getElementById('replayBtn').addEventListener('click',()=>{
+    resetGame(true);
+  });
+  document.getElementById('keepBtn').addEventListener('click',()=>{
+    // show simple difficulty chooser overlay in same space
+    parent.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;padding:10px">
+        <div class="small">Choose difficulty for next round:</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" data-d="0">EASY</button>
+          <button class="btn" data-d="1">MEDIUM</button>
+          <button class="btn" data-d="2">HARD</button>
+        </div>
+      </div>
+    `;
+    parent.querySelectorAll('.btn[data-d]').forEach(b=>{
+      b.addEventListener('click',()=>{
+        difficulty = Number(b.getAttribute('data-d'));
+        resetGame(true);
+      });
+    });
+  });
+
+  // update labels outside
+  difficultyLabel.innerText = `Difficulty: ${difficultyNames[difficulty]}`;
+  qCounter.innerText = `Round complete`;
+}
+
+/* Reset game state */
+function resetGame(startImmediately=false){
+  usedQuestionHashes.clear();
+  currentQuestion = null;
+  qIndex = 0;
+  score = 0;
+  clearInterval(timerInterval);
+  // restore top question box skeleton
+  const parent = document.querySelector('.question-box');
+  parent.innerHTML = `
+    <div class="q-top">
+      <div id="statusText" class="small">Press Start to play</div>
+      <div id="timerText" class="small">—</div>
+    </div>
+    <div id="questionText" class="question">Ready for a new round?</div>
+    <div>
+      <div class="timer-wrap" aria-hidden="true">
+        <div id="timerBar" class="timer-bar" style="width:100%"></div>
+      </div>
+      <div id="timerLabel" class="timer-text">Ready</div>
+    </div>
+  `;
+  // rebind references (since innerHTML replaced some nodes)
+  bindAfterReset();
+  difficultyLabel.innerText = `Difficulty: ${difficultyNames[difficulty]}`;
+  qCounter.innerText = `0 of ${QUESTION_COUNT}`;
+  opts.forEach(o=>{ o.classList.add('dim'); o.classList.remove('correct','wrong','timeout-correct','disabled'); o.innerText=''; });
+  if(startImmediately) {
+    setTimeout(()=>{ startRound(); }, 250);
+  }
+}
+
+/* Rebind UI references after innerHTML rewrites */
+function bindAfterReset(){
+  // top replacements
+  statusText = document.getElementById('statusText');
+  questionText = document.getElementById('questionText');
+  timerBar = document.getElementById('timerBar');
+  timerLabel = document.getElementById('timerLabel');
+  timerText = document.getElementById('timerText');
+  // options are stable nodes; reassign opts if needed
+}
+
+/* Start a quiz round */
+function startRound(){
+  startBtn.disabled = true;
+  startBtn.style.opacity = 0.8;
+  qIndex = 0;
+  score = 0;
+  usedQuestionHashes.clear();
+  difficultyLabel.innerText = `Difficulty: ${difficultyNames[difficulty]}`;
+  qCounter.innerText = `0 of ${QUESTION_COUNT}`;
+  opts.forEach(o=>o.classList.add('dim'));
+  loadQuestion();
+}
+
+/* Event listeners for option clicks & keyboard accessibility */
+opts.forEach((el,i)=>{
+  el.addEventListener('click', ()=> onSelect(i) );
+  el.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onSelect(i) }
+  });
+});
+
+/* Start button */
+startBtn.addEventListener('click', ()=>{
+  // if mid-game, restart anyway
+  resetGame(true);
+  startRound();
+});
+
+/* Keyboard shortcuts: 1,2,3 to pick choices */
+document.addEventListener('keydown', (e)=>{
+  if(e.key === '1') onSelect(0);
+  if(e.key === '2') onSelect(1);
+  if(e.key === '3') onSelect(2);
+});
+
+/* Initialize UI */
+(function init(){
+  difficulty = 1; // medium start
+  difficultyLabel.innerText = `Difficulty: ${difficultyNames[difficulty]}`;
+  qCounter.innerText = `0 of ${QUESTION_COUNT}`;
+  opts.forEach((o,i)=> { o.innerText = ['A','B','C'][i]; o.classList.add('dim'); });
+  statusText.innerText = 'Press Start to play';
+  timerLabel.innerText = '—';
+  timerText.innerText = '';
+})();
+</script>
+</body>
+</html> 

@@ -1,0 +1,189 @@
+---
+alwaysApply: true
+---
+# SaveMyLinks Style Rules
+
+## Core Principles
+
+### Dark Mode Only
+- **Never use light mode classes** or `dark:` prefixes
+- This app is dark mode only
+- All styling should work in the dark theme context
+
+### CSS Best Practices
+- **Never use `!important`** in any styles
+- Use **Tailwind utilities** for layout, spacing, and most styling
+- Use **custom utilities/components** from `index.css` for project-wide patterns
+- Check **specificity and order** if styles aren't applying correctly
+
+## Component Style Patterns
+
+### Buttons
+```css
+/* Primary Button - Main actions (Save Link, Sign In) */
+.btn.btn-primary
+
+/* Secondary Button - Secondary actions (Cancel, Close) */
+.btn.btn-secondary
+```
+
+### Form Elements
+```css
+/* Input fields (Search, Add Link, Auth forms) */
+.bg-input.border.border-input-border.text-main.placeholder-muted.text-base
+
+/* Input labels */
+.block.text-base.font-bold.font-sans.text-main.mb-2
+```
+
+### Cards and Containers
+```css
+/* Standard card */
+.card
+
+/* Dark card variant */
+.card-dark
+
+/* Modal card */
+.card.p-8.max-w-md
+```
+
+### Typography
+```css
+/* Headings */
+.heading-1  /* Main page titles */
+.heading-2  /* Section titles, modal titles */
+.heading-3  /* Card titles, smaller section titles */
+.heading-4  /* LinkCard title, Add Link form */
+
+/* Body text */
+.body       /* Paragraphs, card content */
+.body-sm    /* Muted text, URLs, notes */
+```
+
+### Layout and Spacing
+```css
+/* Modal overlay */
+.bg-black/40
+
+/* Empty state container */
+.flex.flex-col.items-center.justify-center.text-main
+
+/* Cloud sync status */
+.flex.items-center.gap-2.text-main
+
+/* Sidebar menu */
+.bg-[#232946].border-r.border-[#334155].text-main
+```
+
+### Special Patterns
+
+#### Overlay Action Button Padding
+When using absolutely positioned overlay buttons (like three dots menu):
+- Add `pr-12` (or matching button width) to content containers
+- Prevents text overlap with overlay buttons
+- Example: title rows with action menus
+
+#### Section Anchor Offset
+For anchor sections with fixed headers:
+- Add `section-anchor` class to anchor sections
+- Ensures correct scroll position on both desktop and mobile
+- Used in welcome.html and pages with fixed headers
+
+## Color System
+
+### Primary Colors
+- Primary: `#38bdf8` (blue)
+- Background: `#0f172a` (dark blue)
+- Card background: `rgba(30,41,59,0.85)`
+- Border: `#232946`, `#334155`
+
+### Text Colors
+- Main text: `text-main`
+- Muted text: `text-muted`
+- Chip text: `text-chip`
+
+### Background Colors
+- Input: `bg-input`
+- Chip: `bg-chip`
+- Card hover: `bg-card-hover`
+
+## Layout Guidelines
+
+### Containers
+- Use `max-w-4xl mx-auto` for main content containers
+- Use `p-8` for main page padding
+- Use `px-4` for responsive horizontal padding
+
+### Spacing
+- Use Tailwind spacing scale consistently
+- Common patterns: `gap-4`, `mb-8`, `p-6`, `py-3`
+
+### Responsive Design
+- Mobile-first approach
+- Use responsive prefixes (`sm:`, `md:`, `lg:`) when needed
+- Test on both desktop and mobile
+
+## Component-Specific Rules
+
+### Tables
+```css
+/* Demo table styling */
+.rounded-xl.shadow.bg-[rgba(30,41,59,0.85)].border.border-[#232946]
+```
+
+### Tags/Chips
+```css
+/* Tag styling */
+.inline-flex.items-center.gap-1.px-2.py-1.rounded-full.text-xs.bg-chip.text-chip
+```
+
+### Images
+- Store in `public/images/` directory
+- Use `object-contain` for logos and icons
+- Use `rounded-xl` for logo containers
+- Background: `bg-[#181C2A]` for logo containers
+
+## Style Review Checklist
+
+Before committing any style changes, verify:
+
+1. ✅ Only dark mode classes/utilities used
+2. ✅ All custom utilities/components from `index.css`
+3. ✅ No use of `!important`
+4. ✅ All headings, buttons, cards, and inputs consistent with reference
+5. ✅ All new styles documented in StyleDemo
+6. ✅ Style cascade and specificity correct
+7. ✅ UI visually consistent across all pages and modals
+8. ✅ Overlay action buttons have proper padding
+9. ✅ Anchor sections use `section-anchor` class
+
+## File Organization
+
+### CSS Files
+- `index.css` - Main stylesheet with custom utilities
+- Component-specific styles should be in component files
+- Use CSS modules or styled-components for complex styling
+
+### Image Assets
+- `public/images/logo.png` - Main logo
+- `public/images/sml_whitelogo.png` - White logo variant
+- `public/images/sml_darklogo.png` - Dark logo variant
+
+## Common Patterns to Avoid
+
+- ❌ Light mode classes (`bg-white`, `text-black`)
+- ❌ `!important` declarations
+- ❌ Inline styles (except for demo purposes)
+- ❌ Hardcoded colors (use design system colors)
+- ❌ Inconsistent spacing or typography
+- ❌ Missing responsive considerations
+
+## Adding New Styles
+
+1. Add new utilities to `index.css`
+2. Document in StyleDemo component
+3. Follow existing naming conventions
+4. Test across different screen sizes
+5. Ensure dark mode compatibility
+6. Update this style guide if needed
