@@ -52,7 +52,7 @@ Without a key, Generate returns an error; you can still paste JSON and Save to e
 
 Optional: wrap the site with Cloudflare Access. Optional: put [AI Gateway](https://developers.cloudflare.com/ai-gateway/) in front of Gemini later for logs and caching.
 
-Change the model with `vars.GEMINI_MODEL` in `wrangler.jsonc` (default `gemini-2.5-flash`).
+Change the model with `vars.GEMINI_MODEL` in `wrangler.jsonc` (default `gemini-3.8-flash`).
 
 ## Add a solution
 

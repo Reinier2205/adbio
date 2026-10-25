@@ -52,7 +52,7 @@ async function handleGenerate(request, env) {
     }, 503);
   }
 
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const model = env.GEMINI_MODEL || 'gemini-3.8-flash';
   const prompt = fillPrompt(solution.prompt, text);
 
   try {
