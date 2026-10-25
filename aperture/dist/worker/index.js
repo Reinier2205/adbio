@@ -154,7 +154,7 @@ async function handleGenerate(request, env) {
       error: "GEMINI_API_KEY is not set. Add it to .dev.vars locally or run wrangler secret put GEMINI_API_KEY."
     }, 503);
   }
-  const model = env.GEMINI_MODEL || "gemini-3.8-flash";
+  const model = env.GEMINI_MODEL || "gemini-2.5-flash";
   const prompt = fillPrompt(solution.prompt, text);
   try {
     const output = await generateWithGemini({
