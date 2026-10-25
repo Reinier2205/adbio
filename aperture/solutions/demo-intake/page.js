@@ -1,18 +1,38 @@
 import { bindInternalLinks, escapeHtml, layout, pretty } from '../../src/ui.js';
 
 const MAX_BYTES = 3_500_000;
+const MAX_EDGE = 1280;
+
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not read that image.'));
+    };
+    image.src = url;
+  });
+}
 
 async function fileToPayload(file) {
   if (!file?.type.startsWith('image/')) throw new Error('Please choose an image file.');
   if (file.size > MAX_BYTES) throw new Error('Image is too large. Use a smaller screenshot.');
-  const dataUrl = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Could not read that image.'));
-    reader.readAsDataURL(file);
-  });
-  const comma = dataUrl.indexOf(',');
-  return { mimeType: file.type, imageBase64: dataUrl.slice(comma + 1), preview: dataUrl };
+  const image = await loadImage(file);
+  const scale = Math.min(1, MAX_EDGE / Math.max(image.width, image.height));
+  const width = Math.max(1, Math.round(image.width * scale));
+  const height = Math.max(1, Math.round(image.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(image, 0, 0, width, height);
+  const preview = canvas.toDataURL('image/jpeg', 0.72);
+  return { mimeType: 'image/jpeg', imageBase64: preview.slice(preview.indexOf(',') + 1), preview };
 }
 
 function titleFrom(payload) {
@@ -151,7 +171,7 @@ export function render(root, { api, toast, navigate, solution }) {
     if (!text && !pendingImage) return toast('Add some text or an image first.');
     const button = root.querySelector('#generateBtn');
     button.disabled = true;
-    button.textContent = 'Generating…';
+    button.textContent = pendingImage ? 'Generating… (image can take ~20s)' : 'Generating…';
     try {
       const result = await api.generate({
         solutionId: solution.id,

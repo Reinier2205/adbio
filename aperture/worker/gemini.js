@@ -27,7 +27,11 @@ export function toGeminiSchema(node) {
 
 function extractText(data) {
   const parts = data?.candidates?.[0]?.content?.parts || [];
-  return parts.map((part) => part.text || '').join('').trim();
+  return parts
+    .filter((part) => part.text && !part.thought)
+    .map((part) => part.text)
+    .join('')
+    .trim();
 }
 
 export async function generateWithGemini({ apiKey, model, prompt, schema, imageBase64, mimeType }) {
@@ -42,20 +46,31 @@ export async function generateWithGemini({ apiKey, model, prompt, schema, imageB
   }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
-    },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: toGeminiSchema(schema),
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
       },
-    }),
-  });
+      signal: AbortSignal.timeout(40_000),
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: toGeminiSchema(schema),
+          maxOutputTokens: 2048,
+          thinkingConfig: { thinkingLevel: 'low' },
+        },
+      }),
+    });
+  } catch (err) {
+    if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+      throw new Error('Gemini timed out. Try a smaller image, or generate from text only.');
+    }
+    throw err;
+  }
 
   const raw = await res.text();
   let data;

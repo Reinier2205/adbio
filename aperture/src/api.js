@@ -8,11 +8,20 @@ async function readError(res) {
 }
 
 export async function generate({ solutionId, text, imageBase64, mimeType }) {
-  const res = await fetch('/api/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ solutionId, text, imageBase64, mimeType }),
-  });
+  let res;
+  try {
+    res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(50_000),
+      body: JSON.stringify({ solutionId, text, imageBase64, mimeType }),
+    });
+  } catch (err) {
+    if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+      throw new Error('Generate timed out. Try a smaller image, or text only.');
+    }
+    throw err;
+  }
   if (!res.ok) throw new Error(await readError(res));
   return res.json();
 }
