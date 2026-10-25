@@ -1,18 +1,60 @@
-const id = "demo-intake";
-const title = "Demo intake";
-const description = "Paste text and/or drop an image. Gemini extracts a title, summary, date, and list of items. Review the JSON, then save.";
-const inputs = "text + image";
+const id$1 = "demo-intake";
+const title$1 = "Demo intake";
+const description$1 = "Paste text and/or drop an image. Gemini extracts a title, summary, date, and list of items. Review the JSON, then save.";
+const inputs$1 = "text + image";
 const demoManifest = {
+  id: id$1,
+  title: title$1,
+  description: description$1,
+  inputs: inputs$1
+};
+const demoPrompt = 'You extract structured notes from messy human input.\r\n\r\nRules:\r\n- Use only what is present in the text and/or image. Do not invent facts.\r\n- If a field is unknown, use an empty string or an empty array.\r\n- Dates must be ISO 8601 (YYYY-MM-DD) when you can read a date; otherwise use "".\r\n- items should be concrete extracted bullets, not a rewrite of the whole input.\r\n- title should be short (under 80 characters).\r\n- summary should be 1–3 sentences.\r\n\r\nInput text:\r\n{{input_text}}\r\n';
+const type$1 = "object";
+const properties$1 = { "title": { "type": "string", "description": "Short title for this capture" }, "summary": { "type": "string", "description": "One to three sentence summary" }, "date": { "type": "string", "description": "ISO date YYYY-MM-DD if present, else empty" }, "items": { "type": "array", "items": { "type": "string" }, "description": "Concrete extracted bullets" } };
+const required$1 = ["title", "summary", "date", "items"];
+const demoSchema = {
+  type: type$1,
+  properties: properties$1,
+  required: required$1
+};
+const id = "song-creator";
+const title = "Song Creator";
+const description = "Paste a Meta AI song analysis and your creative direction — get a Suno-ready song design back.";
+const inputs = "text";
+const songManifest = {
   id,
   title,
   description,
   inputs
 };
-const demoPrompt = 'You extract structured notes from messy human input.\r\n\r\nRules:\r\n- Use only what is present in the text and/or image. Do not invent facts.\r\n- If a field is unknown, use an empty string or an empty array.\r\n- Dates must be ISO 8601 (YYYY-MM-DD) when you can read a date; otherwise use "".\r\n- items should be concrete extracted bullets, not a rewrite of the whole input.\r\n- title should be short (under 80 characters).\r\n- summary should be 1–3 sentences.\r\n\r\nInput text:\r\n{{input_text}}\r\n';
+const songPrompt = `You are a music producer and Suno AI expert. Your job is to analyse a song description and help the user create their own original song inspired by it.
+
+The input contains two parts:
+1. A song analysis (from Meta AI or similar) describing an existing song
+2. The user's creative direction for their own new song
+
+Rules:
+- Extract the original song's details from the analysis only. Do not invent facts.
+- If a field is unknown, use an empty string or empty array.
+- For original_style: write Suno-compatible style tags (e.g. "afrobeats, upbeat, guitar, 100bpm, warm vocals").
+- For new_style: adapt the original style tags to fit the user's creative direction. Keep what works, change what doesn't.
+- For new_lyrics_prompt: write a vivid, concrete Suno lyrics prompt (3-5 sentences) that captures the user's theme and the musical vibe of the original. Make it feel personal and specific, not generic.
+- For new_title: suggest a catchy, original title that fits the user's theme.
+
+Output fields:
+- original_title: the title of the original song
+- original_style: Suno style tags for the original
+- original_lyrics_themes: bullet list of key themes/hooks from the original lyrics
+- new_title: your suggested title for the user's new song
+- new_style: Suno style prompt for the new song
+- new_lyrics_prompt: detailed Suno lyrics prompt for the new song
+
+{{input_text}}
+`;
 const type = "object";
-const properties = { "title": { "type": "string", "description": "Short title for this capture" }, "summary": { "type": "string", "description": "One to three sentence summary" }, "date": { "type": "string", "description": "ISO date YYYY-MM-DD if present, else empty" }, "items": { "type": "array", "items": { "type": "string" }, "description": "Concrete extracted bullets" } };
-const required = ["title", "summary", "date", "items"];
-const demoSchema = {
+const properties = { "original_title": { "type": "string", "description": "Title of the original song" }, "original_style": { "type": "string", "description": "Suno style tags describing the original song (genre, mood, instruments, tempo)" }, "original_lyrics_themes": { "type": "array", "items": { "type": "string" }, "description": "Key lyrical themes and hooks from the original song" }, "new_title": { "type": "string", "description": "Suggested title for the new song" }, "new_style": { "type": "string", "description": "Suno style prompt for the new song, blending the original style with the user's creative direction" }, "new_lyrics_prompt": { "type": "string", "description": "A detailed Suno lyrics prompt for the new song, incorporating the user's theme and the original's vibe" } };
+const required = ["original_title", "original_style", "original_lyrics_themes", "new_title", "new_style", "new_lyrics_prompt"];
+const songSchema = {
   type,
   properties,
   required
@@ -22,6 +64,11 @@ const catalog = {
     manifest: demoManifest,
     prompt: demoPrompt,
     schema: demoSchema
+  },
+  [songManifest.id]: {
+    manifest: songManifest,
+    prompt: songPrompt,
+    schema: songSchema
   }
 };
 function getSolution(id2) {
@@ -54,7 +101,7 @@ function toGeminiSchema(node) {
 }
 function extractText(data) {
   const parts = data?.candidates?.[0]?.content?.parts || [];
-  return parts.filter((part) => part.text && !part.thought).map((part) => part.text).join("").trim();
+  return parts.map((part) => part.text || "").join("").trim();
 }
 async function generateWithGemini({ apiKey, model, prompt, schema, imageBase64, mimeType }) {
   const parts = [{ text: prompt }];
@@ -67,31 +114,22 @@ async function generateWithGemini({ apiKey, model, prompt, schema, imageBase64, 
     });
   }
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-  let res;
-  try {
-    res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey
-      },
-      signal: AbortSignal.timeout(9e4),
-      body: JSON.stringify({
-        contents: [{ role: "user", parts }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: toGeminiSchema(schema),
-          maxOutputTokens: 2048,
-          thinkingConfig: { thinkingLevel: "low" }
-        }
-      })
-    });
-  } catch (err) {
-    if (err?.name === "TimeoutError" || err?.name === "AbortError") {
-      throw new Error("Gemini timed out. Try a smaller image, or generate from text only.");
-    }
-    throw err;
-  }
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey
+    },
+    signal: AbortSignal.timeout(45e3),
+    body: JSON.stringify({
+      contents: [{ role: "user", parts }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: toGeminiSchema(schema),
+        maxOutputTokens: 2048
+      }
+    })
+  });
   const raw = await res.text();
   let data;
   try {
@@ -154,7 +192,7 @@ async function handleGenerate(request, env) {
       error: "GEMINI_API_KEY is not set. Add it to .dev.vars locally or run wrangler secret put GEMINI_API_KEY."
     }, 503);
   }
-  const model = env.GEMINI_MODEL || "gemini-3.8-flash";
+  const model = env.GEMINI_MODEL || "gemini-2.5-flash";
   const prompt = fillPrompt(solution.prompt, text);
   try {
     const output = await generateWithGemini({
