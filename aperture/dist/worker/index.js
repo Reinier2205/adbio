@@ -27,7 +27,7 @@ const songManifest = {
   description,
   inputs
 };
-const songPrompt = `You are a professional songwriter and Suno AI expert. Your job is to analyse a song description and write complete, ready-to-use lyrics for a new original song inspired by it.
+const songPrompt = `\uFEFFYou are a professional songwriter and Suno AI expert. Your job is to analyse a song description and write complete, ready-to-use lyrics for a new original song inspired by it.
 
 The input contains three parts:
 1. A song analysis (from Meta AI or similar) describing an existing song
@@ -52,7 +52,7 @@ Output fields:
 - new_style: Suno style tags for the new song
 - new_lyrics: the complete lyrics with Suno section tags
 
-{{input_text}}
+{{input_text}}\r
 `;
 const type = "object";
 const properties = { "original_title": { "type": "string", "description": "Title of the original song" }, "original_style": { "type": "string", "description": "Suno style tags describing the original song (genre, mood, instruments, tempo)" }, "original_lyrics_themes": { "type": "array", "items": { "type": "string" }, "description": "Key lyrical themes and hooks from the original song" }, "new_title": { "type": "string", "description": "Suggested title for the new song" }, "new_style": { "type": "string", "description": "Suno style prompt for the new song, blending the original style with the user's creative direction" }, "new_lyrics": { "type": "string", "description": "Complete song lyrics with Suno section tags such as [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro]. Each section on its own line followed by the lyrics for that section." } };
@@ -245,6 +245,27 @@ async function deleteRecord(id2, env) {
   await env.DB.prepare(`DELETE FROM records WHERE id = ?1`).bind(Number(id2)).run();
   return new Response(null, { status: 204 });
 }
+async function updateRecord(id2, request, env) {
+  if (!id2 || Number.isNaN(Number(id2))) return json({ error: "Invalid record id" }, 400);
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object") return json({ error: "Invalid JSON body" }, 400);
+  const fields = [];
+  const binds = [];
+  if (body.title != null) {
+    fields.push("title = ?" + (binds.length + 1));
+    binds.push(String(body.title));
+  }
+  if (body.payload != null) {
+    fields.push("payload = ?" + (binds.length + 1));
+    binds.push(JSON.stringify(body.payload));
+  }
+  if (!fields.length) return json({ error: "Nothing to update" }, 400);
+  binds.push(Number(id2));
+  await env.DB.prepare(`UPDATE records SET ${fields.join(", ")} WHERE id = ?${binds.length}`).bind(...binds).run();
+  const row = await env.DB.prepare("SELECT id, solution_id, created_at, title, payload FROM records WHERE id = ?1").bind(Number(id2)).first();
+  if (!row) return json({ error: "Record not found" }, 404);
+  return json(parsePayload(row));
+}
 const index = {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -265,6 +286,10 @@ const index = {
       const deleted = path.match(/^\/api\/records\/([^/]+)$/);
       if (deleted && request.method === "DELETE") {
         return await deleteRecord(deleted[1], env);
+      }
+      const patched = path.match(/^\/api\/records\/([^/]+)$/);
+      if (patched && request.method === "PATCH") {
+        return await updateRecord(patched[1], request, env);
       }
       if (path.startsWith("/api/")) {
         return json({ error: "Not found" }, 404);

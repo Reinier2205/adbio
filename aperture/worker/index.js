@@ -1,4 +1,4 @@
-import { getSolution } from './catalog.js';
+﻿import { getSolution } from './catalog.js';
 import { generateWithGemini } from './gemini.js';
 
 const MAX_IMAGE_CHARS = 5_500_000;
@@ -112,6 +112,27 @@ async function deleteRecord(id, env) {
   return new Response(null, { status: 204 });
 }
 
+async function updateRecord(id, request, env) {
+  if (!id || Number.isNaN(Number(id))) return json({ error: 'Invalid record id' }, 400);
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== 'object') return json({ error: 'Invalid JSON body' }, 400);
+
+  const fields = [];
+  const binds = [];
+  if (body.title != null) { fields.push('title = ?' + (binds.length + 1)); binds.push(String(body.title)); }
+  if (body.payload != null) { fields.push('payload = ?' + (binds.length + 1)); binds.push(JSON.stringify(body.payload)); }
+  if (!fields.length) return json({ error: 'Nothing to update' }, 400);
+
+  binds.push(Number(id));
+  await env.DB.prepare(`UPDATE records SET ${fields.join(', ')} WHERE id = ?${binds.length}`)
+    .bind(...binds).run();
+
+  const row = await env.DB.prepare('SELECT id, solution_id, created_at, title, payload FROM records WHERE id = ?1')
+    .bind(Number(id)).first();
+  if (!row) return json({ error: 'Record not found' }, 404);
+  return json(parsePayload(row));
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -137,6 +158,11 @@ export default {
       const deleted = path.match(/^\/api\/records\/([^/]+)$/);
       if (deleted && request.method === 'DELETE') {
         return await deleteRecord(deleted[1], env);
+      }
+
+      const patched = path.match(/^\/api\/records\/([^/]+)$/);
+      if (patched && request.method === 'PATCH') {
+        return await updateRecord(patched[1], request, env);
       }
 
       if (path.startsWith('/api/')) {

@@ -1,4 +1,4 @@
-async function readError(res) {
+﻿async function readError(res) {
   try {
     const data = await res.json();
     return data.error || `HTTP ${res.status}`;
@@ -28,6 +28,16 @@ export async function saveRecord({ solutionId, title, payload }) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ solutionId, title, payload }),
+  });
+  if (!res.ok) throw new Error(await readError(res));
+  return res.json();
+}
+
+export async function updateRecord(id, { title, payload }) {
+  const res = await fetch(`/api/records/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, payload }),
   });
   if (!res.ok) throw new Error(await readError(res));
   return res.json();
