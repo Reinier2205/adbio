@@ -5,262 +5,211 @@
 async function renderGearAuditPage() {
     const user = auth.getCurrentUser();
     const container = document.getElementById('page-container');
-    
+
     container.innerHTML = `
-        <div class="page-header">
-            <h1>Gear audit</h1>
-            <p class="subtitle">Track your equipment, especially boot break-in</p>
-        </div>
-        
-        <div class="gear-highlight">
-            <div class="gear-highlight-icon">🥾</div>
-            <div class="gear-highlight-content">
-                <h2>Boot Break-in Status</h2>
-                <div id="boot-status">
-                    <div class="loading">Loading...</div>
-                </div>
+        <div class="lp-hero">
+            <div>
+                <h1>Gear audit</h1>
+                <p class="lp-hero-sub">Track your equipment &mdash; especially boot break-in progress</p>
             </div>
         </div>
-        
-        <div class="content-grid">
-            <div class="card">
-                <div class="card-header">
-                    <h2>Add Gear Item</h2>
-                </div>
-                <div class="card-body">
-                    <form id="gear-form" class="form">
-                        <div class="form-group">
-                            <label for="item-type">Item Type</label>
-                            <select id="item-type" class="input-field" required>
-                                <option value="boots">🥾 Boots</option>
-                                <option value="backpack">🎒 Backpack</option>
-                                <option value="poles">🏔️ Trekking Poles</option>
-                                <option value="jacket">🧥 Rain Jacket</option>
-                                <option value="sleeping-bag">💤 Sleeping Bag</option>
-                                <option value="other">📦 Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="item-name">Item Name / Brand</label>
-                            <input type="text" id="item-name" class="input-field" placeholder="e.g., Salomon Quest 4 GTX" required>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="comfort-rating">Comfort Rating</label>
-                                <select id="comfort-rating" class="input-field">
-                                    <option value="">Not rated yet</option>
-                                    <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
-                                    <option value="4">⭐⭐⭐⭐ Good</option>
-                                    <option value="3">⭐⭐⭐ Okay</option>
-                                    <option value="2">⭐⭐ Poor</option>
-                                    <option value="1">⭐ Very Poor</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="first-used">First Used</label>
-                                <input type="date" id="first-used" class="input-field">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="gear-notes">Notes</label>
-                            <textarea id="gear-notes" class="input-field" rows="2" placeholder="Any issues, adjustments, or observations..."></textarea>
-                        </div>
-                        
-                        <button type="submit" class="btn-primary">Add Gear Item</button>
-                    </form>
+
+        <section class="ov-section">
+            <h2 class="ov-section-title">Boot break-in</h2>
+            <div id="ga-boot-status"><div class="ov-loading">Loading...</div></div>
+        </section>
+
+        <div class="lp-layout">
+            <!-- Add gear form -->
+            <div class="lp-form-col">
+                <div class="lp-card">
+                    <h2 class="lp-card-title">Add gear item</h2>
+
+                    <div class="lp-field-label">Item type</div>
+                    <div class="lp-type-grid ga-type-grid" id="ga-type-grid">
+                        <button type="button" class="lp-type-tile lp-selected" data-type="boots">
+                            <span class="lp-tile-icon ga-dot-boots"></span><span>Boots</span>
+                        </button>
+                        <button type="button" class="lp-type-tile" data-type="backpack">
+                            <span class="lp-tile-icon ga-dot-backpack"></span><span>Pack</span>
+                        </button>
+                        <button type="button" class="lp-type-tile" data-type="poles">
+                            <span class="lp-tile-icon ga-dot-poles"></span><span>Poles</span>
+                        </button>
+                        <button type="button" class="lp-type-tile" data-type="jacket">
+                            <span class="lp-tile-icon ga-dot-jacket"></span><span>Jacket</span>
+                        </button>
+                        <button type="button" class="lp-type-tile" data-type="other">
+                            <span class="lp-tile-icon ga-dot-other"></span><span>Other</span>
+                        </button>
+                    </div>
+
+                    <div class="lp-field-label">Name / brand</div>
+                    <input type="text" id="ga-name" class="lp-date-input" placeholder="e.g. Salomon Quest 4 GTX">
+
+                    <div class="lp-field-label">Comfort rating</div>
+                    <div class="lp-toggle-row" id="ga-rating-row">
+                        <button type="button" class="lp-toggle" data-rating="1">1</button>
+                        <button type="button" class="lp-toggle" data-rating="2">2</button>
+                        <button type="button" class="lp-toggle" data-rating="3">3</button>
+                        <button type="button" class="lp-toggle" data-rating="4">4</button>
+                        <button type="button" class="lp-toggle" data-rating="5">5 &mdash; Best</button>
+                    </div>
+
+                    <div class="lp-field-label">First used <span class="lp-optional">(optional)</span></div>
+                    <input type="date" id="ga-first-used" class="lp-date-input">
+
+                    <div class="lp-field-label">Notes <span class="lp-optional">(optional)</span></div>
+                    <textarea id="ga-notes" class="lp-notes" rows="2" placeholder="Any issues, adjustments, or observations..."></textarea>
+
+                    <button type="button" id="ga-submit" class="lp-submit-btn">Add gear item</button>
                 </div>
             </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h2>Your Gear List</h2>
-                </div>
-                <div class="card-body" id="gear-list">
-                    <div class="loading">Loading...</div>
-                </div>
+
+            <!-- Gear list -->
+            <div class="lp-history-col">
+                <h2 class="lp-card-title" style="margin-bottom:var(--spacing-md)">Your gear</h2>
+                <div id="ga-gear-list"><div class="ov-loading">Loading...</div></div>
             </div>
         </div>
-        
-        <div class="card">
-            <div class="card-header">
-                <h2>Gear Preparation Tips</h2>
+
+        <section class="ov-section" style="margin-top:var(--spacing-xl)">
+            <h2 class="ov-section-title">Gear tips</h2>
+            <div class="tp-guidelines-grid">
+                ${[
+                    ['Boots: 100 km minimum',  'Fully break in your boots before the Camino. 100 km of walking prevents blisters and ensures comfort.'],
+                    ['Pack weight: 10% rule',  'Your full pack should weigh no more than 10% of your body weight. Practice with full weight in the final 2 months.'],
+                    ['Socks matter',           'Invest in quality merino wool hiking socks. Test them during training to find what works for your feet.'],
+                    ['Trekking poles',         'Poles reduce knee strain and improve stability on descents. Practice with them during training.'],
+                ].map(([t, d]) => `<div class="tp-guideline"><div class="tp-guideline-title">${t}</div><p class="tp-guideline-desc">${d}</p></div>`).join('')}
             </div>
-            <div class="card-body">
-                <div class="tips-grid">
-                    <div class="tip-card">
-                        <div class="tip-icon">🥾</div>
-                        <h3>Boots: 100km Minimum</h3>
-                        <p>Your boots must be fully broken in before the Camino. Aim for at least 100km of walking to prevent blisters and ensure comfort.</p>
-                    </div>
-                    
-                    <div class="tip-card">
-                        <div class="tip-icon">🎒</div>
-                        <h3>Pack Weight: 10% Rule</h3>
-                        <p>Your full pack should weigh no more than 10% of your body weight. Practice with full weight during the final 2 months.</p>
-                    </div>
-                    
-                    <div class="tip-card">
-                        <div class="tip-icon">🧦</div>
-                        <h3>Socks Matter</h3>
-                        <p>Invest in quality merino wool hiking socks. Test them during training to find what works for your feet.</p>
-                    </div>
-                    
-                    <div class="tip-card">
-                        <div class="tip-icon">🏔️</div>
-                        <h3>Trekking Poles</h3>
-                        <p>Practice with poles during training. They reduce knee strain and improve stability on descents.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </section>
     `;
-    
-    // Handle form submission
-    const form = document.getElementById('gear-form');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await handleGearSubmit(user);
+
+    // Type tiles
+    let selectedGearType = 'boots';
+    document.getElementById('ga-type-grid').addEventListener('click', e => {
+        const tile = e.target.closest('.lp-type-tile');
+        if (!tile) return;
+        document.querySelectorAll('#ga-type-grid .lp-type-tile').forEach(t => t.classList.remove('lp-selected'));
+        tile.classList.add('lp-selected');
+        selectedGearType = tile.dataset.type;
     });
-    
-    // Load gear
-    await loadGear(user);
+
+    // Rating toggles (single-select)
+    let selectedRating = null;
+    document.getElementById('ga-rating-row').addEventListener('click', e => {
+        const btn = e.target.closest('[data-rating]');
+        if (!btn) return;
+        document.querySelectorAll('#ga-rating-row .lp-toggle').forEach(b => b.classList.remove('lp-toggle-on'));
+        btn.classList.add('lp-toggle-on');
+        selectedRating = parseInt(btn.dataset.rating);
+    });
+
+    // Submit
+    document.getElementById('ga-submit').addEventListener('click', async () => {
+        await handleGASubmit(user, () => selectedGearType, () => selectedRating);
+    });
+
+    await loadGAGear(user);
 }
 
-async function handleGearSubmit(user) {
-    const submitBtn = document.querySelector('#gear-form button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Adding...';
-    
+async function handleGASubmit(user, getType, getRating) {
+    const btn = document.getElementById('ga-submit');
+    const name = document.getElementById('ga-name').value.trim();
+    if (!name) { alert('Please enter an item name.'); return; }
+
+    btn.disabled = true; btn.textContent = 'Adding...';
     try {
-        const gear = {
-            item_type: document.getElementById('item-type').value,
-            item_name: document.getElementById('item-name').value,
-            comfort_rating: document.getElementById('comfort-rating').value ? parseInt(document.getElementById('comfort-rating').value) : null,
-            first_used: document.getElementById('first-used').value || null,
-            notes: document.getElementById('gear-notes').value || null,
-            total_km: 0,
-            is_trail_ready: false
-        };
-        
-        await api.createGear(gear);
-        
-        // Reset form
-        document.getElementById('gear-form').reset();
-        
-        // Reload gear
-        await loadGear(user);
-        
-        alert('Gear item added successfully! 🎉');
-        
-    } catch (error) {
-        console.error('Error adding gear:', error);
-        alert('Failed to add gear item. Please try again.');
+        await api.createGear({
+            item_type:      getType(),
+            item_name:      name,
+            comfort_rating: getRating(),
+            first_used:     document.getElementById('ga-first-used').value || null,
+            notes:          document.getElementById('ga-notes').value || null,
+            total_km:       0,
+            is_trail_ready: false,
+        });
+        document.getElementById('ga-name').value = '';
+        document.getElementById('ga-first-used').value = '';
+        document.getElementById('ga-notes').value = '';
+        document.querySelectorAll('#ga-rating-row .lp-toggle').forEach(b => b.classList.remove('lp-toggle-on'));
+        await loadGAGear(user);
+    } catch (e) {
+        console.error(e);
+        alert('Could not add gear item.');
     } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Add Gear Item';
+        btn.disabled = false; btn.textContent = 'Add gear item';
     }
 }
 
-async function loadGear(user) {
+async function loadGAGear(user) {
     try {
         const gear = await api.getGear(user.id);
-        
-        // Update boot status
-        const boots = gear.filter(item => item.item_type === 'boots');
-        const bootStatusEl = document.getElementById('boot-status');
-        
+
+        // Boot progress bar
+        const boots = gear.filter(g => g.item_type === 'boots');
+        const bootEl = document.getElementById('ga-boot-status');
         if (boots.length === 0) {
-            bootStatusEl.innerHTML = `
-                <div class="boot-status-empty">
-                    <p>No boots tracked yet. Add your Camino boots above!</p>
-                </div>
-            `;
+            bootEl.innerHTML = '<div class="ov-empty"><p>No boots tracked yet. Add your Camino boots below.</p></div>';
         } else {
-            const boot = boots[0];
-            const progress = Math.min((boot.total_km / CONFIG.BOOT_READY_KM) * 100, 100);
-            const isReady = boot.total_km >= CONFIG.BOOT_READY_KM;
-            
-            bootStatusEl.innerHTML = `
-                <div class="boot-progress">
-                    <div class="boot-stats">
-                        <div class="boot-stat">
-                            <div class="boot-stat-value">${boot.total_km.toFixed(1)} km</div>
-                            <div class="boot-stat-label">Distance walked</div>
-                        </div>
-                        <div class="boot-stat">
-                            <div class="boot-stat-value">${(CONFIG.BOOT_READY_KM - boot.total_km).toFixed(1)} km</div>
-                            <div class="boot-stat-label">Until trail-ready</div>
-                        </div>
+            const b = boots[0];
+            const pct = Math.min((b.total_km / CONFIG.BOOT_READY_KM) * 100, 100);
+            const rem = Math.max(CONFIG.BOOT_READY_KM - b.total_km, 0);
+            bootEl.innerHTML = `
+                <div class="ga-boot-card">
+                    <div class="ga-boot-name">${b.item_name}</div>
+                    <div class="ga-boot-stats">
+                        <div class="ga-boot-stat"><span class="ga-boot-val">${b.total_km.toFixed(1)}</span><span class="ga-boot-lbl">km walked</span></div>
+                        <div class="ga-boot-stat"><span class="ga-boot-val">${rem.toFixed(1)}</span><span class="ga-boot-lbl">km remaining</span></div>
+                        <div class="ga-boot-stat"><span class="ga-boot-val">${pct.toFixed(0)}%</span><span class="ga-boot-lbl">complete</span></div>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${progress}%"></div>
-                    </div>
-                    <div class="boot-status-label ${isReady ? 'ready' : 'not-ready'}">
-                        ${isReady ? '✅ Trail-ready!' : `📍 ${progress.toFixed(0)}% complete`}
+                    <div class="ga-progress-wrap">
+                        <div class="ga-progress-bar">
+                            <div class="ga-progress-fill" style="width:${pct}%"></div>
+                        </div>
+                        <span class="ga-progress-label ${pct >= 100 ? 'ga-ready' : ''}">${pct >= 100 ? 'Trail-ready!' : 'Break-in in progress'}</span>
                     </div>
                 </div>
             `;
         }
-        
-        // Render gear list
-        const listContainer = document.getElementById('gear-list');
-        
+
+        // Gear list
+        const listEl = document.getElementById('ga-gear-list');
         if (gear.length === 0) {
-            listContainer.innerHTML = `
-                <div class="empty-state">
-                    <p>No gear items yet. Start tracking your equipment above!</p>
-                </div>
-            `;
+            listEl.innerHTML = '<div class="ov-empty"><p>No gear tracked yet.</p></div>';
             return;
         }
-        
-        let html = '<div class="gear-items">';
-        gear.forEach(item => {
-            const icon = getGearIcon(item.item_type);
-            const stars = item.comfort_rating ? '⭐'.repeat(item.comfort_rating) : 'Not rated';
-            
-            html += `
-                <div class="gear-card">
-                    <div class="gear-icon-large">${icon}</div>
-                    <div class="gear-details">
-                        <h3>${item.item_name}</h3>
-                        <div class="gear-type">${capitalize(item.item_type)}</div>
-                        ${item.total_km > 0 ? `<div class="gear-km">📍 ${item.total_km.toFixed(1)} km</div>` : ''}
-                        <div class="gear-rating">${stars}</div>
-                        ${item.is_trail_ready ? '<div class="gear-badge ready">✅ Trail-ready</div>' : ''}
-                        ${item.notes ? `<div class="gear-notes">${item.notes}</div>` : ''}
-                    </div>
-                </div>
+
+        const GEAR_LABELS = { boots:'Boots', backpack:'Pack', poles:'Poles', jacket:'Jacket', 'sleeping-bag':'Sleeping bag', other:'Other' };
+        const rows = gear.map(g => {
+            const stars = g.comfort_rating ? Array(g.comfort_rating).fill('&#9733;').join('') + Array(5 - g.comfort_rating).fill('&#9734;').join('') : '&mdash;';
+            return `
+                <tr>
+                    <td><span class="ov-type-dot ga-dot-${g.item_type}"></span>${g.item_name}</td>
+                    <td>${GEAR_LABELS[g.item_type] || 'Other'}</td>
+                    <td class="ov-num">${g.total_km ? g.total_km.toFixed(1) + ' km' : '&mdash;'}</td>
+                    <td class="ga-stars">${stars}</td>
+                    <td>${g.is_trail_ready ? '<span class="ov-badge ov-badge-boots">Trail-ready</span>' : '<span class="ov-badge ov-badge-none">Training</span>'}</td>
+                </tr>
             `;
-        });
-        html += '</div>';
-        
-        listContainer.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error loading gear:', error);
-        document.getElementById('gear-list').innerHTML = `
-            <div class="error">Failed to load gear</div>
+        }).join('');
+
+        listEl.innerHTML = `
+            <div class="ov-table-wrap">
+                <table class="ov-table ov-auto-table">
+                    <thead><tr>
+                        <th>Item</th>
+                        <th>Type</th>
+                        <th class="ov-th-num">Km</th>
+                        <th>Rating</th>
+                        <th>Status</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
         `;
+    } catch (e) {
+        document.getElementById('ga-gear-list').innerHTML = '<p class="ov-error">Could not load gear.</p>';
     }
-}
-
-function getGearIcon(type) {
-    const icons = {
-        boots: '🥾',
-        backpack: '🎒',
-        poles: '🏔️',
-        jacket: '🧥',
-        'sleeping-bag': '💤',
-        other: '📦'
-    };
-    return icons[type] || '📦';
-}
-
-function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1).replace('-', ' ');
 }

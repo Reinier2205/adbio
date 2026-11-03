@@ -5,240 +5,220 @@
 async function renderLogProgressPage() {
     const user = auth.getCurrentUser();
     const container = document.getElementById('page-container');
-    
+
     container.innerHTML = `
-        <div class="page-header">
-            <h1>Log progress</h1>
-            <p class="subtitle">Track your training activities</p>
+        <div class="lp-hero">
+            <div>
+                <h1>Log progress</h1>
+                <p class="lp-hero-sub">Track your training, ${user.name}</p>
+            </div>
         </div>
-        
-        <div class="content-grid">
-            <div class="card">
-                <div class="card-header">
-                    <h2>New Activity</h2>
-                </div>
-                <div class="card-body">
-                    <form id="activity-form" class="form">
-                        <div class="form-group">
-                            <label for="activity-type">Activity Type</label>
-                            <select id="activity-type" class="input-field" required>
-                                <option value="walk">🚶 Walk</option>
-                                <option value="pilates">🧘 Pilates</option>
-                                <option value="hike">⛰️ Hike</option>
-                                <option value="cycle">🚴 Cycle</option>
-                                <option value="swim">🏊 Swim</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="activity-date">Date</label>
-                                <input type="date" id="activity-date" class="input-field" required>
+
+        <div class="lp-layout">
+            <!-- LEFT: capture form -->
+            <div class="lp-form-col">
+                <div class="lp-card">
+                    <h2 class="lp-card-title">New activity</h2>
+
+                    <!-- Step 1: activity type tiles -->
+                    <div class="lp-field-label">What did you do?</div>
+                    <div class="lp-type-grid" id="lp-type-grid">
+                        <button type="button" class="lp-type-tile lp-selected" data-type="walk">
+                            <span class="lp-tile-icon lp-dot-walk"></span>
+                            <span>Walk</span>
+                        </button>
+                        <button type="button" class="lp-type-tile" data-type="hike">
+                            <span class="lp-tile-icon lp-dot-hike"></span>
+                            <span>Hike</span>
+                        </button>
+                        <button type="button" class="lp-type-tile" data-type="pilates">
+                            <span class="lp-tile-icon lp-dot-pilates"></span>
+                            <span>Pilates</span>
+                        </button>
+                        <button type="button" class="lp-type-tile" data-type="cycle">
+                            <span class="lp-tile-icon lp-dot-cycle"></span>
+                            <span>Cycle</span>
+                        </button>
+                        <button type="button" class="lp-type-tile" data-type="swim">
+                            <span class="lp-tile-icon lp-dot-swim"></span>
+                            <span>Swim</span>
+                        </button>
+                    </div>
+
+                    <!-- Step 2: date -->
+                    <div class="lp-field-label">Date</div>
+                    <input type="date" id="lp-date" class="lp-date-input">
+
+                    <!-- Step 3: numbers -->
+                    <div class="lp-numbers-row" id="lp-distance-row">
+                        <div class="lp-number-box">
+                            <div class="lp-field-label">Distance</div>
+                            <div class="lp-number-input-wrap">
+                                <input type="number" id="lp-distance" class="lp-number-input" min="0" step="0.1" placeholder="0.0">
+                                <span class="lp-number-unit">km</span>
                             </div>
-                            
-                            <div class="form-group">
-                                <label for="duration">Duration (minutes)</label>
-                                <input type="number" id="duration" class="input-field" min="1" required>
+                        </div>
+                        <div class="lp-number-box">
+                            <div class="lp-field-label">Elevation</div>
+                            <div class="lp-number-input-wrap">
+                                <input type="number" id="lp-elevation" class="lp-number-input" min="0" placeholder="0">
+                                <span class="lp-number-unit">m</span>
                             </div>
                         </div>
-                        
-                        <div class="form-row" id="distance-group">
-                            <div class="form-group">
-                                <label for="distance">Distance (km)</label>
-                                <input type="number" id="distance" class="input-field" min="0" step="0.1">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="elevation">Elevation gain (m)</label>
-                                <input type="number" id="elevation" class="input-field" min="0" value="0">
+                        <div class="lp-number-box">
+                            <div class="lp-field-label">Duration</div>
+                            <div class="lp-number-input-wrap">
+                                <input type="number" id="lp-duration" class="lp-number-input" min="1" placeholder="60">
+                                <span class="lp-number-unit">min</span>
                             </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="wore-boots">
-                                <span>Wore Camino boots</span>
-                            </label>
+                    </div>
+                    <div class="lp-numbers-row" id="lp-duration-only-row" style="display:none">
+                        <div class="lp-number-box">
+                            <div class="lp-field-label">Duration</div>
+                            <div class="lp-number-input-wrap">
+                                <input type="number" id="lp-duration-pilates" class="lp-number-input" min="1" placeholder="45">
+                                <span class="lp-number-unit">min</span>
+                            </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="stretched">
-                                <span>Stretched after</span>
-                            </label>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="conversation-test">
-                                <span>Passed conversation test (could talk comfortably)</span>
-                            </label>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="notes">Notes (optional)</label>
-                            <textarea id="notes" class="input-field" rows="3" placeholder="How did you feel? Any discomfort or hotspots?"></textarea>
-                        </div>
-                        
-                        <button type="submit" class="btn-primary">Log Activity</button>
-                    </form>
+                    </div>
+
+                    <!-- Step 4: toggle tags -->
+                    <div class="lp-field-label">How did it go?</div>
+                    <div class="lp-toggle-row">
+                        <button type="button" class="lp-toggle" id="tog-boots">Boots</button>
+                        <button type="button" class="lp-toggle" id="tog-stretch">Stretched</button>
+                        <button type="button" class="lp-toggle" id="tog-conv">Conv. test</button>
+                    </div>
+
+                    <!-- Step 5: notes -->
+                    <div class="lp-field-label">Notes <span class="lp-optional">(optional)</span></div>
+                    <textarea id="lp-notes" class="lp-notes" rows="2" placeholder="How did it feel? Any hotspots?"></textarea>
+
+                    <button type="button" id="lp-submit" class="lp-submit-btn">Save activity</button>
                 </div>
             </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h2>Your Recent Activities</h2>
+
+            <!-- RIGHT: recent activities -->
+            <div class="lp-history-col">
+                <div class="ov-section-header" style="margin-bottom:var(--spacing-md)">
+                    <h2 class="lp-card-title" style="margin-bottom:0">Your activities</h2>
                 </div>
-                <div class="card-body" id="activities-list">
-                    <div class="loading">Loading...</div>
-                </div>
+                <div id="lp-activities"><div class="ov-loading">Loading...</div></div>
             </div>
         </div>
     `;
-    
-    // Set today's date as default
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('activity-date').value = today;
-    
-    // Handle activity type change
-    const activityTypeSelect = document.getElementById('activity-type');
-    const distanceGroup = document.getElementById('distance-group');
-    
-    activityTypeSelect.addEventListener('change', () => {
-        // Hide distance for Pilates
-        if (activityTypeSelect.value === 'pilates') {
-            distanceGroup.style.display = 'none';
-        } else {
-            distanceGroup.style.display = 'flex';
-        }
+
+    // Set today
+    document.getElementById('lp-date').value = new Date().toISOString().split('T')[0];
+
+    // Type tile selection
+    let selectedType = 'walk';
+    document.getElementById('lp-type-grid').addEventListener('click', e => {
+        const tile = e.target.closest('.lp-type-tile');
+        if (!tile) return;
+        document.querySelectorAll('.lp-type-tile').forEach(t => t.classList.remove('lp-selected'));
+        tile.classList.add('lp-selected');
+        selectedType = tile.dataset.type;
+
+        // Show/hide distance fields
+        const isPilates = selectedType === 'pilates';
+        document.getElementById('lp-distance-row').style.display    = isPilates ? 'none' : '';
+        document.getElementById('lp-duration-only-row').style.display = isPilates ? '' : 'none';
     });
-    
-    // Handle form submission
-    const form = document.getElementById('activity-form');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await handleActivitySubmit(user);
+
+    // Toggle pills
+    document.querySelectorAll('.lp-toggle').forEach(btn => {
+        btn.addEventListener('click', () => btn.classList.toggle('lp-toggle-on'));
     });
-    
-    // Load activities
-    await loadActivities(user);
+
+    // Submit
+    document.getElementById('lp-submit').addEventListener('click', async () => {
+        await handleLPSubmit(user, () => { selectedType; }, () => selectedType);
+    });
+
+    // Load history
+    await loadLPActivities(user);
 }
 
-async function handleActivitySubmit(user) {
-    const submitBtn = document.querySelector('#activity-form button[type="submit"]');
+async function handleLPSubmit(user, _unused, getType) {
+    const submitBtn = document.getElementById('lp-submit');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Saving...';
-    
-    try {
-        const activityType = document.getElementById('activity-type').value;
-        const activity = {
-            activity_type: activityType,
-            activity_date: document.getElementById('activity-date').value,
-            duration_min: parseInt(document.getElementById('duration').value),
-            stretched_after: document.getElementById('stretched').checked,
-            conversation_test: document.getElementById('conversation-test').checked,
-            wore_camino_boots: document.getElementById('wore-boots').checked,
-            notes: document.getElementById('notes').value || null
-        };
-        
-        // Add distance/elevation for non-Pilates activities
-        if (activityType !== 'pilates') {
-            const distance = document.getElementById('distance').value;
-            const elevation = document.getElementById('elevation').value;
-            if (distance) activity.distance_km = parseFloat(distance);
-            if (elevation) activity.elevation_gain_m = parseInt(elevation);
-        }
-        
-        await api.createActivity(activity);
-        
-        // Reset form
-        document.getElementById('activity-form').reset();
-        document.getElementById('activity-date').value = new Date().toISOString().split('T')[0];
-        
-        // Reload activities
-        await loadActivities(user);
-        
-        // Show success message
-        showNotification('Activity logged successfully! 🎉', 'success');
-        
-    } catch (error) {
-        console.error('Error logging activity:', error);
-        showNotification('Failed to log activity. Please try again.', 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Log Activity';
-    }
-}
 
-async function loadActivities(user) {
     try {
-        const activities = await api.getActivities(user.id);
-        const listContainer = document.getElementById('activities-list');
-        
-        if (!activities || activities.length === 0) {
-            listContainer.innerHTML = `
-                <div class="empty-state">
-                    <p>No activities logged yet.</p>
-                    <p>Start tracking your training above!</p>
-                </div>
-            `;
+        const activityType = getType();
+        const isPilates    = activityType === 'pilates';
+
+        const durationEl = isPilates
+            ? document.getElementById('lp-duration-pilates')
+            : document.getElementById('lp-duration');
+
+        if (!durationEl.value) {
+            alert('Please enter a duration.');
             return;
         }
-        
-        let html = '<div class="activity-list">';
-        activities.forEach(activity => {
-            const icon = getActivityIcon(activity.activity_type);
-            html += `
-                <div class="activity-card">
-                    <div class="activity-header">
-                        <div>
-                            <span class="activity-icon-large">${icon}</span>
-                            <strong>${capitalize(activity.activity_type)}</strong>
-                        </div>
-                        <span class="activity-date">${formatDate(activity.activity_date)}</span>
-                    </div>
-                    <div class="activity-stats-grid">
-                        ${activity.distance_km ? `<div><span class="label">Distance:</span> ${activity.distance_km} km</div>` : ''}
-                        <div><span class="label">Duration:</span> ${activity.duration_min} min</div>
-                        ${activity.elevation_gain_m ? `<div><span class="label">Elevation:</span> ${activity.elevation_gain_m} m</div>` : ''}
-                    </div>
-                    <div class="activity-badges">
-                        ${activity.wore_camino_boots ? '<span class="badge">👟 Boots</span>' : ''}
-                        ${activity.stretched_after ? '<span class="badge">🧘 Stretched</span>' : ''}
-                        ${activity.conversation_test ? '<span class="badge">💬 Conv. test</span>' : ''}
-                    </div>
-                    ${activity.notes ? `<div class="activity-notes">${activity.notes}</div>` : ''}
-                </div>
-            `;
+
+        const activity = {
+            activity_type:     activityType,
+            activity_date:     document.getElementById('lp-date').value,
+            duration_min:      parseInt(durationEl.value),
+            wore_camino_boots: document.getElementById('tog-boots').classList.contains('lp-toggle-on'),
+            stretched_after:   document.getElementById('tog-stretch').classList.contains('lp-toggle-on'),
+            conversation_test: document.getElementById('tog-conv').classList.contains('lp-toggle-on'),
+            notes:             document.getElementById('lp-notes').value || null,
+        };
+
+        if (!isPilates) {
+            const dist = document.getElementById('lp-distance').value;
+            const elev = document.getElementById('lp-elevation').value;
+            if (dist) activity.distance_km       = parseFloat(dist);
+            if (elev) activity.elevation_gain_m  = parseInt(elev);
+        }
+
+        await api.createActivity(activity);
+
+        // Reset form
+        document.getElementById('lp-date').value = new Date().toISOString().split('T')[0];
+        ['lp-distance','lp-elevation','lp-duration','lp-duration-pilates','lp-notes'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
         });
-        html += '</div>';
-        
-        listContainer.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error loading activities:', error);
-        document.getElementById('activities-list').innerHTML = `
-            <div class="error">Failed to load activities</div>
-        `;
+        document.querySelectorAll('.lp-toggle').forEach(b => b.classList.remove('lp-toggle-on'));
+        document.querySelectorAll('.lp-type-tile').forEach(t => t.classList.remove('lp-selected'));
+        document.querySelector('.lp-type-tile[data-type="walk"]').classList.add('lp-selected');
+
+        showLPNotification('Activity saved!', 'success');
+        await loadLPActivities(user);
+
+    } catch (err) {
+        console.error('Save error:', err);
+        showLPNotification('Could not save. Please try again.', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save activity';
     }
 }
 
-function getActivityIcon(type) {
-    const icons = {
-        walk: '🚶',
-        pilates: '🧘',
-        cycle: '🚴',
-        swim: '🏊',
-        hike: '⛰️'
-    };
-    return icons[type] || '✓';
+async function loadLPActivities(user) {
+    try {
+        const activities = await api.getActivities(user.id);
+        renderActivityTable('lp-activities', activities, async () => {
+            await loadLPActivities(user);
+        });
+    } catch (err) {
+        console.error('Load activities error:', err);
+        document.getElementById('lp-activities').innerHTML = '<p class="ov-error">Could not load activities.</p>';
+    }
 }
 
-function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function showNotification(message, type = 'info') {
-    // Simple notification - you can enhance this
-    alert(message);
+function showLPNotification(msg, type) {
+    const old = document.getElementById('lp-notif');
+    if (old) old.remove();
+    const el = document.createElement('div');
+    el.id = 'lp-notif';
+    el.className = 'lp-notif lp-notif-' + type;
+    el.textContent = msg;
+    document.querySelector('.lp-form-col').prepend(el);
+    setTimeout(() => el.remove(), 3000);
 }

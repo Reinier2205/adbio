@@ -116,6 +116,13 @@ async function handleAPI(request, env, corsHeaders) {
     case '/activities':
       return handleActivities(method, request, currentUser, env, corsHeaders);
     
+    default:
+      // Check for /activities/:id
+      if (path.startsWith('/activities/')) {
+        const id = path.replace('/activities/', '');
+        return handleActivityById(method, request, id, currentUser, env, corsHeaders);
+      }
+      return jsonResponse({ error: 'Not found' }, 404, corsHeaders);
     case '/weight':
       return handleWeight(method, request, currentUser, env, corsHeaders);
     
@@ -128,8 +135,6 @@ async function handleAPI(request, env, corsHeaders) {
     case '/progress/weekly':
       return handleWeeklyProgress(env, corsHeaders);
     
-    default:
-      return jsonResponse({ error: 'Not found' }, 404, corsHeaders);
   }
 }
 
@@ -359,6 +364,40 @@ async function handleWeeklyProgress(env, corsHeaders) {
   );
   
   return jsonResponse(data, 200, corsHeaders);
+}
+
+/**
+ * Activity by ID Handler (PATCH/DELETE)
+ */
+async function handleActivityById(method, request, id, currentUser, env, corsHeaders) {
+  if (!currentUser) {
+    return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+  }
+
+  // Verify this activity belongs to the current user
+  const existing = await supabaseRequest(env, `activities?id=eq.${id}&user_id=eq.${currentUser.id}`);
+  if (!existing || existing.length === 0) {
+    return jsonResponse({ error: 'Not found or not yours' }, 404, corsHeaders);
+  }
+
+  if (method === 'PATCH') {
+    const updates = await request.json();
+    // Prevent overriding ownership
+    delete updates.user_id;
+    delete updates.id;
+    const data = await supabaseRequest(env, `activities?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates)
+    });
+    return jsonResponse(data[0], 200, corsHeaders);
+  }
+
+  if (method === 'DELETE') {
+    await supabaseRequest(env, `activities?id=eq.${id}`, { method: 'DELETE' });
+    return jsonResponse({ success: true }, 200, corsHeaders);
+  }
+
+  return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
 }
 
 /**

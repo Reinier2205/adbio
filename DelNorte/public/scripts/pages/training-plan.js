@@ -5,222 +5,132 @@
 async function renderTrainingPlanPage() {
     const user = auth.getCurrentUser();
     const container = document.getElementById('page-container');
-    
+    const currentPhase = getCurrentPhase();
+
     container.innerHTML = `
-        <div class="page-header">
-            <h1>Training plan</h1>
-            <p class="subtitle">Your 7-month preparation for Camino del Norte</p>
-        </div>
-        
-        <div class="timeline-container">
-            <div class="timeline-header">
-                <div class="timeline-dates">
-                    <span>📅 ${formatDate(CONFIG.TRAINING_START)}</span>
-                    <span class="timeline-arrow">→</span>
-                    <span>🎯 ${formatDate(CONFIG.CAMINO_DATE)}</span>
-                </div>
-                <div class="timeline-countdown">
-                    <strong>${getDaysUntilCamino()} days</strong> until departure
-                </div>
-            </div>
-            
-            <div class="phases-container" id="phases-container">
-                <!-- Phases will be rendered here -->
+        <div class="lp-hero">
+            <div>
+                <h1>Training plan</h1>
+                <p class="lp-hero-sub">${getDaysUntilCamino()} days to Camino &mdash; ${formatDate(CONFIG.TRAINING_START)} &rarr; ${formatDate(CONFIG.CAMINO_DATE)}</p>
             </div>
         </div>
-        
-        <div class="card">
-            <div class="card-header">
-                <h2>Weekly Progress Chart</h2>
+
+        <section class="ov-section">
+            <h2 class="ov-section-title">Training phases</h2>
+            <div class="tp-phases" id="tp-phases"></div>
+        </section>
+
+        <section class="ov-section">
+            <h2 class="ov-section-title">Weekly progress &mdash; last 8 weeks</h2>
+            <div id="tp-progress"><div class="ov-loading">Loading...</div></div>
+        </section>
+
+        <section class="ov-section">
+            <h2 class="ov-section-title">Training guidelines</h2>
+            <div class="tp-guidelines-grid">
+                ${[
+                    ['Boot break-in',      '100 km minimum',          'Walk in your Camino boots as much as possible. Prevents blisters and ensures comfort for the full trek.'],
+                    ['Conversation test',  '2 hours minimum',         'You should be able to talk comfortably while walking. If you cannot, slow down.'],
+                    ['Pack training',      'Full trek load',           'Train with your full pack in the final 2 months. Start light and increase gradually.'],
+                    ['Strength & stretch', '2 sessions per week',     'Pilates and stretching prevent injuries and improve endurance. Non-negotiable.'],
+                    ['Hill training',      'Expansion phase onwards',  'Camino del Norte has real elevation. Introduce hills and varied terrain from January.'],
+                    ['Consecutive days',   'Trek-readiness phase',    'Walk 2&ndash;3 days back-to-back to simulate the Camino rhythm before you go.'],
+                ].map(([title, target, desc]) => `
+                    <div class="tp-guideline">
+                        <div class="tp-guideline-title">${title}</div>
+                        <div class="tp-guideline-target">${target}</div>
+                        <p class="tp-guideline-desc">${desc}</p>
+                    </div>
+                `).join('')}
             </div>
-            <div class="card-body" id="progress-chart">
-                <div class="loading">Loading your progress...</div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header">
-                <h2>Training Guidelines</h2>
-            </div>
-            <div class="card-body">
-                <div class="guidelines-grid">
-                    <div class="guideline-card">
-                        <div class="guideline-icon">🥾</div>
-                        <h3>Boot Break-in</h3>
-                        <p>Target: <strong>100km minimum</strong></p>
-                        <p>Walk in your Camino boots as much as possible during training. This prevents blisters and ensures comfort for the full trek.</p>
-                    </div>
-                    
-                    <div class="guideline-card">
-                        <div class="guideline-icon">💬</div>
-                        <h3>Conversation Test</h3>
-                        <p>Duration: <strong>2 hours minimum</strong></p>
-                        <p>You should be able to maintain a conversation comfortably while walking. This ensures you're not overexerting.</p>
-                    </div>
-                    
-                    <div class="guideline-card">
-                        <div class="guideline-icon">🎒</div>
-                        <h3>Pack Training</h3>
-                        <p>Weight: <strong>Full trek load</strong></p>
-                        <p>Practice with your full pack during the final 2 months. Start light and gradually increase weight.</p>
-                    </div>
-                    
-                    <div class="guideline-card">
-                        <div class="guideline-icon">🧘</div>
-                        <h3>Strength & Flexibility</h3>
-                        <p>Frequency: <strong>2x per week</strong></p>
-                        <p>Pilates and stretching prevent injuries and improve endurance. Never skip these sessions!</p>
-                    </div>
-                    
-                    <div class="guideline-card">
-                        <div class="guideline-icon">⛰️</div>
-                        <h3>Hill Training</h3>
-                        <p>Focus: <strong>Expansion phase</strong></p>
-                        <p>Camino del Norte has significant elevation. Practice hills and varied terrain from January onwards.</p>
-                    </div>
-                    
-                    <div class="guideline-card">
-                        <div class="guideline-icon">🔄</div>
-                        <h3>Consecutive Days</h3>
-                        <p>Target: <strong>Back-to-back walks</strong></p>
-                        <p>In the final phase, practice 2-3 consecutive days of walking to simulate the trek rhythm.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </section>
     `;
-    
-    // Render phases
-    renderPhases();
-    
-    // Load progress chart
-    await loadProgressChart(user);
+
+    renderTPPhases();
+    await loadTPProgress();
 }
 
-function renderPhases() {
-    const container = document.getElementById('phases-container');
-    const currentDate = new Date();
-    
+function renderTPPhases() {
+    const now = new Date();
     let html = '';
-    TRAINING_PHASES.forEach((phase, index) => {
-        const isActive = currentDate >= phase.start && currentDate <= phase.end;
-        const isPast = currentDate > phase.end;
-        const isFuture = currentDate < phase.start;
-        
-        let statusClass = '';
-        let statusLabel = '';
-        if (isActive) {
-            statusClass = 'phase-active';
-            statusLabel = '▶ Current Phase';
-        } else if (isPast) {
-            statusClass = 'phase-past';
-            statusLabel = '✓ Completed';
-        } else {
-            statusClass = 'phase-future';
-            statusLabel = '○ Upcoming';
-        }
-        
+    TRAINING_PHASES.forEach((phase, i) => {
+        const isActive = now >= phase.start && now <= phase.end;
+        const isPast   = now > phase.end;
         html += `
-            <div class="phase-card ${statusClass}">
-                <div class="phase-number">${String(index + 1).padStart(2, '0')}</div>
-                <div class="phase-content">
-                    <div class="phase-header">
-                        <h3>${phase.name}</h3>
-                        <span class="phase-status">${statusLabel}</span>
+            <div class="tp-phase${isActive ? ' tp-phase-active' : isPast ? ' tp-phase-past' : ''}">
+                <div class="tp-phase-num">${String(i + 1).padStart(2,'0')}</div>
+                <div class="tp-phase-body">
+                    <div class="tp-phase-top">
+                        <div>
+                            <div class="tp-phase-name">${phase.name}</div>
+                            <div class="tp-phase-dates">${formatDate(phase.start)} &rarr; ${formatDate(phase.end)}</div>
+                        </div>
+                        <span class="tp-status-pill${isActive ? ' tp-pill-active' : isPast ? ' tp-pill-past' : ' tp-pill-future'}">
+                            ${isActive ? 'Current' : isPast ? 'Done' : 'Upcoming'}
+                        </span>
                     </div>
-                    <div class="phase-dates">
-                        ${formatDate(phase.start)} → ${formatDate(phase.end)}
-                    </div>
-                    <p class="phase-description">${phase.description}</p>
-                    <div class="phase-structure">
-                        <strong>Weekly structure:</strong>
-                        <p>${phase.weeklyStructure}</p>
-                    </div>
+                    <p class="tp-phase-desc">${phase.description}</p>
+                    <div class="tp-phase-weekly"><strong>Weekly:</strong> ${phase.weeklyStructure}</div>
                 </div>
             </div>
         `;
     });
-    
-    container.innerHTML = html;
+    document.getElementById('tp-phases').innerHTML = html;
 }
 
-async function loadProgressChart(user) {
+async function loadTPProgress() {
     try {
         const data = await api.getWeeklyProgress();
-        
-        // Group activities by week
-        const weeklyData = {};
-        data.forEach(activity => {
-            const date = new Date(activity.activity_date);
-            const weekKey = getWeekKey(date);
-            
-            if (!weeklyData[weekKey]) {
-                weeklyData[weekKey] = {
-                    walking_km: 0,
-                    walking_count: 0,
-                    pilates_count: 0,
-                    other_count: 0
-                };
-            }
-            
-            if (activity.activity_type === 'walk') {
-                weeklyData[weekKey].walking_km += parseFloat(activity.distance_km || 0);
-                weeklyData[weekKey].walking_count++;
-            } else if (activity.activity_type === 'pilates') {
-                weeklyData[weekKey].pilates_count++;
+        const weekly = {};
+        data.forEach(a => {
+            const key = getWeekKey(new Date(a.activity_date));
+            if (!weekly[key]) weekly[key] = { km: 0, walks: 0, pilates: 0, other: 0 };
+            if (a.activity_type === 'walk' || a.activity_type === 'hike') {
+                weekly[key].km += parseFloat(a.distance_km || 0);
+                weekly[key].walks++;
+            } else if (a.activity_type === 'pilates') {
+                weekly[key].pilates++;
             } else {
-                weeklyData[weekKey].other_count++;
+                weekly[key].other++;
             }
         });
-        
-        // Render chart (simple text-based for now)
-        let chartHTML = '<div class="progress-table">';
-        chartHTML += `
-            <div class="progress-table-header">
-                <div>Week</div>
-                <div>Walking (km)</div>
-                <div>Walks</div>
-                <div>Pilates</div>
-                <div>Other</div>
+
+        const weeks = Object.keys(weekly).sort().reverse().slice(0, 8);
+
+        if (weeks.length === 0) {
+            document.getElementById('tp-progress').innerHTML = '<div class="ov-empty"><p>No data yet. Start logging to see your progress!</p></div>';
+            return;
+        }
+
+        let rows = weeks.map(w => `
+            <tr>
+                <td>${w}</td>
+                <td class="ov-num">${weekly[w].km.toFixed(1)}</td>
+                <td class="ov-num">${weekly[w].walks}</td>
+                <td class="ov-num">${weekly[w].pilates}</td>
+                <td class="ov-num">${weekly[w].other}</td>
+            </tr>
+        `).join('');
+
+        document.getElementById('tp-progress').innerHTML = `
+            <div class="ov-table-wrap">
+                <table class="ov-table ov-auto-table">
+                    <thead><tr>
+                        <th>Week</th>
+                        <th class="ov-th-num">Km</th>
+                        <th class="ov-th-num">Walks</th>
+                        <th class="ov-th-num">Pilates</th>
+                        <th class="ov-th-num">Other</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
             </div>
         `;
-        
-        const weeks = Object.keys(weeklyData).sort().reverse().slice(0, 8);
-        weeks.forEach(weekKey => {
-            const stats = weeklyData[weekKey];
-            chartHTML += `
-                <div class="progress-table-row">
-                    <div>${weekKey}</div>
-                    <div><strong>${stats.walking_km.toFixed(1)}</strong></div>
-                    <div>${stats.walking_count}</div>
-                    <div>${stats.pilates_count}</div>
-                    <div>${stats.other_count}</div>
-                </div>
-            `;
-        });
-        
-        chartHTML += '</div>';
-        
-        if (weeks.length === 0) {
-            chartHTML = `
-                <div class="empty-state">
-                    <p>No activity data yet. Start logging your training to see progress!</p>
-                </div>
-            `;
-        }
-        
-        document.getElementById('progress-chart').innerHTML = chartHTML;
-        
-    } catch (error) {
-        console.error('Error loading progress chart:', error);
-        document.getElementById('progress-chart').innerHTML = `
-            <div class="error">Failed to load progress data</div>
-        `;
+    } catch (e) {
+        document.getElementById('tp-progress').innerHTML = '<p class="ov-error">Could not load progress.</p>';
     }
 }
 
 function getWeekKey(date) {
-    const weekNum = getWeekNumber(date);
-    const year = date.getFullYear();
-    return `${year}-W${String(weekNum).padStart(2, '0')}`;
+    return date.getFullYear() + '-W' + String(getWeekNumber(date)).padStart(2,'0');
 }

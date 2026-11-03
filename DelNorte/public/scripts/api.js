@@ -89,6 +89,19 @@ class API {
         });
     }
 
+    async updateActivity(id, updates) {
+        return this.request(`/api/activities/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(updates),
+        });
+    }
+
+    async deleteActivity(id) {
+        return this.request(`/api/activities/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
     // Weight
     async getWeightEntries(userId) {
         return this.request(`/api/weight?user_id=${userId}`);
