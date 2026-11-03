@@ -88,7 +88,7 @@ async function renderLogProgressPage() {
                     <div class="lp-toggle-row">
                         <button type="button" class="lp-toggle" id="tog-boots">Boots</button>
                         <button type="button" class="lp-toggle" id="tog-stretch">Stretched</button>
-                        <button type="button" class="lp-toggle" id="tog-conv">Conv. test</button>
+                        <button type="button" class="lp-toggle" id="tog-conv" title="Could you hold a conversation comfortably throughout?">Conversation test</button>
                     </div>
 
                     <!-- Step 5: notes -->

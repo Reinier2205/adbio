@@ -10,12 +10,28 @@ async function renderStrengthStretchPage() {
         <div class="lp-hero">
             <div>
                 <h1>Strength &amp; stretch</h1>
-                <p class="lp-hero-sub">2 Pilates sessions per week &mdash; rotate through your 5-video library</p>
+                <p class="lp-hero-sub">2 Pilates sessions per week &mdash; always warm up and cool down</p>
             </div>
         </div>
 
         <section class="ov-section">
-            <h2 class="ov-section-title">Your video rotation</h2>
+            <h2 class="ov-section-title">Your video library</h2>
+            <div class="ss-reminder">
+                <div class="ss-reminder-item ss-reminder-warm">
+                    <div class="ss-reminder-label">Always start with</div>
+                    <div class="ss-reminder-name">5 Min Warm Up</div>
+                </div>
+                <div class="ss-reminder-arrow">&rarr;</div>
+                <div class="ss-reminder-item ss-reminder-main">
+                    <div class="ss-reminder-label">Main session</div>
+                    <div class="ss-reminder-name">45 Min workout</div>
+                </div>
+                <div class="ss-reminder-arrow">&rarr;</div>
+                <div class="ss-reminder-item ss-reminder-cool">
+                    <div class="ss-reminder-label">Always finish with</div>
+                    <div class="ss-reminder-name">5 Min Cool Down</div>
+                </div>
+            </div>
             <div class="ss-videos-grid" id="ss-videos-grid">
                 <div class="ov-loading">Loading videos...</div>
             </div>
@@ -28,9 +44,9 @@ async function renderStrengthStretchPage() {
                     ['Core strength',      'A strong core stabilises your body on long walks and helps carry your pack efficiently.'],
                     ['Leg endurance',      'Controlled movements build the slow-twitch muscle fibres needed for all-day walking.'],
                     ['Flexibility',        'Prevents injuries and reduces muscle soreness. Essential for recovery between walking days.'],
-                    ['Balance',            'Improves stability on uneven terrain, reducing the risk of falls on the trail.'],
+                    ['Balance',            'Improves stability on uneven terrain, reducing the risk of falls on the Camino.'],
                     ['Hip mobility',       'Healthy hip flexors prevent lower back pain and improve your walking stride.'],
-                    ['Injury prevention',  'Addresses muscle imbalances and weak points before they become problems on the trail.'],
+                    ['Injury prevention',  'Addresses muscle imbalances and weak points before they become problems on the Camino.'],
                 ].map(([title, desc]) => `
                     <div class="tp-guideline">
                         <div class="tp-guideline-title">${title}</div>

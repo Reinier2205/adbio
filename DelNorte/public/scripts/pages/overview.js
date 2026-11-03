@@ -43,7 +43,15 @@ async function renderOverviewPage() {
         <div class="ov-phase-pill">${phase.name} phase</div>
         <p class="ov-phase-desc">${phase.description}</p>
         <p class="ov-phase-weekly"><strong>Weekly:</strong> ${phase.weeklyStructure}</p>
+        <p class="ov-phase-link">Tap to see full plan &rarr;</p>
     `;
+    document.getElementById('ov-phase-card').style.cursor = 'pointer';
+    document.getElementById('ov-phase-card').addEventListener('click', () => {
+        router.navigate('training-plan');
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        const link = document.querySelector('.nav-link[data-page=training-plan]');
+        if (link) link.classList.add('active');
+    });
 
     try {
         const [allActivities, dashboard] = await Promise.all([
@@ -95,7 +103,7 @@ function renderAllTimeTotals(activities) {
         const isLeader = idx === 0 && s.km > 0;
         rows += `
             <tr class="${isLeader ? 'ov-leader' : ''}">
-                <td>${isLeader ? '<span class="ov-crown">&#9733;</span> ' : ''}${name}</td>
+                <td>${name}</td>
                 <td class="ov-num">${s.count}</td>
                 <td class="ov-num">${s.km.toFixed(1)}</td>
                 <td class="ov-num">${dur}</td>
@@ -198,7 +206,7 @@ function renderActivityTable(containerId, activities, onRefresh) {
         let badges = [];
         if (a.wore_camino_boots) badges.push('<span class="ov-badge ov-badge-boots">Boots</span>');
         if (a.stretched_after)   badges.push('<span class="ov-badge ov-badge-stretch">Stretch</span>');
-        if (a.conversation_test) badges.push('<span class="ov-badge ov-badge-conv">Conv</span>');
+        if (a.conversation_test) badges.push('<span class="ov-badge ov-badge-conv" title="Conversation test: could talk comfortably during the activity">Conversation test</span>');
 
         rows += `
             <tr class="act-row" data-id="${a.id}" title="Tap to edit">

@@ -1314,3 +1314,127 @@ body {
     .ga-progress-wrap { flex-direction: column; align-items: flex-start; gap: var(--spacing-sm); }
     .ga-progress-bar { width: 100%; }
 }
+/* ============================================
+   Horizontal scroll prevention (Android fix)
+   ============================================ */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+#app-screen, .main-content, #page-container {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Tables that could overflow on narrow screens get a scrollable wrapper */
+.ov-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   Overview phase card — clickable
+   ============================================ */
+.ov-phase-card {
+    transition: var(--transition);
+}
+.ov-phase-card:hover {
+    background: rgba(255,255,255,0.14) !important;
+}
+.ov-phase-link {
+    font-size: var(--font-size-xs);
+    color: var(--color-camino-yellow);
+    opacity: 0.85;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* ============================================
+   Strength & Stretch warm-up reminder
+   ============================================ */
+.ss-reminder {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    background: rgba(44,95,79,0.07);
+    border: 1px solid rgba(44,95,79,0.2);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+.ss-reminder-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 120px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+}
+.ss-reminder-warm { background: rgba(244,199,83,0.15); border: 1px solid rgba(244,199,83,0.4); }
+.ss-reminder-main { background: rgba(44,95,79,0.1);   border: 1px solid rgba(44,95,79,0.3); }
+.ss-reminder-cool { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.3); }
+
+.ss-reminder-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--color-text-secondary);
+}
+.ss-reminder-name {
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+.ss-reminder-arrow {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .ss-reminder        { flex-direction: column; gap: var(--spacing-sm); }
+    .ss-reminder-arrow  { transform: rotate(90deg); align-self: center; }
+}
+/* ============================================
+   SVG Logo overrides
+   ============================================ */
+
+/* Login screen — large logo */
+.logo-icon.logo-icon-svg {
+    display: block;
+    width: 80px;
+    height: 80px;
+    border-radius: var(--border-radius-lg);
+    object-fit: cover;
+    background: none;
+    font-size: unset;
+    font-weight: unset;
+    color: unset;
+}
+
+/* Sidebar + mobile topbar — small logo */
+.logo-icon-small.logo-icon-svg {
+    display: block;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--border-radius);
+    object-fit: cover;
+    background: none;
+    font-size: unset;
+    font-weight: unset;
+    color: unset;
+    flex-shrink: 0;
+}
+
+/* Mobile topbar small variant */
+@media (max-width: 768px) {
+    .mobile-logo .logo-icon-small.logo-icon-svg {
+        width: 32px;
+        height: 32px;
+    }
+}

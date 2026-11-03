@@ -91,7 +91,7 @@ const activityModal = (() => {
                     <div class="lp-toggle-row">
                         <button type="button" class="lp-toggle${a.wore_camino_boots ? ' lp-toggle-on' : ''}" id="amod-boots">Boots</button>
                         <button type="button" class="lp-toggle${a.stretched_after   ? ' lp-toggle-on' : ''}" id="amod-stretch">Stretched</button>
-                        <button type="button" class="lp-toggle${a.conversation_test ? ' lp-toggle-on' : ''}" id="amod-conv">Conv. test</button>
+                        <button type="button" class="lp-toggle${a.conversation_test ? ' lp-toggle-on' : ''}" id="amod-conv" title="Could you hold a conversation comfortably throughout?">Conversation test</button>
                     </div>
 
                     <div class="lp-field-label" style="margin-top:var(--spacing-md)">Notes <span class="lp-optional">(optional)</span></div>
