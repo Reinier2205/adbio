@@ -80,15 +80,20 @@ body {
     min-height: 100vh;
 }
 
-.screen.active {
-    display: block;
+/* Login screen: flex for centering when active */
+#login-screen.active {
+    display: flex;
+}
+
+/* App screen: flex for sidebar layout when active */
+#app-screen.active {
+    display: flex;
 }
 
 /* ============================================
    Login Screen
    ============================================ */
 #login-screen {
-    display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--color-forest-green) 0%, var(--color-forest-green-dark) 100%);
@@ -224,7 +229,6 @@ body {
    App Layout
    ============================================ */
 #app-screen {
-    display: flex;
     min-height: 100vh;
 }
 
@@ -369,27 +373,143 @@ body {
 }
 
 /* ============================================
+   Mobile Top Bar & Hamburger
+   ============================================ */
+.mobile-topbar {
+    display: none;
+}
+
+.hamburger-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.hamburger-btn span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: var(--color-white);
+    border-radius: 2px;
+    transition: var(--transition);
+}
+
+.hamburger-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-close-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 20px;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    line-height: 1;
+    transition: var(--transition);
+}
+
+.sidebar-close-btn:hover {
+    color: var(--color-white);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dim overlay behind open sidebar */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* ============================================
    Responsive Design
    ============================================ */
 @media (max-width: 768px) {
     :root {
-        --sidebar-width: 0px;
+        --sidebar-width: 280px;
     }
-    
+
+    /* Show mobile top bar */
+    .mobile-topbar {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background-color: var(--color-forest-green-dark);
+        padding: 0 var(--spacing-md);
+        z-index: 98;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .mobile-logo {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        color: var(--color-white);
+    }
+
+    .mobile-logo .logo-icon-small {
+        width: 32px;
+        height: 32px;
+        font-size: var(--font-size-sm);
+    }
+
+    .mobile-logo .logo-text {
+        font-size: var(--font-size-base);
+        font-weight: 600;
+    }
+
+    /* Sidebar slides in from left */
     .sidebar {
         transform: translateX(-100%);
         transition: transform 0.3s ease;
+        z-index: 200;
+        width: 280px;
     }
-    
+
     .sidebar.open {
         transform: translateX(0);
     }
-    
+
+    /* Show close button inside sidebar header */
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .sidebar-close-btn {
+        display: block;
+    }
+
+    /* Push content below fixed top bar */
     .main-content {
         margin-left: 0;
         padding: var(--spacing-lg);
+        padding-top: calc(56px + var(--spacing-lg));
     }
-    
+
     .login-card {
         padding: var(--spacing-lg);
     }

@@ -154,7 +154,7 @@ async function loadOverviewData(user) {
             document.getElementById('recent-activities').innerHTML = `
                 <div class="empty-state">
                     <p>No activities yet. Start logging your training!</p>
-                    <a href="#log-progress" class="btn-primary">Log your first activity</a>
+                    <button class="btn-primary" data-navigate="log-progress">Log your first activity</button>
                 </div>
             `;
         }

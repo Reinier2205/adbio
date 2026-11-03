@@ -4,6 +4,7 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize screens
+    let appInitialized = false;
     const loginScreen = document.getElementById('login-screen');
     const appScreen = document.getElementById('app-screen');
     const travelerSelect = document.getElementById('traveler-select');
@@ -49,11 +50,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // Hamburger menu toggle
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const sidebar = document.querySelector('.sidebar');
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        sidebarOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (hamburgerBtn) hamburgerBtn.addEventListener('click', openSidebar);
+    if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', closeSidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+
+    // Close sidebar when a nav link is tapped on mobile
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) closeSidebar();
+        });
+    });
+
     // Handle logout
     logoutBtn.addEventListener('click', () => {
         if (confirm('Are you sure you want to logout?')) {
             auth.logout();
-            showLogin();
+            // Reload the page to reset all state cleanly
+            window.location.reload();
         }
     });
 
@@ -73,28 +104,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function showApp() {
-        console.log('showApp called');
-        console.log('loginScreen before:', loginScreen.classList.contains('active'));
-        console.log('appScreen before:', appScreen.classList.contains('active'));
-        
         loginScreen.classList.remove('active');
         appScreen.classList.add('active');
-        
-        console.log('loginScreen after:', loginScreen.classList.contains('active'));
-        console.log('appScreen after:', appScreen.classList.contains('active'));
-        
-        // Initialize router
-        const pageContainer = document.getElementById('page-container');
-        router.init(pageContainer);
-        
-        // Register all pages
-        router.registerPage('overview', renderOverviewPage);
-        router.registerPage('log-progress', renderLogProgressPage);
-        router.registerPage('training-plan', renderTrainingPlanPage);
-        router.registerPage('strength-stretch', renderStrengthStretchPage);
-        router.registerPage('gear-audit', renderGearAuditPage);
-        router.registerPage('trail-fuel', renderTrailFuelPage);
-        
+
+        // Only initialize router and pages once
+        if (!appInitialized) {
+            appInitialized = true;
+
+            const pageContainer = document.getElementById('page-container');
+            router.init(pageContainer);
+
+            // Register all pages
+            router.registerPage('overview', renderOverviewPage);
+            router.registerPage('log-progress', renderLogProgressPage);
+            router.registerPage('training-plan', renderTrainingPlanPage);
+            router.registerPage('strength-stretch', renderStrengthStretchPage);
+            router.registerPage('gear-audit', renderGearAuditPage);
+            router.registerPage('trail-fuel', renderTrailFuelPage);
+        }
+
         // Navigate to default page
         router.navigate('overview');
     }

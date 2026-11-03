@@ -19,7 +19,7 @@ class Router {
     }
 
     setupNavigation() {
-        // Handle nav link clicks
+        // Handle sidebar nav link clicks
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -30,6 +30,20 @@ class Router {
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
             });
+        });
+
+        // Handle data-navigate buttons/links anywhere in the page
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-navigate]');
+            if (!target) return;
+            e.preventDefault();
+            const page = target.dataset.navigate;
+            this.navigate(page);
+
+            // Sync sidebar active state
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            const navLink = document.querySelector('.nav-link[data-page=' + page + ']');
+            if (navLink) navLink.classList.add('active');
         });
     }
 
@@ -43,7 +57,11 @@ class Router {
         
         try {
             const content = await this.pages[pageName]();
-            this.container.innerHTML = content;
+            // Only set innerHTML if the page function returned a string.
+            // Some page functions set innerHTML directly and return undefined.
+            if (typeof content === 'string') {
+                this.container.innerHTML = content;
+            }
             
             // Call post-render hook if it exists
             const hookName = `${pageName}PostRender`;
@@ -52,12 +70,15 @@ class Router {
             }
         } catch (error) {
             console.error('Error rendering page:', error);
-            this.container.innerHTML = `
-                <div class="error-message">
-                    <h2>Error loading page</h2>
-                    <p>${error.message}</p>
-                </div>
-            `;
+            const container = document.getElementById('page-container');
+            if (container) {
+                container.innerHTML = `
+                    <div class="error-message">
+                        <h2>Error loading page</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
         }
     }
 
