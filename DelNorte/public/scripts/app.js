@@ -37,10 +37,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         loginBtn.textContent = 'Logging in...';
 
         try {
+            console.log('Attempting login for:', name);
             await auth.login(name);
+            console.log('Login successful');
             showApp();
         } catch (error) {
-            alert('Login failed. Please try again.');
+            console.error('Login error:', error);
+            alert('Login failed: ' + error.message);
             loginBtn.disabled = false;
             loginBtn.textContent = 'Start training';
         }
@@ -70,8 +73,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function showApp() {
+        console.log('showApp called');
+        console.log('loginScreen before:', loginScreen.classList.contains('active'));
+        console.log('appScreen before:', appScreen.classList.contains('active'));
+        
         loginScreen.classList.remove('active');
         appScreen.classList.add('active');
+        
+        console.log('loginScreen after:', loginScreen.classList.contains('active'));
+        console.log('appScreen after:', appScreen.classList.contains('active'));
         
         // Initialize router
         const pageContainer = document.getElementById('page-container');

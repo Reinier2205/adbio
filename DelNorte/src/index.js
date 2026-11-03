@@ -3,18 +3,10 @@
  * Cloudflare Worker Entry Point
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-    // Initialize Supabase client
-    const supabase = createClient(
-      env.SUPABASE_URL,
-      env.SUPABASE_ANON_KEY
-    );
-
     // CORS headers
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
@@ -29,141 +21,166 @@ export default {
 
     // API Routes
     if (url.pathname.startsWith('/api/')) {
-      return handleAPI(request, env, supabase, corsHeaders);
+      try {
+        return await handleAPI(request, env, corsHeaders);
+      } catch (error) {
+        console.error('API Error:', error);
+        return jsonResponse({ error: error.message }, 500, corsHeaders);
+      }
     }
 
-    // Serve static files (frontend)
-    return env.ASSETS.fetch(request);
+    // Serve static files using new Assets binding
+    try {
+      if (env.ASSETS) {
+        console.log('Serving asset via ASSETS binding:', url.pathname);
+        return await env.ASSETS.fetch(request);
+      } else {
+        console.error('ASSETS binding not available');
+        return new Response(getIndexHTML(), {
+          status: 200,
+          headers: { 'Content-Type': 'text/html' }
+        });
+      }
+    } catch (e) {
+      console.error('Asset serving error:', e);
+      // Fallback to inline HTML
+      return new Response(getIndexHTML(), {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' }
+      });
+    }
   },
 };
 
 /**
+ * Supabase REST API Helper
+ */
+async function supabaseRequest(env, endpoint, options = {}) {
+  const url = `${env.SUPABASE_URL}/rest/v1/${endpoint}`;
+  const headers = {
+    'apikey': env.SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation',
+    ...options.headers
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  });
+
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(`Supabase error: ${response.status} ${text}`);
+  }
+
+  return text ? JSON.parse(text) : null;
+}
+
+/**
  * API Route Handler
  */
-async function handleAPI(request, env, supabase, corsHeaders) {
+async function handleAPI(request, env, corsHeaders) {
   const url = new URL(request.url);
   const path = url.pathname.replace('/api', '');
   const method = request.method;
 
-  try {
-    // Authentication: Simple name-based lookup
-    const authHeader = request.headers.get('Authorization');
-    let currentUser = null;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const userName = authHeader.replace('Bearer ', '');
-      const { data } = await supabase
-        .from('travelers')
-        .select('*')
-        .eq('name', userName)
-        .single();
-      currentUser = data;
+  // Authentication: Simple name-based lookup
+  const authHeader = request.headers.get('Authorization');
+  let currentUser = null;
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const userName = authHeader.replace('Bearer ', '');
+    try {
+      const travelers = await supabaseRequest(env, `travelers?name=eq.${encodeURIComponent(userName)}`);
+      if (travelers && travelers.length > 0) {
+        currentUser = travelers[0];
+      }
+    } catch (e) {
+      console.error('Auth error:', e);
     }
+  }
 
-    // Routes
-    switch (path) {
-      // Auth
-      case '/login':
-        return handleLogin(request, supabase, corsHeaders);
-      
-      // Travelers
-      case '/travelers':
-        return handleTravelers(method, supabase, corsHeaders);
-      
-      // Dashboard stats
-      case '/dashboard':
-        return handleDashboard(supabase, corsHeaders);
-      
-      // Activities
-      case '/activities':
-        return handleActivities(method, request, currentUser, supabase, corsHeaders);
-      
-      // Weight entries
-      case '/weight':
-        return handleWeight(method, request, currentUser, supabase, corsHeaders);
-      
-      // Gear items
-      case '/gear':
-        return handleGear(method, request, currentUser, supabase, corsHeaders);
-      
-      // Pilates videos
-      case '/videos':
-        return handleVideos(method, request, supabase, corsHeaders);
-      
-      // Weekly progress
-      case '/progress/weekly':
-        return handleWeeklyProgress(supabase, corsHeaders);
-      
-      default:
-        return jsonResponse({ error: 'Not found' }, 404, corsHeaders);
-    }
-  } catch (error) {
-    console.error('API Error:', error);
-    return jsonResponse({ error: error.message }, 500, corsHeaders);
+  // Routes
+  switch (path) {
+    case '/login':
+      return handleLogin(request, env, corsHeaders);
+    
+    case '/travelers':
+      return handleTravelers(method, env, corsHeaders);
+    
+    case '/dashboard':
+      return handleDashboard(env, corsHeaders);
+    
+    case '/activities':
+      return handleActivities(method, request, currentUser, env, corsHeaders);
+    
+    case '/weight':
+      return handleWeight(method, request, currentUser, env, corsHeaders);
+    
+    case '/gear':
+      return handleGear(method, request, currentUser, env, corsHeaders);
+    
+    case '/videos':
+      return handleVideos(method, request, env, corsHeaders);
+    
+    case '/progress/weekly':
+      return handleWeeklyProgress(env, corsHeaders);
+    
+    default:
+      return jsonResponse({ error: 'Not found' }, 404, corsHeaders);
   }
 }
 
 /**
- * Login Handler - Simple name-based authentication
+ * Login Handler
  */
-async function handleLogin(request, supabase, corsHeaders) {
+async function handleLogin(request, env, corsHeaders) {
   const { name } = await request.json();
+  const travelers = await supabaseRequest(env, `travelers?name=eq.${encodeURIComponent(name)}`);
   
-  const { data, error } = await supabase
-    .from('travelers')
-    .select('*')
-    .eq('name', name)
-    .single();
-  
-  if (error || !data) {
+  if (!travelers || travelers.length === 0) {
     return jsonResponse({ error: 'Traveler not found' }, 404, corsHeaders);
   }
   
   return jsonResponse({ 
     success: true, 
-    user: data,
-    token: name // Simple token = name
+    user: travelers[0],
+    token: name
   }, 200, corsHeaders);
 }
 
 /**
  * Travelers Handler
  */
-async function handleTravelers(method, supabase, corsHeaders) {
+async function handleTravelers(method, env, corsHeaders) {
   if (method === 'GET') {
-    const { data, error } = await supabase
-      .from('travelers')
-      .select('*')
-      .order('name');
-    
-    if (error) throw error;
+    const data = await supabaseRequest(env, 'travelers?order=name.asc');
     return jsonResponse(data, 200, corsHeaders);
   }
-  
   return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
 }
 
 /**
- * Dashboard Handler - Group overview
+ * Dashboard Handler
  */
-async function handleDashboard(supabase, corsHeaders) {
-  // Get this week's activities for all users
+async function handleDashboard(env, corsHeaders) {
   const weekStart = getMonday(new Date());
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 6);
   
-  const { data: activities, error } = await supabase
-    .from('activities')
-    .select('*, travelers(name)')
-    .gte('activity_date', weekStart.toISOString().split('T')[0])
-    .lte('activity_date', weekEnd.toISOString().split('T')[0]);
+  const startStr = weekStart.toISOString().split('T')[0];
+  const endStr = weekEnd.toISOString().split('T')[0];
   
-  if (error) throw error;
+  const activities = await supabaseRequest(
+    env, 
+    `activities?activity_date=gte.${startStr}&activity_date=lte.${endStr}&select=*,travelers(name)`
+  );
   
-  // Group by user
   const userStats = {};
   activities.forEach(act => {
-    const userName = act.travelers.name;
+    const userName = act.travelers?.name || 'Unknown';
     if (!userStats[userName]) {
       userStats[userName] = {
         walking_km: 0,
@@ -189,24 +206,17 @@ async function handleDashboard(supabase, corsHeaders) {
 /**
  * Activities Handler
  */
-async function handleActivities(method, request, currentUser, supabase, corsHeaders) {
+async function handleActivities(method, request, currentUser, env, corsHeaders) {
   if (method === 'GET') {
     const url = new URL(request.url);
     const userId = url.searchParams.get('user_id');
     
-    let query = supabase
-      .from('activities')
-      .select('*, travelers(name)')
-      .order('activity_date', { ascending: false })
-      .limit(50);
-    
+    let endpoint = 'activities?select=*,travelers(name)&order=activity_date.desc&limit=50';
     if (userId) {
-      query = query.eq('user_id', userId);
+      endpoint = `activities?user_id=eq.${userId}&select=*,travelers(name)&order=activity_date.desc&limit=50`;
     }
     
-    const { data, error } = await query;
-    if (error) throw error;
-    
+    const data = await supabaseRequest(env, endpoint);
     return jsonResponse(data, 200, corsHeaders);
   }
   
@@ -218,20 +228,17 @@ async function handleActivities(method, request, currentUser, supabase, corsHead
     const activity = await request.json();
     activity.user_id = currentUser.id;
     
-    const { data, error } = await supabase
-      .from('activities')
-      .insert(activity)
-      .select()
-      .single();
-    
-    if (error) throw error;
+    const data = await supabaseRequest(env, 'activities', {
+      method: 'POST',
+      body: JSON.stringify(activity)
+    });
     
     // Update gear if boots were worn
     if (activity.wore_camino_boots && activity.distance_km) {
-      await updateGearKm(currentUser.id, activity.distance_km, supabase);
+      await updateGearKm(currentUser.id, activity.distance_km, env);
     }
     
-    return jsonResponse(data, 201, corsHeaders);
+    return jsonResponse(data[0], 201, corsHeaders);
   }
   
   return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
@@ -240,7 +247,7 @@ async function handleActivities(method, request, currentUser, supabase, corsHead
 /**
  * Weight Handler
  */
-async function handleWeight(method, request, currentUser, supabase, corsHeaders) {
+async function handleWeight(method, request, currentUser, env, corsHeaders) {
   if (method === 'GET') {
     const url = new URL(request.url);
     const userId = url.searchParams.get('user_id');
@@ -249,13 +256,10 @@ async function handleWeight(method, request, currentUser, supabase, corsHeaders)
       return jsonResponse({ error: 'user_id required' }, 400, corsHeaders);
     }
     
-    const { data, error } = await supabase
-      .from('weight_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .order('entry_date', { ascending: false });
-    
-    if (error) throw error;
+    const data = await supabaseRequest(
+      env, 
+      `weight_entries?user_id=eq.${userId}&order=entry_date.desc`
+    );
     return jsonResponse(data, 200, corsHeaders);
   }
   
@@ -267,14 +271,12 @@ async function handleWeight(method, request, currentUser, supabase, corsHeaders)
     const entry = await request.json();
     entry.user_id = currentUser.id;
     
-    const { data, error } = await supabase
-      .from('weight_entries')
-      .insert(entry)
-      .select()
-      .single();
+    const data = await supabaseRequest(env, 'weight_entries', {
+      method: 'POST',
+      body: JSON.stringify(entry)
+    });
     
-    if (error) throw error;
-    return jsonResponse(data, 201, corsHeaders);
+    return jsonResponse(data[0], 201, corsHeaders);
   }
   
   return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
@@ -283,7 +285,7 @@ async function handleWeight(method, request, currentUser, supabase, corsHeaders)
 /**
  * Gear Handler
  */
-async function handleGear(method, request, currentUser, supabase, corsHeaders) {
+async function handleGear(method, request, currentUser, env, corsHeaders) {
   if (method === 'GET') {
     const url = new URL(request.url);
     const userId = url.searchParams.get('user_id') || currentUser?.id;
@@ -292,13 +294,10 @@ async function handleGear(method, request, currentUser, supabase, corsHeaders) {
       return jsonResponse({ error: 'user_id required' }, 400, corsHeaders);
     }
     
-    const { data, error } = await supabase
-      .from('gear_items')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
+    const data = await supabaseRequest(
+      env,
+      `gear_items?user_id=eq.${userId}&order=created_at.desc`
+    );
     return jsonResponse(data, 200, corsHeaders);
   }
   
@@ -310,14 +309,12 @@ async function handleGear(method, request, currentUser, supabase, corsHeaders) {
     const gear = await request.json();
     gear.user_id = currentUser.id;
     
-    const { data, error } = await supabase
-      .from('gear_items')
-      .insert(gear)
-      .select()
-      .single();
+    const data = await supabaseRequest(env, 'gear_items', {
+      method: 'POST',
+      body: JSON.stringify(gear)
+    });
     
-    if (error) throw error;
-    return jsonResponse(data, 201, corsHeaders);
+    return jsonResponse(data[0], 201, corsHeaders);
   }
   
   return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
@@ -326,29 +323,23 @@ async function handleGear(method, request, currentUser, supabase, corsHeaders) {
 /**
  * Videos Handler
  */
-async function handleVideos(method, request, supabase, corsHeaders) {
+async function handleVideos(method, request, env, corsHeaders) {
   if (method === 'GET') {
-    const { data, error } = await supabase
-      .from('pilates_videos')
-      .select('*')
-      .order('slot_number');
-    
-    if (error) throw error;
+    const data = await supabaseRequest(env, 'pilates_videos?order=slot_number.asc');
     return jsonResponse(data, 200, corsHeaders);
   }
   
   if (method === 'PUT') {
     const video = await request.json();
-    
-    const { data, error } = await supabase
-      .from('pilates_videos')
-      .update(video)
-      .eq('slot_number', video.slot_number)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return jsonResponse(data, 200, corsHeaders);
+    const data = await supabaseRequest(
+      env,
+      `pilates_videos?slot_number=eq.${video.slot_number}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(video)
+      }
+    );
+    return jsonResponse(data[0], 200, corsHeaders);
   }
   
   return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
@@ -357,26 +348,22 @@ async function handleVideos(method, request, supabase, corsHeaders) {
 /**
  * Weekly Progress Handler
  */
-async function handleWeeklyProgress(supabase, corsHeaders) {
-  // Get activities from last 8 weeks for trend analysis
+async function handleWeeklyProgress(env, corsHeaders) {
   const today = new Date();
   const eightWeeksAgo = new Date(today);
   eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
   
-  const { data, error } = await supabase
-    .from('activities')
-    .select('*, travelers(name)')
-    .gte('activity_date', eightWeeksAgo.toISOString().split('T')[0])
-    .order('activity_date', { ascending: false });
+  const data = await supabaseRequest(
+    env,
+    `activities?activity_date=gte.${eightWeeksAgo.toISOString().split('T')[0]}&select=*,travelers(name)&order=activity_date.desc`
+  );
   
-  if (error) throw error;
   return jsonResponse(data, 200, corsHeaders);
 }
 
 /**
  * Helper Functions
  */
-
 function jsonResponse(data, status = 200, corsHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
@@ -394,26 +381,103 @@ function getMonday(date) {
   return new Date(d.setDate(diff));
 }
 
-async function updateGearKm(userId, distanceKm, supabase) {
-  // Find user's boots
-  const { data: boots } = await supabase
-    .from('gear_items')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('item_type', 'boots')
-    .single();
-  
-  if (boots) {
-    const newTotalKm = parseFloat(boots.total_km || 0) + parseFloat(distanceKm);
-    const isReady = newTotalKm >= 100;
+async function updateGearKm(userId, distanceKm, env) {
+  try {
+    const boots = await supabaseRequest(
+      env,
+      `gear_items?user_id=eq.${userId}&item_type=eq.boots`
+    );
     
-    await supabase
-      .from('gear_items')
-      .update({
-        total_km: newTotalKm,
-        is_trail_ready: isReady,
-        last_used: new Date().toISOString().split('T')[0]
-      })
-      .eq('id', boots.id);
+    if (boots && boots.length > 0) {
+      const boot = boots[0];
+      const newTotalKm = parseFloat(boot.total_km || 0) + parseFloat(distanceKm);
+      const isReady = newTotalKm >= 100;
+      
+      await supabaseRequest(
+        env,
+        `gear_items?id=eq.${boot.id}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            total_km: newTotalKm,
+            is_trail_ready: isReady,
+            last_used: new Date().toISOString().split('T')[0]
+          })
+        }
+      );
+    }
+  } catch (error) {
+    console.error('Error updating gear km:', error);
   }
+}
+
+// Fallback HTML when Workers Sites assets aren't available
+function getIndexHTML() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DelNorte - Camino Training Tracker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2C5F4F 0%, #1F4438 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            text-align: center;
+        }
+        .logo { font-size: 48px; margin-bottom: 20px; }
+        h1 { font-size: 32px; margin-bottom: 10px; }
+        p { font-size: 18px; opacity: 0.9; line-height: 1.6; margin-bottom: 30px; }
+        .error-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .error-box h2 { font-size: 20px; margin-bottom: 10px; color: #F4C753; }
+        .error-box p { font-size: 14px; opacity: 0.8; }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🥾</div>
+        <h1>DelNorte Camino Tracker</h1>
+        <p>Your training companion for Camino del Norte</p>
+        
+        <div class="error-box">
+            <h2>⚠️ Configuration Issue</h2>
+            <p>Workers Sites assets are not properly configured.</p>
+            <p style="margin-top: 15px;">
+                The <code>__STATIC_CONTENT_MANIFEST</code> binding is missing.
+                This usually means the site assets weren't uploaded correctly.
+            </p>
+            <p style="margin-top: 15px; font-size: 12px;">
+                Try redeploying with: <code>wrangler deploy</code>
+            </p>
+        </div>
+        
+        <p style="margin-top: 30px; font-size: 14px;">
+            Training Period: November 1, 2026 → June 1, 2027<br>
+            <strong>Buen Camino!</strong>
+        </p>
+    </div>
+</body>
+</html>`;
 }

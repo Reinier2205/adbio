@@ -58,7 +58,7 @@ class API {
 
     // Auth
     async login(name) {
-        const data = await this.request('/login', {
+        const data = await this.request('/api/login', {
             method: 'POST',
             body: JSON.stringify({ name }),
         });
@@ -68,22 +68,22 @@ class API {
 
     // Travelers
     async getTravelers() {
-        return this.request('/travelers');
+        return this.request('/api/travelers');
     }
 
     // Dashboard
     async getDashboard() {
-        return this.request('/dashboard');
+        return this.request('/api/dashboard');
     }
 
     // Activities
     async getActivities(userId = null) {
         const query = userId ? `?user_id=${userId}` : '';
-        return this.request(`/activities${query}`);
+        return this.request(`/api/activities${query}`);
     }
 
     async createActivity(activity) {
-        return this.request('/activities', {
+        return this.request('/api/activities', {
             method: 'POST',
             body: JSON.stringify(activity),
         });
@@ -91,11 +91,11 @@ class API {
 
     // Weight
     async getWeightEntries(userId) {
-        return this.request(`/weight?user_id=${userId}`);
+        return this.request(`/api/weight?user_id=${userId}`);
     }
 
     async createWeightEntry(entry) {
-        return this.request('/weight', {
+        return this.request('/api/weight', {
             method: 'POST',
             body: JSON.stringify(entry),
         });
@@ -103,11 +103,11 @@ class API {
 
     // Gear
     async getGear(userId) {
-        return this.request(`/gear?user_id=${userId}`);
+        return this.request(`/api/gear?user_id=${userId}`);
     }
 
     async createGear(gear) {
-        return this.request('/gear', {
+        return this.request('/api/gear', {
             method: 'POST',
             body: JSON.stringify(gear),
         });
@@ -115,11 +115,11 @@ class API {
 
     // Videos
     async getVideos() {
-        return this.request('/videos');
+        return this.request('/api/videos');
     }
 
     async updateVideo(video) {
-        return this.request('/videos', {
+        return this.request('/api/videos', {
             method: 'PUT',
             body: JSON.stringify(video),
         });
@@ -127,7 +127,7 @@ class API {
 
     // Weekly Progress
     async getWeeklyProgress() {
-        return this.request('/progress/weekly');
+        return this.request('/api/progress/weekly');
     }
 }
 
