@@ -31,7 +31,7 @@ const activityModal = (() => {
         close();
 
         const a       = _activity;
-        const types   = ['walk','hike','pilates','cycle','swim'];
+        const types   = ['walk','hike','pilates','cycle','dance','sauna'];
         const typeTiles = types.map(t => `
             <button type="button" class="lp-type-tile${a.activity_type === t ? ' lp-selected' : ''}" data-type="${t}">
                 <span class="lp-tile-icon lp-dot-${t}"></span>
@@ -124,7 +124,7 @@ const activityModal = (() => {
             document.querySelectorAll('#amod-type-grid .lp-type-tile').forEach(t => t.classList.remove('lp-selected'));
             tile.classList.add('lp-selected');
             selectedType = tile.dataset.type;
-            document.getElementById('amod-numbers').style.display = selectedType === 'pilates' ? 'none' : '';
+            document.getElementById('amod-numbers').style.display = (selectedType === 'pilates' || selectedType === 'sauna') ? 'none' : '';
         });
 
         // Toggle pills
@@ -140,7 +140,7 @@ const activityModal = (() => {
             btn.disabled = true;
             btn.textContent = 'Saving...';
             try {
-                const isPil = selectedType === 'pilates';
+                const isPil = selectedType === 'pilates' || selectedType === 'sauna';
                 const updates = {
                     activity_type:     selectedType,
                     activity_date:     document.getElementById('amod-date').value,

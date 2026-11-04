@@ -39,9 +39,13 @@ async function renderLogProgressPage() {
                             <span class="lp-tile-icon lp-dot-cycle"></span>
                             <span>Cycle</span>
                         </button>
-                        <button type="button" class="lp-type-tile" data-type="swim">
-                            <span class="lp-tile-icon lp-dot-swim"></span>
-                            <span>Swim</span>
+                        <button type="button" class="lp-type-tile" data-type="dance">
+                            <span class="lp-tile-icon lp-dot-dance"></span>
+                            <span>Dance</span>
+                        </button>
+                        <button type="button" class="lp-type-tile" data-type="sauna">
+                            <span class="lp-tile-icon lp-dot-sauna"></span>
+                            <span>Sauna</span>
                         </button>
                     </div>
 
@@ -122,7 +126,7 @@ async function renderLogProgressPage() {
         selectedType = tile.dataset.type;
 
         // Show/hide distance fields
-        const isPilates = selectedType === 'pilates';
+        const isPilates = selectedType === 'pilates' || selectedType === 'sauna';
         document.getElementById('lp-distance-row').style.display    = isPilates ? 'none' : '';
         document.getElementById('lp-duration-only-row').style.display = isPilates ? '' : 'none';
     });
@@ -148,7 +152,7 @@ async function handleLPSubmit(user, _unused, getType) {
 
     try {
         const activityType = getType();
-        const isPilates    = activityType === 'pilates';
+        const isPilates    = activityType === 'pilates' || activityType === 'sauna';
 
         const durationEl = isPilates
             ? document.getElementById('lp-duration-pilates')
