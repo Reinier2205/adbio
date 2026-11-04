@@ -79,6 +79,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // Share button
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', async () => {
+            const url = 'https://delnorte.reinier-olivier.workers.dev';
+            const text = 'Join me on Camino Ready — tracking our Camino del Norte training! ' + url;
+            if (navigator.share) {
+                // Native share sheet on mobile
+                try {
+                    await navigator.share({ title: 'Camino Ready', text: 'Join me on Camino Ready — tracking our Camino del Norte training!', url });
+                } catch (e) { /* user cancelled */ }
+            } else {
+                // Fallback: copy to clipboard
+                try {
+                    await navigator.clipboard.writeText(url);
+                    showShareToast('Link copied — share it with your Camino group!');
+                } catch (e) {
+                    // Last resort
+                    prompt('Copy this link to share:', url);
+                }
+            }
+        });
+    }
+
+    function showShareToast(msg) {
+        const old = document.getElementById('share-toast');
+        if (old) old.remove();
+        const toast = document.createElement('div');
+        toast.id = 'share-toast';
+        toast.className = 'share-toast';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.classList.add('share-toast-show'); }, 10);
+        setTimeout(() => { toast.classList.remove('share-toast-show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
     // Handle logout
     logoutBtn.addEventListener('click', () => {
         if (confirm('Are you sure you want to logout?')) {
