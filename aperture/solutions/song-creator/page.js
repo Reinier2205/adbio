@@ -3,6 +3,44 @@
 const META_AI_PROMPT =
   'Create compact, copy-ready Suno soundtrack design JSON and Suno style tags for this post. JSON fields: genre, mood, emotion, tempo_bpm, rhythm, instruments, vocal_style, energy, song_structure, production_style, and suno_style_tags. No lyrics.';
 
+// Mirror of the server-side prompt template — kept in sync with solutions/song-creator/prompt.md
+// Also includes explicit JSON output format instructions (Gemini gets these via responseSchema;
+// other LLMs need them spelled out in the prompt).
+const SYSTEM_PROMPT = `You are a professional songwriter and Suno AI expert. Your job is to analyse a song description and write complete, ready-to-use lyrics for a new original song inspired by it.
+
+The input contains three parts:
+1. A song analysis (from Meta AI or similar) describing an existing song
+2. The user's creative direction for their own new song
+3. The song structure the user wants (e.g. intro, 2 verses, chorus, bridge, outro)
+
+Rules:
+- Extract the original song's details from the analysis only. Do not invent facts about the original.
+- If original info is unknown, use an empty string or empty array.
+- For original_style: write Suno-compatible style tags (e.g. "afrobeats, upbeat, acoustic guitar, 95bpm, warm male vocals").
+- For new_style: adapt the original style tags to fit the user's creative direction. Keep the musical DNA, adjust mood/genre to match their idea.
+- For new_title: suggest a catchy, original title that fits the user's theme.
+- For new_lyrics: write COMPLETE song lyrics — not a prompt, not a description, actual words the singer will sing. Follow the song structure the user requested. Use Suno section tags exactly as follows on their own line before each section:
+  [Intro], [Verse 1], [Verse 2], [Verse 3], [Pre-Chorus], [Chorus], [Bridge], [Hook], [Outro], [Break], [Instrumental]
+  Write 4–8 lines per section. Make the lyrics vivid, personal, and emotionally resonant. The chorus should be catchy and memorable. Rhyme scheme should feel natural, not forced.
+
+OUTPUT FORMAT — respond with a single valid JSON object, no markdown fences, no explanation:
+
+{
+  "original_title": "Title of the original song",
+  "original_style": "genre, mood, instruments, tempo — comma-separated Suno style tags",
+  "original_lyrics_themes": ["theme one", "theme two", "theme three"],
+  "new_title": "Your suggested title for the new song",
+  "new_style": "genre, mood, instruments, tempo — comma-separated Suno style tags for the new song",
+  "new_lyrics": "[Intro]\\nLine one\\nLine two\\n\\n[Verse 1]\\nLine one\\nLine two\\nLine three\\nLine four\\n\\n[Chorus]\\nLine one\\nLine two\\nLine three\\nLine four\\n\\n[Outro]\\nLine one\\nLine two"
+}
+
+CRITICAL RULES FOR new_lyrics:
+- Each section tag ([Intro], [Verse 1], [Chorus], etc.) must be on its own line, with a blank line before and after it — exactly as Suno expects.
+- Write actual sung words — not descriptions, not placeholders.
+- Do NOT write anything like "verse about..." or "(optional)". Write the real lyrics.
+- The entire lyrics field is a single JSON string. Use \\n for line breaks inside it.
+- Only include the sections the user requested in the song structure part of the input.`;
+
 const STRUCTURE_BLOCKS = [
   { id: 'intro',        label: 'Intro',        tag: '[Intro]',        default: true  },
   { id: 'verse1',       label: 'Verse 1',      tag: '[Verse 1]',      default: true  },
@@ -83,6 +121,20 @@ export function render(root, { api, toast, navigate, solution }) {
           </div>
         </section>
 
+        <section class="card panel fallback-panel" id="fallbackSection" style="display:none">
+          <div class="fallback-header">
+            <div>
+              <h2 class="fallback-title">Gemini is unavailable</h2>
+              <p class="hint" style="margin:4px 0 0;">Copy this prompt and paste it into ChatGPT, Claude, or any AI — then paste the JSON response back into the output fields above.</p>
+            </div>
+            <button class="button secondary" type="button" id="dismissFallbackBtn" aria-label="Dismiss">✕</button>
+          </div>
+          <div class="actions" style="margin-top:14px;margin-bottom:14px;">
+            <button class="button primary" type="button" id="copyFallbackBtn">Copy prompt</button>
+          </div>
+          <textarea id="fallbackPrompt" class="fallback-textarea" readonly rows="10"></textarea>
+        </section>
+
         <section class="card panel" id="outputSection" style="display:none">
           <h2>4. Your Suno song</h2>
 
@@ -126,8 +178,8 @@ export function render(root, { api, toast, navigate, solution }) {
 
       <style>
         /* Meta AI prompt box */
-        .meta-prompt-box { display:flex; flex-direction:column; background:#f6f1e8; border-radius:10px; padding:12px 14px; margin-bottom:12px; }
-        .meta-prompt-text { white-space:pre-wrap; font-size:12px; word-break:break-word; overflow-wrap:anywhere; }
+        .meta-prompt-box { display:flex; flex-direction:column; background:#f6f1e8; border-radius:10px; padding:12px 14px; margin-bottom:12px; overflow:hidden; }
+        .meta-prompt-text { white-space:pre-wrap; font-size:12px; word-break:break-word; overflow-wrap:anywhere; display:block; background:transparent; padding:0; border-radius:0; }
 
         /* Meta row (original song details) */
         .meta-row { display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
@@ -143,29 +195,36 @@ export function render(root, { api, toast, navigate, solution }) {
         @keyframes spin { to { transform:rotate(360deg); } }
 
         /* Jukebox card */
-        .jukebox-card { padding:14px 16px; }
-        .jukebox-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-        .jukebox-info { flex:1; min-width:0; }
+        .jukebox-card { padding:14px 16px; min-width:0; overflow:hidden; }
+        .jukebox-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+        .jukebox-info { flex:1; min-width:0; overflow:hidden; }
         .jukebox-title { font-size:15px; display:block; margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .jukebox-desc { margin:0 0 3px; font-size:13px; color:var(--text); opacity:0.8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .jukebox-style { margin:0 0 8px; font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .jukebox-actions { display:flex; gap:6px; flex-shrink:0; align-items:flex-start; }
+        .jukebox-actions { display:flex; gap:6px; flex-shrink:0; align-items:flex-start; flex-wrap:wrap; }
+        .jukebox-actions .button { font-size:12px; min-height:38px; padding:0 12px; }
 
         /* Jukebox link row */
-        .jukebox-link-row { display:flex; gap:6px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+        .jukebox-link-row { display:flex; gap:6px; align-items:center; margin-top:10px; }
         .jukebox-link-row input[type=url] { flex:1; min-width:0; font-size:13px; min-height:44px; padding:0 10px; border:1.5px solid var(--line); border-radius:8px; outline:none; }
-        .jukebox-link-row .button { font-size:13px; min-height:44px; padding:0 14px; flex-shrink:0; }
+        .jukebox-link-row .button { font-size:12px; min-height:38px; padding:0 12px; flex-shrink:0; }
 
         /* Danger button */
         .btn-danger { color:#c0392b !important; border-color:#e8c4c0 !important; }
         .btn-danger:hover { background:#fdf0ea !important; border-color:#c0392b !important; }
 
-        @media (max-width: 390px) {
-          .jukebox-top { flex-direction:column; }
+        /* Fallback / manual prompt panel */
+        .fallback-panel { border-color:#e8c4c0 !important; background:#fff9f8 !important; }
+        .fallback-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+        .fallback-title { margin:0; font-size:16px; color:#c0392b; }
+        .fallback-textarea { font-family:ui-monospace,Consolas,monospace; font-size:12px; color:var(--ink); background:#f6f1e8; border-color:var(--line); resize:vertical; min-height:180px; cursor:text; }
+
+        @media (max-width: 430px) {
+          .jukebox-top { flex-direction:column; gap:8px; }
           .jukebox-actions { width:100%; justify-content:flex-end; }
-          .jukebox-link-row { flex-direction:column; align-items:stretch; }
+          .jukebox-link-row { flex-wrap:wrap; }
           .jukebox-link-row input[type=url] { width:100%; }
-          .jukebox-link-row .button { width:100%; }
+          .jukebox-link-row .button { flex:1; }
         }
       </style>
     `,
@@ -186,6 +245,8 @@ export function render(root, { api, toast, navigate, solution }) {
   const generateBtn   = root.querySelector('#generateBtn');
   const generateLabel = root.querySelector('#generateLabel');
   const spinner       = root.querySelector('#spinner');
+  const fallbackSection = root.querySelector('#fallbackSection');
+  const fallbackPrompt  = root.querySelector('#fallbackPrompt');
 
   // Structure toggles
   root.querySelector('#structureGrid').addEventListener('click', (e) => {
@@ -198,6 +259,14 @@ export function render(root, { api, toast, navigate, solution }) {
 
   root.querySelector('#copyPromptBtn').addEventListener('click', () => {
     navigator.clipboard.writeText(META_AI_PROMPT).then(() => toast('Prompt copied!'));
+  });
+
+  root.querySelector('#dismissFallbackBtn').addEventListener('click', () => {
+    fallbackSection.style.display = 'none';
+  });
+
+  root.querySelector('#copyFallbackBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(fallbackPrompt.value).then(() => toast('Prompt copied — paste into any AI!'));
   });
   root.querySelector('#copyStyleBtn').addEventListener('click', () => {
     navigator.clipboard.writeText(newStyle.value).then(() => toast('Style tags copied!'));
@@ -259,7 +328,12 @@ export function render(root, { api, toast, navigate, solution }) {
       toast('Lyrics ready \u2014 copy to Suno, then add your Suno link in the Jukebox!');
       await loadHistory();
     } catch (err) {
-      toast(err.message);
+      // Show the fallback panel with the full prompt so the user can copy it to another AI
+      const fullPrompt = `${SYSTEM_PROMPT}\n\n${combinedText}`;
+      fallbackPrompt.value = fullPrompt;
+      fallbackSection.style.display = '';
+      fallbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      toast(`Gemini failed: ${err.message}`);
     } finally {
       setLoading(false);
     }
