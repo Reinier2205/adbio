@@ -48,9 +48,9 @@ export function render(root, { api, toast, navigate, solution }) {
         <section class="card panel">
           <h2>1. Get song info from Meta AI</h2>
           <p class="hint">When you hear a song on Instagram, open Meta AI and paste this prompt:</p>
-          <div style="display:flex;gap:10px;align-items:flex-start;background:#f6f1e8;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
-            <code id="metaPrompt" style="flex:1;white-space:pre-wrap;font-size:12px;">${escapeHtml(META_AI_PROMPT)}</code>
-            <button class="button secondary" type="button" id="copyPromptBtn" style="flex-shrink:0;">Copy</button>
+          <div class="meta-prompt-box">
+            <code id="metaPrompt" class="meta-prompt-text">${escapeHtml(META_AI_PROMPT)}</code>
+            <button class="button secondary" type="button" id="copyPromptBtn" style="align-self:flex-end;margin-top:8px;">Copy prompt</button>
           </div>
           <p class="hint">Then paste Meta AI\u2019s response below.</p>
           <label class="field">Meta AI song analysis
@@ -88,9 +88,9 @@ export function render(root, { api, toast, navigate, solution }) {
 
           <div style="margin-bottom:18px;">
             <h3 style="margin:0 0 10px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;">Original song</h3>
-            <div style="margin-bottom:6px;"><span style="font-size:12px;color:var(--muted);font-weight:700;min-width:90px;display:inline-block;">Title</span><span id="origTitle"></span></div>
-            <div style="margin-bottom:6px;"><span style="font-size:12px;color:var(--muted);font-weight:700;min-width:90px;display:inline-block;">Style tags</span><span id="origStyle"></span></div>
-            <div><span style="font-size:12px;color:var(--muted);font-weight:700;min-width:90px;display:inline-block;vertical-align:top;">Themes</span><ul id="origThemes" style="margin:0;padding-left:18px;display:inline-block;"></ul></div>
+            <div class="meta-row"><span class="meta-label">Title</span><span id="origTitle"></span></div>
+            <div class="meta-row"><span class="meta-label">Style tags</span><span id="origStyle"></span></div>
+            <div class="meta-row" style="align-items:flex-start"><span class="meta-label">Themes</span><ul id="origThemes" style="margin:0;padding-left:18px;"></ul></div>
           </div>
 
           <hr style="border:none;border-top:1px solid var(--line);margin:18px 0;">
@@ -125,22 +125,48 @@ export function render(root, { api, toast, navigate, solution }) {
       </div>
 
       <style>
+        /* Meta AI prompt box */
+        .meta-prompt-box { display:flex; flex-direction:column; background:#f6f1e8; border-radius:10px; padding:12px 14px; margin-bottom:12px; }
+        .meta-prompt-text { white-space:pre-wrap; font-size:12px; word-break:break-word; overflow-wrap:anywhere; }
+
+        /* Meta row (original song details) */
+        .meta-row { display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+        .meta-label { font-size:12px; color:var(--muted); font-weight:700; min-width:80px; flex-shrink:0; }
+
+        /* Structure pill grid */
         .structure-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
-        .structure-block { padding:7px 14px; border-radius:20px; border:1.5px solid var(--line); font-size:13px; font-weight:600; cursor:pointer; user-select:none; background:#fff; color:var(--muted); transition:0.15s; }
+        .structure-block { padding:9px 14px; border-radius:20px; border:1.5px solid var(--line); font-size:13px; font-weight:600; cursor:pointer; user-select:none; background:#fff; color:var(--muted); transition:0.15s; touch-action:manipulation; -webkit-tap-highlight-color:transparent; min-height:44px; display:inline-flex; align-items:center; }
         .structure-block.active { border-color:var(--accent); background:#fdf0ea; color:var(--accent); }
+
+        /* Spinner */
         .spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
         @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* Jukebox card */
         .jukebox-card { padding:14px 16px; }
         .jukebox-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
         .jukebox-info { flex:1; min-width:0; }
-        .jukebox-title { font-size:15px; display:block; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .jukebox-desc { margin:0 0 3px; font-size:13px; color:var(--text); opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .jukebox-style { margin:0 0 8px; font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .jukebox-link-row { display:flex; gap:6px; align-items:center; margin-top:8px; }
-        .jukebox-link-row input[type=url] { flex:1; font-size:12px; min-height:32px; padding:0 8px; border:1.5px solid var(--line); border-radius:8px; outline:none; }
+        .jukebox-title { font-size:15px; display:block; margin-bottom:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .jukebox-desc { margin:0 0 3px; font-size:13px; color:var(--text); opacity:0.8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .jukebox-style { margin:0 0 8px; font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .jukebox-actions { display:flex; gap:6px; flex-shrink:0; align-items:flex-start; }
+
+        /* Jukebox link row */
+        .jukebox-link-row { display:flex; gap:6px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+        .jukebox-link-row input[type=url] { flex:1; min-width:0; font-size:13px; min-height:44px; padding:0 10px; border:1.5px solid var(--line); border-radius:8px; outline:none; }
+        .jukebox-link-row .button { font-size:13px; min-height:44px; padding:0 14px; flex-shrink:0; }
+
+        /* Danger button */
         .btn-danger { color:#c0392b !important; border-color:#e8c4c0 !important; }
         .btn-danger:hover { background:#fdf0ea !important; border-color:#c0392b !important; }
+
+        @media (max-width: 390px) {
+          .jukebox-top { flex-direction:column; }
+          .jukebox-actions { width:100%; justify-content:flex-end; }
+          .jukebox-link-row { flex-direction:column; align-items:stretch; }
+          .jukebox-link-row input[type=url] { width:100%; }
+          .jukebox-link-row .button { width:100%; }
+        }
       </style>
     `,
   });
@@ -255,12 +281,12 @@ export function render(root, { api, toast, navigate, solution }) {
 
         const linkRow = isInputOnly ? '' : sunoHref
           ? `<div class="jukebox-link-row">
-               <a class="button secondary" href="${escapeHtml(sunoHref)}" target="_blank" rel="noopener" style="font-size:12px;min-height:32px;padding:0 14px;display:inline-flex;align-items:center;gap:5px;">\u25b6\ufe0f Play on Suno</a>
-               <button class="button secondary btn-danger clear-link-btn" type="button" data-id="${row.id}" style="font-size:12px;min-height:32px;padding:0 10px;">Remove link</button>
+               <a class="button secondary" href="${escapeHtml(sunoHref)}" target="_blank" rel="noopener">▶️ Play on Suno</a>
+               <button class="button secondary btn-danger clear-link-btn" type="button" data-id="${row.id}">Remove</button>
              </div>`
           : `<div class="jukebox-link-row">
-               <input type="url" class="suno-link-input" data-id="${row.id}" placeholder="Paste Suno link to add Play button\u2026">
-               <button class="button secondary save-link-btn" type="button" data-id="${row.id}" style="font-size:12px;min-height:32px;padding:0 10px;">Save link</button>
+               <input type="url" class="suno-link-input" data-id="${row.id}" placeholder="Paste Suno link\u2026">
+               <button class="button secondary save-link-btn" type="button" data-id="${row.id}">Save</button>
              </div>`;
 
         return `<article class="history-item jukebox-card" data-id="${row.id}">
@@ -269,13 +295,13 @@ export function render(root, { api, toast, navigate, solution }) {
               <strong class="jukebox-title">${escapeHtml(row.title)}</strong>
               ${themes ? `<p class="jukebox-desc">${escapeHtml(themes)}</p>` : ''}
               ${style ? `<p class="jukebox-style">${escapeHtml(style)}</p>` : ''}
-              ${linkRow}
             </div>
             <div class="jukebox-actions">
-              <button class="button secondary load-btn" type="button" data-id="${row.id}" style="font-size:12px;min-height:32px;padding:0 10px;">Load</button>
-              <button class="button secondary btn-danger delete-btn" type="button" data-id="${row.id}" style="font-size:12px;min-height:32px;padding:0 10px;">Delete</button>
+              <button class="button secondary load-btn" type="button" data-id="${row.id}">Load</button>
+              <button class="button secondary btn-danger delete-btn" type="button" data-id="${row.id}">Delete</button>
             </div>
           </div>
+          ${linkRow}
         </article>`;
       }).join('');
 
