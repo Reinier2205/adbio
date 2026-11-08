@@ -116,61 +116,73 @@
     /* ── Hero ─────────────────────────────────────────────── */
     .hero {
       background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
-      padding: var(--sp-3xl) var(--sp-lg) var(--sp-2xl);
-      text-align: center;
+      padding: var(--sp-3xl) var(--sp-lg);
       position: relative;
       overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 70% 50%, rgba(244,199,83,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 20%, rgba(255,255,255,0.04) 0%, transparent 60%);
+      pointer-events: none;
     }
     .hero::after {
       content: '';
       position: absolute;
       bottom: -1px; left: 0; right: 0;
-      height: 32px;
+      height: 40px;
       background: var(--cream);
-      border-radius: 32px 32px 0 0;
+      border-radius: 40px 40px 0 0;
     }
+    .hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-2xl);
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Left: text */
+    .hero-text { }
     .hero-badge {
       display: inline-flex;
       align-items: center;
       gap: var(--sp-xs);
-      background: rgba(244,199,83,0.18);
-      border: 1px solid rgba(244,199,83,0.35);
+      background: rgba(244,199,83,0.15);
+      border: 1px solid rgba(244,199,83,0.3);
       color: var(--yellow);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
-      letter-spacing: 1.5px;
+      letter-spacing: 1.8px;
       text-transform: uppercase;
       padding: 5px 12px;
       border-radius: 100px;
       margin-bottom: var(--sp-md);
     }
-    .hero-icon {
-      width: 72px;
-      height: 72px;
-      background: var(--yellow);
-      border-radius: var(--r-lg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto var(--sp-md);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-    }
-    .hero-icon svg { width: 40px; height: 40px; }
     .hero-title {
-      font-size: clamp(2rem, 6vw, 3rem);
+      font-size: clamp(2.4rem, 5vw, 3.4rem);
       font-weight: 700;
       color: #ffffff;
-      letter-spacing: -1px;
-      line-height: 1.1;
+      letter-spacing: -1.5px;
+      line-height: 1.08;
       margin-bottom: var(--sp-md);
     }
+    .hero-title span {
+      color: var(--yellow);
+    }
     .hero-subtitle {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 400;
-      color: rgba(255,255,255,0.75);
-      max-width: 480px;
-      margin: 0 auto var(--sp-xl);
-      line-height: 1.55;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.65;
+      margin-bottom: var(--sp-xl);
+      max-width: 420px;
     }
     .hero-cta {
       display: inline-flex;
@@ -183,12 +195,101 @@
       padding: 13px 28px;
       border-radius: 100px;
       transition: var(--transition);
-      box-shadow: 0 4px 14px rgba(244,199,83,0.45);
+      box-shadow: 0 4px 20px rgba(244,199,83,0.4);
     }
     .hero-cta:hover {
       background: var(--yellow-hover);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(244,199,83,0.55);
+      box-shadow: 0 8px 28px rgba(244,199,83,0.5);
+    }
+    .hero-stats {
+      display: flex;
+      gap: var(--sp-xl);
+      margin-top: var(--sp-xl);
+      padding-top: var(--sp-xl);
+      border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    .hero-stat-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--yellow);
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    .hero-stat-label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      margin-top: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Right: photo */
+    .hero-photo-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .hero-photo-frame {
+      position: relative;
+      width: 340px;
+      max-width: 100%;
+    }
+    /* Decorative ring */
+    .hero-photo-frame::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 28px;
+      border: 2px solid rgba(244,199,83,0.3);
+    }
+    /* Subtle glow */
+    .hero-photo-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    }
+    .hero-photo {
+      width: 100%;
+      border-radius: 20px;
+      display: block;
+      object-fit: cover;
+      aspect-ratio: 1 / 1;
+      position: relative;
+      z-index: 1;
+    }
+    /* Name tag overlaid on photo */
+    .hero-nametag {
+      position: absolute;
+      bottom: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--yellow);
+      color: var(--green-dark);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      padding: 8px 20px;
+      border-radius: 100px;
+      white-space: nowrap;
+      z-index: 2;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+
+    /* ── Responsive hero ──────────────────────────────────── */
+    @media (max-width: 768px) {
+      .hero { padding: var(--sp-2xl) var(--sp-md) var(--sp-3xl); }
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: var(--sp-xl);
+        text-align: center;
+      }
+      .hero-text { order: 2; }
+      .hero-photo-wrap { order: 1; }
+      .hero-subtitle { max-width: 100%; margin-left: auto; margin-right: auto; }
+      .hero-photo-frame { width: 200px; }
+      .hero-stats { justify-content: center; }
     }
 
     /* ── Section ──────────────────────────────────────────── */
@@ -400,22 +501,44 @@
 
   <!-- ── Hero ─────────────────────────────────────────────── -->
   <section class="hero" aria-labelledby="hero-title">
-    <div class="hero-badge">Apps by Reinier</div>
-    <div class="hero-icon" aria-hidden="true">
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 4L34 12V28L20 36L6 28V12L20 4Z" fill="#2C5F4F"/>
-        <path d="M20 12L27 16V24L20 28L13 24V16L20 12Z" fill="#F4C753"/>
-        <circle cx="20" cy="20" r="3" fill="#1F4438"/>
-      </svg>
+    <div class="hero-inner">
+
+      <!-- Left: text -->
+      <div class="hero-text">
+        <div class="hero-badge">Apps by Reinier</div>
+        <h1 class="hero-title" id="hero-title">ADBio —<br><span>Built for the road,<br>the braai &amp; the grind.</span></h1>
+        <p class="hero-subtitle">A collection of browser-based games, tools, and platforms. Open and use — no installs, no sign-ups, no fuss.</p>
+        <a href="#apps" class="hero-cta">
+          Explore the apps
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 3l5 5-5 5M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-value">12</div>
+            <div class="hero-stat-label">Apps &amp; tools</div>
+          </div>
+          <div>
+            <div class="hero-stat-value">30+</div>
+            <div class="hero-stat-label">Games in TravelGames</div>
+          </div>
+          <div>
+            <div class="hero-stat-value">0</div>
+            <div class="hero-stat-label">Sign-ups needed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: photo -->
+      <div class="hero-photo-wrap">
+        <div class="hero-photo-frame">
+          <img src="images/reinier.jpg" alt="Reinier — builder of ADBio" class="hero-photo">
+          <div class="hero-nametag">Reinier · Builder of ADBio</div>
+        </div>
+      </div>
+
     </div>
-    <h1 class="hero-title" id="hero-title">ADBio</h1>
-    <p class="hero-subtitle">Browser-based apps, games, and tools — open and use, no installs, no sign-ups.</p>
-    <a href="#apps" class="hero-cta">
-      Explore apps
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path d="M8 3l5 5-5 5M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </a>
   </section>
 
   <!-- ── App Grid ──────────────────────────────────────────── -->
