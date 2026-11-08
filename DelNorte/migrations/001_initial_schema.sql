@@ -16,7 +16,7 @@ CREATE TABLE travelers (
 CREATE TABLE activities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES travelers(id) ON DELETE CASCADE,
-    activity_type TEXT NOT NULL CHECK (activity_type IN ('walk', 'pilates', 'cycle', 'swim', 'hike')),
+    activity_type TEXT NOT NULL CHECK (activity_type IN ('walk', 'pilates', 'cycle', 'swim', 'hike', 'dance', 'sauna')),
     distance_km DECIMAL(6,2), -- Optional for pilates
     duration_min INTEGER NOT NULL,
     elevation_gain_m INTEGER DEFAULT 0,
