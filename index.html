@@ -1,2414 +1,468 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description"
-    content="ADBio helps informal vendors transform their business with WhatsApp Business solutions. From free setup to full automation, we make digital business easy." />
-  <meta name="keywords"
-    content="WhatsApp Business, informal vendors, business automation, digital transformation, South Africa" />
-  <title>ADBio - WhatsApp Business Solutions for Vendors</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADBio — Apps by Reinier</title>
+  <meta name="description" content="ADBio is a collection of browser-based apps, games, and tools built by Reinier. Open and use — no downloads, no sign-ups.">
 
-  <!-- Preload critical assets -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-    as="style">
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="images/favicon.png">
-
-  <!-- Stylesheets -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    :root {
-      --primary: #4CAF50;
-      --secondary: #FFEB3B;
-      --accent1: #FF7043;
-      --accent2: #03A9F4;
-      --background: #FFF8E1;
-      --text: #212121;
-      --gradient: linear-gradient(135deg, #4CAF50, #388E3C);
-      --section-spacing: 4rem;
-      --card-spacing: 2rem;
-      --heading-large: 2.8rem;
-      --heading-medium: 2.2rem;
-      --heading-small: 1.8rem;
-      --body-large: 1.3rem;
-      --body-medium: 1.1rem;
-      --body-small: 0.9rem;
-    }
-
+    /* ── Base ─────────────────────────────────────────────── */
     body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: var(--background);
-      color: var(--text);
-      line-height: 1.6;
-      scroll-behavior: smooth;
+      font-family: 'Lato', sans-serif;
+      background-color: #2a1a1f;
+      color: #fff8e1;
     }
+    h1, h2, h3, .cinzel { font-family: 'Cinzel', serif; }
 
-    /* Sticky Navigation */
-    .sticky-nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 1rem;
-      z-index: 1000;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      transform: translateY(-100%);
-      transition: transform 0.3s ease;
-    }
+    /* ── Utilities ────────────────────────────────────────── */
+    .felt-green   { background-color: #0a4821; }
+    .gold-text    { color: #d4af37; }
+    .gold-light   { color: #ffd700; }
 
-    .sticky-nav.visible {
-      transform: translateY(0);
-    }
-
-    .nav-links {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .nav-links a {
-      color: var(--text);
-      text-decoration: none;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      padding: 0.5rem 1rem;
-      border-radius: 25px;
-    }
-
-    .nav-links a:hover {
-      color: var(--primary);
-      background: rgba(76, 175, 80, 0.1);
-    }
-
-    .nav-links a.active {
-      color: var(--primary);
-      background: rgba(76, 175, 80, 0.1);
-    }
-
-    /* Improved Section Spacing */
-    section {
-      margin: var(--section-spacing) 0;
-      padding: 0 1rem;
-      scroll-margin-top: 80px;
-      /* Ensures proper scroll positioning with fixed header */
-    }
-
-    .container {
-      padding: 0 1rem;
-      max-width: 1200px;
-      margin: auto;
-    }
-
-    /* Adjust container padding for fixed header */
-    .container {
-      padding-top: 5.5rem;
-    }
-
-    @media(max-width: 767px) {
-      .container {
-        padding-top: 3.2rem;
-      }
-    }
-
-    /* Consistent CTA Styling */
-    .button {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 1rem 2.5rem;
-      background: var(--primary);
-      color: white;
-      text-decoration: none;
-      border-radius: 50px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      border: none;
-      font-size: var(--body-medium);
-      position: relative;
-      overflow: hidden;
-      z-index: 1;
-      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .button:hover {
-      background: var(--accent1);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 112, 67, 0.3);
-    }
-
-    .button:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 10px rgba(255, 112, 67, 0.2);
-    }
-
-    .button i {
-      transition: transform 0.3s ease;
-    }
-
-    .button:hover i {
-      transform: translateX(4px);
-    }
-
-    /* Improved Card Spacing */
-    .service-card,
-    .story-card,
-    .insight-card {
-      margin-bottom: var(--card-spacing);
-    }
-
-    /* Loading Optimization */
-    .lazy-load {
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .lazy-load.loaded {
-      opacity: 1;
-    }
-
-    /* Mobile Navigation */
-    @media(max-width: 767px) {
-      .nav-links {
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem 0;
-      }
-
-      .sticky-nav {
-        padding: 0.5rem;
-      }
-
-      section {
-        margin: 2rem 0;
-      }
-
-      .button {
-        width: 100%;
-        justify-content: center;
-        padding: 0.875rem 1.5rem;
-      }
-    }
-
-    header {
-      text-align: center;
-      padding: 1rem;
-      background: var(--gradient);
-      color: white;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 60px;
-    }
-
-    .header-logo-title {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .site-logo {
-      height: 80px;
-      width: 80px;
-      max-width: 120px;
-      object-fit: contain;
-      display: block;
-      background: none;
-      margin: -10px 0 -10px -10px;
-      padding: 0;
-    }
-
-    @media(max-width: 767px) {
-      .site-logo {
-        height: 56px;
-        width: 56px;
-        max-width: 80px;
-        margin: -6px 0 -6px -6px;
-      }
-    }
-
-    header h1 {
-      color: white;
-      margin: 0;
-      font-size: 1.8rem;
+    .btn-gold {
+      background-color: #d4af37;
+      color: #2a1a1f;
+      font-family: 'Cinzel', serif;
       font-weight: 700;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(212,175,55,0.45);
     }
 
-    header p {
-      font-size: 1rem;
-      margin: 0;
-      opacity: 0.9;
+    /* ── Hero ─────────────────────────────────────────────── */
+    .hero-bg {
+      background: linear-gradient(160deg, #0a4821 0%, #2a1a1f 60%, #1a0f14 100%);
+    }
+    .hero-glow {
+      text-shadow: 0 0 40px rgba(212,175,55,0.35), 0 2px 4px rgba(0,0,0,0.7);
     }
 
-    /* Hamburger Menu */
-    .hamburger {
-      position: fixed;
-      top: 1rem;
-      left: 1rem;
-      z-index: 1001;
-      background: none;
+    /* ── Section divider ──────────────────────────────────── */
+    .section-rule {
       border: none;
-      padding: 0.5rem;
-      cursor: pointer;
-      display: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #d4af37 30%, #d4af37 70%, transparent);
+      opacity: 0.35;
+      margin: 0 auto;
+      max-width: 480px;
     }
 
-    .hamburger span {
-      display: block;
-      width: 25px;
-      height: 3px;
-      background: white;
-      margin: 5px 0;
-      transition: all 0.3s ease;
-    }
-
-    .mobile-nav {
-      position: fixed;
-      top: 60px;
-      left: -100%;
-      width: 80%;
-      max-width: 300px;
-      height: calc(100vh - 60px);
-      background: white;
-      z-index: 1000;
-      padding: 4rem 1rem 1rem;
-      transition: left 0.3s ease;
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .mobile-nav.active {
-      left: 0;
-    }
-
-    .mobile-nav a {
-      display: block;
-      padding: 1rem;
-      color: var(--text);
-      text-decoration: none;
-      font-weight: 500;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-    }
-
-    .mobile-nav a:hover {
-      color: var(--primary);
-      background: rgba(76, 175, 80, 0.1);
-    }
-
-    .mobile-nav a.active {
-      color: var(--primary);
-      background: rgba(76, 175, 80, 0.1);
-    }
-
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 999;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    /* Adjust container padding for fixed header */
-    .container {
-      padding-top: 4rem;
-    }
-
-    @media(max-width: 767px) {
-      .hamburger {
-        display: block;
-      }
-
-      .sticky-nav {
-        display: none;
-      }
-
-      header {
-        padding: 0.75rem;
-        min-height: 54px;
-      }
-
-      header h1 {
-        font-size: 1.5rem;
-      }
-
-      header p {
-        font-size: 0.9rem;
-      }
-
-      .container {
-        padding-top: 3.5rem;
-      }
-    }
-
-    .services-grid {
+    /* ── App Cards ────────────────────────────────────────── */
+    .app-cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin: 1rem 0;
-      padding-top: 2.5rem;
-      padding-bottom: 2.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.25rem;
     }
 
-    .service-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1px solid rgba(0, 0, 0, 0.05);
+    .app-card {
+      background: linear-gradient(145deg, #3e1e24, #2a1a1f);
+      border-radius: 15px;
+      border: 1px solid rgba(212,175,55,0.2);
+      text-decoration: none;
+      color: #fff8e1;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 165px;
+      padding: 1.25rem 1rem 1rem;
       position: relative;
       overflow: hidden;
-      animation: scaleIn 0.6s ease-out backwards;
-    }
-
-    .service-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(45deg, var(--primary), var(--accent2));
-      opacity: 0;
-      transition: opacity 0.4s ease;
       z-index: 0;
     }
-
-    .service-card:hover::before {
-      opacity: 0.05;
-    }
-
-    .service-card:hover {
-      transform: translateY(-10px) scale(1.02);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .service-card img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-radius: 15px;
-      margin-bottom: 1rem;
-      transition: transform 0.4s ease;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-
-    .service-card:hover img {
-      transform: scale(1.05);
-    }
-
-    .service-card img.loaded {
-      opacity: 1;
-    }
-
-    .service-card h3 {
-      color: var(--primary);
-      margin: 0.75rem 0;
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-
-    .service-card p {
-      color: var(--text);
-      margin-bottom: 1rem;
-    }
-
-    .cta-section {
-      text-align: center;
-      padding: 2.5rem 2rem;
-      background: var(--gradient);
-      color: white;
-      margin: 1.5rem 0;
-      border-radius: 30px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cta-section::before {
+    .app-card::before {
       content: '';
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-      animation: pulse 8s infinite;
-    }
-
-    .cta-section h2 {
-      font-size: 2.2rem;
-      margin-bottom: 0.75rem;
-      animation: fadeInUp 0.8s ease-out;
-      color: white;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .cta-section p {
-      color: white;
-      font-size: 1.1rem;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-      margin-bottom: 1.5rem;
-    }
-
-    .contact-section {
-      background: white;
-      padding: 2rem;
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-      animation: slideIn 0.8s ease-out;
-    }
-
-    .contact-section h2 {
-      color: var(--primary);
-      margin-bottom: 1.5rem;
-    }
-
-    .social-links {
-      margin-top: 1.5rem;
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .social-links .button {
-      background: var(--primary);
-      transition: all 0.3s ease;
-    }
-
-    .social-links .button:hover {
-      background: var(--accent1);
-      transform: translateY(-3px) rotate(2deg);
-    }
-
-    h2 {
-      color: var(--primary);
-      font-size: var(--heading-medium);
-      margin-bottom: 1.5rem;
-    }
-
-    .hero {
-      text-align: center;
-      padding: 3.5rem 1rem 2rem 1rem;
-      background: var(--gradient);
-      color: white;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      min-height: auto;
-      max-width: 1200px;
-      margin: 2rem auto;
-      border-radius: 30px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    }
-
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, rgba(76, 175, 80, 0.85), rgba(56, 142, 60, 0.85));
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: rgba(255,255,255,0.04);
+      transform: rotate(30deg);
+      transition: transform 0.5s ease;
       z-index: 1;
-      border-radius: 30px;
     }
-
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3rem;
-      align-items: center;
-      padding: 2rem;
-    }
-
-    .hero-text {
-      text-align: left;
-      position: relative;
-      z-index: 2;
-    }
-
-    .hero h2 {
-      font-size: 2.8rem;
-      margin-bottom: 1.5rem;
-      color: white;
-      line-height: 1.2;
-    }
-
-    .hero p {
-      font-size: var(--body-large);
-      margin-bottom: 2rem;
-      opacity: 0.9;
-      line-height: 1.6;
-    }
-
-    .hero-image {
-      position: relative;
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto;
-      animation: float 6s ease-in-out infinite;
-      z-index: 3;
-      transform: translateY(-20px);
-    }
-
-    .hero-image img {
-      width: 100%;
-      height: auto;
-      border-radius: 20px;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-      transform: perspective(1000px) rotateY(-5deg);
-      transition: all 0.4s ease;
-      border: 4px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .hero-image:hover img {
-      transform: perspective(1000px) rotateY(0deg) scale(1.02);
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-    }
-
-    @media(max-width: 1024px) {
-      .hero {
-        margin: 1rem;
-      }
-
-      .hero-content {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 2rem;
-      }
-
-      .hero-text {
-        text-align: center;
-      }
-
-      .hero h2 {
-        font-size: 2.4rem;
-      }
-
-      .hero-image {
-        max-width: 400px;
-        transform: translateY(0);
-      }
-    }
-
-    @media(max-width: 767px) {
-      .hero {
-        padding: 3.5rem 1rem 1.5rem 1rem;
-        margin: 1rem auto;
-      }
-
-      .hero h2 {
-        font-size: 2rem;
-      }
-
-      .hero p {
-        font-size: 1.1rem;
-      }
-
-      .hero-image {
-        max-width: 300px;
-      }
-    }
-
-    .whatsapp-solutions {
-      padding: 4rem 0;
-    }
-
-    .package-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-      margin-top: 2rem;
-    }
-
-    .package-card {
-      background: white;
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    .package-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .package-header {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .package-image {
-      width: 100%;
-      height: 200px;
-      object-fit: contain;
-      margin-bottom: 1.5rem;
-      border-radius: 15px;
-      transition: transform 0.3s ease;
-      background: var(--background);
-      padding: 1rem;
-    }
-
-    .package-card:hover .package-image {
-      transform: scale(1.05);
-    }
-
-    .package-price {
-      font-size: 2rem;
-      color: var(--primary);
-      font-weight: 700;
-      margin: 1rem 0;
-    }
-
-    .package-features {
-      list-style: none;
-      padding: 0;
-      margin: 1.5rem 0;
-      flex-grow: 1;
-    }
-
-    .package-features li {
-      padding: 0.75rem 0;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: var(--body-medium);
-      line-height: 1.4;
-    }
-
-    .package-features li::before {
-      content: '✓';
-      color: var(--primary);
-      font-weight: bold;
-      flex-shrink: 0;
-    }
-
-    .why-choose-us {
-      background: var(--background);
-      padding: 4rem 0;
-    }
-
-    .benefits-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 2rem;
-      margin-top: 2rem;
-    }
-
-    .benefit-column {
-      background: white;
-      padding: 2rem;
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .benefit-column h3 {
-      color: var(--primary);
-      margin-bottom: 1.5rem;
-    }
-
-    .benefit-list {
-      list-style: none;
-      padding: 0;
-    }
-
-    .benefit-list li {
-      padding: 0.75rem 0;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .benefit-list li i {
-      color: var(--primary);
-    }
-
-    .how-it-works {
-      padding: 4rem 0;
-    }
-
-    .timeline {
-      max-width: 800px;
-      margin: 3rem auto;
-      position: relative;
-    }
-
-    .timeline::before {
-      content: '';
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 2px;
-      height: 100%;
-      background: var(--primary);
-    }
-
-    .timeline-step {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 3rem;
-      position: relative;
-    }
-
-    .timeline-content {
-      width: 45%;
-      background: white;
-      padding: 1.5rem;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .timeline-step:nth-child(even) .timeline-content {
-      margin-left: auto;
-    }
-
-    .timeline-number {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 40px;
-      height: 40px;
-      background: var(--primary);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-    }
-
-    @media(max-width: 767px) {
-      .hero h2 {
-        font-size: 2rem;
-      }
-
-      .benefits-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .timeline::before {
-        left: 20px;
-      }
-
-      .timeline-step {
-        flex-direction: column;
-      }
-
-      .timeline-content {
-        width: 100%;
-        margin-left: 40px !important;
-      }
-
-      .timeline-number {
-        left: 20px;
-      }
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes scaleIn {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(-20px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-      }
-
-      50% {
-        transform: scale(1.05);
-      }
-
-      100% {
-        transform: scale(1);
-      }
-    }
-
-    .animate-on-scroll {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.6s ease-out;
-    }
-
-    .animate-on-scroll.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .service-card {
-      animation: scaleIn 0.6s ease-out backwards;
-    }
-
-    .service-card:nth-child(1) {
-      animation-delay: 0.1s;
-    }
-
-    .service-card:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    .service-card:nth-child(3) {
-      animation-delay: 0.3s;
-    }
-
-    .contact-section {
-      animation: slideIn 0.8s ease-out;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    .insights-section {
-      background: white;
-      padding: 2rem;
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-      margin: 1.5rem 0;
-    }
-
-    .insights-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1.5rem;
-    }
-
-    .insight-card {
-      background: var(--background);
-      padding: 1.5rem;
-      border-radius: 15px;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s ease;
-    }
-
-    .insight-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .insight-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--primary);
-    }
-
-    .insight-card h3 {
-      color: var(--primary);
-      margin: 0 0 0.75rem 0;
-      font-size: 1.2rem;
-    }
-
-    .insight-card p {
-      margin: 0;
-      font-size: 0.95rem;
-      color: var(--text);
-    }
-
-    .insight-stat {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--accent1);
-      margin-bottom: 0.5rem;
-    }
-
-    .insight-card.social {
-      border-left-color: var(--accent2);
-    }
-
-    .insight-card.speed {
-      border-left-color: var(--accent1);
-    }
-
-    .insight-card.market {
-      border-left-color: var(--secondary);
-    }
-
-    .insight-card.history {
-      border-left-color: var(--primary);
-    }
-
-    @keyframes float {
-      0% {
-        transform: translateY(0px);
-      }
-
-      50% {
-        transform: translateY(-10px);
-      }
-
-      100% {
-        transform: translateY(0px);
-      }
-    }
-
-    @keyframes pulse-glow {
-      0% {
-        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
-      }
-
-      70% {
-        box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
-      }
-
-      100% {
-        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-      }
-    }
-
-    .icon-wrapper {
-      width: 60px;
-      height: 60px;
-      background: var(--gradient);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-      color: white;
-      font-size: 1.5rem;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-    }
-
-    .service-card:hover .icon-wrapper {
-      transform: scale(1.1) rotate(5deg);
-      animation: pulse-glow 2s infinite;
-    }
-
-    .service-card {
-      text-align: center;
-      padding: 2rem 1.5rem;
-    }
-
-    .service-card img {
-      border-radius: 15px;
-      transition: all 0.4s ease;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .service-card:hover img {
-      transform: scale(1.05) translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .insight-card {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 1.5rem;
-    }
-
-    .insight-icon {
-      font-size: 1.5rem;
-      color: var(--primary);
-      margin-bottom: 0.75rem;
-    }
-
-    .insight-stat {
-      font-size: 2.5rem;
-      font-weight: 700;
-      background: var(--gradient);
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.5rem;
-    }
-
-    .cta-section {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cta-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
-      opacity: 0.1;
-      animation: float 6s ease-in-out infinite;
-    }
-
-    .contact-section {
-      position: relative;
-    }
-
-    .contact-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .contact-icon {
-      width: 40px;
-      height: 40px;
-      background: var(--gradient);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.2rem;
-    }
-
-    .social-links .button {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .social-links .button i {
-      font-size: 1.2rem;
-    }
-
-    .success-stories {
-      background: white;
-      padding: 2rem;
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-      margin: 1.5rem 0;
-    }
-
-    .story-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1.5rem;
-    }
-
-    .story-card {
-      background: var(--background);
-      padding: 1.5rem;
-      border-radius: 15px;
-      position: relative;
-      transition: all 0.3s ease;
-    }
-
-    .story-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    .story-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .story-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid var(--primary);
-    }
-
-    .story-content {
-      position: relative;
-    }
-
-    .story-content::before {
-      content: '"';
-      position: absolute;
-      top: -20px;
-      left: -10px;
-      font-size: 4rem;
-      color: var(--primary);
-      opacity: 0.2;
-      font-family: serif;
-    }
-
-    .story-stats {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .stat-item {
-      text-align: center;
-      flex: 1;
-    }
-
-    .stat-number {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    .stat-label {
-      font-size: 0.9rem;
-      color: var(--text);
-      opacity: 0.8;
-    }
-
-    .interactive-quiz {
-      background: var(--gradient);
-      padding: 2rem;
-      border-radius: 20px;
-      color: white;
-      margin-top: 2rem;
-      text-align: center;
-    }
-
-    .quiz-button {
-      background: white;
-      color: var(--primary);
-      padding: 1rem 2rem;
-      border-radius: 50px;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 1rem;
-      transition: all 0.3s ease;
-    }
-
-    .quiz-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .testimonials {
-      padding: 4rem 0;
-      background: var(--background);
-    }
-
-    .testimonial-carousel {
-      max-width: 1000px;
-      margin: 2rem auto;
-      position: relative;
-    }
-
-    .testimonial-card {
-      background: white;
-      padding: 2rem;
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      margin: 1rem;
-      position: relative;
-    }
-
-    .testimonial-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .testimonial-avatar {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid var(--primary);
-    }
-
-    .testimonial-info h3 {
-      color: var(--primary);
-      margin: 0;
-      font-size: 1.3rem;
-    }
-
-    .testimonial-info p {
-      margin: 0.25rem 0 0;
-      color: var(--text);
-      opacity: 0.8;
-    }
-
-    .testimonial-content {
-      position: relative;
-      padding-left: 1rem;
-    }
-
-    .testimonial-content::before {
-      content: '"';
-      position: absolute;
-      top: -20px;
-      left: -10px;
-      font-size: 4rem;
-      color: var(--primary);
-      opacity: 0.2;
-      font-family: serif;
-    }
-
-    .testimonial-stats {
-      display: flex;
-      gap: 1.5rem;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .testimonial-stat {
-      text-align: center;
-      flex: 1;
-    }
-
-    .testimonial-stat-number {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 0.25rem;
-    }
-
-    .testimonial-stat-label {
-      font-size: 0.9rem;
-      color: var(--text);
-      opacity: 0.8;
-    }
-
-    .carousel-controls {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-
-    .carousel-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--primary);
-      opacity: 0.3;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 2px solid var(--primary);
-      position: relative;
-    }
-
-    .carousel-dot.active {
-      opacity: 1;
-      transform: scale(1.2);
-      background: var(--accent1);
-      border-color: var(--accent1);
-    }
-
-    .carousel-dot::after {
-      content: '';
-      display: block;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid var(--primary);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .carousel-dot.active::after {
-      opacity: 0.2;
-    }
-
-    @media(max-width: 767px) {
-      .testimonial-card {
-        padding: 1.5rem;
-      }
-
-      .testimonial-avatar {
-        width: 60px;
-        height: 60px;
-      }
-
-      .testimonial-stats {
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      .testimonial-stat-number {
-        font-size: 1.5rem;
-      }
-    }
-
-    /* Typography Consistency */
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-      font-family: 'Poppins', sans-serif;
-      color: var(--text);
-      line-height: 1.2;
-    }
-
-    h2 {
-      font-size: var(--heading-medium);
-      margin-bottom: 1.5rem;
-      color: var(--primary);
-    }
-
-    h3 {
-      font-size: var(--heading-small);
-      margin-bottom: 1rem;
-    }
-
-    p {
-      font-size: var(--body-medium);
-      line-height: 1.6;
-      color: var(--text);
-    }
-
-    /* Image Consistency */
-    .package-image {
-      width: 100%;
-      height: 200px;
-      object-fit: contain;
-      margin-bottom: 1.5rem;
-      border-radius: 15px;
-      transition: transform 0.3s ease;
-      background: var(--background);
-      padding: 1rem;
-    }
-
-    .package-card:hover .package-image {
-      transform: scale(1.05);
-    }
-
-    /* Section Spacing Consistency */
-    section {
-      margin: var(--section-spacing) 0;
-      padding: 0 1rem;
-    }
-
-    .section-title {
-      text-align: center;
-      margin-bottom: 4rem;
-    }
-
-    .section-title h2 {
-      font-size: var(--heading-large);
-      margin-bottom: 1.5rem;
-    }
-
-    .section-title p {
-      font-size: var(--body-large);
-      max-width: 800px;
-      margin: 0 auto;
-      opacity: 0.9;
-    }
-
-    /* Card Consistency */
-    .package-card,
-    .testimonial-card,
-    .benefit-column {
-      background: white;
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
-    }
-
-    .package-card:hover,
-    .testimonial-card:hover,
-    .benefit-column:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Button Consistency */
-    .button {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 1rem 2.5rem;
-      background: var(--primary);
-      color: white;
-      text-decoration: none;
-      border-radius: 50px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      border: none;
-      font-size: var(--body-medium);
-      position: relative;
-      overflow: hidden;
-      z-index: 1;
-      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .button:hover {
-      background: var(--accent1);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 112, 67, 0.3);
-    }
-
-    .button:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 10px rgba(255, 112, 67, 0.2);
-    }
-
-    /* Responsive Typography */
-    @media(max-width: 1024px) {
-      :root {
-        --heading-large: 2.4rem;
-        --heading-medium: 2rem;
-        --heading-small: 1.6rem;
-        --body-large: 1.2rem;
-        --body-medium: 1rem;
-      }
-    }
-
-    @media(max-width: 767px) {
-      :root {
-        --heading-large: 2rem;
-        --heading-medium: 1.8rem;
-        --heading-small: 1.4rem;
-        --body-large: 1.1rem;
-        --body-medium: 0.95rem;
-        --body-small: 0.85rem;
-      }
-
-      .package-image {
-        height: 180px;
-      }
-    }
-
-    /* Image Alt Text Enhancement */
-    .package-image {
-      position: relative;
-    }
-
-    .package-image::after {
-      content: attr(alt);
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 0.5rem;
-      font-size: var(--body-small);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .package-image:hover::after {
-      opacity: 1;
-    }
-
-    /* Touch-friendly elements */
-    .button,
-    .package-card,
-    .testimonial-card,
-    .nav-links a,
-    .mobile-nav a {
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    @media (hover: none) {
-      .button:hover {
-        transform: none;
-      }
-
-      .package-card:hover,
-      .testimonial-card:hover {
-        transform: none;
-      }
-    }
-
-    /* Responsive text adjustments */
-    @media(max-width: 767px) {
-      .package-features li {
-        font-size: var(--body-small);
-        padding: 0.5rem 0;
-      }
-
-      .package-card {
-        padding: 1.5rem;
-      }
-
-      .button {
-        padding: 0.875rem 2rem;
-        min-height: 44px;
-        /* Minimum touch target size */
-      }
-    }
-
-    /* Accessibility improvements */
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    /* Focus styles */
-    a:focus,
-    button:focus {
-      outline: 3px solid var(--primary);
-      outline-offset: 2px;
-    }
-
-    /* High contrast mode support */
-    @media (forced-colors: active) {
-      .button {
-        border: 2px solid currentColor;
-      }
-    }
-
-    /* Print styles */
-    @media print {
-
-      .button,
-      .mobile-nav,
-      .hamburger {
-        display: none;
-      }
-
-      .package-card {
-        break-inside: avoid;
-        page-break-inside: avoid;
-      }
-    }
-
-    /* Cross-browser compatibility */
-    .package-card {
-      -webkit-transform: translateY(0);
-      transform: translateY(0);
-      -webkit-transition: -webkit-transform 0.3s ease;
-      transition: transform 0.3s ease;
-    }
-
-    .button {
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-    }
-
-    /* Reduced motion preferences */
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-      }
-    }
-
-    .coming-soon {
-      position: relative;
-      opacity: 0.8;
-    }
-
-    .coming-soon-badge {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: var(--accent1);
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transform: rotate(15deg);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      animation: pulse 2s infinite;
-    }
-
-    .coming-soon .button {
-      background: #ccc;
-      cursor: not-allowed;
-      pointer-events: none;
-    }
-
-    .coming-soon .package-image {
-      filter: grayscale(50%);
-    }
-
-    .package-note {
-      font-size: 0.9rem;
-      color: var(--text);
-      opacity: 0.8;
-      margin: 1rem 0;
-      font-style: italic;
-      text-align: center;
-    }
-
-    .package-divider-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 3.5rem 0 2.5rem 0;
-      width: 100%;
-    }
-
-    .package-divider {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      max-width: 1200px;
-      gap: 1.5rem;
-    }
-
-    .divider-line {
-      flex: 1;
-      height: 2.5px;
-      background: var(--primary);
-      opacity: 0.25;
-      border-radius: 2px;
-    }
-
-    .divider-text {
-      color: var(--primary);
-      font-weight: 800;
-      font-size: 1.3rem;
-      padding: 0.5rem 2rem;
-      background: var(--background);
-      border-radius: 20px;
-      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.04);
-      letter-spacing: 1px;
-    }
-
-    .coming-soon-section {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-      max-width: 1200px;
-      margin: 0 auto 2rem auto;
-      padding: 3.5rem 0 3.5rem 0;
-      background: linear-gradient(90deg, #f8fff3 60%, #f3faff 100%);
-      border-radius: 24px;
-      box-shadow: 0 2px 16px rgba(76, 175, 80, 0.04);
-    }
-
-    @media(max-width: 1024px) {
-      .coming-soon-section {
-        grid-template-columns: 1fr;
-        padding: 1.5rem 0 0.5rem 0;
-      }
-
-      .package-divider-wrapper {
-        margin: 2.5rem 0 1.5rem 0;
-      }
-    }
-
-    .facts-section {
-      background: #f7fdf9;
-      border-radius: 24px;
-      box-shadow: 0 2px 16px rgba(76, 175, 80, 0.04);
-      padding: 3rem 1rem;
-      margin: 2.5rem 0;
-      text-align: center;
-    }
-
-    .facts-section h2 {
-      color: var(--primary);
-      font-size: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .facts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 2rem;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .fact-card {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 2px 10px rgba(76, 175, 80, 0.06);
-      padding: 2rem 1.2rem 1.5rem 1.2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transition: transform 0.2s;
-    }
-
-    .fact-card:hover {
-      transform: translateY(-6px) scale(1.03);
-      box-shadow: 0 6px 24px rgba(76, 175, 80, 0.10);
-    }
-
-    .fact-card i {
-      font-size: 2.2rem;
-      color: var(--primary);
-      margin-bottom: 1rem;
-    }
-
-    .fact-card h3 {
-      font-size: 1.1rem;
-      color: var(--accent1);
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-    }
-
-    .fact-card p {
+    .app-card:hover::before  { transform: rotate(60deg); }
+    .app-card:hover {
+      transform: translateY(-5px) scale(1.01);
+      box-shadow:
+        inset 0 2px 5px rgba(0,0,0,0.5),
+        0 5px 15px rgba(0,0,0,0.6),
+        0 0 22px #ffd700;
+      border-color: #d4af37;
+    }
+    .app-card h3 {
+      font-family: 'Cinzel', serif;
+      color: #ffd700;
       font-size: 1rem;
-      color: var(--text);
-      opacity: 0.95;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+      z-index: 2;
+      line-height: 1.3;
+    }
+    .app-card p {
+      font-size: 0.82rem;
+      line-height: 1.35;
+      color: #e8ddb5;
+      flex-grow: 1;
+      z-index: 2;
+    }
+    .app-card-image {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      border: 2px solid #ffd700;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      z-index: 2;
     }
 
-    .coming-soon-social {
-      background: #ccc;
-      color: #888;
-      cursor: not-allowed;
-      position: relative;
+    /* ── Info overlay (matches TravelGames) ───────────────── */
+    .info-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 2px solid #d4af37;
+      background: radial-gradient(circle at 30% 30%, #ffd700, #d4af37);
+      color: #111;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      z-index: 5;
+      transition: transform 0.15s ease;
     }
+    .info-btn:hover { transform: scale(1.05); }
+    .info-btn:focus-visible { outline: 2px solid #ffd700; outline-offset: 2px; }
 
-    .coming-soon-social .coming-soon-badge {
-      background: var(--accent1);
-      color: #fff;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 0.2rem 0.7rem;
-      margin-left: 0.7rem;
-      vertical-align: middle;
-      animation: pulse 2s infinite;
+    .app-card-description {
+      position: absolute;
+      inset: 0;
+      background: rgba(42,26,31,0.93);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.88rem;
+      font-family: 'Lato', sans-serif;
+      line-height: 1.35;
+      border-radius: 15px;
+      border: 2px solid #d4af37;
+      box-shadow: 0 0 20px #ffd700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      transform: translateY(8px);
+      padding: 1.2rem 1.4rem;
+      z-index: 10;
+    }
+    .app-card.show-desc .app-card-description {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .close-desc {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid #d4af37;
+      background: rgba(0,0,0,0.5);
+      color: #ffffff;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .app-card.show-desc          { pointer-events: none; }
+    .app-card.show-desc *        { pointer-events: auto; }
+    .app-card.show-desc .app-card-image { filter: brightness(0.6); }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .app-cards-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 380px) {
+      .app-cards-grid { grid-template-columns: 1fr; }
+      .app-card { min-height: 145px; }
     }
   </style>
-  <meta property="og:image" content="https://bolt.new/static/og_default.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://bolt.new/static/og_default.png">
 </head>
 
-<body>
-  <!-- Skip to main content for accessibility -->
-  <a href="#main-content" class="visually-hidden">Skip to main content</a>
+<body class="antialiased">
 
-  <button class="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobile-nav">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
-
-  <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
-    <a href="#solutions-title">Services</a>
-    <a href="#facts-title">Intriguing Facts</a>
-    <a href="#testimonials">Success Stories</a>
-    <a href="#contact">Contact</a>
-    <a href="./MyDice.html">MyDice</a>
-    <a href="./g.html">Give and Take</a>
-  </nav>
-
-  <div class="overlay" aria-hidden="true"></div>
-
-  <header role="banner">
-    <div class="header-logo-title">
-      <img src="images/logo.png" alt="ADBio Logo" class="site-logo" />
-      <h1>ADBio</h1>
-    </div>
-    <p> </p>
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="felt-green px-4 py-3 sticky top-0 z-50 shadow-lg">
+    <nav class="container mx-auto flex justify-between items-center">
+      <a href="#" class="cinzel text-xl font-bold gold-light tracking-widest">ADBio</a>
+      <div class="flex gap-3 items-center">
+        <a href="#apps" class="btn-gold py-2 px-5 rounded-lg text-sm">Apps</a>
+        <a href="https://github.com/Reinier2205/adbio" target="_blank" rel="noopener"
+           class="text-sm text-yellow-300 hover:text-yellow-100 transition-colors">GitHub</a>
+      </div>
+    </nav>
   </header>
 
-  <main id="main-content" role="main">
-    <div class="container">
-      <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-content">
-          <div class="hero-text">
-            <h2 id="hero-title">Transform Your Business with WhatsApp</h2>
-            <p>From free setup to full automation, we help you build a professional online presence and drive your sales
-              growth seamlessly.</p>
-            <a href="#contact" class="button" role="button">Get Started for Free</a>
-          </div>
-          <div class="hero-image">
-            <img src="images/img_hero.png"
-              alt="Vendor using WhatsApp Business - A friendly vendor managing their business through WhatsApp"
-              width="500" height="300" loading="eager">
-          </div>
-        </div>
-      </section>
+  <main>
 
-      <section class="whatsapp-solutions" aria-labelledby="solutions-title">
-        <h2 id="solutions-title">Our WhatsApp Business Solutions</h2>
-        <div class="package-grid" role="list">
-          <div class="package-card" role="listitem">
-            <div class="package-header">
-              <h3>Free Starter Package</h3>
-              <div class="package-price">Free</div>
-            </div>
-            <img src="images/free_package.png" alt="Free Starter Package - Perfect for new businesses"
-              class="package-image">
-            <ul class="package-features">
-              <li>Quick WhatsApp Business setup - no technical skills needed</li>
-              <li>Professional business profile with your logo and details</li>
-              <li>Easy-to-use product catalog for your items</li>
-              <li>Ready-to-use message templates for quick replies</li>
-            </ul>
-            <a href="#contact" class="button">Start Free Setup</a>
-          </div>
+    <!-- ── Hero ─────────────────────────────────────────────── -->
+    <section class="hero-bg py-16 md:py-24 text-center relative overflow-hidden">
+      <!-- Subtle radial glow -->
+      <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(ellipse 70% 60% at 50% 40%, rgba(212,175,55,0.10) 0%, transparent 70%);"></div>
 
-          <div class="package-card" role="listitem">
-            <div class="package-header">
-              <h3>Support Package</h3>
-              <div class="package-price">R150/session</div>
-            </div>
-            <img src="images/img_support.png" alt="Support Package - Get help when you need it" class="package-image">
-            <ul class="package-features">
-              <li>One 45-minute support call (in person or online)</li>
-              <li>WhatsApp setup or fixes</li>
-              <li>Product catalog updates</li>
-              <li>Google Form or ordering tool setup</li>
-              <li>Message planning or broadcast tips</li>
-              <li>Any digital challenge you're facing</li>
-            </ul>
-            <p class="package-note">No monthly commitment. Book when needed.</p>
-            <a href="#contact" class="button">Book Support Call</a>
-          </div>
+      <div class="container mx-auto px-4 relative z-10">
+        <p class="text-xs tracking-widest gold-text uppercase mb-3 cinzel">Apps by Reinier</p>
+        <h1 class="cinzel text-5xl md:text-6xl font-bold gold-light hero-glow mb-4">ADBio</h1>
+        <hr class="section-rule mb-6">
+        <p class="text-lg md:text-xl max-w-2xl mx-auto text-gray-200 leading-relaxed">
+          A collection of browser-based games, tools, and platforms — no installs, no sign-ups, just open and use.
+        </p>
+        <a href="#apps" class="btn-gold mt-8 inline-block py-3 px-10 rounded-lg text-base">Explore the Apps</a>
+      </div>
+    </section>
 
-          <div class="package-card" role="listitem">
-            <div class="package-header">
-              <h3>Follow-Up Package</h3>
-              <div class="package-price">R299/month</div>
-            </div>
-            <img src="images/img_followup.png" alt="Follow-Up Package - Regular guidance and training"
-              class="package-image">
-            <ul class="package-features">
-              <li>Monthly check-ins to track your progress</li>
-              <li>Tips and ideas to improve your business</li>
-              <li>Training sessions to learn new features</li>
-              <li>Regular performance reviews</li>
-              <li>Strategic business advice</li>
-            </ul>
-            <a href="#contact" class="button">Start Follow-Up</a>
-          </div>
+    <!-- ── App Grid ──────────────────────────────────────────── -->
+    <section id="apps" class="py-16 md:py-20">
+      <div class="container mx-auto px-4">
+        <h2 class="cinzel text-3xl md:text-4xl text-center gold-text mb-3">All Apps</h2>
+        <p class="text-center text-gray-400 mb-10 text-sm tracking-wide">Click a card to open the app &nbsp;·&nbsp; tap ⓘ for a description</p>
 
-          <div class="package-divider-wrapper">
-            <div class="package-divider">
-              <div class="divider-line"></div>
-              <div class="divider-text">Coming Soon</div>
-              <div class="divider-line"></div>
-            </div>
-          </div>
+        <div class="app-cards-grid max-w-5xl mx-auto">
 
-          <div class="coming-soon-section">
-            <div class="package-card coming-soon" role="listitem">
-              <div class="package-header">
-                <h3>Growth Package</h3>
-                <div class="package-price">R499/month</div>
-                <div class="coming-soon-badge">Coming Soon</div>
-              </div>
-              <img src="images/img_growth.png" alt="Growth Package - Scale your business" class="package-image">
-              <ul class="package-features">
-                <li>Everything in Free Package, plus:</li>
-                <li>Automated order handling - never miss a sale</li>
-                <li>Simple inventory tracking for your products</li>
-                <li>Customer list to remember your regular buyers</li>
-                <li>Basic reports to see what's selling best</li>
-              </ul>
-              <button class="button" disabled>Coming Soon</button>
+          <!-- 1. TravelGames -->
+          <a href="https://adbio.pages.dev/TravelGames/" class="app-card" target="_blank" rel="noopener">
+            <img src="images/travegames.svg" alt="TravelGames — travel games and tools collection" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>TravelGames</h3>
+            <p>Travel games &amp; tools collection</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="TravelGames details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>Your portable game room for the road. Dice games, strategy games, and handy travel tools — all browser-based, no downloads needed.</span>
             </div>
+          </a>
 
-            <div class="package-card coming-soon" role="listitem">
-              <div class="package-header">
-                <h3>Advanced Package</h3>
-                <div class="package-price">R999/month</div>
-                <div class="coming-soon-badge">Coming Soon</div>
-              </div>
-              <ul class="package-features">
-                <li>Everything in Growth Package, plus:</li>
-                <li>Advanced automation for busy periods</li>
-                <li>Connect with your other business tools</li>
-                <li>Priority support - get help first</li>
-                <li>Detailed reports to grow your business</li>
-              </ul>
-              <button class="button" disabled>Coming Soon</button>
+          <!-- 2. Trigon -->
+          <a href="https://adbio.pages.dev/Trigon_Game/Trigon.html" class="app-card">
+            <img src="images/trigon.svg" alt="Trigon — 3-player hex board game" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>Trigon</h3>
+            <p>3-player hex board game</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="Trigon details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>Three-way Tic Tac Toe on a hexagonal board. Strategy meets chaos when three players compete for lines at once — unique and fast-paced.</span>
             </div>
-          </div>
-        </div>
-      </section>
+          </a>
 
-      <section class="why-choose-us">
-        <h2>Why Choose Us</h2>
-        <div class="benefits-grid">
-          <div class="benefit-column">
-            <h3>Benefits for Vendors</h3>
-            <ul class="benefit-list">
-              <li><i class="fas fa-check-circle"></i> Easy to use, no technical skills needed</li>
-              <li><i class="fas fa-check-circle"></i> Free initial setup and training</li>
-              <li><i class="fas fa-check-circle"></i> Increased customer reach</li>
-              <li><i class="fas fa-check-circle"></i> Automated order management</li>
-              <li><i class="fas fa-check-circle"></i> Professional business presence</li>
-            </ul>
-          </div>
-          <div class="benefit-column">
-            <h3>Our Service Benefits</h3>
-            <ul class="benefit-list">
-              <li><i class="fas fa-check-circle"></i> Local support team</li>
-              <li><i class="fas fa-check-circle"></i> Regular updates and improvements</li>
-              <li><i class="fas fa-check-circle"></i> Scalable solutions</li>
-              <li><i class="fas fa-check-circle"></i> Data security and privacy</li>
-              <li><i class="fas fa-check-circle"></i> Continuous training and support</li>
-            </ul>
-          </div>
-        </div>
-      </section>
+          <!-- 3. Aperture -->
+          <a href="https://adbio.pages.dev/aperture/" class="app-card">
+            <img src="TravelGames/images/aperture.svg" alt="Aperture — AI-powered solutions platform" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>Aperture</h3>
+            <p>AI-powered solutions platform</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="Aperture details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>Paste text or drop an image and let Gemini AI process it through smart prompt workflows. Song Creator, Demo Intake, and more solutions built in.</span>
+            </div>
+          </a>
 
-      <section class="how-it-works">
-        <h2>How It Works</h2>
-        <div class="timeline">
-          <div class="timeline-step">
-            <div class="timeline-content">
-              <h3>Easy Onboarding</h3>
-              <p>Quick setup of your WhatsApp Business account with professional profile and catalog creation.</p>
+          <!-- 4. Del Norte -->
+          <a href="https://delnorte.reinier-olivier.workers.dev" class="app-card" target="_blank" rel="noopener">
+            <img src="TravelGames/images/delnorte.svg" alt="Del Norte — Camino de Santiago training tracker" class="app-card-image" onerror="this.src='https://placehold.co/90x90/0a4821/d4af37?text=DelNorte'">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>Del Norte</h3>
+            <p>Camino de Santiago training tracker</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="Del Norte details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>Log walks, hikes, cycles, and Pilates sessions. Track gear break-in progress and follow a structured 3-phase plan leading up to the Camino de Santiago.</span>
             </div>
-            <div class="timeline-number">1</div>
-          </div>
-          <div class="timeline-step">
-            <div class="timeline-content">
-              <h3>Engagement Boost</h3>
-              <p>Implement automated responses and order processing to handle customer inquiries efficiently.</p>
-            </div>
-            <div class="timeline-number">2</div>
-          </div>
-          <div class="timeline-step">
-            <div class="timeline-content">
-              <h3>Full Automation</h3>
-              <p>Scale your business with advanced features like inventory management and analytics.</p>
-            </div>
-            <div class="timeline-number">3</div>
-          </div>
-        </div>
-      </section>
+          </a>
 
-      <section class="testimonials" id="testimonials">
-        <h2>Success Stories</h2>
-        <div class="testimonial-carousel">
-          <div class="testimonial-card">
-            <div class="testimonial-header">
-              <img src="bbm/images/logo.png" alt="Sarah's Bakery" class="testimonial-avatar">
-              <div class="testimonial-info">
-                <h3>Sarah's Bakery</h3>
-                <p>Local Bakery Owner</p>
-              </div>
+          <!-- 5. EventBingo -->
+          <a href="https://eventbingo.pages.dev/info" class="app-card" target="_blank" rel="noopener">
+            <img src="TravelGames/images/eventbingo.svg" alt="EventBingo — live event bingo" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>EventBingo</h3>
+            <p>Live event bingo</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="EventBingo details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>Turn any live event into bingo. The host calls items; players mark their cards in real time. Perfect for concerts, sports matches, conferences, or family gatherings.</span>
             </div>
-            <div class="testimonial-content">
-              <p>"Switching to WhatsApp Business with ADBio was a game-changer! Our orders increased by 150% in just two
-                months. The automated responses and catalog feature made it so easy for customers to browse and order
-                our products. The best part? It was completely free to get started!"</p>
-            </div>
-            <div class="testimonial-stats">
-              <div class="testimonial-stat">
-                <div class="testimonial-stat-number">150%</div>
-                <div class="testimonial-stat-label">Order Increase</div>
-              </div>
-              <div class="testimonial-stat">
-                <div class="testimonial-stat-number">85%</div>
-                <div class="testimonial-stat-label">Customer Retention</div>
-              </div>
-              <div class="testimonial-stat">
-                <div class="testimonial-stat-number">2x</div>
-                <div class="testimonial-stat-label">Faster Response Time</div>
-              </div>
-            </div>
-          </div>
+          </a>
 
-          <div class="testimonial-card">
-            <div class="testimonial-header">
-              <img src="bbm/images/logo.png" alt="Mike's Fresh Produce" class="testimonial-avatar">
-              <div class="testimonial-info">
-                <h3>Mike's Fresh Produce</h3>
-                <p>Local Market Vendor</p>
-              </div>
+          <!-- 6. SaveMyLinks -->
+          <a href="https://savemylinks.pages.dev/" class="app-card" target="_blank" rel="noopener">
+            <img src="TravelGames/images/savemylinks.svg" alt="SaveMyLinks — bookmark manager" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>SaveMyLinks</h3>
+            <p>Bookmark manager</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="SaveMyLinks details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>A clean, fast bookmark manager. Save links with tags, search instantly, and access them from any device — no account needed.</span>
             </div>
-            <div class="testimonial-content">
-              <p>"As a market vendor, I never thought I'd be able to manage orders digitally. ADBio's WhatsApp solution
-                made it simple! Now I can handle orders even when I'm at the market, and my customers love the
-                convenience. The inventory management feature is a lifesaver!"</p>
-            </div>
-            <div class="testimonial-stats">
-              <div class="testimonial-stat">
-                <div class="testimonial-stat-number">200%</div>
-                <div class="testimonial-stat-label">Sales Growth</div>
-              </div>
-              <div class="testimonial-stat">
-                <div class="testimonial-stat-number">90%</div>
-                <div class="testimonial-stat-label">Order Accuracy</div>
-              </div>
-              <div class="testimonial-stat">
-                <div class="testimonial-stat-number">3x</div>
-                <div class="testimonial-stat-label">More Customers</div>
-              </div>
-            </div>
-          </div>
+          </a>
 
-          <div class="testimonial-card">
-            <div class="testimonial-header">
-              <img src="bbm/images/logo.png" alt="Local Crafts" class="testimonial-avatar">
-              <div class="testimonial-info">
-                <h3>Local Crafts</h3>
-                <p>Handmade Products</p>
-              </div>
+          <!-- 7. WAB -->
+          <a href="https://adbio.pages.dev/WAB/" class="app-card">
+            <img src="images/wab.svg" alt="WAB — WhatsApp Business setup hub" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>WAB</h3>
+            <p>WhatsApp Business setup hub</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="WAB details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>A guided setup hub for WhatsApp Business. Step-by-step configuration docs and tools to get your business messaging up and running quickly.</span>
             </div>
-            <div class="testimonial-content">
-              <p>"The Growth Package transformed our small craft business. We can now handle multiple orders
-                simultaneously, and the automated responses ensure we never miss a customer inquiry. The analytics help
-                us understand our best-selling products!"</p>
+          </a>
+
+          <!-- 8. InnoFix -->
+          <a href="https://adbio.pages.dev/InnoFix/InnoFix.html" class="app-card">
+            <img src="images/innofix.svg" alt="InnoFix — appliance and solar repair Fourways" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>InnoFix</h3>
+            <p>Appliance &amp; solar repair (Fourways)</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="InnoFix details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>Local appliance and solar repair service based in Fourways. Book a repair, get a quote, and track your job — all from a simple browser page.</span>
             </div>
-            <div class="testimonial-stats">
-              <div class="testimonial-stat">
-                <div class="testimonial-stat-number">175%</div>
-                <div class="testimonial-stat-label">Revenue Increase</div>
-              </div>
-              <div class="testimonial-stat">
-                <div class="testimonial-stat-number">95%</div>
-                <div class="testimonial-stat-label">Response Rate</div>
-              </div>
-              <div class="testimonial-stat">
-                <div class="testimonial-stat-number">4x</div>
-                <div class="testimonial-stat-label">Product Visibility</div>
-              </div>
+          </a>
+
+          <!-- 9. Paperbook -->
+          <a href="https://adbio.pages.dev/paperbook.html" class="app-card">
+            <img src="images/paperbook.svg" alt="Paperbook — booklet photo preparer" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>Paperbook</h3>
+            <p>Booklet photo preparer</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="Paperbook details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>Arrange and prepare your photos for booklet printing. Upload images, set order and layout, then export a print-ready PDF — no design software needed.</span>
             </div>
-          </div>
-        </div>
-        <div class="carousel-controls">
-          <div class="carousel-dot active"></div>
-          <div class="carousel-dot"></div>
-          <div class="carousel-dot"></div>
-        </div>
-      </section>
+          </a>
 
-      <section class="cta-section">
-        <h2>Join the Digital Revolution</h2>
-        <p>Start Your Free Setup Now!</p>
-        <a href="#contact" class="button"><i class="fas fa-rocket"></i> Get Started Today</a>
-      </section>
+          <!-- 10. AI Prompter -->
+          <a href="https://adbio.pages.dev/TravelGames/aiprompt.html" class="app-card">
+            <img src="TravelGames/images/aiprompt.svg" alt="AI Prompter — structured AI prompts for project managers" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>AI Prompter</h3>
+            <p>Structured AI prompts for PM</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="AI Prompter details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>Pick a preset — proofread, risk mitigation, SMART objectives, performance feedback — fill in details, and get a perfectly structured prompt ready to paste into Copilot or ChatGPT.</span>
+            </div>
+          </a>
 
-      <section class="facts-section" aria-labelledby="facts-title">
-        <h2 id="facts-title">Did You Know?</h2>
-        <div class="facts-grid">
-          <div class="fact-card">
-            <i class="fas fa-search"></i>
-            <h3>SEO Origins</h3>
-            <p>The term "Search Engine Optimization" (SEO) dates back to the mid-1990s when webmasters first realized
-              they could tweak their websites to rank higher on search engines like Yahoo and AltaVista.</p>
-          </div>
-          <div class="fact-card">
-            <i class="fas fa-users"></i>
-            <h3>Social Media Power</h3>
-            <p>Over 70% of consumers say they trust a brand more if it has an active social media presence. Engaging
-              with your audience builds loyalty and trust!</p>
-          </div>
-          <div class="fact-card">
-            <i class="fas fa-pizza-slice"></i>
-            <h3>First Online Purchase</h3>
-            <p>The first-ever documented online purchase was a pizza! In 1994, a customer bought a large pepperoni and
-              mushroom pizza from Pizza Hut through their website.</p>
-          </div>
-          <div class="fact-card">
-            <i class="fas fa-tachometer-alt"></i>
-            <h3>Website Speed Matters</h3>
-            <p>If a webpage takes longer than 3 seconds to load, nearly 40% of users abandon the site. Speed
-              optimization is crucial for a strong digital presence.</p>
-          </div>
-          <div class="fact-card">
-            <i class="fas fa-globe"></i>
-            <h3>Digital Marketing is Everywhere</h3>
-            <p>The global digital advertising industry is expected to exceed $700 billion by 2026, proving just how
-              essential digital presence has become for businesses worldwide.</p>
-          </div>
-        </div>
-      </section>
+          <!-- 11. Pilates Full Body -->
+          <a href="https://adbio.pages.dev/TravelGames/pilatus1.html" class="app-card">
+            <img src="TravelGames/images/pilatus1.svg" alt="Pilates Full Body — guided pilates workout" class="app-card-image">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>Pilates Full Body</h3>
+            <p>Guided Pilates workout</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="Pilates Full Body details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>A complete guided Pilates session you can do anywhere — hotel room, campsite, or living room. No equipment needed, just open and follow along.</span>
+            </div>
+          </a>
 
-      <section id="contact" class="contact-section">
-        <h2>Let's Start Your Journey</h2>
-        <div class="contact-info">
-          <div class="contact-icon">
-            <i class="fas fa-phone"></i>
-          </div>
-          <p><strong>Phone:</strong> +27 68 929 5019</p>
-        </div>
-        <div class="contact-info">
-          <div class="contact-icon">
-            <i class="fas fa-envelope"></i>
-          </div>
-          <p><strong>Email:</strong> adbio.wab@gmail.com</p>
-        </div>
-        <div class="contact-info">
-          <div class="contact-icon">
-            <i class="fas fa-map-marker-alt"></i>
-          </div>
-          <p><strong>Address:</strong> Fourways, Sandton, Johannesburg, South Africa</p>
-        </div>
+          <!-- 12. Vintage Compass -->
+          <a href="https://adbio.pages.dev/TravelGames/Navigator.html" class="app-card">
+            <img src="TravelGames/images/Navigator.svg" alt="Vintage Compass — live compass with sun times" class="app-card-image" onerror="this.src='https://placehold.co/90x90/0a4821/d4af37?text=Compass'">
+            <button class="info-btn" aria-label="Show app info" type="button">ⓘ</button>
+            <h3>Vintage Compass</h3>
+            <p>Live compass with sun times</p>
+            <div class="app-card-description" role="dialog" aria-modal="true" aria-label="Vintage Compass details">
+              <button class="close-desc" aria-label="Close">×</button>
+              <span>A brass-styled compass using your device's orientation sensor. Shows your live heading and calculates today's sunrise and sunset azimuths from GPS — perfect for outdoor navigation and campsite planning.</span>
+            </div>
+          </a>
 
-        <div class="social-links">
-          <a href="https://www.facebook.com/profile.php?id=61577152943504" class="button" target="_blank"
-            rel="noopener"><i class="fab fa-facebook-f"></i> Connect on Facebook</a>
-          <a href="https://www.whatsapp.com/catalog/27689295019/?app_absent=0" class="button" target="_blank"
-            rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp Business</a>
-          <button class="button coming-soon-social" disabled><i class="fab fa-instagram"></i> Follow on Instagram <span
-              class="coming-soon-badge">Coming Soon</span></button>
-        </div>
-      </section>
-    </div>
+        </div><!-- /.app-cards-grid -->
+      </div>
+    </section>
+
   </main>
 
+  <!-- ── Footer ────────────────────────────────────────────── -->
+  <footer class="felt-green border-t border-yellow-800 border-opacity-30 py-8 text-center">
+    <div class="container mx-auto px-4">
+      <p class="cinzel text-xl gold-light mb-2">ADBio</p>
+      <p class="text-gray-400 text-sm mb-3">Browser-based apps built with care by Reinier.</p>
+      <a href="https://github.com/Reinier2205/adbio" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-2 gold-text hover:text-yellow-200 transition-colors text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.084 1.84 1.238 1.84 1.238 1.07 1.833 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.31.468-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.606-.015 2.898-.015 3.293 0 .322.218.694.825.577C20.565 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+        </svg>
+        github.com/Reinier2205/adbio
+      </a>
+      <p class="text-gray-600 text-xs mt-4">&copy; 2025 ADBio. All rights reserved.</p>
+    </div>
+  </footer>
+
   <script>
-    // Intersection Observer for scroll animations
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
+    // ── Info overlay — matches TravelGames/index.html exactly ──
+    (function () {
+      function closestCard(el) { return el.closest && el.closest('.app-card'); }
+      function hideAll() {
+        document.querySelectorAll('.app-card.show-desc').forEach(c => c.classList.remove('show-desc'));
+      }
+      document.addEventListener('click', function (e) {
+        const infoBtn = e.target.closest && e.target.closest('.info-btn');
+        if (infoBtn) {
+          e.preventDefault(); e.stopPropagation();
+          const card = closestCard(infoBtn);
+          const isOpen = card.classList.contains('show-desc');
+          hideAll();
+          if (!isOpen) {
+            card.classList.add('show-desc');
+            const dialog = card.querySelector('.app-card-description');
+            if (dialog) dialog.focus({ preventScroll: true });
+          }
+          return;
+        }
+        const closeBtn = e.target.closest && e.target.closest('.close-desc');
+        if (closeBtn) {
+          e.preventDefault();
+          const card = closestCard(closeBtn);
+          if (card) card.classList.remove('show-desc');
+          return;
+        }
+        const desc = e.target.closest && e.target.closest('.app-card-description');
+        if (!desc) hideAll();
+      }, { passive: false });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.app-card.show-desc').forEach(c => c.classList.remove('show-desc'));
         }
       });
-    }, {
-      threshold: 0.1
-    });
 
-    // Observe all elements with animate-on-scroll class
-    document.querySelectorAll('.animate-on-scroll').forEach((el) => observer.observe(el));
-
-    // Lazy loading for images
-    const lazyLoadImages = () => {
-      const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            img.classList.add('loaded');
-            observer.unobserve(img);
-          }
+      document.querySelectorAll('.app-card').forEach(card => {
+        card.addEventListener('click', function (e) {
+          if (card.classList.contains('show-desc')) e.preventDefault();
         });
       });
-
-      document.querySelectorAll('img[data-src]').forEach(img => {
-        imageObserver.observe(img);
-      });
-    };
-
-    // Sticky navigation
-    const stickyNav = document.querySelector('.sticky-nav');
-    let lastScroll = 0;
-
-    window.addEventListener('scroll', () => {
-      const currentScroll = window.pageYOffset;
-
-      if (currentScroll > 200) {
-        stickyNav.classList.add('visible');
-      } else {
-        stickyNav.classList.remove('visible');
-      }
-
-      lastScroll = currentScroll;
-    });
-
-    // Initialize lazy loading
-    document.addEventListener('DOMContentLoaded', lazyLoadImages);
-
-    // Smooth scroll for navigation links
-    document.querySelectorAll('.nav-links a').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const targetId = link.getAttribute('href');
-        const targetElement = document.querySelector(targetId);
-
-        if (targetElement) {
-          targetElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      });
-    });
-
-    // Mobile Navigation
-    const hamburger = document.querySelector('.hamburger');
-    const mobileNav = document.querySelector('.mobile-nav');
-    const overlay = document.querySelector('.overlay');
-
-    hamburger.addEventListener('click', () => {
-      const expanded = hamburger.getAttribute('aria-expanded') === 'true';
-      hamburger.setAttribute('aria-expanded', !expanded);
-      mobileNav.classList.toggle('active');
-      overlay.classList.toggle('active');
-      document.body.style.overflow = mobileNav.classList.contains('active') ? 'hidden' : '';
-    });
-
-    overlay.addEventListener('click', () => {
-      mobileNav.classList.remove('active');
-      overlay.classList.remove('active');
-      document.body.style.overflow = '';
-    });
-
-    // Close mobile menu when clicking a link
-    document.querySelectorAll('.mobile-nav a').forEach(link => {
-      link.addEventListener('click', () => {
-        mobileNav.classList.remove('active');
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
-      });
-    });
-
-    // Testimonial Carousel
-    const testimonialCards = document.querySelectorAll('.testimonial-card');
-    const dots = document.querySelectorAll('.carousel-dot');
-    let currentIndex = 0;
-
-    function showTestimonial(index) {
-      testimonialCards.forEach((card, i) => {
-        card.style.display = i === index ? 'block' : 'none';
-      });
-      dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === index);
-      });
-    }
-
-    dots.forEach((dot, i) => {
-      dot.addEventListener('click', () => {
-        currentIndex = i;
-        showTestimonial(currentIndex);
-      });
-    });
-
-    // Initialize first testimonial
-    showTestimonial(0);
-
-    // Active navigation highlighting
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.nav-links a, .mobile-nav a');
-
-    function highlightNavigation() {
-      const scrollY = window.pageYOffset;
-
-      sections.forEach(section => {
-        const sectionHeight = section.offsetHeight;
-        const sectionTop = section.offsetTop - 100;
-        const sectionId = section.getAttribute('id');
-
-        if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
-          navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === `#${sectionId}`) {
-              link.classList.add('active');
-            }
-          });
-        }
-      });
-    }
-
-    window.addEventListener('scroll', highlightNavigation);
-    window.addEventListener('load', highlightNavigation);
-
-    // Smooth scroll with offset
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        const targetElement = document.querySelector(targetId);
-
-        if (targetElement) {
-          const headerOffset = 80;
-          const elementPosition = targetElement.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: 'smooth'
-          });
-        }
-      });
-    });
-
-    // Touch device detection
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-    if (isTouchDevice) {
-      document.body.classList.add('touch-device');
-    }
-
-    // Ensure minimum touch target size
-    const touchElements = document.querySelectorAll('.button, .nav-links a, .mobile-nav a');
-    touchElements.forEach(element => {
-      const rect = element.getBoundingClientRect();
-      if (rect.height < 44) {
-        element.style.minHeight = '44px';
-      }
-      if (rect.width < 44) {
-        element.style.minWidth = '44px';
-      }
-    });
+    })();
   </script>
-</body>
 
+</body>
 </html>
