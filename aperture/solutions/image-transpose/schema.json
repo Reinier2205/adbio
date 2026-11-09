@@ -1,0 +1,54 @@
+{
+  "type": "object",
+  "properties": {
+    "subject_identity": {
+      "type": "object",
+      "description": "Facial and physical attributes of the subject in the scene image",
+      "properties": {
+        "gender": { "type": "string", "description": "Gender of the subject" },
+        "approximate_age": { "type": "string", "description": "Estimated age range" },
+        "facial_features": { "type": "string", "description": "Description of facial structure, expression, and defining features" },
+        "hair": { "type": "string", "description": "Hair color, length, texture, and style" },
+        "pose": { "type": "string", "description": "Body position and posture of the subject" },
+        "clothing": { "type": "string", "description": "What the subject is wearing" }
+      },
+      "required": ["gender", "approximate_age", "facial_features", "hair", "pose", "clothing"]
+    },
+    "target_scene": {
+      "type": "object",
+      "description": "Visual design code of the scene image",
+      "properties": {
+        "subject": { "type": "string", "description": "One-sentence description of the scene's main subject and action" },
+        "composition": { "type": "string", "description": "Framing, angle, depth of field, and compositional choices" },
+        "style": { "type": "string", "description": "Visual style — e.g. cinematic photography, digital painting, AI-generated realism" },
+        "lighting": { "type": "string", "description": "Lighting type, direction, and mood" },
+        "color_palette_primary": { "type": "string", "description": "Dominant colors in hex or descriptive names" },
+        "color_palette_secondary": { "type": "string", "description": "Supporting colors in hex or descriptive names" },
+        "elements": { "type": "string", "description": "Key visual elements present in the scene, comma-separated" },
+        "background": { "type": "string", "description": "Background description" }
+      },
+      "required": ["subject", "composition", "style", "lighting", "color_palette_primary", "elements", "background"]
+    },
+    "identity_preservation_rules": {
+      "type": "object",
+      "description": "Rules to preserve facial identity during transposition",
+      "properties": {
+        "priority": { "type": "string", "description": "Identity preservation priority level" },
+        "facial_structure_lock": { "type": "string", "description": "Instruction to lock facial proportions, eye shape, nose structure, and jawline" },
+        "eyes": { "type": "string", "description": "Eye shape and color preservation rule" },
+        "nose_shape": { "type": "string", "description": "Nose shape preservation rule" },
+        "lips_shape": { "type": "string", "description": "Lip shape preservation rule" },
+        "face_oval": { "type": "string", "description": "Face oval / jawline preservation rule" },
+        "natural_asymmetry": { "type": "string", "description": "Natural facial asymmetry preservation rule" },
+        "hair_blending_mode": { "type": "string", "description": "How to blend reference hair with scene subject hair" },
+        "skin_tone_adaptation": { "type": "string", "description": "Skin tone blending approach for the new lighting context" }
+      },
+      "required": ["priority", "facial_structure_lock", "natural_asymmetry"]
+    },
+    "final_generation_prompt": {
+      "type": "string",
+      "description": "Complete, paste-ready prompt for an image generation model combining the scene design and identity transfer directives"
+    }
+  },
+  "required": ["subject_identity", "target_scene", "identity_preservation_rules", "final_generation_prompt"]
+}

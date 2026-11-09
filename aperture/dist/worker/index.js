@@ -1,31 +1,31 @@
-const id$1 = "demo-intake";
-const title$1 = "Demo intake";
-const description$1 = "Paste text and/or drop an image. Gemini extracts a title, summary, date, and list of items. Review the JSON, then save.";
-const inputs$1 = "text + image";
+const id$2 = "demo-intake";
+const title$2 = "Demo intake";
+const description$2 = "Paste text and/or drop an image. Gemini extracts a title, summary, date, and list of items. Review the JSON, then save.";
+const inputs$2 = "text + image";
 const demoManifest = {
+  id: id$2,
+  title: title$2,
+  description: description$2,
+  inputs: inputs$2
+};
+const demoPrompt = 'You extract structured notes from messy human input.\r\n\r\nRules:\r\n- Use only what is present in the text and/or image. Do not invent facts.\r\n- If a field is unknown, use an empty string or an empty array.\r\n- Dates must be ISO 8601 (YYYY-MM-DD) when you can read a date; otherwise use "".\r\n- items should be concrete extracted bullets, not a rewrite of the whole input.\r\n- title should be short (under 80 characters).\r\n- summary should be 1–3 sentences.\r\n\r\nInput text:\r\n{{input_text}}\r\n';
+const type$2 = "object";
+const properties$2 = { "title": { "type": "string", "description": "Short title for this capture" }, "summary": { "type": "string", "description": "One to three sentence summary" }, "date": { "type": "string", "description": "ISO date YYYY-MM-DD if present, else empty" }, "items": { "type": "array", "items": { "type": "string" }, "description": "Concrete extracted bullets" } };
+const required$2 = ["title", "summary", "date", "items"];
+const demoSchema = {
+  type: type$2,
+  properties: properties$2,
+  required: required$2
+};
+const id$1 = "song-creator";
+const title$1 = "Song Creator";
+const description$1 = "Paste a Meta AI song analysis and your creative direction — get a Suno-ready song design back.";
+const inputs$1 = "text";
+const songManifest = {
   id: id$1,
   title: title$1,
   description: description$1,
   inputs: inputs$1
-};
-const demoPrompt = 'You extract structured notes from messy human input.\r\n\r\nRules:\r\n- Use only what is present in the text and/or image. Do not invent facts.\r\n- If a field is unknown, use an empty string or an empty array.\r\n- Dates must be ISO 8601 (YYYY-MM-DD) when you can read a date; otherwise use "".\r\n- items should be concrete extracted bullets, not a rewrite of the whole input.\r\n- title should be short (under 80 characters).\r\n- summary should be 1–3 sentences.\r\n\r\nInput text:\r\n{{input_text}}\r\n';
-const type$1 = "object";
-const properties$1 = { "title": { "type": "string", "description": "Short title for this capture" }, "summary": { "type": "string", "description": "One to three sentence summary" }, "date": { "type": "string", "description": "ISO date YYYY-MM-DD if present, else empty" }, "items": { "type": "array", "items": { "type": "string" }, "description": "Concrete extracted bullets" } };
-const required$1 = ["title", "summary", "date", "items"];
-const demoSchema = {
-  type: type$1,
-  properties: properties$1,
-  required: required$1
-};
-const id = "song-creator";
-const title = "Song Creator";
-const description = "Paste a Meta AI song analysis and your creative direction — get a Suno-ready song design back.";
-const inputs = "text";
-const songManifest = {
-  id,
-  title,
-  description,
-  inputs
 };
 const songPrompt = `\uFEFFYou are a professional songwriter and Suno AI expert. Your job is to analyse a song description and write complete, ready-to-use lyrics for a new original song inspired by it.
 
@@ -54,10 +54,49 @@ Output fields:
 
 {{input_text}}\r
 `;
-const type = "object";
-const properties = { "original_title": { "type": "string", "description": "Title of the original song" }, "original_style": { "type": "string", "description": "Suno style tags describing the original song (genre, mood, instruments, tempo)" }, "original_lyrics_themes": { "type": "array", "items": { "type": "string" }, "description": "Key lyrical themes and hooks from the original song" }, "new_title": { "type": "string", "description": "Suggested title for the new song" }, "new_style": { "type": "string", "description": "Suno style prompt for the new song, blending the original style with the user's creative direction" }, "new_lyrics": { "type": "string", "description": "Complete song lyrics with Suno section tags such as [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro]. Each section on its own line followed by the lyrics for that section." } };
-const required = ["original_title", "original_style", "original_lyrics_themes", "new_title", "new_style", "new_lyrics"];
+const type$1 = "object";
+const properties$1 = { "original_title": { "type": "string", "description": "Title of the original song" }, "original_style": { "type": "string", "description": "Suno style tags describing the original song (genre, mood, instruments, tempo)" }, "original_lyrics_themes": { "type": "array", "items": { "type": "string" }, "description": "Key lyrical themes and hooks from the original song" }, "new_title": { "type": "string", "description": "Suggested title for the new song" }, "new_style": { "type": "string", "description": "Suno style prompt for the new song, blending the original style with the user's creative direction" }, "new_lyrics": { "type": "string", "description": "Complete song lyrics with Suno section tags such as [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro]. Each section on its own line followed by the lyrics for that section." } };
+const required$1 = ["original_title", "original_style", "original_lyrics_themes", "new_title", "new_style", "new_lyrics"];
 const songSchema = {
+  type: type$1,
+  properties: properties$1,
+  required: required$1
+};
+const id = "image-transpose";
+const title = "Photo Transpose";
+const description = "Map your face onto any scene — upload a scene image and your photo, then get a ready-to-use generation prompt.";
+const inputs = "image";
+const transposeManifest = {
+  id,
+  title,
+  description,
+  inputs
+};
+const transposePrompt = `You are an expert AI image analyst and prompt engineer. Your job is to analyse a scene image and extract a detailed design code JSON that captures everything needed to recreate that scene with a different person's face transposed onto it.
+
+Rules:
+- Analyse only what is visible in the image. Do not invent details that are not present.
+- Describe the composition, lighting, color palette, style, and all key visual elements precisely.
+- Extract the subject's current attributes (pose, clothing, hair) so they can be preserved.
+- Build an identity_preservation block that locks in the subject's facial structure for identity transfer.
+- The final_generation_prompt must be a single, complete, paste-ready prompt for an image generation model. It must:
+  - Open with "A photorealistic [style] image of [subject description with MY FACE transposed onto the subject]"
+  - Include all scene elements, lighting, color palette, and composition details
+  - Include the identity preservation rules as explicit directives (e.g. "preserve exact facial features from reference photo: unchanged nose, lips, eyes, face oval, and natural asymmetry")
+  - End with "Ultra high resolution, cinematic quality."
+
+Output fields:
+- subject_identity: Facial and physical attributes of the subject in the scene (gender, approximate age, facial features, hair, pose)
+- target_scene: Composition, style, color palette, lighting, and all visual elements of the scene
+- identity_preservation_rules: Specific rules to preserve facial identity during transposition (facial_structure_lock, natural_asymmetry, hair_blending_mode)
+- final_generation_prompt: The complete, unified prompt string ready to paste into an image generation model
+
+{{input_text}}
+`;
+const type = "object";
+const properties = { "subject_identity": { "type": "object", "description": "Facial and physical attributes of the subject in the scene image", "properties": { "gender": { "type": "string", "description": "Gender of the subject" }, "approximate_age": { "type": "string", "description": "Estimated age range" }, "facial_features": { "type": "string", "description": "Description of facial structure, expression, and defining features" }, "hair": { "type": "string", "description": "Hair color, length, texture, and style" }, "pose": { "type": "string", "description": "Body position and posture of the subject" }, "clothing": { "type": "string", "description": "What the subject is wearing" } }, "required": ["gender", "approximate_age", "facial_features", "hair", "pose", "clothing"] }, "target_scene": { "type": "object", "description": "Visual design code of the scene image", "properties": { "subject": { "type": "string", "description": "One-sentence description of the scene's main subject and action" }, "composition": { "type": "string", "description": "Framing, angle, depth of field, and compositional choices" }, "style": { "type": "string", "description": "Visual style — e.g. cinematic photography, digital painting, AI-generated realism" }, "lighting": { "type": "string", "description": "Lighting type, direction, and mood" }, "color_palette_primary": { "type": "string", "description": "Dominant colors in hex or descriptive names" }, "color_palette_secondary": { "type": "string", "description": "Supporting colors in hex or descriptive names" }, "elements": { "type": "string", "description": "Key visual elements present in the scene, comma-separated" }, "background": { "type": "string", "description": "Background description" } }, "required": ["subject", "composition", "style", "lighting", "color_palette_primary", "elements", "background"] }, "identity_preservation_rules": { "type": "object", "description": "Rules to preserve facial identity during transposition", "properties": { "priority": { "type": "string", "description": "Identity preservation priority level" }, "facial_structure_lock": { "type": "string", "description": "Instruction to lock facial proportions, eye shape, nose structure, and jawline" }, "eyes": { "type": "string", "description": "Eye shape and color preservation rule" }, "nose_shape": { "type": "string", "description": "Nose shape preservation rule" }, "lips_shape": { "type": "string", "description": "Lip shape preservation rule" }, "face_oval": { "type": "string", "description": "Face oval / jawline preservation rule" }, "natural_asymmetry": { "type": "string", "description": "Natural facial asymmetry preservation rule" }, "hair_blending_mode": { "type": "string", "description": "How to blend reference hair with scene subject hair" }, "skin_tone_adaptation": { "type": "string", "description": "Skin tone blending approach for the new lighting context" } }, "required": ["priority", "facial_structure_lock", "natural_asymmetry"] }, "final_generation_prompt": { "type": "string", "description": "Complete, paste-ready prompt for an image generation model combining the scene design and identity transfer directives" } };
+const required = ["subject_identity", "target_scene", "identity_preservation_rules", "final_generation_prompt"];
+const transposeSchema = {
   type,
   properties,
   required
@@ -72,6 +111,11 @@ const catalog = {
     manifest: songManifest,
     prompt: songPrompt,
     schema: songSchema
+  },
+  [transposeManifest.id]: {
+    manifest: transposeManifest,
+    prompt: transposePrompt,
+    schema: transposeSchema
   }
 };
 function getSolution(id2) {
