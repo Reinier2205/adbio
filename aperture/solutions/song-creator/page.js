@@ -94,6 +94,9 @@ export function render(root, { api, toast, navigate, solution }) {
           <label class="field">Meta AI song analysis
             <textarea id="songAnalysis" rows="6" placeholder="Paste Meta AI\u2019s response here\u2026"></textarea>
           </label>
+          <label class="field" style="margin-top:10px;">Source URL <span class="hint" style="display:inline;font-size:12px;">(optional \u2014 link to the original post or page)</span>
+            <input type="url" id="sourceUrl" placeholder="https://\u2026" style="margin-top:4px;">
+          </label>
         </section>
 
         <section class="card panel">
@@ -233,6 +236,7 @@ export function render(root, { api, toast, navigate, solution }) {
   bindInternalLinks(root, navigate);
 
   const songAnalysis  = root.querySelector('#songAnalysis');
+  const sourceUrl     = root.querySelector('#sourceUrl');
   const myIdea        = root.querySelector('#myIdea');
   const outputSection = root.querySelector('#outputSection');
   const origTitle     = root.querySelector('#origTitle');
@@ -287,7 +291,7 @@ export function render(root, { api, toast, navigate, solution }) {
     const idea = myIdea.value.trim();
     if (!analysis && !idea) { toast('Nothing to save yet.'); return; }
     const structure = getSelectedStructure(root);
-    const payload = { saved_analysis: analysis, saved_idea: idea, saved_structure: structure, status: 'inputs-only' };
+    const payload = { saved_analysis: analysis, saved_idea: idea, saved_structure: structure, source_url: sourceUrl.value.trim(), status: 'inputs-only' };
     const title = idea ? idea.slice(0, 60) : 'Saved inputs';
     try {
       await api.saveRecord({ solutionId: solution.id, title, payload });
@@ -304,7 +308,6 @@ export function render(root, { api, toast, navigate, solution }) {
     if (!analysis) { toast('Paste the Meta AI song analysis first.'); return; }
     if (!idea) { toast('Tell me what your new song should be about.'); return; }
     if (!structure) { toast('Select at least one song section.'); return; }
-
     const combinedText =
       `--- SONG ANALYSIS FROM META AI ---\n${analysis}\n\n--- MY CREATIVE DIRECTION ---\n${idea}\n\n--- SONG STRUCTURE (write these sections in this order) ---\n${structure}`;
 
@@ -324,7 +327,7 @@ export function render(root, { api, toast, navigate, solution }) {
       outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       // Auto-save
-      await api.saveRecord({ solutionId: solution.id, title: out.new_title || 'Untitled', payload: { ...out } });
+      await api.saveRecord({ solutionId: solution.id, title: out.new_title || 'Untitled', payload: { ...out, source_url: sourceUrl.value.trim() } });
       toast('Lyrics ready \u2014 copy to Suno, then add your Suno link in the Jukebox!');
       await loadHistory();
     } catch (err) {
@@ -352,13 +355,22 @@ export function render(root, { api, toast, navigate, solution }) {
           : (p.saved_idea ? p.saved_idea.slice(0, 80) : '');
         const style = (p.new_style || p.original_style || '').slice(0, 100);
         const sunoHref = p.suno_link || '';
+        const sourceHref = p.source_url || '';
 
-        const linkRow = isInputOnly ? '' : sunoHref
+        const sourceLink = sourceHref
+          ? `<a class="button secondary" href="${escapeHtml(sourceHref)}" target="_blank" rel="noopener" title="${escapeHtml(sourceHref)}">🔗 Source</a>`
+          : '';
+
+        const linkRow = isInputOnly
+          ? (sourceHref ? `<div class="jukebox-link-row">${sourceLink}</div>` : '')
+          : sunoHref
           ? `<div class="jukebox-link-row">
+               ${sourceLink}
                <a class="button secondary" href="${escapeHtml(sunoHref)}" target="_blank" rel="noopener">▶️ Play on Suno</a>
                <button class="button secondary btn-danger clear-link-btn" type="button" data-id="${row.id}">Remove</button>
              </div>`
           : `<div class="jukebox-link-row">
+               ${sourceLink}
                <input type="url" class="suno-link-input" data-id="${row.id}" placeholder="Paste Suno link\u2026">
                <button class="button secondary save-link-btn" type="button" data-id="${row.id}">Save</button>
              </div>`;
@@ -388,6 +400,7 @@ export function render(root, { api, toast, navigate, solution }) {
           if (p.status === 'inputs-only') {
             if (p.saved_analysis) songAnalysis.value = p.saved_analysis;
             if (p.saved_idea) myIdea.value = p.saved_idea;
+            if (p.source_url) sourceUrl.value = p.source_url;
             if (p.saved_structure) {
               const tags = p.saved_structure.split(',').map((s) => s.trim());
               root.querySelectorAll('.structure-cb').forEach((cb) => {
@@ -406,6 +419,7 @@ export function render(root, { api, toast, navigate, solution }) {
             origTitle.textContent = p.original_title || '\u2014';
             origStyle.textContent = p.original_style || '\u2014';
             origThemes.innerHTML = (p.original_lyrics_themes || []).map((t) => `<li>${escapeHtml(t)}</li>`).join('') || '<li>\u2014</li>';
+            sourceUrl.value = p.source_url || '';
             outputSection.style.display = '';
             outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             toast('Song loaded.');
