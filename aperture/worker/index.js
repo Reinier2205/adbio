@@ -1,5 +1,6 @@
-﻿import { getSolution } from './catalog.js';
+﻿import { getSolution, isWhatsAppSolution } from './catalog.js';
 import { generateWithGemini } from './gemini.js';
+import { verifyWebhook, handleIncoming } from './whatsapp.js';
 
 const MAX_IMAGE_CHARS = 5_500_000;
 
@@ -163,6 +164,20 @@ export default {
       const patched = path.match(/^\/api\/records\/([^/]+)$/);
       if (patched && request.method === 'PATCH') {
         return await updateRecord(patched[1], request, env);
+      }
+
+      // WhatsApp webhook routes: GET (verification) and POST (inbound messages)
+      const waMatch = path.match(/^\/api\/whatsapp\/([^/]+)\/webhook$/);
+      if (waMatch) {
+        const solutionId = waMatch[1];
+        const solution = getSolution(solutionId);
+        if (!solution) return json({ error: `Unknown solution: ${solutionId}` }, 404);
+        if (!isWhatsAppSolution(solution)) {
+          return json({ error: 'Solution is not a WhatsApp integration' }, 400);
+        }
+        if (request.method === 'GET') return verifyWebhook(url, env.WA_VERIFY_TOKEN);
+        if (request.method === 'POST') return await handleIncoming(request, env, solution);
+        return new Response(null, { status: 405, headers: { Allow: 'GET, POST' } });
       }
 
       if (path.startsWith('/api/')) {

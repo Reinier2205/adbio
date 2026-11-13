@@ -1,31 +1,31 @@
-const id$2 = "demo-intake";
-const title$2 = "Demo intake";
-const description$2 = "Paste text and/or drop an image. Gemini extracts a title, summary, date, and list of items. Review the JSON, then save.";
-const inputs$2 = "text + image";
+const id$3 = "demo-intake";
+const title$3 = "Demo intake";
+const description$3 = "Paste text and/or drop an image. Gemini extracts a title, summary, date, and list of items. Review the JSON, then save.";
+const inputs$3 = "text + image";
 const demoManifest = {
+  id: id$3,
+  title: title$3,
+  description: description$3,
+  inputs: inputs$3
+};
+const demoPrompt = 'You extract structured notes from messy human input.\r\n\r\nRules:\r\n- Use only what is present in the text and/or image. Do not invent facts.\r\n- If a field is unknown, use an empty string or an empty array.\r\n- Dates must be ISO 8601 (YYYY-MM-DD) when you can read a date; otherwise use "".\r\n- items should be concrete extracted bullets, not a rewrite of the whole input.\r\n- title should be short (under 80 characters).\r\n- summary should be 1–3 sentences.\r\n\r\nInput text:\r\n{{input_text}}\r\n';
+const type$4 = "object";
+const properties$3 = { "title": { "type": "string", "description": "Short title for this capture" }, "summary": { "type": "string", "description": "One to three sentence summary" }, "date": { "type": "string", "description": "ISO date YYYY-MM-DD if present, else empty" }, "items": { "type": "array", "items": { "type": "string" }, "description": "Concrete extracted bullets" } };
+const required$3 = ["title", "summary", "date", "items"];
+const demoSchema = {
+  type: type$4,
+  properties: properties$3,
+  required: required$3
+};
+const id$2 = "song-creator";
+const title$2 = "Song Creator";
+const description$2 = "Paste a Meta AI song analysis and your creative direction — get a Suno-ready song design back.";
+const inputs$2 = "text";
+const songManifest = {
   id: id$2,
   title: title$2,
   description: description$2,
   inputs: inputs$2
-};
-const demoPrompt = 'You extract structured notes from messy human input.\r\n\r\nRules:\r\n- Use only what is present in the text and/or image. Do not invent facts.\r\n- If a field is unknown, use an empty string or an empty array.\r\n- Dates must be ISO 8601 (YYYY-MM-DD) when you can read a date; otherwise use "".\r\n- items should be concrete extracted bullets, not a rewrite of the whole input.\r\n- title should be short (under 80 characters).\r\n- summary should be 1–3 sentences.\r\n\r\nInput text:\r\n{{input_text}}\r\n';
-const type$2 = "object";
-const properties$2 = { "title": { "type": "string", "description": "Short title for this capture" }, "summary": { "type": "string", "description": "One to three sentence summary" }, "date": { "type": "string", "description": "ISO date YYYY-MM-DD if present, else empty" }, "items": { "type": "array", "items": { "type": "string" }, "description": "Concrete extracted bullets" } };
-const required$2 = ["title", "summary", "date", "items"];
-const demoSchema = {
-  type: type$2,
-  properties: properties$2,
-  required: required$2
-};
-const id$1 = "song-creator";
-const title$1 = "Song Creator";
-const description$1 = "Paste a Meta AI song analysis and your creative direction — get a Suno-ready song design back.";
-const inputs$1 = "text";
-const songManifest = {
-  id: id$1,
-  title: title$1,
-  description: description$1,
-  inputs: inputs$1
 };
 const songPrompt = `\uFEFFYou are a professional songwriter and Suno AI expert. Your job is to analyse a song description and write complete, ready-to-use lyrics for a new original song inspired by it.
 
@@ -54,23 +54,23 @@ Output fields:
 
 {{input_text}}\r
 `;
-const type$1 = "object";
-const properties$1 = { "original_title": { "type": "string", "description": "Title of the original song" }, "original_style": { "type": "string", "description": "Suno style tags describing the original song (genre, mood, instruments, tempo)" }, "original_lyrics_themes": { "type": "array", "items": { "type": "string" }, "description": "Key lyrical themes and hooks from the original song" }, "new_title": { "type": "string", "description": "Suggested title for the new song" }, "new_style": { "type": "string", "description": "Suno style prompt for the new song, blending the original style with the user's creative direction" }, "new_lyrics": { "type": "string", "description": "Complete song lyrics with Suno section tags such as [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro]. Each section on its own line followed by the lyrics for that section." } };
-const required$1 = ["original_title", "original_style", "original_lyrics_themes", "new_title", "new_style", "new_lyrics"];
+const type$3 = "object";
+const properties$2 = { "original_title": { "type": "string", "description": "Title of the original song" }, "original_style": { "type": "string", "description": "Suno style tags describing the original song (genre, mood, instruments, tempo)" }, "original_lyrics_themes": { "type": "array", "items": { "type": "string" }, "description": "Key lyrical themes and hooks from the original song" }, "new_title": { "type": "string", "description": "Suggested title for the new song" }, "new_style": { "type": "string", "description": "Suno style prompt for the new song, blending the original style with the user's creative direction" }, "new_lyrics": { "type": "string", "description": "Complete song lyrics with Suno section tags such as [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro]. Each section on its own line followed by the lyrics for that section." } };
+const required$2 = ["original_title", "original_style", "original_lyrics_themes", "new_title", "new_style", "new_lyrics"];
 const songSchema = {
-  type: type$1,
-  properties: properties$1,
-  required: required$1
+  type: type$3,
+  properties: properties$2,
+  required: required$2
 };
-const id = "image-transpose";
-const title = "Photo Transpose";
-const description = "Map your face onto any scene — upload a scene image and your photo, then get a ready-to-use generation prompt.";
-const inputs = "image";
+const id$1 = "image-transpose";
+const title$1 = "Photo Transpose";
+const description$1 = "Map your face onto any scene — upload a scene image and your photo, then get a ready-to-use generation prompt.";
+const inputs$1 = "image";
 const transposeManifest = {
-  id,
-  title,
-  description,
-  inputs
+  id: id$1,
+  title: title$1,
+  description: description$1,
+  inputs: inputs$1
 };
 const transposePrompt = `You are an expert AI image analyst and prompt engineer. Your job is to analyse a scene image and extract a detailed design code JSON that captures everything needed to recreate that scene with a different person's face transposed onto it.
 
@@ -93,14 +93,50 @@ Output fields:
 
 {{input_text}}
 `;
-const type = "object";
-const properties = { "subject_identity": { "type": "object", "description": "Facial and physical attributes of the subject in the scene image", "properties": { "gender": { "type": "string", "description": "Gender of the subject" }, "approximate_age": { "type": "string", "description": "Estimated age range" }, "facial_features": { "type": "string", "description": "Description of facial structure, expression, and defining features" }, "hair": { "type": "string", "description": "Hair color, length, texture, and style" }, "pose": { "type": "string", "description": "Body position and posture of the subject" }, "clothing": { "type": "string", "description": "What the subject is wearing" } }, "required": ["gender", "approximate_age", "facial_features", "hair", "pose", "clothing"] }, "target_scene": { "type": "object", "description": "Visual design code of the scene image", "properties": { "subject": { "type": "string", "description": "One-sentence description of the scene's main subject and action" }, "composition": { "type": "string", "description": "Framing, angle, depth of field, and compositional choices" }, "style": { "type": "string", "description": "Visual style — e.g. cinematic photography, digital painting, AI-generated realism" }, "lighting": { "type": "string", "description": "Lighting type, direction, and mood" }, "color_palette_primary": { "type": "string", "description": "Dominant colors in hex or descriptive names" }, "color_palette_secondary": { "type": "string", "description": "Supporting colors in hex or descriptive names" }, "elements": { "type": "string", "description": "Key visual elements present in the scene, comma-separated" }, "background": { "type": "string", "description": "Background description" } }, "required": ["subject", "composition", "style", "lighting", "color_palette_primary", "elements", "background"] }, "identity_preservation_rules": { "type": "object", "description": "Rules to preserve facial identity during transposition", "properties": { "priority": { "type": "string", "description": "Identity preservation priority level" }, "facial_structure_lock": { "type": "string", "description": "Instruction to lock facial proportions, eye shape, nose structure, and jawline" }, "eyes": { "type": "string", "description": "Eye shape and color preservation rule" }, "nose_shape": { "type": "string", "description": "Nose shape preservation rule" }, "lips_shape": { "type": "string", "description": "Lip shape preservation rule" }, "face_oval": { "type": "string", "description": "Face oval / jawline preservation rule" }, "natural_asymmetry": { "type": "string", "description": "Natural facial asymmetry preservation rule" }, "hair_blending_mode": { "type": "string", "description": "How to blend reference hair with scene subject hair" }, "skin_tone_adaptation": { "type": "string", "description": "Skin tone blending approach for the new lighting context" } }, "required": ["priority", "facial_structure_lock", "natural_asymmetry"] }, "final_generation_prompt": { "type": "string", "description": "Complete, paste-ready prompt for an image generation model combining the scene design and identity transfer directives" } };
-const required = ["subject_identity", "target_scene", "identity_preservation_rules", "final_generation_prompt"];
+const type$2 = "object";
+const properties$1 = { "subject_identity": { "type": "object", "description": "Facial and physical attributes of the subject in the scene image", "properties": { "gender": { "type": "string", "description": "Gender of the subject" }, "approximate_age": { "type": "string", "description": "Estimated age range" }, "facial_features": { "type": "string", "description": "Description of facial structure, expression, and defining features" }, "hair": { "type": "string", "description": "Hair color, length, texture, and style" }, "pose": { "type": "string", "description": "Body position and posture of the subject" }, "clothing": { "type": "string", "description": "What the subject is wearing" } }, "required": ["gender", "approximate_age", "facial_features", "hair", "pose", "clothing"] }, "target_scene": { "type": "object", "description": "Visual design code of the scene image", "properties": { "subject": { "type": "string", "description": "One-sentence description of the scene's main subject and action" }, "composition": { "type": "string", "description": "Framing, angle, depth of field, and compositional choices" }, "style": { "type": "string", "description": "Visual style — e.g. cinematic photography, digital painting, AI-generated realism" }, "lighting": { "type": "string", "description": "Lighting type, direction, and mood" }, "color_palette_primary": { "type": "string", "description": "Dominant colors in hex or descriptive names" }, "color_palette_secondary": { "type": "string", "description": "Supporting colors in hex or descriptive names" }, "elements": { "type": "string", "description": "Key visual elements present in the scene, comma-separated" }, "background": { "type": "string", "description": "Background description" } }, "required": ["subject", "composition", "style", "lighting", "color_palette_primary", "elements", "background"] }, "identity_preservation_rules": { "type": "object", "description": "Rules to preserve facial identity during transposition", "properties": { "priority": { "type": "string", "description": "Identity preservation priority level" }, "facial_structure_lock": { "type": "string", "description": "Instruction to lock facial proportions, eye shape, nose structure, and jawline" }, "eyes": { "type": "string", "description": "Eye shape and color preservation rule" }, "nose_shape": { "type": "string", "description": "Nose shape preservation rule" }, "lips_shape": { "type": "string", "description": "Lip shape preservation rule" }, "face_oval": { "type": "string", "description": "Face oval / jawline preservation rule" }, "natural_asymmetry": { "type": "string", "description": "Natural facial asymmetry preservation rule" }, "hair_blending_mode": { "type": "string", "description": "How to blend reference hair with scene subject hair" }, "skin_tone_adaptation": { "type": "string", "description": "Skin tone blending approach for the new lighting context" } }, "required": ["priority", "facial_structure_lock", "natural_asymmetry"] }, "final_generation_prompt": { "type": "string", "description": "Complete, paste-ready prompt for an image generation model combining the scene design and identity transfer directives" } };
+const required$1 = ["subject_identity", "target_scene", "identity_preservation_rules", "final_generation_prompt"];
 const transposeSchema = {
+  type: type$2,
+  properties: properties$1,
+  required: required$1
+};
+const id = "whatsapp-clinic";
+const title = "Clinic WhatsApp Assistant";
+const description = "Receives patient WhatsApp messages and extracts appointment intent, symptoms, and urgency for clinic staff.";
+const inputs = "text";
+const type$1 = "whatsapp";
+const phone_number_id = "1372094679329820";
+const clinicManifest = {
+  id,
+  title,
+  description,
+  inputs,
+  type: type$1,
+  phone_number_id
+};
+const clinicPrompt = 'You are a medical intake assistant powered by Gemini, helping a clinic process incoming patient WhatsApp messages.\n\nYour task is to extract structured intake information from an incoming patient WhatsApp message.\n\nRules:\n- Use only information present in the message. Do not invent facts.\n- Follow the JSON schema exactly.\n- Prefer empty string over a guess if a field is unknown or not mentioned.\n- Infer urgency from language cues: words like "emergency", "severe", "can\'t breathe", "chest pain", or "urgent" indicate high urgency; general discomfort or worsening symptoms indicate medium; routine queries or mild complaints indicate low.\n\nOutput fields:\n- `appointment_request` (boolean): true if the patient is requesting or asking about an appointment, false otherwise.\n- `symptom` (string): the primary symptom, complaint, or reason for contact. Use an empty string if none is mentioned.\n- `urgency_level` (string): inferred urgency level based on the language and content of the message. Must be one of: "low" (routine query or mild complaint), "medium" (concerning or worsening symptoms), or "high" (severe, urgent, or emergency language).\n- `callback_preference` (string): any stated preference for when or how the patient would like to be contacted. Use an empty string if not mentioned.\n\n{{input_text}}\n';
+const type = "object";
+const properties = { "appointment_request": { "type": "boolean", "description": "True if the patient is requesting or enquiring about an appointment" }, "symptom": { "type": "string", "description": "The primary symptom, complaint, or reason for contact" }, "urgency_level": { "type": "string", "enum": ["low", "medium", "high"], "description": "Inferred urgency level based on the language and content of the message" }, "callback_preference": { "type": "string", "description": "Stated preference for when or how to be contacted" } };
+const required = ["appointment_request", "symptom", "urgency_level", "callback_preference"];
+const clinicSchema = {
   type,
   properties,
   required
 };
+function autoReply(geminiOutput, message) {
+  if (geminiOutput === null) {
+    return "Thank you for contacting the clinic. We've received your message and a staff member will be in touch shortly.";
+  }
+  if (geminiOutput.urgency_level === "high") {
+    return "We've received your message and noted the urgency. A staff member will contact you as soon as possible. If this is a medical emergency, please call 112 immediately.";
+  }
+  if (geminiOutput.appointment_request === true) {
+    const symptom = geminiOutput.symptom;
+    return `Thanks for reaching out! We've noted your request${symptom ? ` regarding "${symptom}"` : ""}. We'll be in touch to confirm your appointment.`;
+  }
+  return "Thanks for your message. We'll review it and get back to you as soon as possible.";
+}
 const catalog = {
   [demoManifest.id]: {
     manifest: demoManifest,
@@ -116,10 +152,19 @@ const catalog = {
     manifest: transposeManifest,
     prompt: transposePrompt,
     schema: transposeSchema
+  },
+  [clinicManifest.id]: {
+    manifest: clinicManifest,
+    prompt: clinicPrompt,
+    schema: clinicSchema,
+    autoReply
   }
 };
 function getSolution(id2) {
   return catalog[id2] || null;
+}
+function isWhatsAppSolution(solution) {
+  return solution?.manifest?.type === "whatsapp";
 }
 const TYPE_MAP = {
   object: "OBJECT",
@@ -195,6 +240,138 @@ async function generateWithGemini({ apiKey, model, prompt, schema, imageBase64, 
   } catch {
     throw new Error("Gemini returned JSON that could not be parsed");
   }
+}
+function fillPrompt$1(template, inputText) {
+  return String(template || "").replaceAll("{{input_text}}", inputText || "(no text provided)");
+}
+function parseWebhookBody(body) {
+  const entries = body?.entry;
+  if (!entries || entries.length === 0) return null;
+  const changes = entries[0]?.changes;
+  if (!changes || changes.length === 0) return null;
+  const value = changes[0]?.value;
+  const messages = value?.messages;
+  if (!messages || messages.length === 0) return null;
+  const msg = messages[0];
+  if (msg?.type !== "text") return null;
+  return {
+    from: msg.from,
+    text: msg.text?.body,
+    waMessageId: msg.id
+  };
+}
+function verifyWebhook(url, verifyToken) {
+  const mode = url.searchParams.get("hub.mode");
+  const token = url.searchParams.get("hub.verify_token");
+  const challenge = url.searchParams.get("hub.challenge");
+  if (!verifyToken || mode !== "subscribe" || token !== verifyToken) {
+    return new Response("Forbidden", { status: 403 });
+  }
+  if (!challenge) {
+    return new Response("Bad Request", { status: 400 });
+  }
+  return new Response(challenge, {
+    status: 200,
+    headers: { "Content-Type": "text/plain" }
+  });
+}
+async function sendWhatsAppMessage({ phoneNumberId, to, body, accessToken }) {
+  const url = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to,
+      type: "text",
+      text: { body }
+    })
+  });
+  if (!response.ok) {
+    throw new Error(`Meta API returned status ${response.status}`);
+  }
+}
+async function handleIncoming(request, env, solution) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  }
+  const message = parseWebhookBody(body);
+  if (!message) {
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  }
+  let geminiOutput = null;
+  try {
+    geminiOutput = await generateWithGemini({
+      apiKey: env.GEMINI_API_KEY,
+      model: env.GEMINI_MODEL || "gemini-2.5-flash",
+      prompt: fillPrompt$1(solution.prompt, message.text),
+      schema: solution.schema,
+      imageBase64: null,
+      mimeType: null
+    });
+  } catch (err) {
+    console.error(JSON.stringify({ event: "gemini_error", message: err.message }));
+    geminiOutput = null;
+  }
+  try {
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO whatsapp_messages
+        (solution_id, from_number, direction, body, gemini_output, wa_message_id, timestamp)
+       VALUES (?1, ?2, 'in', ?3, ?4, ?5, ?6)`
+    ).bind(
+      solution.manifest.id,
+      message.from,
+      message.text,
+      JSON.stringify(geminiOutput),
+      message.waMessageId,
+      (/* @__PURE__ */ new Date()).toISOString()
+    ).run();
+  } catch (err) {
+    console.error(JSON.stringify({ event: "db_error", message: err.message }));
+  }
+  if (!env.WA_ACCESS_TOKEN) {
+    console.error(JSON.stringify({ event: "missing_token", message: "WA_ACCESS_TOKEN is not set" }));
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+  }
+  const replyText = solution.autoReply(geminiOutput, message);
+  if (replyText && typeof replyText === "string") {
+    try {
+      await sendWhatsAppMessage({
+        phoneNumberId: solution.manifest.phone_number_id,
+        to: message.from,
+        body: replyText,
+        accessToken: env.WA_ACCESS_TOKEN
+      });
+      try {
+        await env.DB.prepare(
+          `INSERT INTO whatsapp_messages
+            (solution_id, from_number, direction, body, gemini_output, wa_message_id, timestamp)
+           VALUES (?1, ?2, 'out', ?3, null, 'out-' || ?4, ?5)`
+        ).bind(
+          solution.manifest.id,
+          message.from,
+          replyText,
+          message.waMessageId,
+          (/* @__PURE__ */ new Date()).toISOString()
+        ).run();
+      } catch (err) {
+        console.error(JSON.stringify({ event: "db_outbound_error", message: err.message }));
+      }
+    } catch (err) {
+      console.error(JSON.stringify({ event: "send_error", message: err.message }));
+    }
+  }
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
 }
 const MAX_IMAGE_CHARS = 55e5;
 function json(body, status = 200) {
@@ -334,6 +511,18 @@ const index = {
       const patched = path.match(/^\/api\/records\/([^/]+)$/);
       if (patched && request.method === "PATCH") {
         return await updateRecord(patched[1], request, env);
+      }
+      const waMatch = path.match(/^\/api\/whatsapp\/([^/]+)\/webhook$/);
+      if (waMatch) {
+        const solutionId = waMatch[1];
+        const solution = getSolution(solutionId);
+        if (!solution) return json({ error: `Unknown solution: ${solutionId}` }, 404);
+        if (!isWhatsAppSolution(solution)) {
+          return json({ error: "Solution is not a WhatsApp integration" }, 400);
+        }
+        if (request.method === "GET") return verifyWebhook(url, env.WA_VERIFY_TOKEN);
+        if (request.method === "POST") return await handleIncoming(request, env, solution);
+        return new Response(null, { status: 405, headers: { Allow: "GET, POST" } });
       }
       if (path.startsWith("/api/")) {
         return json({ error: "Not found" }, 404);
