@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Excel Coach — Session Planner</title>
+<style>
+:root{--bg:#f6f5f0;--card:#fffefa;--ink:#18231f;--muted:#66736d;--line:#e1e4dc;--green:#146b50;--green2:#dcefe5;--amber:#fff4d9;--amberline:#ecd48f;--blue:#e6eff4;--r:16px;
+font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+*{box-sizing:border-box}body{margin:0;line-height:1.55;min-width:320px}button,input{font:inherit;color:inherit}button{cursor:pointer}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:10;background:#f6f5f0ee;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:14px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.03em;font-size:18px;background:none;border:0;padding:0}
+.mark{width:32px;height:32px;border-radius:10px;background:var(--green);color:#fff;display:grid;place-items:center;font-size:14px}
+.search{flex:1;max-width:420px;margin-left:auto;padding:9px 14px;border:1px solid #cbd7cf;border-radius:11px;background:var(--card);outline:none}
+.search:focus{border-color:var(--green);box-shadow:0 0 0 3px #146b5017}
+.seg{display:flex;background:#e9eee8;border-radius:11px;padding:3px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:9px;font-size:13px;font-weight:650;color:#4b5b53}
+.seg button.on{background:var(--card);color:var(--green);box-shadow:0 1px 3px #0001}
+main{padding:28px 0 70px}
+h1{font-size:clamp(28px,4vw,40px);letter-spacing:-.05em;line-height:1.1;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 24px}
+.step-label{font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:800;color:var(--green);margin:26px 0 10px;display:flex;gap:8px;align-items:center}
+.step-label b{background:var(--green);color:#fff;border-radius:50%;width:20px;height:20px;display:grid;place-items:center;font-size:11px;letter-spacing:0}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.level{text-align:left;padding:18px;border:2px solid var(--line);background:var(--card);border-radius:var(--r);transition:.15s}
+.level:hover{border-color:#a9c3b1}.level.on{border-color:var(--green);background:var(--green2)}
+.level strong{display:block;font-size:17px}.level span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}.level small{display:block;margin-top:8px;font-weight:700;font-size:12px;color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:650}
+.chip:hover{border-color:#a9c3b1}.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.chip i{font-style:normal;opacity:.65;margin-left:5px;font-weight:500}
+.list{display:grid;gap:9px}
+.row{display:flex;align-items:center;gap:14px;text-align:left;width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:14px 16px}
+.row:hover{border-color:#a9c3b1;transform:translateY(-1px)}
+.row .n{font:700 11px ui-monospace,monospace;color:#8b9991;width:22px}.row .m{flex:1;min-width:0}.row strong{display:block;font-size:15px}.row small{color:var(--muted);font-size:12.5px}
+.pill{font-size:11px;font-weight:700;border-radius:999px;padding:3px 9px;background:#edf1ec;color:#5a6b61;white-space:nowrap}
+.pill.lv{background:var(--green2);color:var(--green)}.pill.v{background:var(--amber);color:#855a13}
+.empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+/* lesson */
+.crumbs{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
+.crumbs button{border:0;background:none;color:var(--green);font-weight:700;padding:0}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:6px}
+.nav2{display:flex;gap:8px}.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 13px;font-weight:650;font-size:13px}
+.btn:hover{border-color:#a9c3b1}.btn.pri{background:var(--green);color:#fff;border-color:var(--green)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:22px 0 18px}
+.tabs button{border:0;background:none;padding:10px 16px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--green);border-color:var(--green)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 8px;letter-spacing:-.01em}.card p{margin:0 0 8px;font-size:14px;color:#44544b}.card p:last-child{margin:0}
+.eyebrow{font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;font-weight:800;color:var(--muted);margin-bottom:4px}
+.formula{background:#183b30;color:#f0faf2;border-radius:12px;padding:14px 16px;font-size:13.5px;white-space:pre-wrap;overflow:auto;margin-top:10px}
+ul,ol{margin:6px 0 0;padding-left:20px;font-size:14px;color:#44544b}li{padding:2px 0}
+.practice{background:var(--amber);border-color:var(--amberline)}
+.answer{display:none;margin-top:10px;padding:10px 12px;background:#fffdf6;border-left:3px solid #d3ad4c;border-radius:0 9px 9px 0;font-size:13.5px}.answer.show{display:block}
+/* session script */
+.meter{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted);margin-bottom:14px}
+.track{flex:1;height:6px;background:#e5e9e2;border-radius:9px;overflow:hidden}.track span{display:block;height:100%;background:var(--green);width:0;transition:width .25s}
+.seg-card{display:grid;grid-template-columns:44px 1fr;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:12px}
+.seg-card.done{opacity:.6}
+.chk{width:30px;height:30px;border-radius:50%;border:2px solid #b8c6bd;background:none;display:grid;place-items:center;color:#fff;font-weight:800}
+.seg-card.done .chk{background:var(--green);border-color:var(--green)}
+.seg-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.seg-head h3{margin:0;font-size:16px}.min{font-size:12px;font-weight:700;color:var(--green)}
+.say{background:var(--blue);border-radius:10px;padding:10px 13px;margin-top:10px;font-size:14px}
+.say b{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#406c86;display:block;margin-bottom:2px}
+.tip{margin-top:10px;font-size:13px;color:#6b5a2a;background:var(--amber);border-radius:10px;padding:9px 12px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#193b30;color:#fff;padding:9px 15px;border-radius:11px;font-size:13px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
+@media(max-width:700px){.levels{grid-template-columns:1fr}.bar{flex-wrap:wrap;height:auto;padding:10px 0}.search{order:3;flex-basis:100%;max-width:none;margin:0}.seg-card{grid-template-columns:1fr}.brand span.t{display:none}}
+@media print{header,.nav2,.tabs,.crumbs,.toast,.btn{display:none!important}.seg-card,.card{break-inside:avoid;border-color:#bbb}body{background:#fff}.say{background:#eef}}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+  <button class="brand" id="home" aria-label="Home"><span class="mark">x·</span><span class="t">Excel Coach</span></button>
+  <input class="search" id="q" type="search" placeholder="Search a topic or function…" aria-label="Search lessons" autocomplete="off">
+  <div class="seg" id="mode" role="group" aria-label="View"><button data-m="coach">Coach</button><button data-m="student">Student</button></div>
+</div></header>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+const LEVELS=[
+ {id:'beginner',name:'Beginner',blurb:'First steps: the grid, entering data, simple sums.'},
+ {id:'intermediate',name:'Intermediate',blurb:'Decisions, lookups, Tables, PivotTables, charts.'},
+ {id:'advanced',name:'Advanced',blurb:'Dynamic arrays, LET, LAMBDA, troubleshooting.'}
+];
+const L=(id,level,topic,title,goal,explain,formula,steps,mistakes,prompt,practice,answer,compat)=>({id,level,topic,title,goal,explain,formula,steps,mistakes,prompt,practice,answer,compat});
+const LESSONS=[
+L('workbook','beginner','Grid & data','Workbook, sheets & cells','Know where data lives and select the right cells.','A workbook is the file; a worksheet is one tab; a cell is where a row and column meet (B4); a range is a group of cells (B2:D10).','Workbook → worksheets → rows + columns → cells',['Open a blank workbook and rename Sheet1 to Sales.','Type Date, Branch and Amount in A1:C1.','Click C2 and notice the Name Box shows its address.','Select A1:C2 and read the range reference.'],['Typing several fields into one cell makes sorting and analysis hard.','Blank rows inside a list break many tools.'],'If a colleague asks for “the total in column C”, how would you describe where to find it?','Create a small sales list with Date, Branch, Product and Amount as separate columns.','One field per column, one transaction per row, clear headers in row 1.'),
+L('data-shape','beginner','Grid & data','Clean, useful data layout','Recognise the tidy layout Excel tools expect.','Each row is one transaction; each column one attribute (date, invoice, province, value). Keep totals outside the raw list.','One header row · one record per row · one field per column',['Make row 1 the field names, with no merged cells.','Keep dates as real dates and amounts as numbers.','Put notes and totals beside or above the list, not inside it.'],['Merged headers block many data tools.','“R 4,850” typed as text cannot be added; use number formatting instead.','Inconsistent names (KZN vs KwaZulu-Natal) split groups.'],'What goes wrong if a blank row separates November from December sales?','Add two rows to a sample sales list, keeping the layout consistent.','A blank row can cut a selected range short or confuse auto-detection. Continuous data is easier to filter and analyse.'),
+L('refs','beginner','Grid & data','Cell references: relative & fixed','Choose the right reference before filling a formula down.','Copied down a row, B2 becomes B3 while $F$1 stays put. F4 cycles reference styles while editing (Windows desktop).','=B2*C2*(1+$F$1)\n$A$1 fixed · A1 relative · $A1 fixed column · A$1 fixed row',['Enter a VAT rate such as 15% in F1.','In D2 calculate qty × price × (1 + rate), locking the rate.','Fill down and inspect each row’s references.'],['Locking too much stops row references adjusting.','Forgetting to lock a shared rate shifts it to a blank row.'],'Which part should change for each product, and which should stay constant?','Write quantity × unit price × (1 + VAT in F1) and fill it down.','=B2*C2*(1+$F$1)  — B2 and C2 move by row, $F$1 stays.'),
+L('fill','beginner','Speed','Fill handle & AutoFill','Repeat formulas or continue a series in seconds.','The fill handle (small square at the selection corner) copies formulas with adjusted references or continues patterns such as dates and month names. Double-click fills down beside a continuous column.','Drag the corner square, or double-click it',['Enter 01 Nov 2026 and 02 Nov 2026 in A2:A3.','Select both and drag down to continue daily dates.','In B2 enter =C2*D2 and drag to copy it.','Double-click the handle beside a continuous list.'],['One date alone just copies; select two to set the step.','Double-click fill stops at gaps in the neighbouring column.'],'How can you tell whether Excel copied a value or continued a pattern?','Build a five-day date series and calculate line totals for three products.','Select the first two dates before dragging; formula references shift row by row.'),
+L('flash','beginner','Speed','Flash Fill · Ctrl+E','Show Excel a text pattern with one or two examples.','Flash Fill recognises a pattern and fills the rest. It writes fixed values, not live formulas, so later source edits don’t update it.','Type an example → Ctrl+E (Windows)',['Put full names in column A.','Type “Thandi” beside the first name.','Add a second example if needed.','Press Ctrl+E.'],['Results are fixed text, not formulas.','Multi-part names need checking.'],'When is a fixed extracted value fine, and when do you want a formula that updates?','From “Kabelo Dlamini”, “Leila Jacobs”, “Noah Petersen” extract first names.','Type Kabelo in the first result cell, press Ctrl+E, then check every row.','Excel 2013+ desktop; varies by platform'),
+L('dates','beginner','Speed','Dates & times quickly','Enter real dates/times and format them readably.','Excel stores dates as serial numbers and times as fractions of a day. Ctrl+; enters today’s date as a fixed value; Ctrl+Shift+; the current time (Windows).','=B2-A2   → elapsed days\n=MOD(B2-A2,1)*24   → hours across midnight',['Enter two dates, format as dd mmm yyyy.','Enter start and end times, format hh:mm.','Subtract to get elapsed days.','Use MOD for times crossing midnight.'],['Dates stored as text won’t calculate.','Durations over 24h need [h]:mm.','TODAY() updates; Ctrl+; is fixed.'],'Should this cell update every day, or keep the date entered today?','Record a delivery date, arrival time and departure time; calculate elapsed hours.','Same day: =(Departure-Arrival)*24. May cross midnight: =MOD(Departure-Arrival,1)*24.','Shortcuts differ on Mac/web'),
+L('format','beginner','Speed','Number formats that tell the story','Show rand, percentages and dates without changing the stored value.','Formatting changes display, not the value. Use Currency/Accounting for money, Percentage for rates, date formats for dates.','Select cells → Home → Number format',['Apply Currency with R to the sales values.','Apply Percentage to a rate such as 0.15.','Use sensible decimals; AutoFit columns.'],['Typing “%” as text blocks calculation.','0.15 displays as 15% — the value is unchanged.'],'What does this mean to the reader: 0.15, 15%, or R 0.15?','Format 18500.5 as rand with two decimals and 0.15 as a percentage.','Currency/number format with R and two decimals; Percentage for the rate. Stored values stay 18500.5 and 0.15.'),
+L('nav','beginner','Speed','Navigation & selection shortcuts','Move through big sheets without endless scrolling.','Ctrl+Arrow jumps to data edges; Ctrl+Home goes to A1; Ctrl+End to the last used cell; Ctrl+Space selects a column, Shift+Space a row.','Ctrl+Arrow · Ctrl+Home · Ctrl+End · Ctrl+Space · Shift+Space',['Click in a list and press Ctrl+↓.','Ctrl+Home to return.','Ctrl+Space to select a column.','Ctrl+F to find an invoice.'],['A blank cell stops Ctrl+Arrow.','Ctrl+End may include formatted-but-blank cells.'],'Where do you expect Ctrl+Down to stop in this sheet?','Jump to the bottom of a sample list and back to A1 without scrolling.','Click in the list, Ctrl+↓ then Ctrl+Home. A blank in the list stops the first jump early.','Windows shortcuts; check Mac/web'),
+L('paste','beginner','Speed','Paste Special · values & formats','Paste only the part you need.','Paste Special lets you paste Values, Formats or Transpose. Values freeze a result; Transpose flips rows and columns.','Copy → Paste Special → Values / Formats / Transpose',['Copy a range of formula results.','Paste Special → Values.','Copy a horizontal list and Transpose it.'],['Pasting values breaks the live link.','Pasting formats alone doesn’t copy values.'],'Should the report update from its source, or be a fixed snapshot?','Copy a formula total and paste it as values in a “Final” column.','Paste Special → Values keeps the displayed numbers without formulas.'),
+L('sum','beginner','Core formulas','SUM · add values','Add a range with a formula that updates.','SUM adds numbers in cells or ranges. The colon means “from this cell through that cell”.','=SUM(D2:D8)',['Enter numeric sales in D2:D8.','In D9 type =SUM(D2:D8).','Compare with a quick mental estimate.'],['Numbers stored as text are ignored.','Check the range includes the last row.'],'If another sales row is added, will this range include it?','Total the three branches: Cape Town R12,400, Durban R8,950, Pretoria R15,200.','R36,550 — =SUM(B2:B4) for those three cells.'),
+L('avg','beginner','Core formulas','AVERAGE, COUNT & COUNTA','Pick the right summary for your question.','AVERAGE is the mean. COUNT counts numeric cells; COUNTA counts non-empty cells including text.','=AVERAGE(D2:D20)\n=COUNT(D2:D20)\n=COUNTA(A2:A20)',['Average the order values.','Count numeric order values.','Count filled invoice IDs.'],['COUNT ignores numbers stored as text.','Averages can hide outliers.'],'Are you counting completed invoice IDs, or numeric amounts?','For R100, R250, R350 find the average and numeric count.','Average R233.33; COUNT = 3.'),
+L('minmax','beginner','Core formulas','MIN & MAX · find the range','Spot low and high figures as a sense-check.','MIN returns the smallest number, MAX the largest. Text is ignored.','=MIN(D2:D50)\n=MAX(D2:D50)',['Select the amount range.','Calculate MIN and MAX.','Decide whether zeros are real sales.'],['A zero may be a sale, missing data or an error.'],'Would a zero be a real transaction here?','Find MIN and MAX of 1250, 4900, 875, 6200.','MIN 875; MAX 6200.'),
+L('if','intermediate','Core formulas','IF · make a decision','Turn a business rule into a formula.','IF tests a condition and returns one result for TRUE and another for FALSE. Text results need quotes. Operators: = > < >= <>.','=IF(B2>=5000,"Review","Standard")',['Agree the rule in plain language.','Test whether B2 is at least R5,000.','Return “Review” or “Standard”.','Test values just below, at and above the threshold.'],['Missing quotes around text.','>5000 differs from >=5000.'],'Should an amount of exactly R5,000 be flagged?','Mark orders of R1,000 or more as “Bulk”, otherwise “Regular”.','=IF(B2>=1000,"Bulk","Regular")'),
+L('sumif','intermediate','Core formulas','SUMIF & SUMIFS · conditional totals','Total by branch, status or a combination.','SUMIF has one condition; SUMIFS several, and the sum range comes first.','=SUMIF(B2:B100,"Gauteng",D2:D100)\n=SUMIFS(D2:D100,B2:B100,"Gauteng",C2:C100,"Paid")',['Pick the condition column and the values to add.','Total Gauteng with SUMIF.','Add Paid with SUMIFS.'],['Argument order differs between SUMIF and SUMIFS.','Ranges must be the same size.'],'Which field is the condition and which is the number to add?','Total Paid sales for Gauteng: rows Gauteng/Paid R4,200; Western Cape/Paid R3,100; Gauteng/Open R1,800.','=SUMIFS(C2:C4,A2:A4,"Gauteng",B2:B4,"Paid") = R4,200.'),
+L('countif','intermediate','Core formulas','COUNTIF & COUNTIFS','Answer “how many are overdue?”.','COUNTIF checks one condition, COUNTIFS several. Join operators to cells with &: ">="&F1.','=COUNTIF(C2:C100,"Overdue")\n=COUNTIFS(B2:B100,"Gauteng",C2:C100,"Overdue")',['Count Overdue invoices.','Count Overdue in one province.','Try amounts above R10,000.'],['">10000" needs quotes.','Criteria ranges must line up.'],'Could two regions share the same status label?','Count Gauteng invoices marked Overdue.','=COUNTIFS(ProvinceRange,"Gauteng",StatusRange,"Overdue")'),
+L('iferror','intermediate','Core formulas','IFERROR · handle expected errors','Keep a report readable while keeping problems visible.','IFERROR returns the normal result, or your fallback if there’s an error. Use a helpful message.','=IFERROR(XLOOKUP(A2,Products[Code],Products[Price]),"Check code")',['Wrap a lookup that can fail.','Choose a fallback that tells the user what to fix.'],['Wrapping everything hides broken references.'],'Should the user see the missing code, or should the result be blank?','Wrap a lookup so a missing code shows “Check code”.','=IFERROR(XLOOKUP(A2,Products[Code],Products[Price]),"Check code")'),
+L('vlookup','intermediate','Lookups','VLOOKUP · exact & approximate','Look up a key and return a value to its right.','VLOOKUP searches the first column. FALSE = exact match (use for IDs). TRUE needs a sorted first column (use for bands).','=VLOOKUP(A2,$H$2:$J$100,3,FALSE)',['Put codes in the first column of the table.','Use FALSE for exact code lookup.','For commission bands sort ascending and use TRUE.'],['Lookup column must be leftmost.','Hard-coded column numbers break when columns are inserted.','Omitting FALSE gives surprising matches.'],'Exact code match, or closest lower threshold?','Look up the price for P-104 in H2:J100; price is column 3.','=VLOOKUP("P-104",$H$2:$J$100,3,FALSE)','Works in older Excel; XLOOKUP is easier in 365/2021+'),
+L('xlookup','intermediate','Lookups','XLOOKUP · flexible modern lookup','Build a readable exact-match lookup with a fallback.','XLOOKUP searches one range and returns from another, left or right, exact by default, with a not-found message.','=XLOOKUP(A2,Products[Code],Products[Price],"Not found")',['Choose the code to find.','Select the lookup column.','Select the return column.','Add a not-found message.'],['Arrays must be the same size.','Older Excel shows #NAME?.'],'How would this change to return the description instead of the price?','Return the customer for the invoice in A2.','=XLOOKUP(A2,Invoices[Invoice],Invoices[Customer],"Invoice not found")','Microsoft 365, Excel for the web, Excel 2021+'),
+L('index','intermediate','Lookups','INDEX + MATCH','A flexible lookup that works in older Excel.','MATCH finds a position; INDEX returns the value at that position. 0 means exact match.','=INDEX(Products[Price],MATCH(A2,Products[Code],0))',['MATCH finds the row for the code.','INDEX returns the price at that row.','Keep ranges aligned.'],['Forgetting the 0.','Misaligned ranges return the wrong row.'],'Which part finds the position and which returns the price?','Find A2 in Products[Code] and return Products[Price].','=INDEX(Products[Price],MATCH(A2,Products[Code],0))'),
+L('tables','intermediate','Tables & Pivots','Excel Tables · structure your data','Create a Table that grows and uses readable formulas.','Tables expand with new rows, keep formatting consistent and allow structured references like Sales[Amount].','=[@Quantity]*[@[Unit Price]]',['Click in the list, press Ctrl+T.','Confirm “My table has headers”.','Name it Sales in Table Design.','Add a Line Total column.'],['Headers must be unique.','Keep grand totals out of the data body.'],'What happens to a Table formula when a row is added?','Convert Date, Branch, Product, Quantity, Unit Price to a Table and add line totals.','Name it Sales; Line Total = =[@Quantity]*[@[Unit Price]].'),
+L('pivot','intermediate','Tables & Pivots','PivotTables · summarise quickly','Answer a question by dragging fields.','A PivotTable groups and totals a list without changing it. Text fields → Rows, numbers → Values.','Insert → PivotTable → drag fields',['Click in the Sales Table → Insert → PivotTable.','Branch to Rows, Amount to Values.','Check it says Sum, not Count.','Add Product as a column or filter.','Refresh after data changes.'],['Text amounts make Count instead of Sum.','Forgetting to refresh.'],'What comparison helps a manager decide where to focus next month?','Summarise sales by Province and Product, highest first.','Province in Rows, Product in Columns, Amount (Sum) in Values; sort by grand total descending.'),
+L('pivot2','intermediate','Tables & Pivots','PivotTable dates, grouping & slicers','Explore by period and category.','Group a real date field by months/years; slicers give click-to-filter buttons.','Right-click date → Group · Insert Slicer',['Add Order Date to Rows.','Right-click → Group → Months and Years.','Insert Slicer for Province.'],['Text dates won’t group.','Slicers only link to compatible PivotTables.'],'Compare months across provinces, or filter to one province?','Group sample orders by month and add a Province slicer.','Real date field → Group by Months & Years → Slicer on Province.'),
+L('charts','intermediate','Charts & data tools','Charts · choose a clear view','Match chart type to the question.','Columns/bars compare categories; lines show trends; pie only for a few parts of one whole. Title with the takeaway.','Select a tidy summary → Insert → Recommended Charts',['Start from a summary table, not raw rows.','Pick the type from the question.','Give a takeaway title and units.','Check the axis is honest.'],['Too many categories.','3-D distortion.'],'What should the student notice first in this chart?','Chart monthly sales Jan–Jun with a one-sentence title.','Line chart, titled e.g. “Sales grew steadily from January to June”.'),
+L('cf','intermediate','Charts & data tools','Conditional formatting','Highlight exceptions automatically.','A rule changes a cell’s look when it’s true — overdue items, top values, scales. Keep it restrained.','Home → Conditional Formatting → rule',['Select the Status range.','Add a rule: text equals “Overdue”.','Choose a readable fill.','Test known rows.'],['Rules can apply to the wrong range after copying.','Don’t rely on colour alone.'],'What should the student do when a cell is highlighted?','Highlight “Overdue” in soft red.','Text rule for “Overdue”; keep the word visible so colour isn’t the only signal.'),
+L('validation','intermediate','Charts & data tools','Data validation · dropdowns','Reduce entry mistakes.','Validation restricts what may be typed. Lists give consistent categories; number/date rules set bounds.','Data → Data Validation → Allow: List',['List allowed statuses on a setup sheet.','Select the input cells.','Data Validation → List → pick the range.','Add an input message and error alert.'],['Free typing splits reports.','Doesn’t clean imported data.'],'Which entries are allowed, and which should prompt a fix?','Create a dropdown: Draft, Sent, Paid, Overdue.','List the four values in a range; Data Validation → List with that range.'),
+L('filter','advanced','Dynamic arrays','FILTER · return matching rows','Create a live extract that spills.','FILTER returns matching rows; results spill into free cells. Use * for AND, + for OR.','=FILTER(Sales,Sales[Province]="Gauteng","No matching sales")',['Store data in a Table named Sales.','Enter FILTER in an empty area.','Confirm nothing blocks the spill.','Change the condition.'],['Blocked area → #SPILL!.','Don’t type inside a spill range.'],'One province, or any selected province?','Return rows where Status is “Overdue”.','=FILTER(Sales,Sales[Status]="Overdue","No overdue items")','Microsoft 365, web, Excel 2021+'),
+L('sort','advanced','Dynamic arrays','SORT & SORTBY','Return a sorted copy that updates.','SORT orders by a column of the array (1 asc, -1 desc). SORTBY uses a separate key range, or several keys.','=SORT(A2:D100,4,-1)\n=SORTBY(A2:C100,C2:C100,-1,A2:A100,1)',['SORT by the fourth column, largest first.','Use SORTBY with a tie-break.'],['sort_index is relative to the array.','Leave room to spill.'],'What breaks ties between equal totals?','Sort A2:D100 by column 4, largest first.','=SORT(A2:D100,4,-1)','Microsoft 365, web, Excel 2021+'),
+L('unique','advanced','Dynamic arrays','UNIQUE · distinct values','Build a live list with no repeats.','UNIQUE returns each distinct value once; exactly_once=TRUE returns values that occur once.','=SORT(UNIQUE(Sales[Province]))',['Wrap UNIQUE in SORT for tidy order.','Check for stray spaces.'],['Extra spaces make look-alikes different.'],'Every province once, or only those appearing exactly once?','List each distinct product alphabetically.','=SORT(UNIQUE(Sales[Product]))','Microsoft 365, web, Excel 2021+'),
+L('sequence','advanced','Dynamic arrays','SEQUENCE, TAKE, DROP & CHOOSECOLS','Generate and shape arrays.','SEQUENCE makes number series; TAKE/DROP keep or remove rows; CHOOSECOLS picks columns by position.','=SEQUENCE(12,1,1,1)\n=TAKE(SORT(A2:D100,4,-1),5)\n=CHOOSECOLS(A2:E100,1,3,5)',['Generate 6 month numbers.','Take the top 5 sorted rows.','Pick columns 1, 3 and 5.'],['Positions are relative to the array.','Older Excel shows #NAME?.'],'Top ten, last ten, or everything but the header?','Return the top 5 rows of A2:D100 by column 4.','=TAKE(SORT(A2:D100,4,-1),5)','Recent Microsoft 365 / Excel 2024+'),
+L('let','advanced','Modern formulas','LET · name parts of a formula','Make long formulas readable.','LET stores names for values inside a formula; the last argument is the result.','=LET(net,B2,vat,15%,net*(1+vat))',['Name net = B2.','Name vat = 15%.','Return net*(1+vat).'],['Names can’t look like cell references.'],'What plain-English name would help the next reader?','Use LET to add 15% VAT to B2.','=LET(net,B2,vat,15%,net*(1+vat))','Microsoft 365, web, Excel 2021+'),
+L('lambda','advanced','Modern formulas','LAMBDA · reusable function','Name a repeated rule once.','LAMBDA defines a function without VBA. Test in a cell, then save in Name Manager and call it like =GROSS(B2).','=LAMBDA(net,net*1.15)(B2)',['Test the LAMBDA in a cell.','Formulas → Name Manager → New.','Name it GROSS, Refers to =LAMBDA(net,net*1.15).','Call =GROSS(B2).'],['Without arguments it’s only a definition.','Don’t over-engineer small workbooks.'],'Which repeated calculation deserves one shared definition?','Create LINEVALUE(qty, price).','Test =LAMBDA(qty,price,qty*price)(B2,C2), then define LINEVALUE in Name Manager.','Microsoft 365 and web only'),
+L('audit','advanced','Modern formulas','Check formulas & troubleshoot','Diagnose instead of guessing.','Treat the result as evidence: check inputs, ranges, references and data types. Use Evaluate Formula and Trace Precedents.','F2 edit · Ctrl+` show formulas · Formulas → Evaluate Formula',['Compare a known row by hand.','Look for text-numbers and hidden spaces.','Step through with Evaluate Formula.','Identify #N/A, #VALUE!, #REF!, #DIV/0!, #SPILL!.'],['Tweaking until it “looks right” hides logic errors.','Rounded display ≠ stored value.'],'What small example can we calculate by hand to verify this?','A SUM looks too low — name three things to inspect first.','Range endpoints, numbers stored as text, and filters or missing rows.')
+];
+const byId=Object.fromEntries(LESSONS.map(l=>[l.id,l]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let mode=store.get('mode','coach'), done=store.get('done',{}), q='';
+
+/* ---- session script generator ---- */
+function script(l){
+  return [
+   {t:'Welcome & warm-up',m:2,say:[`Today’s goal: ${l.goal}`,`Ask: “${l.prompt}” — let them answer before you explain anything.`],tip:'Listen for what they already know; adjust the pace to match.'},
+   {t:'Explain the idea',m:3,say:[l.explain],code:l.formula,tip:'Keep it to the idea and the formula shape. Save detail for the demo.'},
+   {t:'Demo — I do, you watch',m:5,list:l.steps,say:['Narrate each step out loud: what you click, what you expect, what you see. Pause after each step and ask “what do you think happens next?”'],tip:'Make a deliberate small mistake once and ask the student to spot it.'},
+   {t:'Your turn — you do',m:6,say:['Task: '+l.practice],tip:'Stay quiet for 2 minutes. If they’re stuck, ask “which cell does that refer to?” before giving the answer.',answer:l.answer},
+   {t:'Check & common mistakes',m:2,list:l.mistakes,say:['Ask the student to find one of these in their own sheet, or explain why it would cause a problem.']},
+   {t:'Wrap-up',m:2,say:[`Recap: ${l.goal}`,'Exit question: “Explain it back to me as if I’m a new colleague.”','Set one small homework: reuse this on their own real data.']}
+  ];
+}
+const totalMin=l=>script(l).reduce((a,s)=>a+s.m,0);
+function scriptText(l){return `${l.title} — ${totalMin(l)}-minute session\n\n`+script(l).map((s,i)=>`${i+1}. ${s.t} (${s.m} min)\n`+(s.say||[]).map(x=>'   SAY: '+x).join('\n')+(s.code?`\n   FORMULA: ${s.code.replace(/\n/g,'\n            ')}`:'')+(s.list?'\n'+s.list.map(x=>'   • '+x).join('\n'):'')+(s.tip?`\n   TIP: ${s.tip}`:'')+(s.answer?`\n   ANSWER: ${s.answer}`:'')).join('\n\n')}
+
+/* ---- routing: #/ , #/level , #/level/topic , #/l/id[/tab] ---- */
+const parse=()=>{const p=location.hash.replace(/^#\/?/,'').split('/').filter(Boolean).map(decodeURIComponent);return p};
+const go=(...p)=>{location.hash="#/"+p.map(encodeURIComponent).join("/");render()};
+const topicsOf=lv=>[...new Set(LESSONS.filter(l=>l.level===lv).map(l=>l.topic))];
+const pill=l=>`<span class="pill lv">${cap(l.level)}</span>`;
+function rowHtml(l,i,showCtx){return `<button class="row" data-lesson="${l.id}"><span class="n">${done[l.id]?'✓':String(i+1).padStart(2,'0')}</span><span class="m"><strong>${esc(l.title)}</strong><small>${esc(l.goal)}</small></span>${showCtx?pill(l)+`<span class="pill">${esc(l.topic)}</span>`:''}<span class="pill">${totalMin(l)} min</span></button>`}
+
+function renderBrowse(lv,topic){
+  const levels=LEVELS.map(x=>{const n=LESSONS.filter(l=>l.level===x.id).length,d=LESSONS.filter(l=>l.level===x.id&&done[l.id]).length;return `<button class="level ${lv===x.id?'on':''}" data-level="${x.id}"><strong>${x.name}</strong><span>${x.blurb}</span><small>${n} lessons${d?` · ${d} taught`:''}</small></button>`}).join('');
+  let html=`<h1>What are we covering today?</h1><p class="sub">Pick a level, pick a topic, open the lesson. Each lesson has a ready-made session script.</p>
+  <div class="step-label"><b>1</b> Level</div><div class="levels">${levels}</div>`;
+  if(lv){
+    const tp=topicsOf(lv);
+    html+=`<div class="step-label"><b>2</b> Topic</div><div class="chips"><button class="chip ${!topic?'on':''}" data-topic="">All<i>${LESSONS.filter(l=>l.level===lv).length}</i></button>${tp.map(t=>`<button class="chip ${topic===t?'on':''}" data-topic="${esc(t)}">${esc(t)}<i>${LESSONS.filter(l=>l.level===lv&&l.topic===t).length}</i></button>`).join('')}</div>`;
+    const list=LESSONS.filter(l=>l.level===lv&&(!topic||l.topic===topic));
+    html+=`<div class="step-label"><b>3</b> Lesson</div><div class="list">${list.map((l,i)=>rowHtml(l,i)).join('')}</div>`;
+  } else html+=`<div class="step-label"><b>2</b> Topic &amp; lesson</div><div class="empty">Choose a level above to see its topics.</div>`;
+  return html;
+}
+function renderSearch(){
+  const s=q.toLowerCase(),r=LESSONS.filter(l=>[l.title,l.goal,l.topic,l.level,l.formula,l.explain].join(' ').toLowerCase().includes(s));
+  return `<h1>Search results</h1><p class="sub">${r.length} lesson${r.length===1?'':'s'} for “${esc(q)}”</p><div class="list">${r.length?r.map((l,i)=>rowHtml(l,i,true)).join(''):'<div class="empty">No match. Try a function name like “SUM” or a topic like “pivot”.</div>'}</div>`;
+}
+function renderLesson(id,tab){
+  const l=byId[id];if(!l)return renderBrowse();
+  const siblings=LESSONS.filter(x=>x.level===l.level),i=siblings.findIndex(x=>x.id===id);
+  const prev=siblings[i-1],next=siblings[i+1];
+  tab=mode==='student'?'notes':(tab||'script');
+  const tabs=mode==='coach'?`<div class="tabs"><button data-tab="script" class="${tab==='script'?'on':''}">Session script</button><button data-tab="notes" class="${tab==='notes'?'on':''}">Lesson notes</button></div>`:'<div style="height:18px"></div>';
+  let body='';
+  if(tab==='script'){
+    const sc=script(l),doneSteps=store.get('steps_'+id,[]);
+    body+=`<div class="meter"><span>${totalMin(l)}-minute session</span><span class="track"><span id="bar" style="width:${Math.round(doneSteps.length/sc.length*100)}%"></span></span><span id="cnt">${doneSteps.length}/${sc.length}</span><button class="btn" id="copy">Copy script</button><button class="btn" id="print">Print</button></div>`;
+    body+=sc.map((s,k)=>`<section class="seg-card ${doneSteps.includes(k)?'done':''}" data-k="${k}"><button class="chk" data-check="${k}" aria-label="Mark step ${k+1} done">${doneSteps.includes(k)?'✓':''}</button><div><div class="seg-head"><h3>${k+1}. ${esc(s.t)}</h3><span class="min">${s.m} min</span></div>${(s.say||[]).map(x=>`<div class="say"><b>Say / ask</b>${esc(x)}</div>`).join('')}${s.code?`<div class="formula mono">${esc(s.code)}</div>`:''}${s.list?`<ul>${s.list.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}${s.tip?`<div class="tip">💡 ${esc(s.tip)}</div>`:''}${s.answer?`<button class="btn" data-reveal style="margin-top:10px">Show worked answer</button><div class="answer">${esc(s.answer)}</div>`:''}</div></section>`).join('');
+  } else {
+    body+=`<div class="card"><div class="eyebrow">The idea</div><h2>${esc(l.goal)}</h2><p>${esc(l.explain)}</p><div class="formula mono">${esc(l.formula)}</div></div>
+    <div class="card"><div class="eyebrow">Work through it</div><ol>${l.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol></div>
+    <div class="card practice"><div class="eyebrow">Your turn</div><h2>${esc(l.practice)}</h2><button class="btn" data-reveal>Show worked answer</button><div class="answer">${esc(l.answer)}</div></div>
+    <div class="card"><div class="eyebrow">Watch for</div><ul>${l.mistakes.map(m=>`<li>${esc(m)}</li>`).join('')}</ul></div>`;
+  }
+  return `<div class="crumbs"><button data-home>All levels</button>›<button data-level="${l.level}">${cap(l.level)}</button>›<button data-level="${l.level}" data-topic="${esc(l.topic)}">${esc(l.topic)}</button></div>
+  <div class="top"><div><h1>${esc(l.title)}</h1><div style="display:flex;gap:7px;flex-wrap:wrap">${pill(l)}<span class="pill">${esc(l.topic)}</span>${l.compat?`<span class="pill v">${esc(l.compat)}</span>`:''}</div></div>
+  <div class="nav2">${prev?`<button class="btn" data-lesson="${prev.id}">← ${esc(prev.title.split(' · ')[0])}</button>`:''}${next?`<button class="btn pri" data-lesson="${next.id}">${esc(next.title.split(' · ')[0])} →</button>`:''}</div></div>${tabs}${body}`;
+}
+function render(){
+  document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
+  const p=parse(),app=document.getElementById('app');
+  if(q.trim()) app.innerHTML=renderSearch();
+  else if(p[0]==='l') app.innerHTML=renderLesson(p[1],p[2]);
+  else app.innerHTML=renderBrowse(LEVELS.some(x=>x.id===p[0])?p[0]:null,p[1]);
+  window.scrollTo(0,0);
+}
+const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)};
+document.addEventListener('click',e=>{
+  const t=e.target;let el;
+  if(el=t.closest('[data-lesson]')){q='';document.getElementById('q').value='';go('l',el.dataset.lesson);return}
+  if(t.closest('[data-home]')){go();return}
+  if(el=t.closest('[data-level]')){q='';document.getElementById('q').value='';go(el.dataset.level,...(el.dataset.topic?[el.dataset.topic]:[]));return}
+  if(el=t.closest('[data-topic]')){go(parse()[0],...(el.dataset.topic?[el.dataset.topic]:[]));return}
+  if(el=t.closest('[data-tab]')){go('l',parse()[1],el.dataset.tab);return}
+  if(el=t.closest('[data-reveal]')){const a=el.nextElementSibling;a.classList.toggle('show');el.textContent=a.classList.contains('show')?'Hide worked answer':'Show worked answer';return}
+  if(el=t.closest('[data-check]')){
+    const id=parse()[1],k=+el.dataset.check,st=store.get('steps_'+id,[]),n=st.indexOf(k);
+    n<0?st.push(k):st.splice(n,1);store.set('steps_'+id,st);
+    if(st.length===script(byId[id]).length){done[id]=true;store.set('done',done);toast('Session complete ✓')}else if(done[id]&&st.length<script(byId[id]).length){delete done[id];store.set('done',done)}
+    const card=el.closest('.seg-card');card.classList.toggle('done',st.includes(k));el.textContent=st.includes(k)?'✓':'';
+    const total=script(byId[id]).length;document.getElementById('bar').style.width=Math.round(st.length/total*100)+'%';document.getElementById('cnt').textContent=st.length+'/'+total;return}
+  if(t.closest('#copy')){const txt=scriptText(byId[parse()[1]]);(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Script copied')).catch(()=>toast('Copy not available — use Print'));return}
+  if(t.closest('#print')){window.print();return}
+  if(el=t.closest('#mode button')){mode=el.dataset.m;store.set('mode',mode);render();return}
+  if(t.closest('#home')){q='';document.getElementById('q').value='';go()}
+});
+document.getElementById('q').addEventListener('input',e=>{q=e.target.value;render()});
+window.addEventListener('hashchange',render);
+render();
+</script>
+</body>
+</html>
