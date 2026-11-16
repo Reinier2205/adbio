@@ -70,6 +70,14 @@ ul,ol{margin:6px 0 0;padding-left:20px;font-size:14px;color:#44544b}li{padding:2
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#193b30;color:#fff;padding:9px 15px;border-radius:11px;font-size:13px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
 @media(max-width:700px){.levels{grid-template-columns:1fr}.bar{flex-wrap:wrap;height:auto;padding:10px 0}.search{order:3;flex-basis:100%;max-width:none;margin:0}.seg-card{grid-template-columns:1fr}.brand span.t{display:none}}
 @media print{header,.nav2,.tabs,.crumbs,.toast,.btn{display:none!important}.seg-card,.card{break-inside:avoid;border-color:#bbb}body{background:#fff}.say{background:#eef}}
+.wb{background:#e8f3ec;border:2px solid var(--green);border-radius:var(--r);padding:16px 18px;margin:18px 0 4px;display:grid;grid-template-columns:auto 1fr;gap:6px 16px;align-items:start}
+.wb h2{grid-column:1/-1;margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.13em;color:var(--green)}
+.wb .k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#47705b;padding-top:3px}
+.wb .v{font-size:14px}.wb .v ul{margin:0;padding-left:18px}
+.loc{display:inline-flex;gap:0;border-radius:8px;overflow:hidden;font-size:13px;font-weight:700;margin:0 6px 4px 0;border:1px solid var(--green)}
+.loc b{background:var(--green);color:#fff;padding:3px 9px}.loc span{background:#fff;padding:3px 9px;font-family:ui-monospace,Consolas,monospace}
+@media(max-width:700px){.wb{grid-template-columns:1fr}}
+@media print{.wb{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -122,6 +130,41 @@ L('let','advanced','Modern formulas','LET · name parts of a formula','Make long
 L('lambda','advanced','Modern formulas','LAMBDA · reusable function','Name a repeated rule once.','LAMBDA defines a function without VBA. Test in a cell, then save in Name Manager and call it like =GROSS(B2).','=LAMBDA(net,net*1.15)(B2)',['Test the LAMBDA in a cell.','Formulas → Name Manager → New.','Name it GROSS, Refers to =LAMBDA(net,net*1.15).','Call =GROSS(B2).'],['Without arguments it’s only a definition.','Don’t over-engineer small workbooks.'],'Which repeated calculation deserves one shared definition?','Create LINEVALUE(qty, price).','Test =LAMBDA(qty,price,qty*price)(B2,C2), then define LINEVALUE in Name Manager.','Microsoft 365 and web only'),
 L('audit','advanced','Modern formulas','Check formulas & troubleshoot','Diagnose instead of guessing.','Treat the result as evidence: check inputs, ranges, references and data types. Use Evaluate Formula and Trace Precedents.','F2 edit · Ctrl+` show formulas · Formulas → Evaluate Formula',['Compare a known row by hand.','Look for text-numbers and hidden spaces.','Step through with Evaluate Formula.','Identify #N/A, #VALUE!, #REF!, #DIV/0!, #SPILL!.'],['Tweaking until it “looks right” hides logic errors.','Rounded display ≠ stored value.'],'What small example can we calculate by hand to verify this?','A SUM looks too low — name three things to inspect first.','Range endpoints, numbers stored as text, and filters or missing rows.')
 ];
+
+const WB={
+workbook:{loc:[['Sales','A1:L41']],use:['Rename a tab, click C2 and read the Name Box.','Select A1:C2 and A1:L41 to see ranges.']},
+'data-shape':{loc:[['Sales','A1:L41']],use:['Spot the header row, one record per row, one field per column.','Find the totals: they live on Exercises/Answer Key, not inside the data.']},
+refs:{loc:[['Products','F2'],['Sales','L2:L41']],use:['VAT rate sits in Products!F2 — lock it with $F$2 (Products!$F$2).','Fill Incl VAT = Line Total × (1 + VAT) down column L.'],ex:[1,2]},
+fill:{loc:[['Sales','L2:L41'],['Sales','K2:K41']],use:['Write the first formula in L2, then fill down with the handle or double-click.'],ex:[2]},
+flash:{loc:[['Names','B2:C11']],use:['Type the first name in B2, press Ctrl+E. Repeat for last name in C2.']},
+dates:{loc:[['Dates','D2:D4'],['Dates','G2:G4']],use:['D: delivered date minus order date.','G: hours from Depart to Arrive using MOD (Durban crosses midnight).'],ex:[8,9]},
+format:{loc:[['Sales','H2:H41'],['Sales','J2:J41'],['Products','F2']],use:['Apply Currency (R) to prices and totals, Percentage to the VAT rate.']},
+nav:{loc:[['Sales','A1:L41']],use:['Ctrl+↓ down column A, Ctrl+Home back, Ctrl+Space on column J.']},
+paste:{loc:[['Sales','J2:J41']],use:['Copy Line Total, Paste Special → Values into column M.']},
+sum:{loc:[['Sales','J2:J41']],use:['Total the Line Total column.'],ex:[3]},
+avg:{loc:[['Sales','J2:J41'],['Sales','B2:B41']],use:['AVERAGE on Line Total; COUNTA on the Invoice column.'],ex:[4,5]},
+minmax:{loc:[['Sales','J2:J41']],use:['Smallest and largest Line Total.'],ex:[6,7]},
+if:{loc:[['Sales','K2:K41']],use:['Flag column: “Review” when Line Total ≥ R5,000, else “Standard”.'],ex:[10]},
+sumif:{loc:[['Sales','C2:C41'],['Sales','I2:I41'],['Sales','J2:J41']],use:['Condition = Province (C); numbers = Line Total (J).','SUMIFS: add Status (I) = Paid.'],ex:[11,12]},
+countif:{loc:[['Sales','C2:C41'],['Sales','I2:I41']],use:['Status (I) for Overdue; Province (C) for the COUNTIFS.'],ex:[13,14]},
+iferror:{loc:[['Products','A2:C9']],use:['Look up a code that doesn’t exist (P-999) and show “Check code”.'],ex:[17]},
+vlookup:{loc:[['Products','A2:C9'],['Bands','A2:B6']],use:['Exact: price of P-104 (column 3).','Approximate: commission for Bands!D2 (R62,000) — answer in Bands!E3.'],ex:[15,18]},
+xlookup:{loc:[['Products','A2:C9']],use:['Return the product name for code P-107.'],ex:[16]},
+index:{loc:[['Products','A2:C9']],use:['MATCH the code, INDEX the name.'],ex:[16]},
+tables:{loc:[['Sales','A1:L41']],use:['The data is already a Table named Sales. Add rows, use [@Qty]*[@[Unit Price]] style formulas, count rows.'],ex:[19]},
+pivot:{loc:[['Sales','A1:L41']],use:['Insert PivotTable from the Sales Table: Province in Rows, Line Total in Values.'],ex:[20]},
+pivot2:{loc:[['Sales','A1:L41']],use:['Add Date to Rows, group by Month; add a Province slicer.']},
+charts:{loc:[['Sales','A1:L41']],use:['Pivot or total by Province, then Insert a column chart.'],ex:[21]},
+cf:{loc:[['Sales','I2:I41']],use:['Highlight “Overdue” in the Status column.'],ex:[22]},
+validation:{loc:[['Validation','D2:D7'],['Validation','A2:A5']],use:['Data → Data Validation → List, source = A2:A5.'],ex:[23]},
+filter:{loc:[['Sales','Table: Sales']],use:['Spill overdue rows into an empty sheet area (Microsoft 365).'],ex:[24]},
+sort:{loc:[['Sales','Table: Sales']],use:['Sort by Line Total (column 10) descending.'],ex:[25]},
+unique:{loc:[['Sales','C2:C41']],use:['Distinct provinces, sorted.'],ex:[26]},
+sequence:{loc:[['Any blank sheet','A1'],['Sales','Table: Sales']],use:['Spill 1–6 down a column.','TAKE the top 5 rows of a SORT; CHOOSECOLS for Invoice, Province, Line Total (columns 2, 3, 10).'],ex:[27]},
+let:{loc:[['Sales','J2'],['Products','F2']],use:['Name net = J2 and vat = F2 inside LET.'],ex:[28]},
+lambda:{loc:[['Sales','J2']],use:['Define GROSS in Name Manager, call =GROSS(Sales!J2).'],ex:[29]},
+audit:{loc:[['Sales','J2:J41']],use:['Check ranges, text-numbers and filters when a total looks wrong.'],ex:[30]}
+};
 const byId=Object.fromEntries(LESSONS.map(l=>[l.id,l]));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cap=s=>s[0].toUpperCase()+s.slice(1);
@@ -147,8 +190,11 @@ const parse=()=>{const p=location.hash.replace(/^#\/?/,'').split('/').filter(Boo
 const go=(...p)=>{location.hash="#/"+p.map(encodeURIComponent).join("/");render()};
 const topicsOf=lv=>[...new Set(LESSONS.filter(l=>l.level===lv).map(l=>l.topic))];
 const pill=l=>`<span class="pill lv">${cap(l.level)}</span>`;
-function rowHtml(l,i,showCtx){return `<button class="row" data-lesson="${l.id}"><span class="n">${done[l.id]?'✓':String(i+1).padStart(2,'0')}</span><span class="m"><strong>${esc(l.title)}</strong><small>${esc(l.goal)}</small></span>${showCtx?pill(l)+`<span class="pill">${esc(l.topic)}</span>`:''}<span class="pill">${totalMin(l)} min</span></button>`}
+function rowHtml(l,i,showCtx){return `<button class="row" data-lesson="${l.id}"><span class="n">${done[l.id]?'✓':String(i+1).padStart(2,'0')}</span><span class="m"><strong>${esc(l.title)}</strong><small>${esc(l.goal)}</small></span>${showCtx?pill(l)+`<span class="pill">${esc(l.topic)}</span>`:''}${wbPill(l)}<span class="pill">${totalMin(l)} min</span></button>`}
+function wbPill(l){const w=WB[l.id];return w?`<span class="pill v">📗 ${esc(w.loc[0][0])}</span>`:''}
 
+function wbCard(l){const w=WB[l.id];if(!w)return '';
+ return `<div class="wb"><h2>📗 In the workbook — Excel_Coaching_Workbook.xlsx</h2><div class="k">Go to</div><div class="v">${w.loc.map(x=>`<span class="loc"><b>${esc(x[0])}</b><span>${esc(x[1])}</span></span>`).join('')}</div><div class="k">Use it to</div><div class="v"><ul>${w.use.map(u=>`<li>${esc(u)}</li>`).join('')}</ul></div>${w.ex?`<div class="k">Exercise</div><div class="v">Exercises sheet: #${w.ex.join(', #')} · check on <b>Answer Key</b> rows ${w.ex.join(', ')}</div>`:''}</div>`}
 function renderBrowse(lv,topic){
   const levels=LEVELS.map(x=>{const n=LESSONS.filter(l=>l.level===x.id).length,d=LESSONS.filter(l=>l.level===x.id&&done[l.id]).length;return `<button class="level ${lv===x.id?'on':''}" data-level="${x.id}"><strong>${x.name}</strong><span>${x.blurb}</span><small>${n} lessons${d?` · ${d} taught`:''}</small></button>`}).join('');
   let html=`<h1>What are we covering today?</h1><p class="sub">Pick a level, pick a topic, open the lesson. Each lesson has a ready-made session script.</p>
@@ -184,7 +230,7 @@ function renderLesson(id,tab){
   }
   return `<div class="crumbs"><button data-home>All levels</button>›<button data-level="${l.level}">${cap(l.level)}</button>›<button data-level="${l.level}" data-topic="${esc(l.topic)}">${esc(l.topic)}</button></div>
   <div class="top"><div><h1>${esc(l.title)}</h1><div style="display:flex;gap:7px;flex-wrap:wrap">${pill(l)}<span class="pill">${esc(l.topic)}</span>${l.compat?`<span class="pill v">${esc(l.compat)}</span>`:''}</div></div>
-  <div class="nav2">${prev?`<button class="btn" data-lesson="${prev.id}">← ${esc(prev.title.split(' · ')[0])}</button>`:''}${next?`<button class="btn pri" data-lesson="${next.id}">${esc(next.title.split(' · ')[0])} →</button>`:''}</div></div>${tabs}${body}`;
+  <div class="nav2">${prev?`<button class="btn" data-lesson="${prev.id}">← ${esc(prev.title.split(' · ')[0])}</button>`:''}${next?`<button class="btn pri" data-lesson="${next.id}">${esc(next.title.split(' · ')[0])} →</button>`:''}</div></div>${wbCard(l)}${tabs}${body}`;
 }
 function render(){
   document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
