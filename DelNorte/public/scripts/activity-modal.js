@@ -4,8 +4,8 @@
  *
  * Usage:
  *   activityModal.open(activity, onSaved, onDeleted)
- *     onSaved(updatedActivity)   — called after successful PATCH
- *     onDeleted(id)              — called after successful DELETE
+ *     onSaved(updatedActivity)   ï¿½ called after successful PATCH
+ *     onDeleted(id)              ï¿½ called after successful DELETE
  */
 
 const activityModal = (() => {
@@ -31,7 +31,7 @@ const activityModal = (() => {
         close();
 
         const a       = _activity;
-        const types   = ['walk','hike','pilates','cycle','dance','sauna'];
+        const types   = ['walk','hike','pilates','cycle','swim','dance','sauna'];
         const typeTiles = types.map(t => `
             <button type="button" class="lp-type-tile${a.activity_type === t ? ' lp-selected' : ''}" data-type="${t}">
                 <span class="lp-tile-icon lp-dot-${t}"></span>

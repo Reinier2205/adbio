@@ -39,6 +39,10 @@ async function renderLogProgressPage() {
                             <span class="lp-tile-icon lp-dot-cycle"></span>
                             <span>Cycle</span>
                         </button>
+                        <button type="button" class="lp-type-tile" data-type="swim">
+                            <span class="lp-tile-icon lp-dot-swim"></span>
+                            <span>Swim</span>
+                        </button>
                         <button type="button" class="lp-type-tile" data-type="dance">
                             <span class="lp-tile-icon lp-dot-dance"></span>
                             <span>Dance</span>
