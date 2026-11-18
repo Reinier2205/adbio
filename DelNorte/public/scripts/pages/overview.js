@@ -2,6 +2,9 @@
  * Overview Page
  */
 
+// name -> traveler id, so team-table names can be tapped to open that member's activities
+let _nameToId = {};
+
 async function renderOverviewPage() {
     const user = auth.getCurrentUser();
     const container = document.getElementById('page-container');
@@ -53,13 +56,23 @@ async function renderOverviewPage() {
         if (link) link.classList.add('active');
     });
 
+    // Build name -> id map so team names are tappable
+    try {
+        const travelers = await api.getTravelers();
+        _nameToId = {};
+        (travelers || []).forEach(t => { _nameToId[t.name] = t.id; });
+    } catch (e) {
+        console.error('Travelers load error:', e);
+        _nameToId = {};
+    }
+
     try {
         const [allActivities, dashboard] = await Promise.all([
             api.getActivities(),
             api.getDashboard()
         ]);
-        renderAllTimeTotals(allActivities);
-        renderWeekTable(dashboard);
+        renderAllTimeTotals(allActivities, _nameToId);
+        renderWeekTable(dashboard, _nameToId);
     } catch (e) {
         console.error('Overview group error:', e);
         document.getElementById('ov-totals').innerHTML = '<p class="ov-error">Could not load team data.</p>';
@@ -78,7 +91,7 @@ async function renderOverviewPage() {
 /* -------------------------------------------------------
    All-time totals: one row per person, sorted by km
 ------------------------------------------------------- */
-function renderAllTimeTotals(activities) {
+function renderAllTimeTotals(activities, nameToId) {
     const NAMES = ['Reinier', 'Drikkie', 'Annatjie', 'Letitia'];
     const stats = {};
     NAMES.forEach(n => { stats[n] = { count: 0, km: 0, min: 0 }; });
@@ -101,9 +114,10 @@ function renderAllTimeTotals(activities) {
         const min = s.min % 60;
         const dur = s.min > 0 ? (hrs > 0 ? hrs + 'h ' + min + 'm' : min + 'm') : '&mdash;';
         const isLeader = idx === 0 && s.km > 0;
+        const clickable = nameToId && nameToId[name];
         rows += `
             <tr class="${isLeader ? 'ov-leader' : ''}">
-                <td>${name}</td>
+                <td${clickable ? ` class="ov-name-link" data-name="${name}" role="button" tabindex="0" title="Tap to see ${name}'s activities"` : ''}>${name}</td>
                 <td class="ov-num">${s.count}</td>
                 <td class="ov-num">${s.km.toFixed(1)}</td>
                 <td class="ov-num">${dur}</td>
@@ -124,12 +138,13 @@ function renderAllTimeTotals(activities) {
             </table>
         </div>
     `;
+    wireNameLinks(document.getElementById('ov-totals'));
 }
 
 /* -------------------------------------------------------
    This week table
 ------------------------------------------------------- */
-function renderWeekTable(dashboard) {
+function renderWeekTable(dashboard, nameToId) {
     const NAMES = ['Reinier', 'Drikkie', 'Annatjie', 'Letitia'];
     const stats = dashboard.userStats || {};
 
@@ -148,9 +163,10 @@ function renderWeekTable(dashboard) {
         if (other)   breakdown += '<span class="ov-badge ov-badge-other">Other ' + other + '</span>';
         if (!total)  breakdown  = '<span class="ov-badge ov-badge-none">Rest week</span>';
 
+        const clickable = nameToId && nameToId[name];
         rows += `
             <tr>
-                <td>${name}</td>
+                <td${clickable ? ` class="ov-name-link" data-name="${name}" role="button" tabindex="0" title="Tap to see ${name}'s activities"` : ''}>${name}</td>
                 <td class="ov-num">${total}</td>
                 <td class="ov-num">${km}</td>
                 <td class="ov-td-badges">${breakdown}</td>
@@ -171,20 +187,22 @@ function renderWeekTable(dashboard) {
             </table>
         </div>
     `;
+    wireNameLinks(document.getElementById('ov-week'));
 }
 
 /* -------------------------------------------------------
    My activities detail table  (shared helper)
-   containerId  — DOM id to render into
-   activities   — array
-   onRefresh    — async fn() to reload the list after edit/delete
+   containerId  ï¿½ DOM id to render into
+   activities   ï¿½ array
+   onRefresh    ï¿½ async fn() to reload the list after edit/delete
 ------------------------------------------------------- */
-function renderActivityTable(containerId, activities, onRefresh) {
+function renderActivityTable(containerId, activities, onRefresh, readOnly) {
     const el = document.getElementById(containerId);
 
     if (!activities || activities.length === 0) {
-        el.innerHTML = `
-            <div class="ov-empty">
+        el.innerHTML = readOnly
+            ? '<div class="ov-empty"><p>No activities logged yet.</p></div>'
+            : `<div class="ov-empty">
                 <p>No activities yet. Start logging your training!</p>
                 <button class="ov-log-btn" data-navigate="log-progress">Log your first activity</button>
             </div>`;
@@ -209,14 +227,14 @@ function renderActivityTable(containerId, activities, onRefresh) {
         if (a.conversation_test) badges.push('<span class="ov-badge ov-badge-conv" title="Conversation test: could talk comfortably during the activity">Conversation test</span>');
 
         rows += `
-            <tr class="act-row" data-id="${a.id}" title="Tap to edit">
+            <tr class="act-row" data-id="${a.id}"${readOnly ? '' : ' title="Tap to edit"'}>
                 <td><span class="ov-type-dot ${typeCls}"></span>${typeLabel}</td>
                 <td class="ov-td-date">${formatDate(a.activity_date)}</td>
                 <td class="ov-num">${km}</td>
                 <td class="ov-num ov-hide-xs">${elev}</td>
                 <td class="ov-num">${dur}</td>
                 <td>${badges.join(' ') || '&mdash;'}</td>
-                <td class="act-edit-cell"><span class="act-edit-icon">&#9998;</span></td>
+                ${readOnly ? '' : '<td class="act-edit-cell"><span class="act-edit-icon">&#9998;</span></td>'}
             </tr>
         `;
     });
@@ -231,26 +249,28 @@ function renderActivityTable(containerId, activities, onRefresh) {
                     <th class="ov-th-num ov-hide-xs">Elevation</th>
                     <th class="ov-th-num">Duration</th>
                     <th>Tags</th>
-                    <th></th>
+                    ${readOnly ? '' : '<th></th>'}
                 </tr></thead>
                 <tbody>${rows}</tbody>
             </table>
         </div>
-        <p class="act-tap-hint">Tap a row to edit or delete</p>
+        ${readOnly ? '' : '<p class="act-tap-hint">Tap a row to edit or delete</p>'}
     `;
 
-    // Wire up row clicks
-    el.querySelectorAll('.act-row').forEach(row => {
-        row.addEventListener('click', () => {
-            const activity = actMap[row.dataset.id];
-            if (!activity) return;
-            activityModal.open(
-                activity,
-                async () => { await onRefresh(); },   // onSaved
-                async () => { await onRefresh(); }    // onDeleted
-            );
+    // Wire up row clicks (edit only â€” read-only views show no edit affordance)
+    if (!readOnly) {
+        el.querySelectorAll('.act-row').forEach(row => {
+            row.addEventListener('click', () => {
+                const activity = actMap[row.dataset.id];
+                if (!activity) return;
+                activityModal.open(
+                    activity,
+                    async () => { await onRefresh(); },   // onSaved
+                    async () => { await onRefresh(); }    // onDeleted
+                );
+            });
         });
-    });
+    }
 }
 
 function renderMyActivities(activities) {
@@ -263,4 +283,63 @@ function renderMyActivities(activities) {
 
 function capitalize(str) {
     return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+}
+
+/* -------------------------------------------------------
+   Member activities viewer (read-only)
+   Tap a traveller's name in a team table to open a modal
+   listing their recent activities in the same format as
+   the "My activities" detail table.
+------------------------------------------------------- */
+function wireNameLinks(scopeEl) {
+    scopeEl.querySelectorAll('.ov-name-link').forEach(el => {
+        const name = el.dataset.name;
+        el.addEventListener('click', () => openMemberActivities(name));
+        el.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openMemberActivities(name);
+            }
+        });
+    });
+}
+
+function openMemberActivities(name) {
+    const userId = _nameToId[name];
+    if (!userId) return;
+
+    const backdrop = document.createElement('div');
+    backdrop.id = 'mact-backdrop';
+    backdrop.className = 'mact-backdrop';
+    backdrop.innerHTML = `
+        <div class="mact-box" role="dialog" aria-modal="true" aria-label="${name}'s activities">
+            <div class="mact-header">
+                <h3>${name}'s activities</h3>
+                <button class="mact-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="mact-body">
+                <div id="mact-activities"><div class="ov-loading">Loading...</div></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(backdrop);
+    document.body.style.overflow = 'hidden';
+
+    const onKey = e => { if (e.key === 'Escape') close(); };
+    const close = () => {
+        backdrop.remove();
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', onKey);
+    };
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+    backdrop.querySelector('.mact-close').addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+
+    api.getActivities(userId)
+        .then(activities => renderActivityTable('mact-activities', activities, null, true))
+        .catch(e => {
+            console.error('Member activities error:', e);
+            document.getElementById('mact-activities').innerHTML =
+                '<p class="ov-error">Could not load activities.</p>';
+        });
 }
